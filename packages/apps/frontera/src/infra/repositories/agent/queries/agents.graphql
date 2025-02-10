@@ -3,16 +3,24 @@ query agents {
     id
     type
     name
+    listeners {
+      id
+      type
+      name
+      active
+      config
+      errors
+    }
     capabilities {
       id
       type
       name
-      action
       active
       config
       errors
     }
     goal
+    goalType
     isActive
     flowId
     visible
@@ -21,5 +29,6 @@ query agents {
     error
     color
     icon
+    isConfigured
   }
 }

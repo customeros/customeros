@@ -94,13 +94,45 @@ export type Agent = {
   error?: Maybe<Scalars['String']['output']>;
   flowId?: Maybe<Scalars['ID']['output']>;
   goal: Scalars['String']['output'];
+  goalType: Scalars['String']['output'];
   icon: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
+  isConfigured: Scalars['Boolean']['output'];
+  listeners: Array<AgentListener>;
   name: Scalars['String']['output'];
   type: AgentType;
   updatedAt: Scalars['Time']['output'];
   visible: Scalars['Boolean']['output'];
+};
+
+export type AgentListener = {
+  __typename?: 'AgentListener';
+  active: Scalars['Boolean']['output'];
+  config: Scalars['String']['output'];
+  errors?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  type: AgentListenerEvent;
+};
+
+export enum AgentListenerEvent {
+  IcpFit = 'ICP_FIT',
+  IcpNotAFit = 'ICP_NOT_A_FIT',
+  NewLead = 'NEW_LEAD',
+  NewWebSession = 'NEW_WEB_SESSION',
+  RunIcpQualifierAgent = 'RUN_ICP_QUALIFIER_AGENT',
+  WebVisitorIdentified = 'WEB_VISITOR_IDENTIFIED',
+  WebVisitorNotIdentified = 'WEB_VISITOR_NOT_IDENTIFIED',
+}
+
+export type AgentListenerSaveInput = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  config?: InputMaybe<Scalars['String']['input']>;
+  errors?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<AgentListenerEvent>;
 };
 
 export type AgentSaveInput = {
@@ -111,6 +143,7 @@ export type AgentSaveInput = {
   icon?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  listeners?: InputMaybe<Array<AgentListenerSaveInput>>;
   name?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<AgentType>;
   visible?: InputMaybe<Scalars['Boolean']['input']>;
@@ -332,7 +365,6 @@ export enum CalendarType {
 
 export type Capability = {
   __typename?: 'Capability';
-  action: Scalars['String']['output'];
   active: Scalars['Boolean']['output'];
   config: Scalars['String']['output'];
   errors?: Maybe<Scalars['String']['output']>;
@@ -342,7 +374,6 @@ export type Capability = {
 };
 
 export type CapabilitySaveInput = {
-  action?: InputMaybe<Scalars['String']['input']>;
   active?: InputMaybe<Scalars['Boolean']['input']>;
   config?: InputMaybe<Scalars['String']['input']>;
   errors?: InputMaybe<Scalars['String']['input']>;
@@ -356,9 +387,11 @@ export enum CapabilityType {
   ApplyTag = 'APPLY_TAG',
   CreateMarkdownTimelineEvent = 'CREATE_MARKDOWN_TIMELINE_EVENT',
   CreateOrganization = 'CREATE_ORGANIZATION',
+  GatherCompanyIntelligence = 'GATHER_COMPANY_INTELLIGENCE',
   IcpQualify = 'ICP_QUALIFY',
   IdentifyWebVisitor = 'IDENTIFY_WEB_VISITOR',
   SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
+  UpdateCompanyStatus = 'UPDATE_COMPANY_STATUS',
   WebVisitorSendSlackNotification = 'WEB_VISITOR_SEND_SLACK_NOTIFICATION',
 }
 

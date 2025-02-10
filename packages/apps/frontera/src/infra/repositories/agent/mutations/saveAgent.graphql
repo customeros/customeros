@@ -3,16 +3,24 @@ mutation saveAgent($input: AgentSaveInput!) {
     id
     type
     name
+    listeners {
+      id
+      type
+      name
+      active
+      config
+      errors
+    }
     capabilities {
       id
       type
       name
       active
-      action
       config
       errors
     }
     goal
+    goalType
     isActive
     flowId
     visible
@@ -21,5 +29,6 @@ mutation saveAgent($input: AgentSaveInput!) {
     error
     color
     icon
+    isConfigured
   }
 }

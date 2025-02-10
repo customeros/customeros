@@ -15,4 +15,6 @@ export const capabilities: Record<CapabilityType, () => JSX.Element> = {
   [CapabilityType.ApplyTag]: () => <></>,
   [CapabilityType.CreateMarkdownTimelineEvent]: () => <></>,
   [CapabilityType.IcpQualify]: () => <EvaluateCompanyIcpFit />,
+  [CapabilityType.GatherCompanyIntelligence]: () => <></>,
+  [CapabilityType.UpdateCompanyStatus]: () => <></>,
 };
