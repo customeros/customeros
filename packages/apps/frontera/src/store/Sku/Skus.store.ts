@@ -41,7 +41,6 @@ export class SkusStore extends Store<SkuDatum, Sku> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        this.persistGroup();
       });
     }
   }
