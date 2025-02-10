@@ -76,7 +76,7 @@ func (l *NewMeetingRecordingListener) DefaultConfig() any {
 	}
 }
 
-func (l *NewMeetingRecordingListener) SubscribedAgents() []enum.AgentType {
+func (l *NewMeetingRecordingListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentMeetingKeeper,
 		enum.AgentSupportSpotter,
@@ -163,7 +163,7 @@ func (l *NewMeetingRecordingListener) lookupActiveAgentsForUser(ctx context.Cont
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, l.SubscribedAgents())
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, l.ExecutingAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

@@ -2,18 +2,16 @@ package agent_listeners
 
 import (
 	"context"
-	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -60,7 +58,7 @@ func (l *NewLeadListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *NewLeadListener) SubscribedAgents() []enum.AgentType {
+func (l *NewLeadListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentICPQualifier,
 	}
@@ -86,8 +84,8 @@ func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string) err
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	subscribedAgents := l.SubscribedAgents()
-	if len(subscribedAgents) == 0 {
+	activeAgents := l.lookupActiveAgents(ctx)
+	if len(activeAgents) == 0 {
 		err := errors.New("No agent types configured for company stage lead listener")
 		tracing.TraceErr(span, err)
 		return err
@@ -99,7 +97,6 @@ func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string) err
 		OrganizationID: orgID,
 	}
 
-	activeAgents := l.lookupActiveAgents(ctx, subscribedAgents)
 	var errs error
 	for _, agent := range activeAgents {
 
@@ -118,13 +115,12 @@ func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string) err
 	return errs
 }
 
-func (l *NewLeadListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
+func (l *NewLeadListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))
 
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, agentTypes)
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

@@ -54,10 +54,8 @@ func (l *MeetingLoggedListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *MeetingLoggedListener) SubscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentMeetingKeeper,
-	}
+func (l *MeetingLoggedListener) ExecutingAgents() []enum.AgentType {
+	return []enum.AgentType{}
 }
 
 func (l *MeetingLoggedListener) Handle(ctx context.Context, baseEvent any) error {
@@ -78,7 +76,11 @@ func (l *MeetingLoggedListener) Handle(ctx context.Context, baseEvent any) error
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	if data.AgentExecutionId != "" {
+		return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	}
+
+	return nil
 }
 
 func (l *MeetingLoggedListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {

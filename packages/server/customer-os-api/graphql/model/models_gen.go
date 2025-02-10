@@ -1896,7 +1896,8 @@ func (this Metadata) GetAppSource() string         { return this.AppSource }
 func (Metadata) IsNode()            {}
 func (this Metadata) GetID() string { return this.ID }
 
-type Mutation struct{}
+type Mutation struct {
+}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -2482,7 +2483,8 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Query struct{}
+type Query struct {
+}
 
 type Reminder struct {
 	Metadata  *Metadata  `json:"metadata"`
@@ -3403,6 +3405,7 @@ const (
 	CapabilityTypeAddMeetingNotesToCompany        CapabilityType = "ADD_MEETING_NOTES_TO_COMPANY"
 	CapabilityTypeAnalyzeWebSessionIntent         CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
 	CapabilityTypeApplyTagToCompany               CapabilityType = "APPLY_TAG_TO_COMPANY"
+	CapabilityTypeCheckSupportNeed                CapabilityType = "CHECK_SUPPORT_NEED"
 	CapabilityTypeCreateContacts                  CapabilityType = "CREATE_CONTACTS"
 	CapabilityTypeCreateOrganization              CapabilityType = "CREATE_ORGANIZATION"
 	CapabilityTypeCreateMarkdownTimelineEvent     CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
@@ -3420,6 +3423,7 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeAddMeetingNotesToCompany,
 	CapabilityTypeAnalyzeWebSessionIntent,
 	CapabilityTypeApplyTagToCompany,
+	CapabilityTypeCheckSupportNeed,
 	CapabilityTypeCreateContacts,
 	CapabilityTypeCreateOrganization,
 	CapabilityTypeCreateMarkdownTimelineEvent,
@@ -3435,7 +3439,7 @@ var AllCapabilityType = []CapabilityType{
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeExtractMeetingHighlights, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeWebVisitorSendSLACkNotification:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCheckSupportNeed, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeExtractMeetingHighlights, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeWebVisitorSendSLACkNotification:
 		return true
 	}
 	return false
