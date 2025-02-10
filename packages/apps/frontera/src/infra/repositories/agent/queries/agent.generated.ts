@@ -12,6 +12,7 @@ export type AgentQuery = {
     type: Types.AgentType;
     name: string;
     goal: string;
+    goalType: string;
     isActive: boolean;
     flowId?: string | null;
     visible: boolean;
@@ -20,12 +21,21 @@ export type AgentQuery = {
     error?: string | null;
     color: string;
     icon: string;
+    isConfigured: boolean;
+    listeners: Array<{
+      __typename?: 'AgentListener';
+      id: string;
+      type: Types.AgentListenerEvent;
+      name: string;
+      active: boolean;
+      config: string;
+      errors?: string | null;
+    }>;
     capabilities: Array<{
       __typename?: 'Capability';
       id: string;
       type: Types.CapabilityType;
       name: string;
-      action: string;
       active: boolean;
       config: string;
       errors?: string | null;
