@@ -531,6 +531,12 @@ func (s *contactService) processAutomationRunResult(ctx context.Context, automat
 		return
 	}
 
+	userEntity := neo4jmapper.MapDbNodeToUserEntity(useByEmailNode)
+
+	if userEntity.Roles == nil || utils.Contains(userEntity.Roles, "IMPERSONATED") {
+		return
+	}
+
 	var results []string
 
 	err = json.Unmarshal([]byte(result.ResultData), &results)

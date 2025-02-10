@@ -92,7 +92,7 @@ export const GlobalSharedCommands = observer(
         </CommandItem>
 
         <CommandItem
-          dataTest={`${dataTest}-gz`}
+          dataTest={`${dataTest}-gc`}
           leftAccessory={<ArrowNarrowRight />}
           keywords={navigationKeywords.go_to_address_book}
           rightAccessory={<KeyboardShortcut shortcut='C' />}

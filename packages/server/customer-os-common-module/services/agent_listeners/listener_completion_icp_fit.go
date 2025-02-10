@@ -8,7 +8,6 @@ import (
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -104,13 +103,13 @@ func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, agentExecutionI
 	}
 
 	// update execution with goal achieved
-	if agentExecution.Status == enum.AgentExecutionCompleted || agentExecution.Status == enum.AgentExecutionFail {
-		err = fmt.Errorf("agent execution already completed or failed")
+	if agentExecution.Status == enum.AgentExecutionCompleted {
+		err = fmt.Errorf("agent execution already completed")
 		tracing.TraceErr(span, err)
 		return err
 	}
 	agentExecution.GoalAchieved = true
-	_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, utils.NowPtr(), "", true)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

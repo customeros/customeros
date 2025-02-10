@@ -3,11 +3,9 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -105,13 +103,13 @@ func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecut
 	}
 
 	// update execution with goal achieved
-	if agentExecution.Status == enum.AgentExecutionCompleted || agentExecution.Status == enum.AgentExecutionFail {
-		err = fmt.Errorf("agent execution already completed or failed")
+	if agentExecution.Status == enum.AgentExecutionCompleted {
+		err = fmt.Errorf("agent execution already completed")
 		tracing.TraceErr(span, err)
 		return err
 	}
 	agentExecution.GoalAchieved = true
-	_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, utils.NowPtr(), "", true)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

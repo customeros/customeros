@@ -5,13 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"net/http"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -158,9 +158,8 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				continue
 			}
 
-			event := dto.IntentDetected{
-				EventName: enum.EventIntentSignal,
-				//IntentType: enum.IntentGenerateCycleInvoice,
+			event := dto.InvoiceStart{
+				// IntentType: enum.IntentGenerateCycleInvoice,
 				ContractID: contract.Id,
 				DryRun:     dryRun,
 				Preview:    preview,
@@ -384,8 +383,8 @@ func (s *invoiceService) SendRemindNotifications() {
 func (s *invoiceService) GenerateOffCycleInvoices() {
 	return
 
-	//ctx, cancel := context.WithCancel(context.Background())
-	//defer cancel() // Cancel context on exit
+	// ctx, cancel := context.WithCancel(context.Background())
+	// defer cancel() // Cancel context on exit
 
 	//span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
 	//defer span.Finish()

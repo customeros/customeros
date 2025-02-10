@@ -55,10 +55,12 @@ func (f *agentsRepository) GetById(ctx context.Context, id string) (*postgres_en
 		First(&agent).
 		Error
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return &agent, nil
 }
 
@@ -195,6 +197,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context,
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(records)))
 	return records, nil
 }
 
@@ -391,6 +394,7 @@ func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, c
 		First(&capability).
 		Error
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -398,5 +402,7 @@ func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, c
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
+	span.LogFields(log.String("result.capabilityId", capability.ID))
 	return &capability, nil
 }

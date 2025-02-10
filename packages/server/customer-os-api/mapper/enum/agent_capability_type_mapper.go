@@ -13,7 +13,7 @@ var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapability{
 	model.CapabilityTypeCreateOrganization:              enum.CapabilityCreateAndEnrichCompany,
 	model.CapabilityTypeIdentifyWebVisitor:              enum.CapabilityIdentifyWebVisitor,
 	model.CapabilityTypeWebVisitorSendSLACkNotification: enum.CapabilitySendWebVisitorSlackNotification,
-	model.CapabilityTypeApplyTag:                        enum.CapabilityApplyTag,
+	model.CapabilityTypeApplyTag:                        enum.CapabilityApplyTagToCompany,
 	model.CapabilityTypeCreateMarkdownTimelineEvent:     enum.CapabilityCreateMarkdownTimelineEvent,
 	model.CapabilityTypeIcpQualify:                      enum.CapabilityEvaluateCompanyICPFit,
 	model.CapabilityTypeGatherCompanyIntelligence:       enum.CapabilityGatherCompanyIntelligence,

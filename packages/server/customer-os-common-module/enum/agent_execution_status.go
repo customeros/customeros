@@ -11,6 +11,7 @@ const (
 	AgentExecutionPending   AgentExecutionStatus = "PENDING"
 	AgentExecutionRunning   AgentExecutionStatus = "RUNNING"
 	AgentExecutionCompleted AgentExecutionStatus = "COMPLETED"
+	AgentExecutionFinished  AgentExecutionStatus = "FINISHED"
 )
 
 func (t AgentExecutionStatus) String() string {
@@ -23,6 +24,7 @@ func GetAgentExecutionStatus(s string) (AgentExecutionStatus, error) {
 		AgentExecutionFail,
 		AgentExecutionPending,
 		AgentExecutionRunning,
+		AgentExecutionFinished,
 		AgentExecutionCompleted:
 		return AgentExecutionStatus(s), nil
 

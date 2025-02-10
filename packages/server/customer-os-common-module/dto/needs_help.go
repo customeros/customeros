@@ -5,19 +5,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
-var (
-	_ interfaces.AgentEvents = NeedsHelp{}
-	_ interfaces.AgentEvents = DoesNotNeedHelp{}
-)
+var _ interfaces.AgentEvents = CompanyNeedsHelp{}
 
-type NeedsHelp struct{}
+type CompanyNeedsHelp struct{}
 
-func (e NeedsHelp) Name() enum.AgentListenerEvent {
-	return enum.EventNeedsHelp
-}
-
-type DoesNotNeedHelp struct{}
-
-func (e DoesNotNeedHelp) Name() enum.AgentListenerEvent {
-	return enum.EventDoesNotNeedHelp
+func (e CompanyNeedsHelp) Name() enum.AgentListenerEvent {
+	return enum.EventCompanyNeedsHelp
 }

@@ -3,9 +3,9 @@ import { chromium } from '@playwright/test';
 // import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { ContactsPage } from './pages/contacts/contactsPage';
+import { CompaniesPage } from './pages/companies/companiesPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
 import { OpportunitiesPage } from './pages/opportunities/opportunitiesPage';
-import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportunitiesKanbanPage';
 
 async function globalSetup() {
@@ -13,7 +13,7 @@ async function globalSetup() {
   const page = await browser.newPage();
 
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
+  const organizationsPage = new CompaniesPage(page);
   const contactsPage = new ContactsPage(page);
   // const flowsPage = new FlowsPage(page);
   const opportunitiesPage = new OpportunitiesPage(page);
@@ -22,7 +22,7 @@ async function globalSetup() {
   await loginPage.login();
 
   // Archive organizations
-  await organizationsPage.goToAllOrgs();
+  await organizationsPage.goToCompanies();
 
   if ((await page.locator(organizationsPage.allOrgsAddOrg).count()) === 0) {
     await organizationsPage.selectAllOrgs();
@@ -83,7 +83,7 @@ async function globalSetup() {
   await opportunitiesKanbanPage.setWinRates(WinRatesFor.Committed, -100);
 
   // Create initial organization
-  await organizationsPage.goToAllOrgs();
+  await organizationsPage.goToCompanies();
 
   await organizationsPage.addInitialOrganization();
 

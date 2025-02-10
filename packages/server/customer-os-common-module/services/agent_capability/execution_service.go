@@ -22,7 +22,7 @@ func NewAgentCapabilityExecutionService() interfaces.AgentCapabilityExecutionSer
 func (f *agentCapabilityExecutionService) Execute(
 	ctx context.Context, executionContainer interfaces.ExecutionContainer,
 ) (map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentCapabilityExecutionService.Execute")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.Execute")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -48,13 +48,13 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
-	case enum.CapabilityApplyTag:
-		executor, ok := GetTypedExecutor[ApplyTagInput, NoOutput, ApplyTagConfig](
+	case enum.CapabilityApplyTagToCompany:
+		executor, ok := GetTypedExecutor[ApplyTagToCompanyInput, NoOutput, ApplyTagToCompanyConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTag)
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTagToCompany)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -187,7 +187,7 @@ func (f *agentCapabilityExecutionService) Execute(
 }
 
 func (f *agentCapabilityExecutionService) handleGetTypedExecutorError(ctx context.Context, capability enum.AgentCapability) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentCapabilityExecutionService.handleGetTypedExecutorError")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.handleGetTypedExecutorError")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -201,7 +201,7 @@ func executeCapability[I, O, C any](
 	cap interfaces.AgentCapability[I, O, C],
 	executionContainer interfaces.ExecutionContainer,
 ) (map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("agentCapabilityExecutionService.executeCapability.%s", executionContainer.Capability.Type.String()))
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("AgentCapabilityExecutionService.executeCapability.%s", executionContainer.Capability.Type.String()))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

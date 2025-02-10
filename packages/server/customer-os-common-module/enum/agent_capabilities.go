@@ -9,7 +9,7 @@ type AgentCapability string
 const (
 	CapabilityAddMeetingNotesToCompany           AgentCapability = "add_meeting_notes_to_company"
 	CapabilityAnalyzeWebSessionIntent            AgentCapability = "analyze_web_session_for_intent"
-	CapabilityApplyTag                           AgentCapability = "apply_tag"
+	CapabilityApplyTagToCompany                  AgentCapability = "apply_tag_to_company"
 	CapabilityBuildCampaignList                  AgentCapability = "build_campaign_list"
 	CapabilityCheckSupportNeed                   AgentCapability = "check_support_need"
 	CapabilityCollectPayments                    AgentCapability = "collect_payment"
@@ -55,7 +55,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 	case
 		CapabilityAddMeetingNotesToCompany,
 		CapabilityAnalyzeWebSessionIntent,
-		CapabilityApplyTag,
+		CapabilityApplyTagToCompany,
 		CapabilityBuildCampaignList,
 		CapabilityCheckSupportNeed,
 		CapabilityCollectPayments,

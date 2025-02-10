@@ -11,7 +11,7 @@ import {
   clickLocatorThatIsVisibleAndHasText,
 } from '../../helper';
 
-export class OrganizationAccountPage {
+export class CompanyAccountPage {
   constructor(page: Page) {
     this.page = page;
   }
@@ -186,7 +186,7 @@ export class OrganizationAccountPage {
     ).toHaveCount(1);
   }
 
-  async updateOrgToCustomer() {
+  async updateCompanyToCustomer() {
     await clickLocatorThatIsVisibleAndHasText(
       this.page,
       this.organizationAccountRelationship,
@@ -200,7 +200,7 @@ export class OrganizationAccountPage {
     );
   }
 
-  async addNoteToOrg() {
+  async addNoteToCompany() {
     const editor = await clickLocatorThatIsVisible(
       this.page,
       this.organizationAccountNotesEditor,

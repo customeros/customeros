@@ -8,7 +8,7 @@ import {
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
-export class OrganizationAboutPage {
+export class CompanyAboutPage {
   constructor(page: Page) {
     this.page = page;
   }
@@ -355,7 +355,7 @@ export class OrganizationAboutPage {
     ]);
   }
 
-  async enrichOrganization(domain: string) {
+  async enrichCompany(domain: string) {
     await this.addDomainToOrg(domain);
     await expect(this.page.locator(this.orgAboutDomainFilled)).toHaveText(
       domain,
