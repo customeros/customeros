@@ -18,7 +18,7 @@ export const SocialMediaList = observer(
   ({ isReadOnly, dataTest }: SocialMediaListProps) => {
     const store = useStore();
     const id = useParams()?.id as string;
-    const organization = store.organizations.getById(store.ui.focusRow ?? id);
+    const organization = store.organizations.getById(id ?? store.ui.focusRow);
 
     if (!organization || !organization?.value) return null;
 
