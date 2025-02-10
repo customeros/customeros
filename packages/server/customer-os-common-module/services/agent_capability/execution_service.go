@@ -37,13 +37,13 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
-	case enum.CapabilityApplyTag:
-		executor, ok := GetTypedExecutor[ApplyTagInput, NoOutput, ApplyTagConfig](
+	case enum.CapabilityApplyTagToCompany:
+		executor, ok := GetTypedExecutor[ApplyTagToCompanyInput, NoOutput, ApplyTagToCompanyConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTag)
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTagToCompany)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 

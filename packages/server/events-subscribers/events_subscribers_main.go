@@ -216,9 +216,6 @@ func (a *App) initializeListeners() error {
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorNotIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 
-	// Intent Listeners
-	a.events.Subscriber.RegisterListener(agent_listeners.NewIntentDetectedListener(a.logger, a.deps))
-
 	return nil
 }
 
