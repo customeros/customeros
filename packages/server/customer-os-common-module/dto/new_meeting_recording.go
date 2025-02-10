@@ -5,10 +5,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
-
-var _ interfaces.AgentEvents = NewMeetingRecording{}
 
 type NewMeetingRecording struct {
 	MeetingTitle        string      `json:"meetingTitle,omitempty"`

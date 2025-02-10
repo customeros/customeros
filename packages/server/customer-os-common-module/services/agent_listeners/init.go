@@ -2,12 +2,12 @@ package agent_listeners
 
 import (
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 )
 
 type AgentListeners struct {
@@ -19,7 +19,6 @@ func InitAgentListeners(
 	postgresRepositories *postgres_repository.Repositories,
 	agentRunnerService interfaces.AgentRunnerService,
 ) *AgentListeners {
-
 	var listeners []interfaces.AgentListenerUntyped
 	listeners = append(listeners, NewIcpFitListener(logger, postgresRepositories))
 	listeners = append(listeners, NewIcpNotAFitListener(logger, postgresRepositories))
@@ -29,6 +28,8 @@ func InitAgentListeners(
 	listeners = append(listeners, NewWebVisitorIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewWebVisitorNotIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewRunIcpQualifierAgent(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewNewMeetingRecordingListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewMeetingLoggedListener(logger, postgresRepositories))
 
 	agentListeners := AgentListeners{
 		listeners: make(map[enum.AgentListenerEvent]interfaces.AgentListenerUntyped),

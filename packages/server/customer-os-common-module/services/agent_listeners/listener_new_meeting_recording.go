@@ -48,6 +48,20 @@ func NewNewMeetingRecordingListener(
 	}
 }
 
+type NewMeetingRecordingListenerConfig struct {
+	MeetingSource enum.Source
+}
+
+func (l *NewMeetingRecordingListenerConfig) Validate() bool {
+	switch {
+	case l.MeetingSource == enum.SourceFathom:
+		return true
+	case l.MeetingSource == enum.SourceGrain:
+		return true
+	}
+	return false
+}
+
 func (l *NewMeetingRecordingListener) Type() enum.AgentListenerEvent {
 	return enum.EventNewMeetingRecording
 }
@@ -57,7 +71,9 @@ func (l *NewMeetingRecordingListener) Name() string {
 }
 
 func (l *NewMeetingRecordingListener) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	return &NewMeetingRecordingListenerConfig{
+		MeetingSource: enum.SourceUnknown,
+	}
 }
 
 func (l *NewMeetingRecordingListener) SubscribedAgents() []enum.AgentType {
@@ -90,6 +106,12 @@ func (l *NewMeetingRecordingListener) Handle(ctx context.Context, baseEvent any)
 		return err
 	}
 
+	if data.Source == enum.SourceUnknown {
+		err := errors.New("Meeging source cannot be unknown")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	if data.Content == nil {
 		err := errors.New("No meeting content")
 		tracing.TraceErr(span, err)
@@ -117,12 +139,23 @@ func (l *NewMeetingRecordingListener) handleExecution(ctx context.Context, data 
 
 	var errs error
 	for _, agent := range activeAgents {
-		// replaced route with generic mapping
+		// get listener config for agent
+		config := NewMeetingRecordingListenerConfig{}
+		agent.GetListenerConfigByType(l.Type(), &config)
+
+		// validate config
+		if config.MeetingSource == enum.SourceUnknown || config.MeetingSource != data.Source {
+			continue
+		}
+
+		// map event data to execution input
 		initialParams, err := utils.StructToMap(data)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
+
+		// run
 		err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -143,5 +176,6 @@ func (l *NewMeetingRecordingListener) lookupActiveAgentsForUser(ctx context.Cont
 		tracing.TraceErr(span, err)
 		return nil
 	}
+
 	return agents
 }

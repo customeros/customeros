@@ -3217,6 +3217,7 @@ const (
 	AgentListenerEventWebVisitorIdentified    AgentListenerEvent = "WEB_VISITOR_IDENTIFIED"
 	AgentListenerEventWebVisitorNotIdentified AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
 	AgentListenerEventNewWebSession           AgentListenerEvent = "NEW_WEB_SESSION"
+	AgentListenerEventNewMeetingRecording     AgentListenerEvent = "NEW_MEETING_RECORDING"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
@@ -3227,11 +3228,12 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventWebVisitorIdentified,
 	AgentListenerEventWebVisitorNotIdentified,
 	AgentListenerEventNewWebSession,
+	AgentListenerEventNewMeetingRecording,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventNewLead, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventNewWebSession:
+	case AgentListenerEventNewLead, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventNewWebSession, AgentListenerEventNewMeetingRecording:
 		return true
 	}
 	return false
@@ -3261,20 +3263,22 @@ func (e AgentListenerEvent) MarshalGQL(w io.Writer) {
 type AgentType string
 
 const (
-	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
-	AgentTypeTagSupport         AgentType = "TAG_SUPPORT"
 	AgentTypeIcpQualifier       AgentType = "ICP_QUALIFIER"
+	AgentTypeMeetingKeeper      AgentType = "MEETING_KEEPER"
+	AgentTypeSupportSpotter     AgentType = "SUPPORT_SPOTTER"
+	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
 )
 
 var AllAgentType = []AgentType{
-	AgentTypeWebVisitIdentifier,
-	AgentTypeTagSupport,
 	AgentTypeIcpQualifier,
+	AgentTypeMeetingKeeper,
+	AgentTypeSupportSpotter,
+	AgentTypeWebVisitIdentifier,
 }
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeWebVisitIdentifier, AgentTypeTagSupport, AgentTypeIcpQualifier:
+	case AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier:
 		return true
 	}
 	return false

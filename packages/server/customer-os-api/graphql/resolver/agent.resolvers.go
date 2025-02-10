@@ -15,7 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 // AgentSave is the resolver for the agent_Save field.
@@ -25,38 +25,26 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	agentId := utils.IfNotNilString(input.ID)
-
-	// case 1 - if id missing, create new agent by type
-	if agentId == "" {
-		if input.Type == nil {
-			graphql.AddErrorf(ctx, "Type is required")
-			return nil, nil
+	buildAgentFields := func(input model.AgentSaveInput) data_fields.AgentFields {
+		return data_fields.AgentFields{
+			Active:      input.IsActive,
+			VisibleInUI: input.Visible,
+			Color:       input.Color,
+			Icon:        input.Icon,
+			Name:        input.Name,
+			FlowID:      input.FlowID,
+			Goal:        input.Goal,
 		}
-		agentType := enummapper.MapAgentTypeFromModel(*input.Type)
-		agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to create agent")
-			return nil, nil
-		}
-		return mapper.MapAgentToModel(agentEntity), nil
 	}
 
-	agentFields := data_fields.AgentFields{
-		Active:      input.IsActive,
-		VisibleInUI: input.Visible,
-		Color:       input.Color,
-		Icon:        input.Icon,
-		Name:        input.Name,
-		FlowID:      input.FlowID,
-		Goal:        input.Goal,
-	}
-	var capabilitiesConfig []postgresentity.Capability
-	if input.Capabilities != nil {
-		capabilities := make([]postgresentity.Capability, 0, len(input.Capabilities))
-		for _, capability := range input.Capabilities {
-			dbCapability := postgresentity.Capability{
+	buildCapabilities := func(inputCapabilities []*model.CapabilitySaveInput) []postgres_entity.Capability {
+		if inputCapabilities == nil {
+			return nil
+		}
+
+		capabilities := make([]postgres_entity.Capability, 0, len(inputCapabilities))
+		for _, capability := range inputCapabilities {
+			dbCapability := postgres_entity.Capability{
 				ID:     utils.IfNotNilString(capability.ID),
 				Name:   utils.IfNotNilString(capability.Name),
 				Error:  utils.IfNotNilString(capability.Errors),
@@ -64,18 +52,24 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 			}
 			dbCapability.SetConfig(utils.IfNotNilString(capability.Config))
 
-			capabilities = append(capabilities, dbCapability)
 			if capability.Type != nil {
-				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
+				dbCapability.Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
 			}
+
+			capabilities = append(capabilities, dbCapability)
 		}
-		capabilitiesConfig = capabilities
+
+		return capabilities
 	}
-	var listenersConfig []postgresentity.Listener
-	if input.Listeners != nil {
-		listeners := make([]postgresentity.Listener, 0, len(input.Listeners))
-		for _, listener := range input.Listeners {
-			dbListener := postgresentity.Listener{
+
+	buildListeners := func(inputListeners []*model.AgentListenerSaveInput) []postgres_entity.Listener {
+		if inputListeners == nil {
+			return nil
+		}
+
+		listeners := make([]postgres_entity.Listener, 0, len(inputListeners))
+		for _, listener := range inputListeners {
+			dbListener := postgres_entity.Listener{
 				ID:     utils.IfNotNilString(listener.ID),
 				Name:   utils.IfNotNilString(listener.Name),
 				Error:  utils.IfNotNilString(listener.Errors),
@@ -83,15 +77,46 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 			}
 			dbListener.SetConfig(utils.IfNotNilString(listener.Config))
 
-			listeners = append(listeners, dbListener)
 			if listener.Type != nil {
-				listeners[len(listeners)-1].Type = enummapper.MapAgentListenerTypeFromModel(*listener.Type)
+				dbListener.Type = enummapper.MapAgentListenerTypeFromModel(*listener.Type)
 			}
+
+			listeners = append(listeners, dbListener)
 		}
-		listenersConfig = listeners
+
+		return listeners
 	}
 
-	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentId, agentFields, capabilitiesConfig, listenersConfig)
+	// Handle creation of new agent
+	if input.ID == nil {
+		if input.Type == nil {
+			graphql.AddErrorf(ctx, "Type is required")
+			return nil, nil
+		}
+
+		agentType := enummapper.MapAgentTypeFromModel(*input.Type)
+		agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to create agent")
+			return nil, nil
+		}
+
+		return mapper.MapAgentToModel(agentEntity), nil
+	}
+
+	// Handle updating existing agent
+	agentFields := buildAgentFields(input)
+	capabilities := buildCapabilities(input.Capabilities)
+	listeners := buildListeners(input.Listeners)
+
+	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(
+		ctx,
+		*input.ID,
+		agentFields,
+		capabilities,
+		listeners,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update agent")
