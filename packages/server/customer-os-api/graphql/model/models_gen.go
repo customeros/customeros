@@ -1896,8 +1896,7 @@ func (this Metadata) GetAppSource() string         { return this.AppSource }
 func (Metadata) IsNode()            {}
 func (this Metadata) GetID() string { return this.ID }
 
-type Mutation struct {
-}
+type Mutation struct{}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -2483,8 +2482,7 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Query struct {
-}
+type Query struct{}
 
 type Reminder struct {
 	Metadata  *Metadata  `json:"metadata"`
@@ -3210,30 +3208,32 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type AgentListenerEvent string
 
 const (
-	AgentListenerEventNewLead                 AgentListenerEvent = "NEW_LEAD"
+	AgentListenerEventCompanyIdentified       AgentListenerEvent = "COMPANY_IDENTIFIED"
 	AgentListenerEventIcpFit                  AgentListenerEvent = "ICP_FIT"
 	AgentListenerEventIcpNotAFit              AgentListenerEvent = "ICP_NOT_A_FIT"
+	AgentListenerEventNewLead                 AgentListenerEvent = "NEW_LEAD"
+	AgentListenerEventNewMeetingRecording     AgentListenerEvent = "NEW_MEETING_RECORDING"
+	AgentListenerEventNewWebSession           AgentListenerEvent = "NEW_WEB_SESSION"
 	AgentListenerEventRunIcpQualifierAgent    AgentListenerEvent = "RUN_ICP_QUALIFIER_AGENT"
 	AgentListenerEventWebVisitorIdentified    AgentListenerEvent = "WEB_VISITOR_IDENTIFIED"
 	AgentListenerEventWebVisitorNotIdentified AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
-	AgentListenerEventNewWebSession           AgentListenerEvent = "NEW_WEB_SESSION"
-	AgentListenerEventNewMeetingRecording     AgentListenerEvent = "NEW_MEETING_RECORDING"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
-	AgentListenerEventNewLead,
+	AgentListenerEventCompanyIdentified,
 	AgentListenerEventIcpFit,
 	AgentListenerEventIcpNotAFit,
+	AgentListenerEventNewLead,
+	AgentListenerEventNewMeetingRecording,
+	AgentListenerEventNewWebSession,
 	AgentListenerEventRunIcpQualifierAgent,
 	AgentListenerEventWebVisitorIdentified,
 	AgentListenerEventWebVisitorNotIdentified,
-	AgentListenerEventNewWebSession,
-	AgentListenerEventNewMeetingRecording,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventNewLead, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventNewWebSession, AgentListenerEventNewMeetingRecording:
+	case AgentListenerEventCompanyIdentified, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified:
 		return true
 	}
 	return false
@@ -3400,34 +3400,42 @@ func (e CalendarType) MarshalGQL(w io.Writer) {
 type CapabilityType string
 
 const (
-	CapabilityTypeIdentifyWebVisitor              CapabilityType = "IDENTIFY_WEB_VISITOR"
-	CapabilityTypeCreateOrganization              CapabilityType = "CREATE_ORGANIZATION"
+	CapabilityTypeAddMeetingNotesToCompany        CapabilityType = "ADD_MEETING_NOTES_TO_COMPANY"
 	CapabilityTypeAnalyzeWebSessionIntent         CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
-	CapabilityTypeSendSLACkNotification           CapabilityType = "SEND_SLACK_NOTIFICATION"
-	CapabilityTypeWebVisitorSendSLACkNotification CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
-	CapabilityTypeApplyTag                        CapabilityType = "APPLY_TAG"
+	CapabilityTypeApplyTagToCompany               CapabilityType = "APPLY_TAG_TO_COMPANY"
+	CapabilityTypeCreateContacts                  CapabilityType = "CREATE_CONTACTS"
+	CapabilityTypeCreateOrganization              CapabilityType = "CREATE_ORGANIZATION"
 	CapabilityTypeCreateMarkdownTimelineEvent     CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
-	CapabilityTypeIcpQualify                      CapabilityType = "ICP_QUALIFY"
+	CapabilityTypeExtractMeetingHighlights        CapabilityType = "EXTRACT_MEETING_HIGHLIGHTS"
 	CapabilityTypeGatherCompanyIntelligence       CapabilityType = "GATHER_COMPANY_INTELLIGENCE"
+	CapabilityTypeIcpQualify                      CapabilityType = "ICP_QUALIFY"
+	CapabilityTypeIdentifyMeetingParticipants     CapabilityType = "IDENTIFY_MEETING_PARTICIPANTS"
+	CapabilityTypeIdentifyWebVisitor              CapabilityType = "IDENTIFY_WEB_VISITOR"
+	CapabilityTypeSendSLACkNotification           CapabilityType = "SEND_SLACK_NOTIFICATION"
 	CapabilityTypeUpdateCompanyStatus             CapabilityType = "UPDATE_COMPANY_STATUS"
+	CapabilityTypeWebVisitorSendSLACkNotification CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
 )
 
 var AllCapabilityType = []CapabilityType{
-	CapabilityTypeIdentifyWebVisitor,
-	CapabilityTypeCreateOrganization,
+	CapabilityTypeAddMeetingNotesToCompany,
 	CapabilityTypeAnalyzeWebSessionIntent,
-	CapabilityTypeSendSLACkNotification,
-	CapabilityTypeWebVisitorSendSLACkNotification,
-	CapabilityTypeApplyTag,
+	CapabilityTypeApplyTagToCompany,
+	CapabilityTypeCreateContacts,
+	CapabilityTypeCreateOrganization,
 	CapabilityTypeCreateMarkdownTimelineEvent,
-	CapabilityTypeIcpQualify,
+	CapabilityTypeExtractMeetingHighlights,
 	CapabilityTypeGatherCompanyIntelligence,
+	CapabilityTypeIcpQualify,
+	CapabilityTypeIdentifyMeetingParticipants,
+	CapabilityTypeIdentifyWebVisitor,
+	CapabilityTypeSendSLACkNotification,
 	CapabilityTypeUpdateCompanyStatus,
+	CapabilityTypeWebVisitorSendSLACkNotification,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeApplyTag, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeIcpQualify, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeUpdateCompanyStatus:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeExtractMeetingHighlights, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeWebVisitorSendSLACkNotification:
 		return true
 	}
 	return false

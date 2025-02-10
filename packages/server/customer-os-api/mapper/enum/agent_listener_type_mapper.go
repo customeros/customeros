@@ -8,14 +8,15 @@ import (
 )
 
 var agentListenerEventByModel = map[model.AgentListenerEvent]enum.AgentListenerEvent{
+	model.AgentListenerEventCompanyIdentified:       enum.EventCompanyIdentified,
 	model.AgentListenerEventIcpFit:                  enum.EventICPFit,
 	model.AgentListenerEventIcpNotAFit:              enum.EventICPNotAFit,
 	model.AgentListenerEventNewLead:                 enum.EventNewLead,
-	model.AgentListenerEventRunIcpQualifierAgent:    enum.EventRunICPQualifierAgent,
+	model.AgentListenerEventNewMeetingRecording:     enum.EventNewMeetingRecording,
 	model.AgentListenerEventNewWebSession:           enum.EventNewWebSession,
+	model.AgentListenerEventRunIcpQualifierAgent:    enum.EventRunICPQualifierAgent,
 	model.AgentListenerEventWebVisitorIdentified:    enum.EventWebVisitorIdentified,
 	model.AgentListenerEventWebVisitorNotIdentified: enum.EventWebVisitorNotIdentified,
-	model.AgentListenerEventNewMeetingRecording:     enum.EventNewMeetingRecording,
 }
 
 var agentListenerEventByValue = utils.ReverseMap(agentListenerEventByModel)
