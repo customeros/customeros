@@ -7,10 +7,10 @@ import { SubHeader } from './components/SubHeader/SubHeader';
 
 export const AgentPage = observer(() => {
   return (
-    <div>
+    <>
       <Header />
       <SubHeader />
       <Outlet />
-    </div>
+    </>
   );
 });

@@ -1,7 +1,7 @@
-import React, { ReactNode, ReactElement } from 'react';
+import { ReactNode, ReactElement } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { FlowStepCommandMenuType } from '@store/UI/FlowStepCommandMenu.store.ts';
+import { FlowStepCommandMenuType } from '@store/UI/FlowStepCommandMenu.store';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';

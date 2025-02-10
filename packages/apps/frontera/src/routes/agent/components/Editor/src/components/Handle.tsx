@@ -1,6 +1,6 @@
 import { Position, Handle as FlowHandle } from '@xyflow/react';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 
 export const Handle = ({
   type,

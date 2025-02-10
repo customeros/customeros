@@ -454,21 +454,6 @@ export const FlowBuilder = observer(
             }
 
             if (
-              node.type === 'trigger' &&
-              flow.value.status === FlowStatus.Off
-            ) {
-              event.stopPropagation();
-              ui.flowCommandMenu.setOpen(true);
-              ui.flowCommandMenu.setType('TriggersHub');
-              ui.flowCommandMenu.setContext({
-                id: node.id,
-                entity: 'Trigger',
-              });
-
-              return;
-            }
-
-            if (
               node.type === 'action' &&
               node.data.action &&
               ['EMAIL_NEW', 'EMAIL_REPLY'].includes(node.data.action as string)
@@ -486,7 +471,6 @@ export const FlowBuilder = observer(
           />
           <Background />
           <FlowBuilderToolbar />
-          {/* todo explore way to merge that with flow settings panel*/}
           {store.ui.flowActionSidePanel.isOpen && <EmailSettingsPanel />}
         </ReactFlow>
       </>

@@ -1,18 +1,15 @@
-import { Route, Routes, Navigate, useParams } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
-import { useStore } from '@shared/hooks/useStore';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 
 import { Editor } from '../Editor';
+import { List } from '../List/List';
 import { AgentConfig } from '../AgentConfig/AgentConfig';
 
 export const AgentSubRoutesWrapper = observer(() => {
-  const store = useStore();
-  const { id } = useParams<{ id: string }>();
-  const agent = id ? store.agents.getById(id) : null;
-
+  // todo change condition
   return (
     <Routes>
       <Route path='setup' element={<AgentConfig />} />
@@ -28,11 +25,11 @@ export const AgentSubRoutesWrapper = observer(() => {
         path='list'
         element={
           <ProtectedRoute condition={true} fallback={'../setup'}>
-            <div>People</div>
+            <List />
           </ProtectedRoute>
         }
       />
-      <Route path='*' element={<Navigate replace to='setup' />} />
+      <Route index element={<Navigate replace to={`setup`} />} />
     </Routes>
   );
 });

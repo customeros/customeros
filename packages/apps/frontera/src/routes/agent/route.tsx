@@ -4,7 +4,7 @@ import { AgentPage } from './page';
 import { AgentSubRoutesWrapper } from './components';
 
 export const AgentRoute: RouteObject = {
-  path: '/agents/:id',
+  path: '/agents/:id/*',
   element: <AgentPage />,
   children: [
     {

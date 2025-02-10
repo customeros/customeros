@@ -1,15 +1,10 @@
-import { useParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { MaskElement } from 'imask';
 import { observer } from 'mobx-react-lite';
 import { NodeProps, useNodesData, useReactFlow } from '@xyflow/react';
 
-import { FlowStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
-import { IconButton } from '@ui/form/IconButton';
-import { useStore } from '@shared/hooks/useStore';
-import { Trash01 } from '@ui/media/icons/Trash01';
 import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput';
 
@@ -34,11 +29,9 @@ export const WaitNode = observer(
     id,
     data,
   }: NodeProps & { data: Record<string, string | number | boolean> }) => {
-    const { setNodes, getNode, deleteElements } = useReactFlow();
-    const { ui, flows } = useStore();
+    const { setNodes, getNode } = useReactFlow();
     const nodeData = useNodesData(id);
     const inputRef = useRef<MaskElement>();
-    const flowId = useParams()?.id as string;
 
     const [unit, setUnit] = useState<DurationUnit>(
       (data.fe_waitDurationUnit as DurationUnit) || 'days',
@@ -50,9 +43,6 @@ export const WaitNode = observer(
 
     const isEditing = nodeData?.data?.isEditing;
     const selected = getNode(id)?.selected;
-    const flow = flows.value.get(flowId)?.value;
-    const flowWasStarted =
-      flow?.status === FlowStatus.On || flow?.firstStartedAt;
 
     const convertDuration = (
       value: number,
@@ -199,22 +189,6 @@ export const WaitNode = observer(
               </span>
             )}
           </div>
-
-          {!ui.flowActionSidePanel.isOpen && !flowWasStarted && (
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              icon={<Trash01 />}
-              aria-label='Delete'
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteElements({ nodes: [{ id }] });
-              }}
-              className={`ml-2 opacity-0 group-hover:opacity-100 pointer-events-all ${
-                isEditing ? 'opacity-0 group-hover:opacity-0' : ''
-              }`}
-            />
-          )}
         </div>
         <Handle type='target' />
         <Handle type='source' />

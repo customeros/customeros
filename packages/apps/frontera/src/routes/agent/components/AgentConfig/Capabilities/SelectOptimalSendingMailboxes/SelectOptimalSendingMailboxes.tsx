@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
+import { FlowSender as FlowSenderT } from '@graphql/types';
 import {
   ScrollAreaRoot,
   ScrollAreaThumb,
@@ -12,9 +13,12 @@ import { FlowSender, MailboxStatus, SenderDropdown } from './components';
 
 export const SelectOptimalSendingMailboxes = observer(() => {
   const store = useStore();
-  const flow = store.flows.value?.[0];
+  // todo integrate with proper data when BE is ready
+  const flow = store.flows.toArray()?.[0];
 
-  const id = flow?.metadata?.id;
+  if (!flow) return null;
+
+  const id = flow?.value?.metadata?.id;
   const hasSenders =
     !!flow?.value?.senders?.length && flow?.value?.senders?.length > 0;
 
@@ -38,7 +42,7 @@ export const SelectOptimalSendingMailboxes = observer(() => {
               <MailboxStatus id={id ?? ''} />
               {hasSenders && (
                 <div className='flex flex-col gap-2 '>
-                  {flow?.value.senders.map((e) => (
+                  {flow?.value.senders.map((e: FlowSenderT) => (
                     <FlowSender
                       flowId={id ?? ''}
                       id={e.metadata.id}
