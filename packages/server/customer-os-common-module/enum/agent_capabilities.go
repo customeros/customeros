@@ -11,13 +11,13 @@ const (
 	CapabilityAnalyzeWebSessionIntent            AgentCapability = "analyze_web_session_for_intent"
 	CapabilityApplyTagToCompany                  AgentCapability = "apply_tag_to_company"
 	CapabilityBuildCampaignList                  AgentCapability = "build_campaign_list"
-	CapabilityCheckSupportNeed                   AgentCapability = "check_support_need"
 	CapabilityCollectPayments                    AgentCapability = "collect_payment"
 	CapabilityCreateAndEnrichContact             AgentCapability = "create_and_enrich_contacts"
 	CapabilityCreateAndEnrichCompany             AgentCapability = "create_and_enrich_company"
 	CapabilityCreateMarkdownTimelineEvent        AgentCapability = "create_markdown_timeline_event"
 	CapabilityDetectNewLead                      AgentCapability = "detect_new_lead"
 	CapabilityDetectNewMeetingRecording          AgentCapability = "detect_new_meeting_recording"
+	CapabilityDetectSupportWebvisit              AgentCapability = "detect_support_webvisit"
 	CapabilityEnrichEmailAddress                 AgentCapability = "enrich_email_address"
 	CapabilityEvaluateCompanyICPFit              AgentCapability = "evaluate_company_icp_fit"
 	CapabilityExtractMeetingHighlights           AgentCapability = "extract_meeting_highlights"
@@ -57,13 +57,13 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityAnalyzeWebSessionIntent,
 		CapabilityApplyTagToCompany,
 		CapabilityBuildCampaignList,
-		CapabilityCheckSupportNeed,
 		CapabilityCollectPayments,
 		CapabilityCreateAndEnrichContact,
 		CapabilityCreateAndEnrichCompany,
 		CapabilityCreateMarkdownTimelineEvent,
 		CapabilityDetectNewLead,
 		CapabilityDetectNewMeetingRecording,
+		CapabilityDetectSupportWebvisit,
 		CapabilityEnrichEmailAddress,
 		CapabilityEvaluateCompanyICPFit,
 		CapabilityExtractMeetingHighlights,

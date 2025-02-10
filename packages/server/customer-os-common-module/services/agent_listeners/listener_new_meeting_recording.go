@@ -49,14 +49,19 @@ func NewNewMeetingRecordingListener(
 }
 
 type NewMeetingRecordingListenerConfig struct {
-	MeetingSource enum.Source
+	MeetingSource MeetingSourceConfig `json:"meetingSource"`
+}
+
+type MeetingSourceConfig struct {
+	Value enum.Source `json:"value"`
+	Error string      `json:"error"`
 }
 
 func (l *NewMeetingRecordingListenerConfig) Validate() bool {
 	switch {
-	case l.MeetingSource == enum.SourceFathom:
+	case l.MeetingSource.Value == enum.SourceFathom:
 		return true
-	case l.MeetingSource == enum.SourceGrain:
+	case l.MeetingSource.Value == enum.SourceGrain:
 		return true
 	}
 	return false
@@ -72,7 +77,9 @@ func (l *NewMeetingRecordingListener) Name() string {
 
 func (l *NewMeetingRecordingListener) DefaultConfig() any {
 	return &NewMeetingRecordingListenerConfig{
-		MeetingSource: enum.SourceUnknown,
+		MeetingSource: MeetingSourceConfig{
+			Value: enum.SourceUnknown,
+		},
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"go.uber.org/multierr"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -53,7 +54,7 @@ func (l *CompanyIdentifiedListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *CompanyIdentifiedListener) Name() string {
-	return "Company Identified"
+	return "Company identified from web visit"
 }
 
 func (l *CompanyIdentifiedListener) DefaultConfig() any {
@@ -114,10 +115,28 @@ func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID s
 		return err
 	}
 
+	// get web session
+	lookbackInMins := 60
+	session, err := l.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: &orgID,
+		IsActive:       false,
+	}, &lookbackInMins)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if session == nil {
+		return nil
+	}
+
 	message := struct {
-		OrganizationID string
+		OrganizationID  string   `json:"organizationId"`
+		UniquePageViews []string `json:"uniquePageViews"`
 	}{
-		OrganizationID: orgID,
+		OrganizationID:  orgID,
+		UniquePageViews: session.UniquePageViews,
 	}
 
 	var errs error
