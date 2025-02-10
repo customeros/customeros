@@ -2,6 +2,9 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -18,10 +21,14 @@ import (
 
 type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
+	events              *events.EventsService
 }
 
-func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
+func NewCreateOrganizationCapability(
+	events *events.EventsService,
+	orgService interfaces.OrganizationService) *CreateOrganizationCapability {
 	return &CreateOrganizationCapability{
+		events:              events,
 		organizationService: orgService,
 	}
 }
@@ -115,7 +122,23 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 		return true, result, err
 	}
 
+	err = c.publishCompanyIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, result, err
+	}
+
 	result.OrganizationID = orgID
 	tracing.LogObjectAsJson(span, "result", result)
 	return true, result, nil
+}
+
+func (c *CreateOrganizationCapability) publishCompanyIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.publishCompanyIdentifiedEvent")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.CompanyIdentified{
+		AgentExecutionId: agentExecutionID,
+	})
 }
