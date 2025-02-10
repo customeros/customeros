@@ -28,6 +28,7 @@ func InitAgentListeners(
 	listeners = append(listeners, NewWebVisitorIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewWebVisitorNotIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewRunIcpQualifierAgent(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewCompanyIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewNewMeetingRecordingListener(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewMeetingLoggedListener(logger, postgresRepositories))
 
