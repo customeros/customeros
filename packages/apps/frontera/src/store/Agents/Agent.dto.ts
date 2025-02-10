@@ -100,7 +100,7 @@ export class Agent extends Entity<AgentDatum> {
     return parsed;
   }
 
-  static default(payload?: Partial<AgentDatum>): AgentDatum {
+  default(payload?: Partial<AgentDatum>): AgentDatum {
     return merge(
       {
         id: crypto.randomUUID(),
