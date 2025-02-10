@@ -3,9 +3,11 @@ package agent_listeners
 import (
 	"context"
 
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -13,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 )
 
 type WebVisitorIdentifiedListener struct {
@@ -65,5 +68,7 @@ func (l *WebVisitorIdentifiedListener) Handle(ctx context.Context, baseEvent any
 	// TODO implement
 	return nil
 
+
 	// return l.handleGoalAchieved(ctx, data.AgentExecutionId)
 }
+

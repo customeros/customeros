@@ -36,6 +36,7 @@ func NewCompanyIdentifiedListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
 	agentRunnerService interfaces.AgentRunnerService,
+
 ) *CompanyIdentifiedListener {
 	return &CompanyIdentifiedListener{
 		BaseEventListener: events.NewBaseEventListener(
@@ -45,6 +46,7 @@ func NewCompanyIdentifiedListener(
 		),
 		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
+
 	}
 }
 
@@ -59,6 +61,7 @@ func (l *CompanyIdentifiedListener) Name() string {
 func (l *CompanyIdentifiedListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
+
 
 func (l *CompanyIdentifiedListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
@@ -136,6 +139,8 @@ func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID s
 	}
 
 	return errs
+	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+
 }
 
 func (l *CompanyIdentifiedListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
@@ -146,10 +151,12 @@ func (l *CompanyIdentifiedListener) handleGoalAchieved(ctx context.Context, agen
 
 	var agentExecution *postgres_entity.AgentExecution
 	var err error
+
 	agentExecution, err = l.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+
 	}
 	if agentExecution == nil {
 		err = fmt.Errorf("agent execution not found")
@@ -184,3 +191,4 @@ func (l *CompanyIdentifiedListener) lookupActiveAgents(ctx context.Context) []po
 	}
 	return agents
 }
+
