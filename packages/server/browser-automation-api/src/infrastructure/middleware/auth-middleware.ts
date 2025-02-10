@@ -63,6 +63,13 @@ export class AuthMiddleware {
         });
       }
 
+      if (user.roles.includes("IMPERSONATED")) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized. User is impersonated.",
+        });
+      }
+
       const browserConfig = await this.browserConfigsRepository.selectByUserId(
         user.id
       );
