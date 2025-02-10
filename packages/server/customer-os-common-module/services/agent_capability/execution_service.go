@@ -139,7 +139,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityIdentifyWebVisitor:
-		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig](
+		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
