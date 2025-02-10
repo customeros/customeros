@@ -10,7 +10,7 @@ import {
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
-export class OrganizationPeoplePage {
+export class CompanyPeoplePage {
   constructor(page: Page) {
     this.page = page;
   }

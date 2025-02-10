@@ -12,10 +12,10 @@ import {
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
-export class OrganizationsPage {
+export class CompaniesPage {
   private page: Page;
 
-  private sideNavItemAllOrgs = sideNavSelectors.sideNavItemAllOrgs;
+  private sideNavItemAllOrgs = sideNavSelectors.sideNavItemCompanies;
   private sideNavItemCustomers = sideNavSelectors.sideNavItemCustomers;
   private sideNavItemCustomersSelected = sideNavSelectors.sideNavItemCustomers;
   private finderTableOrganizations = '[data-test="finder-table-ORGANIZATIONS"]';
@@ -62,7 +62,7 @@ export class OrganizationsPage {
     this.page = page;
   }
 
-  async goToAllOrgs() {
+  async goToCompanies() {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
@@ -72,7 +72,7 @@ export class OrganizationsPage {
     return await this.addOrganization(this.allOrgsAddOrg, initialOrg);
   }
 
-  async addNonInitialOrganization(testInfo: TestInfo) {
+  async addNonInitialCompany(testInfo: TestInfo) {
     const initialOrg = false;
 
     return await this.addOrganization(
@@ -134,7 +134,7 @@ export class OrganizationsPage {
     return organizationName;
   }
 
-  async checkNewOrganizationEntry(organizationName: string) {
+  async checkNewCompanyEntry(organizationName: string) {
     const maxAttempts = 3;
     const retryInterval = 20000;
 
@@ -327,11 +327,11 @@ export class OrganizationsPage {
     await ensureLocatorIsVisible(this.page, this.sideNavItemCustomersSelected);
   }
 
-  async goToAllOrgsPage() {
+  async goToCompaniesPage() {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
-  async updateOrgToCustomer(organizationName: string) {
+  async updateCompanyToCustomer(organizationName: string) {
     const rowLocator = this.page
       .locator(`${this.finderTableOrganizations} div[data-index]`)
       .filter({
@@ -348,7 +348,7 @@ export class OrganizationsPage {
     await this.page.waitForTimeout(5000);
   }
 
-  async goToOrganization(organizationName: string) {
+  async goToCompany(organizationName: string) {
     await this.page
       .locator(
         `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,

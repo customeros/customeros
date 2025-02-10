@@ -1,6 +1,6 @@
 import { FlowStatuses } from './pages/flows/flowsStatuses';
 
-export const organizations = {
+export const companies = {
   create: {
     name: '',
     domain: 'gomag.ro',
