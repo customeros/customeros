@@ -1269,11 +1269,11 @@ func TestQueryResolver_UIOrganizationsSearch_SortByCountry(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l1", Country: "C1", CountryCodeA2: "CC1"})
 	neo4jtest.LinkNodes(ctx, driver, "1", "l1", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
-	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2"})
+	neo4jtest.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{Id: "l2", Country: "C2", CountryCodeA2: "CC2"})
 	neo4jtest.LinkNodes(ctx, driver, "2", "l2", "ASSOCIATED_WITH")
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
