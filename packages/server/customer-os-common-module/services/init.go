@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"log"
 	"reflect"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/action"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/ai"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/attachment"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/authentication"
@@ -257,14 +257,15 @@ func InitCommonServices(
 		postgresRepositories,
 		actionImpl,
 		aiImpl,
+		contactImpl,
+		domainImpl,
 		enrichmentImpl,
+		invoiceImpl,
+		markdownEventImpl,
 		notificationImpl,
 		orgImpl,
 		tagImpl,
 		workspaceImpl,
-		markdownEventImpl,
-		domainImpl,
-		invoiceImpl,
 	)
 
 	// initialize agents

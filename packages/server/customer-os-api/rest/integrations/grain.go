@@ -6,10 +6,14 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -44,9 +48,9 @@ func (h *IntegrationHandler) GrainZapier(c *gin.Context) {
 		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 	}
 
-	// if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-	// 	handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
-	// }
+	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
+	}
 
 	h.handleGrainNewRecordingEventZapier(c, ctx)
 }
@@ -75,7 +79,16 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 	if grainData.RecordingData.IntelligenceNotesMD == "" {
 		message := "No Grain meeting in payload"
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
+		return
 	}
+
+	userEmail, err := h.getCustomerOSUser(ctx, grainData.RecordingData.Owners)
+	if err != nil {
+		message := "User not found"
+		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
+		return
+	}
+	ctx = common.SetUserEmailInContext(ctx, userEmail)
 
 	h.responseHandler.HandleAccepted(c)
 
@@ -87,30 +100,56 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 	return
 }
 
+func (h *IntegrationHandler) getCustomerOSUser(ctx context.Context, meetingOwners []string) (string, error) {
+	span, _ := commontracing.StartTracerSpan(ctx, "Flows.getCustomerOSUser")
+	defer span.Finish()
+	commontracing.TagComponentRest(span)
+
+	if len(meetingOwners) == 0 {
+		return "", coserrors.ErrCannotIdentifyUser
+	}
+
+	for _, owner := range meetingOwners {
+		validation := mailvalidate.ValidateEmailSyntax(owner)
+		email := validation.CleanEmail
+		if email == "" {
+			continue
+		}
+		user, _ := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
+		if user != nil && user.Id != "" {
+			return owner, nil
+		}
+	}
+	return "", coserrors.ErrCannotIdentifyUser
+}
+
 func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, grainData *GrainRecordingData) error {
 	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishGrainMeetingSummaryEvent")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	var meeting data_fields.MeetingSummaryEvent
-
 	content := grainData.MeetingNoteContent()
-	meeting.Content = &content
-	meeting.Tenant = common.GetTenantFromContext(ctx)
-	meeting.MeetingID = grainData.RecordingData.ID
 	participants := grainData.RecordingData.participantEmails()
-	meeting.ParticipantEmails = &participants
+	meetingID := grainData.RecordingData.ID
 
-	if grainData.RecordingData.StartDatetime.IsZero() {
-		meeting.Timestamp = utils.NowPtr()
-	} else {
-		meeting.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
+	event := dto.NewMeetingRecording{
+		MeetingTitle:        grainData.RecordingData.Title,
+		Source:              enum.SourceGrain,
+		Content:             &content,
+		ParticipantEmails:   &participants,
+		MeetingRecordingUrl: grainData.RecordingData.PublicURL,
 	}
 
-	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meeting.MeetingID, "", meeting)
+	if grainData.RecordingData.StartDatetime.IsZero() {
+		event.Timestamp = utils.NowPtr()
+	} else {
+		event.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
+	}
+
+	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingID, model.MEETING, event)
 
 	if pubErr != nil {
-		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
+		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish new meeting recording event"))
 	}
 
 	return nil

@@ -27,6 +27,17 @@ func (f *agentCapabilityExecutionService) Execute(
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	switch executionContainer.Capability.Type {
+
+	case enum.CapabilityAddMeetingNotesToCompany:
+		executor, ok := GetTypedExecutor[AddMeetingNotesToCompanyInput, AddMeetingNotesToCompanyOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAddMeetingNotesToCompany)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityAnalyzeWebSessionIntent:
 		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
@@ -57,6 +68,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilityCreateAndEnrichContact:
+		executor, ok := GetTypedExecutor[CreateContactInput, CreateContactOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichContact)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityCreateMarkdownTimelineEvent:
 		executor, ok := GetTypedExecutor[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
@@ -77,6 +98,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilityExtractMeetingHighlights:
+		executor, ok := GetTypedExecutor[ExtractMeetingHighlightsInput, ExtractMeetingHighlightsOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractMeetingHighlights)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityGatherCompanyIntelligence:
 		executor, ok := GetTypedExecutor[GatherCompanyIntilligenceInput, GatherCompanyIntelligenceOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
@@ -94,6 +125,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityIdentifyMeetingParticipants:
+		executor, ok := GetTypedExecutor[IdentifyMeetingParticipantsInput, IdentifyMeetingParticipantsOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyMeetingParticipants)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
