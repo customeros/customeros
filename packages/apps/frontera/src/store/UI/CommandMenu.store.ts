@@ -62,7 +62,9 @@ export type CommandMenuType =
   | 'EditLatestOrgActive'
   | 'EditSku'
   | 'SwitchWorkspace'
-  | 'AddNewSku';
+  | 'AddNewSku'
+  | 'CreateAgent'
+  | 'AgentCommands';
 
 export type Context = {
   ids: Array<string>;
@@ -81,6 +83,7 @@ export type Context = {
     | 'TableViewDef'
     | 'Flow'
     | 'Flows'
+    | 'Agent'
     | null;
 };
 

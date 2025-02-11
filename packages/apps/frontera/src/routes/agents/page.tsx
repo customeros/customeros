@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -27,10 +29,14 @@ export const AgentsPage = observer(() => {
     );
   }
 
+  useEffect(() => {
+    store.ui.commandMenu.setType('AgentCommands');
+  }, []);
+
   return (
     <div className='relative h-full'>
       <Header />
-      <div className='columns-3 p-4 gap-4'>
+      <div className='flex flex-wrap p-4 gap-4'>
         {agents
           .filter((agent) => agent.value.visible)
           .map((agent) => (
@@ -44,6 +50,9 @@ export const AgentsPage = observer(() => {
               hasError={!!agent.value.error || !agent.value.isConfigured}
             />
           ))}
+        <div className='min-w-[372px] flex-1 p-3'></div>
+        <div className='min-w-[372px] flex-1 p-3'></div>
+        <div className='min-w-[372px] flex-1 p-3'></div>
       </div>
     </div>
   );

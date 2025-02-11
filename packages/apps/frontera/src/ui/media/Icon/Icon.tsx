@@ -71,7 +71,8 @@ export type IconName =
   | 'check'
   | 'arrow-switch-horizontal-02'
   | 'x-circle'
-  | 'code-square-02';
+  | 'code-square-02'
+  | 'plus';
 
 interface IconProps extends SVGAttributes<SVGElement> {
   name: IconName;

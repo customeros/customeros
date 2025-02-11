@@ -28,6 +28,9 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  server: {
+    allowedHosts: ['localhost', '127.0.0.1', 'app.customeros.local'],
+  },
   plugins: [
     {
       name: 'watch-external',
