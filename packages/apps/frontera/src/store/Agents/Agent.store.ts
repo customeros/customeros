@@ -1,7 +1,8 @@
 import { Store } from '@store/_store';
-import { computed, runInAction } from 'mobx';
+import { Tracer } from '@infra/tracer';
 import { type RootStore } from '@store/root';
 import { type Transport } from '@infra/transport';
+import { action, computed, runInAction } from 'mobx';
 import { type AgentDatum, AgentRepository } from '@infra/repositories/agent';
 
 import { unwrap } from '@utils/unwrap';
@@ -42,5 +43,17 @@ export class AgentStore extends Store<AgentDatum, Agent> {
       this.isBootstrapped = true;
       this.isBootstrapping = false;
     });
+  }
+
+  @action
+  public addOne(agent: AgentDatum) {
+    const span = Tracer.span('AgentStore.addOne', {
+      payload: agent,
+    });
+
+    this.value.set(agent.id, new Agent(this, agent));
+    this.version++;
+
+    span.end();
   }
 }
