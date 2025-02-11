@@ -27,7 +27,7 @@ func NewFileHandler(services *cosapi_services.Services, responseHandler *respons
 
 func (h *FileHandler) UploadFile(filePath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreService)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
 		cdnUpload := c.Request.FormValue("cdnUpload") == "true"
 		basePath := c.Request.FormValue("basePath")
@@ -53,7 +53,7 @@ func (h *FileHandler) UploadFile(filePath string) gin.HandlerFunc {
 
 func (h *FileHandler) GetFileByID(filePath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreService)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
 		byId, err := h.services.CommonServices.FileService.GetById(ctx, c.Param("id"))
 		if err != nil && err.Error() != "record not found" {
@@ -71,7 +71,7 @@ func (h *FileHandler) GetFileByID(filePath string) gin.HandlerFunc {
 
 func (h *FileHandler) DownloadFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreService)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
 		_, err := h.services.CommonServices.FileService.DownloadSingleFile(ctx, c.Param("id"), c, c.Query("inline") == "true")
 		if err != nil && err.Error() != "record not found" {
@@ -87,7 +87,7 @@ func (h *FileHandler) DownloadFile() gin.HandlerFunc {
 
 func (h *FileHandler) GetBase64() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreService)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
 		base64Encoded, err := h.services.CommonServices.FileService.Base64Image(ctx, c.Param("id"))
 		if err != nil && err.Error() != "record not found" {
@@ -106,7 +106,7 @@ func (h *FileHandler) GetBase64() gin.HandlerFunc {
 
 func (h *FileHandler) GetPublicURL() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceFileStoreService)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 		publicUrl, err := h.services.CommonServices.FileService.GetFilePublicUrl(ctx, c.Param("id"))
 		if err != nil {
 			switch err.Error() {
