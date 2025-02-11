@@ -595,7 +595,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
           }
         }
         this.value.delete(id);
-        // this.version++;
+        this.version++;
         this.totalElements--;
       });
 
