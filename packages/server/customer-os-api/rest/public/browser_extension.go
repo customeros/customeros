@@ -2,21 +2,21 @@ package public
 
 import (
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
@@ -64,6 +64,9 @@ func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 			return
 		}
+
+		contactRecord.LinkedInURL = h.convertSalesUrlToPublic(contactRecord.LinkedInURL)
+
 		contactRecord.ContactId = h.processCreateContact(c.Request.Context(), contactRecord)
 		resp := customerbase.SingleContactResponse{
 			Contact: contactRecord,
@@ -71,6 +74,13 @@ func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context)
 		h.responseHandler.HandleSuccess(c, resp)
 		return
 	}
+}
+
+func (h *BrowserExtensionHandler) convertSalesUrlToPublic(url string) string {
+	if !strings.Contains(url, "/sales/lead") {
+		return url
+	}
+	return strings.Replace(url, "/sales/lead/", "/in/", 1)
 }
 
 func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, record customerbase.ContactRecord) string {
@@ -126,12 +136,23 @@ func isValidLinkedinContactUrl(s string) bool {
 		s = "https://" + s
 	}
 
-	pattern := `^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_.]{3,100}\/?$`
-	matched, err := regexp.MatchString(pattern, s)
-	if err != nil {
-		return false
+	patterns := []string{
+		// Pattern for public profiles
+		`^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_.]{3,100}\/?$`,
+		// Pattern for sales navigator profiles
+		`^https?:\/\/(www\.)?linkedin\.com\/sales\/lead\/[A-Za-z0-9]{20,}\/?$`,
 	}
-	return matched
+
+	for _, pattern := range patterns {
+		matched, err := regexp.MatchString(pattern, s)
+		if err != nil {
+			continue
+		}
+		if matched {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
