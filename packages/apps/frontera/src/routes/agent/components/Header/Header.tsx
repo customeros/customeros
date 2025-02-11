@@ -47,8 +47,8 @@ export const Header = observer(() => {
 
           <div className='ml-4 flex items-center'>
             <Switch
-              checked={agent?.value?.isActive}
               onChange={() => usecase.toggleActive()}
+              checked={agent?.value?.isActive ?? false}
             />
           </div>
         </div>

@@ -9,20 +9,15 @@ import { Button } from '@ui/form/Button/Button.tsx';
 import { Settings03 } from '@ui/media/icons/Settings03';
 import { UserPlus01 } from '@ui/media/icons/UserPlus01.tsx';
 
-import { FlowStatusMenu } from '../header';
 import { SenderSettings } from './SenderSettings';
 import { NoEmailNodesPanel } from './NoEmailNodesPanel';
 
 export const FlowSettingsPanel = ({
   id,
-  hasChanges,
-  onToggleHasChanges,
   onToggleSidePanel,
 }: {
   id: string;
-  hasChanges: boolean;
   onToggleSidePanel: (status: boolean) => void;
-  onToggleHasChanges: (status: boolean) => void;
 }) => {
   const store = useStore();
   const nodes = useNodes();
@@ -77,12 +72,6 @@ export const FlowSettingsPanel = ({
         <h1 className='font-medium'>Flow settings</h1>
 
         <div className='flex gap-2'>
-          <FlowStatusMenu
-            id={id}
-            hasUnsavedChanges={hasChanges}
-            onToggleHasChanges={onToggleHasChanges}
-            handleOpenSettingsPanel={() => onToggleSidePanel(true)}
-          />
           <IconButton
             size='xs'
             variant='outline'

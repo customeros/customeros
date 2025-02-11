@@ -6,14 +6,12 @@ import { Plus } from '@ui/media/icons/Plus';
 import { Table } from '@ui/presentation/Table';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { LinkExternal01 } from '@ui/media/icons/LinkExternal01';
 
 import { columns } from './columns';
 
 export const MailboxTable = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
-  const flowsPreset = store.tableViewDefs.flowsPreset;
 
   const goToBuy = () => navigate('/settings?tab=mailboxes&view=buy');
 
@@ -26,13 +24,13 @@ export const MailboxTable = observer(() => {
           <h2 data-test='mailboxes-header' className='font-semibold text-md'>
             Mailboxes
           </h2>
-          <Button
-            size='xxs'
-            rightIcon={<LinkExternal01 className='size-3' />}
-            onClick={() => navigate(`/finder?preset=${flowsPreset}`)}
-          >
-            Jump to flows
-          </Button>
+          {/*<Button*/}
+          {/*  size='xxs'*/}
+          {/*  rightIcon={<LinkExternal01 className='size-3' />}*/}
+          {/*  onClick={() => navigate(`/finder?preset=${flowsPreset}`)}*/}
+          {/*>*/}
+          {/*  Jump to flows*/}
+          {/*</Button>*/}
         </div>
         <Button
           size='xs'

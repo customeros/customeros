@@ -2,7 +2,7 @@ import { FunctionComponent } from 'react';
 
 import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
 
-import { NewWebSessionListener } from './Listeners';
+import { NewWebSessionListener } from '../Listeners';
 import {
   EvaluateCompanyIcpFit,
   SendSlackNotificationCapability,

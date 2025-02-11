@@ -48,10 +48,10 @@ export const WebsiteTrackerCapability = observer(() => {
           Track and identify website visitors
         </h2>
 
-        {usecase.capabilityErrors && (
+        {usecase.listenerErrors && (
           <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] mb-4'>
             <Icon stroke='none' className='mr-2' name='dot-single' />
-            <span className='text-sm'>{usecase.capabilityErrors}</span>
+            <span className='text-sm'>{usecase.listenerErrors}</span>
           </div>
         )}
 
