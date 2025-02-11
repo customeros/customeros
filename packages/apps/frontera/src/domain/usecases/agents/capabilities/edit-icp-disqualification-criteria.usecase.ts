@@ -12,21 +12,18 @@ export class EditIcpDisqualificationCriteriaUsecase {
   private agentId: string = '';
   @observable accessor inputValue: string = '';
   @observable accessor validationError: string = '';
+  @observable accessor disqualificationCriteriaError: string = '';
 
   constructor() {
     this.execute = this.execute.bind(this);
     this.validate = this.validate.bind(this);
     this.setInputValue = this.setInputValue.bind(this);
+    this.init = this.init.bind(this);
   }
 
   @computed
   get isInvalid() {
     return this.validationError.length > 0;
-  }
-
-  @action
-  setAgentId(agentId: string) {
-    this.agentId = agentId;
   }
 
   @action
@@ -61,11 +58,14 @@ export class EditIcpDisqualificationCriteriaUsecase {
   }
 
   @action
-  init() {
+  init(agentId: string) {
     const span = Tracer.span('EditIcpDisqualificationCriteriaUsecase.init', {
       inputValue: this.inputValue,
     });
-    const agent = this.root.agents.getById(this.agentId);
+
+    this.agentId = agentId;
+
+    const agent = this.root.agents.getById(agentId);
 
     if (!agent) {
       console.error(
@@ -87,7 +87,7 @@ export class EditIcpDisqualificationCriteriaUsecase {
       return;
     }
 
-    const config = Agent.parseCapabilityConfig(capability.config);
+    const config = Agent.parseConfig(capability.config);
 
     if (!config) {
       console.error(
@@ -106,12 +106,15 @@ export class EditIcpDisqualificationCriteriaUsecase {
     }
 
     this.inputValue = config.disqualificationCriteria.value as string;
+    this.disqualificationCriteriaError = config.disqualificationCriteria
+      .error as string;
     span.end({
       inputValue: config.disqualificationCriteria.value,
+      disqualificationCriteriaError: this.disqualificationCriteriaError,
     });
   }
 
-  execute() {
+  async execute() {
     const span = Tracer.span('EditIcpDisqualificationCriteriaUsecase.execute', {
       inputValue: this.inputValue,
     });
@@ -139,7 +142,18 @@ export class EditIcpDisqualificationCriteriaUsecase {
         this.inputValue,
       );
 
-      this.service.saveAgent(agent);
+      const [res, err] = await this.service.saveAgent(agent);
+
+      if (err) {
+        console.error(
+          'EditIcpDisqualificationCriteriaUsecase.execute: Error saving agent. aborting execution',
+        );
+      }
+
+      if (res) {
+        agent.put(res?.agent_Save);
+        this.init(this.agentId);
+      }
     }
 
     span.end();
