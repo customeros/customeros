@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import { Transport } from '@infra/transport.ts';
 import { VitestHelper } from '@store/vitest-helper.ts';
 import { OrganizationRepository } from '@infra/repositories/organization';
 
@@ -10,7 +11,6 @@ import {
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import { Transport } from '../../../infra/transport';
 import { UserService } from '../../Users/User.service';
 import { ContractService } from '../../Contracts/Contract.service';
 import { ContractLineItemService } from '../../ContractLineItems/ContractLineItem.service';
@@ -44,9 +44,8 @@ describe('organizationRepository - Integration Tests', () => {
   });
 
   it('checks create empty organization', async () => {
-    const { id, name } = await VitestHelper.createOrganizationForTest(
-      organizationRepository,
-    );
+    const { organizationId, organizationName } =
+      await VitestHelper.createOrganizationForTest(organizationRepository);
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
@@ -58,7 +57,9 @@ describe('organizationRepository - Integration Tests', () => {
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
-        const organization = await organizationRepository.getOrganization(id);
+        const organization = await organizationRepository.getOrganization(
+          organizationId,
+        );
 
         expect.soft(organization.churnedAt).toBeNull();
         expect.soft(organization.ltv).toBe(0);
@@ -79,7 +80,7 @@ describe('organizationRepository - Integration Tests', () => {
         expect.soft(organization?.leadSource).toBe('');
         expect.soft(organization?.locations).toEqual([]);
         expect.soft(organization?.logoUrl).toBe('');
-        expect.soft(organization?.name).toBe(name);
+        expect.soft(organization?.name).toBe(organizationName);
         expect.soft(organization?.owner).toBeNull();
         expect.soft(organization?.parentId).toBeNull();
         expect.soft(organization?.parentName).toBeNull();
@@ -107,7 +108,7 @@ describe('organizationRepository - Integration Tests', () => {
   });
 
   it('adds tags to organization', async () => {
-    const { id } = await VitestHelper.createOrganizationForTest(
+    const { organizationId } = await VitestHelper.createOrganizationForTest(
       organizationRepository,
     );
 
@@ -115,25 +116,27 @@ describe('organizationRepository - Integration Tests', () => {
 
     await organizationRepository.addTag({
       input: {
-        organizationId: id,
+        organizationId: organizationId,
         tag: { name: organization_tag_name },
       },
     });
 
     let organization;
 
-    organization = await organizationRepository.getOrganization(id);
+    organization = await organizationRepository.getOrganization(organizationId);
     expect(organization?.tags?.[0].name).toEqual(organization_tag_name);
 
     if (organization?.tags?.[0]?.metadata.id) {
       await organizationRepository.removeTag({
         input: {
-          organizationId: id,
+          organizationId: organizationId,
           tag: { id: organization?.tags[0].metadata.id },
         },
       });
 
-      organization = await organizationRepository.getOrganization(id);
+      organization = await organizationRepository.getOrganization(
+        organizationId,
+      );
       expect(organization?.tags).toEqual([]);
     } else {
       throw new Error(
@@ -199,8 +202,8 @@ describe('organizationRepository - Integration Tests', () => {
 
     await organizationRepository.addSubsidiary({
       input: {
-        organizationId: parent.id,
-        subsidiaryId: subsidiary.id,
+        organizationId: parent.organizationId,
+        subsidiaryId: subsidiary.organizationId,
       },
     });
 
@@ -215,9 +218,13 @@ describe('organizationRepository - Integration Tests', () => {
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
-        organization = await organizationRepository.getOrganization(parent.id);
+        organization = await organizationRepository.getOrganization(
+          parent.organizationId,
+        );
 
-        expect(organization?.subsidiaries[0]).toEqual(subsidiary.id);
+        expect(organization?.subsidiaries[0]).toEqual(
+          subsidiary.organizationId,
+        );
 
         assertionsPassed = true;
       } catch (error) {
@@ -232,13 +239,15 @@ describe('organizationRepository - Integration Tests', () => {
     }
 
     await organizationRepository.removeSubsidiary({
-      organizationId: parent.id,
-      subsidiaryId: subsidiary.id,
+      organizationId: parent.organizationId,
+      subsidiaryId: subsidiary.organizationId,
     });
 
     while (retries < maxRetries && !assertionsPassed) {
       try {
-        organization = await organizationRepository.getOrganization(parent.id);
+        organization = await organizationRepository.getOrganization(
+          parent.organizationId,
+        );
 
         expect(organization?.subsidiaries).toHaveLength(0);
 
@@ -258,9 +267,8 @@ describe('organizationRepository - Integration Tests', () => {
   it('retrieve archived organizations', async () => {
     const testStartDate = new Date().toISOString();
 
-    const { name, id } = await VitestHelper.createOrganizationForTest(
-      organizationRepository,
-    );
+    const { organizationName, organizationId } =
+      await VitestHelper.createOrganizationForTest(organizationRepository);
 
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
@@ -286,7 +294,7 @@ describe('organizationRepository - Integration Tests', () => {
       );
     };
 
-    let organizationExistsInDashboard = hasName(name);
+    let organizationExistsInDashboard = hasName(organizationName);
 
     expect(organizationExistsInDashboard).toBe(true);
 
@@ -295,12 +303,12 @@ describe('organizationRepository - Integration Tests', () => {
         date: testStartDate,
       });
 
-    expect(archived_organizations.organizations_HiddenAfter.includes(id)).toBe(
-      false,
-    );
+    expect(
+      archived_organizations.organizations_HiddenAfter.includes(organizationId),
+    ).toBe(false);
 
     await organizationRepository.hideOrganizations({
-      ids: [id],
+      ids: [organizationId],
     });
 
     retrieved_organizations = await organizationRepository.getOrganizations({
@@ -312,7 +320,7 @@ describe('organizationRepository - Integration Tests', () => {
       },
     });
 
-    organizationExistsInDashboard = hasName(name);
+    organizationExistsInDashboard = hasName(organizationName);
 
     expect(organizationExistsInDashboard).toBe(false);
 
@@ -321,33 +329,33 @@ describe('organizationRepository - Integration Tests', () => {
         date: testStartDate,
       });
 
-    expect(archived_organizations.organizations_HiddenAfter.includes(id)).toBe(
-      true,
-    );
+    expect(
+      archived_organizations.organizations_HiddenAfter.includes(organizationId),
+    ).toBe(true);
   });
 
-  it.skip('updates onboarding status to organization', async () => {
-    const { id } = await VitestHelper.createOrganizationForTest(
+  it('updates onboarding status to organization', async () => {
+    const { organizationId } = await VitestHelper.createOrganizationForTest(
       organizationRepository,
     );
 
     let organization;
 
-    organization = await organizationRepository.getOrganization(id);
+    organization = await organizationRepository.getOrganization(organizationId);
     expect(organization.onboardingStatus).toBe('NOT_APPLICABLE');
     await organizationRepository.updateOnboardingStatus({
       input: {
-        organizationId: id,
+        organizationId: organizationId,
         status: OnboardingStatus.Stuck,
       },
     });
 
-    organization = await organizationRepository.getOrganization(id);
+    organization = await organizationRepository.getOrganization(organizationId);
     expect(organization?.onboardingStatus).toBe('STUCK');
   });
 
   it('updates updateAllOpportunityRenewals', async () => {
-    const { id } = await VitestHelper.createOrganizationForTest(
+    const { organizationId } = await VitestHelper.createOrganizationForTest(
       organizationRepository,
     );
 
@@ -358,7 +366,7 @@ describe('organizationRepository - Integration Tests', () => {
 
     const { contract_Create } = await contractService.createContract({
       input: {
-        organizationId: id,
+        organizationId: organizationId,
         committedPeriodInMonths: 3,
         currency: Currency.Usd,
         name: contract_name,
@@ -381,7 +389,7 @@ describe('organizationRepository - Integration Tests', () => {
 
     await organizationRepository.updateAllOpportunityRenewals({
       input: {
-        organizationId: id,
+        organizationId: organizationId,
         renewalAdjustedRate: 53,
         renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
       },
@@ -389,7 +397,7 @@ describe('organizationRepository - Integration Tests', () => {
 
     await organizationRepository.updateAllOpportunityRenewals({
       input: {
-        organizationId: id,
+        organizationId: organizationId,
         renewalAdjustedRate: 53,
         renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
       },
@@ -417,11 +425,13 @@ describe('organizationRepository - Integration Tests', () => {
   });
 
   it('adds updates owner of the organization', async () => {
-    const { id } = await VitestHelper.createOrganizationForTest(
+    const { organizationId } = await VitestHelper.createOrganizationForTest(
       organizationRepository,
     );
 
-    let organization = await organizationRepository.getOrganization(id);
+    let organization = await organizationRepository.getOrganization(
+      organizationId,
+    );
 
     expect(organization?.owner).toBeNull();
 
@@ -431,12 +441,12 @@ describe('organizationRepository - Integration Tests', () => {
 
     await organizationRepository.saveOrganization({
       input: {
-        id,
+        id: organizationId,
         ownerId: user.users.content[0].id,
       },
     });
 
-    organization = await organizationRepository.getOrganization(id);
+    organization = await organizationRepository.getOrganization(organizationId);
     expect(organization?.owner?.id).toBe(user.users.content[0].id);
   });
 });
