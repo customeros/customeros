@@ -205,11 +205,11 @@ func updateContractsStatusAndRenewal(cont *container.Container) {
 
 // Invoice Jobs
 func generateCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateCycleInvoices()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateCycleInvoices()
 }
 
 func generateOffCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
 }
 
 func generateNextPreviewInvoices(cont *container.Container) {
@@ -217,11 +217,11 @@ func generateNextPreviewInvoices(cont *container.Container) {
 }
 
 func generateInvoicePaymentLinks(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateInvoicePaymentLinks()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateInvoicePaymentLinks()
 }
 
 func sendInvoiceFinalizedEvents(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendInvoiceFinalizedEvent()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendInvoiceFinalizedEvent()
 }
 
 func cleanupInvoices(cont *container.Container) {

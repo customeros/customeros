@@ -3211,19 +3211,21 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type AgentListenerEvent string
 
 const (
-	AgentListenerEventCompanyIdentified       AgentListenerEvent = "COMPANY_IDENTIFIED"
-	AgentListenerEventCompanyNeedsHelp        AgentListenerEvent = "COMPANY_NEEDS_HELP"
-	AgentListenerEventContactAddedToCampaign  AgentListenerEvent = "CONTACT_ADDED_TO_CAMPAIGN"
-	AgentListenerEventEmailBounced            AgentListenerEvent = "EMAIL_BOUNCED"
-	AgentListenerEventEmailReplyReceived      AgentListenerEvent = "EMAIL_REPLY_RECEIVED"
-	AgentListenerEventIcpFit                  AgentListenerEvent = "ICP_FIT"
-	AgentListenerEventIcpNotAFit              AgentListenerEvent = "ICP_NOT_A_FIT"
-	AgentListenerEventNewLead                 AgentListenerEvent = "NEW_LEAD"
-	AgentListenerEventNewMeetingRecording     AgentListenerEvent = "NEW_MEETING_RECORDING"
-	AgentListenerEventNewWebSession           AgentListenerEvent = "NEW_WEB_SESSION"
-	AgentListenerEventRunIcpQualifierAgent    AgentListenerEvent = "RUN_ICP_QUALIFIER_AGENT"
-	AgentListenerEventWebVisitorIdentified    AgentListenerEvent = "WEB_VISITOR_IDENTIFIED"
-	AgentListenerEventWebVisitorNotIdentified AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
+	AgentListenerEventCompanyIdentified              AgentListenerEvent = "COMPANY_IDENTIFIED"
+	AgentListenerEventCompanyNeedsHelp               AgentListenerEvent = "COMPANY_NEEDS_HELP"
+	AgentListenerEventContactAddedToCampaign         AgentListenerEvent = "CONTACT_ADDED_TO_CAMPAIGN"
+	AgentListenerEventEmailBounced                   AgentListenerEvent = "EMAIL_BOUNCED"
+	AgentListenerEventEmailReplyReceived             AgentListenerEvent = "EMAIL_REPLY_RECEIVED"
+	AgentListenerEventIcpFit                         AgentListenerEvent = "ICP_FIT"
+	AgentListenerEventIcpNotAFit                     AgentListenerEvent = "ICP_NOT_A_FIT"
+	AgentListenerEventNewLead                        AgentListenerEvent = "NEW_LEAD"
+	AgentListenerEventNewMeetingRecording            AgentListenerEvent = "NEW_MEETING_RECORDING"
+	AgentListenerEventNewWebSession                  AgentListenerEvent = "NEW_WEB_SESSION"
+	AgentListenerEventRunIcpQualifierAgent           AgentListenerEvent = "RUN_ICP_QUALIFIER_AGENT"
+	AgentListenerEventWebVisitorIdentified           AgentListenerEvent = "WEB_VISITOR_IDENTIFIED"
+	AgentListenerEventWebVisitorNotIdentified        AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
+	AgentListenerEventStartInvoiceRun                AgentListenerEvent = "START_INVOICE_RUN"
+	AgentListenerEventStartInvoiceRunWithAutopayment AgentListenerEvent = "START_INVOICE_RUN_WITH_AUTOPAYMENT"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
@@ -3240,11 +3242,13 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventRunIcpQualifierAgent,
 	AgentListenerEventWebVisitorIdentified,
 	AgentListenerEventWebVisitorNotIdentified,
+	AgentListenerEventStartInvoiceRun,
+	AgentListenerEventStartInvoiceRunWithAutopayment,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified:
+	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment:
 		return true
 	}
 	return false
@@ -3320,6 +3324,7 @@ const (
 	AgentTypeMeetingKeeper      AgentType = "MEETING_KEEPER"
 	AgentTypeSupportSpotter     AgentType = "SUPPORT_SPOTTER"
 	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
+	AgentTypeCashflowGuardian   AgentType = "CASHFLOW_GUARDIAN"
 )
 
 var AllAgentType = []AgentType{
@@ -3328,11 +3333,12 @@ var AllAgentType = []AgentType{
 	AgentTypeMeetingKeeper,
 	AgentTypeSupportSpotter,
 	AgentTypeWebVisitIdentifier,
+	AgentTypeCashflowGuardian,
 }
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeCampaignManager, AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier:
+	case AgentTypeCampaignManager, AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier, AgentTypeCashflowGuardian:
 		return true
 	}
 	return false
@@ -3476,6 +3482,8 @@ const (
 	CapabilityTypeUpdateCompanyStatus              CapabilityType = "UPDATE_COMPANY_STATUS"
 	CapabilityTypeValidateEmailDeliverability      CapabilityType = "VALIDATE_EMAIL_DELIVERABILITY"
 	CapabilityTypeWebVisitorSendSLACkNotification  CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
+	CapabilityTypeGenerateInvoice                  CapabilityType = "GENERATE_INVOICE"
+	CapabilityTypeSendInvoiceViaEmail              CapabilityType = "SEND_INVOICE_VIA_EMAIL"
 )
 
 var AllCapabilityType = []CapabilityType{
@@ -3501,11 +3509,13 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeUpdateCompanyStatus,
 	CapabilityTypeValidateEmailDeliverability,
 	CapabilityTypeWebVisitorSendSLACkNotification,
+	CapabilityTypeGenerateInvoice,
+	CapabilityTypeSendInvoiceViaEmail,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail:
 		return true
 	}
 	return false
