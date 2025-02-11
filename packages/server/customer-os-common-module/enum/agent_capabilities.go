@@ -28,8 +28,9 @@ const (
 	CapabilityHandleAutoresponder                AgentCapability = "handle_autoresponder"
 	CapabilityIdentifyMeetingParticipants        AgentCapability = "identify_meeting_participants"
 	CapabilityIdentifyWebVisitor                 AgentCapability = "identify_web_visitor"
-	CapabilityManageCampaignExecution            AgentCapability = "manage_campaign_execution"
 	CapabilityManageBouncedEmail                 AgentCapability = "manage_bounced_email"
+	CapabilityManageCampaignExecution            AgentCapability = "manage_campaign_execution"
+	CapabilityManageEmailDeliveryFailure         AgentCapability = "manage_email_delivery_failure"
 	CapabilityMonitorAccountsReceivable          AgentCapability = "monitor_accounts_receivable"
 	CapabilityMonitorSupportVisits               AgentCapability = "monitor_support_visits"
 	CapabilityProcessRefund                      AgentCapability = "process_refund"
@@ -45,7 +46,7 @@ const (
 	CapabilitySyncWithAccountingSystem           AgentCapability = "sync_with_accounting_system"
 	CapabilityTrackCampaignEngagement            AgentCapability = "track_campaign_engagement"
 	CapabilityUpdateCompanyStatus                AgentCapability = "update_company_status"
-	CapabilityValidateEmailAddressDeliverability AgentCapability = "validate_email_address_deliverability"
+	CapabilityValidateEmailAddressDeliverability AgentCapability = "validate_email_deliverability"
 )
 
 func (t AgentCapability) String() string {
@@ -78,6 +79,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityIdentifyWebVisitor,
 		CapabilityManageBouncedEmail,
 		CapabilityManageCampaignExecution,
+		CapabilityManageEmailDeliveryFailure,
 		CapabilityMonitorAccountsReceivable,
 		CapabilityMonitorSupportVisits,
 		CapabilityProcessRefund,
