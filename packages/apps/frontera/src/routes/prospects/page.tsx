@@ -72,13 +72,15 @@ export const ProspectsBoardPage = observer(() => {
       <div className='flex'>
         <div className=' w-full overflow-auto'>
           <div className='flex justify-between mx-4 my-2 items-start'>
-            {showFinder && (
-              <FinderFilters
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                type={TableViewType.Opportunities as any}
-                tableId={TableIdType.OpportunitiesRecords}
-              />
-            )}
+            <div className='flex items-center gap-2'>
+              {showFinder && (
+                <FinderFilters
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  type={TableViewType.Opportunities as any}
+                  tableId={TableIdType.OpportunitiesRecords}
+                />
+              )}
+            </div>
             <div
               className={cn({
                 'my-[1px]': !showFinder,
