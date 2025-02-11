@@ -88,14 +88,5 @@ func (s SocialEntity) ExtractLinkedinPersonIdentifierFromUrl() string {
 		}
 	}
 
-	if strings.HasPrefix(identifier, "linkedin.com/sales/lead") {
-		parts := strings.Split(identifier, "/")
-		identifier = parts[len(parts)-1]
-		if identifier == "lead" {
-			identifier = ""
-		}
-
-	}
-
 	return identifier
 }
