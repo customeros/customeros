@@ -163,7 +163,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.Mana
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	cypher := `MATCH (i:Invoice {id:$invoiceId}) 
+	cypher := fmt.Sprintf(`MATCH (i:Invoice_%s {id:$invoiceId}) 
 							SET 
 								i.updatedAt=datetime(),
 								i.number=$number,
@@ -188,9 +188,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.Mana
 								i.providerAddressLocality=$providerAddressLocality,
 								i.providerAddressCountry=$providerAddressCountry,
 								i.providerAddressRegion=$providerAddressRegion
-							WITH c, i 
-							MERGE (c)-[:HAS_INVOICE]->(i) 
-							`
+							`, tenant)
 	params := map[string]any{
 		"invoiceId":                    invoiceId,
 		"amount":                       data.Amount,
