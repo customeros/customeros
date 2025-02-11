@@ -280,26 +280,14 @@ func (s *azureService) getValidToken(ctx context.Context, span opentracing.Span,
 		token = refreshed
 	}
 
-	accessToken, err := postgres_entity.DecryptToken(s.cfg.EncryptionKey, token.AccessToken)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	return accessToken, nil
+	return token.AccessToken, nil
 }
 
 func (s *azureService) refreshToken(ctx context.Context, span opentracing.Span, token *postgres_entity.OAuthTokenEntity) (*postgres_entity.OAuthTokenEntity, error) {
-	refreshToken, err := postgres_entity.DecryptToken(s.cfg.EncryptionKey, token.RefreshToken)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
 	data := url.Values{
 		"client_id":     {s.cfg.ClientId},
 		"client_secret": {s.cfg.ClientSecret},
-		"refresh_token": {refreshToken},
+		"refresh_token": {token.RefreshToken},
 		"grant_type":    {"refresh_token"},
 	}
 
