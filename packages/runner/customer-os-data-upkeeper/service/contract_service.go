@@ -53,6 +53,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
+	delayFromPreviousCheckHours := 3
 
 	for {
 		select {
@@ -63,7 +64,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForStatusRenewal(ctx, referenceTime, limit)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForStatusRenewal(ctx, referenceTime, limit, delayFromPreviousCheckHours)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for status update: %v", err)
