@@ -198,6 +198,14 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	return newAgent, nil
 }
 
+func (a *agentService) DeleteAgent(ctx context.Context, agentId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.DeleteAgent")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	return a.postgresRepositories.AgentRepository.Delete(ctx, agentId)
+}
+
 func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string, position int) (*postgres_entity.Capability, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.createDefaultCapability")
 	defer span.Finish()

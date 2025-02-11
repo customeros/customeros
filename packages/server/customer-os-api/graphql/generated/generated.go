@@ -117,6 +117,7 @@ type ComplexityRoot struct {
 		IsConfigured func(childComplexity int) int
 		Listeners    func(childComplexity int) int
 		Name         func(childComplexity int) int
+		Scope        func(childComplexity int) int
 		Type         func(childComplexity int) int
 		UpdatedAt    func(childComplexity int) int
 		Visible      func(childComplexity int) int
@@ -1072,6 +1073,7 @@ type ComplexityRoot struct {
 		AdminRemoveWorkspaceAccess                 func(childComplexity int, authenticatedUserEmail string, tenant string) int
 		AdminSwitchCurrentWorkspace                func(childComplexity int, switchToTenant string) int
 		AdminTenantHardDelete                      func(childComplexity int, tenant string, confirmTenant string) int
+		AgentDelete                                func(childComplexity int, id string) int
 		AgentSave                                  func(childComplexity int, input model.AgentSaveInput) int
 		AttachmentCreate                           func(childComplexity int, input model.AttachmentInput) int
 		BankAccountCreate                          func(childComplexity int, input *model.BankAccountCreateInput) int
@@ -1979,6 +1981,7 @@ type MutationResolver interface {
 	AdminSwitchCurrentWorkspace(ctx context.Context, switchToTenant string) (bool, error)
 	AdminTenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error)
 	AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error)
+	AgentDelete(ctx context.Context, id string) (bool, error)
 	AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error)
 	BankAccountCreate(ctx context.Context, input *model.BankAccountCreateInput) (*model.BankAccount, error)
 	BankAccountUpdate(ctx context.Context, input *model.BankAccountUpdateInput) (*model.BankAccount, error)
@@ -2513,6 +2516,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Agent.Name(childComplexity), true
+
+	case "Agent.scope":
+		if e.complexity.Agent.Scope == nil {
+			break
+		}
+
+		return e.complexity.Agent.Scope(childComplexity), true
 
 	case "Agent.type":
 		if e.complexity.Agent.Type == nil {
@@ -7432,6 +7442,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AdminTenantHardDelete(childComplexity, args["tenant"].(string), args["confirmTenant"].(string)), true
+
+	case "Mutation.agent_Delete":
+		if e.complexity.Mutation.AgentDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_agent_Delete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AgentDelete(childComplexity, args["id"].(string)), true
 
 	case "Mutation.agent_Save":
 		if e.complexity.Mutation.AgentSave == nil {
@@ -13363,7 +13385,6 @@ type TenantImpersonateDetails {
 	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
   agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
   agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
-
   slackChannelsWithBot: [AgentSlackChannel!]!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
@@ -13373,6 +13394,7 @@ extend type Mutation {
   agent_Save(input: AgentSaveInput!): Agent!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
+  agent_Delete(id: ID!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type AgentSlackChannel {
@@ -13387,10 +13409,16 @@ enum AgentType {
   WEB_VISIT_IDENTIFIER
 }
 
+enum AgentScope {
+  WORKSPACE
+  PERSONAL
+}
+
 type Agent {
   id: ID!
   type: AgentType!
   name: String!
+  scope: AgentScope!
   capabilities: [Capability!]!
   listeners: [AgentListener!]!
   goalType: String!
@@ -18230,6 +18258,34 @@ func (ec *executionContext) field_Mutation_admin_tenant_hardDelete_argsConfirmTe
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmTenant"))
 	if tmp, ok := rawArgs["confirmTenant"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_agent_Delete_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_agent_Delete_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_agent_Delete_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -28070,6 +28126,50 @@ func (ec *executionContext) fieldContext_Agent_name(_ context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_scope(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_scope(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scope, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.AgentScope)
+	fc.Result = res
+	return ec.marshalNAgentScope2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentScope(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_scope(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AgentScope does not have child fields")
 		},
 	}
 	return fc, nil
@@ -62587,6 +62687,8 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 				return ec.fieldContext_Agent_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
+			case "scope":
+				return ec.fieldContext_Agent_scope(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
 			case "listeners":
@@ -62625,6 +62727,95 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_agent_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_agent_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_agent_Delete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AgentDelete(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_agent_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_agent_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -92420,6 +92611,8 @@ func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field g
 				return ec.fieldContext_Agent_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
+			case "scope":
+				return ec.fieldContext_Agent_scope(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
 			case "listeners":
@@ -92529,6 +92722,8 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 				return ec.fieldContext_Agent_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
+			case "scope":
+				return ec.fieldContext_Agent_scope(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
 			case "listeners":
@@ -119717,6 +119912,11 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "scope":
+			out.Values[i] = ec._Agent_scope(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "capabilities":
 			out.Values[i] = ec._Agent_capabilities(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -127813,6 +128013,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "agent_Delete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_agent_Delete(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "attachment_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_attachment_Create(ctx, field)
@@ -135684,6 +135891,16 @@ func (ec *executionContext) unmarshalNAgentListenerSaveInput2ᚖgithubᚗcomᚋc
 func (ec *executionContext) unmarshalNAgentSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSaveInput(ctx context.Context, v any) (model.AgentSaveInput, error) {
 	res, err := ec.unmarshalInputAgentSaveInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAgentScope2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentScope(ctx context.Context, v any) (model.AgentScope, error) {
+	var res model.AgentScope
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAgentScope2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentScope(ctx context.Context, sel ast.SelectionSet, v model.AgentScope) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNAgentSlackChannel2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSlackChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AgentSlackChannel) graphql.Marshaler {

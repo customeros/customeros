@@ -15,6 +15,7 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 	agentModel := model.Agent{
 		ID:           entity.ID,
 		Name:         entity.Name,
+		Scope:        model.AgentScope(entity.Scope),
 		Icon:         entity.Icon,
 		CreatedAt:    entity.CreatedAt,
 		UpdatedAt:    utils.IfNotNilTimeWithDefault(entity.UpdatedAt, entity.CreatedAt),

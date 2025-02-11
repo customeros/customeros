@@ -39,6 +39,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewDetectSupportWebVisitCapability(events))
 	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService))
 	capabilities = append(capabilities, NewExtractMeetingHighlightsCapability(aiService))
+	capabilities = append(capabilities, NewExtractSupportSignalsFromMeetingCapability(aiService))
 	capabilities = append(capabilities, NewGatherCompanyIntelligenceCapability(postgresRepositories, organizationService))
 	capabilities = append(capabilities, NewGenerateInvoiceCapability(postgresRepositories, invoiceService))
 	capabilities = append(capabilities, NewIdentifyMeetingParticipantsCapability(workspaceService))

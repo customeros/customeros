@@ -106,6 +106,7 @@ type Agent struct {
 	ID           string           `json:"id"`
 	Type         AgentType        `json:"type"`
 	Name         string           `json:"name"`
+	Scope        AgentScope       `json:"scope"`
 	Capabilities []*Capability    `json:"capabilities"`
 	Listeners    []*AgentListener `json:"listeners"`
 	GoalType     string           `json:"goalType"`
@@ -3259,6 +3260,47 @@ func (e *AgentListenerEvent) UnmarshalGQL(v any) error {
 }
 
 func (e AgentListenerEvent) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type AgentScope string
+
+const (
+	AgentScopeWorkspace AgentScope = "WORKSPACE"
+	AgentScopePersonal  AgentScope = "PERSONAL"
+)
+
+var AllAgentScope = []AgentScope{
+	AgentScopeWorkspace,
+	AgentScopePersonal,
+}
+
+func (e AgentScope) IsValid() bool {
+	switch e {
+	case AgentScopeWorkspace, AgentScopePersonal:
+		return true
+	}
+	return false
+}
+
+func (e AgentScope) String() string {
+	return string(e)
+}
+
+func (e *AgentScope) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AgentScope(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AgentScope", str)
+	}
+	return nil
+}
+
+func (e AgentScope) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
