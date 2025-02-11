@@ -3212,6 +3212,10 @@ type AgentListenerEvent string
 
 const (
 	AgentListenerEventCompanyIdentified       AgentListenerEvent = "COMPANY_IDENTIFIED"
+	AgentListenerEventCompanyNeedsHelp        AgentListenerEvent = "COMPANY_NEEDS_HELP"
+	AgentListenerEventContactAddedToCampaign  AgentListenerEvent = "CONTACT_ADDED_TO_CAMPAIGN"
+	AgentListenerEventEmailBounced            AgentListenerEvent = "EMAIL_BOUNCED"
+	AgentListenerEventEmailReplyReceived      AgentListenerEvent = "EMAIL_REPLY_RECEIVED"
 	AgentListenerEventIcpFit                  AgentListenerEvent = "ICP_FIT"
 	AgentListenerEventIcpNotAFit              AgentListenerEvent = "ICP_NOT_A_FIT"
 	AgentListenerEventNewLead                 AgentListenerEvent = "NEW_LEAD"
@@ -3224,6 +3228,10 @@ const (
 
 var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventCompanyIdentified,
+	AgentListenerEventCompanyNeedsHelp,
+	AgentListenerEventContactAddedToCampaign,
+	AgentListenerEventEmailBounced,
+	AgentListenerEventEmailReplyReceived,
 	AgentListenerEventIcpFit,
 	AgentListenerEventIcpNotAFit,
 	AgentListenerEventNewLead,
@@ -3236,7 +3244,7 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventCompanyIdentified, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified:
+	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified:
 		return true
 	}
 	return false
@@ -3307,6 +3315,7 @@ func (e AgentScope) MarshalGQL(w io.Writer) {
 type AgentType string
 
 const (
+	AgentTypeCampaignManager    AgentType = "CAMPAIGN_MANAGER"
 	AgentTypeIcpQualifier       AgentType = "ICP_QUALIFIER"
 	AgentTypeMeetingKeeper      AgentType = "MEETING_KEEPER"
 	AgentTypeSupportSpotter     AgentType = "SUPPORT_SPOTTER"
@@ -3314,6 +3323,7 @@ const (
 )
 
 var AllAgentType = []AgentType{
+	AgentTypeCampaignManager,
 	AgentTypeIcpQualifier,
 	AgentTypeMeetingKeeper,
 	AgentTypeSupportSpotter,
@@ -3322,7 +3332,7 @@ var AllAgentType = []AgentType{
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier:
+	case AgentTypeCampaignManager, AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier:
 		return true
 	}
 	return false
@@ -3444,44 +3454,54 @@ func (e CalendarType) MarshalGQL(w io.Writer) {
 type CapabilityType string
 
 const (
-	CapabilityTypeAddMeetingNotesToCompany        CapabilityType = "ADD_MEETING_NOTES_TO_COMPANY"
-	CapabilityTypeAnalyzeWebSessionIntent         CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
-	CapabilityTypeApplyTagToCompany               CapabilityType = "APPLY_TAG_TO_COMPANY"
-	CapabilityTypeCheckSupportNeed                CapabilityType = "CHECK_SUPPORT_NEED"
-	CapabilityTypeCreateContacts                  CapabilityType = "CREATE_CONTACTS"
-	CapabilityTypeCreateOrganization              CapabilityType = "CREATE_ORGANIZATION"
-	CapabilityTypeCreateMarkdownTimelineEvent     CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
-	CapabilityTypeExtractMeetingHighlights        CapabilityType = "EXTRACT_MEETING_HIGHLIGHTS"
-	CapabilityTypeGatherCompanyIntelligence       CapabilityType = "GATHER_COMPANY_INTELLIGENCE"
-	CapabilityTypeIcpQualify                      CapabilityType = "ICP_QUALIFY"
-	CapabilityTypeIdentifyMeetingParticipants     CapabilityType = "IDENTIFY_MEETING_PARTICIPANTS"
-	CapabilityTypeIdentifyWebVisitor              CapabilityType = "IDENTIFY_WEB_VISITOR"
-	CapabilityTypeSendSLACkNotification           CapabilityType = "SEND_SLACK_NOTIFICATION"
-	CapabilityTypeUpdateCompanyStatus             CapabilityType = "UPDATE_COMPANY_STATUS"
-	CapabilityTypeWebVisitorSendSLACkNotification CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
+	CapabilityTypeAddMeetingNotesToCompany         CapabilityType = "ADD_MEETING_NOTES_TO_COMPANY"
+	CapabilityTypeAnalyzeWebSessionIntent          CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
+	CapabilityTypeApplyTagToCompany                CapabilityType = "APPLY_TAG_TO_COMPANY"
+	CapabilityTypeCreateContacts                   CapabilityType = "CREATE_CONTACTS"
+	CapabilityTypeCreateOrganization               CapabilityType = "CREATE_ORGANIZATION"
+	CapabilityTypeCreateMarkdownTimelineEvent      CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
+	CapabilityTypeDetectSupportWebvisit            CapabilityType = "DETECT_SUPPORT_WEBVISIT"
+	CapabilityTypeEnrichEmailAddress               CapabilityType = "ENRICH_EMAIL_ADDRESS"
+	CapabilityTypeExtractMeetingHighlights         CapabilityType = "EXTRACT_MEETING_HIGHLIGHTS"
+	CapabilityTypeExtractSupportSignalsFromMeeting CapabilityType = "EXTRACT_SUPPORT_SIGNALS_FROM_MEETING"
+	CapabilityTypeGatherCompanyIntelligence        CapabilityType = "GATHER_COMPANY_INTELLIGENCE"
+	CapabilityTypeIcpQualify                       CapabilityType = "ICP_QUALIFY"
+	CapabilityTypeIdentifyMeetingParticipants      CapabilityType = "IDENTIFY_MEETING_PARTICIPANTS"
+	CapabilityTypeIdentifyWebVisitor               CapabilityType = "IDENTIFY_WEB_VISITOR"
+	CapabilityTypeManageCampaignExecution          CapabilityType = "MANAGE_CAMPAIGN_EXECUTION"
+	CapabilityTypeSelectOptimalSendingMailbox      CapabilityType = "SELECT_OPTIMAL_SENDING_MAILBOX"
+	CapabilityTypeSendSLACkNotification            CapabilityType = "SEND_SLACK_NOTIFICATION"
+	CapabilityTypeUpdateCompanyStatus              CapabilityType = "UPDATE_COMPANY_STATUS"
+	CapabilityTypeValidateEmailDeliverability      CapabilityType = "VALIDATE_EMAIL_DELIVERABILITY"
+	CapabilityTypeWebVisitorSendSLACkNotification  CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
 )
 
 var AllCapabilityType = []CapabilityType{
 	CapabilityTypeAddMeetingNotesToCompany,
 	CapabilityTypeAnalyzeWebSessionIntent,
 	CapabilityTypeApplyTagToCompany,
-	CapabilityTypeCheckSupportNeed,
 	CapabilityTypeCreateContacts,
 	CapabilityTypeCreateOrganization,
 	CapabilityTypeCreateMarkdownTimelineEvent,
+	CapabilityTypeDetectSupportWebvisit,
+	CapabilityTypeEnrichEmailAddress,
 	CapabilityTypeExtractMeetingHighlights,
+	CapabilityTypeExtractSupportSignalsFromMeeting,
 	CapabilityTypeGatherCompanyIntelligence,
 	CapabilityTypeIcpQualify,
 	CapabilityTypeIdentifyMeetingParticipants,
 	CapabilityTypeIdentifyWebVisitor,
+	CapabilityTypeManageCampaignExecution,
+	CapabilityTypeSelectOptimalSendingMailbox,
 	CapabilityTypeSendSLACkNotification,
 	CapabilityTypeUpdateCompanyStatus,
+	CapabilityTypeValidateEmailDeliverability,
 	CapabilityTypeWebVisitorSendSLACkNotification,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCheckSupportNeed, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeExtractMeetingHighlights, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeWebVisitorSendSLACkNotification:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeManageCampaignExecution, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification:
 		return true
 	}
 	return false
