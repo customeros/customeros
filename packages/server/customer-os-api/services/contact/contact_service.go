@@ -84,7 +84,7 @@ func (s *contactService) Create(ctx context.Context, contactDetails *cosapi_inte
 	var err error
 
 	if (neo4jentity.SocialEntity{Url: contactDetails.SocialUrl}).IsLinkedin() {
-		contactId, err = s.contact.CreateContactByLinkedIn(ctx, nil, contactDetails.SocialUrl)
+		contactId, _, err = s.contact.CreateContactByLinkedIn(ctx, nil, contactDetails.SocialUrl)
 	} else {
 		contactId, err = s.contact.Save(ctx, nil, nil,
 			data_fields.ContactFields{

@@ -33,6 +33,11 @@ func NewBrowserExtensionHandler(services *cosapi_services.Services, responseHand
 	}
 }
 
+type ContactResponse struct {
+	ContactID   string `json:"contactId"`
+	LinkedinURL string `json:"linkedinUrl,omitempty"`
+}
+
 func (h *BrowserExtensionHandler) CreateContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.CreateContact", c.Request.Header)
@@ -56,34 +61,34 @@ func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context)
 	tracing.TagComponentRest(span)
 
 	var contactRecord customerbase.ContactRecord
-	if err := c.BindJSON(&contactRecord); err == nil && (strings.TrimSpace(contactRecord.Email) != "" || strings.TrimSpace(contactRecord.LinkedInURL) != "") {
-		err, errValue := h.validateContactRecord(&contactRecord)
-		if err != nil {
-			errMessage := fmt.Sprintf("%s | %s", errValue, err)
-			span.LogFields(log.String("result.error", errMessage))
-			h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
-			return
-		}
-
-		contactRecord.LinkedInURL = h.convertSalesUrlToPublic(contactRecord.LinkedInURL)
-
-		contactRecord.ContactId = h.processCreateContact(c.Request.Context(), contactRecord)
-		resp := customerbase.SingleContactResponse{
-			Contact: contactRecord,
-		}
-		h.responseHandler.HandleSuccess(c, resp)
+	err := c.BindJSON(&contactRecord)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		errMessage := "cannot parse request"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 		return
 	}
-}
 
-func (h *BrowserExtensionHandler) convertSalesUrlToPublic(url string) string {
-	if !strings.Contains(url, "/sales/lead") {
-		return url
+	if strings.TrimSpace(contactRecord.Email) == "" && strings.TrimSpace(contactRecord.LinkedInURL) == "" {
+		errMessage := "email or linkedin_url must be provided"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 	}
-	return strings.Replace(url, "/sales/lead/", "/in/", 1)
+
+	err, errValue := h.validateContactRecord(&contactRecord)
+	if err != nil {
+		errMessage := fmt.Sprintf("%s | %s", errValue, err)
+		span.LogFields(log.String("result.error", errMessage))
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
+		return
+	}
+
+	resp := ContactResponse{}
+	resp.ContactID, resp.LinkedinURL = h.processCreateContact(c.Request.Context(), contactRecord)
+	h.responseHandler.HandleSuccess(c, resp)
+	return
 }
 
-func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, record customerbase.ContactRecord) string {
+func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, record customerbase.ContactRecord) (string, string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BrowserExtensionHandler.processCreateContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -97,22 +102,20 @@ func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, reco
 
 	if linkedInUrl == "" {
 		span.LogFields(log.String("result", "No email or LinkedIn URL provided"))
-		return ""
+		return "", ""
 	}
 
 	createdContactId := ""
 	var err error
-	if linkedInUrl != "" {
-		createdContactId, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
-			return ""
-		}
-
-		h.services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, createdContactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
+	createdContactId, linkedInUrl, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+		return "", ""
 	}
 
-	return createdContactId
+	h.services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, createdContactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
+
+	return createdContactId, linkedInUrl
 }
 
 func (h *BrowserExtensionHandler) validateContactRecord(record *customerbase.ContactRecord) (error, string) {
@@ -140,7 +143,7 @@ func isValidLinkedinContactUrl(s string) bool {
 		// Pattern for public profiles
 		`^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_.]{3,100}\/?$`,
 		// Pattern for sales navigator profiles
-		`^https?:\/\/(www\.)?linkedin\.com\/sales\/lead\/[A-Za-z0-9]{20,}\/?$`,
+		`^https?:\/\/(www\.)?linkedin\.com\/sales\/lead\/[A-Za-z0-9_-]{3,100}\/?$`,
 	}
 
 	for _, pattern := range patterns {
@@ -186,11 +189,8 @@ func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
 			return
 		}
 
-		var contactRecord customerbase.ContactRecord
-		contactRecord.ContactId = contactId
-		resp := customerbase.SingleContactResponse{
-			Contact: contactRecord,
-		}
+		var resp ContactResponse
+		resp.ContactID = contactId
 		h.responseHandler.HandleSuccess(c, resp)
 		return
 	}
