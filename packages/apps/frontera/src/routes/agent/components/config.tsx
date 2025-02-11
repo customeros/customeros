@@ -1,8 +1,8 @@
 import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
 
+import { NewWebSessionListener } from './Listeners';
 import {
   EvaluateCompanyIcpFit,
-  WebsiteTrackerCapability,
   SendSlackNotificationCapability,
 } from './Capabilities';
 
@@ -13,23 +13,22 @@ export const configs: Record<
   //////////////////
   // CAPABILITIES //
   //////////////////
-  [CapabilityType.IdentifyWebVisitor]: () => <WebsiteTrackerCapability />,
+  [CapabilityType.IdentifyWebVisitor]: () => <></>, // deprecated, use NewWebSessionListener instead
   [CapabilityType.CreateOrganization]: () => <></>,
   [CapabilityType.AnalyzeWebSessionIntent]: () => <></>,
   [CapabilityType.SendSlackNotification]: () => <></>,
-  [CapabilityType.WebVisitorSendSlackNotification]: () => (
-    <SendSlackNotificationCapability />
-  ),
+  [CapabilityType.WebVisitorSendSlackNotification]:
+    SendSlackNotificationCapability,
   [CapabilityType.ApplyTag]: () => <></>,
   [CapabilityType.GatherCompanyIntelligence]: () => <></>,
   [CapabilityType.UpdateCompanyStatus]: () => <></>,
   [CapabilityType.CreateMarkdownTimelineEvent]: () => <></>,
-  [CapabilityType.IcpQualify]: () => <EvaluateCompanyIcpFit />,
+  [CapabilityType.IcpQualify]: EvaluateCompanyIcpFit,
   //////////////////
   //  LISTENERS   //
   //////////////////
   [AgentListenerEvent.NewLead]: () => <></>,
-  [AgentListenerEvent.NewWebSession]: () => <></>,
+  [AgentListenerEvent.NewWebSession]: NewWebSessionListener,
   [AgentListenerEvent.IcpFit]: () => <></>,
   [AgentListenerEvent.IcpNotAFit]: () => <></>,
   [AgentListenerEvent.RunIcpQualifierAgent]: () => <></>,

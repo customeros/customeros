@@ -3,7 +3,13 @@ import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
-import { Capability, AgentListener } from '@graphql/types';
+import {
+  AgentType,
+  Capability,
+  AgentListener,
+  CapabilityType,
+  AgentListenerEvent,
+} from '@graphql/types';
 
 export class AgentViewUsecase {
   private service = new AgentService();
@@ -28,12 +34,23 @@ export class AgentViewUsecase {
   get activeConfig() {
     if (!this.agent) return null;
 
-    if (!this._activeConfigId) {
-      return this.agent?.value.capabilities[0];
-    }
-
-    return this.agent?.value.capabilities.find(
-      (c) => c.id === this._activeConfigId,
+    return (
+      this.agent?.value.listeners.find((c) =>
+        this._activeConfigId
+          ? c.id === this._activeConfigId
+          : c.type ===
+            AgentViewUsecase.defaultConfigMap[
+              this.agent?.value.type ?? AgentType.WebVisitIdentifier
+            ],
+      ) ??
+      this.agent?.value.capabilities.find((c) =>
+        this._activeConfigId
+          ? c.id === this._activeConfigId
+          : c.type ===
+            AgentViewUsecase.defaultConfigMap[
+              this.agent?.value.type ?? AgentType.WebVisitIdentifier
+            ],
+      )
     );
   }
 
@@ -62,4 +79,10 @@ export class AgentViewUsecase {
 
     span.end();
   }
+
+  private static defaultConfigMap = {
+    [AgentType.WebVisitIdentifier]: AgentListenerEvent.NewWebSession,
+    [AgentType.IcpQualifier]: CapabilityType.IcpQualify,
+    [AgentType.TagSupport]: CapabilityType.ApplyTag,
+  };
 }

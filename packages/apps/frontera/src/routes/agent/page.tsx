@@ -1,7 +1,6 @@
 import { useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
-import get from 'lodash/get';
 import { observer } from 'mobx-react-lite';
 import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 
@@ -10,13 +9,6 @@ import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 
 import { goals, Header, configs } from './components';
-
-const goalMap = {
-  identify_web_visitor:
-    'Identify website visitors and add them as enriched leads to CustomerOS',
-  evaluate_icp_fit:
-    'Qualify new leads based on whether they match your ideal customer profile or not',
-};
 
 export const AgentPage = observer(() => {
   const store = useStore();
@@ -66,9 +58,7 @@ export const AgentPage = observer(() => {
         <div className='w-[448px] border-r border-r-grayModern-200 px-4 py-3'>
           <div className='mb-2'>
             <h2 className='font-medium mb-1'>Goal</h2>
-            <p className='pb-2 text-sm'>
-              {get(goalMap, agent?.value.goal ?? '', 'Unknown')}
-            </p>
+            <p className='pb-2 text-sm'>{agent?.value.goal ?? 'Unknown'}</p>
           </div>
 
           <h2 className='mb-2 font-medium text-sm'>It's goal is to</h2>
@@ -107,7 +97,7 @@ export const AgentPage = observer(() => {
                   listener.config.length &&
                     'hover:bg-grayModern-200 cursor-pointer',
                   listener.id === usecase?.activeConfig?.id &&
-                    'bg-grayModern-100 hover:bg-grayModern-100',
+                    'bg-grayModern-100 hover:bg-grayModern-100 font-medium',
                 )}
               >
                 <div className='flex items-center gap-2'>
@@ -147,7 +137,7 @@ export const AgentPage = observer(() => {
                   capability.config.length &&
                     'hover:bg-grayModern-200 cursor-pointer',
                   capability.id === usecase?.activeConfig?.id &&
-                    'bg-grayModern-100 hover:bg-grayModern-100',
+                    'bg-grayModern-100 hover:bg-grayModern-100 font-medium',
                 )}
               >
                 <div className='flex items-center gap-2'>

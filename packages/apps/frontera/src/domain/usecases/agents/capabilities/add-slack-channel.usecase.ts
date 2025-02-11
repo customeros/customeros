@@ -25,6 +25,7 @@ export class AddSlackChannelUsecase {
   @observable accessor inputValue = '';
   @observable accessor selectedChannel = '';
   @observable accessor cooldownPeriod = 12;
+  @observable accessor slackChannelError = '';
 
   constructor(private agentId: string) {
     this.toggle = this.toggle.bind(this);
@@ -147,7 +148,7 @@ export class AddSlackChannelUsecase {
       return;
     }
 
-    const parsedCapability = Agent.parseCapabilityConfig(foundCapabilityConfig);
+    const parsedCapability = Agent.parseConfig(foundCapabilityConfig);
 
     if (!parsedCapability) {
       console.error(
@@ -170,10 +171,11 @@ export class AddSlackChannelUsecase {
 
     this.selectedChannel = parsedCapability.channelId.value as string;
     this.cooldownPeriod = parsedCapability.cooldownHours.value as number;
-
+    this.slackChannelError = parsedCapability.channelId.error as string;
     span.end({
       selectedChannel: this.selectedChannel,
       cooldownPeriod: this.cooldownPeriod,
+      slackChannelError: this.slackChannelError,
     });
   }
 
@@ -221,7 +223,18 @@ export class AddSlackChannelUsecase {
       this.cooldownPeriod,
     );
 
-    await this.agentService.saveAgent(agent);
+    const [res, err] = await this.agentService.saveAgent(agent);
+
+    if (err) {
+      console.error(
+        'AddSlackChannelUsecase.execute: Error saving agent. aborting execution',
+      );
+    }
+
+    if (res) {
+      agent.put(res?.agent_Save);
+      this.init();
+    }
 
     span.end();
   }

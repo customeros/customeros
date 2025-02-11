@@ -1,6 +1,6 @@
 import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
-import { Agent } from '@store/Agents/Agent.dto.ts';
+import { Agent } from '@store/Agents/Agent.dto';
 import { when, action, reaction, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 import { Organization } from '@store/Organizations/Organization.dto';
@@ -21,6 +21,7 @@ export class EditIcpDomainsUsecase {
   private service = OrganizationRepository.getInstance();
   private agentService = new AgentService();
   private agentId: string = '';
+  @observable accessor icpCompanyExamplesError: string = '';
 
   @observable private accessor searchedIds: string[] = [];
   @observable public accessor icpCompanyExamples: Set<string> = new Set();
@@ -74,7 +75,7 @@ export class EditIcpDomainsUsecase {
       return;
     }
 
-    const config = Agent.parseCapabilityConfig(capability.config);
+    const config = Agent.parseConfig(capability.config);
 
     if (!config) {
       console.error(
@@ -95,8 +96,10 @@ export class EditIcpDomainsUsecase {
     this.icpCompanyExamples = Array.isArray(config?.icpCompanyExamples?.value)
       ? new Set(config.icpCompanyExamples.value)
       : new Set();
+    this.icpCompanyExamplesError = config.icpCompanyExamples.error as string;
     span.end({
       icpCompanyExamples: config.icpCompanyExamples.value,
+      icpCompanyExamplesError: this.icpCompanyExamplesError,
     });
   }
 
@@ -151,10 +154,18 @@ export class EditIcpDomainsUsecase {
         Array.from(this.icpCompanyExamples),
       );
 
-      const [res] = await this.agentService.saveAgent(agent);
+      const [res, err] = await this.agentService.saveAgent(agent);
 
       if (res) {
+        agent.put(res?.agent_Save);
         this.reset();
+        this.init(this.agentId);
+      }
+
+      if (err) {
+        console.error(
+          'EditIcpDomainsUsecase.select: Error saving agent. aborting execution',
+        );
       }
     }
 

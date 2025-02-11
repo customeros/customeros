@@ -8,8 +8,10 @@ import { EditIcpDisqualificationCriteriaUsecase } from '@domain/usecases/agents/
 
 import { Icon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
+import { IconButton } from '@ui/form/IconButton';
 import { Textarea } from '@ui/form/Textarea/Textarea';
 import { getFormattedLink } from '@utils/getExternalLink.ts';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   ScrollAreaRoot,
   ScrollAreaThumb,
@@ -53,18 +55,44 @@ export const EvaluateCompanyIcpFit = observer(() => {
               </p>
 
               {editIcpDomainsUsecase.icpCompanyExamples.size > 0 && (
-                <ul className='list-disc list-inside text-sm pl-1 mt-1 flex flex-col gap-y-1'>
+                <ul className='mt-1 flex flex-col gap-y-1'>
                   {Array.from(editIcpDomainsUsecase.icpCompanyExamples).map(
-                    (e) => (
+                    (website) => (
                       <li
-                        key={`ideal-icp${e}`}
-                        className='flex items-center gap-x-2'
+                        key={`ideal-icp${website}`}
+                        className='flex items-center gap-x-2 text-sm mx-2 group'
                       >
                         <Icon
-                          name={'dot-single'}
-                          className={'text-grayModern-500 size-3'}
+                          stroke='none'
+                          name='dot-single'
+                          className={'text-grayModern-500'}
                         />
-                        {getFormattedLink(e)}
+                        {getFormattedLink(website)}
+
+                        <Menu modal={false}>
+                          <MenuButton asChild>
+                            <IconButton
+                              size='xxs'
+                              variant='ghost'
+                              aria-label='more'
+                              icon={<Icon name='dots-vertical' />}
+                              className='ml-2 invisible group-hover:visible'
+                            />
+                          </MenuButton>
+                          <MenuList>
+                            <MenuItem
+                              onClick={() => {
+                                editIcpDomainsUsecase.select(website);
+                              }}
+                            >
+                              <Icon
+                                name='x-circle'
+                                className='text-grayModern-500'
+                              />
+                              Remove
+                            </MenuItem>
+                          </MenuList>
+                        </Menu>
                       </li>
                     ),
                   )}
@@ -81,6 +109,12 @@ export const EvaluateCompanyIcpFit = observer(() => {
               >
                 Add website
               </Button>
+
+              {editIcpDomainsUsecase.icpCompanyExamplesError && (
+                <p className='text-sm text-error-500 mt-1'>
+                  {editIcpDomainsUsecase.icpCompanyExamplesError}
+                </p>
+              )}
             </div>
 
             <div>

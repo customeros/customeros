@@ -28,7 +28,7 @@ const SCRIPT = `<script id="customeros-tracker" type="text/javascript">
   (document.body || document.head).appendChild(customerOS); 
 })(window, "https://app.customeros.ai/analytics-0.1.js", "script");</script>`;
 
-export const WebsiteTrackerCapability = observer(() => {
+export const NewWebSessionListener = observer(() => {
   const { id } = useParams<{ id: string }>();
 
   const usecase = useMemo(() => new AddWebsiteToTrackUsecase(id!), [id]);
@@ -43,10 +43,10 @@ export const WebsiteTrackerCapability = observer(() => {
           Track and identify website visitors
         </h2>
 
-        {usecase.capabilityErrors && (
+        {usecase.listenerErrors && (
           <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] mb-4'>
             <Icon stroke='none' className='mr-2' name='dot-single' />
-            <span className='text-sm'>{usecase.capabilityErrors}</span>
+            <span className='text-sm'>{usecase.listenerErrors}</span>
           </div>
         )}
 
