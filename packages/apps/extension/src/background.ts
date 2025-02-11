@@ -225,7 +225,6 @@ async function checkCustomerOSSession(): Promise<void> {
     );
 
     if (!customerOSTab) {
-      // If no CustomerOS tab is found, clear the session
       chrome.storage.local.set({
         workspaceName: null,
         email: null,

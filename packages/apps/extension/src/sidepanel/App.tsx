@@ -2,14 +2,20 @@ import { useEffect, useState } from "react";
 import "./styles/tailwind.css";
 import { Button } from "@ui/form/Button/Button";
 
+type Contact = {
+  contactId: string;
+  email: string;
+  linkedinUrl: string;
+};
+
 export const App = () => {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
-  const [_appIsOpen, setAppIsOpen] = useState(false);
   const [linkedInUrl, setLinkedInUrl] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [contact, setContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [isAddingContact, setIsAddingContact] = useState(false);
   useEffect(() => {
     const handleMessage = (message: any) => {
       if (message.action === "COS_SESSION_DATA") {
@@ -34,6 +40,7 @@ export const App = () => {
         updateLinkedInUrlFromTab(tab);
       }
     };
+    setIsLoading(true);
 
     const handleActiveTabChange = (activeInfo: chrome.tabs.TabActiveInfo) => {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
@@ -41,9 +48,56 @@ export const App = () => {
       });
     };
 
-    const updateLinkedInUrlFromTab = (tab: chrome.tabs.Tab) => {
+    const updateLinkedInUrlFromTab = async (tab: chrome.tabs.Tab) => {
       const isLinkedInProfile = tab.url?.includes("linkedin.com/in");
+      setContact(null);
       setLinkedInUrl(isLinkedInProfile ? tab.url || null : null);
+
+      const sessionData = await new Promise<{
+        email: string;
+        apiKey: string;
+        workspaceName: string;
+      } | null>((resolve) => {
+        const messageHandler = (message: any) => {
+          if (message.action === "COS_SESSION_DATA") {
+            chrome.runtime.onMessage.removeListener(messageHandler);
+            resolve({
+              email: message.email,
+              apiKey: message.apiKey,
+              workspaceName: message.workspaceName,
+            });
+          }
+        };
+
+        chrome.runtime.onMessage.addListener(messageHandler);
+      });
+      if (sessionData?.apiKey) {
+        try {
+          const response = await fetch(
+            `https://api.customeros.ai/browserExtension/contact?linkedin=${tab.url}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "*/*",
+                "X-CUSTOMER-OS-API-KEY": sessionData?.apiKey,
+              },
+            }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setContact(data.contact);
+          }
+          if (!tab.url?.includes("linkedin.com/in")) {
+            setContact(null);
+          }
+        } catch (error) {
+          console.error("Error fetching contact:", error);
+          setContact(null);
+        } finally {
+          setIsLoading(false);
+        }
+      }
     };
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -69,11 +123,6 @@ export const App = () => {
             tab.url?.includes("app.customeros.ai") ||
             tab.url?.includes("localhost:5173")
         );
-        if (customerOSTab) {
-          setAppIsOpen(true);
-        } else {
-          setAppIsOpen(false);
-        }
       });
     };
 
@@ -101,7 +150,7 @@ export const App = () => {
   const handleAddContact = async () => {
     if (!linkedInUrl) return;
 
-    setIsLoading(true);
+    setIsAddingContact(true);
 
     const sessionData = await new Promise<{
       email: string;
@@ -123,7 +172,7 @@ export const App = () => {
     });
 
     if (!sessionData?.apiKey) {
-      setIsLoading(false);
+      setIsAddingContact(false);
       return;
     }
     setWorkspaceName(sessionData.workspaceName || null);
@@ -154,9 +203,11 @@ export const App = () => {
       setErrorMessage("We couldn't add this contact");
       setTimeout(() => setErrorMessage(null), 3000);
     } finally {
-      setIsLoading(false);
+      setIsAddingContact(false);
     }
   };
+
+  console.log(contact?.contactId, "aicivinemata");
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
@@ -168,8 +219,8 @@ export const App = () => {
           className="size-8"
         />
         <span className="font-semibold text-[16px]">CustomerOS</span>
-        {!workspaceName && !linkedInUrl && (
-          <span className="text-center max-w-[250px]">
+        {!workspaceName && !linkedInUrl && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm">
             Sign into the{" "}
             <a
               id="customerOSLink"
@@ -188,8 +239,8 @@ export const App = () => {
             workspace
           </span>
         )}
-        {!workspaceName && linkedInUrl && (
-          <span className="text-center max-w-[250px] ">
+        {!workspaceName && linkedInUrl && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm ">
             Sign into the{" "}
             <a
               id="customerOSLink"
@@ -208,44 +259,60 @@ export const App = () => {
           </span>
         )}
         {workspaceName && (
-          <span className="bg-gray-100">Signed into {workspaceName}</span>
+          <span className="bg-gray-100 px-1 text-sm">
+            Signed into {workspaceName}
+          </span>
         )}
-        {!linkedInUrl && workspaceName && (
-          <span className="text-center max-w-[250px] ">
+        {!linkedInUrl && workspaceName && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm ">
             Go to any LinkedIn profile to instantly add contacts to CustomerOS
           </span>
         )}
 
-        {workspaceName && linkedInUrl && (
-          <span className="text-center max-w-[250px] ">
+        {workspaceName && linkedInUrl && !contact?.contactId && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm">
             Instantly add LinkedIn contacts to CustomerOS{" "}
           </span>
         )}
       </div>
-      {linkedInUrl && workspaceName && (
-        <div className="mt-4" onClick={handleAddContact}>
-          <Button
-            className="linkedin-button"
-            size="xs"
-            colorScheme="primary"
-            isDisabled={isLoading}
-            leftIcon={
-              !isLoading ? (
-                <img
-                  id="plus-icon"
-                  src={chrome.runtime.getURL("src/assets/plus.svg")}
-                  alt="Plus Icon"
-                />
-              ) : (
-                <img
-                  src={chrome.runtime.getURL("src/assets/spinner.svg")}
-                  alt="loading"
-                />
-              )
-            }
-          >
-            {!isLoading ? "Add contact to CustomerOS" : "Adding to CustomerOS…"}
-          </Button>
+      {isLoading && !contact?.contactId && (
+        <img
+          className="mt-4"
+          src={chrome.runtime.getURL("src/assets/spinner.svg")}
+          alt="loading"
+        />
+      )}
+
+      {linkedInUrl && workspaceName && !contact?.contactId && !isLoading && (
+        <Button
+          className="mt-4"
+          size="xs"
+          onClick={handleAddContact}
+          colorScheme="primary"
+          isDisabled={isAddingContact}
+          leftIcon={
+            !isAddingContact ? (
+              <img
+                id="plus-icon"
+                src={chrome.runtime.getURL("src/assets/plus.svg")}
+                alt="Plus Icon"
+              />
+            ) : (
+              <img
+                src={chrome.runtime.getURL("src/assets/spinner.svg")}
+                alt="loading"
+              />
+            )
+          }
+        >
+          {!isAddingContact
+            ? "Add contact to CustomerOS"
+            : "Adding to CustomerOS…"}
+        </Button>
+      )}
+      {contact?.contactId && (
+        <div className="mt-1">
+          <span className="text-sm">This contact is already in CustomerOS</span>
         </div>
       )}
       {successMessage && (
