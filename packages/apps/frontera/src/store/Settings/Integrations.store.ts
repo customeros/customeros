@@ -71,7 +71,7 @@ export class IntegrationsStore {
 
     try {
       this.isMutating = true;
-      this.transport.http.post('/sa/integration', {
+      this.transport.http.post('/sa/integrations', {
         [identifier]: payload,
       });
       this.root.ui.toastSuccess(
@@ -99,7 +99,7 @@ export class IntegrationsStore {
 
     try {
       this.isMutating = true;
-      this.transport.http.delete(`/sa/integration/${identifier}`);
+      this.transport.http.delete(`/sa/integrations/${identifier}`);
       this.root.ui.toastSuccess(
         'Settings updated successfully!',
         'integration-settings-delete',

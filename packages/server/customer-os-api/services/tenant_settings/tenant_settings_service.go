@@ -2,6 +2,9 @@ package api_tenant_settings
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -133,8 +136,13 @@ func NewTenantSettingsService(log logger.Logger, cfg *config.Config, postgres *p
 	}
 }
 
-func (s *tenantSettingsService) GetForTenant(tenantName string) (*postgresentity.TenantSettings, map[string]bool, error) {
-	settings, err := s.postgres.TenantSettingsRepository.FindForTenantName(context.TODO(), tenantName)
+func (s *tenantSettingsService) GetForTenant(ctx context.Context) (*postgresentity.TenantSettings, map[string]bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetForTenant")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	settings, err := s.postgres.TenantSettingsRepository.FindForTenantName(ctx, tenant)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -155,21 +163,29 @@ func (s *tenantSettingsService) GetForTenant(tenantName string) (*postgresentity
 		}
 	}
 
-	activeServices, err := s.GetServiceActivations(tenantName)
+	activeServices, err := s.GetServiceActivations(ctx)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
 	}
+
 	return settings, activeServices, nil
 }
 
-func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[string]bool, error) {
+func (s *tenantSettingsService) GetServiceActivations(ctx context.Context) (map[string]bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetServiceActivations")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
 	result := make(map[string]bool)
 	for service, keyMappings := range s.serviceMap {
 		hasKeys := true
 		for _, mapping := range keyMappings {
 
-			keyValue, err := s.postgres.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(context.TODO(), tenantName, mapping.DbKeyName)
+			keyValue, err := s.postgres.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, mapping.DbKeyName)
 			if err != nil {
+				tracing.TraceErr(span, err)
 				return nil, fmt.Errorf("GetServiceActivations: %w", err)
 			}
 
@@ -185,8 +201,13 @@ func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[st
 	return result, nil
 }
 
-func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*postgresentity.TenantSettings, map[string]bool, error) {
-	tenantSettings, _, err := s.GetForTenant(tenantName)
+func (s *tenantSettingsService) SaveIntegrationData(ctx context.Context, request map[string]interface{}) (*postgresentity.TenantSettings, map[string]bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.SaveIntegrationData")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	tenantSettings, _, err := s.GetForTenant(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -195,10 +216,10 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 	if tenantSettings == nil {
 		tenantSettings = &postgresentity.TenantSettings{
-			TenantName: tenantName,
+			TenantName: tenant,
 		}
 
-		_, err := s.postgres.TenantSettingsRepository.Save(context.TODO(), tenantSettings)
+		_, err := s.postgres.TenantSettingsRepository.Save(ctx, tenantSettings)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -219,7 +240,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 					if !ok {
 						return nil, nil, fmt.Errorf("invalid data for key %s in integration %s", mapping.ApiKeyName, integrationId)
 					}
-					keysToUpdate = append(keysToUpdate, postgresentity.GoogleServiceAccountKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
+					keysToUpdate = append(keysToUpdate, postgresentity.GoogleServiceAccountKey{TenantName: tenant, Key: mapping.DbKeyName, Value: valueStr})
 					data[mapping.DbKeyName] = value
 				}
 			}
@@ -1334,15 +1355,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	}
 
 	if legacyUpdate {
-		tenantSettings, err = s.postgres.TenantSettingsRepository.Save(context.TODO(), tenantSettings)
+		tenantSettings, err = s.postgres.TenantSettingsRepository.Save(ctx, tenantSettings)
 		if err != nil {
 			return nil, nil, err
 		}
-
 	}
-
-	ctx, cancel := utils.GetLongLivedContext(context.Background())
-	defer cancel()
 
 	if keysToUpdate != nil {
 		for _, key := range keysToUpdate {
@@ -1353,7 +1370,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		}
 	}
 
-	activeServices, err := s.GetServiceActivations(tenantName)
+	activeServices, err := s.GetServiceActivations(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
 	}
@@ -1361,11 +1378,13 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	return tenantSettings, activeServices, nil
 }
 
-func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*postgresentity.TenantSettings, map[string]bool, error) {
-	ctx, cancel := utils.GetLongLivedContext(context.Background())
-	defer cancel()
+func (s *tenantSettingsService) ClearIntegrationData(ctx context.Context, identifier string) (*postgresentity.TenantSettings, map[string]bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.ClearIntegrationData")
+	defer span.Finish()
 
-	tenantSettings, _, err := s.GetForTenant(tenantName)
+	tenant := common.GetTenantFromContext(ctx)
+
+	tenantSettings, _, err := s.GetForTenant(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1377,7 +1396,7 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		mappings, ok := s.serviceMap[identifier]
 		if ok {
 			for _, mapping := range mappings {
-				err := s.postgres.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenantName, mapping.DbKeyName)
+				err := s.postgres.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenant, mapping.DbKeyName)
 				if err != nil {
 					return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
 				}
@@ -1645,7 +1664,7 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			return nil, nil, err
 		}
 
-		activeServices, err := s.GetServiceActivations(tenantName)
+		activeServices, err := s.GetServiceActivations(ctx)
 		if err != nil {
 			return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
 		}

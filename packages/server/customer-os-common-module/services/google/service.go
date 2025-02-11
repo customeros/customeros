@@ -531,7 +531,7 @@ func (s *googleService) ReadEmailFromGoogle(gmailService *gmail.Service, usernam
 }
 
 func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GoogleService.SendEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.SendEmail")
 	defer span.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)

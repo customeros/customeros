@@ -32,11 +32,12 @@ func WithCustomContext(ctx context.Context, customContext *CustomContext) contex
 
 func WithCustomContextFromGinRequest(c *gin.Context, appSource string) context.Context {
 	customContext := &CustomContext{
-		AppSource: appSource,
-		Tenant:    c.GetString("TenantName"),
-		UserId:    c.GetString("UserId"),
-		UserEmail: c.GetString("UserEmail"),
-		Roles:     c.GetStringSlice("UserRoles"),
+		AppSource:  appSource,
+		AuthUserId: c.GetString("AuthenticatedUserId"),
+		Tenant:     c.GetString("TenantName"),
+		UserId:     c.GetString("UserId"),
+		UserEmail:  c.GetString("UserEmail"),
+		Roles:      c.GetStringSlice("UserRoles"),
 	}
 	return WithCustomContext(c.Request.Context(), customContext)
 }

@@ -24,19 +24,23 @@ import (
 
 func (s *mailService) SendMail(ctx context.Context, emailMessage *postgres_entity.EmailMessage) error {
 	span, ctx := s.initializeTracing(ctx, "MailService.SendMail")
-	span.LogFields(tracingLog.Object("emailMessage", emailMessage))
 	defer span.Finish()
 
-	oauthToken, err := s.getOAuthToken(ctx, span, emailMessage)
+	span.LogKV("emailMessage", emailMessage)
+
+	oauthToken, err := s.getOAuthToken(ctx, emailMessage)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if err := s.prepareEmailMessage(ctx, span, emailMessage); err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if err := s.sendEmailBasedOnProvider(ctx, span, emailMessage, oauthToken); err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -66,7 +70,14 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 	return id.(*string), nil
 }
 
-func (s *mailService) getOAuthToken(ctx context.Context, span opentracing.Span, emailMessage *postgres_entity.EmailMessage) (*postgres_entity.OAuthTokenEntity, error) {
+func (s *mailService) getOAuthToken(ctx context.Context, emailMessage *postgres_entity.EmailMessage) (*postgres_entity.OAuthTokenEntity, error) {
+	span, ctx := s.initializeTracing(ctx, "MailService.getOAuthToken")
+	defer span.Finish()
+
+	span.LogFields(tracingLog.String("tenant", emailMessage.Tenant))
+	span.LogFields(tracingLog.String("provider", emailMessage.FromProvider))
+	span.LogFields(tracingLog.String("email", emailMessage.From))
+
 	oauthToken, err := s.postgres.OAuthTokenRepository.GetByEmail(
 		ctx,
 		emailMessage.Tenant,
@@ -75,8 +86,9 @@ func (s *mailService) getOAuthToken(ctx context.Context, span opentracing.Span, 
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("unable to retrieve oauth token for %s: %v", emailMessage.From, err)
+		return nil, err
 	}
+
 	return oauthToken, nil
 }
 

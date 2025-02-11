@@ -86,13 +86,14 @@ func (r *tenantSettingsMailboxRepository) GetById(ctx context.Context, id string
 		First(&result).
 		Error
 
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			span.LogFields(tracingLog.Bool("result.found", false))
-			return nil, nil
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		span.LogFields(tracingLog.Bool("result.found", false))
+		return nil, nil
 	}
 
 	span.LogFields(tracingLog.Bool("result.found", true))
@@ -115,13 +116,14 @@ func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, mail
 		First(&result).
 		Error
 
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			span.LogFields(tracingLog.Bool("result.found", false))
-			return nil, nil
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		span.LogFields(tracingLog.Bool("result.found", false))
+		return nil, nil
 	}
 
 	span.LogFields(tracingLog.Bool("result.found", true))
@@ -145,7 +147,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, do
 		Error
 
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
@@ -168,7 +170,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByUserId(ctx context.Context, us
 		Error
 
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

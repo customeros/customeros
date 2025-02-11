@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/machinebox/graphql"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
@@ -139,22 +138,6 @@ func InjectSpanContextIntoHTTPRequest(req *http.Request, span opentracing.Span) 
 		}
 	}
 	return req
-}
-
-func InjectSpanContextIntoGraphQLRequest(req *graphql.Request, span opentracing.Span) {
-	if span != nil {
-		carrier := make(opentracing.TextMapCarrier)
-		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, carrier)
-		if err != nil {
-			// Log error or handle it as per your application's error handling strategy
-			fmt.Println("Error injecting span context into GraphQL request:", err)
-			return
-		}
-
-		for k, v := range carrier {
-			req.Header.Set(k, v)
-		}
-	}
 }
 
 func ExtractGraphQLMethodName(req *http.Request) string {
