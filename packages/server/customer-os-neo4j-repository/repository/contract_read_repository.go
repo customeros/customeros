@@ -2,12 +2,12 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -31,7 +31,7 @@ type ContractReadRepository interface {
 	GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
-	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
+	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit, delayFromPreviousStatusCheckHours int) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
 	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
 	GetPaginatedContracts(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
@@ -486,14 +486,14 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error) {
+func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit, delayFromPreviousStatusCheckHours int) ([]TenantAndContractId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit))
+	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit), log.Int("delayFromPreviousStatusCheckHours", delayFromPreviousStatusCheckHours))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)<-[:HAS_CONTRACT]-(:Organization {hide:false})
-				WHERE c.techStatusRenewalRequestedAt IS NULL OR c.techStatusRenewalRequestedAt + duration({hours: 2}) < $referenceTime
+				WHERE c.techStatusRenewalRequestedAt IS NULL OR c.techStatusRenewalRequestedAt + duration({hours: $delayFromPreviousStatusCheckHours}) < $referenceTime
 				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WITH t, c, op.renewedAt as renewedAt
 				WHERE (c.status <> $endedStatus AND c.endedAt < $referenceTime) OR
@@ -507,13 +507,14 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 						))
 				RETURN DISTINCT t.name, c.id LIMIT $limit`
 	params := map[string]any{
-		"referenceTime":       referenceTime,
-		"endedStatus":         neo4jenum.ContractStatusEnded,
-		"liveStatus":          neo4jenum.ContractStatusLive,
-		"scheduledStatus":     neo4jenum.ContractStatusScheduled,
-		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract,
-		"draftStatus":         neo4jenum.ContractStatusDraft,
-		"limit":               limit,
+		"referenceTime":                     referenceTime,
+		"endedStatus":                       neo4jenum.ContractStatusEnded,
+		"liveStatus":                        neo4jenum.ContractStatusLive,
+		"scheduledStatus":                   neo4jenum.ContractStatusScheduled,
+		"outOfContractStatus":               neo4jenum.ContractStatusOutOfContract,
+		"draftStatus":                       neo4jenum.ContractStatusDraft,
+		"limit":                             limit,
+		"delayFromPreviousStatusCheckHours": delayFromPreviousStatusCheckHours,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -556,7 +557,8 @@ func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Conte
 					(c.techRolloutRenewalRequestedAt IS NULL OR c.techRolloutRenewalRequestedAt + duration({hours: 2}) < $referenceTime) AND
 					date(op.renewedAt) <= date($referenceTime) AND
 					(c.autoRenew = true OR op.renewalApproved = true) AND
-					c.status IN [$liveStatus, $outOfContractStatus, $scheduledStatus]
+					c.status IN [$liveStatus, $outOfContractStatus, $scheduledStatus] AND
+					(c.endedAt IS NULL OR date(c.endedAt) > date($referenceTime))
 				RETURN t.name, c.id LIMIT $limit`
 	params := map[string]any{
 		"referenceTime":       referenceTime,
