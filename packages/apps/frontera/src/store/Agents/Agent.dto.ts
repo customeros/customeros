@@ -45,6 +45,8 @@ export class Agent extends Entity<AgentDatum> {
       console.error(
         'Agent.setListenerConfig: Listener not found. will not set',
       );
+
+      return;
     }
 
     const config = Agent.parseConfig(this.value.listeners[foundIndex].config);
@@ -145,7 +147,7 @@ export class Agent extends Entity<AgentDatum> {
     return parsed;
   }
 
-  default(payload?: Partial<AgentDatum>): AgentDatum {
+  static default(payload?: Partial<AgentDatum>): AgentDatum {
     return merge(
       {
         id: crypto.randomUUID(),
