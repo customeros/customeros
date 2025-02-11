@@ -108,6 +108,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilityExtractSupportSignalsFromMeeting:
+		executor, ok := GetTypedExecutor[ExtractSupportSignalsFromMeetingInput, ExtractSupportSignalsFromMeetingOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractSupportSignalsFromMeeting)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityGatherCompanyIntelligence:
 		executor, ok := GetTypedExecutor[GatherCompanyIntilligenceInput, GatherCompanyIntelligenceOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,

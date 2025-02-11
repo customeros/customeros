@@ -13,6 +13,7 @@ const (
 	EventDoesNotNeedHelp         AgentListenerEvent = "does_not_need_help"
 	EventICPFit                  AgentListenerEvent = "icp_fit"
 	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
+	EventHelpSpotted             AgentListenerEvent = "help_spotted"
 	EventMeetingLogged           AgentListenerEvent = "meeting_logged"
 	EventNewLead                 AgentListenerEvent = "new_lead"
 	EventNewMeetingRecording     AgentListenerEvent = "new_meeting_recording"
@@ -55,6 +56,7 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 		EventDoesNotNeedHelp,
 		EventICPFit,
 		EventICPNotAFit,
+		EventHelpSpotted,
 		EventMeetingLogged,
 		EventNewLead,
 		EventNewMeetingRecording,

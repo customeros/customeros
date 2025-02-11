@@ -27,6 +27,7 @@ type AgentRepository interface {
 	UpdateCapabilities(ctx context.Context, capabilities []postgres_entity.Capability) error
 	UpdateListeners(ctx context.Context, capabilities []postgres_entity.Listener) error
 	FindCapability(ctx context.Context, agentID string, capabilityType enum.AgentCapability) (*postgres_entity.Capability, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type agentsRepository struct {
@@ -407,4 +408,50 @@ func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, c
 	span.LogFields(log.Bool("result.found", true))
 	span.LogFields(log.String("result.capabilityId", capability.ID))
 	return &capability, nil
+}
+
+func (f *agentsRepository) Delete(ctx context.Context, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.Delete")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return f.gormDb.Transaction(func(tx *gorm.DB) error {
+		// First verify the agent exists and belongs to the tenant
+		var agent postgres_entity.Agent
+		if err := tx.Where("id = ? AND tenant = ?", id, tenant).First(&agent).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New("agent not found or access denied")
+			}
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		// Delete capabilities
+		if err := tx.Where("agent_id = ?", id).Delete(&postgres_entity.Capability{}).Error; err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		// Delete listeners
+		if err := tx.Where("agent_id = ?", id).Delete(&postgres_entity.Listener{}).Error; err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		// Delete the agent
+		if err := tx.Delete(&postgres_entity.Agent{}, "id = ?", id).Error; err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		return nil
+	})
 }

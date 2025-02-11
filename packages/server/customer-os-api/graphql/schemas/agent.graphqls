@@ -1,7 +1,6 @@
 extend type Query {
   agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
   agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
-
   slackChannelsWithBot: [AgentSlackChannel!]!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
@@ -11,6 +10,7 @@ extend type Mutation {
   agent_Save(input: AgentSaveInput!): Agent!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
+  agent_Delete(id: ID!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type AgentSlackChannel {
@@ -25,10 +25,16 @@ enum AgentType {
   WEB_VISIT_IDENTIFIER
 }
 
+enum AgentScope {
+  WORKSPACE
+  PERSONAL
+}
+
 type Agent {
   id: ID!
   type: AgentType!
   name: String!
+  scope: AgentScope!
   capabilities: [Capability!]!
   listeners: [AgentListener!]!
   goalType: String!
@@ -62,11 +68,12 @@ enum CapabilityType {
   ADD_MEETING_NOTES_TO_COMPANY
   ANALYZE_WEB_SESSION_INTENT
   APPLY_TAG_TO_COMPANY
-  CHECK_SUPPORT_NEED
   CREATE_CONTACTS
   CREATE_ORGANIZATION
   CREATE_MARKDOWN_TIMELINE_EVENT
+  DETECT_SUPPORT_WEBVISIT
   EXTRACT_MEETING_HIGHLIGHTS
+  EXTRACT_SUPPORT_SIGNALS_FROM_MEETING
   GATHER_COMPANY_INTELLIGENCE
   ICP_QUALIFY
   IDENTIFY_MEETING_PARTICIPANTS
@@ -96,6 +103,7 @@ input CapabilitySaveInput {
 
 enum AgentListenerEvent {
   COMPANY_IDENTIFIED
+  COMPANY_NEEDS_HELP
   ICP_FIT
   ICP_NOT_A_FIT
   NEW_LEAD

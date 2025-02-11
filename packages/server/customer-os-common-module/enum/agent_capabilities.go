@@ -21,6 +21,7 @@ const (
 	CapabilityEnrichEmailAddress                 AgentCapability = "enrich_email_address"
 	CapabilityEvaluateCompanyICPFit              AgentCapability = "evaluate_company_icp_fit"
 	CapabilityExtractMeetingHighlights           AgentCapability = "extract_meeting_highlights"
+	CapabilityExtractSupportSignalsFromMeeting   AgentCapability = "extract_support_signals_from_meeting"
 	CapabilityForwardEmailReply                  AgentCapability = "forward_email_reply"
 	CapabilityGatherCompanyIntelligence          AgentCapability = "gather_company_intelligence"
 	CapabilityGenerateInvoice                    AgentCapability = "generate_invoice"
@@ -67,6 +68,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityEnrichEmailAddress,
 		CapabilityEvaluateCompanyICPFit,
 		CapabilityExtractMeetingHighlights,
+		CapabilityExtractSupportSignalsFromMeeting,
 		CapabilityForwardEmailReply,
 		CapabilityGatherCompanyIntelligence,
 		CapabilityGenerateInvoice,
