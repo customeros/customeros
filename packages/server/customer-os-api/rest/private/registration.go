@@ -557,17 +557,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
 		oauthToken.Type = signInRequest.OAuthTokenType
-
-		oauthToken.AccessToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.AccessToken)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-
-		oauthToken.RefreshToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.RefreshToken)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-
+		oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+		oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
 		oauthToken.IdToken = signInRequest.OAuthToken.IdToken
 		oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
 		oauthToken.Scope = signInRequest.OAuthToken.Scope
