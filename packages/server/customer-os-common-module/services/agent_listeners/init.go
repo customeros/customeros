@@ -22,6 +22,9 @@ func InitAgentListeners(
 	var listeners []interfaces.AgentListenerUntyped
 	listeners = append(listeners, NewCompanyIdentifiedListener(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewCompanyNeedsHelpListener(logger, postgresRepositories))
+	listeners = append(listeners, NewContactAddedToCampaignListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewEmailBouncedListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewEmailReplyReceivedListener(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewIcpFitListener(logger, postgresRepositories))
 	listeners = append(listeners, NewIcpNotAFitListener(logger, postgresRepositories))
 	listeners = append(listeners, NewMeetingLoggedListener(logger, postgresRepositories))

@@ -188,6 +188,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilityValidateEmailAddressDeliverability:
+		executor, ok := GetTypedExecutor[ValidateEmailDeliverabilityInput, ValidateEmailDeliverabilityOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityValidateEmailAddressDeliverability)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	default:
 		err := fmt.Errorf("capability not configured")
 		span.LogKV("capability", executionContainer.Capability.Type)

@@ -43,11 +43,11 @@ func NewCompanyNeedsHelpListener(
 }
 
 func (l *CompanyNeedsHelpListener) Type() enum.AgentListenerEvent {
-	return enum.EventNewSupportVisit
+	return enum.EventCompanyNeedsHelp
 }
 
 func (l *CompanyNeedsHelpListener) Name() string {
-	return "New Support Visit"
+	return "Company needs help"
 }
 
 func (h *CompanyNeedsHelpListener) DefaultConfig() any {
