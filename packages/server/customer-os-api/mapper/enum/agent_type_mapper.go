@@ -8,6 +8,7 @@ import (
 )
 
 var agentTypeByModel = map[model.AgentType]enum.AgentType{
+	model.AgentTypeCampaignManager:    enum.AgentCampaignManager,
 	model.AgentTypeIcpQualifier:       enum.AgentICPQualifier,
 	model.AgentTypeMeetingKeeper:      enum.AgentMeetingKeeper,
 	model.AgentTypeSupportSpotter:     enum.AgentSupportSpotter,

@@ -5,10 +5,11 @@ import (
 )
 
 var agentGoalNameMap = map[enum.AgentGoal]string{
-	enum.AgentGoalEvaluateICPFit:     "A company is qualified",
-	enum.AgentGoalIdentifyWebVisitor: "Identify website visitors",
-
-	enum.AgentGoalSpotHelpNeeded: "Spot Help Needed",
+	enum.AgentGoalEvaluateICPFit:         "Evaluate company ICP fit",
+	enum.AgentGoalIdentifyWebVisitor:     "Identify website visitors",
+	enum.AgentGoalSpotHelpNeeded:         "Spot compaines that may need help",
+	enum.AgentGoalCaptureExternalMeeting: "Capture and share external meetings",
+	enum.AgentGoalReceiveReply:           "Receive a reply to our outreach",
 }
 
 func MapAgentGoalName(input enum.AgentGoal) string {

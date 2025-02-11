@@ -10,7 +10,12 @@ type AgentListenerEvent string
 const (
 	EventCompanyIdentified       AgentListenerEvent = "company_identified"
 	EventCompanyNeedsHelp        AgentListenerEvent = "company_needs_help"
+	EventContactAddedToCampaign  AgentListenerEvent = "contact_added_to_campaign"
 	EventDoesNotNeedHelp         AgentListenerEvent = "does_not_need_help"
+	EventEmailBounced            AgentListenerEvent = "email_bounced"
+	EventEmailNotDeliverable     AgentListenerEvent = "email_not_deliverable"
+	EventEmailReplyNotReceived   AgentListenerEvent = "email_reply_not_received"
+	EventEmailReplyReceived      AgentListenerEvent = "email_reply_received"
 	EventICPFit                  AgentListenerEvent = "icp_fit"
 	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
 	EventHelpSpotted             AgentListenerEvent = "help_spotted"
@@ -53,7 +58,12 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 	case
 		EventCompanyIdentified,
 		EventCompanyNeedsHelp,
+		EventContactAddedToCampaign,
 		EventDoesNotNeedHelp,
+		EventEmailBounced,
+		EventEmailNotDeliverable,
+		EventEmailReplyNotReceived,
+		EventEmailReplyReceived,
 		EventICPFit,
 		EventICPNotAFit,
 		EventHelpSpotted,
