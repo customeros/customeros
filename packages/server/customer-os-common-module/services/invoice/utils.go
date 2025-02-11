@@ -31,7 +31,7 @@ func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData 
 	}
 
 	// Build the full path to the template file
-	templatePath := filepath.Join(currentDir, "/subscriptions/invoice/pdf_template/index.html")
+	templatePath := filepath.Join(currentDir, "/services/invoice/pdf_template/index.html")
 	templateContent, err := ioutil.ReadFile(templatePath)
 	if err != nil {
 		return errors.Wrap(err, "ioutil.ReadFile")
@@ -85,7 +85,7 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	if err != nil {
 		return nil, errors.Wrap(err, "os.Getwd")
 	}
-	resourcesPath := filepath.Join(currentDir, "/subscriptions/invoice/pdf_template")
+	resourcesPath := filepath.Join(currentDir, "/services/invoice/pdf_template")
 
 	// Prepare HTTP request
 	url := pdfConverterUrl + "/forms/chromium/convert/html"

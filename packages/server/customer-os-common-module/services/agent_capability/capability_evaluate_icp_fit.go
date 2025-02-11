@@ -56,7 +56,7 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 		c.QualificationCriteria.Error = ""
 	}
 	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
-		c.ICPCompanyExamples.Error = "Please provide at least 5 companies that match your ICP."
+		c.ICPCompanyExamples.Error = "Add at least 5 ideal customer websites"
 		isValid = false
 	} else {
 		c.ICPCompanyExamples.Error = ""
