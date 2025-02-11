@@ -10,7 +10,7 @@ import (
 var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapability{
 	model.CapabilityTypeAnalyzeWebSessionIntent:         enum.CapabilityAnalyzeWebSessionIntent,
 	model.CapabilityTypeApplyTagToCompany:               enum.CapabilityApplyTagToCompany,
-	model.CapabilityTypeCheckSupportNeed:                enum.CapabilityCheckSupportNeed,
+	model.CapabilityTypeCheckSupportNeed:                enum.CapabilityDetectSupportWebvisit,
 	model.CapabilityTypeCreateContacts:                  enum.CapabilityCreateAndEnrichContact,
 	model.CapabilityTypeCreateMarkdownTimelineEvent:     enum.CapabilityCreateMarkdownTimelineEvent,
 	model.CapabilityTypeCreateOrganization:              enum.CapabilityCreateAndEnrichCompany,

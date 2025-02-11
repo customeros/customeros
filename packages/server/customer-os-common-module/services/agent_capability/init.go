@@ -32,11 +32,11 @@ func InitCapabilities(
 	var capabilities []interfaces.AgentCapabilityUntyped
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
 	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService))
-	capabilities = append(capabilities, NewApplyTagToCompanyCapability(tagService))
-	capabilities = append(capabilities, NewCheckSupporNeedCapability())
+	capabilities = append(capabilities, NewApplyTagToCompanyCapability(tagService, events))
 	capabilities = append(capabilities, NewCreateOrganizationCapability(events, organizationService))
 	capabilities = append(capabilities, NewCreateContactCapability(contactService))
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
+	capabilities = append(capabilities, NewDetectSupportWebVisitCapability(events))
 	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService))
 	capabilities = append(capabilities, NewExtractMeetingHighlightsCapability(aiService))
 	capabilities = append(capabilities, NewGatherCompanyIntelligenceCapability(postgresRepositories, organizationService))
