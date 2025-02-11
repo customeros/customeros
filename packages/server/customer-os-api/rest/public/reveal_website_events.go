@@ -101,15 +101,15 @@ func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
 	switch {
 	case origin == "":
 		err := errors.New("missing origin")
-		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result.error", err.Error()))
 		return err
 	case referer == "":
 		err := errors.New("missing referer")
-		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result.error", err.Error()))
 		return err
 	case userAgent == "":
 		err := errors.New("missing userAgent")
-		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result.error", err.Error()))
 		return err
 	default:
 		return nil
