@@ -128,7 +128,7 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 
 // AgentDelete is the resolver for the agent_Delete field.
 func (r *mutationResolver) AgentDelete(ctx context.Context, id string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.AgentDelete", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AgentDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
