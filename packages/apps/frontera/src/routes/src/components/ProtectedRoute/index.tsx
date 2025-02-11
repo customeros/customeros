@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 
 export const ProtectedRoute = ({
@@ -7,7 +6,7 @@ export const ProtectedRoute = ({
   fallback,
 }: {
   fallback: string;
-  children: ReactNode;
+  children: React.ReactNode;
   condition?: boolean | null;
 }) => {
   if (!condition) {

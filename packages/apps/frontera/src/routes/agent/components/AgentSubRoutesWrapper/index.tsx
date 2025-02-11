@@ -5,11 +5,9 @@ import { observer } from 'mobx-react-lite';
 import { ProtectedRoute } from '@shared/components/ProtectedRoute';
 
 import { Editor } from '../Editor';
-import { List } from '../List/List';
 import { AgentConfig } from '../AgentConfig/AgentConfig';
 
 export const AgentSubRoutesWrapper = observer(() => {
-  // todo change condition
   return (
     <Routes>
       <Route path='setup' element={<AgentConfig />} />
@@ -25,11 +23,11 @@ export const AgentSubRoutesWrapper = observer(() => {
         path='list'
         element={
           <ProtectedRoute condition={true} fallback={'../setup'}>
-            <List />
+            <div>People</div>
           </ProtectedRoute>
         }
       />
-      <Route index element={<Navigate replace to={`setup`} />} />
+      <Route path='*' element={<Navigate replace to='setup' />} />
     </Routes>
   );
 });

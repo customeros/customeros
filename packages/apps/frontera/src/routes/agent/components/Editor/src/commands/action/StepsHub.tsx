@@ -10,7 +10,6 @@ import { CommandItem } from '@ui/overlay/CommandMenu';
 import { MailReply } from '@ui/media/icons/MailReply';
 
 import { keywords } from './keywords';
-import { useUndoRedo } from '../../hooks';
 
 const MINUTES_PER_DAY = 1440;
 const DEFAULT_FIRST_EMAIL_WAIT = 30;

@@ -471,6 +471,7 @@ export const FlowBuilder = observer(
           />
           <Background />
           <FlowBuilderToolbar />
+          {/* todo explore way to merge that with flow settings panel*/}
           {store.ui.flowActionSidePanel.isOpen && <EmailSettingsPanel />}
         </ReactFlow>
       </>

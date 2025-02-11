@@ -13,6 +13,7 @@ import { NotFound } from './src/components/NotFound';
 import { OnboardingRoute } from './onboarding/route';
 import { CustomerMapRoute } from './customer-map/route';
 import { OrganizationRoute } from './organization/route';
+import { FlowEditorRoute } from './flow-editor/route.tsx';
 
 const NotFoundRoute: RouteObject = {
   path: '*',
@@ -31,6 +32,7 @@ export const RootRoute: RouteObject = {
     FinderRoute,
     CustomerMapRoute,
     ProspectsRoute,
+    FlowEditorRoute,
     OnboardingRoute,
     NotFoundRoute,
   ],

@@ -13,10 +13,7 @@ import { FlowSender, MailboxStatus, SenderDropdown } from './components';
 
 export const SelectOptimalSendingMailboxes = observer(() => {
   const store = useStore();
-  // todo integrate with proper data when BE is ready
-  const flow = store.flows.toArray()?.[0];
-
-  if (!flow) return null;
+  const flow = store.flows.toArray()?.[0]; // todo get proper flow when BE is ready
 
   const id = flow?.value?.metadata?.id;
   const hasSenders =

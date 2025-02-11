@@ -4,8 +4,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
 
 import { FlowSender } from './FlowSender';
+import { MailboxStatus } from './MailboxStatus';
 import { SenderDropdown } from './SenderDropdown';
-import { MailboxStatus } from './MailboxStatus.tsx';
 
 export const SenderSettings = observer(({ id }: { id: string }) => {
   const store = useStore();

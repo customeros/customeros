@@ -21,9 +21,9 @@ type ActionNodeProps = Omit<NodeProps, 'data'> & {
 };
 
 export const ActionNode = ({ data, ...flowProps }: ActionNodeProps) => {
-  return (
-    <>
-      <div className='h-[56px] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center'>
+  const renderNode = () => {
+    if (isEmailData(data)) {
+      return (
         <EmailActionNode
           {...flowProps}
           data={{
@@ -33,9 +33,26 @@ export const ActionNode = ({ data, ...flowProps }: ActionNodeProps) => {
             action: data.action,
           }}
         />
+      );
+    }
+  };
+
+  return (
+    <>
+      <div className='h-[56px] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center'>
+        {renderNode()}
         <Handle type='target' />
         <Handle type='source' />
       </div>
     </>
+  );
+};
+
+const isEmailData = (data: ActionNodeData): data is EmailData => {
+  return (
+    'subject' in data &&
+    'bodyTemplate' in data &&
+    (data.action === FlowActionType.EMAIL_NEW ||
+      data.action === FlowActionType.EMAIL_REPLY)
   );
 };

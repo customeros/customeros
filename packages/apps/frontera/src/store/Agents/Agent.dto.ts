@@ -30,6 +30,11 @@ export class Agent extends Entity<AgentDatum> {
     return this.value.id;
   }
 
+  @computed
+  get type() {
+    return this.value.type;
+  }
+
   @action
   public setListenerConfig(
     listenerType: AgentListenerEvent,

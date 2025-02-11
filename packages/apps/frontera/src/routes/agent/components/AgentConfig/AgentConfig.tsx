@@ -1,24 +1,14 @@
 import { useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
-import get from 'lodash/get';
 import { observer } from 'mobx-react-lite';
-import { AgentConfigViewUsecase } from '@domain/usecases/agents/agent-config-view.usecase.ts';
+import { AgentConfigViewUsecase } from '@domain/usecases/agents/agent-config-view.usecase';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 import { Icon } from '@ui/media/Icon';
-import { Capability } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 
-import { capabilities } from './Capabilities';
-
-const goalMap = {
-  identify_web_visitor:
-    'Identify website visitors and add them as enriched leads to CustomerOS',
-  evaluate_icp_fit:
-    'Qualify new leads based on whether they match your ideal customer profile or not',
-  receive_reply: 'Receive replies from leads and forward them to your team',
-};
+import { goals, configs } from './config';
 
 export const AgentConfig = observer(() => {
   const store = useStore();
@@ -34,84 +24,142 @@ export const AgentConfig = observer(() => {
     [id],
   );
 
-  const ActiveCapability = useMemo(
+  const ActiveConfig = useMemo(
     () =>
-      usecase.activeCapability
-        ? capabilities[usecase.activeCapability.type]
-        : () => null,
-    [usecase?.activeCapability?.type],
+      usecase.activeConfig ? configs[usecase.activeConfig.type] : () => null,
+    [usecase?.activeConfig?.type],
   );
 
   useEffect(() => {
-    if (!queryParams.get('cid') && agent) {
+    if (!queryParams.get('cid')) {
       setQueryParams((params) => {
-        if (!usecase.activeCapability) return params;
-
-        params.set('cid', agent.value.capabilities[0].id);
+        if (!usecase.activeConfig?.id) return params;
+        params.set('cid', usecase.activeConfig.id);
 
         return params;
       });
     }
   }, []);
 
-  if (!id || !agent) {
+  if (!id) {
     throw new Error('No id provided');
   }
 
   return (
-    <div className='flex h-screen'>
-      <div className='w-[448px] border-r border-r-grayModern-200 px-4 py-3'>
-        <div className='mb-2'>
-          <h2 className='font-medium mb-1'>Goal</h2>
-          <p className='pb-2 text-sm'>
-            {get(goalMap, agent?.value.goal ?? '', 'Unknown')}
-          </p>
-        </div>
+    <div>
+      <div className='flex h-screen'>
+        <div className='w-[448px] border-r border-r-grayModern-200 px-4 py-3'>
+          <div className='mb-2'>
+            <h2 className='font-medium mb-1'>Goal</h2>
+            <p className='pb-2 text-sm'>{agent?.value.goal ?? 'Unknown'}</p>
+          </div>
 
-        <h2 className='mb-2 font-medium text-sm'>This agent will:</h2>
+          <h2 className='mb-2 font-medium text-sm'>It's goal is to</h2>
+          <ul className='space-y-1 mb-4'>
+            {agent &&
+              goals[agent?.value.type]?.map((goal) => (
+                <div
+                  key={goal}
+                  className='flex items-center px-2 py-1 justify-between rounded-lg select-none'
+                >
+                  <div className='flex items-center gap-2'>
+                    <Icon
+                      stroke='none'
+                      name='dot-single'
+                      className={'text-grayModern-500'}
+                    />
+                    <p className='text-sm'>{goal}</p>
+                  </div>
+                </div>
+              ))}
+          </ul>
 
-        <ul className='space-y-1'>
-          {agent?.value.capabilities.map((capability: Capability) => (
-            <div
-              key={capability.id}
-              onClick={() => {
-                if (capability.config.length) {
-                  usecase.setActiveCapability(capability);
-                  navigate(`?cid=${capability.id}`);
-                }
-              }}
-              className={cn(
-                'flex items-center px-2 py-1 justify-between rounded-lg select-none',
-                capability.config.length &&
-                  'hover:bg-grayModern-200 cursor-pointer',
-                capability.id === usecase?.activeCapability?.id &&
-                  'bg-grayModern-100 hover:bg-grayModern-100',
-              )}
-            >
-              <div className='flex items-center gap-2'>
-                <Icon
-                  stroke={capability.errors ? 'currentColor' : 'none'}
-                  name={capability.errors ? 'radio-dot' : 'dot-single'}
-                  className={
-                    capability.errors ? 'text-error-500' : 'text-grayModern-500'
+          <h2 className='mb-2 font-medium text-sm'>It listens for</h2>
+          <ul className='space-y-1 mb-4'>
+            {agent?.value.listeners.map((listener) => (
+              <div
+                key={listener.id}
+                onClick={() => {
+                  if (listener.config.length) {
+                    usecase.setActiveConfig(listener);
+                    navigate(`?lid=${listener.id}`);
                   }
-                />
-                <p className='text-sm'>{capability.name ?? 'Unknown'}</p>
+                }}
+                className={cn(
+                  'flex items-center px-2 py-1 justify-between rounded-lg select-none',
+                  listener.config.length &&
+                    'hover:bg-grayModern-200 cursor-pointer',
+                  listener.id === usecase?.activeConfig?.id &&
+                    'bg-grayModern-100 hover:bg-grayModern-100 font-medium',
+                )}
+              >
+                <div className='flex items-center gap-2'>
+                  <Icon
+                    stroke={listener.errors ? 'currentColor' : 'none'}
+                    name={listener.errors ? 'radio-dot' : 'dot-single'}
+                    className={
+                      listener.errors ? 'text-error-500' : 'text-grayModern-500'
+                    }
+                  />
+                  <p className='text-sm'>{listener.name ?? 'Unknown'}</p>
+                </div>
+
+                {listener.config.length > 0 && (
+                  <Icon name='settings-02' className='text-grayModern-500' />
+                )}
               </div>
+            ))}
+          </ul>
 
-              {capability.config.length > 0 && (
-                <Icon name='settings-02' className='text-grayModern-500' />
-              )}
-            </div>
-          ))}
-        </ul>
-      </div>
+          <h2 className='mb-2 font-medium text-sm'>
+            It can perform these actions
+          </h2>
 
-      {usecase.activeCapability && (
-        <div className='w-[418px] border-r border-r-grayModern-200 px-4 py-3'>
-          <ActiveCapability />
+          <ul className='space-y-1'>
+            {agent?.value.capabilities.map((capability) => (
+              <div
+                key={capability.id}
+                onClick={() => {
+                  if (capability.config.length) {
+                    usecase.setActiveConfig(capability);
+                    navigate(`?cid=${capability.id}`);
+                  }
+                }}
+                className={cn(
+                  'flex items-center px-2 py-1 justify-between rounded-lg select-none',
+                  capability.config.length &&
+                    'hover:bg-grayModern-200 cursor-pointer',
+                  capability.id === usecase?.activeConfig?.id &&
+                    'bg-grayModern-100 hover:bg-grayModern-100 font-medium',
+                )}
+              >
+                <div className='flex items-center gap-2'>
+                  <Icon
+                    stroke={capability.errors ? 'currentColor' : 'none'}
+                    name={capability.errors ? 'radio-dot' : 'dot-single'}
+                    className={
+                      capability.errors
+                        ? 'text-error-500'
+                        : 'text-grayModern-500'
+                    }
+                  />
+                  <p className='text-sm'>{capability.name ?? 'Unknown'}</p>
+                </div>
+
+                {capability.config.length > 0 && (
+                  <Icon name='settings-02' className='text-grayModern-500' />
+                )}
+              </div>
+            ))}
+          </ul>
         </div>
-      )}
+
+        {usecase.activeConfig && (
+          <div className='w-[418px] border-r border-r-grayModern-200 px-4 py-3'>
+            <ActiveConfig />
+          </div>
+        )}
+      </div>
     </div>
   );
 });
