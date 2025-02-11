@@ -62,7 +62,7 @@ func TestCleanUrlBasePath(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := CleanUrlBasePath(tc.input)
+			got := StripUrlToBasePath(tc.input)
 			if got != tc.expected {
 				t.Errorf("CleanUrlBasePath(%q) = %q; want %q", tc.input, got, tc.expected)
 			}
