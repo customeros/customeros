@@ -48,10 +48,37 @@ export const App = () => {
       });
     };
 
+    const parseLinkedInUrl = (url: string): string | null => {
+      try {
+        if (url.includes("linkedin.com/sales/lead/")) {
+          const commaIndex = url.indexOf(",");
+          if (commaIndex !== -1) {
+            return url.slice(0, commaIndex);
+          }
+          return url;
+        } else if (url.includes("linkedin.com/in/")) {
+          return url;
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
     const updateLinkedInUrlFromTab = async (tab: chrome.tabs.Tab) => {
-      const isLinkedInProfile = tab.url?.includes("linkedin.com/in");
+      const isLinkedInProfile =
+        tab.url?.includes("linkedin.com/in") ||
+        tab.url?.includes("linkedin.com/sales/lead");
+
       setContact(null);
-      setLinkedInUrl(isLinkedInProfile ? tab.url || null : null);
+
+      const parsedUrl = tab.url ? parseLinkedInUrl(tab.url) : null;
+      setLinkedInUrl(parsedUrl);
+
+      if (!isLinkedInProfile || !parsedUrl) {
+        setIsLoading(false);
+        return;
+      }
 
       const sessionData = await new Promise<{
         email: string;
@@ -71,10 +98,11 @@ export const App = () => {
 
         chrome.runtime.onMessage.addListener(messageHandler);
       });
+
       if (sessionData?.apiKey) {
         try {
           const response = await fetch(
-            `https://api.customeros.ai/browserExtension/contact?linkedin=${tab.url}`,
+            `https://api.customeros.ai/browserExtension/contact?linkedin=${parsedUrl}`,
             {
               method: "GET",
               headers: {
@@ -88,7 +116,10 @@ export const App = () => {
             const data = await response.json();
             setContact(data.contact);
           }
-          if (!tab.url?.includes("linkedin.com/in")) {
+          if (
+            !tab.url?.includes("linkedin.com/in") &&
+            !tab.url?.includes("linkedin.com/sales/lead")
+          ) {
             setContact(null);
           }
         } catch (error) {
@@ -196,12 +227,13 @@ export const App = () => {
 
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        console.error("Failed to add contact");
+        setErrorMessage("We couldn't add this contact");
+        setTimeout(() => setErrorMessage(null), 5000);
       }
     } catch (error) {
       console.error("Error adding contact:", error);
       setErrorMessage("We couldn't add this contact");
-      setTimeout(() => setErrorMessage(null), 3000);
+      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
       setIsAddingContact(false);
     }
