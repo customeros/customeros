@@ -63,12 +63,13 @@ type InvoiceService interface {
 	CleanupInvoices()
 	GenerateNextPreviewInvoices()
 	AdjustInvoiceStatus()
+
 	// TODO stopped invoicing
-	//GenerateCycleInvoices()
-	//GenerateOffCycleInvoices()
-	//SendPayNotifications()
-	//GenerateInvoicePaymentLinks()
-	//SendInvoiceFinalizedEvent()
+	GenerateCycleInvoices()
+	GenerateOffCycleInvoices()
+	SendPayNotifications()
+	GenerateInvoicePaymentLinks()
+	SendInvoiceFinalizedEvent()
 }
 
 type invoiceService struct {
