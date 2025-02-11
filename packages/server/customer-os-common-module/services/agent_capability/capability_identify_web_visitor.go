@@ -2,8 +2,8 @@ package agent_capability
 
 import (
 	"context"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -178,7 +178,7 @@ func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, h
 	accepted := false
 
 	for _, website := range websites {
-		if utils.CleanUrlBasePath(website) == utils.CleanUrlBasePath(hostname) {
+		if utils.StripUrlToBasePath(website) == utils.StripUrlToBasePath(hostname) {
 			accepted = true
 		}
 	}

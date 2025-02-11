@@ -264,11 +264,11 @@ func (c *NewWebSessionProducer) sortUrlsByLength(urls []string) []string {
 }
 
 func (c *NewWebSessionProducer) extractPageUrl(page postgres_entity.WebTrackerEvents) string {
-	url := utils.CleanUrlBasePath(page.Hostname)
+	url := utils.StripUrlToBasePath(page.Hostname)
 	if page.Pathname != "" {
 		url = strings.TrimSuffix(fmt.Sprintf("%s/%s",
-			utils.CleanUrlBasePath(page.Hostname),
-			utils.CleanUrlBasePath(page.Pathname)), "/")
+			utils.StripUrlToBasePath(page.Hostname),
+			utils.StripUrlToBasePath(page.Pathname)), "/")
 	}
 	return url
 }

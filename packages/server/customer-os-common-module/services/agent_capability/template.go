@@ -30,7 +30,7 @@ var (
 )
 
 func (c *xxxxxCapability) Type() enum.AgentCapability {
-	return enum.CapabilityCheckSupportNeed
+	return enum.CapabilityIdentifyWebVisitor
 }
 
 func (c *xxxxxCapability) Name() string {

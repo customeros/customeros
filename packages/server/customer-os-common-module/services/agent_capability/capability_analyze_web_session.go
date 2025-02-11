@@ -218,7 +218,7 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 		return AnalyzeWebSessionOutput{}, nil
 	}
 
-	hostname := utils.CleanUrlBasePath(session.Hostname)
+	hostname := utils.StripUrlToBasePath(session.Hostname)
 
 	var referrer string
 	if session.Referrer == nil {
@@ -226,7 +226,7 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 	} else {
 		referrer = *session.Referrer
 	}
-	referrer = utils.CleanUrlBasePath(referrer)
+	referrer = utils.StripUrlToBasePath(referrer)
 	if strings.Contains(referrer, "syndicatedsearch.goog") {
 		referrer = "google.com"
 	}

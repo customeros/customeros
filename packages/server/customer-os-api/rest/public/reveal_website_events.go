@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"net/http"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -122,7 +122,7 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 	tracing.TagComponentRest(span)
 	span.LogKV("origin", origin)
 
-	cleanedOrigin := utils.CleanUrlBasePath(origin)
+	cleanedOrigin := utils.StripUrlToBasePath(origin)
 
 	tenant := h.cache.GetTenantForOrigin(cleanedOrigin)
 	if tenant != "" {
@@ -176,7 +176,7 @@ func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, a
 		}
 
 		for _, website := range config.Websites.Value {
-			if utils.CleanUrlBasePath(website) == cleanedOrigin {
+			if utils.StripUrlToBasePath(website) == cleanedOrigin {
 				return agent.Tenant
 			}
 		}
