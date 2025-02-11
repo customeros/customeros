@@ -59,14 +59,16 @@ type InvoiceFinalizedEventBody struct {
 }
 
 type InvoiceService interface {
-	GenerateCycleInvoices()
-	GenerateOffCycleInvoices()
-	SendPayNotifications()
 	SendRemindNotifications()
-	GenerateInvoicePaymentLinks()
 	CleanupInvoices()
 	GenerateNextPreviewInvoices()
 	AdjustInvoiceStatus()
+
+	// TODO stopped invoicing
+	GenerateCycleInvoices()
+	GenerateOffCycleInvoices()
+	SendPayNotifications()
+	GenerateInvoicePaymentLinks()
 	SendInvoiceFinalizedEvent()
 }
 

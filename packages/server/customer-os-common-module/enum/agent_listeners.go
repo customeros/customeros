@@ -8,25 +8,29 @@ import (
 type AgentListenerEvent string
 
 const (
-	EventCompanyIdentified       AgentListenerEvent = "company_identified"
-	EventCompanyNeedsHelp        AgentListenerEvent = "company_needs_help"
-	EventContactAddedToCampaign  AgentListenerEvent = "contact_added_to_campaign"
-	EventDoesNotNeedHelp         AgentListenerEvent = "does_not_need_help"
-	EventEmailBounced            AgentListenerEvent = "email_bounced"
-	EventEmailNotDeliverable     AgentListenerEvent = "email_not_deliverable"
-	EventEmailReplyNotReceived   AgentListenerEvent = "email_reply_not_received"
-	EventEmailReplyReceived      AgentListenerEvent = "email_reply_received"
-	EventICPFit                  AgentListenerEvent = "icp_fit"
-	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
-	EventHelpSpotted             AgentListenerEvent = "help_spotted"
-	EventMeetingLogged           AgentListenerEvent = "meeting_logged"
-	EventNewLead                 AgentListenerEvent = "new_lead"
-	EventNewMeetingRecording     AgentListenerEvent = "new_meeting_recording"
-	EventNewSupportVisit         AgentListenerEvent = "new_support_visit"
-	EventNewWebSession           AgentListenerEvent = "new_web_session"
-	EventRunICPQualifierAgent    AgentListenerEvent = "run_icp_qualifier_agent"
-	EventWebVisitorIdentified    AgentListenerEvent = "web_visitor_identified"
-	EventWebVisitorNotIdentified AgentListenerEvent = "web_visitor_not_identified"
+	EventCompanyIdentified              AgentListenerEvent = "company_identified"
+	EventCompanyNeedsHelp               AgentListenerEvent = "company_needs_help"
+	EventContactAddedToCampaign         AgentListenerEvent = "contact_added_to_campaign"
+	EventDoesNotNeedHelp                AgentListenerEvent = "does_not_need_help"
+	EventEmailBounced                   AgentListenerEvent = "email_bounced"
+	EventEmailNotDeliverable            AgentListenerEvent = "email_not_deliverable"
+	EventEmailReplyNotReceived          AgentListenerEvent = "email_reply_not_received"
+	EventEmailReplyReceived             AgentListenerEvent = "email_reply_received"
+	EventICPFit                         AgentListenerEvent = "icp_fit"
+	EventICPNotAFit                     AgentListenerEvent = "icp_not_a_fit"
+	EventHelpSpotted                    AgentListenerEvent = "help_spotted"
+	EventMeetingLogged                  AgentListenerEvent = "meeting_logged"
+	EventNewLead                        AgentListenerEvent = "new_lead"
+	EventNewMeetingRecording            AgentListenerEvent = "new_meeting_recording"
+	EventNewSupportVisit                AgentListenerEvent = "new_support_visit"
+	EventNewWebSession                  AgentListenerEvent = "new_web_session"
+	EventRunICPQualifierAgent           AgentListenerEvent = "run_icp_qualifier_agent"
+	EventWebVisitorIdentified           AgentListenerEvent = "web_visitor_identified"
+	EventWebVisitorNotIdentified        AgentListenerEvent = "web_visitor_not_identified"
+	EventInvoicePaid                    AgentListenerEvent = "invoice_paid"
+	EventInvoiceVoided                  AgentListenerEvent = "invoice_voided"
+	EventStartInvoiceRun                AgentListenerEvent = "start_invoice_run"
+	EventStartInvoiceRunWithAutopayment AgentListenerEvent = "start_invoice_run_with_autopayment"
 
 	EventNotSet AgentListenerEvent = ""
 )
@@ -75,6 +79,10 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 		EventRunICPQualifierAgent,
 		EventWebVisitorIdentified,
 		EventWebVisitorNotIdentified,
+		EventInvoicePaid,
+		EventInvoiceVoided,
+		EventStartInvoiceRun,
+		EventStartInvoiceRunWithAutopayment,
 
 		EventNotSet:
 

@@ -7,6 +7,7 @@ import (
 type AgentCapability string
 
 const (
+	CapabilityTemplate                           AgentCapability = "template"
 	CapabilityAddMeetingNotesToCompany           AgentCapability = "add_meeting_notes_to_company"
 	CapabilityAnalyzeWebSessionIntent            AgentCapability = "analyze_web_session_for_intent"
 	CapabilityApplyTagToCompany                  AgentCapability = "apply_tag_to_company"
@@ -36,7 +37,6 @@ const (
 	CapabilityProcessRefund                      AgentCapability = "process_refund"
 	CapabilityScheduleEmailDelivery              AgentCapability = "schedule_email_delivery"
 	CapabilitySelectOptimalSendingMailbox        AgentCapability = "select_optimal_sending_mailbox"
-	CapabilitySendInvoice                        AgentCapability = "send_invoice"
 	CapabilitySendLinkedinConnectionRequest      AgentCapability = "send_linkedin_connection_request"
 	CapabililtySendLinkedinMessage               AgentCapability = "send_linkedin_message"
 	CapabilitySyncLinkedinConnections            AgentCapability = "sync_linkedin_connections"
@@ -47,6 +47,7 @@ const (
 	CapabilityTrackCampaignEngagement            AgentCapability = "track_campaign_engagement"
 	CapabilityUpdateCompanyStatus                AgentCapability = "update_company_status"
 	CapabilityValidateEmailAddressDeliverability AgentCapability = "validate_email_deliverability"
+	CapabilitySendInvoiceViaEmail                AgentCapability = "send_invoice_via_email"
 )
 
 func (t AgentCapability) String() string {
@@ -56,6 +57,7 @@ func (t AgentCapability) String() string {
 func GetAgentCapability(s string) (AgentCapability, error) {
 	switch AgentCapability(s) {
 	case
+		CapabilityTemplate,
 		CapabilityAddMeetingNotesToCompany,
 		CapabilityAnalyzeWebSessionIntent,
 		CapabilityApplyTagToCompany,
@@ -85,7 +87,6 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityProcessRefund,
 		CapabilityScheduleEmailDelivery,
 		CapabilitySelectOptimalSendingMailbox,
-		CapabilitySendInvoice,
 		CapabilitySendLinkedinConnectionRequest,
 		CapabililtySendLinkedinMessage,
 		CapabilitySyncLinkedinConnections,
@@ -95,6 +96,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilitySyncWithAccountingSystem,
 		CapabilityTrackCampaignEngagement,
 		CapabilityUpdateCompanyStatus,
+		CapabilitySendInvoiceViaEmail,
 		CapabilityValidateEmailAddressDeliverability:
 		return AgentCapability(s), nil
 
