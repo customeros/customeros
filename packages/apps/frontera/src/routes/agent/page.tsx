@@ -32,10 +32,9 @@ export const AgentPage = observer(() => {
 
   useEffect(() => {
     if (!queryParams.get('cid')) {
-      setQueryParams(
-        (params) => {
-          if (!usecase.activeConfig) return params;
-          params.set('cid', usecase.activeConfig?.id);
+      setQueryParams((params) => {
+          if (!usecase.activeConfig?.id) return params;
+          params.set('cid', usecase.activeConfig.id);
 
           return params;
         },

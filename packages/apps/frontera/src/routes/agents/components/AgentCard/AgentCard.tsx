@@ -10,6 +10,7 @@ interface AgentCardProps {
   icon?: string;
   color: string;
   hasError?: boolean;
+  defaultName: string;
   status: 'ON' | 'OFF';
 }
 
@@ -19,6 +20,7 @@ export const AgentCard = ({
   icon,
   status,
   hasError,
+  defaultName,
   color = 'grayModern',
 }: AgentCardProps) => {
   const navigate = useNavigate();
@@ -44,22 +46,29 @@ export const AgentCard = ({
       </div>
 
       <div className='flex justify-between w-full'>
-        <p className='line-clamp-1 text-sm font-medium'>{name}</p>
-        <Tag colorScheme={tagColor}>
-          <TagLabel className='flex items-center gap-1'>
-            <Icon
-              stroke='none'
-              name={
-                hasError
-                  ? 'dot-single'
-                  : status === 'OFF'
-                  ? 'dot-single'
-                  : 'dot-live-success'
-              }
-            />
-            {status}
-          </TagLabel>
-        </Tag>
+        <div className='flex flex-col justify-center'>
+          {name !== defaultName && (
+            <p className='line-clamp-1 text-xs text-grayModern-500'>{name}</p>
+          )}
+          <p className='line-clamp-2 text-sm font-medium'>{defaultName}</p>
+        </div>
+        <div className='flex items-center'>
+          <Tag colorScheme={tagColor}>
+            <TagLabel className='flex items-center gap-1'>
+              <Icon
+                stroke='none'
+                name={
+                  hasError
+                    ? 'dot-single'
+                    : status === 'OFF'
+                    ? 'dot-single'
+                    : 'dot-live-success'
+                }
+              />
+              {status}
+            </TagLabel>
+          </Tag>
+        </div>
       </div>
     </div>
   );

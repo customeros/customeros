@@ -19,6 +19,11 @@ type CapabilityConfig = {
 
 export class Agent extends Entity<AgentDatum> {
   @observable accessor value: AgentDatum = Agent.default();
+  static defaultNameByType = {
+    [AgentType.WebVisitIdentifier]: 'Web visitor identifier',
+    [AgentType.SupportSpotter]: 'Support spotter',
+    [AgentType.IcpQualifier]: 'Icp qualifier',
+  };
 
   constructor(store: AgentStore, data: AgentDatum) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,6 +33,11 @@ export class Agent extends Entity<AgentDatum> {
   @computed
   get id() {
     return this.value.id;
+  }
+
+  @computed
+  get defaultName() {
+    return Agent.defaultNameByType[this.value.type];
   }
 
   @action

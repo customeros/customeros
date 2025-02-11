@@ -46,6 +46,7 @@ export const AgentsPage = observer(() => {
               icon={agent.value.icon}
               name={agent.value.name}
               color={agent.value.color}
+              defaultName={agent.defaultName}
               status={agent.value.isActive ? 'ON' : 'OFF'}
               hasError={!!agent.value.error || !agent.value.isConfigured}
             />
