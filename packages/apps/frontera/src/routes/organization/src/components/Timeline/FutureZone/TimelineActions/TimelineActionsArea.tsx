@@ -4,7 +4,7 @@ import { cn } from '@ui/utils/cn';
 import { useTimelineActionContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 
 import { EmailTimelineAction } from './email/EmailTimelineAction';
-import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
+// import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
 
 interface TimelineActionsAreaProps {
   hide: () => void;
@@ -13,7 +13,7 @@ interface TimelineActionsAreaProps {
 }
 
 export const TimelineActionsArea = ({
-  hide,
+  // hide,
   activeEditor,
   emailUseCase,
 }: TimelineActionsAreaProps) => {
@@ -31,7 +31,7 @@ export const TimelineActionsArea = ({
       {openedEditor === 'email' && (
         <EmailTimelineAction emailUseCase={emailUseCase} />
       )}
-      {activeEditor === 'log-entry' && <LogEntryTimelineAction hide={hide} />}
+      {/* {activeEditor === 'log-entry' && <LogEntryTimelineAction hide={hide} />} */}
     </div>
   );
 };

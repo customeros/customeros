@@ -14,7 +14,6 @@ import { TagList } from './TagsList.tsx';
 const entityTypes = {
   [EntityType.Organization]: { label: 'Company' },
   [EntityType.Contact]: { label: 'Contact' },
-  [EntityType.LogEntry]: { label: 'Log entry' },
 };
 export const TagsManager = observer(() => {
   const store = useStore();

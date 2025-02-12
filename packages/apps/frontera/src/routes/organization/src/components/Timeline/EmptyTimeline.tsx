@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@shared/hooks/useStore';
 import { TimelineActions } from '@organization/components/Timeline/FutureZone/TimelineActions/TimelineActions';
 
-import { FutureZone } from './FutureZone/FutureZone';
+// import { FutureZone } from './FutureZone/FutureZone';
 import EmptyTimelineIllustration from './assets/EmptyTimelineIllustration';
 
 interface EmptyTimelineProps {
@@ -37,7 +37,7 @@ export const EmptyTimeline = observer(
             <TimelineActions invalidateQuery={invalidateQuery} />
           </div>
           <div className='flex flex-1 h-full bg-[#F9F9FB]'>
-            <FutureZone />
+            {/* <FutureZone /> */}
           </div>
         </div>
       </div>

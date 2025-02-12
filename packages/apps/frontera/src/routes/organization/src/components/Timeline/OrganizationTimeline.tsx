@@ -24,7 +24,7 @@ import { TimelineItemSkeleton } from '@organization/components/Timeline/PastZone
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/shared/TimelineEventPreview/TimelineEventPreviewModal';
 
 import { useTimelineMeta } from './state';
-import { FutureZone } from './FutureZone/FutureZone';
+// import { FutureZone } from './FutureZone/FutureZone';
 import { EmailStub, TimelineItem } from './PastZone/events';
 import { MeetingStub } from './PastZone/events/meeting/MeetingStub';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
@@ -152,7 +152,7 @@ export const OrganizationTimeline = observer(() => {
     return (
       <>
         <TimelineActions invalidateQuery={invalidateQuery} />
-        <FutureZone />
+        {/* <FutureZone /> */}
         <div className='h-[64px]' />
       </>
     );

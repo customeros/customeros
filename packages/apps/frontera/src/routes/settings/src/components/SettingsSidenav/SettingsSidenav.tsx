@@ -6,9 +6,9 @@ import { useLocalStorage } from 'usehooks-ts';
 import { cn } from '@ui/utils/cn';
 import { Image } from '@ui/media/Image/Image';
 import { Link01 } from '@ui/media/icons/Link01';
-import { Receipt } from '@ui/media/icons/Receipt';
+// import { Receipt } from '@ui/media/icons/Receipt';
 import { useStore } from '@shared/hooks/useStore';
-import { Dataflow03 } from '@ui/media/icons/Dataflow03';
+// import { Dataflow03 } from '@ui/media/icons/Dataflow03';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
@@ -118,7 +118,7 @@ export const SettingsSidenav = observer(() => {
           checkIsActive={checkIsActive}
           handleItemClick={handleItemClick}
         /> */}
-            <SidenavItem
+            {/* <SidenavItem
               label='Customer billing'
               isActive={checkIsActive('billing')}
               onClick={handleItemClick('billing')}
@@ -132,8 +132,8 @@ export const SettingsSidenav = observer(() => {
                   )}
                 />
               }
-            />
-            <SidenavItem
+            /> */}
+            {/* <SidenavItem
               label='Integrations'
               isActive={checkIsActive('integrations')}
               onClick={handleItemClick('integrations')}
@@ -146,7 +146,7 @@ export const SettingsSidenav = observer(() => {
                   )}
                 />
               }
-            />
+            /> */}
           </div>
           <div className='flex flex-col space-y-1 flex-grow justify-end'>
             {/* <NotificationCenter /> */}

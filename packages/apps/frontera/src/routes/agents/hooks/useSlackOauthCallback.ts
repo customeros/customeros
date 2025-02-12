@@ -30,7 +30,7 @@ export const useSlackOauthCallback = () => {
     }
 
     if (id) {
-      navigate(`/agents/${id}?${cid}`);
+      navigate(`/agents/${id}?${cid}`, { replace: true });
     }
   }, [store.session.isAuthenticated]);
 };
