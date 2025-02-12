@@ -3,19 +3,26 @@ import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
-import { Capability } from '@graphql/types';
+import {
+  AgentType,
+  Capability,
+  AgentListener,
+  CapabilityType,
+  AgentListenerEvent,
+} from '@graphql/types';
 
 export class AgentViewUsecase {
   private service = new AgentService();
   private root = RootStore.getInstance();
-  @observable private accessor _activeCapabilityId: string = '';
+  @observable private accessor _activeConfigId: string = '';
 
-  constructor(private id: string, private defaultCapabilityId?: string | null) {
-    if (this.defaultCapabilityId?.length) {
-      this._activeCapabilityId = this.defaultCapabilityId;
+  constructor(private id: string, private defaultConfigId?: string | null) {
+    if (this.defaultConfigId?.length) {
+      this._activeConfigId = this.defaultConfigId;
     }
+
     this.toggleActive = this.toggleActive.bind(this);
-    this.setActiveCapability = this.setActiveCapability.bind(this);
+    this.setActiveConfig = this.setActiveConfig.bind(this);
   }
 
   @computed
@@ -24,27 +31,38 @@ export class AgentViewUsecase {
   }
 
   @computed
-  get activeCapability() {
+  get activeConfig() {
     if (!this.agent) return null;
 
-    if (!this._activeCapabilityId) {
-      return this.agent?.value.capabilities[0];
-    }
-
-    return this.agent?.value.capabilities.find(
-      (c) => c.id === this._activeCapabilityId,
+    return (
+      this.agent?.value.listeners.find((c) =>
+        this._activeConfigId
+          ? c.id === this._activeConfigId
+          : c.type ===
+            AgentViewUsecase.defaultConfigMap[
+              this.agent?.value.type ?? AgentType.WebVisitIdentifier
+            ],
+      ) ??
+      this.agent?.value.capabilities.find((c) =>
+        this._activeConfigId
+          ? c.id === this._activeConfigId
+          : c.type ===
+            AgentViewUsecase.defaultConfigMap[
+              this.agent?.value.type ?? AgentType.WebVisitIdentifier
+            ],
+      )
     );
   }
 
   @action
-  setActiveCapability(capability: Capability) {
-    const span = Tracer.span('AgentViewUsecase.setActiveCapability', {
-      previousActiveCapability: this.activeCapability?.type,
+  setActiveConfig(listenerOrCapability: Capability | AgentListener) {
+    const span = Tracer.span('AgentViewUsecase.setActiveConfig', {
+      previous: this.activeConfig?.type,
     });
 
-    this._activeCapabilityId = capability.id;
+    this._activeConfigId = listenerOrCapability.id;
 
-    span.end({ currentActiveCapability: this.activeCapability?.type });
+    span.end({ current: this.activeConfig?.type });
   }
 
   toggleActive() {
@@ -61,4 +79,10 @@ export class AgentViewUsecase {
 
     span.end();
   }
+
+  private static defaultConfigMap = {
+    [AgentType.WebVisitIdentifier]: AgentListenerEvent.NewWebSession,
+    [AgentType.IcpQualifier]: CapabilityType.IcpQualify,
+    [AgentType.TagSupport]: CapabilityType.ApplyTag,
+  };
 }

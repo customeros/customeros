@@ -7,5 +7,6 @@ type AgentFields struct {
 	Icon        *string `json:"icon,omitempty"`
 	Name        *string `json:"name,omitempty"`
 	Goal        *string `json:"goal,omitempty"`
+	Scope       *string `json:"scope,omitempty"`
 	FlowID      *string `json:"flowId,omitempty"`
 }

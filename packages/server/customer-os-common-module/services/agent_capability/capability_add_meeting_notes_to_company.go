@@ -73,7 +73,7 @@ func (c *AddMeetingNotesToCompanyCapability) ValidateInput(input AddMeetingNotes
 	return nil
 }
 
-func (c *AddMeetingNotesToCompanyCapability) ValidateConfig(config postgres_entity.NoConfig) error {
+func (c *AddMeetingNotesToCompanyCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 

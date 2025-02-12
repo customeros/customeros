@@ -37,12 +37,14 @@ import {
   RenameFlow,
   AssignOwner,
   ChangeStage,
+  CreateAgent,
   EditJobTitle,
   AddNewDomain,
   RemoveDomain,
   CreateNewFlow,
   FlowsCommands,
   DuplicateFlow,
+  AgentCommands,
   OpportunityHub,
   ChangeCurrency,
   EditPersonaTag,
@@ -160,6 +162,10 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   //SKU
   EditSku: <EditSku />,
   AddNewSku: <AddNewSku />,
+
+  //Agent
+  CreateAgent: <CreateAgent />,
+  AgentCommands: <AgentCommands />,
 };
 
 export const CommandMenu = observer(() => {
@@ -180,7 +186,13 @@ export const CommandMenu = observer(() => {
         store.ui.commandMenu.setOpen(false);
         store.ui.commandMenu.setType('OpportunityHub');
       })
-
+      .with('/agents', () => {
+        if (store.ui.commandMenu.type === 'AgentCommands') {
+          store.ui.commandMenu.setOpen(false);
+        } else {
+          store.ui.commandMenu.setType('AgentCommands');
+        }
+      })
       .otherwise(() => {
         store.ui.commandMenu.setOpen(false);
       });

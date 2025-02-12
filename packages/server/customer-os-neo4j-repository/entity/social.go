@@ -87,5 +87,6 @@ func (s SocialEntity) ExtractLinkedinPersonIdentifierFromUrl() string {
 			identifier = ""
 		}
 	}
+
 	return identifier
 }

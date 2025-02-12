@@ -7,11 +7,12 @@ import (
 type AgentType string
 
 const (
-	AgentCashflowGuardian     AgentType = "cashflow_guardian"
+	AgentCampaignManager      AgentType = "campaign_manager"
 	AgentICPQualifier         AgentType = "icp_qualifier"
 	AgentMeetingKeeper        AgentType = "meeting_keeper"
 	AgentSupportSpotter       AgentType = "support_spotter"
 	AgentWebVisitorIdentifier AgentType = "web_visitor_identifier"
+	AgentCashflowGuardian     AgentType = "cashflow_guardian"
 )
 
 func (t AgentType) String() string {
@@ -21,6 +22,7 @@ func (t AgentType) String() string {
 func GetAgentType(s string) (AgentType, error) {
 	switch AgentType(s) {
 	case
+		AgentCampaignManager,
 		AgentCashflowGuardian,
 		AgentMeetingKeeper,
 		AgentICPQualifier,
@@ -39,7 +41,9 @@ const (
 	AgentGoalCaptureExternalMeeting AgentGoal = "capture_external_meeting"
 	AgentGoalEvaluateICPFit         AgentGoal = "evaluate_icp_fit"
 	AgentGoalIdentifyWebVisitor     AgentGoal = "identify_web_visitor"
+	AgentGoalReceiveReply           AgentGoal = "receive_reply"
 	AgentGoalSpotHelpNeeded         AgentGoal = "spot_help_needed"
+	AgentGoalGetPaid                AgentGoal = "get_paid"
 )
 
 func (t AgentGoal) String() string {
@@ -52,7 +56,9 @@ func GetAgentGoal(s string) (AgentGoal, error) {
 		AgentGoalCaptureExternalMeeting,
 		AgentGoalEvaluateICPFit,
 		AgentGoalIdentifyWebVisitor,
-		AgentGoalSpotHelpNeeded:
+		AgentGoalReceiveReply,
+		AgentGoalSpotHelpNeeded,
+		AgentGoalGetPaid:
 		return AgentGoal(s), nil
 
 	default:

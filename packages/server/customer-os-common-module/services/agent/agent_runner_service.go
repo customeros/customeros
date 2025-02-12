@@ -95,6 +95,18 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	var capErr error
 	for _, capabilityTypeStr := range *&play.Capabilities {
 
+		// ensure execution is not completed yet
+		execution, err := a.postgresRepositories.AgentExecutionRepository.GetById(ctx, executionID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			capErr = err
+			break
+		}
+		// execution already completed, stop
+		if execution.Status == enum.AgentExecutionCompleted {
+			break
+		}
+
 		capabilityType, err := enum.GetAgentCapability(capabilityTypeStr)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -135,7 +147,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 
 	if capErr != nil {
 		tracing.TraceErr(span, capErr)
-		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, enum.AgentExecutionFail, utils.StringPtr(capErr.Error()), false)
+		dbErr := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, executionID, capErr.Error())
 		if dbErr != nil {
 			tracing.TraceErr(span, errors.Wrap(dbErr, "unable to update agent execution record"))
 			return dbErr
@@ -144,7 +156,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	// update agentExecutionRecord
-	_, err = a.postgresRepositories.AgentExecutionRepository.Finish(ctx, executionID)
+	err = a.postgresRepositories.AgentExecutionRepository.Finish(ctx, executionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

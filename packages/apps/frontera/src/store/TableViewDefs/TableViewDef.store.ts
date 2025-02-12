@@ -187,7 +187,6 @@ export class TableViewDefStore extends Store<TableViewDefDatum, TableViewDef> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        this.persistGroup();
       });
     }
   }

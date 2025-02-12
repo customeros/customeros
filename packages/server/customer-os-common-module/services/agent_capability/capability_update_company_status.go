@@ -49,7 +49,7 @@ func (c *UpdateCompanyStatusCapability) Type() enum.AgentCapability {
 }
 
 func (c *UpdateCompanyStatusCapability) Name() string {
-	return "Update company status"
+	return "Update the status of companies"
 }
 
 func (c *UpdateCompanyStatusCapability) NewInput() UpdateCompanyStatusInput {

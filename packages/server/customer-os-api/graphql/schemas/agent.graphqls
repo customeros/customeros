@@ -1,118 +1,148 @@
 extend type Query {
-    agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    slackChannelsWithBot: [AgentSlackChannel!]!
+  agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+  slackChannelsWithBot: [AgentSlackChannel!]!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
 }
 
 extend type Mutation {
-    agent_Save(input: AgentSaveInput!): Agent!
+  agent_Save(input: AgentSaveInput!): Agent!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
+  agent_Delete(id: ID!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type AgentSlackChannel {
-    channelId: String!
-    name: String!
+  channelId: String!
+  name: String!
 }
 
 enum AgentType {
-    WEB_VISIT_IDENTIFIER
-    TAG_SUPPORT
-    ICP_QUALIFIER
+  CAMPAIGN_MANAGER
+  ICP_QUALIFIER
+  MEETING_KEEPER
+  SUPPORT_SPOTTER
+  WEB_VISIT_IDENTIFIER
+  CASHFLOW_GUARDIAN
+}
+
+enum AgentScope {
+  WORKSPACE
+  PERSONAL
 }
 
 type Agent {
-    id: ID!
-    type: AgentType!
-    name: String!
-    capabilities: [Capability!]!
-    listeners: [AgentListener!]!
-    goalType: String!
-    goal: String!
-    isActive: Boolean!
-    isConfigured: Boolean!
-    flowId: ID
-    visible: Boolean!
-    createdAt: Time!
-    updatedAt: Time!
-    error: String
-    color: String!
-    icon: String!
+  id: ID!
+  type: AgentType!
+  name: String!
+  scope: AgentScope!
+  capabilities: [Capability!]!
+  listeners: [AgentListener!]!
+  goalType: String!
+  goal: String!
+  isActive: Boolean!
+  isConfigured: Boolean!
+  flowId: ID
+  visible: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  error: String
+  color: String!
+  icon: String!
 }
 
 input AgentSaveInput {
-    id:             ID
-    type:           AgentType @deprecated ## field is not update-able
-    name:           String
-    capabilities:   [CapabilitySaveInput!]
-    listeners:      [AgentListenerSaveInput!]
-    goal:           String @deprecated ## field is not update-able
-    isActive:       Boolean
-    flowId:         ID
-    visible:        Boolean
-    color:          String
-    icon:           String
+  id: ID
+  type: AgentType @deprecated ## field is not update-able
+  name: String
+  capabilities: [CapabilitySaveInput!]
+  listeners: [AgentListenerSaveInput!]
+  goal: String @deprecated ## field is not update-able
+  isActive: Boolean
+  flowId: ID
+  visible: Boolean
+  color: String
+  icon: String
 }
 
 enum CapabilityType {
-    IDENTIFY_WEB_VISITOR
-    CREATE_ORGANIZATION
-    ANALYZE_WEB_SESSION_INTENT
-    SEND_SLACK_NOTIFICATION
-    WEB_VISITOR_SEND_SLACK_NOTIFICATION
-    APPLY_TAG
-    CREATE_MARKDOWN_TIMELINE_EVENT
-    ICP_QUALIFY
-    GATHER_COMPANY_INTELLIGENCE
-    UPDATE_COMPANY_STATUS
+  ADD_MEETING_NOTES_TO_COMPANY
+  ANALYZE_WEB_SESSION_INTENT
+  APPLY_TAG_TO_COMPANY
+  CREATE_CONTACTS
+  CREATE_ORGANIZATION
+  CREATE_MARKDOWN_TIMELINE_EVENT
+  DETECT_SUPPORT_WEBVISIT
+  ENRICH_EMAIL_ADDRESS
+  EXTRACT_MEETING_HIGHLIGHTS
+  EXTRACT_SUPPORT_SIGNALS_FROM_MEETING
+  FORWARD_EMAIL_REPLY
+  GATHER_COMPANY_INTELLIGENCE
+  ICP_QUALIFY
+  IDENTIFY_MEETING_PARTICIPANTS
+  IDENTIFY_WEB_VISITOR
+  MANAGE_CAMPAIGN_EXECUTION
+  MANAGE_EMAIL_DELIVERY_FAILURE
+  SELECT_OPTIMAL_SENDING_MAILBOX
+  SEND_SLACK_NOTIFICATION
+  UPDATE_COMPANY_STATUS
+  VALIDATE_EMAIL_DELIVERABILITY
+  WEB_VISITOR_SEND_SLACK_NOTIFICATION
+  GENERATE_INVOICE
+  SEND_INVOICE_VIA_EMAIL
 }
 
 type Capability {
-    id:     ID!
-    type:   CapabilityType!
-    name:   String!
-    active: Boolean!
-    config: String!
-    errors: String
+  id: ID!
+  type: CapabilityType!
+  name: String!
+  active: Boolean!
+  config: String!
+  errors: String
 }
 
 input CapabilitySaveInput {
-    id:     ID
-    type:   CapabilityType @deprecated ## field is not update-able
-    name:   String
-    active: Boolean
-    config: String
-    errors: String
+  id: ID
+  type: CapabilityType @deprecated ## field is not update-able
+  name: String
+  active: Boolean
+  config: String
+  errors: String
 }
 
 enum AgentListenerEvent {
-    NEW_LEAD
-    ICP_FIT
-    ICP_NOT_A_FIT
-    RUN_ICP_QUALIFIER_AGENT
-    WEB_VISITOR_IDENTIFIED
-    WEB_VISITOR_NOT_IDENTIFIED
-    NEW_WEB_SESSION
+  COMPANY_IDENTIFIED
+  COMPANY_NEEDS_HELP
+  CONTACT_ADDED_TO_CAMPAIGN
+  EMAIL_BOUNCED
+  EMAIL_REPLY_RECEIVED
+  ICP_FIT
+  ICP_NOT_A_FIT
+  NEW_LEAD
+  NEW_MEETING_RECORDING
+  NEW_WEB_SESSION
+  RUN_ICP_QUALIFIER_AGENT
+  WEB_VISITOR_IDENTIFIED
+  WEB_VISITOR_NOT_IDENTIFIED
+  START_INVOICE_RUN
+  START_INVOICE_RUN_WITH_AUTOPAYMENT
 }
 
 type AgentListener {
-    id:     ID!
-    type:   AgentListenerEvent!
-    name:   String!
-    active: Boolean!
-    config: String!
-    errors: String
+  id: ID!
+  type: AgentListenerEvent!
+  name: String!
+  active: Boolean!
+  config: String!
+  errors: String
 }
 
 input AgentListenerSaveInput {
-    id:     ID
-    type:   AgentListenerEvent @deprecated ## field is not update-able
-    name:   String
-    active: Boolean
-    config: String
-    errors: String
+  id: ID
+  type: AgentListenerEvent @deprecated ## field is not update-able
+  name: String
+  active: Boolean
+  config: String
+  errors: String
 }
-

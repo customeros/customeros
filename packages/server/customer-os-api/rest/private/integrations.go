@@ -1,6 +1,8 @@
 package private
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -9,7 +11,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 )
 
 type PrivateIntegrationHandler struct {
@@ -26,12 +27,13 @@ func NewPrivateIntegrationHandler(services *cosapi_services.Services, responseHa
 
 func (h *PrivateIntegrationHandler) GetIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "PrivateIntegrationHandler.GetIntegrations")
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		tenantName := c.Keys["TenantName"].(string)
-		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.GetForTenant(tenantName)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/settings/integrations", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultServiceSpanTags(ctx, span)
+
+		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.GetForTenant(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
@@ -44,9 +46,11 @@ func (h *PrivateIntegrationHandler) GetIntegrations() gin.HandlerFunc {
 
 func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "PrivateIntegrationHandler.CreateIntegration")
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/settings/integrations", c.Request.Header)
 		defer span.Finish()
-		tracing.TagComponentRest(span)
+		tracing.SetDefaultServiceSpanTags(ctx, span)
 
 		var request map[string]interface{}
 
@@ -56,9 +60,7 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 			return
 		}
 
-		tenantName := c.Keys["TenantName"].(string)
-
-		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.SaveIntegrationData(tenantName, request)
+		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.SaveIntegrationData(ctx, request)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -70,18 +72,19 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 
 func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "PrivateIntegrationHandler.DeleteIntegration")
-		defer span.Finish()
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		tracing.TagComponentRest(span)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/settings/integrations/:identifier", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultServiceSpanTags(ctx, span)
+
 		identifier := c.Param("identifier")
 		if identifier == "" {
 			c.JSON(500, gin.H{"error": "integration identifier is empty"})
 			return
 		}
-		tenantName := c.Keys["TenantName"].(string)
 
-		data, activeServices, err := h.services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
+		data, activeServices, err := h.services.TenantSettingsService.ClearIntegrationData(ctx, identifier)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

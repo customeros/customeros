@@ -48,6 +48,25 @@ func NewNewMeetingRecordingListener(
 	}
 }
 
+type NewMeetingRecordingListenerConfig struct {
+	MeetingSource MeetingSourceConfig `json:"meetingSource"`
+}
+
+type MeetingSourceConfig struct {
+	Value enum.Source `json:"value"`
+	Error string      `json:"error"`
+}
+
+func (l *NewMeetingRecordingListenerConfig) Validate() bool {
+	switch {
+	case l.MeetingSource.Value == enum.SourceFathom:
+		return true
+	case l.MeetingSource.Value == enum.SourceGrain:
+		return true
+	}
+	return false
+}
+
 func (l *NewMeetingRecordingListener) Type() enum.AgentListenerEvent {
 	return enum.EventNewMeetingRecording
 }
@@ -57,12 +76,17 @@ func (l *NewMeetingRecordingListener) Name() string {
 }
 
 func (l *NewMeetingRecordingListener) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	return &NewMeetingRecordingListenerConfig{
+		MeetingSource: MeetingSourceConfig{
+			Value: enum.SourceUnknown,
+		},
+	}
 }
 
-func (l *NewMeetingRecordingListener) SubscribedAgents() []enum.AgentType {
+func (l *NewMeetingRecordingListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentMeetingKeeper,
+		enum.AgentSupportSpotter,
 	}
 }
 
@@ -86,6 +110,12 @@ func (l *NewMeetingRecordingListener) Handle(ctx context.Context, baseEvent any)
 
 	data, err := events.DecodeEventData[dto.NewMeetingRecording](ctx, event)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if data.Source == enum.SourceUnknown {
+		err := errors.New("Meeting source cannot be unknown")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -117,12 +147,14 @@ func (l *NewMeetingRecordingListener) handleExecution(ctx context.Context, data 
 
 	var errs error
 	for _, agent := range activeAgents {
-		// replaced route with generic mapping
+		// map event data to execution input
 		initialParams, err := utils.StructToMap(data)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
+
+		// run
 		err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -138,10 +170,11 @@ func (l *NewMeetingRecordingListener) lookupActiveAgentsForUser(ctx context.Cont
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, l.SubscribedAgents())
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, l.ExecutingAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
 	}
+
 	return agents
 }

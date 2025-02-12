@@ -1,13 +1,17 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { EditIcpDomainsUsecase } from '@domain/usecases/agents/capabilities/edit-icp-domains.usecase';
 import { EditIcpQualificationCriteriaUsecase } from '@domain/usecases/agents/capabilities/edit-icp-qualification-criteria.usecase';
 import { EditIcpDisqualificationCriteriaUsecase } from '@domain/usecases/agents/capabilities/edit-icp-disqualification-criteria.usecase';
 
 import { Icon } from '@ui/media/Icon';
-import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button';
+import { IconButton } from '@ui/form/IconButton';
 import { Textarea } from '@ui/form/Textarea/Textarea';
+import { getFormattedLink } from '@utils/getExternalLink.ts';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   ScrollAreaRoot,
   ScrollAreaThumb,
@@ -15,27 +19,104 @@ import {
   ScrollAreaScrollbar,
 } from '@ui/utils/ScrollArea';
 
+import { IdealCustomersModal } from './IdealCustomersModal';
+
+// import { IdealCustomersModal } from './IdealCustomersModal';
+
 const disqualificationCriteriaUsecase =
   new EditIcpDisqualificationCriteriaUsecase();
 const qualificationCriteriaUsecase = new EditIcpQualificationCriteriaUsecase();
+const editIcpDomainsUsecase = new EditIcpDomainsUsecase();
+
 export const EvaluateCompanyIcpFit = observer(() => {
   const { id } = useParams<{ id: string }>();
-  const store = useStore();
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!id || store.agents.value.size === 0) return;
-    disqualificationCriteriaUsecase.setAgentId(id);
-    qualificationCriteriaUsecase.setAgentId(id);
-    disqualificationCriteriaUsecase.init();
-    qualificationCriteriaUsecase.init();
-  }, [id, store.agents.value.size]);
+    if (!id) return;
+    disqualificationCriteriaUsecase.init(id);
+    qualificationCriteriaUsecase.init(id);
+    editIcpDomainsUsecase.init(id);
+  }, [id]);
 
   return (
     <article className='flex flex-col gap-4 -mr-4'>
       <h1 className='text-sm font-medium pr-4'>Evaluate company ICP fit</h1>
       <ScrollAreaRoot>
         <ScrollAreaViewport className=''>
-          <div className=' h-[90vh] pr-4'>
+          <div className='h-[90vh] pr-4 flex flex-col gap-4'>
+            <div className='flex flex-col'>
+              <h2 className='text-sm font-medium mb-1'>
+                Add 5 ideal customers
+              </h2>
+              <p className='text-sm'>
+                Add at least 5 company websites that match your ideal customer
+                profile. Feel free to add more.
+              </p>
+
+              {editIcpDomainsUsecase.icpCompanyExamples.size > 0 && (
+                <ul className='mt-1 flex flex-col gap-y-1'>
+                  {Array.from(editIcpDomainsUsecase.icpCompanyExamples).map(
+                    (website) => (
+                      <li
+                        key={`ideal-icp${website}`}
+                        className='flex items-center gap-x-2 text-sm mx-2 group'
+                      >
+                        <Icon
+                          stroke='none'
+                          name='dot-single'
+                          className={'text-grayModern-500'}
+                        />
+                        {getFormattedLink(website)}
+
+                        <Menu modal={false}>
+                          <MenuButton asChild>
+                            <IconButton
+                              size='xxs'
+                              variant='ghost'
+                              aria-label='more'
+                              icon={<Icon name='dots-vertical' />}
+                              className='ml-2 invisible group-hover:visible'
+                            />
+                          </MenuButton>
+                          <MenuList>
+                            <MenuItem
+                              onClick={() => {
+                                editIcpDomainsUsecase.select(website);
+                              }}
+                            >
+                              <Icon
+                                name='x-circle'
+                                className='text-grayModern-500'
+                              />
+                              Remove
+                            </MenuItem>
+                          </MenuList>
+                        </Menu>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
+
+              <Button
+                size='xs'
+                variant='ghost'
+                colorScheme='primary'
+                className='w-fit mt-1'
+                onClick={() => setIsOpen(true)}
+                leftIcon={<Icon name='plus-circle' />}
+              >
+                Add website
+              </Button>
+
+              {editIcpDomainsUsecase.icpCompanyExamplesError && (
+                <p className='text-sm text-error-500 mt-1'>
+                  {editIcpDomainsUsecase.icpCompanyExamplesError}
+                </p>
+              )}
+            </div>
+
             <div>
               <h2 className='text-sm font-medium mb-1'>
                 Qualification criteria
@@ -71,25 +152,6 @@ export const EvaluateCompanyIcpFit = observer(() => {
                 </div>
               )}
             </div>
-
-            {/*<div className='flex flex-col'>*/}
-            {/*  <p className='text-sm font-medium'>Add 5 ideal customers</p>*/}
-            {/*  <p className='text-sm'>*/}
-            {/*    Add at least 5 company websites that match your ideal customer*/}
-            {/*    profile. Feel free to add more.*/}
-            {/*  </p>*/}
-
-            {/*  <Button*/}
-            {/*    size='xs'*/}
-            {/*    variant='ghost'*/}
-            {/*    colorScheme='primary'*/}
-            {/*    // onClick={usecase.open}*/}
-            {/*    className='w-fit mt-1'*/}
-            {/*    leftIcon={<Icon name='plus-circle' />}*/}
-            {/*  >*/}
-            {/*    Add website*/}
-            {/*  </Button>*/}
-            {/*</div>*/}
 
             <div>
               <h2 className='text-sm font-medium mb-1'>
@@ -133,6 +195,11 @@ export const EvaluateCompanyIcpFit = observer(() => {
           <ScrollAreaThumb />
         </ScrollAreaScrollbar>
       </ScrollAreaRoot>
+      <IdealCustomersModal
+        isOpen={isOpen}
+        usecase={editIcpDomainsUsecase}
+        onClose={() => setIsOpen(false)}
+      />
     </article>
   );
 });

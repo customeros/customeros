@@ -5,7 +5,7 @@ import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
 import { validateUrl } from '@utils/url';
-import { CapabilityType } from '@graphql/types';
+import { AgentListenerEvent } from '@graphql/types';
 
 export class AddWebsiteToTrackUsecase {
   private service = new AgentService();
@@ -15,6 +15,7 @@ export class AddWebsiteToTrackUsecase {
   @observable accessor isOpen: boolean = false;
   @observable accessor websites: string[] = [];
   @observable accessor validationError: string = '';
+  @observable accessor websitesError: string = '';
 
   constructor(private agentId: string) {
     this.toggle = this.toggle.bind(this);
@@ -35,12 +36,11 @@ export class AddWebsiteToTrackUsecase {
   }
 
   @computed
-  get capabilityErrors() {
+  get listenerErrors() {
     return this.root.agents
       .getById(this.agentId)
-      ?.value.capabilities.find(
-        (c) => c.type === CapabilityType.IdentifyWebVisitor,
-      )?.errors;
+      ?.value.listeners.find((c) => c.type === AgentListenerEvent.NewWebSession)
+      ?.errors;
   }
 
   @action
@@ -135,19 +135,19 @@ export class AddWebsiteToTrackUsecase {
       return;
     }
 
-    const capability = agent.value.capabilities.find(
-      (c) => c.type === CapabilityType.IdentifyWebVisitor,
+    const listener = agent.value.listeners.find(
+      (c) => c.type === AgentListenerEvent.NewWebSession,
     );
 
-    if (!capability) {
+    if (!listener) {
       console.error(
-        'AddWebsiteToTrackUsecase.init: Capability not found. aborting execution',
+        'AddWebsiteToTrackUsecase.init: Listener not found. aborting execution',
       );
 
       return;
     }
 
-    const config = Agent.parseCapabilityConfig(capability.config);
+    const config = Agent.parseConfig(listener.config);
 
     if (!config) {
       console.error(
@@ -166,12 +166,13 @@ export class AddWebsiteToTrackUsecase {
     }
 
     this.websites = config.websites.value as string[];
+    this.websitesError = config.websites.error ?? '';
     span.end({
       websites: config.websites.value,
     });
   }
 
-  executeRemove(website: string) {
+  async executeRemove(website: string) {
     const span = Tracer.span('AddWebsiteToTrackUsecase.executeRemove', {
       websites: this.websites,
     });
@@ -188,20 +189,31 @@ export class AddWebsiteToTrackUsecase {
       return;
     }
 
-    agent?.setCapabilityConfig(
-      CapabilityType.IdentifyWebVisitor,
+    agent?.setListenerConfig(
+      AgentListenerEvent.NewWebSession,
       'websites',
       this.websites,
     );
 
-    this.service.saveAgent(agent);
+    const [res, err] = await this.service.saveAgent(agent);
+
+    if (err) {
+      console.error(
+        'AddWebsiteToTrackUsecase.executeRemove: Error saving agent. aborting execution',
+      );
+    }
+
+    if (res) {
+      agent.put(res?.agent_Save);
+      this.init();
+    }
 
     span.end({
       websites: this.websites,
     });
   }
 
-  executeAdd(opts?: { onInvalid?: () => void }) {
+  async executeAdd(opts?: { onInvalid?: () => void }) {
     const span = Tracer.span('AddWebsiteToTrackUsecase.executeAdd', {
       websites: this.websites,
     });
@@ -227,13 +239,28 @@ export class AddWebsiteToTrackUsecase {
       this.addWebsite();
       this.close();
 
-      agent?.setCapabilityConfig(
-        CapabilityType.IdentifyWebVisitor,
+      agent?.setListenerConfig(
+        AgentListenerEvent.NewWebSession,
         'websites',
         this.websites,
       );
 
-      this.service.saveAgent(agent);
+      const [res, err] = await this.service.saveAgent(agent);
+
+      if (err) {
+        console.error(
+          'AddWebsiteToTrackUsecase.executeAdd: Error saving agent. aborting execution',
+        );
+      }
+
+      if (res) {
+        agent.put(res?.agent_Save);
+        this.init();
+      }
+
+      span.end({
+        websites: this.websites,
+      });
     }
 
     span.end();

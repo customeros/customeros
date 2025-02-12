@@ -108,6 +108,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilityExtractSupportSignalsFromMeeting:
+		executor, ok := GetTypedExecutor[ExtractSupportSignalsFromMeetingInput, ExtractSupportSignalsFromMeetingOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractSupportSignalsFromMeeting)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityGatherCompanyIntelligence:
 		executor, ok := GetTypedExecutor[GatherCompanyIntilligenceInput, GatherCompanyIntelligenceOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
@@ -139,7 +149,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityIdentifyWebVisitor:
-		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig](
+		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
@@ -175,6 +185,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityValidateEmailAddressDeliverability:
+		executor, ok := GetTypedExecutor[ValidateEmailDeliverabilityInput, ValidateEmailDeliverabilityOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityValidateEmailAddressDeliverability)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 

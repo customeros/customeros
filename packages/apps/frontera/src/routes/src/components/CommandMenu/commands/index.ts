@@ -17,3 +17,5 @@ export * from './FlowHub';
 export * from './FlowsCommands';
 export * from './FlowsBulkCommands';
 export * from './sku';
+export * from './AgentCommands';
+export * from './agent';

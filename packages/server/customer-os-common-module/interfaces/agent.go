@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -13,6 +14,7 @@ type AgentService interface {
 
 	CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgres_entity.Agent, error)
 	UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgres_entity.Capability, listeners []postgres_entity.Listener) (*postgres_entity.Agent, error)
+	DeleteAgent(ctx context.Context, agentId string) error
 	GetAgentById(ctx context.Context, agentId string) (*postgres_entity.Agent, error)
 	GetAllAgentsByTenant(ctx context.Context) ([]*postgres_entity.Agent, error)
 
@@ -23,7 +25,4 @@ type AgentService interface {
 
 type AgentRegistry interface {
 	SyncRegistry(ctx context.Context) error
-}
-
-type AgentEvents interface {
 }

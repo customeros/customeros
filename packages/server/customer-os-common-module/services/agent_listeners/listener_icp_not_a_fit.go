@@ -3,16 +3,18 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type IcpNotAFitListener struct {
@@ -52,7 +54,7 @@ func (l *IcpNotAFitListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *IcpNotAFitListener) SubscribedAgents() []enum.AgentType {
+func (l *IcpNotAFitListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentICPQualifier,
 	}

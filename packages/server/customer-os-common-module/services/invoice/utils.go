@@ -12,7 +12,6 @@ import (
 	"golang.org/x/net/context"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -24,43 +23,36 @@ func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FillInvoiceHtmlTemplate")
 	defer span.Finish()
 
-	// Get the current directory
-	currentDir, err := os.Getwd()
+	// Read template from the embedded FS.
+	templateContent, err := Templates.ReadFile("pdf_template/index.html")
 	if err != nil {
-		return errors.Wrap(err, "os.Getwd")
+		return errors.Wrap(err, "reading embedded template")
 	}
 
-	// Build the full path to the template file
-	templatePath := filepath.Join(currentDir, "/subscriptions/invoice/pdf_template/index.html")
-	templateContent, err := ioutil.ReadFile(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "ioutil.ReadFile")
-	}
-
-	// Convert the template content to a string
+	// Convert the template content to a string.
 	templateString := string(templateContent)
 
-	// Load HTML template
+	// Load HTML template.
 	tmpl, err := template.New("template").Funcs(template.FuncMap{
 		"safeHTML": func(text string) template.HTML {
 			return template.HTML(text)
 		},
 	}).Parse(templateString)
 	if err != nil {
-		return errors.Wrap(err, "template.ParseFiles")
+		return errors.Wrap(err, "parsing template")
 	}
 
-	// Create a buffer to store the filled template
+	// Create a buffer to store the filled template.
 	var tplBuffer bytes.Buffer
 	err = tmpl.Execute(&tplBuffer, invoiceData)
 	if err != nil {
-		return errors.Wrap(err, "tmpl.Execute")
+		return errors.Wrap(err, "executing template")
 	}
 
-	// Write the filled template to the temporary HTML file
+	// Write the filled template to the temporary HTML file.
 	_, err = tmpFile.Write(tplBuffer.Bytes())
 	if err != nil {
-		return errors.Wrap(err, "tmpHTMLFile.Write")
+		return errors.Wrap(err, "writing to temporary file")
 	}
 
 	return nil
@@ -80,154 +72,138 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	//--form 'files=@"provider_logo.png"' \
 	//-o my.pdf
 
-	// Get the current directory
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return nil, errors.Wrap(err, "os.Getwd")
-	}
-	resourcesPath := filepath.Join(currentDir, "/subscriptions/invoice/pdf_template")
-
-	// Prepare HTTP request
+	// Construct the URL for PDF conversion.
 	url := pdfConverterUrl + "/forms/chromium/convert/html"
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	// Add files to the request
-	// invoice html file
+	// 1. Add the invoice HTML file (already created and filled in tmpFile).
 	invoiceHtmlFile, err := utils.GetFileByName(tmpFile.Name())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "getFileByName"))
-		return nil, errors.Wrap(err, "getFileByName")
+		tracing.TraceErr(span, fmt.Errorf("getFileByName: %w", err))
+		return nil, fmt.Errorf("getFileByName: %w", err)
 	}
 	err = addMultipartFile(writer, invoiceHtmlFile, "index.html")
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addMultipartFile index.html"))
-		return nil, errors.Wrap(err, "addMultipartFile index.html")
+		tracing.TraceErr(span, fmt.Errorf("addMultipartFile index.html: %w", err))
+		return nil, fmt.Errorf("addMultipartFile index.html: %w", err)
 	}
 
-	//provider logo
+	// 2. Add provider logo if available
 	if providerLogoRepositoryFileId, ok := invoiceData["ProviderLogoRepositoryFileId"].(string); ok && providerLogoRepositoryFileId != "" {
 		file, metadata, err := downloadProviderLogoAsTempFile(ctx, fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, span)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "downloadProviderLogoAsTempFile"))
-			return nil, errors.Wrap(err, "downloadProviderLogoAsTempFile")
+			tracing.TraceErr(span, fmt.Errorf("downloadProviderLogoAsTempFile: %w", err))
+			return nil, fmt.Errorf("downloadProviderLogoAsTempFile: %w", err)
 		}
 
 		fileExtension := GetFileExtensionFromMetadata(metadata)
-
 		err = addMultipartFile(writer, file, "provider-logo"+fileExtension)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "addMultipartFile provider-logo"+fileExtension))
-			return nil, errors.Wrap(err, "addMultipartFile provider-logo"+fileExtension)
+			tracing.TraceErr(span, fmt.Errorf("addMultipartFile provider-logo%s: %w", fileExtension, err))
+			return nil, fmt.Errorf("addMultipartFile provider-logo%s: %w", fileExtension, err)
 		}
 	}
 
-	err = addResourceFile(writer, resourcesPath, "/index.css", "index.css")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile index.css"))
-		return nil, errors.Wrap(err, "addResourceFile index.css")
+	// 3. Add static resource files from the embedded FS.
+	resourceFiles := []struct {
+		FileName string
+		PartName string
+	}{
+		{"index.css", "index.css"},
+		{"style.css", "style.css"},
+		{"fonts.css", "fonts.css"},
+		{"customer-os.png", "customer-os.png"},
+		{"preview-stamp.png", "preview-stamp.png"},
+		{"line11681-7w4.svg", "line11681-7w4.svg"},
+		{"line21681-3s8.svg", "line21681-3s8.svg"},
+		{"line31681-nvh.svg", "line31681-nvh.svg"},
+	}
+	for _, rf := range resourceFiles {
+		err = addEmbeddedResourceFile(writer, rf.FileName, rf.PartName)
+		if err != nil {
+			tracing.TraceErr(span, fmt.Errorf("addEmbeddedResourceFile %s: %w", rf.FileName, err))
+			return nil, fmt.Errorf("addEmbeddedResourceFile %s: %w", rf.FileName, err)
+		}
 	}
 
-	err = addResourceFile(writer, resourcesPath, "/style.css", "style.css")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile style.css"))
-		return nil, errors.Wrap(err, "addResourceFile style.css")
+	// 4. Add multipart form fields (e.g., paper width, margins, etc.)
+	formFields := []struct {
+		FieldName string
+		Value     string
+	}{
+		{"paperWidth", "8.6"},
+		{"marginTop", "0"},
+		{"marginBottom", "0"},
+		{"marginLeft", "0"},
+		{"marginRight", "0"},
+	}
+	for _, ff := range formFields {
+		err = addMultipartValue(writer, ff.Value, ff.FieldName)
+		if err != nil {
+			tracing.TraceErr(span, fmt.Errorf("addMultipartValue %s: %w", ff.FieldName, err))
+			return nil, fmt.Errorf("addMultipartValue %s: %w", ff.FieldName, err)
+		}
 	}
 
-	err = addResourceFile(writer, resourcesPath, "/fonts.css", "fonts.css")
+	// Close the multipart writer to flush the buffer.
+	err = writer.Close()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile fonts.css"))
-		return nil, errors.Wrap(err, "addResourceFile fonts.css")
+		tracing.TraceErr(span, fmt.Errorf("writer.Close: %w", err))
+		return nil, fmt.Errorf("writer.Close: %w", err)
 	}
 
-	//images
-	err = addResourceFile(writer, resourcesPath, "/customer-os.png", "customer-os.png")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile customer-os.png"))
-		return nil, errors.Wrap(err, "addResourceFile customer-os.png")
-	}
-	err = addResourceFile(writer, resourcesPath, "/preview-stamp.png", "preview-stamp.png")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile preview-stamp.png"))
-		return nil, errors.Wrap(err, "addResourceFile preview-stamp.png")
-	}
-	err = addResourceFile(writer, resourcesPath, "/line11681-7w4.svg", "line11681-7w4.svg")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile line11681-7w4.svg"))
-		return nil, errors.Wrap(err, "addResourceFile line11681-7w4.svg")
-	}
-	err = addResourceFile(writer, resourcesPath, "/line21681-3s8.svg", "line21681-3s8.svg")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile line21681-3s8.svg"))
-		return nil, errors.Wrap(err, "addResourceFile line21681-3s8.svg")
-	}
-	err = addResourceFile(writer, resourcesPath, "/line31681-nvh.svg", "line31681-nvh.svg")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile line31681-nvh.svg"))
-		return nil, errors.Wrap(err, "addResourceFile line31681-nvh.svg")
-	}
-
-	err = addMultipartValue(writer, "8.6", "paperWidth")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue paperWidth"))
-		return nil, errors.Wrap(err, "addMultipartValue paperWidth")
-	}
-	err = addMultipartValue(writer, "0", "marginTop")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginTop"))
-		return nil, errors.Wrap(err, "addMultipartValue marginTop")
-	}
-	err = addMultipartValue(writer, "0", "marginBottom")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginBottom"))
-		return nil, errors.Wrap(err, "addMultipartValue marginBottom")
-	}
-	err = addMultipartValue(writer, "0", "marginLeft")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginLeft"))
-		return nil, errors.Wrap(err, "addMultipartValue marginLeft")
-	}
-	err = addMultipartValue(writer, "0", "marginRight")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginRight"))
-		return nil, errors.Wrap(err, "addMultipartValue marginRight")
-	}
-
-	writer.Close()
-
-	// Create HTTP request
+	// Create the HTTP request.
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "http.NewRequest"))
-		return nil, errors.Wrap(err, "http.NewRequest")
+		tracing.TraceErr(span, fmt.Errorf("http.NewRequest: %w", err))
+		return nil, fmt.Errorf("http.NewRequest: %w", err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	// Perform HTTP request
+	// Perform the HTTP request.
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "client.Do"))
-		return nil, errors.Wrap(err, "client.Do")
+		tracing.TraceErr(span, fmt.Errorf("client.Do: %w", err))
+		return nil, fmt.Errorf("client.Do: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Check if the request was successful
+	// Check for a successful status code.
 	if resp.StatusCode != http.StatusOK {
 		span.LogFields(log.String("status_code", resp.Status))
-		tracing.TraceErr(span, errors.Errorf("Error: Unexpected status code %v", resp.StatusCode))
-		return nil, errors.Errorf("Error: Unexpected status code %v", resp.StatusCode)
+		tracing.TraceErr(span, fmt.Errorf("unexpected status code %v", resp.StatusCode))
+		return nil, fmt.Errorf("unexpected status code %v", resp.StatusCode)
 	}
 
-	// Read the response body
+	// Read the response body (the PDF bytes)
 	pdfBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "io.ReadAll"))
-		return nil, errors.Wrap(err, "io.ReadAll")
+		tracing.TraceErr(span, fmt.Errorf("io.ReadAll: %w", err))
+		return nil, fmt.Errorf("io.ReadAll: %w", err)
 	}
 
 	return &pdfBytes, nil
+}
+
+// addEmbeddedResourceFile reads the given file from the embedded FS (Templates)
+// and adds it as a file part to the multipart writer.
+func addEmbeddedResourceFile(writer *multipart.Writer, fileName, partName string) error {
+	data, err := Templates.ReadFile("pdf_template/" + fileName)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read embedded file %s", fileName)
+	}
+	part, err := writer.CreateFormFile("files", partName)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create form file for %s", fileName)
+	}
+	_, err = part.Write(data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to write data for %s", fileName)
+	}
+	return nil
 }
 
 func downloadProviderLogoAsTempFile(ctx context.Context, fileService interfaces.FileService, tenant, repositoryFileId string, span opentracing.Span) (*os.File, *interfaces.File, error) {

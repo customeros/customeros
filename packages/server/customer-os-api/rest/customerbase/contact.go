@@ -138,7 +138,7 @@ func (h *ContactHandler) processContact(ctx context.Context, record ContactRecor
 	createdContactId := ""
 	var err error
 	if linkedInUrl != "" {
-		createdContactId, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
+		createdContactId, _, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 			return ""

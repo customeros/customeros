@@ -4,7 +4,7 @@ import type { Transport } from '@infra/transport';
 import set from 'lodash/set';
 import { match } from 'ts-pattern';
 import { getDiff, applyDiff } from 'recursive-diff';
-import { when, action, reaction, observable, runInAction } from 'mobx';
+import { when, action, observable, runInAction } from 'mobx';
 
 import type { RootStore } from './root';
 import type { Entity, EntityFactoryClass } from './record';
@@ -74,13 +74,6 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
       () => this.isBootstrapped,
       () => {
         this.persister?.setItem('isBootstrapped', true);
-      },
-    );
-
-    reaction(
-      () => `${this.size}-${this.version}`,
-      () => {
-        this.persistGroup();
       },
     );
 
@@ -339,46 +332,46 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
 
     this.root.transactions.commit(operation, {
       ...opts,
-      persist: () => this.persist(id),
+      // persist: () => this.persist(id),
     });
     this.version++;
   }
 
-  private async persist(id: string) {
-    try {
-      const record = this.value.get(id);
+  // private async persist(id: string) {
+  //   try {
+  //     const record = this.value.get(id);
 
-      if (!record) return;
-      const data = record.toRaw();
+  //     if (!record) return;
+  //     const data = record.toRaw();
 
-      const persisted = await this.persister?.getItem<Map<string, T>>('data');
+  //     const persisted = await this.persister?.getItem<Map<string, T>>('data');
 
-      persisted?.set(id, data);
-      await this.persister?.setItem('data', persisted);
-    } catch (e) {
-      console.error('Failed to persist', e);
-    }
-  }
+  //     persisted?.set(id, data);
+  //     await this.persister?.setItem('data', persisted);
+  //   } catch (e) {
+  //     console.error('Failed to persist', e);
+  //   }
+  // }
 
-  public persistGroup() {
-    this.persister?.getItem<Map<string, T>>('data', (err) => {
-      if (err) {
-        console.error('Failed to get persisted data', err);
+  // public persistGroup() {
+  //   this.persister?.getItem<Map<string, T>>('data', (err) => {
+  //     if (err) {
+  //       console.error('Failed to get persisted data', err);
 
-        return;
-      }
+  //       return;
+  //     }
 
-      const persisted = new Map<string, T>();
+  //     const persisted = new Map<string, T>();
 
-      this.value.forEach((v, k) => persisted.set(k, v.toRaw()));
+  //     this.value.forEach((v, k) => persisted.set(k, v.toRaw()));
 
-      this.persister?.setItem('data', persisted, (err) => {
-        if (err) {
-          console.error('Failed to persist store data', err);
-        }
-      });
-    });
-  }
+  //     this.persister?.setItem('data', persisted, (err) => {
+  //       if (err) {
+  //         console.error('Failed to persist store data', err);
+  //       }
+  //     });
+  //   });
+  // }
 
   private makeChangesetOperation(id: string) {
     const lhs = this.snapshots.get(id)!;

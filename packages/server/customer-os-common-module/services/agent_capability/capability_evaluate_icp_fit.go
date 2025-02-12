@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
@@ -55,7 +56,7 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 		c.QualificationCriteria.Error = ""
 	}
 	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
-		c.ICPCompanyExamples.Error = "Please provide at least 5 companies that match your ICP."
+		c.ICPCompanyExamples.Error = "Add at least 5 websites"
 		isValid = false
 	} else {
 		c.ICPCompanyExamples.Error = ""
@@ -80,7 +81,7 @@ func (c *EvaluateICPFitCapability) Type() enum.AgentCapability {
 }
 
 func (c *EvaluateICPFitCapability) Name() string {
-	return "Evaluate company for ICP fit"
+	return "Qualify if companies fit your ICP"
 }
 
 func (c *EvaluateICPFitCapability) NewInput() EvaluateICPFitInput {
@@ -156,7 +157,12 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	// askAI
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to ask AI"))
+		if answer != nil {
+			span.LogFields(log.String("result.answer", *answer))
+		} else {
+			span.LogFields(log.String("result.answer", "nil"))
+		}
 		return true, result, err
 	}
 
@@ -193,7 +199,11 @@ Analyze the company and respond in this exact JSON format:
     ]
 }
 
-Important: Always provide exactly three reasons, and format as valid JSON.  Please pay special attention to location criteria in your decision making.`
+Important:
+- Always output exactly three reasons.
+- Your entire response must be valid JSON and nothing else.
+- Follow the JSON format exactly.
+- Pay special attention to location criteria in your decision making.`
 
 	var descLines []string
 	descriptions := []string{company.CompanyDescriptions.Description2, company.CompanyDescriptions.Description3, company.CompanyDescriptions.Description4, company.CompanyDescriptions.Description5}

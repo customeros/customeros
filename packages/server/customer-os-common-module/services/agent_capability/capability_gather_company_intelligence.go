@@ -65,7 +65,7 @@ func (c *GatherCompanyIntelligenceCapability) Type() enum.AgentCapability {
 }
 
 func (c *GatherCompanyIntelligenceCapability) Name() string {
-	return "Gather company intelligence"
+	return "Gather intelligence on companies"
 }
 
 func (c *GatherCompanyIntelligenceCapability) NewInput() GatherCompanyIntilligenceInput {

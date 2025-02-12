@@ -125,7 +125,7 @@ func (r *webSessionEventsRepository) FindSession(ctx context.Context, webSession
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	query := r.gormDb.Where(&webSessionData).Order("created_at DESC")
+	query := r.gormDb.Where(&webSessionData).Order("last_activity DESC")
 
 	// Add lookback period if provided
 	if lookbackPeriodInMins != nil {

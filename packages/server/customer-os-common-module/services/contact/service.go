@@ -526,26 +526,6 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 	return nil
 }
 
-func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithLinkedIn")
-	defer span.Finish()
-
-	if alias == "" {
-		// use identifier as alias
-		alias = neo4jentity.SocialEntity{Url: url}.ExtractLinkedinPersonIdentifierFromUrl()
-	}
-	contacts, err := s.neo4j.ContactReadRepository.GetContactsByLinkedIn(ctx, common.GetTenantFromContext(ctx), url, alias, externalId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return false, "", err
-	}
-	contactId := ""
-	if len(contacts) > 0 {
-		contactId = contacts[0].Props["id"].(string)
-	}
-	return len(contacts) > 0, contactId, nil
-}
-
 func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithEmail")
 	defer span.Finish()
@@ -569,99 +549,6 @@ func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email 
 		contactId = contacts[0].Props["id"].(string)
 	}
 	return len(contacts) > 0, contactId, nil
-}
-
-func (s *contactService) CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string, options ...common_srv.ServiceOptions) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactByLinkedIn")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("linkedInUrl", linkedInUrl)
-
-	// validate tenant
-	err := common.ValidateTenant(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	tenant := common.GetTenantFromContext(ctx)
-
-	// check if linkedInUrl is valid
-	socialEntity := neo4jentity.SocialEntity{Url: linkedInUrl}
-	if !socialEntity.IsLinkedin() {
-		err := errors.New("not a valid linkedin url")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	// Reject contact creation if linked-in url is already used by another contact
-	if utils.IfNotNilString(linkedInUrl) != "" {
-		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			linkedInAlreadyUsed, existingContactId, err := s.CheckContactExistsWithLinkedIn(ctx, linkedInUrl, "", "")
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists with linkedin"))
-				return "", err
-			}
-			if linkedInAlreadyUsed {
-				contactByLinkedInEntity, err := s.GetContactById(ctx, existingContactId)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
-					return "", err
-				}
-
-				_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-					if contactByLinkedInEntity.IsHidden() {
-						err = s.ShowContact(ctx, txWithPostCommit, existingContactId)
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
-							return "", err
-						}
-					} else {
-						// just update contact' updatedAt
-						err = s.neo4j.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelContact, existingContactId)
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
-						}
-						txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-							if common_srv.PublishCompletedEvents(options...) {
-								s.events.Publisher.PublishNotification(ctx, tenant, existingContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
-							}
-							return nil
-						})
-					}
-					return nil, nil
-				})
-				return existingContactId, nil
-			}
-		}
-	}
-
-	createdContactId := ""
-
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		createdContactId, err = s.Save(ctx, txWithPostCommit, nil, data_fields.ContactFields{}, false, options...)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to create contact"))
-			return "", err
-		}
-		if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
-			_, err := s.social.AddSocialToEntity(ctx, txWithPostCommit,
-				common_srv.LinkWith{
-					Id:   createdContactId,
-					Type: model.CONTACT,
-				},
-				neo4jentity.SocialEntity{
-					Url:       linkedInUrl,
-					Source:    neo4jentity.DecodeDataSource(neo4jentity.DataSourceOpenline.String()),
-					AppSource: common.GetAppSourceFromContext(ctx),
-				})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
-			}
-		}
-		return nil, nil
-	})
-
-	return createdContactId, nil
 }
 
 func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string, options ...common_srv.ServiceOptions) (string, error) {
@@ -884,4 +771,29 @@ func (s *contactService) GetFirstContactByEmail(ctx context.Context, email strin
 		return nil, nil
 	}
 	return neo4jmapper.MapDbNodeToContactEntity(contactDbNodes[0]), nil
+}
+
+func (s *contactService) TouchContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.TouchContact")
+	defer span.Finish()
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err = s.neo4j.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), model.NodeLabelContact, contactId)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }

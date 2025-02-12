@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"strings"
@@ -49,9 +51,11 @@ type AskAIResponse struct {
 // AskAI handles AI requests
 func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "AskAI")
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/askAI", c.Request.Header)
 		defer span.Finish()
-		tracing.TagComponentRest(span)
+		tracing.SetDefaultServiceSpanTags(ctx, span)
 
 		// parse request
 		request, err := h.parseRequest(c)

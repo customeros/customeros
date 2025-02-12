@@ -73,6 +73,7 @@ import (
 
 type CommonServices struct {
 	// Core infrastructure
+	Logger               logger.Logger
 	Cache                *caches.Cache
 	Events               *events.EventsService
 	Neo4jRepositories    *neo4j_repository.Repositories
@@ -283,6 +284,7 @@ func InitCommonServices(
 	// Initialize CommonServices struct
 	common := CommonServices{
 		// Core components
+		Logger:               log,
 		Cache:                cacheImpl,
 		Events:               eventsImpl,
 		Neo4jRepositories:    neo4jRepositories,

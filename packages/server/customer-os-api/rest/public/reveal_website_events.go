@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -101,15 +101,15 @@ func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
 	switch {
 	case origin == "":
 		err := errors.New("missing origin")
-		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result.error", err.Error()))
 		return err
 	case referer == "":
 		err := errors.New("missing referer")
-		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result.error", err.Error()))
 		return err
 	case userAgent == "":
 		err := errors.New("missing userAgent")
-		tracing.TraceErr(span, err)
+		span.LogFields(log.String("result.error", err.Error()))
 		return err
 	default:
 		return nil
@@ -122,7 +122,7 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 	tracing.TagComponentRest(span)
 	span.LogKV("origin", origin)
 
-	cleanedOrigin := utils.CleanUrlBasePath(origin)
+	cleanedOrigin := utils.StripUrlToBasePath(origin)
 
 	tenant := h.cache.GetTenantForOrigin(cleanedOrigin)
 	if tenant != "" {
@@ -163,20 +163,20 @@ func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, a
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	for _, capability := range agent.Capabilities {
-		if capability.Type != enum.CapabilityIdentifyWebVisitor {
+	for _, listener := range agent.Listeners {
+		if listener.Type != enum.EventNewWebSession {
 			continue
 		}
 
-		var config agent_capability.IdentifyWebsiteVisitorConfig
-		err := capability.GetConfig(&config)
+		var config agent_listeners.IdentifyWebsiteVisitorConfig
+		err := listener.GetConfig(&config)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return ""
 		}
 
 		for _, website := range config.Websites.Value {
-			if utils.CleanUrlBasePath(website) == cleanedOrigin {
+			if utils.StripUrlToBasePath(website) == cleanedOrigin {
 				return agent.Tenant
 			}
 		}

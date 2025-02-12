@@ -24,7 +24,7 @@ func NewMailstackProvisionMailboxListener(logger logger.Logger, deps *model.Depe
 	return &MailstackProvisionMailboxListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.MailstackProvisionBuyRequest](), // subscribed event
+			events.GetEventType[dto.MailstackProvisionMailbox](), // subscribed event
 			events.QueueEvents, // listening on CustomerOS Events queue
 		),
 		dependencies: deps,

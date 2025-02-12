@@ -166,26 +166,6 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 
 		agentListeners = append(agentListeners, *defaultListener)
 	}
-	for _, registryListener := range agentRegistry.CompletionEvents {
-		listenerEvent, err := enum.GetAgentListener(registryListener)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		listenerHandler, err := a.agentListeners.GetListener(listenerEvent)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		defaultListener, err := a.createDefaultListener(ctx, listenerEvent, listenerHandler.Name(), position)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		position++
-
-		agentListeners = append(agentListeners, *defaultListener)
-	}
 	agent.Listeners = agentListeners
 
 	// create agent instance in database
@@ -216,6 +196,14 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 
 	return newAgent, nil
+}
+
+func (a *agentService) DeleteAgent(ctx context.Context, agentId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.DeleteAgent")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	return a.postgresRepositories.AgentRepository.Delete(ctx, agentId)
 }
 
 func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string, position int) (*postgres_entity.Capability, error) {
@@ -341,7 +329,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilities, Listeners: listeners}
 	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message {UpdateAgent}"))
 	}
 
 	return updatedAgent, nil
@@ -395,6 +383,7 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 
 	agentEntity.UpdateListeners(listeners)
 
+	allListenersValid := true
 	for i, listener := range agentEntity.Listeners {
 		if !listener.Active {
 			// Not active => auto valid
@@ -415,7 +404,9 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 
 		// see if typedConfig implements ConfigValidator
 		if validator, ok := config.(agent_capability.ConfigValidator); ok {
-			validator.Validate()
+			if !validator.Validate() {
+				allListenersValid = false
+			}
 			err = listener.SetConfig(config)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -424,6 +415,7 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 			agentEntity.Listeners[i] = listener
 		}
 	}
+	agentEntity.Configured = agentEntity.Configured && allListenersValid
 	return nil
 }
 

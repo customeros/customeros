@@ -125,7 +125,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Invoice Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateInvoice, GroupInvoice, generateCycleInvoices, "generateCycleInvoices")
-	addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
+	//addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateNextPreviewInvoice, GroupInvoice, generateNextPreviewInvoices, "generateNextPreviewInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateInvoicePaymentLink, GroupInvoice, generateInvoicePaymentLinks, "generateInvoicePaymentLinks")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckInvoiceFinalized, GroupInvoice, sendInvoiceFinalizedEvents, "sendInvoiceFinalizedEvents")
@@ -205,11 +205,15 @@ func updateContractsStatusAndRenewal(cont *container.Container) {
 
 // Invoice Jobs
 func generateCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateCycleInvoices()
+	if cont.Cfg.App.ProcessConfig.CycleInvoicingEnabled == false {
+		cont.Log.Warn("INVOICING IS DISABLED")
+		return
+	}
+	cont.AgentProducers.InvoiceProducer.Execute()
 }
 
 func generateOffCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
 }
 
 func generateNextPreviewInvoices(cont *container.Container) {
@@ -217,11 +221,11 @@ func generateNextPreviewInvoices(cont *container.Container) {
 }
 
 func generateInvoicePaymentLinks(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateInvoicePaymentLinks()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateInvoicePaymentLinks()
 }
 
 func sendInvoiceFinalizedEvents(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendInvoiceFinalizedEvent()
+	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendInvoiceFinalizedEvent()
 }
 
 func cleanupInvoices(cont *container.Container) {

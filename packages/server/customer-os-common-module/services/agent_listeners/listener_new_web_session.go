@@ -2,6 +2,7 @@ package agent_listeners
 
 import (
 	"context"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -21,6 +22,30 @@ type NewWebSessionListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
+}
+
+type IdentifyWebsiteVisitorConfig struct {
+	Websites ConfigMultipleValues `json:"websites"`
+}
+
+func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
+	isValid := true
+
+	websiteConfigured := false
+	for _, website := range c.Websites.Value {
+		if !utils.IsBlank(website) {
+			websiteConfigured = true
+			break
+		}
+	}
+	if !websiteConfigured {
+		c.Websites.Error = "Add at least 1 website"
+		isValid = false
+	} else {
+		c.Websites.Error = ""
+	}
+
+	return isValid
 }
 
 // Compile-time interface check for AgentListenerUntyped
@@ -50,14 +75,16 @@ func (l *NewWebSessionListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *NewWebSessionListener) Name() string {
-	return "New Web Session"
+	return "New website sessions"
 }
 
 func (l *NewWebSessionListener) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	config := IdentifyWebsiteVisitorConfig{}
+	config.Websites.Value = []string{}
+	return &config
 }
 
-func (l *NewWebSessionListener) SubscribedAgents() []enum.AgentType {
+func (l *NewWebSessionListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentWebVisitorIdentifier,
 	}
@@ -123,7 +150,7 @@ func (l *NewWebSessionListener) lookupActiveAgents(ctx context.Context) []postgr
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.SubscribedAgents())
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

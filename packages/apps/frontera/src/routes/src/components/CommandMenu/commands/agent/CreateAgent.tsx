@@ -1,0 +1,32 @@
+import { useMemo } from 'react';
+
+import { CreateAgentUsecase } from '@domain/usecases/agents/create-agent.usecase';
+
+import { Icon } from '@ui/media/Icon';
+import { AgentType } from '@graphql/types';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+
+export const CreateAgent = () => {
+  const usecase = useMemo(() => new CreateAgentUsecase(), []);
+
+  return (
+    <Command>
+      <CommandInput
+        label='Add a new agent'
+        placeholder='Search for an agent...'
+      />
+      <Command.List>
+        <CommandItem
+          onSelect={() => usecase.execute(AgentType.WebVisitIdentifier)}
+        >
+          <Icon name='radar' />
+          <span>Web visitor identifier</span>
+        </CommandItem>
+        <CommandItem onSelect={() => usecase.execute(AgentType.IcpQualifier)}>
+          <Icon name='target-04' />
+          <span>ICP qualifier</span>
+        </CommandItem>
+      </Command.List>
+    </Command>
+  );
+};

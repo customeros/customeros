@@ -87,7 +87,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Type() enum.AgentCapability 
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) Name() string {
-	return "Send a slack notification"
+	return "Send Slack notification (optional)"
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) NewInput() SendWebVisitorSlackNotificationInput {

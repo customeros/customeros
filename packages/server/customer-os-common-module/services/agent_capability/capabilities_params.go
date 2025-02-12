@@ -14,6 +14,7 @@ type CapabilityParams struct {
 	CompanyCity                    string      `json:"companyCity"`
 	CompanyCountryA2               string      `json:"companyCountry"`
 	CompanyDescriptions            string      `json:"companyDescriptions"`
+	CompanyNeedsHelp               bool        `json:"companyNeedsHelp"`
 	CompanyRegion                  string      `json:"companyRegion"`
 	DisqualificationCriteria       string      `json:"disqualificationCriteria"`
 	Domain                         string      `json:"domain"`
@@ -45,6 +46,7 @@ type CapabilityParams struct {
 	Referrer                       string      `json:"referrer"`
 	SessionDuration                string      `json:"sessionDuration"`
 	SlackNotification              string      `json:"slackNotification"`
+	UniquePageViews                []string    `json:"uniquePageViews"`
 	VisitorID                      string      `json:"visitorId"`
 	WebSessionID                   string      `json:"webSessionId"`
 	YearCompanyFounded             string      `json:"yearCompanyFounded"`

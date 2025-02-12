@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,18 +33,18 @@ func main() {
 	}
 	defer postgresDb.Close()
 
-	neo4jDriver, errNeo4j := syncGmailRawConfig.NewDriver(config)
-	if errNeo4j != nil {
-		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(config.Neo4jDb)
+	if err != nil {
+		log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", config.Neo4jDb.Target, err.Error())
 	}
-	defer (*neo4jDriver).Close(ctx)
+	defer neo4jDriver.Close(ctx)
 
 	// Initialize logger
 	appLogger := logger.NewExtendedAppLogger(&config.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName("sync-gmail-raw")
 
-	services := service.InitServices(neo4jDriver, postgresDb, config, appLogger)
+	services := service.InitServices(&neo4jDriver, postgresDb, config, appLogger)
 
 	cronJobs := localCron.StartCronJobs(config, services)
 

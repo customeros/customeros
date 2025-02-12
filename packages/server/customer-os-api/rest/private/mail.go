@@ -38,9 +38,11 @@ func NewMailHandler(services *cosapi_services.Services, responseHandler *respons
 
 func (h *MailHandler) SendEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/mail/send", c.Request.Header)
 		defer span.Finish()
-		tracing.TagComponentRest(span)
+		tracing.SetDefaultServiceSpanTags(ctx, span)
 
 		tenant := common.GetTenantFromContext(ctx)
 
@@ -56,7 +58,7 @@ func (h *MailHandler) SendEmail() gin.HandlerFunc {
 		request.ProducerId = "N/A"
 		request.ProducerType = "N/A"
 
-		span.LogFields(log.Object("request", request))
+		span.LogKV("request", request)
 
 		err := h.services.CommonServices.MailService.SendMail(ctx, request)
 		if err != nil {

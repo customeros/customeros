@@ -15,7 +15,7 @@ export const PipelineMetrics = ({
   totalWeightedArr = 0,
 }: PipelineMetricsProps) => {
   return (
-    <div className='px-3 py-2 mx-4 mt-4 mb-4 bg-gray-100 flex justify-center gap-4 rounded-[4px] '>
+    <div className='px-3 py-2 mx-4 mb-4 bg-gray-100 flex justify-center gap-4 rounded-[4px] '>
       <span className=''>
         <span
           className='font-semibold'

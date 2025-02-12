@@ -122,6 +122,22 @@ func (server *server) Run(parentCtx context.Context) error {
 		services:  serviceContainer,
 		cache:     serviceContainer.Cache,
 	})
+	registerRoute(ctx, r, RouteConfig{
+		method:    "PUT",
+		path:      "/browserExtension/contact/:id/touch",
+		handler:   restHandlers.BrowserExtension.TouchContact(),
+		routeType: RouteCustomer,
+		services:  serviceContainer,
+		cache:     serviceContainer.Cache,
+	})
+	registerRoute(ctx, r, RouteConfig{
+		method:    "GET",
+		path:      "/browserExtension/contact",
+		handler:   restHandlers.BrowserExtension.GetContact(),
+		routeType: RouteCustomer,
+		services:  serviceContainer,
+		cache:     serviceContainer.Cache,
+	})
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = server.cfg.App.CORS.AllowOrigins

@@ -17,11 +17,12 @@ export const AgentCard = ({
   id,
   name,
   icon,
-  color = 'grayModern',
   status,
+  hasError,
+  color = 'grayModern',
 }: AgentCardProps) => {
   const navigate = useNavigate();
-  const tagColor = status === 'ON' ? 'success' : 'error';
+  const tagColor = hasError ? 'error' : status === 'ON' ? 'success' : 'error';
 
   const [ring, bg, iconColor] = colorMap[color];
 
@@ -29,7 +30,7 @@ export const AgentCard = ({
     <div
       onClick={() => navigate(`/agents/${id}`)}
       className={cn(
-        'p-3 rounded-lg flex items-center gap-2 ring-0 border mb-4 cursor-pointer hover:bg-white hover:shadow-lg transition-all ring-grayModern-200 hover:ring-1',
+        'p-3 min-w-[372px] flex-1 rounded-lg flex items-center gap-2 ring-0 border cursor-pointer group hover:bg-white hover:shadow-lg transition-all ring-grayModern-200 hover:ring-1',
         ring,
       )}
     >
@@ -48,7 +49,13 @@ export const AgentCard = ({
           <TagLabel className='flex items-center gap-1'>
             <Icon
               stroke='none'
-              name={status === 'OFF' ? 'dot-single' : 'dot-live-success'}
+              name={
+                hasError
+                  ? 'dot-single'
+                  : status === 'OFF'
+                  ? 'dot-single'
+                  : 'dot-live-success'
+              }
             />
             {status}
           </TagLabel>
@@ -61,45 +68,53 @@ export const AgentCard = ({
 const colorMap: Record<string, [ring: string, bg: string, iconColor: string]> =
   {
     grayModern: [
-      'hover:ring-grayModern-400',
-      'hover:bg-grayModern-50',
-      'hover:text-grayModern-500',
+      'group-hover:ring-grayModern-400',
+      'group-hover:bg-grayModern-50',
+      'group-hover:text-grayModern-500',
     ],
     error: [
-      'hover:ring-error-400',
-      'hover:bg-error-50',
-      'hover:text-error-500',
+      'group-hover:ring-error-400',
+      'group-hover:bg-error-50',
+      'group-hover:text-error-500',
     ],
     warning: [
-      'hover:ring-warning-400',
-      'hover:bg-warning-50',
-      'hover:text-warning-500',
+      'group-hover:ring-warning-400',
+      'group-hover:bg-warning-50',
+      'group-hover:text-warning-500',
     ],
     success: [
-      'hover:ring-success-400',
-      'hover:bg-success-50',
-      'hover:text-success-500',
+      'group-hover:ring-success-400',
+      'group-hover:bg-success-50',
+      'group-hover:text-success-500',
     ],
     grayWarm: [
-      'hover:ring-grayWarm-400',
-      'hover:bg-grayWarm-50',
-      'hover:text-grayWarm-500',
+      'group-hover:ring-grayWarm-400',
+      'group-hover:bg-grayWarm-50',
+      'group-hover:text-grayWarm-500',
     ],
-    moss: ['hover:ring-moss-400', 'hover:bg-moss-50', 'hover:text-moss-500'],
+    moss: [
+      'group-hover:ring-moss-400',
+      'group-hover:bg-moss-50',
+      'group-hover:text-moss-500',
+    ],
     blueLight: [
-      'hover:ring-blueLight-400',
-      'hover:bg-blueLight-50',
-      'hover:text-blueLight-500',
+      'group-hover:ring-blueLight-400',
+      'group-hover:bg-blueLight-50',
+      'group-hover:text-blueLight-500',
     ],
     indigo: [
-      'hover:ring-indigo-400',
-      'hover:bg-indigo-50',
-      'hover:text-indigo-500',
+      'group-hover:ring-indigo-400',
+      'group-hover:bg-indigo-50',
+      'group-hover:text-indigo-500',
     ],
     violet: [
-      'hover:ring-violet-400',
-      'hover:bg-violet-50',
-      'hover:text-violet-500',
+      'group-hover:ring-violet-400',
+      'group-hover:bg-violet-50',
+      'group-hover:text-violet-500',
     ],
-    pink: ['hover:ring-pink-400', 'hover:bg-pink-50', 'hover:text-pink-500'],
+    pink: [
+      'group-hover:ring-pink-400',
+      'group-hover:bg-pink-50',
+      'group-hover:text-pink-500',
+    ],
   };

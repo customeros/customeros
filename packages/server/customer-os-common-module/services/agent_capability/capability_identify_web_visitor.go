@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -41,7 +42,7 @@ func NewIdentifyWebsiteVisitorCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapability[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, postgres_entity.NoConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
 )
 
 func (c *IdentifyWebsiteVisitorCapability) Type() enum.AgentCapability {
@@ -49,20 +50,19 @@ func (c *IdentifyWebsiteVisitorCapability) Type() enum.AgentCapability {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) Name() string {
-	return "Identify website visitor"
+	return "Identify website visitors"
 }
 
 func (c *IdentifyWebsiteVisitorCapability) NewInput() IdentifyWebsiteVisitorInput {
 	return IdentifyWebsiteVisitorInput{}
 }
 
-func (c *IdentifyWebsiteVisitorCapability) NewConfig() IdentifyWebsiteVisitorConfig {
-	return IdentifyWebsiteVisitorConfig{}
+func (c *IdentifyWebsiteVisitorCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *IdentifyWebsiteVisitorCapability) DefaultConfig() any {
 	config := c.NewConfig()
-	config.Websites.Value = []string{}
 	return &config
 }
 
@@ -79,20 +79,7 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVis
 	return nil
 }
 
-func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
-	isValid := true
-
-	if len(c.Websites.Value) == 0 {
-		c.Websites.Error = "Add at least 1 website"
-		isValid = false
-	} else {
-		c.Websites.Error = ""
-	}
-
-	return isValid
-}
-
-func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(IdentifyWebsiteVisitorConfig) error {
+func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -108,16 +95,7 @@ type IdentifyWebsiteVisitorOutput struct {
 	LinkedInSlug string `json:"linkedinSlug"`
 }
 
-type IdentifyWebsiteVisitorConfig struct {
-	Websites WebsitesConfig `json:"websites"`
-}
-
-type WebsitesConfig struct {
-	Value []string `json:"value"`
-	Error string   `json:"error"`
-}
-
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorConfig]) (bool, IdentifyWebsiteVisitorOutput, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, postgres_entity.NoConfig]) (bool, IdentifyWebsiteVisitorOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -133,14 +111,6 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return false, result, err
-	}
-
-	// check if website input hostname configured by current agent
-	err := c.acceptHostname(ctx, executionContainer.InputData.Hostname, executionContainer.ConfigData.Websites.Value)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		tracing.LogObjectAsJson(span, "result", result)
-		return true, result, err
 	}
 
 	domain, linkedInSlug, err := c.identifyIP(ctx, executionContainer.InputData.IPAddress)
@@ -208,7 +178,7 @@ func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, h
 	accepted := false
 
 	for _, website := range websites {
-		if utils.CleanUrlBasePath(website) == utils.CleanUrlBasePath(hostname) {
+		if utils.StripUrlToBasePath(website) == utils.StripUrlToBasePath(hostname) {
 			accepted = true
 		}
 	}
