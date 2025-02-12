@@ -76,11 +76,10 @@ func (s *tenantService) CheckOnboarding() {
 			continue
 		}
 
-		// check web visitor agents
-		s.checkWebVisitorAgents(innerCtx, tenantEntity.Name)
+		// Suppress creating default agents
 
-		// check icp qualification agents
-		s.checkIcpQualificationAgents(innerCtx, tenantEntity.Name)
+		//s.checkWebVisitorAgents(innerCtx, tenantEntity.Name)
+		//s.checkIcpQualificationAgents(innerCtx, tenantEntity.Name)
 	}
 }
 
