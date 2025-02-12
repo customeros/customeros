@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -43,17 +44,18 @@ import (
 )
 
 type invoiceService struct {
-	log                  logger.Logger
-	neo4j                *neoRepo.Repositories
-	postgresRepositories *postgresrepository.Repositories
-	events               *events.EventsService
-	contractService      interfaces.ContractService
-	sli                  interfaces.ServiceLineItemService
-	tenantSettings       interfaces.TenantSettingsService
-	postmarkService      interfaces.PostmarkService
-	fileService          interfaces.FileService
-	cfg                  *config.ExternalServicesConfig
-	internalCfg          *config.InternalServicesConfig
+	log                   logger.Logger
+	neo4j                 *neoRepo.Repositories
+	postgresRepositories  *postgresrepository.Repositories
+	events                *events.EventsService
+	contractService       interfaces.ContractService
+	sli                   interfaces.ServiceLineItemService
+	tenantSettings        interfaces.TenantSettingsService
+	postmarkService       interfaces.PostmarkService
+	fileService           interfaces.FileService
+	cfg                   *config.ExternalServicesConfig
+	internalCfg           *config.InternalServicesConfig
+	externalSystemService interfaces.ExternalSystemService
 }
 
 func NewInvoiceService(log logger.Logger,
@@ -67,19 +69,21 @@ func NewInvoiceService(log logger.Logger,
 	tenantSettings interfaces.TenantSettingsService,
 	postmarkService interfaces.PostmarkService,
 	fileService interfaces.FileService,
+	externalSystemService interfaces.ExternalSystemService,
 ) interfaces.InvoiceService {
 	return &invoiceService{
-		log:                  log,
-		neo4j:                neo4j,
-		postgresRepositories: postgresRepositories,
-		cfg:                  cfg,
-		internalCfg:          internalCfg,
-		events:               events,
-		contractService:      contractService,
-		sli:                  sli,
-		tenantSettings:       tenantSettings,
-		postmarkService:      postmarkService,
-		fileService:          fileService,
+		log:                   log,
+		neo4j:                 neo4j,
+		postgresRepositories:  postgresRepositories,
+		cfg:                   cfg,
+		internalCfg:           internalCfg,
+		events:                events,
+		contractService:       contractService,
+		sli:                   sli,
+		tenantSettings:        tenantSettings,
+		postmarkService:       postmarkService,
+		fileService:           fileService,
+		externalSystemService: externalSystemService,
 	}
 }
 
@@ -2751,6 +2755,174 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 		tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
 		s.log.Errorf("Error setting invoice remind notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return err
+	}
+
+	return nil
+}
+
+func (s *invoiceService) AutopayInvoice(ctx context.Context, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.AutopayInvoice")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, invoiceId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	if s.cfg.IntegrationAppConfig.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
+		err := errors.New("InvoiceFinalizedUrl is not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// load invoice
+	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// check if invoice can be auto-paid
+	if invoiceEntity.DryRun {
+		return nil
+	} else if invoiceEntity.TotalAmount == 0 {
+		return nil
+	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
+		return nil
+	} else if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt != nil {
+		return nil
+	}
+
+	err = s.integrationAppInvoiceFinalizedWebhook(ctx, tenant, *invoiceEntity)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error invoking invoice finalized webhook"))
+		s.log.Errorf("error invoking invoice ready webhook for invoice %s: %s", invoiceEntity.Id, err.Error())
+	}
+
+	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyInvoiceFinalizedEventSentAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error updating invoice finalized sent at"))
+		s.log.Errorf("Error updating invoice finalized sent at for invoice %s: %s", invoiceEntity.Id, err.Error)
+		return err
+	}
+
+	return nil
+}
+
+type IntegrationAppInvoiceFinalizedEventBody struct {
+	Tenant                       string `json:"tenant"`
+	Currency                     string `json:"currency"`
+	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
+	InvoiceId                    string `json:"invoiceId"`
+	InvoiceDescription           string `json:"invoiceDescription"`
+	CustomerOsId                 string `json:"customerOsId"`
+	Status                       string `json:"status"`
+	CustomerEmail                string `json:"customerEmail"`
+	CustomerName                 string `json:"customerName"`
+	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
+	Pay                          struct {
+		PayAutomatically      bool `json:"payAutomatically"`
+		CanPayWithCard        bool `json:"canPayWithCard"`
+		CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
+	} `json:"pay"`
+}
+
+func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.integrationAppInvoiceFinalizedWebhook")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+
+	// get organization linked to invoice
+	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	// get contract linked to invoice
+	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+	contractEntity := neo4jentity.ContractEntity{}
+	if contractDbNode != nil {
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+	}
+
+	// convert amount to the smallest currency unit
+	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
+	if err != nil {
+		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
+	}
+
+	primaryStripeCustomerId, err := s.externalSystemService.GetPrimaryExternalId(ctx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
+	}
+
+	requestBody := IntegrationAppInvoiceFinalizedEventBody{
+		Tenant:                       tenant,
+		Currency:                     invoice.Currency.String(),
+		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
+		InvoiceId:                    invoice.Id,
+		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
+		CustomerOsId:                 organizationEntity.CustomerOsId,
+		Status:                       invoice.Status.String(),
+		CustomerEmail:                contractEntity.InvoiceEmail,
+		CustomerName:                 utils.GetReadableNameFromEmail(contractEntity.InvoiceEmail),
+		PrimaryStripeCustomerId:      primaryStripeCustomerId,
+		Pay: struct {
+			PayAutomatically      bool `json:"payAutomatically"`
+			CanPayWithCard        bool `json:"canPayWithCard"`
+			CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
+		}{
+			PayAutomatically:      contractEntity.PayAutomatically && (invoice.Status == neo4jenum.InvoiceStatusDue || invoice.Status == neo4jenum.InvoiceStatusOverdue),
+			CanPayWithCard:        true,
+			CanPayWithDirectDebit: true,
+		},
+	}
+
+	// Convert the request body to JSON
+	requestBodyJSON, err := json.Marshal(requestBody)
+	if err != nil {
+		return fmt.Errorf("error encoding JSON: %v", err)
+	}
+
+	// Create an HTTP client
+	client := &http.Client{}
+
+	// Create a POST request with headers and body
+	req, err := http.NewRequest("POST", s.cfg.IntegrationAppConfig.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl, bytes.NewBuffer(requestBodyJSON))
+	if err != nil {
+		return fmt.Errorf("error creating request: %v", err)
+	}
+
+	// Set the content type header
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the POST request
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error sending request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request failed with status code: %s", resp.Status)
 	}
 
 	return nil
