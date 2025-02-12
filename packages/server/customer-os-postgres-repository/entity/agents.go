@@ -64,6 +64,9 @@ func (a *Agent) UpdateCapabilities(updatedCaps []Capability) {
 			// Update allowed fields.
 			existingCap.Config = upd.Config
 			existingCap.Active = upd.Active
+			if upd.Name != "" {
+				existingCap.Name = upd.Name
+			}
 		}
 	}
 }
@@ -81,6 +84,9 @@ func (a *Agent) UpdateListeners(updatedListeners []Listener) {
 		if existingListener, ok := existingMap[upd.ID]; ok {
 			existingListener.Config = upd.Config
 			existingListener.Active = upd.Active
+			if upd.Name != "" {
+				existingListener.Name = upd.Name
+			}
 		}
 	}
 }
