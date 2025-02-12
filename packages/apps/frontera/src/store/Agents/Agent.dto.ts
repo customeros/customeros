@@ -6,6 +6,7 @@ import { Tracer } from '@infra/tracer';
 import { action, computed, observable } from 'mobx';
 import { type AgentDatum } from '@infra/repositories/agent';
 
+import { IconName } from '@ui/media/Icon';
 import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
 
 import { AgentStore } from './Agent.store';
@@ -17,12 +18,27 @@ type CapabilityConfig = {
   };
 };
 
+type ColorType =
+  | 'grayModern'
+  | 'error'
+  | 'warning'
+  | 'success'
+  | 'grayWarm'
+  | 'moss'
+  | 'blueLight'
+  | 'indigo'
+  | 'violet'
+  | 'pink';
+
 export class Agent extends Entity<AgentDatum> {
   @observable accessor value: AgentDatum = Agent.default();
-  static defaultNameByType = {
+  static defaultNameByType: Record<AgentType, string> = {
     [AgentType.WebVisitIdentifier]: 'Web visitor identifier',
     [AgentType.SupportSpotter]: 'Support spotter',
     [AgentType.IcpQualifier]: 'Icp qualifier',
+    [AgentType.CampaignManager]: 'Outbound campaign manager',
+    [AgentType.CashflowGuardian]: 'Cashflow guardian',
+    [AgentType.MeetingKeeper]: 'Meeting keeper',
   };
 
   constructor(store: AgentStore, data: AgentDatum) {
@@ -37,7 +53,28 @@ export class Agent extends Entity<AgentDatum> {
 
   @computed
   get defaultName() {
-    return Agent.defaultNameByType[this.value.type];
+    return Agent.defaultNameByType[this.value.type] || 'Unknown';
+  }
+
+  @action
+  public setName(name: string) {
+    this.draft();
+    this.value.name = name;
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public setIcon(iconName: IconName) {
+    this.draft();
+    this.value.icon = iconName;
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public setColor(color: string) {
+    this.draft();
+    this.value.color = color;
+    this.commit({ syncOnly: true });
   }
 
   @action
@@ -131,6 +168,22 @@ export class Agent extends Entity<AgentDatum> {
     ]);
   }
 
+  public toDuplicatePayload(
+    name: string,
+  ): Omit<
+    AgentDatum,
+    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'id'
+  > {
+    return omit({ ...this.value, name }, [
+      'createdAt',
+      'updatedAt',
+      'error',
+      'isConfigured',
+      'goalType',
+      'id',
+    ]);
+  }
+
   public put(payload: AgentDatum) {
     const span = Tracer.span('Agent.put');
 
@@ -139,6 +192,66 @@ export class Agent extends Entity<AgentDatum> {
     this.commit({ syncOnly: true });
 
     span.end();
+  }
+
+  get colorMap(): [ring: string, bg: string, iconColor: string] {
+    const options: Record<
+      ColorType,
+      [ring: string, bg: string, iconColor: string]
+    > = {
+      grayModern: [
+        'group-hover:ring-grayModern-400',
+        'group-hover:bg-grayModern-50',
+        'group-hover:text-grayModern-500',
+      ],
+      error: [
+        'group-hover:ring-error-400',
+        'group-hover:bg-error-50',
+        'group-hover:text-error-500',
+      ],
+      warning: [
+        'group-hover:ring-warning-400',
+        'group-hover:bg-warning-50',
+        'group-hover:text-warning-500',
+      ],
+      success: [
+        'group-hover:ring-success-400',
+        'group-hover:bg-success-50',
+        'group-hover:text-success-500',
+      ],
+      grayWarm: [
+        'group-hover:ring-grayWarm-400',
+        'group-hover:bg-grayWarm-50',
+        'group-hover:text-grayWarm-500',
+      ],
+      moss: [
+        'group-hover:ring-moss-400',
+        'group-hover:bg-moss-50',
+        'group-hover:text-moss-500',
+      ],
+      blueLight: [
+        'group-hover:ring-blueLight-400',
+        'group-hover:bg-blueLight-50',
+        'group-hover:text-blueLight-500',
+      ],
+      indigo: [
+        'group-hover:ring-indigo-400',
+        'group-hover:bg-indigo-50',
+        'group-hover:text-indigo-500',
+      ],
+      violet: [
+        'group-hover:ring-violet-400',
+        'group-hover:bg-violet-50',
+        'group-hover:text-violet-500',
+      ],
+      pink: [
+        'group-hover:ring-pink-400',
+        'group-hover:bg-pink-50',
+        'group-hover:text-pink-500',
+      ],
+    };
+
+    return options?.[this.value.color as ColorType] || options.grayModern;
   }
 
   static parseConfig(raw: string): CapabilityConfig | null {

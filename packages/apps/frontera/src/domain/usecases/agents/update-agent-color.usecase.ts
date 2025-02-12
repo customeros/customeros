@@ -1,10 +1,10 @@
 import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
+import { computed, observable } from 'mobx';
 import { Agent } from '@store/Agents/Agent.dto.ts';
-import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
-export class DuplicateAgentUsecase {
+export class UpdateAgentColorUsecase {
   private root = RootStore.getInstance();
   private service = new AgentService();
   @observable accessor inputValue: string = '';
@@ -12,12 +12,6 @@ export class DuplicateAgentUsecase {
 
   constructor(private id?: string) {
     this.execute = this.execute.bind(this);
-    this.setInputValue = this.setInputValue.bind(this);
-  }
-
-  @action
-  setInputValue(value: string) {
-    this.inputValue = value;
   }
 
   @computed
@@ -25,34 +19,33 @@ export class DuplicateAgentUsecase {
     return this.id ? this.root.agents.getById(this.id) : null;
   }
 
-  public async execute() {
+  public async execute(color: string) {
     this.isSaving = true;
 
     const agent = this.agent;
 
     if (!agent) {
-      console.error('DuplicateAgentUsecase.execute: Could not find agent');
+      console.error('UpdateAgentColorUsecase.execute: Could not find agent');
       this.isSaving = false;
 
       return;
     }
 
-    const span = Tracer.span('DuplicateAgentUsecase.execute', {
+    const span = Tracer.span('UpdateAgentColorUsecase.execute', {
       payload: {
         agent,
-        name: this.inputValue,
+        color,
       },
     });
 
-    const [res, err] = await this.service.duplicateAgent(
-      agent,
-      this.inputValue,
-    );
+    agent.setColor(color);
+
+    const [res, err] = await this.service.saveAgent(agent);
 
     if (err) {
       this.isSaving = false;
       console.error(
-        'DuplicateAgentUsecase.execute: Could not duplicate agent',
+        'UpdateAgentColorUsecase.execute: Could not change agent color',
         err,
       );
       span.end();
@@ -61,12 +54,8 @@ export class DuplicateAgentUsecase {
     }
 
     if (res?.agent_Save) {
-      window.location.href = `/agents/${res.agent_Save.id}`;
-
       this.isSaving = false;
-      this.root.agents.addOne(res.agent_Save);
-      this.root.ui.commandMenu.setType('AgentCommands');
-      this.root.ui.commandMenu.toggle();
+      agent.put(res?.agent_Save);
     }
 
     span.end();

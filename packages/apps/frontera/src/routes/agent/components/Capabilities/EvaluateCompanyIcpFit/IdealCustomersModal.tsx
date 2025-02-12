@@ -9,7 +9,6 @@ import { Avatar } from '@ui/media/Avatar';
 import { Check } from '@ui/media/icons/Check';
 import { Spinner } from '@ui/feedback/Spinner';
 import { User03 } from '@ui/media/icons/User03';
-import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { getFormattedLink } from '@utils/getExternalLink';
@@ -38,12 +37,13 @@ export const IdealCustomersModal = observer(
     onClose: () => void;
     usecase: EditIcpDomainsUsecase;
   }) => {
-    const store = useStore();
     const commandRef = useRef(null);
 
     useOutsideClick({
       ref: commandRef,
-      handler: () => store.ui.commandMenu.setOpen(false),
+      handler: () => {
+        onClose();
+      },
     });
 
     useKey('Escape', (e) => {

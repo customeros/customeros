@@ -30,7 +30,7 @@ export const AgentsPage = observer(() => {
   }
 
   useEffect(() => {
-    store.ui.commandMenu.setType('AgentCommands');
+    store.ui.commandMenu.setType('AgentsCommands');
   }, []);
 
   return (
@@ -45,7 +45,7 @@ export const AgentsPage = observer(() => {
               key={agent.id}
               icon={agent.value.icon}
               name={agent.value.name}
-              color={agent.value.color}
+              colorMap={agent.colorMap}
               defaultName={agent.defaultName}
               status={agent.value.isActive ? 'ON' : 'OFF'}
               hasError={!!agent.value.error || !agent.value.isConfigured}

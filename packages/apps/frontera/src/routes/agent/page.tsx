@@ -43,13 +43,29 @@ export const AgentPage = observer(() => {
     }
   }, []);
 
+  useEffect(() => {
+    if (id) {
+      store.ui.commandMenu.setContext({
+        ...store.ui.commandMenu.context,
+        ids: [id],
+      });
+      store.ui.commandMenu.setType('AgentCommands');
+    }
+  }, [id]);
+
   if (!id) {
     throw new Error('No id provided');
+  }
+
+  if (!agent) {
+    return null;
   }
 
   return (
     <div>
       <Header
+        id={id}
+        colorMap={agent.colorMap}
         isActive={!!agent?.value.isActive}
         agentName={agent?.value?.name ?? ''}
         icon={agent?.value.icon as IconName}

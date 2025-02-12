@@ -4,7 +4,7 @@ import { Agent } from '@store/Agents/Agent.dto.ts';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
-export class DuplicateAgentUsecase {
+export class RenameAgentUsecase {
   private root = RootStore.getInstance();
   private service = new AgentService();
   @observable accessor inputValue: string = '';
@@ -31,42 +31,39 @@ export class DuplicateAgentUsecase {
     const agent = this.agent;
 
     if (!agent) {
-      console.error('DuplicateAgentUsecase.execute: Could not find agent');
+      console.error('RenameAgentUsecase.execute: Could not find agent');
       this.isSaving = false;
 
       return;
     }
 
-    const span = Tracer.span('DuplicateAgentUsecase.execute', {
+    const span = Tracer.span('RenameAgentUsecase.execute', {
       payload: {
         agent,
         name: this.inputValue,
       },
     });
 
-    const [res, err] = await this.service.duplicateAgent(
-      agent,
-      this.inputValue,
-    );
+    const prevName = agent.value.name;
+
+    agent.setName(this.inputValue);
+
+    const [res, err] = await this.service.saveAgent(agent);
 
     if (err) {
       this.isSaving = false;
-      console.error(
-        'DuplicateAgentUsecase.execute: Could not duplicate agent',
-        err,
-      );
+      agent.setName(prevName);
+      console.error('RenameAgentUsecase.execute: Could not rename agent', err);
       span.end();
 
       return;
     }
 
     if (res?.agent_Save) {
-      window.location.href = `/agents/${res.agent_Save.id}`;
-
       this.isSaving = false;
-      this.root.agents.addOne(res.agent_Save);
+      agent.put(res?.agent_Save);
       this.root.ui.commandMenu.setType('AgentCommands');
-      this.root.ui.commandMenu.toggle();
+      this.root.ui.commandMenu.setOpen(false);
     }
 
     span.end();

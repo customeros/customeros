@@ -7,16 +7,36 @@ import { CommandsContainer } from '@shared/components/CommandMenu/commands/share
 
 export const AgentCommands = observer(() => {
   const store = useStore();
+  const id = store.ui.commandMenu.context.ids?.[0];
+  const agent = id ? store.agents.getById(id) : null;
+  const label = `Agent - ${agent?.value.name}`;
 
   return (
-    <CommandsContainer label={'Agents'}>
+    <CommandsContainer label={label}>
       <CommandItem
-        leftAccessory={<Icon name='plus-circle' />}
+        leftAccessory={<Icon name='edit-03' />}
         onSelect={() => {
-          store.ui.commandMenu.setType('CreateAgent');
+          store.ui.commandMenu.setType('RenameAgent');
         }}
       >
-        Add new agent...
+        Rename agent
+      </CommandItem>
+      {/*<CommandItem*/}
+      {/*  leftAccessory={<Icon name='layers-two-01' />}*/}
+      {/*  onSelect={() => {*/}
+      {/*    store.ui.commandMenu.setType('DuplicateAgent');*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  Duplicate agent*/}
+      {/*</CommandItem>*/}
+
+      <CommandItem
+        leftAccessory={<Icon name='layers-two-01' />}
+        onSelect={() => {
+          store.ui.commandMenu.setType('ArchiveAgent');
+        }}
+      >
+        Archive agent
       </CommandItem>
     </CommandsContainer>
   );
