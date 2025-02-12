@@ -10,7 +10,7 @@ import (
 )
 
 type Config struct {
-	Common *commonconf.CommonConfig
+	Common commonconf.CommonConfig
 	App    AppConfig
 }
 
@@ -25,7 +25,6 @@ type CommonConfig struct {
 	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
 	RabbitMQ         commonconf.RabbitMQConfig
-	GrpcClient       commonconf.GrpcClientConfig
 	MailSherpaApi    commonconf.MailSherpaApiConfig
 	BetterContact    commonconf.BetterContactConfig
 	Scrapin          commonconf.ScrapinConfig
@@ -59,11 +58,10 @@ func Load() *Config {
 		log.Fatalf("%+v", err)
 	}
 
-	cfg.Common = &commonconf.CommonConfig{
+	cfg.Common = commonconf.CommonConfig{
 		Infrastructure: commonconf.InfrastructureConfig{
 			LoggerConfig:        cmnCfg.Logger,
 			JaegerConfig:        cmnCfg.Jaeger,
-			GrpcClientConfig:    cmnCfg.GrpcClient,
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,

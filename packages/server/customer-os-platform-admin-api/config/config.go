@@ -22,7 +22,6 @@ type CommonConfig struct {
 	Postgres      commconf.PostgresConfig
 	PostgresAsync commconf.PostgresAsyncConfig
 	Neo4j         commconf.Neo4jConfig
-	GrpcClient    commconf.GrpcClientConfig
 }
 
 type App struct {
@@ -62,7 +61,6 @@ func InitConfig() (*Config, error) {
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
-			GrpcClientConfig:    cmnCfg.GrpcClient,
 		},
 	}
 

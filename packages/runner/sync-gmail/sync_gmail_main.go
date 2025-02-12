@@ -7,7 +7,6 @@ import (
 	localCron "github.com/customeros/customeros/packages/runner/sync-gmail/cron"
 	"github.com/customeros/customeros/packages/runner/sync-gmail/logger"
 	"github.com/customeros/customeros/packages/runner/sync-gmail/service"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
@@ -54,14 +53,6 @@ func main() {
 		log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", config.Neo4jDb.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&config.GrpcClientConfig)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		logrus.Fatalf("failed opening connection to gRPC: %v", err.Error())
-	}
-	defer df.Close(gRPCconn)
 
 	services := service.InitServices(config, &neo4jDriver, postgresDb, appLogger)
 

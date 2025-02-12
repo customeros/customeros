@@ -6,11 +6,14 @@ volumes:
   postgres_data:
   neo4j_data:
   provision:
+  opensearch-data:
 
 services:
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbitmq
+    networks:
+      - openline
     ports:
       - 5672:5672
       - 15672:15672
@@ -112,6 +115,40 @@ services:
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_SECURITY_PLUGIN=true"  # For development only
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - openline
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS=true"  # For development only
+    ports:
+      - "5601:5601"
+    networks:
+      - openline
+    depends_on:
+      - opensearch
+
   temporal:
     container_name: temporal
     depends_on:
@@ -184,7 +221,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
 
   customer-os-api:
     image: ghcr.io/customeros/customeros/customer-os-api:latest
@@ -196,9 +232,9 @@ services:
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
+      - POSTGRES_ASYNC_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
+      - RABBITMQ_URL=amqp://guest:guest@host.docker.internal:5672
 
   events-subscribers:
     image: ghcr.io/customeros/customeros/events-subscribers:latest
@@ -208,9 +244,9 @@ services:
       - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
+      - POSTGRES_ASYNC_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
+      - RABBITMQ_URL=amqp://guest:guest@host.docker.internal:5672
 
   customer-os-webhooks:
     image: ghcr.io/customeros/customeros/customer-os-webhooks:latest
@@ -223,7 +259,6 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
       - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   validation-api:
