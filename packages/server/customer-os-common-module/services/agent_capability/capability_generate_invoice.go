@@ -49,7 +49,16 @@ type GenerateInvoiceConfig struct {
 }
 
 func (c *GenerateInvoiceConfig) Validate() bool {
-	return true
+	isValid := true
+
+	if c.LegalName.Value == "" {
+		c.LegalName.Error = "Please provide your company legal name"
+		isValid = false
+	} else {
+		c.LegalName.Error = ""
+	}
+
+	return isValid
 }
 
 func NewGenerateInvoiceCapability(postgres *postgres_repository.Repositories, invoiceService interfaces.InvoiceService) *GenerateInvoiceCapability {
@@ -117,6 +126,23 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 	dataFields := data_fields.InvoiceFields{
 		DryRun:  executionContainer.InputData.DryRun,
 		Preview: executionContainer.InputData.Preview,
+		TenantBillingProfile: &data_fields.TenantBillingProfile{
+			Country:                    executionContainer.ConfigData.Country.Value,
+			LegalName:                  executionContainer.ConfigData.LegalName.Value,
+			AddressLine1:               executionContainer.ConfigData.AddressLine1.Value,
+			AddressLine2:               executionContainer.ConfigData.AddressLine2.Value,
+			Zip:                        executionContainer.ConfigData.ZIP.Value,
+			Locality:                   executionContainer.ConfigData.Locality.Value,
+			Region:                     executionContainer.ConfigData.Region.Value,
+			IncludeBankTransferDetails: executionContainer.ConfigData.IncludeBankTransferDetails.Value,
+			BankName:                   executionContainer.ConfigData.BankName.Value,
+			AccountNumber:              executionContainer.ConfigData.AccountNumber.Value,
+			IBAN:                       executionContainer.ConfigData.IBAN.Value,
+			BIC:                        executionContainer.ConfigData.BIC.Value,
+			SortCode:                   executionContainer.ConfigData.SortCode.Value,
+			RoutingNumber:              executionContainer.ConfigData.RoutingNumber.Value,
+			OtherDetails:               executionContainer.ConfigData.OtherDetails.Value,
+		},
 	}
 	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, executionContainer.InputData.ContractId, dataFields)
 	if err != nil {
