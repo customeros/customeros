@@ -139,7 +139,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		tracing.TraceErr(span, err)
 		return "", err
 	} else if dataFields.TenantBillingProfile == nil {
-		dataFields.FillWithDummyTenantBillingProfile()
+		dataFields.FillWithSampleTenantBillingProfile()
 	}
 
 	offCycle := false
