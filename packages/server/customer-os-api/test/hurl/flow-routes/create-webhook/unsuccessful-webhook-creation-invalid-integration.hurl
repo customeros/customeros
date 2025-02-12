@@ -1,5 +1,5 @@
 # Test: Unsuccessful webhook creation invalid integration
-POST {{cos_url}}/flows/v1/hooks
+POST {{cos_url}}/webhooks/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {
