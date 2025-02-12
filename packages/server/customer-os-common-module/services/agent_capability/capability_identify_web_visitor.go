@@ -50,7 +50,7 @@ func (c *IdentifyWebsiteVisitorCapability) Type() enum.AgentCapability {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) Name() string {
-	return "Identify website visitor"
+	return "Identify website visitors"
 }
 
 func (c *IdentifyWebsiteVisitorCapability) NewInput() IdentifyWebsiteVisitorInput {

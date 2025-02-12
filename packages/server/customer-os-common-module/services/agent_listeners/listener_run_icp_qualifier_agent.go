@@ -49,7 +49,7 @@ func (l *RunIcpQualifierAgent) Type() enum.AgentListenerEvent {
 }
 
 func (l *RunIcpQualifierAgent) Name() string {
-	return "Run ICP Qualifier Agent"
+	return "Companies manually added to the agent"
 }
 
 func (l *RunIcpQualifierAgent) DefaultConfig() any {

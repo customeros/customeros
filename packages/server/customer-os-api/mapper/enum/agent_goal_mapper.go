@@ -5,8 +5,8 @@ import (
 )
 
 var agentGoalNameMap = map[enum.AgentGoal]string{
-	enum.AgentGoalEvaluateICPFit:         "Evaluate company ICP fit",
-	enum.AgentGoalIdentifyWebVisitor:     "Identify website visitors",
+	enum.AgentGoalEvaluateICPFit:         "Qualify companies",
+	enum.AgentGoalIdentifyWebVisitor:     "Identify companies that visit my website",
 	enum.AgentGoalSpotHelpNeeded:         "Spot companies that may need help",
 	enum.AgentGoalCaptureExternalMeeting: "Capture and share external meetings",
 	enum.AgentGoalReceiveReply:           "Receive a reply to our outreach",

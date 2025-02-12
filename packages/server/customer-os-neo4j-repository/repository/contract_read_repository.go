@@ -28,7 +28,7 @@ type ContractReadRepository interface {
 	GetContractsForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
-	GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetContractsToGenerateCycleInvoices(ctx context.Context, tenant string, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit, delayFromPreviousStatusCheckHours int) ([]TenantAndContractId, error)
@@ -318,14 +318,16 @@ func (r *contractReadRepository) CountContracts(ctx context.Context, tenant stri
 	return contractsCount, nil
 }
 
-func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error) {
+func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context.Context, tenant string, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateCycleInvoices")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes), log.Int("limit", limit))
 
-	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
+	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
 			WHERE 
+				t.active = true AND
 				ts.invoicingEnabled = true AND
 				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
@@ -342,6 +344,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 				(c.techInvoicingStartedAt IS NULL OR c.techInvoicingStartedAt + duration({minutes: $delayMinutes}) < $referenceTime)
 			RETURN distinct(c), t.name limit $limit`
 	params := map[string]any{
+		"tenant":                tenant,
 		"referenceTime":         referenceTime,
 		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String()},
 		"delayMinutes":          delayMinutes,

@@ -11,7 +11,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -65,7 +64,6 @@ type InvoiceService interface {
 	AdjustInvoiceStatus()
 
 	// TODO stopped invoicing
-	GenerateCycleInvoices()
 	GenerateOffCycleInvoices()
 	SendPayNotifications()
 	GenerateInvoicePaymentLinks()
@@ -85,98 +83,6 @@ func NewInvoiceService(cfg *config.Config, log logger.Logger, commonServices *co
 		log:            log,
 		commonServices: commonServices,
 		repositories:   repositories,
-	}
-}
-
-func (s *invoiceService) GenerateCycleInvoices() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	if s.cfg.App.ProcessConfig.CycleInvoicingEnabled == false {
-		s.log.Infof("Cycle invoicing is disabled, stopping")
-		return
-	}
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	referenceTime := utils.Now()
-	dryRun := false
-	preview := false
-
-	limit := 0
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceTime, s.cfg.App.ProcessConfig.DelayGenerateCycleInvoiceInMinutes, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contracts for invoicing: %v", err)
-			return
-		}
-
-		// no contracts found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-			recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateCycleInvoices.Record")
-			defer recordSpan.Finish()
-			tracing.TagTenant(recordSpan, record.Tenant)
-			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
-			tenant := record.Tenant
-
-			// mark invoicing requested to prevent double processing of the record
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingRequested(innerCtx, tenant, contract.Id, utils.Now())
-			if err != nil {
-				tracing.TraceErr(recordSpan, errors.Wrap(err, "Error marking invoicing requested"))
-				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
-				return
-			}
-
-			// check if tenant has agent for invoicing enabled and configured
-			invoicingAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(innerCtx, []enum.AgentType{enum.AgentCashflowGuardian})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error getting invoicing agents: %v", err)
-				continue
-			}
-			if len(invoicingAgents) == 0 {
-				s.log.Infof("No invoicing agents configured for tenant %s", tenant)
-				continue
-			}
-
-			event := dto.InvoiceStart{
-				// IntentType: enum.IntentGenerateCycleInvoice,
-				ContractID: contract.Id,
-				DryRun:     dryRun,
-				Preview:    preview,
-			}
-
-			err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.INTENT_SIGNAL, &event)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error publishing icp check event"))
-				s.log.Errorf("Error publishing icp check event: %v", err)
-				continue
-			}
-		}
-
-		// sleep for async processing, then check again
-		time.Sleep(10 * time.Second)
 	}
 }
 

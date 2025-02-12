@@ -41,11 +41,6 @@ func NewNewLeadProducer(
 	}
 }
 
-const (
-	Limit                                  = 100
-	DelayFromPreviousCheckRequestInMinutes = 24 * 60 // 24 hours
-)
-
 // Add all Agent types subscribed to this event here
 func (p *NewLeadProducer) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
@@ -56,6 +51,9 @@ func (p *NewLeadProducer) subscribedAgents() []enum.AgentType {
 func (p *NewLeadProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
+
+	limit := 100
+	delayFromPreviousCheckRequestInMinutes := 24 * 60 // 24 hours
 
 	span, ctx := tracing.StartTracerSpan(ctx, "NewLeadProducer.NewLeads")
 	defer span.Finish()
@@ -77,7 +75,7 @@ func (p *NewLeadProducer) Execute() {
 		return
 	}
 
-	records, err := p.neo4jRepository.OrganizationReadRepository.GetOrganizationsForIcpCheck(ctx, tenants, Limit, DelayFromPreviousCheckRequestInMinutes)
+	records, err := p.neo4jRepository.OrganizationReadRepository.GetOrganizationsForIcpCheck(ctx, tenants, limit, delayFromPreviousCheckRequestInMinutes)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return

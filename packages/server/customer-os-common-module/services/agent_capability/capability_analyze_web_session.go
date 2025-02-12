@@ -51,7 +51,7 @@ func (c *AnalyzeWebSessionCapability) Type() enum.AgentCapability {
 }
 
 func (c *AnalyzeWebSessionCapability) Name() string {
-	return "Analyze web session for intent"
+	return "Analyze behaviour for intent signals"
 }
 
 func (c *AnalyzeWebSessionCapability) NewInput() AnalyzeWebSessionInput {

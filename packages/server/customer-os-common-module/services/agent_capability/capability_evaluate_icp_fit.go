@@ -56,7 +56,7 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 		c.QualificationCriteria.Error = ""
 	}
 	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
-		c.ICPCompanyExamples.Error = "Add at least 5 ideal customer websites"
+		c.ICPCompanyExamples.Error = "Add at least 5 websites"
 		isValid = false
 	} else {
 		c.ICPCompanyExamples.Error = ""
@@ -81,7 +81,7 @@ func (c *EvaluateICPFitCapability) Type() enum.AgentCapability {
 }
 
 func (c *EvaluateICPFitCapability) Name() string {
-	return "Evaluate company for ICP fit"
+	return "Qualify if companies fit your ICP"
 }
 
 func (c *EvaluateICPFitCapability) NewInput() EvaluateICPFitInput {
