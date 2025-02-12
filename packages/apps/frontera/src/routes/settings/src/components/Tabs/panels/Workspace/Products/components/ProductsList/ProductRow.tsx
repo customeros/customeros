@@ -33,7 +33,9 @@ export const ProductRow = observer(({ id }: { id: string }) => {
         <span className='truncate'>{row.value.name}</span>
       </div>
       <div className='truncate flex items-center'>{row.typeLabel}</div>
-      <div className='truncate flex items-center'>{row.formattedPrice}</div>
+      <div className='truncate flex items-center justify-end'>
+        {row.formattedPrice}
+      </div>
       <div className='w-7'>
         <Menu onOpenChange={(state) => setIsMenuOpen(state)}>
           <MenuButton asChild>
