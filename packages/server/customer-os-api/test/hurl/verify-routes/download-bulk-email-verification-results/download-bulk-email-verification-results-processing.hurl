@@ -16,7 +16,7 @@ GET {{cos_url}}/verify/v1/email/bulk/results/{{job_id}}/download
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [Options]
-#delay: 30000
+delay: 30000
 
 HTTP *
 [Asserts]

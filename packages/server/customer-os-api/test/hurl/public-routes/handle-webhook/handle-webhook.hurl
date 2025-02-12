@@ -1,5 +1,5 @@
 # Test: Handle Webhook
-POST {{cos_url}}/flows/v1/hooks
+POST {{cos_url}}/webhooks/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {
@@ -11,20 +11,20 @@ HTTP *
 hook_url: jsonpath "$.hook.url"
 integration: jsonpath "$.hook.integration"
 secret: jsonpath "$.hook.secret"
-tenant_id: regex "/flows/v1/([^/]+)"
+tenant_id: regex "/webhooks/v1/([^/]+)"
 integration_id: regex "/i/([a-zA-Z0-9]+)"
 [Asserts]
 status == 200
 header "Content-Type" == "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
-jsonpath "$.hook.url" matches "/flows/v1/[a-zA-Z0-9-]+/i/[a-zA-Z0-9-]+"
+jsonpath "$.hook.url" matches "/webhooks/v1/[a-zA-Z0-9-]+/i/[a-zA-Z0-9-]+"
 jsonpath "$.hook.integration" == "fathom"
 jsonpath "$.hook.secret" matches "^[a-zA-Z0-9_-]{32,}$"
 
 
 
-POST {{cos_url}}/flows/v1/{{tenant_id}}/i/{{integration_id}}
+POST {{cos_url}}/webhooks/v1/{{tenant_id}}/i/{{integration_id}}
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 {

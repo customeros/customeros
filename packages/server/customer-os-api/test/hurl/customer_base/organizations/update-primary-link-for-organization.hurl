@@ -1,4 +1,4 @@
-# Test: Update Primary Link
+# Test: Update Primary Link For Organization
 POST {{cos_url}}/customerbase/v1/organizations
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
