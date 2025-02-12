@@ -31,8 +31,8 @@ type TenantBillingProfile struct {
 	OtherDetails               string `json:"otherDetails"`
 }
 
-// Generate dummy, aka acme data
-func (f *InvoiceFields) FillWithDummyTenantBillingProfile() {
+// Generate sample data
+func (f *InvoiceFields) FillWithSampleTenantBillingProfile() {
 	f.TenantBillingProfile = &TenantBillingProfile{}
 	f.TenantBillingProfile.Country = "US"
 	f.TenantBillingProfile.LegalName = "Acme Inc."

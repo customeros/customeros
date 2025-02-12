@@ -30,7 +30,23 @@ type GenerateInvoiceOutput struct {
 	InvoiceNumber string `json:"invoiceNumber"`
 }
 
-type GenerateInvoiceConfig struct{}
+type GenerateInvoiceConfig struct {
+	Country                    ConfigSingleValue     `json:"country"`
+	LegalName                  ConfigSingleValue     `json:"legalName"`
+	AddressLine1               ConfigSingleValue     `json:"addressLine1"`
+	AddressLine2               ConfigSingleValue     `json:"addressLine2"`
+	ZIP                        ConfigSingleValue     `json:"zip"`
+	Locality                   ConfigSingleValue     `json:"locality"`
+	Region                     ConfigSingleValue     `json:"region"`
+	IncludeBankTransferDetails ConfigSingleBoolValue `json:"includeBankTransferDetails"`
+	BankName                   ConfigSingleValue     `json:"bankName"`
+	AccountNumber              ConfigSingleValue     `json:"accountNumber"`
+	IBAN                       ConfigSingleValue     `json:"iban"`
+	BIC                        ConfigSingleValue     `json:"bic"`
+	SortCode                   ConfigSingleValue     `json:"sortCode"`
+	RoutingNumber              ConfigSingleValue     `json:"routingNumber"`
+	OtherDetails               ConfigSingleValue     `json:"otherDetails"`
+}
 
 func (c *GenerateInvoiceConfig) Validate() bool {
 	return true

@@ -25,6 +25,8 @@ type CapabilityParams struct {
 	IcpFit                         enum.IcpFit `json:"isIcpFit"`
 	IcpFitRationale                string      `json:"icpFitRationale"`
 	IndustryNAICSName              string      `json:"industryName"`
+	InvoiceID                      string      `json:"invoiceId"`
+	InvoiceNumber                  string      `json:"invoiceNumber"`
 	IPAddress                      string      `json:"ipAddress"`
 	IsNewCompanyVisit              bool        `json:"isNewCompanyVisit"`
 	IsNewPersonVisit               bool        `json:"isNewPersonVisit"`
@@ -51,5 +53,4 @@ type CapabilityParams struct {
 	VisitorID                      string      `json:"visitorId"`
 	WebSessionID                   string      `json:"webSessionId"`
 	YearCompanyFounded             string      `json:"yearCompanyFounded"`
-	InvoiceID                      string      `json:"invoiceId"`
 }

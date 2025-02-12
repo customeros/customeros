@@ -140,7 +140,7 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 			return db.Order("position ASC")
 		}).
 		Where(
-			"(tenant = ? AND scope = ? ) OR (tenant = ? AND owner = ? AND scope = ?)",
+			"(tenant = ? AND agent_scope = ? ) OR (tenant = ? AND owner = ? AND agent_scope = ?)",
 			tenant, enum.AgentScopeWorkspace, tenant, user, enum.AgentScopePersonal,
 		)
 
