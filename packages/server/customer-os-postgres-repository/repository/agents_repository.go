@@ -126,7 +126,7 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 
 	user := common.GetUserIdFromContext(ctx)
 	if user == "" {
-		err := errors.New("User email not set on context")
+		err := errors.New("UserID not set on context")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
