@@ -33,4 +33,31 @@ export class AgentService {
 
     return req;
   }
+
+  public async duplicateAgent(agent: Agent, name: string) {
+    const duplicateAgentPayload = agent.toDuplicatePayload(name);
+    const span = Tracer.span('AgentService.duplicateAgent', {
+      payload: duplicateAgentPayload,
+    });
+
+    const req = await unwrap(
+      this.repo.saveAgent({ input: duplicateAgentPayload }),
+    );
+
+    span.end();
+
+    return req;
+  }
+
+  public async archiveAgent(agent: Agent) {
+    const span = Tracer.span('AgentService.archiveAgent', {
+      payload: agent.id,
+    });
+
+    const req = await unwrap(this.repo.archiveAgent({ id: agent.id }));
+
+    span.end();
+
+    return req;
+  }
 }

@@ -101,6 +101,7 @@ export type Agent = {
   isConfigured: Scalars['Boolean']['output'];
   listeners: Array<AgentListener>;
   name: Scalars['String']['output'];
+  scope: AgentScope;
   type: AgentType;
   updatedAt: Scalars['Time']['output'];
   visible: Scalars['Boolean']['output'];
@@ -117,11 +118,19 @@ export type AgentListener = {
 };
 
 export enum AgentListenerEvent {
+  CompanyIdentified = 'COMPANY_IDENTIFIED',
+  CompanyNeedsHelp = 'COMPANY_NEEDS_HELP',
+  ContactAddedToCampaign = 'CONTACT_ADDED_TO_CAMPAIGN',
+  EmailBounced = 'EMAIL_BOUNCED',
+  EmailReplyReceived = 'EMAIL_REPLY_RECEIVED',
   IcpFit = 'ICP_FIT',
   IcpNotAFit = 'ICP_NOT_A_FIT',
   NewLead = 'NEW_LEAD',
+  NewMeetingRecording = 'NEW_MEETING_RECORDING',
   NewWebSession = 'NEW_WEB_SESSION',
   RunIcpQualifierAgent = 'RUN_ICP_QUALIFIER_AGENT',
+  StartInvoiceRun = 'START_INVOICE_RUN',
+  StartInvoiceRunWithAutopayment = 'START_INVOICE_RUN_WITH_AUTOPAYMENT',
   WebVisitorIdentified = 'WEB_VISITOR_IDENTIFIED',
   WebVisitorNotIdentified = 'WEB_VISITOR_NOT_IDENTIFIED',
 }
@@ -149,6 +158,11 @@ export type AgentSaveInput = {
   visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export enum AgentScope {
+  Personal = 'PERSONAL',
+  Workspace = 'WORKSPACE',
+}
+
 export type AgentSlackChannel = {
   __typename?: 'AgentSlackChannel';
   channelId: Scalars['String']['output'];
@@ -156,8 +170,11 @@ export type AgentSlackChannel = {
 };
 
 export enum AgentType {
+  CampaignManager = 'CAMPAIGN_MANAGER',
+  CashflowGuardian = 'CASHFLOW_GUARDIAN',
   IcpQualifier = 'ICP_QUALIFIER',
-  TagSupport = 'TAG_SUPPORT',
+  MeetingKeeper = 'MEETING_KEEPER',
+  SupportSpotter = 'SUPPORT_SPOTTER',
   WebVisitIdentifier = 'WEB_VISIT_IDENTIFIER',
 }
 
@@ -383,15 +400,29 @@ export type CapabilitySaveInput = {
 };
 
 export enum CapabilityType {
+  AddMeetingNotesToCompany = 'ADD_MEETING_NOTES_TO_COMPANY',
   AnalyzeWebSessionIntent = 'ANALYZE_WEB_SESSION_INTENT',
-  ApplyTag = 'APPLY_TAG',
+  ApplyTagToCompany = 'APPLY_TAG_TO_COMPANY',
+  CreateContacts = 'CREATE_CONTACTS',
   CreateMarkdownTimelineEvent = 'CREATE_MARKDOWN_TIMELINE_EVENT',
   CreateOrganization = 'CREATE_ORGANIZATION',
+  DetectSupportWebvisit = 'DETECT_SUPPORT_WEBVISIT',
+  EnrichEmailAddress = 'ENRICH_EMAIL_ADDRESS',
+  ExtractMeetingHighlights = 'EXTRACT_MEETING_HIGHLIGHTS',
+  ExtractSupportSignalsFromMeeting = 'EXTRACT_SUPPORT_SIGNALS_FROM_MEETING',
+  ForwardEmailReply = 'FORWARD_EMAIL_REPLY',
   GatherCompanyIntelligence = 'GATHER_COMPANY_INTELLIGENCE',
+  GenerateInvoice = 'GENERATE_INVOICE',
   IcpQualify = 'ICP_QUALIFY',
+  IdentifyMeetingParticipants = 'IDENTIFY_MEETING_PARTICIPANTS',
   IdentifyWebVisitor = 'IDENTIFY_WEB_VISITOR',
+  ManageCampaignExecution = 'MANAGE_CAMPAIGN_EXECUTION',
+  ManageEmailDeliveryFailure = 'MANAGE_EMAIL_DELIVERY_FAILURE',
+  SelectOptimalSendingMailbox = 'SELECT_OPTIMAL_SENDING_MAILBOX',
+  SendInvoiceViaEmail = 'SEND_INVOICE_VIA_EMAIL',
   SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
   UpdateCompanyStatus = 'UPDATE_COMPANY_STATUS',
+  ValidateEmailDeliverability = 'VALIDATE_EMAIL_DELIVERABILITY',
   WebVisitorSendSlackNotification = 'WEB_VISITOR_SEND_SLACK_NOTIFICATION',
 }
 
@@ -2554,6 +2585,7 @@ export type Mutation = {
   admin_removeWorkspaceAccess: Scalars['Boolean']['output'];
   admin_switchCurrentWorkspace: Scalars['Boolean']['output'];
   admin_tenant_hardDelete: Scalars['Boolean']['output'];
+  agent_Delete: Scalars['Boolean']['output'];
   agent_Save: Agent;
   attachment_Create: Attachment;
   bankAccount_Create: BankAccount;
@@ -2754,6 +2786,10 @@ export type MutationAdmin_SwitchCurrentWorkspaceArgs = {
 export type MutationAdmin_Tenant_HardDeleteArgs = {
   confirmTenant: Scalars['String']['input'];
   tenant: Scalars['String']['input'];
+};
+
+export type MutationAgent_DeleteArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationAgent_SaveArgs = {

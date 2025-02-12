@@ -34,8 +34,8 @@ export const AgentPage = observer(() => {
     if (!queryParams.get('cid')) {
       setQueryParams(
         (params) => {
-          if (!usecase.activeConfig) return params;
-          params.set('cid', usecase.activeConfig?.id);
+          if (!usecase.activeConfig?.id) return params;
+          params.set('cid', usecase.activeConfig.id);
 
           return params;
         },
@@ -44,13 +44,29 @@ export const AgentPage = observer(() => {
     }
   }, []);
 
+  useEffect(() => {
+    if (id) {
+      store.ui.commandMenu.setContext({
+        ...store.ui.commandMenu.context,
+        ids: [id],
+      });
+      store.ui.commandMenu.setType('AgentCommands');
+    }
+  }, [id]);
+
   if (!id) {
     throw new Error('No id provided');
+  }
+
+  if (!agent) {
+    return null;
   }
 
   return (
     <div>
       <Header
+        id={id}
+        colorMap={agent.colorMap}
         isActive={!!agent?.value.isActive}
         agentName={agent?.value?.name ?? ''}
         icon={agent?.value.icon as IconName}
@@ -60,7 +76,7 @@ export const AgentPage = observer(() => {
       <div className='flex h-screen'>
         <div className='w-[448px] border-r border-r-grayModern-200 px-4 py-3'>
           <div className='mb-2'>
-            <h2 className='font-medium mb-1'>Goal</h2>
+            <h2 className='font-medium mb-1 text-sm'>About this agent</h2>
             <p className='pb-2 text-sm'>{agent?.value.goal ?? 'Unknown'}</p>
           </div>
 
