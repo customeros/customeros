@@ -50,4 +50,5 @@ type CapabilityParams struct {
 	VisitorID                      string      `json:"visitorId"`
 	WebSessionID                   string      `json:"webSessionId"`
 	YearCompanyFounded             string      `json:"yearCompanyFounded"`
+	InvoiceID                      string      `json:"invoiceId"`
 }
