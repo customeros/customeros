@@ -76,7 +76,7 @@ export const AgentPage = observer(() => {
       <div className='flex h-screen'>
         <div className='w-[448px] border-r border-r-grayModern-200 px-4 py-3'>
           <div className='mb-2'>
-            <h2 className='font-medium mb-1'>Goal</h2>
+            <h2 className='font-medium mb-1 text-sm'>About this agent</h2>
             <p className='pb-2 text-sm'>{agent?.value.goal ?? 'Unknown'}</p>
           </div>
 
