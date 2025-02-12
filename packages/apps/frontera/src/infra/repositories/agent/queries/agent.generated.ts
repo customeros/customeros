@@ -11,6 +11,7 @@ export type AgentQuery = {
     id: string;
     type: Types.AgentType;
     name: string;
+    scope: Types.AgentScope;
     goal: string;
     goalType: string;
     isActive: boolean;

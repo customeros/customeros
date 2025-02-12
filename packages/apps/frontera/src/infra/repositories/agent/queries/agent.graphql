@@ -3,6 +3,7 @@ query agent($id: ID!) {
     id
     type
     name
+    scope
     listeners {
       id
       type

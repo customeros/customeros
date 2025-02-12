@@ -5,8 +5,10 @@ import { observer } from 'mobx-react-lite';
 import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 
 import { cn } from '@ui/utils/cn';
+import { AgentScope } from '@graphql/types';
 import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
+import { Tag, TagLabel } from '@ui/presentation/Tag';
 
 import { goals, Header, configs } from './components';
 
@@ -76,7 +78,24 @@ export const AgentPage = observer(() => {
       <div className='flex h-screen'>
         <div className='w-[448px] border-r border-r-grayModern-200 px-4 py-3'>
           <div className='mb-2'>
-            <h2 className='font-medium mb-1 text-sm'>About this agent</h2>
+            <div className='mb-1 flex items-center justify-between'>
+              <h2 className='font-medium text-sm'>About this agent</h2>
+              <Tag variant='subtle' color='grayModern'>
+                <TagLabel className='flex items-center gap-1'>
+                  <Icon
+                    className='size-3'
+                    name={
+                      agent?.value?.scope === AgentScope.Workspace
+                        ? 'building-05'
+                        : 'user-01'
+                    }
+                  />
+                  {agent?.value?.scope === AgentScope.Workspace
+                    ? 'Workspace'
+                    : 'Personal'}
+                </TagLabel>
+              </Tag>
+            </div>
             <p className='pb-2 text-sm'>{agent?.value.goal ?? 'Unknown'}</p>
           </div>
 
