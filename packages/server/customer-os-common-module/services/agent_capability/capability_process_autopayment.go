@@ -85,7 +85,7 @@ func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionCon
 	err := c.invoiceService.AutopayInvoice(ctx, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
