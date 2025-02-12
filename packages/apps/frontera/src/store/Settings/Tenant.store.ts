@@ -1,3 +1,4 @@
+import { set } from 'lodash';
 import pick from 'lodash/pick';
 import { RootStore } from '@store/root';
 import { Transport } from '@infra/transport';
@@ -36,8 +37,11 @@ export class TenantStore {
 
       runInAction(() => {
         this.value = tenantSettings;
-        this.root.session.value.profile.workspaceName =
-          this.value.workspaceName ?? undefined;
+        set(
+          this.root.session.value.profile,
+          'workspaceName',
+          this.value.workspaceName ?? undefined,
+        );
         this.isBootstrapped = true;
       });
     } catch (err) {

@@ -1,5 +1,6 @@
 import type { RootStore } from '@store/root';
 
+import { set } from 'lodash';
 import { match } from 'ts-pattern';
 import { AxiosError } from 'axios';
 import { Persister } from '@store/persister';
@@ -135,8 +136,11 @@ export class SessionStore {
         this.value.profile.email = jwtParsed?.profile?.email ?? '';
         this.value.profile.id = jwtParsed?.profile?.id ?? '';
         this.value.campaign = jwtParsed?.campaign ?? '';
-        this.value.profile.workspaceName =
-          jwtParsed?.profile?.workspaceName ?? '';
+        set(
+          this.value.profile,
+          'workspaceName',
+          jwtParsed?.profile?.workspaceName ?? '',
+        );
       });
 
       return;
@@ -156,7 +160,7 @@ export class SessionStore {
 
       runInAction(() => {
         if (data?.session) {
-          this.value = data?.session;
+          this.value = data.session;
           this.setSessionToWindow();
         }
       });
