@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+// import { useParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -8,9 +8,9 @@ import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { useEvent } from '@shared/hooks/useEvent';
-import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
+// import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure.ts';
-import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
+// import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 import {
@@ -29,21 +29,21 @@ interface TimelineActionButtonsProps {
 export const TimelineActionButtons = observer(
   ({
     onClick,
-    activeEditor,
-    invalidateQuery,
+    // activeEditor,
+    // invalidateQuery,
     emailUseCase,
   }: TimelineActionButtonsProps) => {
     const store = useStore();
-    const { id } = useParams();
+    // const { id } = useParams();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [openEmailEditor, setOpenEmailEditor] = useState<EditorType | null>(
       null,
     );
     const {
       checkCanExitSafely,
-      showLogEntryConfirmationDialog,
+      // showLogEntryConfirmationDialog,
       handleExitEditorAndCleanData: handleExitLogEntryEditorAndCleanData,
-      onCreateLogEntry,
+      // onCreateLogEntry,
     } = useTimelineActionLogEntryContext();
     const {
       open: showEmailConfirmationDialog,
@@ -114,19 +114,19 @@ export const TimelineActionButtons = observer(
       showEditor(openOnConfirm);
     };
 
-    const handleConfirmLogEntry = () => {
-      onCreateLogEntry({
-        onSuccess: () => {
-          handleExitLogEntryEditorAndCleanData();
-          timeoutRef.current = setTimeout(() => {
-            invalidateQuery();
-          }, 500);
-        },
-        onSettled: () => {
-          showEditor(openOnConfirm);
-        },
-      });
-    };
+    // const handleConfirmLogEntry = () => {
+    //   onCreateLogEntry({
+    //     onSuccess: () => {
+    //       handleExitLogEntryEditorAndCleanData();
+    //       timeoutRef.current = setTimeout(() => {
+    //         invalidateQuery();
+    //       }, 500);
+    //     },
+    //     onSettled: () => {
+    //       showEditor(openOnConfirm);
+    //     },
+    //   });
+    // };
 
     const handleConfirmEmail = () => {
       showEditor(openOnConfirm);
@@ -149,14 +149,14 @@ export const TimelineActionButtons = observer(
       }
     };
 
-    const handleLogEntry = () => {
-      if (store.ui.dirtyEditor === 'log-entry') {
-        store.ui.confirmAction('log-entry');
-      } else {
-        showEditor(null);
-        activeEditor !== 'log-entry' ? onClick('log-entry') : onClick(null);
-      }
-    };
+    // const handleLogEntry = () => {
+    //   if (store.ui.dirtyEditor === 'log-entry') {
+    //     store.ui.confirmAction('log-entry');
+    //   } else {
+    //     showEditor(null);
+    //     activeEditor !== 'log-entry' ? onClick('log-entry') : onClick(null);
+    //   }
+    // };
 
     return (
       <>
@@ -174,7 +174,7 @@ export const TimelineActionButtons = observer(
           >
             Email
           </Button>
-          <Button
+          {/* <Button
             size='xs'
             variant='outline'
             className='rounded-3xl'
@@ -184,8 +184,8 @@ export const TimelineActionButtons = observer(
             colorScheme={activeEditor === 'log-entry' ? 'primary' : 'gray'}
           >
             Log
-          </Button>
-          <Button
+          </Button> */}
+          {/* <Button
             size='xs'
             variant='outline'
             className='rounded-3xl'
@@ -198,7 +198,7 @@ export const TimelineActionButtons = observer(
             }}
           >
             Reminder
-          </Button>
+          </Button> */}
         </div>
 
         <ConfirmDeleteDialog
@@ -213,7 +213,7 @@ export const TimelineActionButtons = observer(
           description={`You have typed an unsent email. Do you want to send it, or discard it?`}
         />
 
-        <ConfirmDeleteDialog
+        {/* <ConfirmDeleteDialog
           isLoading={false}
           colorScheme='primary'
           onClose={handleDiscard}
@@ -223,7 +223,7 @@ export const TimelineActionButtons = observer(
           onConfirm={handleConfirmLogEntry}
           isOpen={showLogEntryConfirmationDialog}
           description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
-        />
+        /> */}
       </>
     );
   },

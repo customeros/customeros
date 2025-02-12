@@ -32,12 +32,15 @@ export const AgentPage = observer(() => {
 
   useEffect(() => {
     if (!queryParams.get('cid')) {
-      setQueryParams((params) => {
-        if (!usecase.activeConfig) return params;
-        params.set('cid', usecase.activeConfig?.id);
+      setQueryParams(
+        (params) => {
+          if (!usecase.activeConfig) return params;
+          params.set('cid', usecase.activeConfig?.id);
 
-        return params;
-      });
+          return params;
+        },
+        { replace: true },
+      );
     }
   }, []);
 
@@ -89,7 +92,7 @@ export const AgentPage = observer(() => {
                 onClick={() => {
                   if (listener.config.length) {
                     usecase.setActiveConfig(listener);
-                    navigate(`?lid=${listener.id}`);
+                    navigate(`?lid=${listener.id}`, { replace: true });
                   }
                 }}
                 className={cn(
@@ -129,7 +132,7 @@ export const AgentPage = observer(() => {
                 onClick={() => {
                   if (capability.config.length) {
                     usecase.setActiveConfig(capability);
-                    navigate(`?cid=${capability.id}`);
+                    navigate(`?cid=${capability.id}`, { replace: true });
                   }
                 }}
                 className={cn(
