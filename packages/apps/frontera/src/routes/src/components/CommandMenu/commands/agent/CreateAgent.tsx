@@ -26,6 +26,12 @@ export const CreateAgent = () => {
           <Icon name='target-04' />
           <span>ICP qualifier</span>
         </CommandItem>
+        <CommandItem
+          onSelect={() => usecase.execute(AgentType.CampaignManager)}
+        >
+          <Icon name='send-03' />
+          <span>Outbound campaign manager</span>
+        </CommandItem>
       </Command.List>
     </Command>
   );

@@ -4,6 +4,13 @@ import { observer } from 'mobx-react-lite';
 
 import { Switch } from '@ui/form/Switch';
 import { Icon, IconName } from '@ui/media/Icon';
+import { IconButton } from '@ui/form/IconButton';
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
 
 interface HeaderProps {
   icon?: IconName;
@@ -33,6 +40,39 @@ export const Header = observer(
 
             <div className='flex items-center gap-1'>
               <p className='text-md font-medium'>{agentName}</p>
+              <Menu>
+                <MenuButton asChild>
+                  <IconButton
+                    size='xs'
+                    variant='ghost'
+                    aria-label={'Menu'}
+                    icon={<Icon name='dots-vertical' />}
+                  />
+                </MenuButton>
+                <MenuList side='bottom' align='start'>
+                  <MenuItem className='group' onClick={() => {}}>
+                    <Icon
+                      name='edit-03'
+                      className='text-grayModern-500 group-hover:text-grayModern-700'
+                    />
+                    Rename
+                  </MenuItem>
+                  <MenuItem className='group' onClick={() => {}}>
+                    <Icon
+                      name='layers-two-01'
+                      className='text-grayModern-500 group-hover:text-grayModern-700'
+                    />
+                    Duplicate
+                  </MenuItem>
+                  {/*<MenuItem className='group' onClick={() => {}}>*/}
+                  {/*  <Icon*/}
+                  {/*    name='archive'*/}
+                  {/*    className='text-grayModern-500 group-hover:text-grayModern-700'*/}
+                  {/*  />*/}
+                  {/*  Archive*/}
+                  {/*</MenuItem>*/}
+                </MenuList>
+              </Menu>
             </div>
 
             <div className='ml-4 flex items-center'>
