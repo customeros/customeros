@@ -216,6 +216,18 @@ func (a *App) initializeListeners() error {
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorNotIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 
+	// Cashflow guardian listeners
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewStartInvoiceRun(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewStartInvoiceRunWithAutopayment(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+
 	return nil
 }
 

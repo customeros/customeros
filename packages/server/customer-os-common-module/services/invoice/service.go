@@ -225,7 +225,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		}
 	}
 	if !contractReadyForInvoicingByDates {
-		err := fmt.Errorf("contract not ready for invoicing")
+		err := fmt.Errorf("contract not ready for invoicing by dates")
 		tracing.TraceErr(span, err)
 		return "", err
 	}

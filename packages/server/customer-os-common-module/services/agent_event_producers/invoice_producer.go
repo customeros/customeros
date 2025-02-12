@@ -109,8 +109,19 @@ func (p *InvoiceProducer) Execute() {
 					return
 				}
 
-				// TODO check if autopayment is enabled, if so invoke the autopayment service
-				err = p.events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.CONTRACT, dto.InvoiceContract{})
+				if contract.PayAutomatically {
+					err = p.events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.CONTRACT, dto.InvoiceContractWithAutopayment{
+						ContractId: contract.Id,
+						DryRun:     false,
+						Preview:    false,
+					})
+				} else {
+					err = p.events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.CONTRACT, dto.InvoiceContract{
+						ContractId: contract.Id,
+						DryRun:     false,
+						Preview:    false,
+					})
+				}
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "error publishing new invoice event"))
 					return
