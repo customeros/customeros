@@ -69,7 +69,7 @@ func (c *GenerateInvoiceCapability) DefaultConfig() any {
 	return &config
 }
 
-func (c *GenerateInvoiceCapability) ValidateConfig(config GenerateInvoiceConfig) error {
+func (c *GenerateInvoiceCapability) ValidateConfig(GenerateInvoiceConfig) error {
 	return nil
 }
 
@@ -104,7 +104,7 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 	}
 	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, executionContainer.InputData.ContractId, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to generate invoice"))
+		tracing.TraceErr(span, err)
 		return true, result, err
 	}
 	// load invoice after generation

@@ -8,19 +8,21 @@ import (
 )
 
 var agentListenerEventByModel = map[model.AgentListenerEvent]enum.AgentListenerEvent{
-	model.AgentListenerEventCompanyIdentified:       enum.EventCompanyIdentified,
-	model.AgentListenerEventCompanyNeedsHelp:        enum.EventCompanyNeedsHelp,
-	model.AgentListenerEventContactAddedToCampaign:  enum.EventContactAddedToCampaign,
-	model.AgentListenerEventEmailBounced:            enum.EventEmailBounced,
-	model.AgentListenerEventEmailReplyReceived:      enum.EventEmailReplyReceived,
-	model.AgentListenerEventIcpFit:                  enum.EventICPFit,
-	model.AgentListenerEventIcpNotAFit:              enum.EventICPNotAFit,
-	model.AgentListenerEventNewLead:                 enum.EventNewLead,
-	model.AgentListenerEventNewMeetingRecording:     enum.EventNewMeetingRecording,
-	model.AgentListenerEventNewWebSession:           enum.EventNewWebSession,
-	model.AgentListenerEventRunIcpQualifierAgent:    enum.EventRunICPQualifierAgent,
-	model.AgentListenerEventWebVisitorIdentified:    enum.EventWebVisitorIdentified,
-	model.AgentListenerEventWebVisitorNotIdentified: enum.EventWebVisitorNotIdentified,
+	model.AgentListenerEventCompanyIdentified:              enum.EventCompanyIdentified,
+	model.AgentListenerEventCompanyNeedsHelp:               enum.EventCompanyNeedsHelp,
+	model.AgentListenerEventContactAddedToCampaign:         enum.EventContactAddedToCampaign,
+	model.AgentListenerEventEmailBounced:                   enum.EventEmailBounced,
+	model.AgentListenerEventEmailReplyReceived:             enum.EventEmailReplyReceived,
+	model.AgentListenerEventIcpFit:                         enum.EventICPFit,
+	model.AgentListenerEventIcpNotAFit:                     enum.EventICPNotAFit,
+	model.AgentListenerEventNewLead:                        enum.EventNewLead,
+	model.AgentListenerEventNewMeetingRecording:            enum.EventNewMeetingRecording,
+	model.AgentListenerEventNewWebSession:                  enum.EventNewWebSession,
+	model.AgentListenerEventRunIcpQualifierAgent:           enum.EventRunICPQualifierAgent,
+	model.AgentListenerEventWebVisitorIdentified:           enum.EventWebVisitorIdentified,
+	model.AgentListenerEventWebVisitorNotIdentified:        enum.EventWebVisitorNotIdentified,
+	model.AgentListenerEventStartInvoiceRun:                enum.EventStartInvoiceRun,
+	model.AgentListenerEventStartInvoiceRunWithAutopayment: enum.EventStartInvoiceRunWithAutopayment,
 }
 
 var agentListenerEventByValue = utils.ReverseMap(agentListenerEventByModel)
