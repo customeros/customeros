@@ -15,7 +15,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
@@ -459,31 +458,33 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 		return err
 	}
 
-	// get web visitor agents
-	webVisitorAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
-		return err
-	}
-	if len(webVisitorAgents) == 0 {
-		_, err = s.agentService.CreateAgent(ctx, enum.AgentWebVisitorIdentifier)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
-		}
-	}
+	// Suppress creating default agents for new tenant
 
-	// get icp qualification agents
-	icpQualificationAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualifier})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
-		return err
-	}
-	if len(icpQualificationAgents) == 0 {
-		_, err = s.agentService.CreateAgent(ctx, enum.AgentICPQualifier)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating ICP qualification agent"))
-		}
-	}
+	//// get web visitor agents
+	//webVisitorAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
+	//if err != nil {
+	//	tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
+	//	return err
+	//}
+	//if len(webVisitorAgents) == 0 {
+	//	_, err = s.agentService.CreateAgent(ctx, enum.AgentWebVisitorIdentifier)
+	//	if err != nil {
+	//		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
+	//	}
+	//}
+
+	//// get icp qualification agents
+	//icpQualificationAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualifier})
+	//if err != nil {
+	//	tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
+	//	return err
+	//}
+	//if len(icpQualificationAgents) == 0 {
+	//	_, err = s.agentService.CreateAgent(ctx, enum.AgentICPQualifier)
+	//	if err != nil {
+	//		tracing.TraceErr(span, errors.Wrap(err, "error creating ICP qualification agent"))
+	//	}
+	//}
 
 	return nil
 }
