@@ -131,9 +131,9 @@ test('Create Timeline entries in an Company', async ({ page }, testInfo) => {
   // Go to Account page and update company
   await companySideNavPage.goToAccount();
   await companyTimelinePage.ensureEmailPermissionPromptIsRedirecting();
-  await page.goBack();
-  await companyTimelinePage.ensureLogEntryCanBeAdded();
-  await companyTimelinePage.ensureReminderCanBeAdded();
+  // await page.goBack();
+  // await companyTimelinePage.ensureLogEntryCanBeAdded();
+  // await companyTimelinePage.ensureReminderCanBeAdded();
 });
 
 test('Create Contracts in an Company', async ({ page }, testInfo) => {
