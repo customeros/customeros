@@ -54,7 +54,7 @@ func (l *CompanyIdentifiedListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *CompanyIdentifiedListener) Name() string {
-	return "Company identified from web visit"
+	return "Companies identified from web visit"
 }
 
 func (l *CompanyIdentifiedListener) DefaultConfig() any {

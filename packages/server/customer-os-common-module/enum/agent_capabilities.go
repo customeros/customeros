@@ -29,6 +29,7 @@ const (
 	CapabilityHandleAutoresponder                AgentCapability = "handle_autoresponder"
 	CapabilityIdentifyMeetingParticipants        AgentCapability = "identify_meeting_participants"
 	CapabilityIdentifyWebVisitor                 AgentCapability = "identify_web_visitor"
+	CapabilityLogRequestsForHelp                 AgentCapability = "log_requests_for_help"
 	CapabilityManageBouncedEmail                 AgentCapability = "manage_bounced_email"
 	CapabilityManageCampaignExecution            AgentCapability = "manage_campaign_execution"
 	CapabilityManageEmailDeliveryFailure         AgentCapability = "manage_email_delivery_failure"
@@ -79,6 +80,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityHandleAutoresponder,
 		CapabilityIdentifyMeetingParticipants,
 		CapabilityIdentifyWebVisitor,
+		CapabilityLogRequestsForHelp,
 		CapabilityManageBouncedEmail,
 		CapabilityManageCampaignExecution,
 		CapabilityManageEmailDeliveryFailure,

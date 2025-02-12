@@ -20,7 +20,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type xxxxxListener struct {
+type TEMPLATEListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
@@ -32,40 +32,41 @@ var (
 	_ interfaces.EventListener        = (*CompanyIdentifiedListener)(nil)
 )
 
-func NewxxxxxListener(
+func NewTEMPLATEListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
 	agentRunnerService interfaces.AgentRunnerService,
-) *xxxxxListener {
-	return &xxxxxListener{
+) *TEMPLATEListener {
+	return &TEMPLATEListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.CompanyIdentified](), // subscribed event
-			events.QueueAgents,                           // listening on Agents queue
+			events.GetEventType[dto.TEMPLATE](), // subscribed event
+			events.QueueAgents,                  // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
 	}
 }
 
-func (l *xxxxxListener) Type() enum.AgentListenerEvent {
-	return enum.EventCompanyIdentified
+func (l *TEMPLATEListener) Type() enum.AgentListenerEvent {
+	return enum.EventTEMPLATE
 }
 
-func (l *xxxxxListener) Name() string {
-	return "xxxxx"
+func (l *TEMPLATEListener) Name() string {
+	return "TEMPLATE"
 }
 
-func (l *xxxxxListener) DefaultConfig() any {
+func (l *TEMPLATEListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *xxxxxListener) ExecutingAgents() []enum.AgentType {
+func (l *TEMPLATEListener) ExecutingAgents() []enum.AgentType {
+	// add execution agents
 	return []enum.AgentType{}
 }
 
-func (l *xxxxxListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "xxxxxListener.Handle")
+func (l *TEMPLATEListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATEListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -76,7 +77,7 @@ func (l *xxxxxListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.CompanyIdentified](ctx, event)
+	data, err := events.DecodeEventData[dto.TEMPLATE](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -100,8 +101,8 @@ func (l *xxxxxListener) Handle(ctx context.Context, baseEvent any) error {
 	return errs
 }
 
-func (l *xxxxxListener) handleExecution(ctx context.Context, orgID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "xxxxxListener.handleExecution")
+func (l *TEMPLATEListener) handleExecution(ctx context.Context, orgID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATEListener.handleExecution")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -112,6 +113,7 @@ func (l *xxxxxListener) handleExecution(ctx context.Context, orgID string) error
 		return err
 	}
 
+	// replace with start params
 	var startParams any
 
 	var errs error
@@ -126,8 +128,8 @@ func (l *xxxxxListener) handleExecution(ctx context.Context, orgID string) error
 	return errs
 }
 
-func (l *xxxxxListener) run(ctx context.Context, agent postgres_entity.Agent, startParams any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "xxxxxListener.run")
+func (l *TEMPLATEListener) run(ctx context.Context, agent postgres_entity.Agent, startParams any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATEListener.run")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -144,8 +146,8 @@ func (l *xxxxxListener) run(ctx context.Context, agent postgres_entity.Agent, st
 	return nil
 }
 
-func (l *xxxxxListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "xxxxxListener.handleGoalAchieved")
+func (l *TEMPLATEListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATEListener.handleGoalAchieved")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentExecutionId", agentExecutionId))
@@ -180,8 +182,8 @@ func (l *xxxxxListener) handleGoalAchieved(ctx context.Context, agentExecutionId
 	return nil
 }
 
-func (l *xxxxxListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "xxxxxListener.lookupActiveAgents")
+func (l *TEMPLATEListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATEListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 

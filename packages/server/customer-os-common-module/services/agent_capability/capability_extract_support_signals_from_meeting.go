@@ -36,7 +36,7 @@ func (c *ExtractSupportSignalsFromMeetingCapability) Type() enum.AgentCapability
 }
 
 func (c *ExtractSupportSignalsFromMeetingCapability) Name() string {
-	return "Extract meeting highlights"
+	return "Extract support signals from meeting"
 }
 
 func (c *ExtractSupportSignalsFromMeetingCapability) NewInput() ExtractSupportSignalsFromMeetingInput {
@@ -68,8 +68,7 @@ type ExtractSupportSignalsFromMeetingInput struct {
 }
 
 type ExtractSupportSignalsFromMeetingOutput struct {
-	MeetingSummary string   `json:"meetingSummary"`
-	ActionItems    []string `json:"actionItems"`
+	HelpNeeded []string `json:"helpNeeded"`
 }
 
 func (c *ExtractSupportSignalsFromMeetingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractSupportSignalsFromMeetingInput, postgres_entity.NoConfig]) (bool, ExtractSupportSignalsFromMeetingOutput, error) {
@@ -91,18 +90,17 @@ func (c *ExtractSupportSignalsFromMeetingCapability) Execute(ctx context.Context
 		return false, result, err
 	}
 
-	systemPrompt := `Your objective is to capture the main outcome of the meeting for the CEO in two sentences or less.  Then provide clear account of all action points that need to be followed up on and their owners.  Ensure you do not make anything up or leave anything out, and please communicate in simple, clear, and direct language.
+	systemPrompt := `Your objective is to identify everywhere the user or prospect needs help so our team can follow up on all points. Ensure you do not make anything up or leave anything out, and please communicate in simple, clear, and direct language.
 
 Please analyze the meeting and respond in this exact JSON format:
 {
-    "summary": "This is my clear and direct summary for the CEO.",
-    "actionItems": [
-        "Name of owner: action item",
-        "Name of owner: action item"
+    "helpNeeded": [
+        "Name of requester: short description of help required",
+        "Name of requester: short description of help required"
     ]
 }
 
-Important: Always provide your answer as valid JSON. If there are no clear action items, omit the actionItems parameter and array from your response.`
+Important: Always provide your answer as valid JSON. If there is no help required, simply return help_needed with an empty array.`
 
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, executionContainer.InputData.MeetingContent)
 	if err != nil {
@@ -135,12 +133,6 @@ func (c *ExtractSupportSignalsFromMeetingCapability) parseAnswer(ctx context.Con
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return ExtractSupportSignalsFromMeetingOutput{}, fmt.Errorf("failed to parse JSON: %w", err)
-	}
-
-	if result.MeetingSummary == "" {
-		err := errors.New("Unable to produce meeting summary")
-		tracing.TraceErr(span, err)
-		return ExtractSupportSignalsFromMeetingOutput{}, err
 	}
 
 	return result, nil

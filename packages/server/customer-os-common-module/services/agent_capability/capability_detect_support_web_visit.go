@@ -125,7 +125,7 @@ func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, execution
 	for _, page := range executionContainer.InputData.UniquePageViews {
 		if c.isSupportVisit(page, executionContainer.ConfigData) {
 			// throw event
-			err := c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationId, model.ORGANIZATION, dto.TagCompany{})
+			err := c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationId, model.ORGANIZATION, dto.CompanyNeedsHelp{})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return true, result, err

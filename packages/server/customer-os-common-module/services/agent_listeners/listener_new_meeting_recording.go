@@ -72,7 +72,7 @@ func (l *NewMeetingRecordingListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *NewMeetingRecordingListener) Name() string {
-	return "New meeting recording"
+	return "New meeting recordings"
 }
 
 func (l *NewMeetingRecordingListener) DefaultConfig() any {

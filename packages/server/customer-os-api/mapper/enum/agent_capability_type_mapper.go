@@ -23,6 +23,7 @@ var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapability{
 	model.CapabilityTypeIcpQualify:                       enum.CapabilityEvaluateCompanyICPFit,
 	model.CapabilityTypeIdentifyMeetingParticipants:      enum.CapabilityIdentifyMeetingParticipants,
 	model.CapabilityTypeIdentifyWebVisitor:               enum.CapabilityIdentifyWebVisitor,
+	model.CapabilityTypeLogRequestsForHelp:               enum.CapabilityLogRequestsForHelp,
 	model.CapabilityTypeManageCampaignExecution:          enum.CapabilityManageCampaignExecution,
 	model.CapabilityTypeManageEmailDeliveryFailure:       enum.CapabilityManageEmailDeliveryFailure,
 	model.CapabilityTypeSelectOptimalSendingMailbox:      enum.CapabilitySelectOptimalSendingMailbox,

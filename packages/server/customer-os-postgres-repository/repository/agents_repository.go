@@ -70,6 +70,22 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
+	if agent.Scope == enum.AgentScopePersonal {
+		agent.Owner = common.GetUserIdFromContext(ctx)
+		if agent.Owner == "" {
+			err := errors.New("UserID not set on context")
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
+	agent.Tenant = common.GetTenantFromContext(ctx)
+	if agent.Tenant == "" {
+		err := errors.New("Tenant not set on context")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	err := f.gormDb.Transaction(func(tx *gorm.DB) error {
 		// Create agent first
 		if err := tx.Create(&agent).Error; err != nil {
@@ -108,6 +124,13 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 		return nil, err
 	}
 
+	user := common.GetUserIdFromContext(ctx)
+	if user == "" {
+		err := errors.New("User email not set on context")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	var agents []*postgres_entity.Agent
 	query := f.gormDb.
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
@@ -116,12 +139,17 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
-		Where("tenant = ?", tenant)
+		Where(
+			"(tenant = ? AND scope = ? ) OR (tenant = ? AND owner = ? AND scope = ?)",
+			tenant, enum.AgentScopeWorkspace, tenant, user, enum.AgentScopePersonal,
+		)
+
 	err := query.Find(&agents).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
 	return agents, nil
 }
 
@@ -208,8 +236,8 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByUserAndType(ctx context.Co
 	tracing.TagComponentPostgresRepository(span)
 
 	tenant := common.GetTenantFromContext(ctx)
-	userEmail := common.GetUserEmailFromContext(ctx)
-	if tenant == "" || userEmail == "" {
+	user := common.GetUserIdFromContext(ctx)
+	if tenant == "" || user == "" {
 		err := errors.New("tenant or userEmail not set")
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -228,7 +256,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByUserAndType(ctx context.Co
 		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
-		Where("tenant = ? AND is_active = ? AND configured = ? AND owner = ?", tenant, true, true, userEmail)
+		Where("tenant = ? AND is_active = ? AND configured = ? AND owner = ?", tenant, true, true, user)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}

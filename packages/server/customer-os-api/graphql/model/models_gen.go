@@ -3475,6 +3475,7 @@ const (
 	CapabilityTypeIcpQualify                       CapabilityType = "ICP_QUALIFY"
 	CapabilityTypeIdentifyMeetingParticipants      CapabilityType = "IDENTIFY_MEETING_PARTICIPANTS"
 	CapabilityTypeIdentifyWebVisitor               CapabilityType = "IDENTIFY_WEB_VISITOR"
+	CapabilityTypeLogRequestsForHelp               CapabilityType = "LOG_REQUESTS_FOR_HELP"
 	CapabilityTypeManageCampaignExecution          CapabilityType = "MANAGE_CAMPAIGN_EXECUTION"
 	CapabilityTypeManageEmailDeliveryFailure       CapabilityType = "MANAGE_EMAIL_DELIVERY_FAILURE"
 	CapabilityTypeSelectOptimalSendingMailbox      CapabilityType = "SELECT_OPTIMAL_SENDING_MAILBOX"
@@ -3502,6 +3503,7 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeIcpQualify,
 	CapabilityTypeIdentifyMeetingParticipants,
 	CapabilityTypeIdentifyWebVisitor,
+	CapabilityTypeLogRequestsForHelp,
 	CapabilityTypeManageCampaignExecution,
 	CapabilityTypeManageEmailDeliveryFailure,
 	CapabilityTypeSelectOptimalSendingMailbox,
@@ -3515,7 +3517,7 @@ var AllCapabilityType = []CapabilityType{
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeLogRequestsForHelp, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail:
 		return true
 	}
 	return false
