@@ -235,7 +235,13 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		execution.ErrorMessage = utils.StringPtr(err.Error())
 		execution.NextRetryAt = nil
 	} else {
-		backoff := time.Duration(execution.RetryCount) * time.Minute * 5
+
+		backoff := utils.CalculateExponentialBackoffDelay(execution.RetryCount, utils.BackoffConfig{
+			InitialDelay: 30 * time.Second,
+			MaxDelay:     12 * time.Hour,
+			Factor:       2.0,
+			Jitter:       0.12,
+		})
 		nextRetry := time.Now().Add(backoff)
 		execution.NextRetryAt = &nextRetry
 		execution.ErrorMessage = utils.StringPtr(err.Error())
