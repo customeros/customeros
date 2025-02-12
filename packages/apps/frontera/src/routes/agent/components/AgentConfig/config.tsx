@@ -3,6 +3,9 @@ import { FunctionComponent } from 'react';
 import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
 
 import { NewWebSessionListener } from '../Listeners';
+import { ForwardEmailReplies } from './Capabilities/ForwardEmailReplies';
+import { ManageCampaignExecution } from './Capabilities/ManageCampaignExecution';
+import { SelectOptimalSendingMailboxes } from './Capabilities/SelectOptimalSendingMailboxes';
 import {
   EvaluateCompanyIcpFit,
   SendSlackNotificationCapability,
@@ -31,11 +34,11 @@ export const configs: Record<
   [CapabilityType.EnrichEmailAddress]: () => <></>,
   [CapabilityType.ExtractMeetingHighlights]: () => <></>,
   [CapabilityType.ExtractSupportSignalsFromMeeting]: () => <></>,
-  [CapabilityType.ForwardEmailReply]: () => <></>,
+  [CapabilityType.ForwardEmailReply]: ForwardEmailReplies,
   [CapabilityType.IdentifyMeetingParticipants]: () => <></>,
-  [CapabilityType.ManageCampaignExecution]: () => <></>,
+  [CapabilityType.ManageCampaignExecution]: ManageCampaignExecution,
   [CapabilityType.ManageEmailDeliveryFailure]: () => <></>,
-  [CapabilityType.SelectOptimalSendingMailbox]: () => <></>,
+  [CapabilityType.SelectOptimalSendingMailbox]: SelectOptimalSendingMailboxes,
   [CapabilityType.ValidateEmailDeliverability]: () => <></>,
   [CapabilityType.IcpQualify]: EvaluateCompanyIcpFit,
   //////////////////
