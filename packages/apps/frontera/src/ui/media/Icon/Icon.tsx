@@ -123,6 +123,7 @@ export type IconName =
   | 'clipboard-check'
   | 'sticker-circle'
   | 'paperclip'
+  | 'alert-triangle'
   | 'plus';
 
 interface IconProps extends SVGAttributes<SVGElement> {
