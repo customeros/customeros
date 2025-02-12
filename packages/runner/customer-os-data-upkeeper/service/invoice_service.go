@@ -20,7 +20,6 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -39,24 +38,6 @@ type GeneratePaymentLinkEventBody struct {
 	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
 }
 
-type InvoiceFinalizedEventBody struct {
-	Tenant                       string `json:"tenant"`
-	Currency                     string `json:"currency"`
-	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
-	InvoiceId                    string `json:"invoiceId"`
-	InvoiceDescription           string `json:"invoiceDescription"`
-	CustomerOsId                 string `json:"customerOsId"`
-	Status                       string `json:"status"`
-	CustomerEmail                string `json:"customerEmail"`
-	CustomerName                 string `json:"customerName"`
-	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
-	Pay                          struct {
-		PayAutomatically      bool `json:"payAutomatically"`
-		CanPayWithCard        bool `json:"canPayWithCard"`
-		CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
-	} `json:"pay"`
-}
-
 type InvoiceService interface {
 	SendRemindNotifications()
 	CleanupInvoices()
@@ -67,7 +48,6 @@ type InvoiceService interface {
 	GenerateOffCycleInvoices()
 	SendPayNotifications()
 	GenerateInvoicePaymentLinks()
-	SendInvoiceFinalizedEvent()
 }
 
 type invoiceService struct {
@@ -676,173 +656,4 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 		// sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
 	}
-}
-
-func (s *invoiceService) SendInvoiceFinalizedEvent() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendInvoiceFinalizedEvent")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
-		err := errors.New("InvoiceFinalizedUrl is not configured")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
-
-	referenceTime := utils.Now()
-	limit := 10
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetReadyInvoicesForFinalizedEvent(ctx, s.cfg.App.ProcessConfig.DelayAutoPayInvoiceInMinutes, referenceTime, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for finalized event: %v", err)
-			return
-		}
-
-		// no invoices found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
-
-			if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt == nil {
-				err = s.integrationAppInvoiceFinalizedWebhook(ctx, tenant, *invoiceEntity)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "error invoking invoice finalized webhook"))
-					s.log.Errorf("error invoking invoice ready webhook for invoice %s: %s", invoiceEntity.Id, err.Error())
-				}
-
-				err = s.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyInvoiceFinalizedEventSentAt), utils.NowPtr())
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "error updating invoice finalized sent at"))
-					s.log.Errorf("Error updating invoice finalized sent at for invoice %s: %s", invoiceEntity.Id, err.Error)
-					return
-				}
-			}
-		}
-		time.Sleep(2 * time.Second)
-	}
-}
-
-func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.integrationAppInvoiceFinalizedWebhook")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
-
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    tenant,
-		AppSource: constants.AppSourceDataUpkeeper,
-	})
-
-	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
-		return nil
-	}
-
-	// get organization linked to invoice
-	organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	organizationEntity := neo4jentity.OrganizationEntity{}
-	if organizationDbNode != nil {
-		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	}
-
-	// get contract linked to invoice
-	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(innerCtx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	contractEntity := neo4jentity.ContractEntity{}
-	if contractDbNode != nil {
-		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-	}
-
-	// convert amount to the smallest currency unit
-	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
-	if err != nil {
-		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
-	}
-
-	primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
-	}
-
-	requestBody := InvoiceFinalizedEventBody{
-		Tenant:                       tenant,
-		Currency:                     invoice.Currency.String(),
-		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
-		InvoiceId:                    invoice.Id,
-		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
-		CustomerOsId:                 organizationEntity.CustomerOsId,
-		Status:                       invoice.Status.String(),
-		CustomerEmail:                contractEntity.InvoiceEmail,
-		CustomerName:                 utils.GetReadableNameFromEmail(contractEntity.InvoiceEmail),
-		PrimaryStripeCustomerId:      primaryStripeCustomerId,
-		Pay: struct {
-			PayAutomatically      bool `json:"payAutomatically"`
-			CanPayWithCard        bool `json:"canPayWithCard"`
-			CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
-		}{
-			PayAutomatically:      contractEntity.PayAutomatically && (invoice.Status == neo4jenum.InvoiceStatusDue || invoice.Status == neo4jenum.InvoiceStatusOverdue),
-			CanPayWithCard:        true,
-			CanPayWithDirectDebit: true,
-		},
-	}
-
-	// Convert the request body to JSON
-	requestBodyJSON, err := json.Marshal(requestBody)
-	if err != nil {
-		return fmt.Errorf("error encoding JSON: %v", err)
-	}
-
-	// Create an HTTP client
-	client := &http.Client{}
-
-	// Create a POST request with headers and body
-	req, err := http.NewRequest("POST", s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl, bytes.NewBuffer(requestBodyJSON))
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
-	}
-
-	// Set the content type header
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send the POST request
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error sending request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status code: %s", resp.Status)
-	}
-
-	return nil
 }

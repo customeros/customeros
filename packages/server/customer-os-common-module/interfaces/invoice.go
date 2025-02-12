@@ -32,6 +32,7 @@ type InvoiceService interface {
 	UpdateInvoice(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
 	SendPayInvoiceNotification(ctx context.Context, invoiceId string) error
 	SendPayReminderInvoiceNotification(ctx context.Context, invoiceId string) error
+	AutopayInvoice(ctx context.Context, invoiceId string) error
 
 	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD
 	FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error)

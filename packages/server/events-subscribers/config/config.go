@@ -42,6 +42,7 @@ type CommonConfig struct {
 	FileStore        commonconf.FileStoreConfig
 	SlackConfig      commonconf.SlackConfig
 	CustomerOsApi    commonconf.CustomerOsApiConfig
+	IntegrationApp   commonconf.IntegrationAppConfig
 }
 
 func Load() *Config {
@@ -74,19 +75,20 @@ func Load() *Config {
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
 		},
 		External: commonconf.ExternalServicesConfig{
-			BetterContactConfig: cmnCfg.BetterContact,
-			ScrapinConfig:       cmnCfg.Scrapin,
-			SnitcherConfig:      cmnCfg.Snitcher,
-			AnthropicConfig:     cmnCfg.Anthropic,
-			NovuConfig:          cmnCfg.Novu,
-			NamecheapConfig:     cmnCfg.Namecheap,
-			OpenSRSConfig:       cmnCfg.OpenSrs,
-			CloudflareConfig:    cmnCfg.Cloudflare,
-			TrueInboxConfig:     cmnCfg.TrueInbox,
-			BrandfetchConfig:    cmnCfg.Brandfetch,
-			EnrowConfig:         cmnCfg.Enrow,
-			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
-			SlackConfig:         cmnCfg.SlackConfig,
+			BetterContactConfig:  cmnCfg.BetterContact,
+			ScrapinConfig:        cmnCfg.Scrapin,
+			SnitcherConfig:       cmnCfg.Snitcher,
+			AnthropicConfig:      cmnCfg.Anthropic,
+			NovuConfig:           cmnCfg.Novu,
+			NamecheapConfig:      cmnCfg.Namecheap,
+			OpenSRSConfig:        cmnCfg.OpenSrs,
+			CloudflareConfig:     cmnCfg.Cloudflare,
+			TrueInboxConfig:      cmnCfg.TrueInbox,
+			BrandfetchConfig:     cmnCfg.Brandfetch,
+			EnrowConfig:          cmnCfg.Enrow,
+			QuickbooksConfig:     cmnCfg.QuickbooksConfig,
+			SlackConfig:          cmnCfg.SlackConfig,
+			IntegrationAppConfig: cmnCfg.IntegrationApp,
 		},
 	}
 

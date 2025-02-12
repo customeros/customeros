@@ -18,12 +18,6 @@ type PostmarkConfig struct {
 	DefaultInboundStreamWebhook string `env:"POSTMARK_DEFAULT_INBOUND_STREAM_WEBHOOK"`
 }
 
-type IntegrationAppConfig struct {
-	WorkspaceKey                    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
-	WorkspaceSecret                 string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
-	ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
-}
-
 type SlackConfig struct {
 	ClientID                        string `env:"SLACK_CLIENT_ID"`
 	ClientSecret                    string `env:"SLACK_CLIENT_SECRET"`
