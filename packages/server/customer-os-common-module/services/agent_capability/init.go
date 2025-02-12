@@ -53,7 +53,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService))
 	capabilities = append(capabilities, NewValidateEmailDeliverabilityCapability())
 	capabilities = append(capabilities, NewUpdateCompanyStatusCapability(organizationService, events))
-	capabilities = append(capabilities, NewProcessAutopaymentCapability())
+	capabilities = append(capabilities, NewProcessAutopaymentCapability(invoiceService))
 
 	agentCapabilities := AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),

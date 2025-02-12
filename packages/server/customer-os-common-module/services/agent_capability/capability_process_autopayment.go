@@ -14,11 +14,13 @@ import (
 )
 
 type ProcessAutopaymentCapability struct {
-	// TODO add services here
+	invoiceService interfaces.InvoiceService
 }
 
-func NewProcessAutopaymentCapability() *ProcessAutopaymentCapability {
-	return &ProcessAutopaymentCapability{}
+func NewProcessAutopaymentCapability(invoiceService interfaces.InvoiceService) *ProcessAutopaymentCapability {
+	return &ProcessAutopaymentCapability{
+		invoiceService: invoiceService,
+	}
 }
 
 // Compile-time interface checks
@@ -31,7 +33,7 @@ func (c *ProcessAutopaymentCapability) Type() enum.AgentCapability {
 }
 
 func (c *ProcessAutopaymentCapability) Name() string {
-	return "ProcessAutopayment"
+	return "Process autopayment"
 }
 
 func (c *ProcessAutopaymentCapability) NewInput() ProcessAutopaymentInput {
@@ -80,7 +82,11 @@ func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionCon
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	// TODO implement execution here
+	err := c.invoiceService.AutopayInvoice(ctx, executionContainer.InputData.InvoiceID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, result, err
+	}
 
 	tracing.LogObjectAsJson(span, "result", result)
 	return enum.CapabilityExecutionCompleted, result, nil

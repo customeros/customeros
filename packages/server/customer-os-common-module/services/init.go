@@ -235,7 +235,7 @@ func InitCommonServices(
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
-	invoiceImpl := invoice.NewInvoiceService(log, neo4jRepositories, postgresRepositories, &cfg.External, &cfg.Internal, eventsImpl, contractImpl, sliImpl, tenantSettingsImpl, postmarkImpl, fileImpl)
+	invoiceImpl := invoice.NewInvoiceService(log, neo4jRepositories, postgresRepositories, &cfg.External, &cfg.Internal, eventsImpl, contractImpl, sliImpl, tenantSettingsImpl, postmarkImpl, fileImpl, externalSystemImpl)
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
 	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
