@@ -20,6 +20,7 @@ export type SaveAgentMutation = {
     updatedAt: any;
     error?: string | null;
     color: string;
+    scope: Types.AgentScope;
     icon: string;
     isConfigured: boolean;
     listeners: Array<{

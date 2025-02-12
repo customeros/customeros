@@ -28,6 +28,7 @@ mutation saveAgent($input: AgentSaveInput!) {
     updatedAt
     error
     color
+    scope
     icon
     isConfigured
   }

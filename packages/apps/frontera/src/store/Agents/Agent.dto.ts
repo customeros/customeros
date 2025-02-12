@@ -7,7 +7,12 @@ import { action, computed, observable } from 'mobx';
 import { type AgentDatum } from '@infra/repositories/agent';
 
 import { IconName } from '@ui/media/Icon';
-import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
+import {
+  AgentType,
+  AgentScope,
+  CapabilityType,
+  AgentListenerEvent,
+} from '@graphql/types';
 
 import { AgentStore } from './Agent.store';
 
@@ -157,7 +162,7 @@ export class Agent extends Entity<AgentDatum> {
 
   public toPayload(): Omit<
     AgentDatum,
-    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType'
+    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'scope'
   > {
     return omit(this.value, [
       'createdAt',
@@ -165,6 +170,7 @@ export class Agent extends Entity<AgentDatum> {
       'error',
       'isConfigured',
       'goalType',
+      'scope',
     ]);
   }
 
@@ -172,7 +178,7 @@ export class Agent extends Entity<AgentDatum> {
     name: string,
   ): Omit<
     AgentDatum,
-    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'id'
+    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'id' | 'scope'
   > {
     return omit({ ...this.value, name }, [
       'createdAt',
@@ -180,6 +186,7 @@ export class Agent extends Entity<AgentDatum> {
       'error',
       'isConfigured',
       'goalType',
+      'scope',
       'id',
     ]);
   }
@@ -288,6 +295,7 @@ export class Agent extends Entity<AgentDatum> {
         flowId: '',
         error: null,
         isConfigured: false,
+        scope: AgentScope.Workspace,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
