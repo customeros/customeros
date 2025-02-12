@@ -116,13 +116,11 @@ func (p *InvoiceProducer) Execute() {
 						Preview:    false,
 					})
 				} else {
-					if contract.PayAutomatically {
-						err = p.events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.CONTRACT, dto.InvoiceContract{
-							ContractId: contract.Id,
-							DryRun:     false,
-							Preview:    false,
-						})
-					}
+					err = p.events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.CONTRACT, dto.InvoiceContract{
+						ContractId: contract.Id,
+						DryRun:     false,
+						Preview:    false,
+					})
 				}
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "error publishing new invoice event"))
