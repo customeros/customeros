@@ -41,7 +41,7 @@ func (c *AddMeetingNotesToCompanyCapability) Type() enum.AgentCapability {
 }
 
 func (c *AddMeetingNotesToCompanyCapability) Name() string {
-	return "Add meeting notes to company"
+	return "Add meeting notes to company timeline"
 }
 
 func (c *AddMeetingNotesToCompanyCapability) NewInput() AddMeetingNotesToCompanyInput {

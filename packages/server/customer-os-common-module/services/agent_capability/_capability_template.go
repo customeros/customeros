@@ -13,66 +13,66 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type TemplateCapability struct {
+type TEMPLATECapability struct {
 	// TODO add services here
 }
 
-func NewTemplateCapability() *TemplateCapability {
-	return &TemplateCapability{}
+func NewTEMPLATECapability() *TEMPLATECapability {
+	return &TEMPLATECapability{}
 }
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[TemplateInput, TemplateOutput, postgres_entity.NoConfig] = (*TemplateCapability)(nil)
+	_ interfaces.AgentCapability[TEMPLATEInput, TEMPLATEOutput, postgres_entity.NoConfig] = (*TEMPLATECapability)(nil)
 )
 
-func (c *TemplateCapability) Type() enum.AgentCapability {
+func (c *TEMPLATECapability) Type() enum.AgentCapability {
 	// TODO change this to the correct capability
-	return enum.CapabilityTemplate
+	return enum.CapabilityTEMPLATE
 }
 
-func (c *TemplateCapability) Name() string {
-	return "Template"
+func (c *TEMPLATECapability) Name() string {
+	return "TEMPLATE"
 }
 
-func (c *TemplateCapability) NewInput() TemplateInput {
-	return TemplateInput{}
+func (c *TEMPLATECapability) NewInput() TEMPLATEInput {
+	return TEMPLATEInput{}
 }
 
-func (c *TemplateCapability) NewConfig() postgres_entity.NoConfig {
+func (c *TEMPLATECapability) NewConfig() postgres_entity.NoConfig {
 	return postgres_entity.NoConfig{}
 }
 
-func (c *TemplateCapability) DefaultConfig() any {
+func (c *TEMPLATECapability) DefaultConfig() any {
 	config := c.NewConfig()
 	return &config
 }
 
-func (c *TemplateCapability) ValidateInput(input TemplateInput) error {
+func (c *TEMPLATECapability) ValidateInput(input TEMPLATEInput) error {
 	return nil
 }
 
-func (c *TemplateCapability) ValidateConfig(config postgres_entity.NoConfig) error {
+func (c *TEMPLATECapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }
 
-type TemplateInput struct {
+type TEMPLATEInput struct {
 	// TODO add input here
 }
 
-type TemplateOutput struct {
+type TEMPLATEOutput struct {
 	// TODO add output here
 }
 
-func (c *TemplateCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[TemplateInput, postgres_entity.NoConfig]) (bool, TemplateOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TemplateCapability.Execute")
+func (c *TEMPLATECapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[TEMPLATEInput, postgres_entity.NoConfig]) (bool, TEMPLATEOutput, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATECapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
-	result := TemplateOutput{}
+	result := TEMPLATEOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))

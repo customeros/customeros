@@ -34,7 +34,7 @@ func (c *CreateContactCapability) Type() enum.AgentCapability {
 }
 
 func (c *CreateContactCapability) Name() string {
-	return "Create and enrich contact"
+	return "Create and enrich contacts"
 }
 
 func (c *CreateContactCapability) NewInput() CreateContactInput {

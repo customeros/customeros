@@ -8,6 +8,7 @@ import (
 type AgentListenerEvent string
 
 const (
+	EventTEMPLATE                       AgentListenerEvent = "template"
 	EventCompanyIdentified              AgentListenerEvent = "company_identified"
 	EventCompanyNeedsHelp               AgentListenerEvent = "company_needs_help"
 	EventContactAddedToCampaign         AgentListenerEvent = "contact_added_to_campaign"

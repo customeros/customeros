@@ -2,7 +2,7 @@ package agent_listeners
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -15,11 +15,13 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type CompanyNeedsHelpListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
+	agentRunnerService   interfaces.AgentRunnerService
 }
 
 // Compile-time interface check for AgentListenerUntyped
@@ -31,6 +33,7 @@ var (
 func NewCompanyNeedsHelpListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
+	agentRunnerService interfaces.AgentRunnerService,
 ) *CompanyNeedsHelpListener {
 	return &CompanyNeedsHelpListener{
 		BaseEventListener: events.NewBaseEventListener(
@@ -39,6 +42,7 @@ func NewCompanyNeedsHelpListener(
 			events.QueueAgents,                          // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
+		agentRunnerService:   agentRunnerService,
 	}
 }
 
@@ -47,7 +51,7 @@ func (l *CompanyNeedsHelpListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *CompanyNeedsHelpListener) Name() string {
-	return "Company needs help"
+	return "Companies that need help"
 }
 
 func (h *CompanyNeedsHelpListener) DefaultConfig() any {
@@ -55,7 +59,9 @@ func (h *CompanyNeedsHelpListener) DefaultConfig() any {
 }
 
 func (h *CompanyNeedsHelpListener) ExecutingAgents() []enum.AgentType {
-	return []enum.AgentType{}
+	return []enum.AgentType{
+		enum.AgentSupportSpotter,
+	}
 }
 
 func (l *CompanyNeedsHelpListener) Handle(ctx context.Context, baseEvent any) error {
@@ -70,15 +76,30 @@ func (l *CompanyNeedsHelpListener) Handle(ctx context.Context, baseEvent any) er
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.CompanyNeedsHelp](ctx, event)
-	if err != nil {
+	return l.handleExecution(ctx, event.Event.EntityId)
+}
+
+func (l *CompanyNeedsHelpListener) handleExecution(ctx context.Context, orgID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyNeedsHelpListener.handleExecution")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	activeAgents := l.lookupActiveAgents(ctx)
+	if len(activeAgents) == 0 {
+		err := errors.New("No agent types configured for company identified listener")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
+	startParams := struct {
+		OrganizationID string
+	}{
+		OrganizationID: orgID,
+	}
+
 	var errs error
-	if data.AgentExecutionId != "" {
-		err = l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	for _, agent := range activeAgents {
+		err := l.run(ctx, agent, startParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -88,38 +109,33 @@ func (l *CompanyNeedsHelpListener) Handle(ctx context.Context, baseEvent any) er
 	return errs
 }
 
-func (l *CompanyNeedsHelpListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyNeedsHelpListener.handle")
+func (l *CompanyNeedsHelpListener) run(ctx context.Context, agent postgres_entity.Agent, startParams any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyNeedsHelpListener.run")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	span.LogKV("agentExecutionId", agentExecutionId)
 
-	var agentExecution *postgres_entity.AgentExecution
-	var err error
-	if agentExecutionId != "" {
-		agentExecution, err = l.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-	if agentExecution == nil {
-		err = fmt.Errorf("agent execution not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// update execution with goal achieved
-	if agentExecution.Status == enum.AgentExecutionCompleted {
-		err = fmt.Errorf("agent execution already completed")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
+	initialParams, err := utils.StructToMap(startParams)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
-
+	err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 	return nil
+}
+
+func (l *CompanyNeedsHelpListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyNeedsHelpListener.lookupActiveAgents")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	return agents
 }

@@ -20,6 +20,7 @@ type CapabilityParams struct {
 	Domain                         string      `json:"domain"`
 	EmployeeCount                  int64       `json:"employeeCount"`
 	ExecutionValidated             bool        `json:"executionValidated"`
+	HelpNeeded                     []string    `json:"helpNeeded"`
 	Hostname                       string      `json:"hostname"`
 	IcpFit                         enum.IcpFit `json:"isIcpFit"`
 	IcpFitRationale                string      `json:"icpFitRationale"`

@@ -63,7 +63,7 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 	return agent, nil
 }
 
-func (a *agentService) GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agent, error) {
+func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAllAgentsByTenant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

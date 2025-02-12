@@ -16,7 +16,7 @@ type AgentService interface {
 	UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgres_entity.Capability, listeners []postgres_entity.Listener) (*postgres_entity.Agent, error)
 	DeleteAgent(ctx context.Context, agentId string) error
 	GetAgentById(ctx context.Context, agentId string) (*postgres_entity.Agent, error)
-	GetAllAgentsByTenant(ctx context.Context) ([]*postgres_entity.Agent, error)
+	GetAllAgents(ctx context.Context) ([]*postgres_entity.Agent, error)
 
 	CreateAgentExecutionRecord(ctx context.Context, agent postgres_entity.Agent, triggerEvent, traceId string) (string, error)
 	SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error
