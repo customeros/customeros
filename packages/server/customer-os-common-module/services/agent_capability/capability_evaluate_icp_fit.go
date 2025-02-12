@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -131,7 +131,7 @@ type ICPAnswer struct {
 	Reasons []string `json:"reasons"`
 }
 
-func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (bool, EvaluateICPFitOutput, error) {
+func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (enum.CapabilityExecutionStatus, EvaluateICPFitOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -144,11 +144,11 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// build prompt
@@ -163,14 +163,14 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		} else {
 			span.LogFields(log.String("result.answer", "nil"))
 		}
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// parse answer
 	parsedAnswer, err := c.parseAnswer(ctx, *answer)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	result.IcpFitRationale = parsedAnswer.Reasons
@@ -181,7 +181,7 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	}
 	tracing.LogObjectAsJson(span, "result", result)
 
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *EvaluateICPFitCapability) buildPrompts(executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string) {

@@ -124,7 +124,7 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 	return nil
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationConfig]) (bool, NoOutput, error) {
+func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -135,22 +135,22 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// check if slack notification enabled
 	slackChannel, err := c.postgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, "REVEAL-AI-WEBSITE-VISIT")
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if slackChannel == nil {
 		span.LogKV("result.slackChannel", "not found")
-		return true, result, nil
+		return enum.CapabilityExecutionCompleted, result, nil
 	}
 	span.LogKV("result.slackChannel", slackChannel.ChannelId)
 
@@ -158,21 +158,21 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	skip, err := c.skipNotification(ctx, executionContainer.InputData.Domain, executionContainer.ConfigData.CooldownHours.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if skip {
-		return true, result, nil
+		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
 	message, err := c.buildWebVisitorSlackNotification(ctx, executionContainer.InputData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if message == nil {
 		err = errors.New("Failed to build slack notification message")
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	newExecutionContainer := interfaces.TypedExecutionContainer[SendSlackNotificationInput, SendSlackNotificationConfig]{

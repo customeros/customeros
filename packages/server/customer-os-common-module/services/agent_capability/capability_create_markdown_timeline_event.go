@@ -74,7 +74,7 @@ func (c *CreateMarkdownTimelineEventCapability) ValidateInput(input CreateMarkdo
 	return nil
 }
 
-func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateMarkdownTimelineEventInput, postgres_entity.NoConfig]) (bool, CreateMarkdownTimelineEventOutput, error) {
+func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateMarkdownTimelineEventInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateMarkdownTimelineEventOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateMarkdownTimelineEventCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -86,18 +86,18 @@ func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, exe
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	markdownEventId, err := c.markdownService.Save(ctx, nil, nil, data_fields.MarkdownEventFields{
@@ -106,10 +106,10 @@ func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, exe
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	result.MarkdownEventID = markdownEventId
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

@@ -18,6 +18,7 @@ type CapabilityParams struct {
 	CompanyRegion                  string      `json:"companyRegion"`
 	DisqualificationCriteria       string      `json:"disqualificationCriteria"`
 	Domain                         string      `json:"domain"`
+	EmailAddress                   string      `json:"emailAddress"`
 	EmployeeCount                  int64       `json:"employeeCount"`
 	ExecutionValidated             bool        `json:"executionValidated"`
 	HelpNeeded                     []string    `json:"helpNeeded"`

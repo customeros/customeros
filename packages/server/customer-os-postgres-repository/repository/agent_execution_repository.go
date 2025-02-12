@@ -3,6 +3,8 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -19,8 +21,12 @@ type AgentExecutionRepository interface {
 	Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
 	GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error)
 	Fail(ctx context.Context, executionID, errorMessage string) error
+	Pending(ctx context.Context, executionID string) error
 	Finish(ctx context.Context, executionID string) error
 	Completed(ctx context.Context, executionID string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
+	ScheduleRetry(ctx context.Context, executionID string, err error) error
+	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
+	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
 }
 
 type agentExecutionRepository struct {
@@ -102,7 +108,7 @@ func (f *agentExecutionRepository) Finish(ctx context.Context, executionID strin
 		Where("id = ?", executionID).
 		Where("status = ?", enum.AgentExecutionRunning.String()).
 		Updates(map[string]interface{}{
-			"status": enum.AgentExecutionFinished.String(),
+			"status": enum.AgentExecutionCompleted.String(),
 		}).
 		Error
 	if err != nil {
@@ -124,9 +130,38 @@ func (f *agentExecutionRepository) Fail(ctx context.Context, executionID, errorM
 		Where("id = ?", executionID).
 		Where("status <> ?", enum.AgentExecutionCompleted.String()).
 		Updates(map[string]interface{}{
-			"status":        enum.AgentExecutionFail.String(),
+			"status":        enum.AgentExecutionError.String(),
 			"error_message": errorMessage,
 			"goal_achieved": false,
+		}).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (f *agentExecutionRepository) Pending(ctx context.Context, executionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Pending")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+
+	if executionID == "" {
+		err := errors.New("executionID is missing")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err := f.gormDb.
+		Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Where("status <> ?", enum.AgentExecutionCompleted.String()).
+		Updates(map[string]interface{}{
+			"status": enum.AgentExecutionPending.String(),
+			// Don't set completed_at since it's pending
+			// Don't clear error_message in case we want to preserve previous errors
 		}).
 		Error
 	if err != nil {
@@ -179,4 +214,73 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 
 	span.LogFields(log.Bool("result.found", true))
 	return &agentExecution, nil
+}
+
+func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, err error) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.ScheduleRetry")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+
+	execution := &postgres_entity.AgentExecution{}
+	result := f.gormDb.First(execution, "id = ?", executionID)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// Increment retry count and set next retry time
+	execution.RetryCount++
+	if execution.RetryCount > execution.MaxRetries {
+		execution.Status = enum.AgentExecutionError
+		execution.ErrorMessage = utils.StringPtr(err.Error())
+		execution.NextRetryAt = nil
+	} else {
+		backoff := time.Duration(execution.RetryCount) * time.Minute * 5
+		nextRetry := time.Now().Add(backoff)
+		execution.NextRetryAt = &nextRetry
+		execution.ErrorMessage = utils.StringPtr(err.Error())
+		execution.Status = enum.AgentExecutionRetrying
+	}
+
+	return f.gormDb.Save(execution).Error
+}
+
+func (f *agentExecutionRepository) SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.SaveAsyncState")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+
+	return f.gormDb.Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Updates(map[string]interface{}{
+			"current_step": currentStep,
+			"state_data":   stateData,
+			"status":       enum.AgentExecutionPending,
+		}).Error
+}
+
+func (f *agentExecutionRepository) CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.CompleteStep")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+
+	execution := &postgres_entity.AgentExecution{}
+	err := f.gormDb.First(execution, "id = ?", executionID).Error
+	if err != nil {
+		return err
+	}
+
+	// Initialize checkpoints if nil
+	if execution.Checkpoints == nil {
+		execution.Checkpoints = make(map[string]any)
+	}
+
+	// Store step completion data
+	execution.Checkpoints[step] = result
+	execution.CurrentStep = "" // Clear current step
+	execution.StateData = nil  // Clear state data since step is complete
+
+	return f.gormDb.Save(execution).Error
 }

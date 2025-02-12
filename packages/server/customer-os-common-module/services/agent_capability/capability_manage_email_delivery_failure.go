@@ -58,7 +58,7 @@ func (c *ManageEmailDeliveryFailureCapability) ValidateInput(input ManageEmailDe
 	return nil
 }
 
-func (c *ManageEmailDeliveryFailureCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ManageEmailDeliveryFailureInput, ManageEmailDeliveryFailureConfig]) (bool, ManageEmailDeliveryFailureOutput, error) {
+func (c *ManageEmailDeliveryFailureCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ManageEmailDeliveryFailureInput, ManageEmailDeliveryFailureConfig]) (enum.CapabilityExecutionStatus, ManageEmailDeliveryFailureOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ManageEmailDeliveryFailureCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -68,13 +68,13 @@ func (c *ManageEmailDeliveryFailureCapability) Execute(ctx context.Context, exec
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

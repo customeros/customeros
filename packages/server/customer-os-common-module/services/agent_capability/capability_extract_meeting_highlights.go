@@ -72,7 +72,7 @@ type ExtractMeetingHighlightsOutput struct {
 	ActionItems    []string `json:"actionItems"`
 }
 
-func (c *ExtractMeetingHighlightsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractMeetingHighlightsInput, postgres_entity.NoConfig]) (bool, ExtractMeetingHighlightsOutput, error) {
+func (c *ExtractMeetingHighlightsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractMeetingHighlightsInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ExtractMeetingHighlightsOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExtractMeetingHighlightsCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -84,11 +84,11 @@ func (c *ExtractMeetingHighlightsCapability) Execute(ctx context.Context, execut
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	systemPrompt := `Your objective is to capture the main outcome of the meeting for the CEO in two sentences or less.  Then provide clear account of all action points that need to be followed up on and their owners.  Ensure you do not make anything up or leave anything out, and please communicate in simple, clear, and direct language.
@@ -107,22 +107,22 @@ Important: Always provide your answer as valid JSON. If there are no clear actio
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, executionContainer.InputData.MeetingContent)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if answer == nil {
 		err := errors.New("No answer from AI")
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	result, err = c.parseAnswer(ctx, *answer)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *ExtractMeetingHighlightsCapability) parseAnswer(ctx context.Context, answer string) (ExtractMeetingHighlightsOutput, error) {

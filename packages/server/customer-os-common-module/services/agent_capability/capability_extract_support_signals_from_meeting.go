@@ -71,7 +71,7 @@ type ExtractSupportSignalsFromMeetingOutput struct {
 	HelpNeeded []string `json:"helpNeeded"`
 }
 
-func (c *ExtractSupportSignalsFromMeetingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractSupportSignalsFromMeetingInput, postgres_entity.NoConfig]) (bool, ExtractSupportSignalsFromMeetingOutput, error) {
+func (c *ExtractSupportSignalsFromMeetingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractSupportSignalsFromMeetingInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ExtractSupportSignalsFromMeetingOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExtractSupportSignalsFromMeetingCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -83,11 +83,11 @@ func (c *ExtractSupportSignalsFromMeetingCapability) Execute(ctx context.Context
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	systemPrompt := `Your objective is to identify everywhere the user or prospect needs help so our team can follow up on all points. Ensure you do not make anything up or leave anything out, and please communicate in simple, clear, and direct language.
@@ -105,22 +105,22 @@ Important: Always provide your answer as valid JSON. If there is no help require
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, executionContainer.InputData.MeetingContent)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if answer == nil {
 		err := errors.New("No answer from AI")
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	result, err = c.parseAnswer(ctx, *answer)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *ExtractSupportSignalsFromMeetingCapability) parseAnswer(ctx context.Context, answer string) (ExtractSupportSignalsFromMeetingOutput, error) {

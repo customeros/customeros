@@ -9,7 +9,7 @@ import (
 )
 
 type AgentCapability[I, O, C any] interface {
-	Execute(ctx context.Context, execution TypedExecutionContainer[I, C]) (validationOk bool, outputData O, error error)
+	Execute(ctx context.Context, execution TypedExecutionContainer[I, C]) (status enum.CapabilityExecutionStatus, outputData O, error error)
 	ValidateConfig(C) error
 	ValidateInput(I) error
 	NewInput() I
@@ -24,7 +24,7 @@ type AgentCapabilityUntyped interface {
 }
 
 type AgentCapabilityExecutionService interface {
-	Execute(ctx context.Context, execution ExecutionContainer) (map[string]any, error)
+	Execute(ctx context.Context, execution ExecutionContainer) (enum.CapabilityExecutionStatus, map[string]any, error)
 }
 
 type ExecutionContainer struct {

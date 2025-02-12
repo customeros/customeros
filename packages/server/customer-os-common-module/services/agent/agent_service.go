@@ -482,7 +482,7 @@ func (a *agentService) SaveAgentExecutionError(ctx context.Context, executionID,
 		return err
 	}
 
-	executionRecord.Status = enum.AgentExecutionFail
+	executionRecord.Status = enum.AgentExecutionError
 	executionRecord.ErrorMessage = &errorMessage
 	// update
 

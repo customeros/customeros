@@ -4,6 +4,31 @@ import (
 	"fmt"
 )
 
+type CapabilityExecutionStatus string
+
+const (
+	CapabilityExecutionError     CapabilityExecutionStatus = "ERROR"
+	CapabilityExecutionPending   CapabilityExecutionStatus = "PENDING"
+	CapabilityExecutionCompleted CapabilityExecutionStatus = "COMPLETED"
+)
+
+func (t CapabilityExecutionStatus) String() string {
+	return string(t)
+}
+
+func GetCapabilityExecutionStatus(s string) (CapabilityExecutionStatus, error) {
+	switch CapabilityExecutionStatus(s) {
+	case
+		CapabilityExecutionError,
+		CapabilityExecutionPending,
+		CapabilityExecutionCompleted:
+		return CapabilityExecutionStatus(s), nil
+
+	default:
+		return "", fmt.Errorf("invalid CapabilityExecutionStatus: %s", s)
+	}
+}
+
 type AgentCapability string
 
 const (

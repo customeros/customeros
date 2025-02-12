@@ -92,7 +92,7 @@ func (c *GatherCompanyIntelligenceCapability) ValidateInput(input GatherCompanyI
 	return nil
 }
 
-func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GatherCompanyIntilligenceInput, postgres_entity.NoConfig]) (bool, GatherCompanyIntelligenceOutput, error) {
+func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GatherCompanyIntilligenceInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, GatherCompanyIntelligenceOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GatherCompanyIntelligenceCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -103,28 +103,28 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// get all company context
 	primaryDomain, err := c.organizationService.GetPrimaryDomainByOrgID(ctx, executionContainer.InputData.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	company, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if company == nil {
 		err := errors.New("Company not set in global orgs, cannot run ICP qualification")
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	result.CompanyName = company.Name
@@ -140,5 +140,5 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 	result.CompanyCity = company.City
 	result.CompanyRegion = company.Region
 	result.CompanyCountryA2 = company.CountryA2
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
