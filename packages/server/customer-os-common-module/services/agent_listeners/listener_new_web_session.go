@@ -75,7 +75,7 @@ func (l *NewWebSessionListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *NewWebSessionListener) Name() string {
-	return "New Web Session"
+	return "New website sessions"
 }
 
 func (l *NewWebSessionListener) DefaultConfig() any {

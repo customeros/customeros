@@ -43,7 +43,7 @@ func (c *CreateOrganizationCapability) Type() enum.AgentCapability {
 }
 
 func (c *CreateOrganizationCapability) Name() string {
-	return "Create and enrich a company"
+	return "Create and enrich a companies"
 }
 
 func (c *CreateOrganizationCapability) NewInput() CreateOrganizationInput {
