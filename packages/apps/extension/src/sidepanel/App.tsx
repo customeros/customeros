@@ -2,18 +2,27 @@ import { useEffect, useState } from "react";
 import "./styles/tailwind.css";
 import { Button } from "@ui/form/Button/Button";
 
+type Contact = {
+  contactId: string;
+  email: string;
+  linkedinUrl: string;
+};
+
 export const App = () => {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
-  const [_appIsOpen, setAppIsOpen] = useState(false);
+  const [tenantApiKey, setTenantApiKey] = useState<string | null>(null);
   const [linkedInUrl, setLinkedInUrl] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [contact, setContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAddingContact, setIsAddingContact] = useState(false);
 
   useEffect(() => {
     const handleMessage = (message: any) => {
       if (message.action === "COS_SESSION_DATA") {
         setWorkspaceName(message.workspaceName || null);
+        setTenantApiKey(message.apiKey || null);
       }
     };
 
@@ -30,23 +39,113 @@ export const App = () => {
       changeInfo: chrome.tabs.TabChangeInfo,
       tab: chrome.tabs.Tab
     ) => {
-      if (changeInfo.url && tab.active && tab.url?.length) {
-        setLinkedInUrl(tab.url.includes("linkedin.com/in") ? tab.url : null);
-        chrome.runtime.sendMessage({ action: "REQUEST_COS_SESSION_DATA" });
+      if (changeInfo.url && tab.active) {
+        updateLinkedInUrlFromTab(tab);
+      }
+    };
+    setIsLoading(true);
+
+    const handleActiveTabChange = (activeInfo: chrome.tabs.TabActiveInfo) => {
+      chrome.tabs.get(activeInfo.tabId, (tab) => {
+        updateLinkedInUrlFromTab(tab);
+      });
+    };
+
+    const parseLinkedInUrl = (url: string): string | null => {
+      try {
+        if (url.includes("linkedin.com/sales/lead/")) {
+          const commaIndex = url.indexOf(",");
+          if (commaIndex !== -1) {
+            return url.slice(0, commaIndex);
+          }
+          return url;
+        } else if (url.includes("linkedin.com/in/")) {
+          return url;
+        }
+        return null;
+      } catch {
+        return null;
       }
     };
 
-    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+    const updateLinkedInUrlFromTab = async (tab: chrome.tabs.Tab) => {
+      const isLinkedInProfile =
+        tab.url?.includes("linkedin.com/in") ||
+        tab.url?.includes("linkedin.com/sales/lead");
+
+      setContact(null);
+
+      const parsedUrl = tab.url ? parseLinkedInUrl(tab.url) : null;
+      setLinkedInUrl(parsedUrl);
+
+      if (!isLinkedInProfile || !parsedUrl) {
+        setIsLoading(false);
+        return;
+      }
+
+      const sessionData = await new Promise<{
+        email: string;
+        apiKey: string;
+        workspaceName: string;
+      } | null>((resolve) => {
+        const messageHandler = (message: any) => {
+          if (message.action === "COS_SESSION_DATA") {
+            chrome.runtime.onMessage.removeListener(messageHandler);
+            resolve({
+              email: message.email,
+              apiKey: message.apiKey,
+              workspaceName: message.workspaceName,
+            });
+          }
+        };
+
+        chrome.runtime.onMessage.addListener(messageHandler);
+      });
+
+      if (sessionData?.apiKey) {
+        try {
+          const response = await fetch(
+            `https://api.customeros.ai/browserExtension/contact?linkedin=${parsedUrl}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "*/*",
+                "X-CUSTOMER-OS-API-KEY": sessionData?.apiKey,
+              },
+            }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setContact(data.contact);
+          }
+          if (
+            !tab.url?.includes("linkedin.com/in") &&
+            !tab.url?.includes("linkedin.com/sales/lead")
+          ) {
+            setContact(null);
+          }
+        } catch (error) {
+          console.error("Error fetching contact:", error);
+          setContact(null);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const url = tabs.find((tab) => tab.url?.includes("linkedin.com/in"))?.url;
-      setLinkedInUrl(url || null);
+      if (tabs[0]) {
+        updateLinkedInUrlFromTab(tabs[0]);
+      }
     });
 
-    chrome.runtime.sendMessage({ action: "REQUEST_COS_SESSION_DATA" });
+    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+    chrome.tabs.onActivated.addListener(handleActiveTabChange);
 
     return () => {
       chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+      chrome.tabs.onActivated.removeListener(handleActiveTabChange);
     };
   }, []);
 
@@ -58,11 +157,6 @@ export const App = () => {
             tab.url?.includes("app.customeros.ai") ||
             tab.url?.includes("localhost:5173")
         );
-        if (customerOSTab) {
-          setAppIsOpen(true);
-        } else {
-          setAppIsOpen(false);
-        }
       });
     };
 
@@ -90,7 +184,7 @@ export const App = () => {
   const handleAddContact = async () => {
     if (!linkedInUrl) return;
 
-    setIsLoading(true);
+    setIsAddingContact(true);
 
     const sessionData = await new Promise<{
       email: string;
@@ -109,11 +203,10 @@ export const App = () => {
       };
 
       chrome.runtime.onMessage.addListener(messageHandler);
-      chrome.runtime.sendMessage({ action: "REQUEST_COS_SESSION_DATA" });
     });
 
     if (!sessionData?.apiKey) {
-      setIsLoading(false);
+      setIsAddingContact(false);
       return;
     }
     setWorkspaceName(sessionData.workspaceName || null);
@@ -137,38 +230,17 @@ export const App = () => {
 
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        console.error("Failed to add contact");
+        setErrorMessage("We couldn't add this contact");
+        setTimeout(() => setErrorMessage(null), 5000);
       }
     } catch (error) {
       console.error("Error adding contact:", error);
       setErrorMessage("We couldn't add this contact");
-      setTimeout(() => setErrorMessage(null), 3000);
+      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
-      setIsLoading(false);
+      setIsAddingContact(false);
     }
   };
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      event.preventDefault();
-      chrome.runtime.sendMessage({
-        action: "openTab",
-        url: "https://app.customeros.ai",
-      });
-    };
-
-    const link = document.getElementById("customerOSLink");
-    if (link) {
-      link.addEventListener("click", handleClick);
-    }
-
-    return () => {
-      const link = document.getElementById("customerOSLink");
-      if (link) {
-        link.removeEventListener("click", handleClick);
-      }
-    };
-  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
@@ -180,60 +252,100 @@ export const App = () => {
           className="size-8"
         />
         <span className="font-semibold text-[16px]">CustomerOS</span>
-        {!workspaceName && !linkedInUrl && (
-          <span className="text-center max-w-[250px]">
+        {!tenantApiKey && !linkedInUrl && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm">
             Sign into the{" "}
-            <a id="customerOSLink" href="#" className="underline">
+            <a
+              id="customerOSLink"
+              href="#"
+              className="underline"
+              onClick={() => {
+                chrome.runtime.sendMessage({
+                  action: "openTab",
+                  url: "https://app.customeros.ai",
+                });
+              }}
+            >
               CustomerOS app
             </a>{" "}
             and go to any LinkedIn profile to start adding contacts to your
             workspace
           </span>
         )}
-        {workspaceName && (
-          <span className="bg-gray-100">Signed into {workspaceName}</span>
+        {!tenantApiKey && linkedInUrl && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm ">
+            Sign into the{" "}
+            <a
+              id="customerOSLink"
+              href="#"
+              className="underline"
+              onClick={() => {
+                chrome.runtime.sendMessage({
+                  action: "openTab",
+                  url: "https://app.customeros.ai",
+                });
+              }}
+            >
+              CustomerOS app
+            </a>{" "}
+            app to start adding contacts to your workspace
+          </span>
         )}
-        {!linkedInUrl && workspaceName && (
-          <span className="text-center max-w-[250px] ">
+        {tenantApiKey && (
+          <span className="bg-gray-100 px-1 text-sm">
+            Signed into {workspaceName || "CustomerOS"}
+          </span>
+        )}
+        {!linkedInUrl && tenantApiKey && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm ">
             Go to any LinkedIn profile to instantly add contacts to CustomerOS
           </span>
         )}
-        {!workspaceName && linkedInUrl && (
-          <span className="text-center max-w-[250px] ">
-            Sign into the CustomerOS app to start adding contacts to your
-            workspace
-          </span>
-        )}
-        {workspaceName && linkedInUrl && (
-          <span className="text-center max-w-[250px] ">
+
+        {tenantApiKey && linkedInUrl && !contact?.contactId && !isLoading && (
+          <span className="text-center max-w-[250px] text-sm">
             Instantly add LinkedIn contacts to CustomerOS{" "}
           </span>
         )}
       </div>
-      {linkedInUrl && workspaceName && (
-        <div className="mt-4" onClick={handleAddContact}>
-          <Button
-            className="linkedin-button"
-            size="xs"
-            colorScheme="primary"
-            isDisabled={isLoading}
-            leftIcon={
-              !isLoading ? (
-                <img
-                  id="plus-icon"
-                  src={chrome.runtime.getURL("src/assets/plus.svg")}
-                  alt="Plus Icon"
-                />
-              ) : (
-                <img
-                  src={chrome.runtime.getURL("src/assets/spinner.svg")}
-                  alt="loading"
-                />
-              )
-            }
-          >
-            {!isLoading ? "Add contact to CustomerOS" : "Adding to CustomerOS…"}
-          </Button>
+      {isLoading && !contact?.contactId && (
+        <img
+          className="mt-4"
+          src={chrome.runtime.getURL("src/assets/spinner.svg")}
+          alt="loading"
+        />
+      )}
+
+      {linkedInUrl && tenantApiKey && !contact?.contactId && !isLoading && (
+        <Button
+          className="mt-4"
+          size="xs"
+          onClick={handleAddContact}
+          colorScheme="primary"
+          isDisabled={isAddingContact}
+          leftIcon={
+            !isAddingContact ? (
+              <img
+                id="plus-icon"
+                src={chrome.runtime.getURL("src/assets/plus.svg")}
+                alt="Plus Icon"
+              />
+            ) : (
+              <img
+                src={chrome.runtime.getURL("src/assets/spinner.svg")}
+                alt="loading"
+              />
+            )
+          }
+        >
+          {!isAddingContact
+            ? "Add contact to CustomerOS"
+            : "Adding to CustomerOS…"}
+        </Button>
+      )}
+      {contact?.contactId && (
+        <div className="mt-1">
+          <span className="text-sm">This contact is already in CustomerOS</span>
         </div>
       )}
       {successMessage && (

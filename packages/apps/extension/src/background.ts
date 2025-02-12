@@ -18,7 +18,30 @@ type data = {
   };
 };
 
+type CustomerOSSession = {
+  email: string | null;
+  apiKey: string | null;
+  workspaceName: string | null;
+};
+
 let sessionData: SessionData;
+
+const isLinkedInProfileUrl = (url: string): boolean => {
+  try {
+    return url.includes("linkedin.com/in");
+  } catch {
+    return false;
+  }
+};
+
+const isLinkedInUrl = (url: string): boolean => {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.host === "www.linkedin.com" || urlObj.host === "linkedin.com";
+  } catch {
+    return false;
+  }
+};
 
 async function getCookiesFromLinkedInTab() {
   try {
@@ -39,10 +62,10 @@ async function getCookiesFromLinkedInTab() {
       }
     );
 
-    console.log("CustomerOS tab found:", customerOSTab);
+    // console.log("CustomerOS tab found:", customerOSTab);
 
     await new Promise<void>((resolve, reject) => {
-      console.log("Attempting to inject content script...");
+      // console.log("Attempting to inject content script...");
       chrome.scripting.executeScript(
         {
           target: { tabId: customerOSTab.id as any },
@@ -60,7 +83,7 @@ async function getCookiesFromLinkedInTab() {
               )
             );
           } else {
-            console.log("Content script injected successfully");
+            // console.log("Content script injected successfully");
             resolve();
           }
         }
@@ -70,7 +93,7 @@ async function getCookiesFromLinkedInTab() {
     // Retrieve session data
     const sessionData = await new Promise<SessionData | null>((resolve) => {
       const onMessage = (message: any) => {
-        console.log("Message received:", message);
+        // console.log("Message received:", message);
         if (message.action === "COS_SESSION_DATA") {
           chrome.runtime.onMessage.removeListener(onMessage);
           resolve({ email: message.email, apiKey: message.apiKey });
@@ -80,7 +103,7 @@ async function getCookiesFromLinkedInTab() {
       chrome.runtime.onMessage.addListener(onMessage);
     });
 
-    console.log("Session Data:", sessionData);
+    // console.log("Session Data:", sessionData);
     if (!sessionData) {
       console.error("Error: sessionData is null");
       return;
@@ -112,12 +135,12 @@ async function getCookiesFromLinkedInTab() {
       }
     );
 
-    console.log("LinkedIn Cookies:", cookies);
+    // console.log("LinkedIn Cookies:", cookies);
 
     if (!cookies) return;
 
     const liAtCookie = cookies?.find((cookie) => cookie.name === "li_at");
-    console.log("li_at Cookie:", liAtCookie);
+    // console.log("li_at Cookie:", liAtCookie);
 
     if (!liAtCookie) return;
 
@@ -132,11 +155,11 @@ async function getCookiesFromLinkedInTab() {
       }
 
       if (previousCookies && previousCookies.value === liAtCookie.value) {
-        console.log("Cookie is the same, no update needed");
+        // console.log("Cookie is the same, no update needed");
         return;
       }
 
-      console.log("Sending new cookie data...");
+      // console.log("Sending new cookie data...");
 
       const response = await fetch(`${BASE_URL}/browser/config`, {
         headers: {
@@ -151,7 +174,7 @@ async function getCookiesFromLinkedInTab() {
         const prevLiAtCookie = data?.data?.cookies;
 
         if (prevLiAtCookie !== liAtCookie.value) {
-          console.log("Different cookie detected, updating...");
+          // console.log("Different cookie detected, updating...");
 
           await fetch(`${BASE_URL}/browser/config`, {
             method: "PATCH",
@@ -166,10 +189,10 @@ async function getCookiesFromLinkedInTab() {
             }),
           });
         } else {
-          console.log("Cookie is the same");
+          // console.log("Cookie is the same");
         }
       } else {
-        console.log("No previous cookies, creating new record");
+        // console.log("No previous cookies, creating new record");
 
         await fetch(`${BASE_URL}/browser/config`, {
           method: "POST",
@@ -192,11 +215,47 @@ async function getCookiesFromLinkedInTab() {
   }
 }
 
+async function checkCustomerOSSession(): Promise<void> {
+  try {
+    const tabs = await chrome.tabs.query({});
+    const customerOSTab = tabs.find(
+      (tab) =>
+        tab.url?.includes("app.customeros.ai") ||
+        tab.url?.includes("localhost:5173")
+    );
+
+    if (!customerOSTab) {
+      chrome.storage.local.set({
+        workspaceName: null,
+        email: null,
+        apiKey: null,
+      });
+      chrome.runtime.sendMessage({
+        action: "COS_SESSION_DATA",
+        workspaceName: null,
+        email: null,
+        apiKey: null,
+      });
+      return;
+    }
+
+    await chrome.scripting.executeScript({
+      target: { tabId: customerOSTab.id as number },
+      files: ["contentScript.js"],
+    });
+  } catch (error) {
+    console.error("Error checking CustomerOS session:", error);
+  }
+}
+
+setInterval(checkCustomerOSSession, 1000);
+
 chrome.alarms.create("checkLinkedInCookies", { periodInMinutes: 0.1 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "checkLinkedInCookies") {
     getCookiesFromLinkedInTab();
+    checkCustomerOSSession();
   }
 });
 
@@ -218,24 +277,6 @@ chrome.action.onClicked.addListener((tab: chrome.tabs.Tab) =>
   handleExtensionButtonClick(tab)
 );
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === "complete" && tab.url) {
-    const url = new URL(tab.url);
-    if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
-      chrome.sidePanel.setOptions({
-        tabId: tabId,
-        path: "sidepanel/index.html",
-        enabled: true,
-      });
-    } else {
-      chrome.sidePanel.setOptions({
-        tabId: tabId,
-        enabled: false,
-      });
-    }
-  }
-});
-
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "openTab") {
     chrome.tabs.create({ url: message.url, active: true });
@@ -243,21 +284,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 });
 
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  const tab = await chrome.tabs.get(activeInfo.tabId);
-  if (tab.url) {
-    const url = new URL(tab.url);
-    if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
-      chrome.sidePanel.setOptions({
-        tabId: activeInfo.tabId,
-        path: "sidepanel/index.html",
-        enabled: true,
-      });
-    } else {
-      chrome.sidePanel.setOptions({
-        tabId: activeInfo.tabId,
-        enabled: false,
-      });
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.tabs.get(tabId, (tab) => {
+    if (tab?.url?.includes("app.customeros.ai")) {
+      checkCustomerOSSession();
     }
-  }
+  });
 });

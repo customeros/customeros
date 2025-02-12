@@ -53,6 +53,12 @@ function sendSessionData() {
           }
         };
       } else {
+        chrome.runtime.sendMessage({
+          action: "COS_SESSION_DATA",
+          email: null,
+          apiKey: null,
+          workspaceName: null,
+        });
         console.log(
           "No session data found in IndexedDB or session data is incomplete"
         );
