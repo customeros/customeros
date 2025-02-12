@@ -4,7 +4,6 @@ import { action, computed, observable } from 'mobx';
 import { SkuDatum } from '@infra/repositories/sku/sku.datum';
 
 import { SkuType, SkuInput } from '@graphql/types';
-import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 
 import { SkusStore } from './Skus.store.ts';
 
@@ -33,7 +32,12 @@ export class Sku extends Entity<SkuDatum> {
     const currency =
       this.store.root.settings.tenant.value?.baseCurrency ?? 'USD';
 
-    return formatCurrency(this.value.price, 2, currency);
+    return Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(this.value.price);
   }
 
   @action
