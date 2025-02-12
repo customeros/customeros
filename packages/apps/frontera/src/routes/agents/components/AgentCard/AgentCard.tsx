@@ -24,7 +24,12 @@ export const AgentCard = ({
   colorMap,
 }: AgentCardProps) => {
   const navigate = useNavigate();
-  const tagColor = hasError ? 'error' : status === 'ON' ? 'success' : 'error';
+  const tagColor =
+    hasError && status === 'ON'
+      ? 'warning'
+      : status === 'OFF'
+      ? 'grayModern'
+      : 'success';
 
   const [ring, bg, iconColor] = colorMap;
 
@@ -60,10 +65,13 @@ export const AgentCard = ({
           <Tag colorScheme={tagColor}>
             <TagLabel className='flex items-center gap-1'>
               <Icon
-                stroke='none'
+                stroke={hasError && status === 'ON' ? 'currentColor' : 'none'}
+                className={cn('size-3', {
+                  'text-warning-500': hasError && status === 'ON',
+                })}
                 name={
-                  hasError
-                    ? 'dot-single'
+                  hasError && status === 'ON'
+                    ? 'alert-triangle'
                     : status === 'OFF'
                     ? 'dot-single'
                     : 'dot-live-success'
