@@ -8,14 +8,15 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // AgentSave is the resolver for the agent_Save field.
@@ -146,7 +147,7 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgentsByTenant(ctx)
+	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgents(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get agents")
