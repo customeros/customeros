@@ -38,16 +38,20 @@ import {
   AssignOwner,
   ChangeStage,
   CreateAgent,
+  RenameAgent,
   EditJobTitle,
   AddNewDomain,
   RemoveDomain,
+  ArchiveAgent,
   CreateNewFlow,
   FlowsCommands,
   DuplicateFlow,
   AgentCommands,
+  AgentsCommands,
   OpportunityHub,
   ChangeCurrency,
   EditPersonaTag,
+  DuplicateAgent,
   OrganizationHub,
   ContactCommands,
   EditContactFlow,
@@ -165,7 +169,11 @@ const Commands: Record<CommandMenuType, ReactElement> = {
 
   //Agent
   CreateAgent: <CreateAgent />,
+  AgentsCommands: <AgentsCommands />,
   AgentCommands: <AgentCommands />,
+  DuplicateAgent: <DuplicateAgent />,
+  RenameAgent: <RenameAgent />,
+  ArchiveAgent: <ArchiveAgent />,
 };
 
 export const CommandMenu = observer(() => {
@@ -176,7 +184,9 @@ export const CommandMenu = observer(() => {
 
   useOutsideClick({
     ref: commandRef,
-    handler: () => store.ui.commandMenu.setOpen(false),
+    handler: () => {
+      store.ui.commandMenu.setOpen(false);
+    },
   });
 
   useKey('Escape', (e) => {
@@ -187,10 +197,10 @@ export const CommandMenu = observer(() => {
         store.ui.commandMenu.setType('OpportunityHub');
       })
       .with('/agents', () => {
-        if (store.ui.commandMenu.type === 'AgentCommands') {
+        if (store.ui.commandMenu.type === 'AgentsCommands') {
           store.ui.commandMenu.setOpen(false);
         } else {
-          store.ui.commandMenu.setType('AgentCommands');
+          store.ui.commandMenu.setType('AgentsCommands');
         }
       })
       .otherwise(() => {
@@ -209,7 +219,7 @@ export const CommandMenu = observer(() => {
   return (
     <Modal
       open={store.ui.commandMenu.isOpen}
-      onOpenChange={store.ui.commandMenu.setOpen}
+      // onOpenChange={store.ui.commandMenu.setOpen}
     >
       <ModalPortal>
         {/* z-[5001] is needed to ensure tooltips are not overlapping  - tooltips have zIndex of 5000 - this should be revisited */}

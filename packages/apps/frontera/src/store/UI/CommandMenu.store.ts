@@ -64,6 +64,10 @@ export type CommandMenuType =
   | 'SwitchWorkspace'
   | 'AddNewSku'
   | 'CreateAgent'
+  | 'RenameAgent'
+  | 'DuplicateAgent'
+  | 'ArchiveAgent'
+  | 'AgentsCommands'
   | 'AgentCommands';
 
 export type Context = {

@@ -80,9 +80,15 @@ export class AgentViewUsecase {
     span.end();
   }
 
-  private static defaultConfigMap = {
+  private static defaultConfigMap: Record<
+    AgentType,
+    AgentListenerEvent | CapabilityType
+  > = {
     [AgentType.WebVisitIdentifier]: AgentListenerEvent.NewWebSession,
     [AgentType.IcpQualifier]: CapabilityType.IcpQualify,
-    [AgentType.TagSupport]: CapabilityType.ApplyTag,
+    [AgentType.SupportSpotter]: CapabilityType.DetectSupportWebvisit,
+    [AgentType.CampaignManager]: CapabilityType.ManageCampaignExecution,
+    [AgentType.CashflowGuardian]: CapabilityType.GenerateInvoice,
+    [AgentType.MeetingKeeper]: CapabilityType.AddMeetingNotesToCompany,
   };
 }
