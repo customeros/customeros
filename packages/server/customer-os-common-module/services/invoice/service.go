@@ -133,6 +133,15 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		return "", err
 	}
 
+	// validate input data
+	if !dataFields.DryRun && dataFields.TenantBillingProfile == nil {
+		err := fmt.Errorf("missing tenant billing profile")
+		tracing.TraceErr(span, err)
+		return "", err
+	} else if dataFields.TenantBillingProfile == nil {
+		dataFields.FillWithDummyTenantBillingProfile()
+	}
+
 	offCycle := false
 	dryRun := dataFields.DryRun
 	preview := dataFields.Preview
@@ -172,19 +181,6 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 	isPostpaid := tenantSettingsEntity.InvoicingPostpaid
 
-	// preload tenant billing profile
-	tenantBillingProfiles, err := s.neo4j.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if len(tenantBillingProfiles) == 0 {
-		err := errors.New("tenantBillingProfiles not available")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	tenantBillingProfileEntity := neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
-
 	// preload countries
 	contractCountry := contractEntity.Country
 	countryDbNode, _ := s.neo4j.CountryReadRepository.GetCountryByCodeIfExists(ctx, contractCountry)
@@ -192,7 +188,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
 		contractCountry = countryEntity.Name
 	}
-	tenantBillingProfileCountry := tenantBillingProfileEntity.Country
+	tenantBillingProfileCountry := dataFields.TenantBillingProfile.Country
 	countryDbNode, _ = s.neo4j.CountryReadRepository.GetCountryByCodeIfExists(ctx, tenantBillingProfileCountry)
 	if countryDbNode != nil {
 		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
@@ -357,18 +353,18 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			CustomerAddressCountry:       contractCountry,
 			CustomerAddressRegion:        contractEntity.Region,
 			ProviderLogoRepositoryFileId: tenantSettingsEntity.LogoRepositoryFileId,
-			ProviderName:                 tenantBillingProfileEntity.LegalName,
-			ProviderEmail:                tenantBillingProfileEntity.SendInvoicesFrom,
-			ProviderAddressLine1:         tenantBillingProfileEntity.AddressLine1,
-			ProviderAddressLine2:         tenantBillingProfileEntity.AddressLine2,
-			ProviderAddressZip:           tenantBillingProfileEntity.Zip,
-			ProviderAddressLocality:      tenantBillingProfileEntity.Locality,
+			ProviderName:                 dataFields.TenantBillingProfile.LegalName,
+			ProviderAddressLine1:         dataFields.TenantBillingProfile.AddressLine1,
+			ProviderAddressLine2:         dataFields.TenantBillingProfile.AddressLine2,
+			ProviderAddressZip:           dataFields.TenantBillingProfile.Zip,
+			ProviderAddressLocality:      dataFields.TenantBillingProfile.Locality,
 			ProviderAddressCountry:       tenantBillingProfileCountry,
-			ProviderAddressRegion:        tenantBillingProfileEntity.Region,
+			ProviderAddressRegion:        dataFields.TenantBillingProfile.Region,
 			Amount:                       invoiceEntity.Amount,
 			VAT:                          invoiceEntity.Vat,
 			TotalAmount:                  invoiceEntity.TotalAmount,
 			Status:                       invoiceStatus,
+			//ProviderEmail:                tenantBillingProfileEntity.SendInvoicesFrom, // TODO alexb not saved on invoice
 		}
 		err = s.neo4j.InvoiceWriteRepository.FillInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId, fillFields)
 		if err != nil {
@@ -416,7 +412,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 
 		// Step 8 - generate invoice PDF
 		if invoiceEntityAfterFill.Status != neo4jenum.InvoiceStatusEmpty {
-			fileId, err := s.generateInvoicePDF(ctx, invoiceEntityAfterFill, contractEntity, invoiceLineEntities, tenantBillingProfileEntity)
+			fileId, err := s.generateInvoicePDF(ctx, invoiceEntityAfterFill, contractEntity, invoiceLineEntities, *dataFields.TenantBillingProfile)
 			if err != nil {
 				return nil, err
 			}
@@ -2232,7 +2228,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	invoiceEntity *neo4jentity.InvoiceEntity,
 	contractEntity *neo4jentity.ContractEntity,
 	invoiceLineEntities []*neo4jentity.InvoiceLineEntity,
-	tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity) (string, error) {
+	tenantBillingProfile data_fields.TenantBillingProfile) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.generateInvoicePDF")
 	defer span.Finish()
 	tenant := common.GetTenantFromContext(ctx)
@@ -2276,25 +2272,15 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 
 	// Include bank details
 	if contractEntity.CanPayWithBankTransfer {
-		if tenantBillingProfileEntity.CanPayWithBankTransfer {
-			bankAccountDbNodes, err := s.neo4j.BankAccountReadRepository.GetBankAccounts(ctx, tenant)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-			for _, bankAccountDbNode := range bankAccountDbNodes {
-				bankAccountEntity := neo4jmapper.MapDbNodeToBankAccountEntity(bankAccountDbNode)
-				if bankAccountEntity.Currency == invoiceEntity.Currency {
-					dataForPdf["BankDetailsAvailable"] = true
-					dataForPdf["BankAccountName"] = bankAccountEntity.BankName
-					dataForPdf["BankAccountNumber"] = bankAccountEntity.AccountNumber
-					dataForPdf["BankAccountIBAN"] = bankAccountEntity.Iban
-					dataForPdf["BankAccountBIC"] = bankAccountEntity.Bic
-					dataForPdf["BankAccountSortCode"] = bankAccountEntity.SortCode
-					dataForPdf["BankAccountRoutingNumber"] = bankAccountEntity.RoutingNumber
-					dataForPdf["BankAccountOtherDetails"] = bankAccountEntity.OtherDetails
-					break
-				}
-			}
+		if tenantBillingProfile.IncludeBankTransferDetails {
+			dataForPdf["BankDetailsAvailable"] = true
+			dataForPdf["BankAccountName"] = tenantBillingProfile.BankName
+			dataForPdf["BankAccountNumber"] = tenantBillingProfile.AccountNumber
+			dataForPdf["BankAccountIBAN"] = tenantBillingProfile.IBAN
+			dataForPdf["BankAccountBIC"] = tenantBillingProfile.BIC
+			dataForPdf["BankAccountSortCode"] = tenantBillingProfile.SortCode
+			dataForPdf["BankAccountRoutingNumber"] = tenantBillingProfile.RoutingNumber
+			dataForPdf["BankAccountOtherDetails"] = tenantBillingProfile.OtherDetails
 		}
 	}
 

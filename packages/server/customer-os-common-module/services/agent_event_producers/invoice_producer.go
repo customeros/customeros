@@ -10,9 +10,12 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"time"
@@ -89,6 +92,15 @@ func (p *InvoiceProducer) Execute() {
 				break // exit the inner loop, then process the next agent
 			}
 
+			// prepare postpaid flag
+			dbNode, err := p.neo4jRepository.TenantReadRepository.GetTenantSettings(ctx, tenant)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
+			postpaid := tenantSettingsEntity.InvoicingPostpaid
+
 			// process records
 			for _, record := range records {
 				innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
@@ -107,6 +119,11 @@ func (p *InvoiceProducer) Execute() {
 					tracing.TraceErr(recordSpan, errors.Wrap(err, "Error marking invoicing requested"))
 					p.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 					return
+				}
+
+				// check if contract is ready for invoicing by dates
+				if !p.isReadyForInvoicing(innerCtx, tenant, *contract, postpaid) {
+					continue
 				}
 
 				if contract.PayAutomatically {
@@ -131,4 +148,53 @@ func (p *InvoiceProducer) Execute() {
 			time.Sleep(1 * time.Second)
 		}
 	}
+}
+
+func (p *InvoiceProducer) isReadyForInvoicing(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity, postpaid bool) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceProducer.isReadyForInvoicing")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.Bool("postpaid", postpaid))
+
+	// prepare and validate dates
+	var invoicePeriodStart, invoicePeriodEnd time.Time
+	if contractEntity.NextInvoiceDate != nil {
+		invoicePeriodStart = *contractEntity.NextInvoiceDate
+	} else {
+		invoicePeriodStart = *contractEntity.InvoicingStartDate
+	}
+
+	invoicePeriodEnd = p.prepareInvoiceCycleEndDate(ctx, invoicePeriodStart, tenant, contractEntity)
+
+	contractReadyForInvoicingByDates := true
+	if postpaid {
+		contractReadyForInvoicingByDates = utils.EndOfDayInUTC(invoicePeriodEnd).Before(utils.Now())
+	} else {
+		contractReadyForInvoicingByDates = invoicePeriodEnd.After(invoicePeriodStart)
+	}
+	return contractReadyForInvoicingByDates
+}
+
+func (p *InvoiceProducer) prepareInvoiceCycleEndDate(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceProducer.prepareInvoiceCycleEndDate")
+	defer span.Finish()
+
+	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
+	if start.Day() == 1 {
+		// if previous invoice was generated end of month, we need to substract extra 1 day
+		previousCycleInvoiceDbNode, err := p.neo4jRepository.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(nil, errors.Wrap(err, "Error getting previous cycle invoice"))
+		}
+		if previousCycleInvoiceDbNode != nil {
+			previousInvoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
+			if previousInvoice.PeriodStartDate.Day() != 1 {
+				nextStart = nextStart.AddDate(0, -1, 0)
+				nextStart = time.Date(nextStart.Year(), nextStart.Month(), previousInvoice.PeriodStartDate.Day(), 0, 0, 0, 0, nextStart.Location())
+			}
+		}
+	}
+	invoiceCycleEnd := nextStart.AddDate(0, 0, -1)
+	span.LogFields(log.Object("result.invoiceCycleEnd", invoiceCycleEnd))
+	return invoiceCycleEnd
 }
