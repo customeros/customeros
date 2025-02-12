@@ -12,8 +12,7 @@ type Config struct {
 	PostgresConfig      config.PostgresConfig
 	PostgresAsyncConfig config.PostgresAsyncConfig
 
-	RabbitMQConfig   config.RabbitMQConfig
-	GrpcClientConfig config.GrpcClientConfig
+	RabbitMQConfig config.RabbitMQConfig
 
 	CommonConfig config.CommonConfig
 

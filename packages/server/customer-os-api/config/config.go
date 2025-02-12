@@ -19,14 +19,13 @@ type Config struct {
 }
 
 type CommonConfig struct {
-	Logger           logger.Config
-	Jaeger           tracing.JaegerConfig
-	GrpcClientConfig commonconf.GrpcClientConfig
-	RabbitMQConfig   commonconf.RabbitMQConfig
-	Postgres         commonconf.PostgresConfig
-	PostgresAsync    commonconf.PostgresAsyncConfig
-	Neo4j            commonconf.Neo4jConfig
-	CosApi           commonconf.CustomerOsApiConfig
+	Logger         logger.Config
+	Jaeger         tracing.JaegerConfig
+	RabbitMQConfig commonconf.RabbitMQConfig
+	Postgres       commonconf.PostgresConfig
+	PostgresAsync  commonconf.PostgresAsyncConfig
+	Neo4j          commonconf.Neo4jConfig
+	CosApi         commonconf.CustomerOsApiConfig
 
 	Anthropic         commonconf.AnthropicConfig
 	BetterContact     commonconf.BetterContactConfig
@@ -109,7 +108,6 @@ func InitConfig() (*Config, error) {
 		Infrastructure: commonconf.InfrastructureConfig{
 			LoggerConfig:        cmnCfg.Logger,
 			JaegerConfig:        cmnCfg.Jaeger,
-			GrpcClientConfig:    cmnCfg.GrpcClientConfig,
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,

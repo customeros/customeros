@@ -17,8 +17,8 @@ type InfrastructureConfig struct {
 	Neo4jConfig         Neo4jConfig
 	GoogleOAuthConfig   GoogleOAuthConfig
 	AzureOAuthConfig    AzureOAuthConfig
-	GrpcClientConfig    GrpcClientConfig
 	RabbitMQConfig      RabbitMQConfig
+	OpensearchConfig    OpensearchConfig
 	JaegerConfig        tracing.JaegerConfig
 	LoggerConfig        logger.Config
 }

@@ -2,8 +2,8 @@ package config
 
 type Neo4jConfig struct {
 	Target                          string `env:"NEO4J_TARGET,required"`
-	User                            string `env:"NEO4J_AUTH_USER,required,unset"`
-	Pwd                             string `env:"NEO4J_AUTH_PWD,required,unset"`
+	User                            string `env:"NEO4J_AUTH_USER,required"`
+	Pwd                             string `env:"NEO4J_AUTH_PWD,required"`
 	Realm                           string `env:"NEO4J_AUTH_REALM"`
 	MaxConnectionPoolSize           int    `env:"NEO4J_MAX_CONN_POOL_SIZE" envDefault:"100"`
 	SocketConnectTimeout            int    `env:"NEO4J_SOCKET_CONN_TIMEOUT_SEC" envDefault:"5"`

@@ -2,10 +2,10 @@ package config
 
 import (
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/tracing"
 	commconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/joho/godotenv"
 	"log"
 )
 
@@ -27,9 +27,8 @@ type Config struct {
 		BatchSize           int `env:"SYNC_CUSTOMER_OS_DATA_BATCH_SIZE" envDefault:"10"`
 	}
 
-	GrpcClientConfig commconf.GrpcClientConfig
-	Logger           logger.Config
-	Service          struct {
+	Logger  logger.Config
+	Service struct {
 		CustomerOsWebhooksAPI    string `env:"CUSTOMER_OS_WEBHOOKS_API,required"`
 		CustomerOsWebhooksAPIKey string `env:"CUSTOMER_OS_WEBHOOKS_API_KEY,required"`
 	}

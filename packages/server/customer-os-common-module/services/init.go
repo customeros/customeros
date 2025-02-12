@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	events2 "github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
 	"log"
 	"reflect"
 
@@ -76,6 +77,7 @@ type CommonServices struct {
 	Logger               logger.Logger
 	Cache                *caches.Cache
 	Events               *events.EventsService
+	Opensearch           interfaces.OpensearchService
 	Neo4jRepositories    *neo4j_repository.Repositories
 	PostgresRepositories *postgres_repository.Repositories
 
@@ -172,11 +174,20 @@ func InitCommonServices(
 		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
 	}
 	eventsImpl := &events.EventsService{}
+
+	log.Printf("rabbitmq url: %s", cfg.Infrastructure.RabbitMQConfig.Url)
+
 	if cfg.Infrastructure.RabbitMQConfig.Url != "" {
 		eventsImpl, err = events.NewEventsService(cfg.Infrastructure.RabbitMQConfig.Url, log, publisherConfig, subscriberConfig)
 		if err != nil {
+			log.Error(err)
 			log.Fatalf("Cannot start events service")
 		}
+	}
+
+	var opensearchImpl interfaces.OpensearchService
+	if cfg.Infrastructure.OpensearchConfig.Url != "" {
+		opensearchImpl = events2.NewOpensearchService(log, &cfg.Infrastructure.OpensearchConfig)
 	}
 
 	// Simple - Services that depend only on base services
@@ -287,6 +298,7 @@ func InitCommonServices(
 		Logger:               log,
 		Cache:                cacheImpl,
 		Events:               eventsImpl,
+		Opensearch:           opensearchImpl,
 		Neo4jRepositories:    neo4jRepositories,
 		PostgresRepositories: postgresRepositories,
 

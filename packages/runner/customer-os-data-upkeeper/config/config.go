@@ -11,22 +11,21 @@ import (
 )
 
 type CommonConfig struct {
-	Enrow            commonconf.EnrowConfig
-	Logger           logger.Config
-	Jaeger           tracing.JaegerConfig
-	GrpcClientConfig commonconf.GrpcClientConfig
-	RabbitMQConfig   commonconf.RabbitMQConfig
-	ScrubbyIo        commonconf.ScrubbyIoConfig
-	Anthropic        commonconf.AnthropicConfig
-	CustomerOsApi    commonconf.CustomerOsApiConfig
-	BetterContact    commonconf.BetterContactConfig
-	Postgres         commonconf.PostgresConfig
-	PostgresAsync    commonconf.PostgresAsyncConfig
-	Neo4j            commonconf.Neo4jConfig
-	Mailsherpa       commonconf.MailSherpaApiConfig
-	FileStore        commonconf.FileStoreConfig
-	PdfConverter     commonconf.PdfConverterConfig
-	SlackConfig      commonconf.SlackConfig
+	Enrow          commonconf.EnrowConfig
+	Logger         logger.Config
+	Jaeger         tracing.JaegerConfig
+	RabbitMQConfig commonconf.RabbitMQConfig
+	ScrubbyIo      commonconf.ScrubbyIoConfig
+	Anthropic      commonconf.AnthropicConfig
+	CustomerOsApi  commonconf.CustomerOsApiConfig
+	BetterContact  commonconf.BetterContactConfig
+	Postgres       commonconf.PostgresConfig
+	PostgresAsync  commonconf.PostgresAsyncConfig
+	Neo4j          commonconf.Neo4jConfig
+	Mailsherpa     commonconf.MailSherpaApiConfig
+	FileStore      commonconf.FileStoreConfig
+	PdfConverter   commonconf.PdfConverterConfig
+	SlackConfig    commonconf.SlackConfig
 }
 
 type AppConfig struct {
@@ -82,7 +81,6 @@ func Load() *Config {
 		Infrastructure: commonconf.InfrastructureConfig{
 			LoggerConfig:        cmnCfg.Logger,
 			JaegerConfig:        cmnCfg.Jaeger,
-			GrpcClientConfig:    cmnCfg.GrpcClientConfig,
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,

@@ -118,14 +118,14 @@ func (a *App) initServices() error {
 		a.logger,
 		neo4jRepositories,
 		postgresRepositories,
-		a.config.Common,
+		&a.config.Common,
 		&service.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
 	// Initialize dependency container
 	a.deps = &model.DependencyContainer{
 		Logger:               a.logger,
-		CommonConfig:         a.config.Common,
+		CommonConfig:         &a.config.Common,
 		PostgresRepositories: postgresRepositories,
 		Neo4jRepositories:    neo4jRepositories,
 		CommonServices:       commonServices,
