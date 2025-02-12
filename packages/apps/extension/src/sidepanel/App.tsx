@@ -10,16 +10,19 @@ type Contact = {
 
 export const App = () => {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
+  const [tenantApiKey, setTenantApiKey] = useState<string | null>(null);
   const [linkedInUrl, setLinkedInUrl] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
+
   useEffect(() => {
     const handleMessage = (message: any) => {
       if (message.action === "COS_SESSION_DATA") {
         setWorkspaceName(message.workspaceName || null);
+        setTenantApiKey(message.apiKey || null);
       }
     };
 
@@ -249,7 +252,7 @@ export const App = () => {
           className="size-8"
         />
         <span className="font-semibold text-[16px]">CustomerOS</span>
-        {!workspaceName && !linkedInUrl && !isLoading && (
+        {!tenantApiKey && !linkedInUrl && !isLoading && (
           <span className="text-center max-w-[250px] text-sm">
             Sign into the{" "}
             <a
@@ -269,7 +272,7 @@ export const App = () => {
             workspace
           </span>
         )}
-        {!workspaceName && linkedInUrl && !isLoading && (
+        {!tenantApiKey && linkedInUrl && !isLoading && (
           <span className="text-center max-w-[250px] text-sm ">
             Sign into the{" "}
             <a
@@ -288,18 +291,18 @@ export const App = () => {
             app to start adding contacts to your workspace
           </span>
         )}
-        {workspaceName && (
+        {tenantApiKey && (
           <span className="bg-gray-100 px-1 text-sm">
-            Signed into {workspaceName}
+            Signed into {workspaceName || "CustomerOS"}
           </span>
         )}
-        {!linkedInUrl && workspaceName && !isLoading && (
+        {!linkedInUrl && tenantApiKey && !isLoading && (
           <span className="text-center max-w-[250px] text-sm ">
             Go to any LinkedIn profile to instantly add contacts to CustomerOS
           </span>
         )}
 
-        {workspaceName && linkedInUrl && !contact?.contactId && !isLoading && (
+        {tenantApiKey && linkedInUrl && !contact?.contactId && !isLoading && (
           <span className="text-center max-w-[250px] text-sm">
             Instantly add LinkedIn contacts to CustomerOS{" "}
           </span>
@@ -313,7 +316,7 @@ export const App = () => {
         />
       )}
 
-      {linkedInUrl && workspaceName && !contact?.contactId && !isLoading && (
+      {linkedInUrl && tenantApiKey && !contact?.contactId && !isLoading && (
         <Button
           className="mt-4"
           size="xs"
