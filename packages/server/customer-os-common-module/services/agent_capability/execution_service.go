@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -25,6 +26,7 @@ func (f *agentCapabilityExecutionService) Execute(
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.Execute")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("capabilityType", executionContainer.Capability.Type.String()))
 
 	switch executionContainer.Capability.Type {
 
@@ -135,6 +137,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityProcessAutopayment:
+		executor, ok := GetTypedExecutor[ProcessAutopaymentInput, ProcessAutopaymentOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityProcessAutopayment)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 

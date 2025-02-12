@@ -13,66 +13,64 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type TemplateCapability struct {
+type ProcessAutopaymentCapability struct {
 	// TODO add services here
 }
 
-func NewTemplateCapability() *TemplateCapability {
-	return &TemplateCapability{}
+func NewProcessAutopaymentCapability() *ProcessAutopaymentCapability {
+	return &ProcessAutopaymentCapability{}
 }
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[TemplateInput, TemplateOutput, postgres_entity.NoConfig] = (*TemplateCapability)(nil)
+	_ interfaces.AgentCapability[ProcessAutopaymentInput, ProcessAutopaymentOutput, postgres_entity.NoConfig] = (*ProcessAutopaymentCapability)(nil)
 )
 
-func (c *TemplateCapability) Type() enum.AgentCapability {
-	// TODO change this to the correct capability
-	return enum.CapabilityTemplate
+func (c *ProcessAutopaymentCapability) Type() enum.AgentCapability {
+	return enum.CapabilityProcessAutopayment
 }
 
-func (c *TemplateCapability) Name() string {
-	return "Template"
+func (c *ProcessAutopaymentCapability) Name() string {
+	return "ProcessAutopayment"
 }
 
-func (c *TemplateCapability) NewInput() TemplateInput {
-	return TemplateInput{}
+func (c *ProcessAutopaymentCapability) NewInput() ProcessAutopaymentInput {
+	return ProcessAutopaymentInput{}
 }
 
-func (c *TemplateCapability) NewConfig() postgres_entity.NoConfig {
+func (c *ProcessAutopaymentCapability) NewConfig() postgres_entity.NoConfig {
 	return postgres_entity.NoConfig{}
 }
 
-func (c *TemplateCapability) DefaultConfig() any {
+func (c *ProcessAutopaymentCapability) DefaultConfig() any {
 	config := c.NewConfig()
 	return &config
 }
 
-func (c *TemplateCapability) ValidateInput(input TemplateInput) error {
+func (c *ProcessAutopaymentCapability) ValidateInput(ProcessAutopaymentInput) error {
 	return nil
 }
 
-func (c *TemplateCapability) ValidateConfig(config postgres_entity.NoConfig) error {
+func (c *ProcessAutopaymentCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
-type TemplateInput struct {
-	// TODO add input here
+type ProcessAutopaymentInput struct {
+	InvoiceID string `json:"invoiceId"`
 }
 
-type TemplateOutput struct {
-	// TODO add output here
+type ProcessAutopaymentOutput struct {
 }
 
-func (c *TemplateCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[TemplateInput, postgres_entity.NoConfig]) (bool, TemplateOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TemplateCapability.Execute")
+func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ProcessAutopaymentInput, postgres_entity.NoConfig]) (bool, ProcessAutopaymentOutput, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ProcessAutopaymentCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
-	result := TemplateOutput{}
+	result := ProcessAutopaymentOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
