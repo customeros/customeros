@@ -100,7 +100,7 @@ func (a *Agent) GetCapabilityConfigByType(capabilityType enum.AgentCapability, c
 			return capability.GetConfig(configPtr)
 		}
 	}
-	return fmt.Errorf("no listener found with type: %v", capabilityType)
+	return fmt.Errorf("no capability found with type: %v", capabilityType)
 }
 
 // Capability as a separate entity
