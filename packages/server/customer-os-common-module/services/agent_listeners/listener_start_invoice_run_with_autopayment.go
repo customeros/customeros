@@ -109,7 +109,7 @@ func (l *StartInvoiceRunWithAutopayment) handleExecution(ctx context.Context, da
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

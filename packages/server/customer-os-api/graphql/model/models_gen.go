@@ -3235,6 +3235,11 @@ const (
 	AgentListenerEventNewEmail                       AgentListenerEvent = "NEW_EMAIL"
 	AgentListenerEventIngestEmail                    AgentListenerEvent = "INGEST_EMAIL"
 	AgentListenerEventIgnoreEmail                    AgentListenerEvent = "IGNORE_EMAIL"
+	AgentListenerEventInvoicePaid                    AgentListenerEvent = "INVOICE_PAID"
+	AgentListenerEventInvoiceVoided                  AgentListenerEvent = "INVOICE_VOIDED"
+	AgentListenerEventPaymentFailed                  AgentListenerEvent = "PAYMENT_FAILED"
+	AgentListenerEventPaymentProcessing              AgentListenerEvent = "PAYMENT_PROCESSING"
+	AgentListenerEventInvoicePastDue                 AgentListenerEvent = "INVOICE_PAST_DUE"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
@@ -3257,11 +3262,16 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventNewEmail,
 	AgentListenerEventIngestEmail,
 	AgentListenerEventIgnoreEmail,
+	AgentListenerEventInvoicePaid,
+	AgentListenerEventInvoiceVoided,
+	AgentListenerEventPaymentFailed,
+	AgentListenerEventPaymentProcessing,
+	AgentListenerEventInvoicePastDue,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment, AgentListenerEventSendInvoice, AgentListenerEventNewEmail, AgentListenerEventIngestEmail, AgentListenerEventIgnoreEmail:
+	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment, AgentListenerEventSendInvoice, AgentListenerEventNewEmail, AgentListenerEventIngestEmail, AgentListenerEventIgnoreEmail, AgentListenerEventInvoicePaid, AgentListenerEventInvoiceVoided, AgentListenerEventPaymentFailed, AgentListenerEventPaymentProcessing, AgentListenerEventInvoicePastDue:
 		return true
 	}
 	return false
