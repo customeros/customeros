@@ -73,7 +73,7 @@ type ContactEnrichDetails struct {
 	EnrichedAt                                  *time.Time
 	EnrichFailedAt                              *time.Time
 	EnrichAttempts                              int64
-	BettercontactFoundEmailAt                   *time.Time // TODO alexb check how it is used
+	BettercontactFoundEmailAt                   *time.Time // TODO check how it is used
 	EnrichedScrapinRecordId                     string
 	FindWorkEmailWithBetterContactRequestedId   *string
 	FindWorkEmailWithBetterContactRequestedAt   *time.Time

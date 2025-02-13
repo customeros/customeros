@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"net/http"
 	"time"
 
@@ -88,8 +90,10 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	}
 	// collect tenants
 	var tenants []string
+	agentByTenant := map[string]postgres_entity.Agent{}
 	for _, agent := range agents {
 		tenants = append(tenants, agent.Tenant)
+		agentByTenant[agent.Tenant] = agent
 	}
 
 	for {
@@ -133,9 +137,32 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 				return
 			}
 
+			// get agent for tenant
 			dataFields := data_fields.InvoiceFields{
 				DryRun:  true,
 				Preview: true,
+			}
+			agent := agentByTenant[tenant]
+			capabilityConfig := agent_capability.GenerateInvoiceConfig{}
+			err = agent.GetCapabilityConfigByType(enum.CapabilityGenerateInvoice, &capabilityConfig)
+			if err != nil {
+				dataFields.TenantBillingProfile = &data_fields.TenantBillingProfile{
+					Country:                    capabilityConfig.Country.Value,
+					LegalName:                  capabilityConfig.LegalName.Value,
+					AddressLine1:               capabilityConfig.AddressLine1.Value,
+					AddressLine2:               capabilityConfig.AddressLine2.Value,
+					Zip:                        capabilityConfig.ZIP.Value,
+					Locality:                   capabilityConfig.Locality.Value,
+					Region:                     capabilityConfig.Region.Value,
+					IncludeBankTransferDetails: capabilityConfig.IncludeBankTransferDetails.Value,
+					BankName:                   capabilityConfig.BankName.Value,
+					AccountNumber:              capabilityConfig.AccountNumber.Value,
+					IBAN:                       capabilityConfig.IBAN.Value,
+					BIC:                        capabilityConfig.BIC.Value,
+					SortCode:                   capabilityConfig.SortCode.Value,
+					RoutingNumber:              capabilityConfig.RoutingNumber.Value,
+					OtherDetails:               capabilityConfig.OtherDetails.Value,
+				}
 			}
 			_, err = s.commonServices.InvoiceService.InvoiceContract(innerCtx, nil, contract.Id, dataFields)
 			if err != nil {
