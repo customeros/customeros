@@ -13,6 +13,7 @@ const (
 	AgentSupportSpotter       AgentType = "support_spotter"
 	AgentWebVisitorIdentifier AgentType = "web_visitor_identifier"
 	AgentCashflowGuardian     AgentType = "cashflow_guardian"
+	AgentEmailKeeper          AgentType = "email_keeper"
 )
 
 func (t AgentType) String() string {
@@ -27,7 +28,8 @@ func GetAgentType(s string) (AgentType, error) {
 		AgentMeetingKeeper,
 		AgentICPQualifier,
 		AgentSupportSpotter,
-		AgentWebVisitorIdentifier:
+		AgentWebVisitorIdentifier,
+		AgentEmailKeeper:
 		return AgentType(s), nil
 
 	default:
@@ -38,12 +40,13 @@ func GetAgentType(s string) (AgentType, error) {
 type AgentGoal string
 
 const (
-	AgentGoalCaptureExternalMeeting AgentGoal = "capture_external_meeting"
-	AgentGoalEvaluateICPFit         AgentGoal = "evaluate_icp_fit"
-	AgentGoalIdentifyWebVisitor     AgentGoal = "identify_web_visitor"
-	AgentGoalReceiveReply           AgentGoal = "receive_reply"
-	AgentGoalSpotHelpNeeded         AgentGoal = "spot_help_needed"
-	AgentGoalGetPaid                AgentGoal = "get_paid"
+	AgentGoalCaptureExternalMeeting              AgentGoal = "capture_external_meeting"
+	AgentGoalEvaluateICPFit                      AgentGoal = "evaluate_icp_fit"
+	AgentGoalIdentifyWebVisitor                  AgentGoal = "identify_web_visitor"
+	AgentGoalReceiveReply                        AgentGoal = "receive_reply"
+	AgentGoalSpotHelpNeeded                      AgentGoal = "spot_help_needed"
+	AgentGoalGetPaid                             AgentGoal = "get_paid"
+	AgentGoalCaptureCommercialEmailConversations AgentGoal = "capture_commercial_email_conversations"
 )
 
 func (t AgentGoal) String() string {
@@ -58,7 +61,8 @@ func GetAgentGoal(s string) (AgentGoal, error) {
 		AgentGoalIdentifyWebVisitor,
 		AgentGoalReceiveReply,
 		AgentGoalSpotHelpNeeded,
-		AgentGoalGetPaid:
+		AgentGoalGetPaid,
+		AgentGoalCaptureCommercialEmailConversations:
 		return AgentGoal(s), nil
 
 	default:

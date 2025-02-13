@@ -14,6 +14,7 @@ var agentTypeByModel = map[model.AgentType]enum.AgentType{
 	model.AgentTypeSupportSpotter:     enum.AgentSupportSpotter,
 	model.AgentTypeWebVisitIdentifier: enum.AgentWebVisitorIdentifier,
 	model.AgentTypeCashflowGuardian:   enum.AgentCashflowGuardian,
+	model.AgentTypeEmailKeeper:        enum.AgentEmailKeeper,
 }
 
 var agentTypeByValue = utils.ReverseMap(agentTypeByModel)

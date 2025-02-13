@@ -75,6 +75,11 @@ const (
 	CapabilityValidateEmailAddressDeliverability AgentCapability = "validate_email_deliverability"
 	CapabilitySendInvoiceViaEmail                AgentCapability = "send_invoice_via_email"
 	CapabilityProcessAutopayment                 AgentCapability = "process_autopayment"
+	CapabilityClassifyEmail                      AgentCapability = "classify_email"
+	CapabilityIdentifyParticipants               AgentCapability = "identify_participants"
+	CapabilitySummarizeMessage                   AgentCapability = "summarize_message"
+	CapabilitySummarizeThread                    AgentCapability = "summarize_thread"
+	CapabilityIngestEmail                        AgentCapability = "ingest_email"
 )
 
 func (t AgentCapability) String() string {
@@ -126,7 +131,12 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityUpdateCompanyStatus,
 		CapabilitySendInvoiceViaEmail,
 		CapabilityValidateEmailAddressDeliverability,
-		CapabilityProcessAutopayment:
+		CapabilityProcessAutopayment,
+		CapabilityClassifyEmail,
+		CapabilityIdentifyParticipants,
+		CapabilitySummarizeMessage,
+		CapabilitySummarizeThread,
+		CapabilityIngestEmail:
 		return AgentCapability(s), nil
 
 	default:

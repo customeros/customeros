@@ -3232,6 +3232,9 @@ const (
 	AgentListenerEventStartInvoiceRun                AgentListenerEvent = "START_INVOICE_RUN"
 	AgentListenerEventStartInvoiceRunWithAutopayment AgentListenerEvent = "START_INVOICE_RUN_WITH_AUTOPAYMENT"
 	AgentListenerEventSendInvoice                    AgentListenerEvent = "SEND_INVOICE"
+	AgentListenerEventNewEmail                       AgentListenerEvent = "NEW_EMAIL"
+	AgentListenerEventIngestEmail                    AgentListenerEvent = "INGEST_EMAIL"
+	AgentListenerEventIgnoreEmail                    AgentListenerEvent = "IGNORE_EMAIL"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
@@ -3251,11 +3254,14 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventStartInvoiceRun,
 	AgentListenerEventStartInvoiceRunWithAutopayment,
 	AgentListenerEventSendInvoice,
+	AgentListenerEventNewEmail,
+	AgentListenerEventIngestEmail,
+	AgentListenerEventIgnoreEmail,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment, AgentListenerEventSendInvoice:
+	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment, AgentListenerEventSendInvoice, AgentListenerEventNewEmail, AgentListenerEventIngestEmail, AgentListenerEventIgnoreEmail:
 		return true
 	}
 	return false
@@ -3332,6 +3338,7 @@ const (
 	AgentTypeSupportSpotter     AgentType = "SUPPORT_SPOTTER"
 	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
 	AgentTypeCashflowGuardian   AgentType = "CASHFLOW_GUARDIAN"
+	AgentTypeEmailKeeper        AgentType = "EMAIL_KEEPER"
 )
 
 var AllAgentType = []AgentType{
@@ -3341,11 +3348,12 @@ var AllAgentType = []AgentType{
 	AgentTypeSupportSpotter,
 	AgentTypeWebVisitIdentifier,
 	AgentTypeCashflowGuardian,
+	AgentTypeEmailKeeper,
 }
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeCampaignManager, AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier, AgentTypeCashflowGuardian:
+	case AgentTypeCampaignManager, AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier, AgentTypeCashflowGuardian, AgentTypeEmailKeeper:
 		return true
 	}
 	return false
@@ -3493,6 +3501,11 @@ const (
 	CapabilityTypeGenerateInvoice                  CapabilityType = "GENERATE_INVOICE"
 	CapabilityTypeSendInvoiceViaEmail              CapabilityType = "SEND_INVOICE_VIA_EMAIL"
 	CapabilityTypeProcessAutopayment               CapabilityType = "PROCESS_AUTOPAYMENT"
+	CapabilityTypeClassifyEmail                    CapabilityType = "CLASSIFY_EMAIL"
+	CapabilityTypeIdentifyParticipants             CapabilityType = "IDENTIFY_PARTICIPANTS"
+	CapabilityTypeSummarizeMessage                 CapabilityType = "SUMMARIZE_MESSAGE"
+	CapabilityTypeSummarizeThread                  CapabilityType = "SUMMARIZE_THREAD"
+	CapabilityTypeIngestEmail                      CapabilityType = "INGEST_EMAIL"
 )
 
 var AllCapabilityType = []CapabilityType{
@@ -3522,11 +3535,16 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeGenerateInvoice,
 	CapabilityTypeSendInvoiceViaEmail,
 	CapabilityTypeProcessAutopayment,
+	CapabilityTypeClassifyEmail,
+	CapabilityTypeIdentifyParticipants,
+	CapabilityTypeSummarizeMessage,
+	CapabilityTypeSummarizeThread,
+	CapabilityTypeIngestEmail,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeLogRequestsForHelp, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail, CapabilityTypeProcessAutopayment:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeLogRequestsForHelp, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail, CapabilityTypeProcessAutopayment, CapabilityTypeClassifyEmail, CapabilityTypeIdentifyParticipants, CapabilityTypeSummarizeMessage, CapabilityTypeSummarizeThread, CapabilityTypeIngestEmail:
 		return true
 	}
 	return false

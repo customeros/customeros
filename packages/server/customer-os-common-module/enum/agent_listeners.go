@@ -33,6 +33,9 @@ const (
 	EventStartInvoiceRun                AgentListenerEvent = "start_invoice_run"
 	EventStartInvoiceRunWithAutopayment AgentListenerEvent = "start_invoice_run_with_autopayment"
 	EventSendInvoice                    AgentListenerEvent = "send_invoice"
+	EventNewEmail                       AgentListenerEvent = "new_email"
+	EventIngestEmail                    AgentListenerEvent = "ingest_email"
+	EventIgnoreEmail                    AgentListenerEvent = "ignore_email"
 
 	EventNotSet AgentListenerEvent = ""
 )
@@ -86,6 +89,9 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 		EventStartInvoiceRun,
 		EventStartInvoiceRunWithAutopayment,
 		EventSendInvoice,
+		EventNewEmail,
+		EventIngestEmail,
+		EventIgnoreEmail,
 
 		EventNotSet:
 
