@@ -28,7 +28,7 @@ export const ProductRow = observer(({ id }: { id: string }) => {
   if (!row || !row?.id) return null;
 
   return (
-    <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,100px)_minmax(0,110px)_28px] w-full text-sm group gap-x-2'>
+    <div className='grid grid-cols-[minmax(40px,1fr)_minmax(0,100px)_minmax(0,110px)_40px] w-full text-sm group gap-x-2'>
       <div title={row.value.name} className='truncate flex items-center'>
         <span className='truncate'>{row.value.name}</span>
       </div>

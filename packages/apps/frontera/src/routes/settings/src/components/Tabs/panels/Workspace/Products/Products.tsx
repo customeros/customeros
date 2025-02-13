@@ -17,8 +17,8 @@ export const Products = observer(() => {
   const hasProducts = store.skus.value.size > 0;
 
   return (
-    <div className='px-6 pb-4 pt-2 max-w-[500px] border-r border-gray-200 h-full'>
-      <div className='flex flex-col gap-4'>
+    <div className='pt-2 max-w-[500px] border-r border-gray-200 h-full'>
+      <div className='flex flex-col gap-4 px-6 pb-4 '>
         <div>
           <div className='flex justify-between'>
             <p
@@ -61,9 +61,8 @@ export const Products = observer(() => {
             Nothing to search for yet. Go ahead, add your first product...
           </p>
         )}
-
-        {hasProducts && <ProductsList searchTerm={searchTerm} />}
       </div>
+      {hasProducts && <ProductsList searchTerm={searchTerm} />}
     </div>
   );
 });
