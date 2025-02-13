@@ -302,19 +302,19 @@ jobs:
           username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
           password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.6.1
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Push Docker image
-        uses: docker/build-push-action@v6.13.0
-        with:
-          context: ./packages/server/
-          file: ./packages/server/customer-os-api/Dockerfile
-          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+#      - name: Extract metadata (tags, labels) for Docker
+#        id: meta
+#        uses: docker/metadata-action@v5.6.1
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+#
+#      - name: Push Docker image
+#        uses: docker/build-push-action@v6.13.0
+#        with:
+#          context: ./packages/server/
+#          file: ./packages/server/customer-os-api/Dockerfile
+#          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
+#          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+#          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
