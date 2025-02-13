@@ -88,17 +88,6 @@ export const NewWebSessionListener = observer(() => {
             </div>
           ))}
 
-          {usecase.websitesError.length > 0 && (
-            <p className='text-sm text-error-500 ml-2'>
-              <Icon
-                stroke='none'
-                name='dot-single'
-                className='text-error-500 mr-2'
-              />
-              {usecase.websitesError}
-            </p>
-          )}
-
           <Button
             size='xs'
             variant='ghost'
@@ -108,6 +97,11 @@ export const NewWebSessionListener = observer(() => {
           >
             Add website
           </Button>
+          {usecase.websitesError.length > 0 && (
+            <p className='text-sm text-error-500 ml-2'>
+              {usecase.websitesError}
+            </p>
+          )}
         </div>
 
         <div className='w-full h-[1px] bg-grayModern-200 my-4' />
@@ -154,7 +148,7 @@ export const NewWebSessionListener = observer(() => {
                 autoFocus
                 ref={inputRef}
                 variant='unstyled'
-                placeholder='website'
+                placeholder='Website'
                 invalid={usecase.isInvalid}
                 onChange={(e) => usecase.setWebsite(e.target.value)}
               />
