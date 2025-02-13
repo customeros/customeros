@@ -186,7 +186,7 @@ func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath stri
 }
 
 func (w *webhookService) GetWebhookForIntegration(ctx context.Context, integration enum.Source) (*postgres_entity.Webhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.Deactivate")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetWebhookForIntegration")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 

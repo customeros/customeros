@@ -53,7 +53,7 @@ func (l *ContactAddedToCampaignListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *ContactAddedToCampaignListener) Name() string {
-	return "ContactAddedToCampaign"
+	return "Contacts that are added to the campaign"
 }
 
 func (l *ContactAddedToCampaignListener) DefaultConfig() any {

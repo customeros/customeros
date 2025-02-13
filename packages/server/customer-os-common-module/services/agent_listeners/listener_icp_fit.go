@@ -47,7 +47,7 @@ func (l *IcpFitListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *IcpFitListener) Name() string {
-	return "ICP Fit"
+	return "ICP fit"
 }
 
 func (l *IcpFitListener) DefaultConfig() any {

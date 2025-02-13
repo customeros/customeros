@@ -47,7 +47,7 @@ func (l *MeetingLoggedListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *MeetingLoggedListener) Name() string {
-	return "Meeting logged"
+	return "Meeting is logged"
 }
 
 func (l *MeetingLoggedListener) DefaultConfig() any {

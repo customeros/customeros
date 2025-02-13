@@ -3,6 +3,7 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -46,7 +47,7 @@ func (l *IcpNotAFitListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *IcpNotAFitListener) Name() string {
-	return "ICP Not A Fit"
+	return "ICP not a fit"
 }
 
 func (l *IcpNotAFitListener) DefaultConfig() any {
