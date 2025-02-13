@@ -167,7 +167,9 @@ export const OrganizationDetails = observer(
                 <Icon name='tag-01' className='mr-3 text-gray-500' />
               }
               onChange={(selection) => {
-                tagsUsecase.select(selection.map((o) => o.value));
+                if (Array.isArray(selection)) {
+                  tagsUsecase.select(selection.map((o) => o.value));
+                }
               }}
             />
 

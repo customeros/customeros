@@ -1,0 +1,45 @@
+import { useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+
+import { observer } from 'mobx-react-lite';
+import { AddTagToCompanyUsecase } from '@domain/usecases/agents/capabilities/add-tag-to-company.usecase';
+
+import { Icon } from '@ui/media/Icon';
+import { Tags } from '@shared/components/Tags';
+
+export const ApplyTag = observer(() => {
+  const { id } = useParams<{ id: string }>();
+  const usecase = useMemo(() => new AddTagToCompanyUsecase(id!), [id]);
+
+  return (
+    <div className='flex flex-col gap-4'>
+      <span className='font-semibold text-sm'>Apply a tag to company</span>
+      <div>
+        <p className='font-semibold text-sm'>Tag name</p>
+        <p className='text-sm'>
+          Choose or create one tag to identify companies that need support
+        </p>
+        <Tags
+          className='mt-1'
+          options={usecase.tagList}
+          placeholder='Company tags'
+          value={usecase.selectedTags}
+          inputValue={usecase.searchTerm}
+          onCreate={() => usecase.create()}
+          setInputValue={usecase.setSearchTerm}
+          leftAccessory={<Icon name='tag-01' className='mr-3 text-gray-500' />}
+          onChange={(selection) => {
+            if (Array.isArray(selection) && selection.length > 1) return;
+
+            if (Array.isArray(selection) && selection.length > 0) {
+              usecase.select(selection[0]?.value);
+            } else {
+              usecase.reset();
+            }
+            usecase.execute();
+          }}
+        />
+      </div>
+    </div>
+  );
+});

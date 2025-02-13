@@ -16,6 +16,7 @@ import {
 
 interface TagsProps {
   dataTest?: string;
+  isMulti?: boolean;
   className?: string;
   inputValue: string;
   placeholder?: string;
@@ -25,7 +26,7 @@ interface TagsProps {
   leftAccessory?: React.ReactNode;
   onCreate: (value: string) => void;
   setInputValue: (value: string) => void;
-  onChange: (selection: SelectOption[]) => void;
+  onChange: (selection: SelectOption[] | SelectOption) => void;
 }
 
 export const Tags = observer(
@@ -40,12 +41,17 @@ export const Tags = observer(
     inputPlaceholder,
     dataTest,
     inputValue,
+    isMulti = true,
     setInputValue,
   }: TagsProps) => {
     const store = useStore();
 
     const handleClear = (id: string) => {
-      onChange?.(value.filter((o) => o.value !== id));
+      if (isMulti) {
+        onChange?.(value.filter((o) => o.value !== id));
+      } else {
+        onChange?.({ value: '', label: '' });
+      }
     };
 
     return (
@@ -91,9 +97,9 @@ export const Tags = observer(
         </Tooltip>
         <PopoverContent align='start' className='min-w-[264px] max-w-[320px]'>
           <Combobox
-            isMulti
             value={value}
             options={options}
+            isMulti={isMulti}
             onChange={onChange}
             inputValue={inputValue}
             onInputChange={setInputValue}
