@@ -1,8 +1,8 @@
-name: customer-os-api
+name: customer-os-api-custom
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "silviu/cos-6153-use-branch-name-as-image-version" ]  # Replace with your desired branch name
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
@@ -12,18 +12,8 @@ on:
       - packages/server/enrichment-api/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
-  pull_request:
-    paths:
-      - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-postgres-repository/**
-      - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events/**
-      - packages/server/validation-api/**
-      - packages/server/enrichment-api/**
-      - packages/server/customer-os-api/**
-      - .github/workflows/build-customer-os-api.yml
-  release:
-    types: [ created, edited ]
+      - .github/workflows/build-customer-os-api-custom.yml
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -32,7 +22,7 @@ env:
   GOBIN: ${{ github.workspace }}/go/bin
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: read
   packages: write
 
@@ -130,6 +120,7 @@ jobs:
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+
   test-resolver:
     runs-on: ubicloud-standard-2
     strategy:
@@ -193,10 +184,14 @@ jobs:
         run: |
           set -x  # Enable debug output
           
-          echo "Generating new test list..."
-          go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
-          cp all_tests.txt .test-list
-
+          if [ -f ".test-list" ] && [ -s ".test-list" ]; then
+            echo "Using cached test list"
+            cat ".test-list" > all_tests.txt
+          else
+            echo "Generating new test list..."
+            go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
+            cp all_tests.txt .test-list
+          fi
           echo "Number of lines in all_tests.txt:"
           wc -l all_tests.txt
           
@@ -279,12 +274,12 @@ jobs:
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
-  
 
   build-publish:
-    needs: [ test ]
+    needs: [ test, test-resolver ]
     runs-on: ubicloud-standard-2
-    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -302,19 +297,54 @@ jobs:
           username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
           password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
 
+      - name: Generate version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # For push events, use the branch name but replace slashes with dashes
+            VERSION=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            VERSION="pr-${{ github.event.pull_request.number }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            # For workflow_dispatch and other events, fallback to a timestamp
+            VERSION=$(date +'v%Y%m%d.%H%M')
+          fi
+          
+          VERSION=$(echo "$VERSION" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9.-]/-/g')
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          git tag $VERSION
+          git push origin $VERSION -f
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5.6.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
 
       - name: Push Docker image
         uses: docker/build-push-action@v6.13.0
         with:
           context: ./packages/server/
           file: ./packages/server/customer-os-api/Dockerfile
-          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  trigger-deployment:
+    needs: [build-publish]
+    runs-on: ubicloud-standard-2
+    steps:
+      - name: Trigger Customer OS API Workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.FE_TESTS_GITHUB_TOKEN }}
+          repository: customeros/cloud
+          event-type: deploy-customer-os-api
+          client-payload: '{"image_version": "${{ needs.build-publish.outputs.version }}"}'

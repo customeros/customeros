@@ -1,0 +1,146 @@
+name: Playwright Tests
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - frontera-app * deployed
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubicloud-standard-2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: ubicloud/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Determine trigger source and versions
+        id: trigger
+        run: |
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            TRIGGER_SOURCE=$(echo "${{ github.event.action }}" | cut -d ' ' -f 1)
+            NEW_VERSION=$(echo "${{ github.event.client_payload.version }}")
+            OLD_VERSION=$(echo "${{ github.event.client_payload.old_version }}")
+            echo "trigger_source=$TRIGGER_SOURCE" >> $GITHUB_ENV
+            echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+            echo "old_version=$OLD_VERSION" >> $GITHUB_ENV
+          else
+            echo "trigger_source=manual" >> $GITHUB_ENV
+          fi
+
+      - name: Cache npm dependencies
+        uses: ubicloud/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            ~/.npm
+            ./packages/apps/frontera/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: ./packages/apps/frontera
+
+      - name: Cache Playwright browsers
+        uses: ubicloud/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+        working-directory: ./packages/apps/frontera
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        working-directory: ./packages/apps/frontera
+        env:
+          PROD_FE_TEST_USER_URL: ${{ secrets.PROD_FE_TEST_USER_URL }}
+
+      - name: Upload video artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-videos
+          path: ./packages/apps/frontera/videos/*.webm
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Read test results
+        if: always()
+        id: test_results
+        run: |
+          TEST_RESULTS=$(cat test-results.txt)
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          echo "$TEST_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        working-directory: ./packages/apps/frontera
+
+      - name: Send test results to Slack
+        if: always()
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          TRIGGER_SOURCE: ${{ env.trigger_source }}
+          NEW_VERSION: ${{ env.new_version }}
+          OLD_VERSION: ${{ env.old_version }}
+        run: |
+          BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          RESULTS="${{ steps.test_results.outputs.results }}"
+
+          # Count passed and failed tests
+          PASSED_TESTS=$(echo "$RESULTS" | grep -c "✅" || true)
+          FAILED_TESTS=$(echo "$RESULTS" | grep -c "❌" || true)
+          TOTAL_TESTS=$((PASSED_TESTS + FAILED_TESTS))
+
+          # Create summary statistic & Create trigger message with version information
+          TRIGGER_MSG=""
+          if [ "$TRIGGER_SOURCE" != "manual" ]; then
+            VERSION_INFO=""
+            if [ ! -z "$NEW_VERSION" ] && [ ! -z "$OLD_VERSION" ]; then
+              VERSION_INFO=" - new version: $NEW_VERSION / old version: v$OLD_VERSION"
+            fi
+            TRIGGER_MSG="\nTriggered by \`$TRIGGER_SOURCE\`$VERSION_INFO"
+          fi
+          
+          SUMMARY="✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)$TRIGGER_MSG"
+
+          # Initialize MESSAGE with the common part
+          MESSAGE="<$BUILD_URL|Playwright Test Results>:\n$SUMMARY  "
+
+          # Format Linear Issues (only if there are any)
+          LINEAR_ISSUES=""
+          if [ "${{ env.ISSUE_INFO }}" != "" ]; then
+            LINEAR_ISSUES=$(echo -e "${{ env.ISSUE_INFO }}" | sed '/^$/d' | sort)
+            MESSAGE="$MESSAGE\n\nLinear Issues:\n$LINEAR_ISSUES"
+          fi
+
+          curl --fail -X POST -H 'Content-type: application/json' --data "{
+            \"text\": \"$MESSAGE\"
+          }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: ./packages/apps/frontera/playwright-report
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-trace
+          path: ./packages/apps/frontera/playwright-trace
+          retention-days: 14
