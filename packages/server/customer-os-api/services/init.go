@@ -39,7 +39,6 @@ import (
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
 	api_timeline_event "github.com/customeros/customeros/packages/server/customer-os-api/services/timeline_event"
 	api_user "github.com/customeros/customeros/packages/server/customer-os-api/services/user"
-	api_webhook "github.com/customeros/customeros/packages/server/customer-os-api/services/webhook"
 )
 
 type Services struct {
@@ -78,7 +77,6 @@ type Services struct {
 	TenantSettingsService       cosapi_interfaces.TenantSettingsService
 	TimelineEventService        cosapi_interfaces.TimelineEventService
 	UserService                 cosapi_interfaces.UserService
-	WebhookService              cosapi_interfaces.WebhookService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config) *Services {
@@ -119,7 +117,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		SearchService:               api_search.NewSearchService(log, repositories),
 		TenantSettingsService:       api_tenant_settings.NewTenantSettingsService(log, cfg, repositories.PostgresRepositories),
 		TimelineEventService:        api_timeline_event.NewTimelineEventService(log, repositories),
-		WebhookService:              api_webhook.NewWebhookService(log, repositories),
 		UserService:                 api_user.NewUserService(log, repositories),
 	}
 

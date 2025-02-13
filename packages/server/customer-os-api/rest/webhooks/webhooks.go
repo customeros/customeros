@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -68,14 +70,14 @@ func (h *WebhookHandler) CreateWebhook(baseURL, flowsPath string) gin.HandlerFun
 			return
 		}
 
-		integration, err := h.services.WebhookService.GetIntegration(strings.ToLower(req.Integration))
+		integration, err := h.services.CommonServices.WebhookService.GetIntegration(strings.ToLower(req.Integration))
 		if err != nil {
 			message := "Invalid integration value"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		webhookPath, secret, err := h.services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		webhookPath, secret, err := h.services.CommonServices.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
 			message := "Unable to create webhook"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -113,7 +115,7 @@ type ActiveWebhookRecord struct {
 	Active      bool      `json:"active"`
 }
 
-func (h *WebhookHandler) GetActiveWebhooks(baseURL, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) GetActiveWebhooks(baseURL, webhookPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetActiveWebhooks", c.Request.Header)
 		defer span.Finish()
@@ -125,13 +127,33 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, flowsPath string) gin.Handle
 			return
 		}
 
-		webhooks, err := h.services.Repositories.PostgresRepositories.WebhooksRepository.FindAll(ctx)
-		if err != nil {
-			err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
-			return
+		integration := c.Query("integration")
+
+		var webhooks *[]postgres_entity.Webhooks
+		var err error
+
+		switch {
+		case integration == "":
+			webhooks, err = h.services.Repositories.PostgresRepositories.WebhooksRepository.FindAll(ctx)
+			if err != nil {
+				err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
+				tracing.TraceErr(span, err)
+				h.responseHandler.HandleError(c, http.StatusNotFound, nil)
+				return
+			}
+		default:
+			webhook, err := h.services.CommonServices.WebhookService.GetWebhookForIntegration(ctx, enum.DecodeSource(integration))
+			if err != nil || webhook == nil {
+				err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
+				tracing.TraceErr(span, err)
+				h.responseHandler.HandleError(c, http.StatusNotFound, nil)
+				return
+			}
+			webhookArray := []postgres_entity.Webhooks{*webhook}
+			webhooks = &webhookArray
 		}
+
+		tracing.LogObjectAsJson(span, "webhooks", webhooks)
 
 		if len(*webhooks) == 0 {
 			h.responseHandler.HandleSuccess(c, NoActiveWebhooks{
@@ -142,14 +164,13 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, flowsPath string) gin.Handle
 
 		results := make([]ActiveWebhookRecord, len(*webhooks))
 
-		for _, webhook := range *webhooks {
-			record := ActiveWebhookRecord{
-				URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhook.WebhookPath),
+		for i, webhook := range *webhooks {
+			results[i] = ActiveWebhookRecord{
+				URL:         fmt.Sprintf("%s%s/%s", baseURL, webhookPath, webhook.WebhookPath),
 				Integration: webhook.Integration,
 				CreatedAt:   webhook.CreatedAt,
 				Active:      webhook.Enabled,
 			}
-			results = append(results, record)
 		}
 
 		if len(*webhooks) == 1 {
@@ -177,7 +198,7 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 			return
 		}
 		tenantId := c.Param("tenantId")
-		validTenant, err := h.services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		validTenant, err := h.services.CommonServices.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
 		if err != nil {
 			message := "Unable to verify webhook ownership"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -191,7 +212,7 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 		// Lookup integration
 		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
 		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
-		integration, err := h.services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
+		integration, err := h.services.CommonServices.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil || integration == commonEnum.SourceUnknown {
 			message := "Unable to identify webhook"
 			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
@@ -199,7 +220,7 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 		}
 
 		// Call create to rotate webhook as it will automatically handle rotation
-		webhookPath, secret, err := h.services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		webhookPath, secret, err := h.services.CommonServices.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
 			message := "Unable to rotate webhook"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -230,7 +251,7 @@ func (h *WebhookHandler) DeactivateWebhook() gin.HandlerFunc {
 			return
 		}
 		tenantId := c.Param("tenantId")
-		validTenant, err := h.services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		validTenant, err := h.services.CommonServices.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
 		if err != nil {
 			message := "Unable to verify webhook ownership"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -242,7 +263,7 @@ func (h *WebhookHandler) DeactivateWebhook() gin.HandlerFunc {
 		}
 
 		// Call to deactivate webhook
-		deactErr := h.services.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
+		deactErr := h.services.CommonServices.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
 		if deactErr != nil {
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
@@ -269,7 +290,7 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 		}
 
 		webhookPath := strings.TrimPrefix(c.Request.URL.Path, flowsPath)
-		integration, err := h.services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
+		integration, err := h.services.CommonServices.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil {
 			message := "Webhook not found"
 			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
