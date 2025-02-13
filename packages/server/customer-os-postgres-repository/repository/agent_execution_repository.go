@@ -197,6 +197,8 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("executionID", executionID))
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, executionID)
 
 	var agentExecution postgres_entity.AgentExecution
 	err := f.gormDb.

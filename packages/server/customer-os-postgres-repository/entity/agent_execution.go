@@ -27,9 +27,9 @@ type AgentExecution struct {
 	NextRetryAt *time.Time `gorm:"column:next_retry_at" json:"nextRetryAt"`
 
 	// Async state management
-	StateData   map[string]any `gorm:"column:state_data;type:jsonb" json:"stateData"`            // Stores execution state for resume
-	CurrentStep string         `gorm:"column:current_step;type:varchar(255)" json:"currentStep"` // Current capability being executed
-	Checkpoints map[string]any `gorm:"column:checkpoints;type:jsonb" json:"checkpoints"`         // Stores completion state of each step
+	StateData   JSONMap `gorm:"column:state_data;type:jsonb" json:"stateData"`            // Stores execution state for resume
+	CurrentStep string  `gorm:"column:current_step;type:varchar(255)" json:"currentStep"` // Current capability being executed
+	Checkpoints JSONMap `gorm:"column:checkpoints;type:jsonb" json:"checkpoints"`         // Stores completion state of each step
 }
 
 func (AgentExecution) TableName() string {
