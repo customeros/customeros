@@ -12,7 +12,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250213142435-9a4f34296882
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/joho/godotenv v1.5.1
@@ -46,6 +46,7 @@ require (
 	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/emersion/go-message v0.18.2 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
