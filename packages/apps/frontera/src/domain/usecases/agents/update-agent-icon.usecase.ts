@@ -85,6 +85,10 @@ export class UpdateAgentIconUsecase {
       keywords: ['announcement', 'megaphone', 'broadcast', 'alert'],
     },
     {
+      name: 'refresh-ccw-02',
+      keywords: ['refresh'],
+    },
+    {
       name: 'infinity',
       keywords: ['infinity', 'endless', 'loop', 'continuous'],
     },
@@ -137,6 +141,10 @@ export class UpdateAgentIconUsecase {
       keywords: ['cpu', 'chip', 'processor', 'hardware', 'computer'],
     },
     {
+      name: 'container',
+      keywords: ['container', 'box', 'storage', 'information'],
+    },
+    {
       name: 'data',
       keywords: ['data', 'database', 'storage', 'information'],
     },
@@ -162,11 +170,7 @@ export class UpdateAgentIconUsecase {
     },
     {
       name: 'beaker-01',
-      keywords: ['beaker', 'science', 'laboratory', 'chemistry'],
-    },
-    {
-      name: 'beaker-02',
-      keywords: ['beaker', 'science', 'laboratory', 'chemistry'],
+      keywords: ['beaker', 'science', 'laboratory', 'chemistry', 'experiment'],
     },
     {
       name: 'book-open-01',
@@ -193,6 +197,10 @@ export class UpdateAgentIconUsecase {
       keywords: ['stand', 'podium', 'platform', 'presentation'],
     },
     {
+      name: 'ruler',
+      keywords: ['ruler', 'centimeter', 'measure'],
+    },
+    {
       name: 'telescope',
       keywords: ['telescope', 'astronomy', 'vision', 'search'],
     },
@@ -211,6 +219,157 @@ export class UpdateAgentIconUsecase {
     {
       name: 'paperclip',
       keywords: ['paperclip', 'attachment', 'file', 'document'],
+    },
+    {
+      name: 'file-05',
+      keywords: ['file', 'document', 'paper', 'page', 'new'],
+    },
+    {
+      name: 'file-03',
+      keywords: ['file', 'document', 'chart', 'statistics', 'graph'],
+    },
+    {
+      name: 'clipboard',
+      keywords: ['clipboard', 'paste', 'copy', 'board', 'list'],
+    },
+    {
+      name: 'bank',
+      keywords: ['bank', 'finance', 'building', 'money', 'institution'],
+    },
+    {
+      name: 'bank-note-01',
+      keywords: ['bank note', 'money', 'cash', 'currency', 'payment'],
+    },
+    {
+      name: 'coins-02',
+      keywords: ['coins', 'money', 'currency', 'finance', 'cash'],
+    },
+    {
+      name: 'coins-stacked-01',
+      keywords: ['coins', 'stack', 'money', 'savings', 'finance'],
+    },
+    {
+      name: 'currency-bitcoin-circle',
+      keywords: ['bitcoin', 'cryptocurrency', 'digital', 'currency', 'crypto'],
+    },
+    {
+      name: 'currency-dollar-circle',
+      keywords: ['dollar', 'usd', 'currency', 'money', 'finance'],
+    },
+    {
+      name: 'currency-euro-circle',
+      keywords: ['euro', 'eur', 'currency', 'money', 'finance'],
+    },
+    {
+      name: 'currency-pound-circle',
+      keywords: ['pound', 'gbp', 'sterling', 'currency', 'british'],
+    },
+    {
+      name: 'currency-ruble-circle',
+      keywords: ['ruble', 'rub', 'russian', 'currency', 'money'],
+    },
+    {
+      name: 'currency-rupee-circle',
+      keywords: ['rupee', 'inr', 'indian', 'currency', 'money'],
+    },
+    {
+      name: 'currency-yen-circle',
+      keywords: ['yen', 'jpy', 'japanese', 'currency', 'money'],
+    },
+    {
+      name: 'diamond-01',
+      keywords: ['diamond', 'jewel', 'precious', 'luxury', 'value'],
+    },
+    {
+      name: 'gift-01',
+      keywords: ['gift', 'present', 'package', 'surprise', 'box'],
+    },
+    {
+      name: 'sale-03',
+      keywords: ['sale', 'discount', 'offer', 'price', 'deal'],
+    },
+    {
+      name: 'shopping-bag-01',
+      keywords: ['shopping', 'bag', 'purchase', 'retail', 'store'],
+    },
+    {
+      name: 'scales-01',
+      keywords: ['scales', 'balance', 'justice', 'weight', 'measure'],
+    },
+    {
+      name: 'activity',
+      keywords: ['activity', 'pulse', 'health', 'monitor', 'heartbeat'],
+    },
+    {
+      name: 'activity-heart',
+      keywords: [
+        'activity',
+        'health',
+        'pulse',
+        'health',
+        'monitor',
+        'heartbeat',
+      ],
+    },
+    {
+      name: 'anchor',
+      keywords: ['anchor', 'ship', 'marine', 'nautical', 'stability'],
+    },
+    {
+      name: 'asterisk-02',
+      keywords: ['asterisk', 'star', 'symbol', 'reference', 'mark'],
+    },
+    {
+      name: 'bookmark',
+      keywords: ['bookmark', 'save', 'favorite', 'marker', 'tag'],
+    },
+    {
+      name: 'building-05',
+      keywords: ['building', 'office', 'work', 'business', 'company'],
+    },
+    {
+      name: 'cake',
+      keywords: ['cake', 'birthday', 'celebration', 'party', 'dessert'],
+    },
+    {
+      name: 'flame',
+      keywords: ['flame', 'fire', 'hot', 'burn', 'energy'],
+    },
+    {
+      name: 'home-02',
+      keywords: ['home', 'house', 'building', 'residence', 'property'],
+    },
+    {
+      name: 'home-smile',
+      keywords: ['home', 'smile', 'happy', 'house', 'friendly'],
+    },
+    {
+      name: 'loading-03',
+      keywords: ['loading', 'spinner', 'wait', 'process', 'refresh'],
+    },
+    {
+      name: 'medical-cross',
+      keywords: ['medical', 'cross', 'health', 'hospital', 'emergency'],
+    },
+    {
+      name: 'speedometer-03',
+      keywords: ['speedometer', 'speed', 'gauge', 'measure', 'performance'],
+    },
+    {
+      name: 'target-01',
+      keywords: ['target', 'aim', 'goal', 'objective', 'focus'],
+    },
+    {
+      name: 'target-03',
+      keywords: ['target', 'bullseye', 'aim', 'precision', 'accuracy'],
+    },
+    {
+      name: 'virus',
+      keywords: ['virus', 'disease', 'infection', 'health', 'medical'],
+    },
+    {
+      name: 'zap',
+      keywords: ['zap', 'lightning', 'thunder', 'power', 'energy'],
     },
   ];
 
