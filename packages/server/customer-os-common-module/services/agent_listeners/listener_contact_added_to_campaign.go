@@ -28,8 +28,8 @@ type ContactAddedToCampaignListener struct {
 
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*CompanyIdentifiedListener)(nil)
-	_ interfaces.EventListener        = (*CompanyIdentifiedListener)(nil)
+	_ interfaces.AgentListenerUntyped = (*ContactAddedToCampaignListener)(nil)
+	_ interfaces.EventListener        = (*ContactAddedToCampaignListener)(nil)
 )
 
 func NewContactAddedToCampaignListener(

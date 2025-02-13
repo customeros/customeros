@@ -28,8 +28,8 @@ type EmailBouncedListener struct {
 
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*CompanyIdentifiedListener)(nil)
-	_ interfaces.EventListener        = (*CompanyIdentifiedListener)(nil)
+	_ interfaces.AgentListenerUntyped = (*EmailBouncedListener)(nil)
+	_ interfaces.EventListener        = (*EmailBouncedListener)(nil)
 )
 
 func NewEmailBouncedListener(

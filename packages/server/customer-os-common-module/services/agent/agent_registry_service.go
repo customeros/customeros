@@ -114,8 +114,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 	agentType, err := enum.GetAgentType(agentConfig.Agent.Type)
 	if err != nil {
 		span.LogKV("agentType", agentConfig.Agent.Type)
-		err := errors.New("Not a valid agent type")
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.New("Not a valid agent type"))
 		return err
 	}
 
