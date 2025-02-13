@@ -789,6 +789,11 @@ type Country struct {
 	PhoneCode string `json:"phoneCode"`
 }
 
+type CreateContactBulkResponse struct {
+	CreatedIds   []string `json:"createdIds"`
+	FailedInputs []string `json:"failedInputs"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
 type CustomField struct {

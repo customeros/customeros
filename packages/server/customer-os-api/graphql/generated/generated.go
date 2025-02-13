@@ -403,6 +403,11 @@ type ComplexityRoot struct {
 		PhoneCode func(childComplexity int) int
 	}
 
+	CreateContactBulkResponse struct {
+		CreatedIds   func(childComplexity int) int
+		FailedInputs func(childComplexity int) int
+	}
+
 	CustomField struct {
 		CreatedAt func(childComplexity int) int
 		Datatype  func(childComplexity int) int
@@ -1091,7 +1096,9 @@ type ComplexityRoot struct {
 		ContactAddTag                              func(childComplexity int, input model.ContactTagInput) int
 		ContactCreate                              func(childComplexity int, input model.ContactInput) int
 		ContactCreateBulkByEmail                   func(childComplexity int, emails []string, flowID *string) int
+		ContactCreateBulkByEmailV2                 func(childComplexity int, emails []string, flowID *string) int
 		ContactCreateBulkByLinkedIn                func(childComplexity int, linkedInUrls []string, flowID *string) int
+		ContactCreateBulkByLinkedInV2              func(childComplexity int, linkedInUrls []string, flowID *string) int
 		ContactCreateForOrganization               func(childComplexity int, input model.ContactInput, organizationID string) int
 		ContactFindWorkEmail                       func(childComplexity int, contactID string, organizationID *string, domain *string, findMobileNumber *bool) int
 		ContactHardDelete                          func(childComplexity int, contactID string) int
@@ -2000,6 +2007,8 @@ type MutationResolver interface {
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
 	ContactCreateBulkByLinkedIn(ctx context.Context, linkedInUrls []string, flowID *string) ([]string, error)
 	ContactCreateBulkByEmail(ctx context.Context, emails []string, flowID *string) ([]string, error)
+	ContactCreateBulkByLinkedInV2(ctx context.Context, linkedInUrls []string, flowID *string) (*model.CreateContactBulkResponse, error)
+	ContactCreateBulkByEmailV2(ctx context.Context, emails []string, flowID *string) (*model.CreateContactBulkResponse, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
 	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
@@ -4141,6 +4150,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Country.PhoneCode(childComplexity), true
+
+	case "CreateContactBulkResponse.createdIds":
+		if e.complexity.CreateContactBulkResponse.CreatedIds == nil {
+			break
+		}
+
+		return e.complexity.CreateContactBulkResponse.CreatedIds(childComplexity), true
+
+	case "CreateContactBulkResponse.failedInputs":
+		if e.complexity.CreateContactBulkResponse.FailedInputs == nil {
+			break
+		}
+
+		return e.complexity.CreateContactBulkResponse.FailedInputs(childComplexity), true
 
 	case "CustomField.createdAt":
 		if e.complexity.CustomField.CreatedAt == nil {
@@ -7659,6 +7682,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactCreateBulkByEmail(childComplexity, args["emails"].([]string), args["flowId"].(*string)), true
 
+	case "Mutation.contact_CreateBulkByEmailV2":
+		if e.complexity.Mutation.ContactCreateBulkByEmailV2 == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_CreateBulkByEmailV2_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactCreateBulkByEmailV2(childComplexity, args["emails"].([]string), args["flowId"].(*string)), true
+
 	case "Mutation.contact_CreateBulkByLinkedIn":
 		if e.complexity.Mutation.ContactCreateBulkByLinkedIn == nil {
 			break
@@ -7670,6 +7705,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactCreateBulkByLinkedIn(childComplexity, args["linkedInUrls"].([]string), args["flowId"].(*string)), true
+
+	case "Mutation.contact_CreateBulkByLinkedInV2":
+		if e.complexity.Mutation.ContactCreateBulkByLinkedInV2 == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_CreateBulkByLinkedInV2_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactCreateBulkByLinkedInV2(childComplexity, args["linkedInUrls"].([]string), args["flowId"].(*string)), true
 
 	case "Mutation.contact_CreateForOrganization":
 		if e.complexity.Mutation.ContactCreateForOrganization == nil {
@@ -13785,8 +13832,12 @@ extend type Mutation {
     contact_Create(input: ContactInput!): ID!
     contact_CreateForOrganization(input: ContactInput!, organizationId: ID!): Contact!
     customer_contact_Create(input: CustomerContactInput!): CustomerContact!
-    contact_CreateBulkByLinkedIn(linkedInUrls: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    contact_CreateBulkByEmail(emails: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    contact_CreateBulkByLinkedIn(linkedInUrls: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    contact_CreateBulkByEmail(emails: [String!]!, flowId: String): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+
+    contact_CreateBulkByLinkedInV2(linkedInUrls: [String!]!, flowId: String): CreateContactBulkResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_CreateBulkByEmailV2(emails: [String!]!, flowId: String): CreateContactBulkResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
@@ -13806,6 +13857,11 @@ extend type Mutation {
     #TODO remove after UI migration
     contact_AddTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
     contact_RemoveTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+}
+
+type CreateContactBulkResponse {
+    createdIds: [String!]!
+    failedInputs: [String!]!
 }
 
 type CustomerContact {
@@ -18754,6 +18810,57 @@ func (ec *executionContext) field_Mutation_contact_AddTag_argsInput(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_contact_CreateBulkByEmailV2_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_contact_CreateBulkByEmailV2_argsEmails(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["emails"] = arg0
+	arg1, err := ec.field_Mutation_contact_CreateBulkByEmailV2_argsFlowID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["flowId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_contact_CreateBulkByEmailV2_argsEmails(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["emails"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("emails"))
+	if tmp, ok := rawArgs["emails"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByEmailV2_argsFlowID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["flowId"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("flowId"))
+	if tmp, ok := rawArgs["flowId"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_contact_CreateBulkByEmail_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -18788,6 +18895,57 @@ func (ec *executionContext) field_Mutation_contact_CreateBulkByEmail_argsEmails(
 }
 
 func (ec *executionContext) field_Mutation_contact_CreateBulkByEmail_argsFlowID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["flowId"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("flowId"))
+	if tmp, ok := rawArgs["flowId"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByLinkedInV2_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_contact_CreateBulkByLinkedInV2_argsLinkedInUrls(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["linkedInUrls"] = arg0
+	arg1, err := ec.field_Mutation_contact_CreateBulkByLinkedInV2_argsFlowID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["flowId"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_contact_CreateBulkByLinkedInV2_argsLinkedInUrls(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["linkedInUrls"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedInUrls"))
+	if tmp, ok := rawArgs["linkedInUrls"]; ok {
+		return ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_CreateBulkByLinkedInV2_argsFlowID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
@@ -39884,6 +40042,94 @@ func (ec *executionContext) _Country_phoneCode(ctx context.Context, field graphq
 func (ec *executionContext) fieldContext_Country_phoneCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CreateContactBulkResponse_createdIds(ctx context.Context, field graphql.CollectedField, obj *model.CreateContactBulkResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CreateContactBulkResponse_createdIds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedIds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CreateContactBulkResponse_createdIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateContactBulkResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CreateContactBulkResponse_failedInputs(ctx context.Context, field graphql.CollectedField, obj *model.CreateContactBulkResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CreateContactBulkResponse_failedInputs(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FailedInputs, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CreateContactBulkResponse_failedInputs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateContactBulkResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -64453,6 +64699,196 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateBulkByEmail(ctx 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contact_CreateBulkByEmail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_CreateBulkByLinkedInV2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_CreateBulkByLinkedInV2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContactCreateBulkByLinkedInV2(rctx, fc.Args["linkedInUrls"].([]string), fc.Args["flowId"].(*string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.CreateContactBulkResponse
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.CreateContactBulkResponse
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.CreateContactBulkResponse
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CreateContactBulkResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.CreateContactBulkResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CreateContactBulkResponse)
+	fc.Result = res
+	return ec.marshalNCreateContactBulkResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCreateContactBulkResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_CreateBulkByLinkedInV2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "createdIds":
+				return ec.fieldContext_CreateContactBulkResponse_createdIds(ctx, field)
+			case "failedInputs":
+				return ec.fieldContext_CreateContactBulkResponse_failedInputs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CreateContactBulkResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_CreateBulkByLinkedInV2_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_CreateBulkByEmailV2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_CreateBulkByEmailV2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContactCreateBulkByEmailV2(rctx, fc.Args["emails"].([]string), fc.Args["flowId"].(*string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.CreateContactBulkResponse
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.CreateContactBulkResponse
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.CreateContactBulkResponse
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CreateContactBulkResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.CreateContactBulkResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CreateContactBulkResponse)
+	fc.Result = res
+	return ec.marshalNCreateContactBulkResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCreateContactBulkResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_CreateBulkByEmailV2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "createdIds":
+				return ec.fieldContext_CreateContactBulkResponse_createdIds(ctx, field)
+			case "failedInputs":
+				return ec.fieldContext_CreateContactBulkResponse_failedInputs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CreateContactBulkResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_CreateBulkByEmailV2_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -122300,6 +122736,50 @@ func (ec *executionContext) _Country(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var createContactBulkResponseImplementors = []string{"CreateContactBulkResponse"}
+
+func (ec *executionContext) _CreateContactBulkResponse(ctx context.Context, sel ast.SelectionSet, obj *model.CreateContactBulkResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createContactBulkResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreateContactBulkResponse")
+		case "createdIds":
+			out.Values[i] = ec._CreateContactBulkResponse_createdIds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failedInputs":
+			out.Values[i] = ec._CreateContactBulkResponse_failedInputs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var customFieldImplementors = []string{"CustomField", "Node"}
 
 func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionSet, obj *model.CustomField) graphql.Marshaler {
@@ -128155,6 +128635,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "contact_CreateBulkByEmail":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_CreateBulkByEmail(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contact_CreateBulkByLinkedInV2":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_CreateBulkByLinkedInV2(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contact_CreateBulkByEmailV2":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_CreateBulkByEmailV2(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -136737,6 +137231,20 @@ func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋcustomerosᚋcusto
 		return graphql.Null
 	}
 	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCreateContactBulkResponse2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCreateContactBulkResponse(ctx context.Context, sel ast.SelectionSet, v model.CreateContactBulkResponse) graphql.Marshaler {
+	return ec._CreateContactBulkResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCreateContactBulkResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCreateContactBulkResponse(ctx context.Context, sel ast.SelectionSet, v *model.CreateContactBulkResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CreateContactBulkResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCustomEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx context.Context, v any) (model.CustomEntityType, error) {
