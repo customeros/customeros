@@ -102,12 +102,6 @@ func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context
 	}
 
 	// update execution with goal achieved
-	if agentExecution.Status == enum.AgentExecutionCompleted {
-		err = fmt.Errorf("agent execution already completed")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	agentExecution.GoalAchieved = true
 	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, false)
 	if err != nil {
 		tracing.TraceErr(span, err)

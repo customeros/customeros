@@ -3,7 +3,6 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -105,12 +104,6 @@ func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecut
 	}
 
 	// update execution with goal achieved
-	if agentExecution.Status == enum.AgentExecutionCompleted {
-		err = fmt.Errorf("agent execution already completed")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	agentExecution.GoalAchieved = true
 	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
 	if err != nil {
 		tracing.TraceErr(span, err)

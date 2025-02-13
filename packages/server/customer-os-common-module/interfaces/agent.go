@@ -19,8 +19,6 @@ type AgentService interface {
 	GetAllAgents(ctx context.Context) ([]*postgres_entity.Agent, error)
 
 	CreateAgentExecutionRecord(ctx context.Context, agent postgres_entity.Agent, triggerEvent, traceId string) (string, error)
-	SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error
-	SaveAgentExecutionError(ctx context.Context, executionID, errorMessage string) error
 }
 
 type AgentRegistry interface {

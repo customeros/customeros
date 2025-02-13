@@ -166,11 +166,6 @@ func (l *EmailBouncedListener) handleGoalAchieved(ctx context.Context, agentExec
 	}
 
 	// update execution with goal achieved
-	if agentExecution.Status == enum.AgentExecutionCompleted {
-		err = fmt.Errorf("agent execution already completed")
-		tracing.TraceErr(span, err)
-		return err
-	}
 	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
