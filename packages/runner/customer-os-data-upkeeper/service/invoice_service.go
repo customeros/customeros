@@ -1,20 +1,14 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"net/http"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -46,9 +40,8 @@ type InvoiceService interface {
 	GenerateNextPreviewInvoices()
 	AdjustInvoiceStatus()
 
-	// TODO stopped invoicing
+	// TODO stopped offcycle invoicing
 	GenerateOffCycleInvoices()
-	GenerateInvoicePaymentLinks()
 }
 
 type invoiceService struct {
@@ -357,145 +350,6 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	//	}
 	//	time.Sleep(10 * time.Second)
 	//}
-}
-
-func (s *invoiceService) GenerateInvoicePaymentLinks() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateInvoicePaymentLinks")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl == "" {
-		err := errors.New("GeneratePaymentLinkUrl is not configured")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
-
-	referenceTime := utils.Now()
-	limit := 100
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPaymentLinkRequest(
-			ctx, s.cfg.App.ProcessConfig.DelayRequestPaymentLinkInMinutes, s.cfg.App.ProcessConfig.RequestPaymentLinkLookBackWindowInDays, referenceTime, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
-			return
-		}
-
-		// no invoices found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
-
-			// get contract linked to invoice
-			contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(innerCtx, tenant, invoice.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
-			}
-			contractEntity := neo4jentity.ContractEntity{}
-			if contractDbNode != nil {
-				contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-			}
-
-			// get organization for invoice
-			organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
-			}
-			organizationEntity := neo4jentity.OrganizationEntity{}
-			if organizationDbNode != nil {
-				organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-			}
-
-			// convert amount to the smallest currency unit
-			amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-
-			// mark payment link request first, before sending the event
-			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPaymentLinkRequested(innerCtx, tenant, invoice.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking payment link requested for invoice %s: %s", invoice.Id, err.Error())
-			}
-
-			primaryStripeCustomerId, err := s.commonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
-			}
-
-			requestBody := GeneratePaymentLinkEventBody{
-				Tenant:                       tenant,
-				Currency:                     invoice.Currency.String(),
-				AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
-				InvoiceId:                    invoice.Id,
-				InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
-				CustomerEmail:                contractEntity.InvoiceEmail,
-				PrimaryStripeCustomerId:      primaryStripeCustomerId,
-			}
-
-			// Convert the request body to JSON
-			requestBodyJSON, err := json.Marshal(requestBody)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("error encoding JSON: %v", err)
-				continue
-			}
-
-			// Create an HTTP client
-			client := &http.Client{}
-
-			// Create a POST request with headers and body
-			req, err := http.NewRequest("POST", s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl, bytes.NewBuffer(requestBodyJSON))
-			if err != nil {
-				tracing.TraceErr(span, err)
-				continue
-			}
-
-			// Set the content type header
-			req.Header.Set("Content-Type", "application/json")
-
-			// Send the POST request
-			resp, err := client.Do(req)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("error sending request: %v", err)
-				continue
-			}
-			defer resp.Body.Close()
-
-			// Check the response status code
-			if resp.StatusCode != http.StatusOK {
-				tracing.TraceErr(span, fmt.Errorf("request failed with status code: %s", resp.Status))
-				s.log.Errorf("request failed with status code: %s", resp.Status)
-			}
-		}
-	}
 }
 
 func (s *invoiceService) CleanupInvoices() {

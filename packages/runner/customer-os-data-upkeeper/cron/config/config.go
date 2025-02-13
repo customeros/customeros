@@ -35,8 +35,6 @@ type Config struct {
 	CronScheduleGenerateNextPreviewInvoice string `env:"CRON_SCHEDULE_GENERATE_NEXT_PREVIEW_INVOICE" envDefault:"30 */10 * * * *"`
 	// Defaults to each 30 min
 	CronScheduleSendPayInvoiceNotification string `env:"CRON_SCHEDULE_SEND_PAY_INVOICE_NOTIFICATION" envDefault:"0 */30 * * * *"`
-	// Defaults to each 10 min
-	CronScheduleGenerateInvoicePaymentLink string `env:"CRON_SCHEDULE_GENERATE_INVOICE_PAYMENT_LINK" envDefault:"30 */10 * * * *"`
 	// Defaults to each 8 hours
 	CronScheduleCleanupInvoices string `env:"CRON_SCHEDULE_CLEANUP_INVOICES" envDefault:"0 40 */8 * * *"`
 	// Defaults to each 30 mins

@@ -20,6 +20,7 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v27.5.1+incompatible
 	github.com/emersion/go-message v0.18.2
 	github.com/forPelevin/gomoji v1.2.0

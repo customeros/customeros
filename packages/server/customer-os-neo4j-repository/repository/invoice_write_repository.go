@@ -72,7 +72,6 @@ type InvoiceWriteRepository interface {
 	InvoicePdfGenerated(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, repositoryFileId string) error
 	UpdateInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceUpdateFields) error
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
-	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetVoidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
@@ -444,32 +443,6 @@ func (r *invoiceWriteRepository) DeletePreviewCycleInitializedInvoices(ctx conte
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *invoiceWriteRepository) MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.MarkPaymentLinkRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
-
-	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
-							WHERE i:Invoice_%s
-							SET i.techPaymentLinkRequestedAt=$now`, tenant)
-	params := map[string]any{
-		"tenant":    tenant,
-		"invoiceId": invoiceId,
-		"now":       utils.Now(),
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
