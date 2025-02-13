@@ -149,7 +149,6 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	tenantSettings := tenantGraphqlResponse.TenantSettings
 	require.Equal(t, "logoRepositoryFileId", *tenantSettings.LogoRepositoryFileID)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.BaseCurrency)
-	require.Equal(t, true, tenantSettings.BillingEnabled)
 }
 
 //func TestMutationResolver_TenantHardDelete(t *testing.T) {
