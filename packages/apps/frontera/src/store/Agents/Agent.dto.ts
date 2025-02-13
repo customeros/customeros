@@ -160,6 +160,27 @@ export class Agent extends Entity<AgentDatum> {
     this.commit({ syncOnly: true });
   }
 
+  public toggleCapabilityStatus(capabilityType: CapabilityType) {
+    this.draft();
+
+    const foundIndex = this.value.capabilities.findIndex(
+      (c) => c.type === capabilityType,
+    );
+
+    if (foundIndex === -1) {
+      console.error(
+        'Agent.toggleCapabilityStatus: Capability not found. will not set',
+      );
+
+      return;
+    }
+
+    this.value.capabilities[foundIndex].active =
+      !this.value.capabilities[foundIndex].active;
+
+    this.commit({ syncOnly: true });
+  }
+
   public toPayload(): Omit<
     AgentDatum,
     'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'scope'
