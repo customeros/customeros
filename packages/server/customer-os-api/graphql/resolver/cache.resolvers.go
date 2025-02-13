@@ -33,27 +33,22 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	userId := common.GetUserIdFromContext(ctx)
 	userEmail := common.GetUserEmailFromContext(ctx)
 
-	user, err := r.Services.CommonServices.UserService.GetById(ctx, userId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed GlobalCache - find user by id")
-		return nil, nil
-	}
-	response.User = mapper.MapEntityToUser(user)
-
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "failed GlobalCache - find user by id")
 		return nil, nil
 	}
+	response.User = mapper.MapEntityToUser(userEntity)
 
-	for _, role := range userEntity.Roles {
-		if role == "OWNER" {
-			response.IsOwner = true
-		}
-		if role == "PLATFORM_OWNER" || role == "IMPERSONATED" {
-			response.IsPlatformOwner = true
+	if userEntity.Roles != nil {
+		for _, role := range userEntity.Roles {
+			if role == "OWNER" {
+				response.IsOwner = true
+			}
+			if role == "PLATFORM_OWNER" || role == "IMPERSONATED" {
+				response.IsPlatformOwner = true
+			}
 		}
 	}
 
@@ -146,7 +141,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	}
 
 	// set is first login (if user first and last login are same)
-	if user.FirstLogin != nil && user.LastLogin != nil && user.FirstLogin.Equal(*user.LastLogin) {
+	if userEntity.FirstLogin != nil && userEntity.LastLogin != nil && userEntity.FirstLogin.Equal(*userEntity.LastLogin) {
 		response.IsFirstLogin = true
 	} else {
 		response.IsFirstLogin = false
