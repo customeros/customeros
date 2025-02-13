@@ -87,6 +87,7 @@ func (c *DetectSupportWebVisitCapability) NewConfig() DetectSupportWebVisitConfi
 
 func (c *DetectSupportWebVisitCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.SupportUrls.Value = []string{}
 	config.SupportUrlPatterns.Value = []string{"**support**"}
 	return &config
 }
