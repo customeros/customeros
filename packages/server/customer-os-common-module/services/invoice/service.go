@@ -7,11 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -2925,5 +2927,142 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 		return fmt.Errorf("request failed with status code: %s", resp.Status)
 	}
 
+	return nil
+}
+
+func (s *invoiceService) GenerateNewPaymentLink(ctx context.Context, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GenerateNewPaymentLink")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, invoiceId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	if s.cfg.IntegrationAppConfig.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl == "" {
+		err := errors.New("GeneratePaymentLinkUrl is not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// load invoice
+	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// check if invoice can be auto-paid
+	if invoiceEntity.DryRun {
+		span.LogFields(log.String("result", "skipped payment link generation, invoice is dry run"))
+		return nil
+	} else if invoiceEntity.TotalAmount == 0 {
+		span.LogFields(log.String("result", "skipped payment link generation, invoice total amount is 0"))
+		return nil
+	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
+		span.LogFields(log.String("result", "skipped payment link generation, invoice is not due or overdue"))
+		return nil
+	}
+
+	// get organization linked to invoice
+	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting organization for invoice %s: %s", invoiceEntity.Id, err.Error())
+		return err
+	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	primaryStripeCustomerId, err := s.externalSystemService.GetPrimaryExternalId(ctx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
+	}
+
+	err = callIntegrationAppWithApiRequestForNewPaymentLink(ctx, s.cfg.IntegrationAppConfig.WorkspaceKey,
+		s.cfg.IntegrationAppConfig.WorkspaceSecret, tenant,
+		s.cfg.IntegrationAppConfig.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoiceEntity)
+
+	return nil
+}
+
+type ApiRequestCreatePaymentLinks struct {
+	Input ApiRequestCreatePaymentLinksInput `json:"input"`
+}
+
+type ApiRequestCreatePaymentLinksInput struct {
+	InvoiceId                    string `json:"invoiceId"`
+	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
+	Currency                     string `json:"currency"`
+	InvoiceDescription           string `json:"invoiceDescription"`
+	CustomerEmail                string `json:"customerEmail"`
+	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
+}
+
+func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key, secret, tenant, url, primaryStripeCustomerId string, invoice *neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "callIntegrationAppWithApiRequestForNewPaymentLink")
+	defer span.Finish()
+	span.LogKV("url", url)
+	span.LogKV("primaryStripeCustomerId", primaryStripeCustomerId)
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	SigningKey := []byte(secret)
+
+	claims := jwt.MapClaims{
+		"id":   tenant,
+		"name": tenant,
+		// To prevent token from being used for too long
+		"exp": time.Now().Add(time.Hour * 1).Unix(),
+		"iss": key,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(SigningKey)
+	if err != nil {
+		return errors.Wrap(err, "Error signing JWT token")
+	}
+
+	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error converting amount to smallest currency unit"))
+		return err
+	}
+
+	input := ApiRequestCreatePaymentLinks{
+		Input: ApiRequestCreatePaymentLinksInput{
+			InvoiceId:                    invoice.Id,
+			AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
+			Currency:                     invoice.Currency.String(),
+			InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
+			CustomerEmail:                invoice.Customer.Email,
+			PrimaryStripeCustomerId:      primaryStripeCustomerId,
+		},
+	}
+	payload, err := json.Marshal(input)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error marshalling input"))
+		return err
+	}
+	req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating HTTP request"))
+		return err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+tokenString)
+	req.Header.Add("Content-Type", "application/json")
+
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
+		return err
+	}
 	return nil
 }

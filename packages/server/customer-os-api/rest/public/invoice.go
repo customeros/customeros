@@ -72,16 +72,6 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 			tracing.TraceErr(span, errors.Wrap(err, "Error saving clientIP"))
 		}
 
-		// get organization linked to invoice
-		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(innerCtx, tenant, invoice.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-		organizationEntity := neo4jentity.OrganizationEntity{}
-		if organizationDbNode != nil {
-			organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-		}
-
 		// Check invoice status
 		switch invoice.Status {
 		case neo4jenum.InvoiceStatusPaid:
@@ -110,18 +100,9 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 		span.LogFields(log.Bool("generateNewLink", generateNewLink))
 
 		if generateNewLink {
-			paymentLink = ""
-
-			primaryStripeCustomerId, err := services.CommonServices.ExternalSystemService.GetPrimaryExternalId(innerCtx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
+			err = services.CommonServices.InvoiceService.GenerateNewPaymentLink(innerCtx, invoice.Id)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
-			}
-
-			err = callIntegrationAppWithApiRequestForNewPaymentLink(innerCtx, services.Cfg.Common.External.IntegrationAppConfig.WorkspaceKey,
-				services.Cfg.Common.External.IntegrationAppConfig.WorkspaceSecret, tenant,
-				services.Cfg.Common.External.IntegrationAppConfig.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
+				tracing.TraceErr(span, errors.Wrap(err, "error generating payment link"))
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})
 				return
 			}
@@ -242,80 +223,6 @@ func saveClientIP(ctx context.Context, s *cosapi_services.Services, clientIP, in
 	if createErr != nil {
 		tracing.TraceErr(span, createErr)
 		return createErr
-	}
-	return nil
-}
-
-type ApiRequestCreatePaymentLinks struct {
-	Input ApiRequestCreatePaymentLinksInput `json:"input"`
-}
-
-type ApiRequestCreatePaymentLinksInput struct {
-	InvoiceId                    string `json:"invoiceId"`
-	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
-	Currency                     string `json:"currency"`
-	InvoiceDescription           string `json:"invoiceDescription"`
-	CustomerEmail                string `json:"customerEmail"`
-	PrimaryStripeCustomerId      string `json:"stripeCustomerId"`
-}
-
-func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key, secret, tenant, url, primaryStripeCustomerId string, invoice *neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "callIntegrationAppWithApiRequestForNewPaymentLink")
-	defer span.Finish()
-	span.LogKV("url", url)
-	span.LogKV("primaryStripeCustomerId", primaryStripeCustomerId)
-	span.SetTag(tracing.SpanTagTenant, tenant)
-
-	SigningKey := []byte(secret)
-
-	claims := jwt.MapClaims{
-		"id":   tenant,
-		"name": tenant,
-		// To prevent token from being used for too long
-		"exp": time.Now().Add(time.Hour * 1).Unix(),
-		"iss": key,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(SigningKey)
-	if err != nil {
-		return errors.Wrap(err, "Error signing JWT token")
-	}
-
-	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error converting amount to smallest currency unit"))
-		return err
-	}
-
-	input := ApiRequestCreatePaymentLinks{
-		Input: ApiRequestCreatePaymentLinksInput{
-			InvoiceId:                    invoice.Id,
-			AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
-			Currency:                     invoice.Currency.String(),
-			InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
-			CustomerEmail:                invoice.Customer.Email,
-			PrimaryStripeCustomerId:      primaryStripeCustomerId,
-		},
-	}
-	payload, err := json.Marshal(input)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error marshalling input"))
-		return err
-	}
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating HTTP request"))
-		return err
-	}
-
-	req.Header.Add("Authorization", "Bearer "+tokenString)
-	req.Header.Add("Content-Type", "application/json")
-
-	_, err = http.DefaultClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
-		return err
 	}
 	return nil
 }

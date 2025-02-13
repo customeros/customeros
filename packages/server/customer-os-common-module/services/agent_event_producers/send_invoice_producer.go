@@ -58,7 +58,7 @@ func (p *SendInvoiceProducer) Execute() {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
-	minutesFromLastAttempt := 120
+	minutesFromLastAttempt := 360
 	minutesFromCreation := 90
 	lookBackWindowDays := 5
 

@@ -23,7 +23,6 @@ type InvoiceReadRepository interface {
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromCreate, minutesFromLastAttempt, lookbackWindow, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForRemindNotifications(ctx context.Context, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
-	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetLastIssuedOnCycleInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetLastIssuedInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
@@ -379,55 +378,6 @@ func (r *invoiceReadRepository) CountNonDryRunInvoicesForContract(ctx context.Co
 	}
 	span.LogFields(log.Int64("result.count", count.(int64)))
 	return int(count.(int64)), nil
-}
-
-func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForPaymentLinkRequest")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Int("lookbackWindow", lookbackWindow), log.Object("referenceTime", referenceTime))
-
-	cypher := `MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
-			WHERE 
-				i.dryRun = false AND
-				i.status IN $acceptedStatuses AND
-				i.techPaymentLinkRequestedAt IS NULL AND
-				i.techInvoiceFinalizedWebhookProcessedAt IS NOT NULL AND
-				c.payOnline = true AND
-				i.createdAt+duration({days: $lookbackWindow}) > $now AND
-				(i.updatedAt + duration({minutes: $delay}) < $referenceTime OR i.techInvoiceFinalizedSentAt + duration({minutes: $delay}) < $referenceTime)
-			RETURN distinct(i), t.name limit $limit`
-	params := map[string]any{
-		"delay":          minutesFromLastUpdate,
-		"lookbackWindow": lookbackWindow,
-		"referenceTime":  referenceTime,
-		"now":            utils.Now(),
-		"limit":          limit,
-		"acceptedStatuses": []string{
-			neo4jenum.InvoiceStatusDue.String(),
-			neo4jenum.InvoiceStatusOverdue.String(),
-		},
-	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
-
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
-	return result.([]*utils.DbNodeAndTenant), err
 }
 
 func (r *invoiceReadRepository) GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
