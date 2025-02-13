@@ -148,7 +148,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 			InvoiceFinalizedWebhookProcessedAt:   utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyFinalizedWebhookProcessedAt)),
 			InvoicePaidWebhookProcessedAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPaidWebhookProcessedAt)),
 			PaymentLinkRequestedAt:               utils.GetTimePropOrNil(props, "techPaymentLinkRequestedAt"),
-			PayInvoiceNotificationRequestedAt:    utils.GetTimePropOrNil(props, "techPayNotificationRequestedAt"),
+			PayInvoiceNotificationRequestedAt:    utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPayNotificationRequestedAt)),
 			PayInvoiceNotificationSentAt:         utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
 			RemindInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyRemindInvoiceNotificationRequestedAt)),
 			LastRemindInvoiceNotificationSentAt:  utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyLastRemindInvoiceNotificationSentAt)),

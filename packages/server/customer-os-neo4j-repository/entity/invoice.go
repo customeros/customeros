@@ -17,6 +17,7 @@ const (
 	InvoicePropertyLastRemindInvoiceNotificationSentAt  InvoiceProperty = "lastRemindInvoiceNotificationSentAt"
 	InvoicePropertyRemindInvoiceNotificationRequestedAt InvoiceProperty = "techRemindInvoiceNotificationRequestedAt"
 	InvoicePropertyQuickbooksInvoiceId                  InvoiceProperty = "quickbooksInvoiceId"
+	InvoicePropertyPayNotificationRequestedAt           InvoiceProperty = "techPayNotificationRequestedAt"
 )
 
 type InvoiceEntity struct {

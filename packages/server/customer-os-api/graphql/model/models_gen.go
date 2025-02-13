@@ -3231,6 +3231,7 @@ const (
 	AgentListenerEventWebVisitorNotIdentified        AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
 	AgentListenerEventStartInvoiceRun                AgentListenerEvent = "START_INVOICE_RUN"
 	AgentListenerEventStartInvoiceRunWithAutopayment AgentListenerEvent = "START_INVOICE_RUN_WITH_AUTOPAYMENT"
+	AgentListenerEventSendInvoice                    AgentListenerEvent = "SEND_INVOICE"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
@@ -3249,11 +3250,12 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventWebVisitorNotIdentified,
 	AgentListenerEventStartInvoiceRun,
 	AgentListenerEventStartInvoiceRunWithAutopayment,
+	AgentListenerEventSendInvoice,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment:
+	case AgentListenerEventCompanyIdentified, AgentListenerEventCompanyNeedsHelp, AgentListenerEventContactAddedToCampaign, AgentListenerEventEmailBounced, AgentListenerEventEmailReplyReceived, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventNewLead, AgentListenerEventNewMeetingRecording, AgentListenerEventNewWebSession, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventStartInvoiceRun, AgentListenerEventStartInvoiceRunWithAutopayment, AgentListenerEventSendInvoice:
 		return true
 	}
 	return false

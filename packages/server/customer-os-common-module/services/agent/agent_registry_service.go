@@ -2,7 +2,7 @@ package agent
 
 import (
 	"context"
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/BurntSushi/toml"
 	"github.com/aws/aws-sdk-go/aws"
@@ -114,8 +114,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 	agentType, err := enum.GetAgentType(agentConfig.Agent.Type)
 	if err != nil {
 		span.LogKV("agentType", agentConfig.Agent.Type)
-		err := errors.New("Not a valid agent type")
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Not a valid agent type"))
 		return err
 	}
 

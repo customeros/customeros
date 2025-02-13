@@ -35,7 +35,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications(t *testing.T) {
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -73,7 +73,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_InvoiceIsDryRun(t 
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -111,7 +111,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsDraft(t *t
 		Status: enum.InvoiceStatusInitialized,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -149,7 +149,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsPaid(t *te
 		Status: enum.InvoiceStatusPaid,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -183,7 +183,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_MissingCustomerEma
 		Status:    enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -222,7 +222,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_RecentlyUpdated(t 
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 1, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -262,7 +262,7 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_LookBackWindowExce
 		Status: enum.InvoiceStatusDue,
 	})
 
-	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, lookBackWindowDays, referenceDate)
+	result, err := repositories.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, 60, 60, lookBackWindowDays, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)

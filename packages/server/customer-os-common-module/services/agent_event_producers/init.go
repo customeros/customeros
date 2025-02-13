@@ -7,6 +7,7 @@ type AgentProducers struct {
 	NewSupportVisitProducer *NewSupportVisitProducer
 	NewWebSessionProducer   *NewWebSessionProducer
 	InvoiceProducer         *InvoiceProducer
+	SendInvoiceProducer     *SendInvoiceProducer
 }
 
 func InitAgentProducers(services *service.CommonServices) *AgentProducers {
@@ -26,6 +27,12 @@ func InitAgentProducers(services *service.CommonServices) *AgentProducers {
 			services.PostgresRepositories,
 		),
 		InvoiceProducer: NewInvoiceProducer(
+			services.PostgresRepositories,
+			services.Neo4jRepositories,
+			services.Events,
+			services.Logger,
+		),
+		SendInvoiceProducer: NewSendInvoiceProducer(
 			services.PostgresRepositories,
 			services.Neo4jRepositories,
 			services.Events,

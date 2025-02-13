@@ -2,11 +2,10 @@ package agent_listeners
 
 import (
 	"context"
-
+	"errors"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -18,7 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type StartInvoiceRun struct {
+type SendInvoiceListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
@@ -26,46 +25,47 @@ type StartInvoiceRun struct {
 
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*StartInvoiceRun)(nil)
-	_ interfaces.EventListener        = (*StartInvoiceRun)(nil)
+	_ interfaces.AgentListenerUntyped = (*SendInvoiceListener)(nil)
+	_ interfaces.EventListener        = (*SendInvoiceListener)(nil)
 )
 
-func NewStartInvoiceRun(
+func NewSendInvoiceListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
 	agentRunnerService interfaces.AgentRunnerService,
-) *StartInvoiceRun {
-	return &StartInvoiceRun{
+) *SendInvoiceListener {
+	return &SendInvoiceListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.InvoiceContract](), // subscribed event
-			events.QueueAgents,                         // listening on Agents queue
+			events.GetEventType[dto.SendInvoice](), // subscribed event
+			events.QueueAgents,                     // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
 	}
 }
 
-func (l *StartInvoiceRun) Type() enum.AgentListenerEvent {
-	return enum.EventStartInvoiceRun
+func (l *SendInvoiceListener) Type() enum.AgentListenerEvent {
+	return enum.EventSendInvoice
 }
 
-func (l *StartInvoiceRun) Name() string {
-	return "Start invoice run"
+func (l *SendInvoiceListener) Name() string {
+	return "Send invoice"
 }
 
-func (l *StartInvoiceRun) DefaultConfig() any {
+func (l *SendInvoiceListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *StartInvoiceRun) ExecutingAgents() []enum.AgentType {
+func (l *SendInvoiceListener) ExecutingAgents() []enum.AgentType {
+	// add execution agents
 	return []enum.AgentType{
 		enum.AgentCashflowGuardian,
 	}
 }
 
-func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.Handle")
+func (l *SendInvoiceListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -76,14 +76,14 @@ func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.InvoiceContract](ctx, event)
+	data, err := events.DecodeEventData[dto.SendInvoice](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if data.ContractId == "" {
-		err := errors.New("missing contract id")
+	if data.InvoiceId == "" {
+		err := errors.New("missing invoice id")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -91,13 +91,17 @@ func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
 	return l.handleExecution(ctx, data)
 }
 
-func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceContract) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.handleExecution")
+func (l *SendInvoiceListener) handleExecution(ctx context.Context, data dto.SendInvoice) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceListener.handleExecution")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	activeAgents := l.lookupActiveAgents(ctx)
-	if activeAgents == nil || len(activeAgents) == 0 {
+	activeAgents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	if len(activeAgents) == 0 {
 		return nil
 	}
 
@@ -117,17 +121,4 @@ func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceC
 	}
 
 	return errs
-}
-
-func (l *StartInvoiceRun) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.lookupActiveAgents")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil
-	}
-	return agents
 }

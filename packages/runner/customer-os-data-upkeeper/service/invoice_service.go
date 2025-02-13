@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"net/http"
 	"time"
 
@@ -46,7 +48,6 @@ type InvoiceService interface {
 
 	// TODO stopped invoicing
 	GenerateOffCycleInvoices()
-	SendPayNotifications()
 	GenerateInvoicePaymentLinks()
 }
 
@@ -88,8 +89,10 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	}
 	// collect tenants
 	var tenants []string
+	agentByTenant := map[string]postgres_entity.Agent{}
 	for _, agent := range agents {
 		tenants = append(tenants, agent.Tenant)
+		agentByTenant[agent.Tenant] = agent
 	}
 
 	for {
@@ -133,9 +136,32 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 				return
 			}
 
+			// get agent for tenant
 			dataFields := data_fields.InvoiceFields{
 				DryRun:  true,
 				Preview: true,
+			}
+			agent := agentByTenant[tenant]
+			capabilityConfig := agent_capability.GenerateInvoiceConfig{}
+			err = agent.GetCapabilityConfigByType(enum.CapabilityGenerateInvoice, &capabilityConfig)
+			if err != nil {
+				dataFields.TenantBillingProfile = &data_fields.TenantBillingProfile{
+					Country:                    capabilityConfig.Country.Value,
+					LegalName:                  capabilityConfig.LegalName.Value,
+					AddressLine1:               capabilityConfig.AddressLine1.Value,
+					AddressLine2:               capabilityConfig.AddressLine2.Value,
+					Zip:                        capabilityConfig.ZIP.Value,
+					Locality:                   capabilityConfig.Locality.Value,
+					Region:                     capabilityConfig.Region.Value,
+					IncludeBankTransferDetails: capabilityConfig.IncludeBankTransferDetails.Value,
+					BankName:                   capabilityConfig.BankName.Value,
+					AccountNumber:              capabilityConfig.AccountNumber.Value,
+					IBAN:                       capabilityConfig.IBAN.Value,
+					BIC:                        capabilityConfig.BIC.Value,
+					SortCode:                   capabilityConfig.SortCode.Value,
+					RoutingNumber:              capabilityConfig.RoutingNumber.Value,
+					OtherDetails:               capabilityConfig.OtherDetails.Value,
+				}
 			}
 			_, err = s.commonServices.InvoiceService.InvoiceContract(innerCtx, nil, contract.Id, dataFields)
 			if err != nil {
@@ -178,58 +204,6 @@ func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant strin
 	currency := tenantSettings.BaseCurrency
 	cachedTenantBaseCurrencies[tenant] = currency
 	return currency
-}
-
-func (s *invoiceService) SendPayNotifications() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendPayNotifications")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	referenceTime := utils.Now()
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPayNotifications(
-			ctx, s.cfg.App.ProcessConfig.DelaySendPayInvoiceNotificationInMinutes, s.cfg.App.ProcessConfig.RetrySendPayInvoiceNotificationDays, referenceTime)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for pay notifications: %v", err)
-			return
-		}
-
-		// no invoices found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			err = s.commonServices.InvoiceService.SendPayInvoiceNotification(innerCtx, invoice.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
-			}
-		}
-		// sleep for async processing, then check again
-		time.Sleep(5 * time.Second)
-	}
 }
 
 func (s *invoiceService) SendRemindNotifications() {
