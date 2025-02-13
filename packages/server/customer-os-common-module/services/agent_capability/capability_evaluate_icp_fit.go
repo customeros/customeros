@@ -113,7 +113,7 @@ func (c *EvaluateICPFitCapability) ValidateInput(input EvaluateICPFitInput) erro
 		return errors.New("missing required input: PrimaryDomain")
 	case input.CompanyName == "":
 		return errors.New("missing required input: CompanyName")
-	case input.CompanyDescriptions.Description1 == "" && input.CompanyDescriptions.Description2 == "":
+	case input.CompanyDescriptions.Description == "":
 		return errors.New("missing required input: CompanyDescription")
 	case input.IndustryNAICSName == "":
 		return errors.New("missing required input: IndustryNAICSName")
@@ -228,7 +228,7 @@ Important:
         `, executionContainer.ConfigData.QualificationCriteria.Value, executionContainer.ConfigData.DisqualificationCriteria.Value,
 		company.CompanyName, company.PrimaryDomain, company.YearCompanyFounded, company.EmployeeCount,
 		company.CompanyCity, company.CompanyRegion, company.CompanyCountryA2,
-		company.IndustryNAICSName, company.CompanyDescriptions.Description1, additionalCompanyDescriptions)
+		company.IndustryNAICSName, company.CompanyDescriptions.Description, additionalCompanyDescriptions)
 
 	return systemPrompt, content
 }

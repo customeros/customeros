@@ -156,7 +156,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
 
 	for _, capabilityTypeStr := range *&play.Capabilities {
-		err := a.executeCapability(ctx, capabilityParams{
+		err = a.executeCapability(ctx, capabilityParams{
 			executionID:       params.executionID,
 			capabilityTypeStr: capabilityTypeStr,
 			agent:             params.agent,
@@ -200,22 +200,12 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, params capab
 		return nil
 	}
 
-	status, output, err := a.executeCapabilityContainer(ctx, params, *capability)
-	if err := a.handleExecutionResult(ctx, params.executionID, status, output, err); err != nil {
+	status, output, execErr := a.executeCapabilityContainer(ctx, params, *capability)
+	if err = a.handleExecutionResult(ctx, params, status, output, execErr); err != nil {
 		return err
 	}
 
-	// Store checkpoint if execution was successful
 	if status == enum.CapabilityExecutionCompleted {
-		checkpointData := map[string]any{
-			"status":       status.String(),
-			"output":       output,
-			"completed_at": time.Now().UTC(),
-		}
-		if err := a.postgresRepositories.AgentExecutionRepository.CompleteStep(ctx, params.executionID, params.capabilityTypeStr, checkpointData); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
 		utils.MergeMapToMap(output, params.allParams)
 	}
 
@@ -275,27 +265,43 @@ func (a *agentRunnerService) executeCapabilityContainer(ctx context.Context, par
 	return a.capabilityExecutionService.Execute(ctx, executionContainer)
 }
 
-func (a *agentRunnerService) handleExecutionResult(ctx context.Context, executionID string, status enum.CapabilityExecutionStatus, output map[string]any, execErr error) error {
+func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params capabilityParams, status enum.CapabilityExecutionStatus, output map[string]any, execErr error) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.handleExecutionResult")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	switch status {
 	case enum.CapabilityExecutionError:
-		tracing.TraceErr(span, execErr)
+		if execErr == nil {
+			return nil
+		}
+		if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErr.Error()); err != nil {
+			return errors.Wrap(err, "unable to update agent execution record")
+		}
+		return execErr
+
+	case enum.CapabilityExecutionRetry:
 		// Try to schedule a retry first
-		retryErr := a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, execErr)
+		retryErr := a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, params.executionID, execErr)
 		if retryErr != nil {
+			tracing.TraceErr(span, retryErr)
 			// If retry scheduling fails, mark as failed
-			if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, executionID, execErr.Error()); err != nil {
+			if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErr.Error()); err != nil {
 				return errors.Wrap(err, "unable to update agent execution record")
 			}
-			return execErr
 		}
-		return nil // Successfully scheduled retry
+		return execErr
 
 	case enum.CapabilityExecutionCompleted:
-		return nil
+		checkpointData := map[string]any{
+			"status":       status.String(),
+			"output":       output,
+			"completed_at": time.Now().UTC(),
+		}
+		if err := a.postgresRepositories.AgentExecutionRepository.CompleteStep(ctx, params.executionID, params.capabilityTypeStr, checkpointData); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 
 	case enum.CapabilityExecutionPending:
 		// Save current step and state for async resume
@@ -304,13 +310,15 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, executio
 			"step":   currentStep,
 			"params": output,
 		}
-		return a.postgresRepositories.AgentExecutionRepository.SaveAsyncState(ctx, executionID, currentStep, stateData)
+		return a.postgresRepositories.AgentExecutionRepository.SaveAsyncState(ctx, params.executionID, currentStep, stateData)
 
 	default:
 		err := errors.New("unexpected capability execution status")
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	return nil
 }
 
 func (a *agentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventName, traceId string) (string, error) {
