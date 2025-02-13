@@ -53,7 +53,7 @@ func (l *EmailBouncedListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *EmailBouncedListener) Name() string {
-	return "EmailBounced"
+	return "Emails that bounced"
 }
 
 func (l *EmailBouncedListener) DefaultConfig() any {

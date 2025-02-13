@@ -47,7 +47,7 @@ func (l *WebVisitorNotIdentifiedListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *WebVisitorNotIdentifiedListener) Name() string {
-	return "Web Visitor Not Identified"
+	return "Web visitor not identified"
 }
 
 func (l *WebVisitorNotIdentifiedListener) DefaultConfig() any {

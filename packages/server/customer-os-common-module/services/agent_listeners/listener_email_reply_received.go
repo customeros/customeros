@@ -53,7 +53,7 @@ func (l *EmailReplyReceivedListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *EmailReplyReceivedListener) Name() string {
-	return "EmailReplyReceived"
+	return "Replies to emails"
 }
 
 func (l *EmailReplyReceivedListener) DefaultConfig() any {
