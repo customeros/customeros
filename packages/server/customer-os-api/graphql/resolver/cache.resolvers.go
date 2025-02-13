@@ -41,7 +41,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	}
 	response.User = mapper.MapEntityToUser(userEntity)
 
-	if userEntity.Roles != nil {
+	if len(userEntity.Roles) > 0 {
 		for _, role := range userEntity.Roles {
 			if role == "OWNER" {
 				response.IsOwner = true
