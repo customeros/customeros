@@ -24,6 +24,7 @@ type NewMeetingRecordingListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
+	webhookService       interfaces.WebhookService
 }
 
 // Compile-time interface check for AgentListenerUntyped
@@ -49,7 +50,8 @@ func NewNewMeetingRecordingListener(
 }
 
 type NewMeetingRecordingListenerConfig struct {
-	MeetingSource MeetingSourceConfig `json:"meetingSource"`
+	MeetingSource           MeetingSourceConfig `json:"meetingSource"`
+	MeetingSourceWebhookUrl ConfigSingleValue   `json:"meetingSourceWebhookUrl"`
 }
 
 type MeetingSourceConfig struct {
