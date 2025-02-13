@@ -9,6 +9,7 @@ import {
 } from '@domain/usecases/agents/capabilities/add-slack-channel.usecase';
 
 import { Icon } from '@ui/media/Icon';
+import { Switch } from '@ui/form/Switch';
 import { Combobox } from '@ui/form/Combobox';
 import { Slack } from '@ui/media/logos/Slack';
 import { Button } from '@ui/form/Button/Button';
@@ -23,10 +24,17 @@ export const SendSlackNotificationCapability = observer(() => {
   if (!usecase.isSlackEnabled) {
     return (
       <div>
-        <h2 className='text-sm font-medium mb-4'>
-          Send Slack notification{` `}
-          <span className='text-grayModern-500'>(optional)</span>
-        </h2>
+        <div className='flex items-center justify-between mb-4'>
+          <h2 className='text-sm font-medium '>
+            Send Slack notification{` `}
+            <span className='text-grayModern-500'>(optional)</span>
+          </h2>
+          <Switch
+            size='sm'
+            checked={usecase.slackNotificationActive}
+            onChange={usecase.toggleSendSlackNotificationActive}
+          />
+        </div>
 
         {usecase.capabilityErrors && (
           <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] mb-4'>
@@ -57,11 +65,17 @@ export const SendSlackNotificationCapability = observer(() => {
 
   return (
     <div>
-      <h2 className='text-sm font-medium mb-4'>
-        Send Slack notification{` `}
-        <span className='text-grayModern-500'>(optional)</span>
-      </h2>
-
+      <div className='flex items-center justify-between mb-4'>
+        <h2 className='text-sm font-medium '>
+          Send Slack notification{` `}
+          <span className='text-grayModern-500'>(optional)</span>
+        </h2>
+        <Switch
+          size='sm'
+          checked={usecase.slackNotificationActive}
+          onChange={usecase.toggleSendSlackNotificationActive}
+        />
+      </div>
       <div className='flex flex-col gap-4 w-full'>
         <div>
           <p className='text-sm font-medium'>Slack notifications</p>
@@ -72,7 +86,7 @@ export const SendSlackNotificationCapability = observer(() => {
         </div>
 
         <div className='w-full flex-1'>
-          <Popover open={usecase.isOpen} onOpenChange={usecase.toggle}>
+          <Popover open={usecase.isOpen} onOpenChange={usecase.togglePopover}>
             <PopoverTrigger className={'flex items-center w-full'}>
               <div className='flex w-full items-center bg-white border border-grayModern-200 px-2 py-1 rounded-md'>
                 <Slack className='mr-3 text-gray-500' />

@@ -28,12 +28,14 @@ export class AddSlackChannelUsecase {
   @observable accessor slackChannelError = '';
 
   constructor(private agentId: string) {
-    this.toggle = this.toggle.bind(this);
+    this.togglePopover = this.togglePopover.bind(this);
     this.close = this.close.bind(this);
     this.selectChannel = this.selectChannel.bind(this);
     this.setInputValue = this.setInputValue.bind(this);
     this.enableSlack = this.enableSlack.bind(this);
     this.disableSlack = this.disableSlack.bind(this);
+    this.toggleSendSlackNotificationActive =
+      this.toggleSendSlackNotificationActive.bind(this);
     this.execute = this.execute.bind(this);
 
     this.init();
@@ -68,6 +70,15 @@ export class AddSlackChannelUsecase {
   }
 
   @computed
+  get slackNotificationActive() {
+    return this.root.agents
+      .getById(this.agentId)
+      ?.value.capabilities?.find(
+        (c) => c.type === CapabilityType.WebVisitorSendSlackNotification,
+      )?.active;
+  }
+
+  @computed
   get capabilityErrors() {
     return this.root.agents
       .getById(this.agentId)
@@ -77,7 +88,7 @@ export class AddSlackChannelUsecase {
   }
 
   @action
-  toggle(open: boolean) {
+  togglePopover(open: boolean) {
     this.isOpen = open;
   }
 
@@ -198,6 +209,45 @@ export class AddSlackChannelUsecase {
 
   disableSlack() {
     this.root.settings.slack.disableSync();
+  }
+
+  async toggleSendSlackNotificationActive() {
+    const span = Tracer.span(
+      'AddSlackChannelUsecase.toggleSendSlackNotificationActive',
+    );
+
+    const agent = this.root.agents.getById(this.agentId);
+
+    if (!agent) {
+      console.error(
+        'AddSlackChannelUsecase.toggleSendSlackNotificationActive: Agent not found',
+      );
+
+      return;
+    }
+
+    agent?.toggleCapabilityStatus(
+      CapabilityType.WebVisitorSendSlackNotification,
+    );
+
+    const [res, err] = await this.agentService.saveAgent(agent);
+
+    if (err) {
+      agent?.toggleCapabilityStatus(
+        CapabilityType.WebVisitorSendSlackNotification,
+      );
+
+      console.error(
+        'AddSlackChannelUsecase.toggleSendSlackNotificationActive: Error saving agent. aborting execution',
+      );
+    }
+
+    if (res) {
+      agent.put(res?.agent_Save);
+      this.init();
+    }
+
+    span.end();
   }
 
   async execute() {
