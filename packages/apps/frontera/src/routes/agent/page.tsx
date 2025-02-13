@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useKeys } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 
@@ -8,6 +9,7 @@ import { cn } from '@ui/utils/cn';
 import { AgentScope } from '@graphql/types';
 import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 
 import { goals, Header, configs } from './components';
@@ -55,6 +57,24 @@ export const AgentPage = observer(() => {
       store.ui.commandMenu.setType('AgentCommands');
     }
   }, [id]);
+
+  useKeys(['Shift', 'S'], (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    usecase.toggleActive();
+  });
+
+  useKeys(['Shift', 'R'], (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    store.ui.commandMenu.setType('RenameAgent');
+    store.ui.commandMenu.setOpen(true);
+  });
+
+  useModKey('Backspace', () => {
+    store.ui.commandMenu.setType('ArchiveAgent');
+    store.ui.commandMenu.setOpen(true);
+  });
 
   if (!id) {
     throw new Error('No id provided');
