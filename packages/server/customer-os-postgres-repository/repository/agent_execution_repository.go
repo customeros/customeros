@@ -65,6 +65,8 @@ func (f *agentExecutionRepository) Completed(ctx context.Context, executionID st
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Completed")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, executionID)
 	span.LogFields(log.String("executionID", executionID))
 	span.LogFields(log.Bool("goalAchieved", goalAchieved))
 
@@ -197,6 +199,8 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("executionID", executionID))
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, executionID)
 
 	var agentExecution postgres_entity.AgentExecution
 	err := f.gormDb.

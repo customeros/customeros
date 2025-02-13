@@ -164,7 +164,7 @@ func (j *JSONConfig) Scan(value any) error {
 		return fmt.Errorf("expected []byte for JSONConfig, got %T", value)
 	}
 
-	*j = JSONConfig(bytes)
+	*j = bytes
 	return nil
 }
 
