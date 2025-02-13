@@ -64,7 +64,7 @@ type TEMPLATEOutput struct {
 	// TODO add output here
 }
 
-func (c *TEMPLATECapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[TEMPLATEInput, postgres_entity.NoConfig]) (bool, TEMPLATEOutput, error) {
+func (c *TEMPLATECapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[TEMPLATEInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, TEMPLATEOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATECapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -86,5 +86,5 @@ func (c *TEMPLATECapability) Execute(ctx context.Context, executionContainer int
 	// TODO implement execution here
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

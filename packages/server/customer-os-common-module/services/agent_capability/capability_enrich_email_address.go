@@ -14,7 +14,9 @@ import (
 
 type EnrichEmailAddressCapability struct{}
 
-type EnrichEmailAddressInput struct{}
+type EnrichEmailAddressInput struct {
+	EmailAddress string `json:"emailAddress"`
+}
 
 type EnrichEmailAddressConfig struct{}
 
@@ -58,7 +60,7 @@ func (c *EnrichEmailAddressCapability) ValidateInput(input EnrichEmailAddressInp
 	return nil
 }
 
-func (c *EnrichEmailAddressCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EnrichEmailAddressInput, EnrichEmailAddressConfig]) (bool, EnrichEmailAddressOutput, error) {
+func (c *EnrichEmailAddressCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EnrichEmailAddressInput, EnrichEmailAddressConfig]) (enum.CapabilityExecutionStatus, EnrichEmailAddressOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichEmailAddressCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -68,13 +70,13 @@ func (c *EnrichEmailAddressCapability) Execute(ctx context.Context, executionCon
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

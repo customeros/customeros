@@ -92,7 +92,7 @@ type AddMeetingNotesToCompanyOutput struct {
 	OrganizationIDs []string `json:"organizationIds"`
 }
 
-func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AddMeetingNotesToCompanyInput, postgres_entity.NoConfig]) (bool, AddMeetingNotesToCompanyOutput, error) {
+func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AddMeetingNotesToCompanyInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, AddMeetingNotesToCompanyOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -104,11 +104,11 @@ func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, execut
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	timelineEvent := c.createMarkdownTimelineEvent(ctx, executionContainer.InputData)
@@ -125,7 +125,7 @@ func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, execut
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx context.Context, email, timelineEvent string, input AddMeetingNotesToCompanyInput, created []string) ([]string, error) {

@@ -105,7 +105,7 @@ func (c *GenerateInvoiceCapability) ValidateInput(input GenerateInvoiceInput) er
 	return nil
 }
 
-func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GenerateInvoiceInput, GenerateInvoiceConfig]) (bool, GenerateInvoiceOutput, error) {
+func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GenerateInvoiceInput, GenerateInvoiceConfig]) (enum.CapabilityExecutionStatus, GenerateInvoiceOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GenerateInvoiceCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -116,11 +116,11 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	dataFields := data_fields.InvoiceFields{
@@ -147,7 +147,7 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, executionContainer.InputData.ContractId, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	// load invoice after generation
 	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, invoiceId)
@@ -160,5 +160,5 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

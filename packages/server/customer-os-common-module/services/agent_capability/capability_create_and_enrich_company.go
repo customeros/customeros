@@ -2,9 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -13,8 +10,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -26,7 +26,8 @@ type CreateOrganizationCapability struct {
 
 func NewCreateOrganizationCapability(
 	events *events.EventsService,
-	orgService interfaces.OrganizationService) *CreateOrganizationCapability {
+	orgService interfaces.OrganizationService,
+) *CreateOrganizationCapability {
 	return &CreateOrganizationCapability{
 		events:              events,
 		organizationService: orgService,
@@ -81,7 +82,7 @@ type CreateOrganizationOutput struct {
 	OrganizationID string `json:"organizationId"`
 }
 
-func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateOrganizationInput, postgres_entity.NoConfig]) (bool, CreateOrganizationOutput, error) {
+func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateOrganizationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateOrganizationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -93,11 +94,11 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// Check if the domain is already linked to an organization
@@ -107,11 +108,11 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	if organizationEntity != nil {
 		// if organization is hidden, return early
 		if organizationEntity.Hide {
-			return true, result, errors.New("Identified organization is archived")
+			return enum.CapabilityExecutionError, result, errors.New("Identified organization is archived")
 		}
 		result.OrganizationID = organizationEntity.ID
 		tracing.LogObjectAsJson(span, "result", result)
-		return true, result, nil
+		return enum.CapabilityExecutionError, result, nil
 	}
 
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
@@ -119,18 +120,18 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	err = c.publishCompanyIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	result.OrganizationID = orgID
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *CreateOrganizationCapability) publishCompanyIdentifiedEvent(ctx context.Context, agentExecutionID string) error {

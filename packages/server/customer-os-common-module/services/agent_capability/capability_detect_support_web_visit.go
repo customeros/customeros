@@ -105,7 +105,7 @@ func (c *DetectSupportWebVisitCapability) ValidateInput(input DetectSupportWebVi
 	return nil
 }
 
-func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[DetectSupportWebVisitInput, DetectSupportWebVisitConfig]) (bool, NoOutput, error) {
+func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[DetectSupportWebVisitInput, DetectSupportWebVisitConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DetectSupportWebVisitCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -115,11 +115,11 @@ func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, execution
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	for _, page := range executionContainer.InputData.UniquePageViews {
@@ -128,14 +128,14 @@ func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, execution
 			err := c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationId, model.ORGANIZATION, dto.CompanyNeedsHelp{})
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return true, result, err
+				return enum.CapabilityExecutionError, result, err
 			}
-			return true, result, nil
+			return enum.CapabilityExecutionError, result, nil
 		}
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *DetectSupportWebVisitCapability) isSupportVisit(page string, config DetectSupportWebVisitConfig) bool {

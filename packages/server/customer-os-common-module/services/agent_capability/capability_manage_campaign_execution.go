@@ -58,7 +58,7 @@ func (c *ManageCampaignExecutionCapability) ValidateInput(input ManageCampaignEx
 	return nil
 }
 
-func (c *ManageCampaignExecutionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ManageCampaignExecutionInput, ManageCampaignExecutionConfig]) (bool, ManageCampaignExecutionOutput, error) {
+func (c *ManageCampaignExecutionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ManageCampaignExecutionInput, ManageCampaignExecutionConfig]) (enum.CapabilityExecutionStatus, ManageCampaignExecutionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ManageCampaignExecutionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -68,13 +68,13 @@ func (c *ManageCampaignExecutionCapability) Execute(ctx context.Context, executi
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

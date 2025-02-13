@@ -2,9 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -13,8 +10,11 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -87,7 +87,7 @@ func (c *UpdateCompanyStatusCapability) ValidateInput(input UpdateCompanyStatusI
 	return nil
 }
 
-func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[UpdateCompanyStatusInput, postgres_entity.NoConfig]) (bool, NoOutput, error) {
+func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[UpdateCompanyStatusInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -96,37 +96,46 @@ func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionCo
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, NoOutput{}, err
+		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, NoOutput{}, err
+		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
 	var err error
 	switch {
 	case executionContainer.InputData.IcpFit == enum.IcpIsFit:
 		err = c.processICPFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionError, NoOutput{}, err
+		}
 
 	case executionContainer.InputData.IcpFit == enum.IcpNotFit:
 		err = c.processICPNotAFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionError, NoOutput{}, err
+		}
 
 	default:
 		err = errors.New("Not implemented yet")
 		tracing.TraceErr(span, err)
-		return false, NoOutput{}, err
+		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, NoOutput{}, err
+		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
 	publishErr := c.publishIcpFitEvent(ctx, executionContainer.InputData.IcpFit, executionContainer.AgentExecutionID)
 	if publishErr != nil {
 		tracing.TraceErr(span, publishErr)
+		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
-	return true, NoOutput{}, err
+	return enum.CapabilityExecutionCompleted, NoOutput{}, nil
 }
 
 func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organizationID string, reasons []string) error {

@@ -61,10 +61,9 @@ type ProcessAutopaymentInput struct {
 	InvoiceID string `json:"invoiceId"`
 }
 
-type ProcessAutopaymentOutput struct {
-}
+type ProcessAutopaymentOutput struct{}
 
-func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ProcessAutopaymentInput, postgres_entity.NoConfig]) (bool, ProcessAutopaymentOutput, error) {
+func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ProcessAutopaymentInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ProcessAutopaymentOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ProcessAutopaymentCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -76,19 +75,19 @@ func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionCon
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	err := c.invoiceService.AutopayInvoice(ctx, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

@@ -77,7 +77,7 @@ func (c *ApplyTagToCompanyCapability) ValidateInput(input ApplyTagToCompanyInput
 	return nil
 }
 
-func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagToCompanyInput, ApplyTagToCompanyConfig]) (bool, NoOutput, error) {
+func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagToCompanyInput, ApplyTagToCompanyConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -87,11 +87,11 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	var entityType model.EntityType
@@ -104,7 +104,7 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 	err := c.applyTag(ctx, entityType, entityID, executionContainer.ConfigData.TagName.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationID, model.ORGANIZATION, dto.CompanyNeedsHelp{
@@ -112,11 +112,11 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *ApplyTagToCompanyCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {

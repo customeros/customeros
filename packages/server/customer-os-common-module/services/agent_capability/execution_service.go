@@ -2,11 +2,12 @@ package agent_capability
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -22,7 +23,7 @@ func NewAgentCapabilityExecutionService() interfaces.AgentCapabilityExecutionSer
 
 func (f *agentCapabilityExecutionService) Execute(
 	ctx context.Context, executionContainer interfaces.ExecutionContainer,
-) (map[string]any, error) {
+) (enum.CapabilityExecutionStatus, map[string]any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.Execute")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -36,7 +37,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAddMeetingNotesToCompany)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAddMeetingNotesToCompany)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -46,7 +47,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAnalyzeWebSessionIntent)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAnalyzeWebSessionIntent)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -56,7 +57,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTagToCompany)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTagToCompany)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -66,7 +67,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichCompany)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichCompany)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -76,7 +77,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichContact)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichContact)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -86,7 +87,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateMarkdownTimelineEvent)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateMarkdownTimelineEvent)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -96,7 +97,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -106,7 +107,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractMeetingHighlights)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractMeetingHighlights)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -116,7 +117,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractSupportSignalsFromMeeting)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityExtractSupportSignalsFromMeeting)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -126,7 +127,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -136,7 +137,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -146,7 +147,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityProcessAutopayment)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityProcessAutopayment)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -156,7 +157,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyMeetingParticipants)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyMeetingParticipants)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -166,7 +167,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyWebVisitor)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyWebVisitor)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -176,7 +177,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendSlackNotification)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendSlackNotification)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -186,7 +187,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -196,7 +197,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -206,7 +207,7 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityValidateEmailAddressDeliverability)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityValidateEmailAddressDeliverability)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -214,7 +215,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		err := fmt.Errorf("capability not configured")
 		span.LogKV("capability", executionContainer.Capability.Type)
 		tracing.TraceErr(span, err)
-		return nil, err
+		return enum.CapabilityExecutionError, nil, err
 	}
 }
 
@@ -232,7 +233,7 @@ func executeCapability[I, O, C any](
 	ctx context.Context,
 	cap interfaces.AgentCapability[I, O, C],
 	executionContainer interfaces.ExecutionContainer,
-) (map[string]any, error) {
+) (enum.CapabilityExecutionStatus, map[string]any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("AgentCapabilityExecutionService.executeCapability.%s", executionContainer.Capability.Type.String()))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -241,14 +242,14 @@ func executeCapability[I, O, C any](
 	err := utils.MapToStruct(executionContainer.ExecutionParams, &input)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return enum.CapabilityExecutionError, nil, err
 	}
 
 	config := cap.NewConfig()
 	err = executionContainer.Capability.GetConfig(&config)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return enum.CapabilityExecutionError, nil, err
 	}
 
 	typedExecutionContainer := interfaces.TypedExecutionContainer[I, C]{
@@ -257,15 +258,24 @@ func executeCapability[I, O, C any](
 		ConfigData:       config,
 	}
 
-	ok, output, err := cap.Execute(ctx, typedExecutionContainer)
-	if !ok {
-		// todo -- what do we do when input validation does not pass?
-		// for when we implement retry logic
-	}
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	capabilityExecutionStatus, output, err := cap.Execute(ctx, typedExecutionContainer)
+	switch capabilityExecutionStatus {
+	case enum.CapabilityExecutionCompleted:
+		results, err := utils.StructToMap(output)
+		if err != nil {
+			return enum.CapabilityExecutionError, nil, err
+		}
+		return enum.CapabilityExecutionCompleted, results, nil
 
-	return utils.StructToMap(output)
+	case enum.CapabilityExecutionError:
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, nil, err
+
+	case enum.CapabilityExecutionPending:
+		// todo  -- need to implement poll until done
+		return enum.CapabilityExecutionPending, nil, nil
+
+	default:
+		return enum.CapabilityExecutionError, nil, errors.New("Unexpected capability execution status")
+	}
 }

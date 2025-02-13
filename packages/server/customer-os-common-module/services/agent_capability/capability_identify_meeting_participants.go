@@ -70,7 +70,7 @@ func (c *IdentifyMeetingParticipantsCapability) ValidateInput(input IdentifyMeet
 	return nil
 }
 
-func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyMeetingParticipantsInput, postgres_entity.NoConfig]) (bool, IdentifyMeetingParticipantsOutput, error) {
+func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyMeetingParticipantsInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, IdentifyMeetingParticipantsOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyMeetingParticipantsCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -80,18 +80,18 @@ func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, exe
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// check each email to determine if they belong to tenant or external participant
 	workspaceDomains, err := c.workspaceService.GetWorkspaceDomainsForTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	for _, email := range executionContainer.InputData.MeetingParticipantEmails {
@@ -103,5 +103,5 @@ func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, exe
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

@@ -102,7 +102,7 @@ type AnalyzeWebSessionOutput struct {
 	Referrer          string   `json:"referrer"`
 }
 
-func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AnalyzeWebSessionInput, postgres_entity.NoConfig]) (bool, AnalyzeWebSessionOutput, error) {
+func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AnalyzeWebSessionInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -114,11 +114,11 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// update session with organization id
@@ -126,7 +126,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 		err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return true, result, err
+			return enum.CapabilityExecutionError, result, err
 		}
 	}
 
@@ -134,14 +134,14 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	result, err := c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// determine if a new company visit
 	isNewCompany, err := c.isNewCompanyVisit(ctx, executionContainer.InputData.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
 
@@ -149,7 +149,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, executionContainer.InputData.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	result.IsNewPersonVisit = isNewVisitor
 
@@ -157,25 +157,25 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	timelineMessage, err := c.buildTimelineMessage(ctx, executionContainer.InputData.WebSessionID, result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// write event to timeline
 	err = c.writeSessionToTimeline(ctx, executionContainer.InputData.OrganizationID, timelineMessage)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	// publish ready for analysis event
 	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.WebSessionID, model.WEB_SESSION, dto.NewSupportVisit{})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return true, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {

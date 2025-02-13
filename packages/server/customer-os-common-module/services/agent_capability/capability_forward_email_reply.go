@@ -58,7 +58,7 @@ func (c *ForwardEmailReplyCapability) ValidateInput(input ForwardEmailReplyInput
 	return nil
 }
 
-func (c *ForwardEmailReplyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ForwardEmailReplyInput, ForwardEmailReplyConfig]) (bool, ForwardEmailReplyOutput, error) {
+func (c *ForwardEmailReplyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ForwardEmailReplyInput, ForwardEmailReplyConfig]) (enum.CapabilityExecutionStatus, ForwardEmailReplyOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ForwardEmailReplyCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -68,13 +68,13 @@ func (c *ForwardEmailReplyCapability) Execute(ctx context.Context, executionCont
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }

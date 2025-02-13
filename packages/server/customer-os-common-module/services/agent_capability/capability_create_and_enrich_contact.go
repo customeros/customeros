@@ -69,7 +69,7 @@ type CreateContactOutput struct {
 	ContactIDs []string `json:"contactIds"`
 }
 
-func (c *CreateContactCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateContactInput, postgres_entity.NoConfig]) (bool, CreateContactOutput, error) {
+func (c *CreateContactCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateContactInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateContactOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateContactCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -81,11 +81,11 @@ func (c *CreateContactCapability) Execute(ctx context.Context, executionContaine
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return false, result, err
+		return enum.CapabilityExecutionError, result, err
 	}
 
 	for _, email := range executionContainer.InputData.ContactEmails {
@@ -105,5 +105,5 @@ func (c *CreateContactCapability) Execute(ctx context.Context, executionContaine
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return true, result, nil
+	return enum.CapabilityExecutionCompleted, result, nil
 }
