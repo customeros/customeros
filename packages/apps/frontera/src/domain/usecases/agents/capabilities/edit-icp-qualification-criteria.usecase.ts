@@ -11,17 +11,10 @@ export class EditIcpQualificationCriteriaUsecase {
   private root = RootStore.getInstance();
   private agentId: string = '';
   @observable accessor inputValue: string = '';
-  @observable accessor validationError: string = '';
   @observable accessor qualificationCriteriaError: string = '';
   constructor() {
     this.execute = this.execute.bind(this);
-    this.validate = this.validate.bind(this);
     this.setInputValue = this.setInputValue.bind(this);
-  }
-
-  @computed
-  get isInvalid() {
-    return this.validationError.length > 0;
   }
 
   @action
@@ -35,24 +28,6 @@ export class EditIcpQualificationCriteriaUsecase {
       .getById(this.agentId)
       ?.value.capabilities.find((c) => c.type === CapabilityType.IcpQualify)
       ?.errors;
-  }
-
-  @action
-  validate() {
-    const span = Tracer.span('EditIcpQualificationCriteriaUsecase.validate');
-
-    if (this.inputValue.length === 0) {
-      this.validationError = 'Houston we have a blank...';
-      span.end();
-
-      return false;
-    } else {
-      this.validationError = '';
-    }
-
-    span.end();
-
-    return true;
   }
 
   @action
@@ -126,32 +101,23 @@ export class EditIcpQualificationCriteriaUsecase {
       return;
     }
 
-    const isValid = this.validate();
+    agent?.setCapabilityConfig(
+      CapabilityType.IcpQualify,
+      'qualificationCriteria',
+      this.inputValue,
+    );
 
-    if (!isValid) {
-      return;
+    const [res, err] = await this.service.saveAgent(agent);
+
+    if (err) {
+      console.error(
+        'EditIcpQualificationCriteriaUsecase.execute: Error saving agent. aborting execution',
+      );
     }
 
-    if (isValid) {
-      this.validationError = '';
-      agent?.setCapabilityConfig(
-        CapabilityType.IcpQualify,
-        'qualificationCriteria',
-        this.inputValue,
-      );
-
-      const [res, err] = await this.service.saveAgent(agent);
-
-      if (err) {
-        console.error(
-          'EditIcpQualificationCriteriaUsecase.execute: Error saving agent. aborting execution',
-        );
-      }
-
-      if (res) {
-        agent.put(res?.agent_Save);
-        this.init(this.agentId);
-      }
+    if (res) {
+      agent.put(res?.agent_Save);
+      this.init(this.agentId);
     }
 
     span.end();

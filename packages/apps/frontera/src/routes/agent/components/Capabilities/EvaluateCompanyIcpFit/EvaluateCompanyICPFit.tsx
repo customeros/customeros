@@ -21,8 +21,6 @@ import {
 
 import { IdealCustomersModal } from './IdealCustomersModal';
 
-// import { IdealCustomersModal } from './IdealCustomersModal';
-
 const disqualificationCriteriaUsecase =
   new EditIcpDisqualificationCriteriaUsecase();
 const qualificationCriteriaUsecase = new EditIcpQualificationCriteriaUsecase();
@@ -135,19 +133,13 @@ export const EvaluateCompanyIcpFit = observer(() => {
                 className='mt-3 px-2 py-1 text-sm bg-transparent resize-none min-h-[72px]  overflow-y-hidden'
                 onChange={(e) => {
                   qualificationCriteriaUsecase.setInputValue(e.target.value);
-
-                  if (qualificationCriteriaUsecase.validationError) {
-                    qualificationCriteriaUsecase.validate();
-                  }
                 }}
               />
-              {(qualificationCriteriaUsecase.capabilityErrors ||
-                qualificationCriteriaUsecase.validationError) && (
+              {qualificationCriteriaUsecase.capabilityErrors && (
                 <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] '>
                   <Icon stroke='none' className='mr-2' name='dot-single' />
                   <span className='text-sm'>
                     {qualificationCriteriaUsecase.capabilityErrors}
-                    {qualificationCriteriaUsecase.validationError}
                   </span>
                 </div>
               )}
@@ -172,19 +164,13 @@ export const EvaluateCompanyIcpFit = observer(() => {
                 className='mt-3 px-2 py-1 text-sm bg-transparent resize-none min-h-[72px]  overflow-y-hidden'
                 onChange={(e) => {
                   disqualificationCriteriaUsecase.setInputValue(e.target.value);
-
-                  if (disqualificationCriteriaUsecase.validationError) {
-                    disqualificationCriteriaUsecase.validate();
-                  }
                 }}
               />
-              {(disqualificationCriteriaUsecase.capabilityErrors ||
-                disqualificationCriteriaUsecase.validationError) && (
+              {disqualificationCriteriaUsecase.capabilityErrors && (
                 <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] '>
                   <Icon stroke='none' className='mr-2' name='dot-single' />
                   <span className='text-sm'>
                     {disqualificationCriteriaUsecase.capabilityErrors}
-                    {disqualificationCriteriaUsecase.validationError}
                   </span>
                 </div>
               )}
