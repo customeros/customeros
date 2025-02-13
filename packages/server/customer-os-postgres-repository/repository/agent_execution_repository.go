@@ -220,11 +220,18 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 	return &agentExecution, nil
 }
 
-func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, err error) error {
+func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.ScheduleRetry")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, executionID)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	span.LogFields(log.String("executionID", executionID))
+	if inputError == nil {
+		span.LogFields(log.String("inputError", "nil"))
+	} else {
+		span.LogFields(log.String("inputError", inputError.Error()))
+	}
 
 	execution := &postgres_entity.AgentExecution{}
 	result := f.gormDb.First(execution, "id = ?", executionID)
@@ -236,7 +243,9 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 	execution.RetryCount++
 	if execution.RetryCount > execution.MaxRetries {
 		execution.Status = enum.AgentExecutionError
-		execution.ErrorMessage = utils.StringPtr(err.Error())
+		if inputError != nil {
+			execution.ErrorMessage = utils.StringPtr(inputError.Error())
+		}
 		execution.NextRetryAt = nil
 	} else {
 
@@ -248,7 +257,9 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		})
 		nextRetry := time.Now().Add(backoff)
 		execution.NextRetryAt = &nextRetry
-		execution.ErrorMessage = utils.StringPtr(err.Error())
+		if inputError != nil {
+			execution.ErrorMessage = utils.StringPtr(inputError.Error())
+		}
 		execution.Status = enum.AgentExecutionRetrying
 	}
 
