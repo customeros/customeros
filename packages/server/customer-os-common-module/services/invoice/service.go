@@ -1157,6 +1157,7 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error
 		return err
 	}
 
+	// TODO alexb move it inside update invoice method only if status changes
 	err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
@@ -1182,6 +1183,7 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) erro
 		return err
 	}
 
+	// TODO alexb move inside update
 	err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))

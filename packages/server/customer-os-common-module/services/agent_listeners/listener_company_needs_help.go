@@ -119,7 +119,7 @@ func (l *CompanyNeedsHelpListener) run(ctx context.Context, agent postgres_entit
 		tracing.TraceErr(span, err)
 		return err
 	}
-	err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+	_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

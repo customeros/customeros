@@ -27,6 +27,7 @@ type AgentExecutionRepository interface {
 	ScheduleRetry(ctx context.Context, executionID string, err error) error
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
+	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error
 }
 
 type agentExecutionRepository struct {
@@ -304,4 +305,35 @@ func (f *agentExecutionRepository) CompleteStep(ctx context.Context, executionID
 	execution.StateData = nil  // Clear state data since step is complete
 
 	return f.gormDb.Save(execution).Error
+}
+
+func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GoalAchieved")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, executionID)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogFields(log.Bool("goalAchieved", goalAchieved))
+
+	if executionID == "" {
+		err := errors.New("ID is missing")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err := f.gormDb.
+		Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Updates(
+			map[string]interface{}{
+				"goal_achieved": goalAchieved,
+				"completed_at":  utils.NowPtr(),
+			}).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
