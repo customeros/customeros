@@ -37,6 +37,7 @@ func InitAgentListeners(
 	listeners = append(listeners, NewStartInvoiceRun(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewStartInvoiceRunWithAutopayment(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewSendInvoiceListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewNewEmailListener(logger, postgresRepositories, agentRunnerService))
 
 	agentListeners := AgentListeners{
 		listeners: make(map[enum.AgentListenerEvent]interfaces.AgentListenerUntyped),

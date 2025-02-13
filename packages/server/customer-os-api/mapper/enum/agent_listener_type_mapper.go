@@ -24,6 +24,9 @@ var agentListenerEventByModel = map[model.AgentListenerEvent]enum.AgentListenerE
 	model.AgentListenerEventStartInvoiceRun:                enum.EventStartInvoiceRun,
 	model.AgentListenerEventStartInvoiceRunWithAutopayment: enum.EventStartInvoiceRunWithAutopayment,
 	model.AgentListenerEventSendInvoice:                    enum.EventSendInvoice,
+	model.AgentListenerEventNewEmail:                       enum.EventNewEmail,
+	model.AgentListenerEventIngestEmail:                    enum.EventIngestEmail,
+	model.AgentListenerEventIgnoreEmail:                    enum.EventIgnoreEmail,
 }
 
 var agentListenerEventByValue = utils.ReverseMap(agentListenerEventByModel)
