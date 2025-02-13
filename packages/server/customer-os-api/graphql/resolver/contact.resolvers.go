@@ -560,6 +560,226 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 	return failedEmails, nil
 }
 
+// ContactCreateBulkByLinkedInV2 is the resolver for the contact_CreateBulkByLinkedInV2 field.
+func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, linkedInUrls []string, flowID *string) (*model.CreateContactBulkResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByLinkedIn", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.linkedInUrls", linkedInUrls)
+
+	uniqueLinkedInUrls := utils.RemoveEmpties(linkedInUrls)
+	uniqueLinkedInUrls = utils.RemoveDuplicates(uniqueLinkedInUrls)
+	// if linkedInUrls is empty, return an empty array
+	if len(uniqueLinkedInUrls) == 0 {
+		return nil, nil
+	}
+	if len(uniqueLinkedInUrls) > 200 {
+		err := pkgerrors.Wrap(errors.New("maximum number of LinkedIn URLs exceeded"), "ContactCreateBulkByLinkedIn")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Maximum number of LinkedIn URLs exceeded")
+		return nil, err
+	}
+
+	// validate flow id
+	if utils.IfNotNilString(flowID) != "" {
+		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
+		if err != nil || flowEntity == nil {
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			graphql.AddErrorf(ctx, "Invalid flow id")
+			return nil, nil
+		}
+	}
+
+	maxWorkers := 10
+	var wg sync.WaitGroup
+	inputCh := make(chan string)
+	successCh := make(chan string, len(uniqueLinkedInUrls))
+	failedCh := make(chan string, len(uniqueLinkedInUrls))
+
+	// Worker function.
+	worker := func() {
+		defer wg.Done()
+		for item := range inputCh {
+			contactId, _, err := r.Services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, item, common_srv.ServiceOptions{SkipCompletedEvents: true})
+			if contactId == "" && err != nil {
+				// Only collect items that completely failed (empty result with error).
+				failedCh <- item
+			} else {
+				successCh <- contactId
+
+				if utils.IfNotNilString(flowID) != "" {
+					_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
+			}
+		}
+
+		if flowID != nil {
+			flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+				for _, flowData := range flowsUpdated {
+					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+		}
+	}
+
+	// Start workers.
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go worker()
+	}
+
+	// Send inputs to the input channel.
+	go func() {
+		for _, linkedInUrl := range uniqueLinkedInUrls {
+			inputCh <- linkedInUrl
+		}
+		close(inputCh) // Close input channel after sending all inputs.
+	}()
+
+	// Wait for workers to finish.
+	wg.Wait()
+	close(failedCh) // Close failed channel when workers are done.
+	close(successCh)
+
+	// Collect failed linkedInUrls from the failed channel.
+	var failedLinkedInUrls []string
+	for item := range failedCh {
+		failedLinkedInUrls = append(failedLinkedInUrls, item)
+	}
+
+	var successIds []string
+	for item := range successCh {
+		successIds = append(successIds, item)
+	}
+
+	span.LogFields(log.String("response.failedLinkedInUrls", strings.Join(failedLinkedInUrls, ", ")))
+	return &model.CreateContactBulkResponse{
+		CreatedIds:   successIds,
+		FailedInputs: failedLinkedInUrls,
+	}, nil
+}
+
+// ContactCreateBulkByEmailV2 is the resolver for the contact_CreateBulkByEmailV2 field.
+func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, emails []string, flowID *string) (*model.CreateContactBulkResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByEmailV2", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.emails", emails)
+
+	uniqueEmails := utils.RemoveEmpties(emails)
+	uniqueEmails = utils.RemoveDuplicates(uniqueEmails)
+	// if linkedInUrls is empty, return an empty array
+	if len(uniqueEmails) == 0 {
+		return nil, nil
+	}
+	if len(uniqueEmails) > 200 {
+		err := pkgerrors.Wrap(errors.New("maximum number of emails exceeded"), "ContactCreateBulkByEmail")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Maximum number of emails exceeded")
+		return nil, err
+	}
+
+	// validate flow id
+	if utils.IfNotNilString(flowID) != "" {
+		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
+		if err != nil || flowEntity == nil {
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			graphql.AddErrorf(ctx, "Invalid flow id")
+			return nil, err
+		}
+	}
+
+	maxWorkers := 10
+	var wg sync.WaitGroup
+	inputCh := make(chan string)
+	successCh := make(chan string, len(uniqueEmails))
+	failedCh := make(chan string, len(uniqueEmails))
+
+	// Worker function.
+	worker := func() {
+		defer wg.Done()
+		for item := range inputCh {
+			contactId, err := r.Services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, item, common_srv.ServiceOptions{SkipCompletedEvents: true})
+			if contactId == "" && err != nil {
+				// Only collect items that completely failed (empty result with error).
+				failedCh <- item
+			} else {
+				successCh <- contactId
+
+				if utils.IfNotNilString(flowID) != "" {
+					_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
+			}
+		}
+
+		if flowID != nil {
+			flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+				for _, flowData := range flowsUpdated {
+					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+		}
+	}
+
+	// Start workers.
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go worker()
+	}
+
+	// Send inputs to the input channel.
+	go func() {
+		for _, emailAddress := range uniqueEmails {
+			inputCh <- emailAddress
+		}
+		close(inputCh) // Close input channel after sending all inputs.
+	}()
+
+	// Wait for workers to finish.
+	wg.Wait()
+	close(failedCh)  // Close failed channel when workers are done.
+	close(successCh) // Close failed channel when workers are done.
+
+	// Collect failed emails from the failed channel.
+	var failedEmails []string
+	for item := range failedCh {
+		failedEmails = append(failedEmails, item)
+	}
+
+	var successIds []string
+	for item := range successCh {
+		successIds = append(successIds, item)
+	}
+
+	span.LogFields(log.String("response.failedEmails", strings.Join(failedEmails, ", ")))
+	return &model.CreateContactBulkResponse{
+		CreatedIds:   successIds,
+		FailedInputs: failedEmails,
+	}, nil
+}
+
 // ContactUpdate is the resolver for the contact_Update field.
 func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpdate", graphql.GetOperationContext(ctx))
