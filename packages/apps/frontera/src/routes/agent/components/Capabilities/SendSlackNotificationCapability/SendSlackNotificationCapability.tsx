@@ -6,7 +6,7 @@ import {
   cooldownPeriods,
   cooldownPeriodsMap,
   AddSlackChannelUsecase,
-} from '@domain/usecases/agents/capabilities/add-slack-channel.usecase';
+} from '@domain/usecases/agents/capabilities/add-slack-channel.usecase.ts';
 
 import { Icon } from '@ui/media/Icon';
 import { Switch } from '@ui/form/Switch';
@@ -15,6 +15,8 @@ import { Slack } from '@ui/media/logos/Slack';
 import { Button } from '@ui/form/Button/Button';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/overlay/Popover';
+
+import { DisconnectSlackMenu } from './DisconnectSlackMenu.tsx';
 
 export const SendSlackNotificationCapability = observer(() => {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +47,9 @@ export const SendSlackNotificationCapability = observer(() => {
 
         <div className='flex flex-col gap-4 w-full'>
           <div>
-            <p className='text-sm font-medium'>Slack notifications</p>
+            <div className='flex justify-between flex-1'>
+              <p className='text-sm font-medium'>Slack notifications</p>
+            </div>
             <p className='text-sm mt-1'>
               We’ll notify you on Slack when a visitor is identified on your
               preferred websites
@@ -78,7 +82,10 @@ export const SendSlackNotificationCapability = observer(() => {
       </div>
       <div className='flex flex-col gap-4 w-full'>
         <div>
-          <p className='text-sm font-medium'>Slack notifications</p>
+          <div className='flex justify-between flex-1'>
+            <p className='text-sm font-medium'>Slack notifications</p>
+            <DisconnectSlackMenu />
+          </div>
           <p className='text-sm mt-1'>
             We’ll notify you on Slack when a visitor is identified on your
             preferred websites
