@@ -45,7 +45,7 @@ func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, entity 
 }
 
 func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := `MERGE (t:Tenant {name:$tenant}) ON CREATE SET t.createdAt=$now`
+	query := `MERGE (t:Tenant {name:$tenant}) ON CREATE SET t.createdAt=$now, t.active=true`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 		"now":    utils.Now(),
@@ -60,7 +60,6 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 					s.id=$id,
 					s.createdAt=$createdAt,
 					s.updatedAt=$updatedAt,
-					s.invoicingEnabled=$invoicingEnabled,
 					s.invoicingPostpaid=$invoicingPostpaid,
 					s.logoRepositoryFileId=$logoRepositoryFileId,
 					s.baseCurrency=$baseCurrency,
@@ -68,7 +67,6 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                   settingsId,
 		"tenant":               tenant,
-		"invoicingEnabled":     settings.InvoicingEnabled,
 		"invoicingPostpaid":    settings.InvoicingPostpaid,
 		"createdAt":            settings.CreatedAt,
 		"updatedAt":            settings.UpdatedAt,

@@ -16,7 +16,7 @@ extend type Mutation {
 type TenantSettings {
     logoRepositoryFileId:   String
     baseCurrency:           Currency
-    billingEnabled:         Boolean!
+    billingEnabled:         Boolean! @deprecated
     opportunityStages:      [TenantSettingsOpportunityStageConfiguration!]!
     workspaceLogo:          String
     workspaceName:          String
@@ -204,5 +204,5 @@ input TenantSettingsInput {
     baseCurrency:           Currency
     workspaceLogo:          String
     workspaceName:          String
-    billingEnabled:         Boolean
+    billingEnabled:         Boolean @deprecated
 }

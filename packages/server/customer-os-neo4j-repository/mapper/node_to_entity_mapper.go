@@ -328,7 +328,6 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *neo4j_entity.TenantSe
 		CreatedAt:                utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		LogoRepositoryFileId:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyLogoRepositoryFileId)),
-		InvoicingEnabled:         utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyInvoicingEnabled)),
 		InvoicingPostpaid:        utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyInvoicingPostpaid)),
 		WorkspaceLogo:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceLogo)),
 		WorkspaceName:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceName)),

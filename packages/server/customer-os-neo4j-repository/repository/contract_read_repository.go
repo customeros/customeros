@@ -30,7 +30,7 @@ type ContractReadRepository interface {
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 	GetContractsToGenerateCycleInvoices(ctx context.Context, tenant string, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error)
-	GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
+	GetContractsToGenerateNextScheduledInvoices(ctx context.Context, tenants []string, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error)
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit, delayFromPreviousStatusCheckHours int) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
 	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
@@ -328,7 +328,6 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
 			WHERE 
 				t.active = true AND
-				ts.invoicingEnabled = true AND
 				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.baseCurrency <> "" ) AND
@@ -380,7 +379,6 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE 
-				ts.invoicingEnabled = true AND 
 				(ts.invoicingPostpaid = false OR ts.invoicingPostpaid IS NULL) AND 
 				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
@@ -434,18 +432,18 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error) {
+func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx context.Context, tenants []string, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateNextScheduledInvoices")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes))
 
-	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
+	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice {dryRun: true, preview: true})
 			WITH c, t, ts, o, i
 			WHERE 
+				t.name IN $tenants AND
 				(i IS NULL OR i.createdAt < c.updatedAt OR i.createdAt < sli.updatedAt) AND
-				ts.invoicingEnabled = true AND
 				(c.invoicingEnabled = true OR c.invoicingEnabled IS NULL) AND
 				(o.hide = false OR o.hide IS NULL) AND
 				(c.currency <> "" OR ts.baseCurrency <> "" ) AND
@@ -460,6 +458,7 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 				(c.techNextPreviewInvoiceRequestedAt IS NULL OR c.techNextPreviewInvoiceRequestedAt + duration({minutes: $delayMinutes}) < $referenceTime)
 			RETURN distinct(c), t.name limit 100`
 	params := map[string]any{
+		"tenants":       tenants,
 		"referenceTime": referenceTime,
 		"validContractStatuses": []string{neo4jenum.ContractStatusLive.String(),
 			neo4jenum.ContractStatusOutOfContract.String(),

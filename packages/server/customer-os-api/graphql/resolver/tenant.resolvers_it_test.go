@@ -133,7 +133,6 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
 		LogoRepositoryFileId: "logoRepositoryFileId",
 		BaseCurrency:         neo4jenum.CurrencyUSD,
-		InvoicingEnabled:     true,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_settings"))

@@ -113,7 +113,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Organization Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
-	addJob(cont.Cfg.App.Cron.CronScheduleIcpCheck, GroupOrganization, findLeads, "findLeads") // TODO alexb
+	addJob(cont.Cfg.App.Cron.CronScheduleIcpCheck, GroupOrganization, findLeads, "findLeads")
 
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
