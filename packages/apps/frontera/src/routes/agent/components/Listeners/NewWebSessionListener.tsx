@@ -154,7 +154,7 @@ export const NewWebSessionListener = observer(() => {
                 autoFocus
                 ref={inputRef}
                 variant='unstyled'
-                placeholder='website'
+                placeholder='Website'
                 invalid={usecase.isInvalid}
                 onChange={(e) => usecase.setWebsite(e.target.value)}
               />
