@@ -16,8 +16,8 @@ import {
 
 import { AgentStore } from './Agent.store';
 
-type CapabilityConfig = {
-  [key: string]: {
+type CapabilityConfig<T extends string> = {
+  [key in T]: {
     value: unknown;
     error: string | null;
   };
@@ -282,13 +282,15 @@ export class Agent extends Entity<AgentDatum> {
     return options?.[this.value.color as ColorType] || options.grayModern;
   }
 
-  static parseConfig(raw: string): CapabilityConfig | null {
+  static parseConfig<T extends string>(
+    raw: string,
+  ): CapabilityConfig<T> | null {
     const span = Tracer.span('Agent.parseConfig', { raw });
 
     if (raw === '') {
       span.end();
 
-      return {};
+      return {} as CapabilityConfig<T>;
     }
 
     const parsed = JSON.parse(raw);

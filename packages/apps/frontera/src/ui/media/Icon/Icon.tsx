@@ -125,8 +125,10 @@ export type IconName =
   | 'paperclip'
   | 'alert-triangle'
   | 'building-05'
+  | 'plus'
+  | 'life-buoy-01'
   | 'link-broken-02'
-  | 'plus';
+  | 'edit-04';
 
 interface IconProps extends SVGAttributes<SVGElement> {
   name: IconName;

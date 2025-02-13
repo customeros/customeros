@@ -6,8 +6,7 @@ import { Spinner } from '@ui/feedback/Spinner';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-
-import logoCustomerOs from '../../../../../src/assets/customer-os-small.png';
+import logoCustomerOs from '@shared/assets/customer-os-small.png';
 
 export const LogoSection = observer(() => {
   const store = useStore();

@@ -10,8 +10,9 @@ export type LogoName =
   | 'twitter'
   | 'youtube'
   | 'instagram'
-  | 'default';
-
+  | 'default'
+  | 'grain'
+  | 'fathom';
 interface LogoProps extends SVGAttributes<SVGElement> {
   name: LogoName;
   className?: string;
