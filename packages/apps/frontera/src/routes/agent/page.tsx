@@ -219,7 +219,7 @@ export const AgentPage = observer(() => {
           </ul>
         </div>
 
-        {usecase.activeConfig && (
+        {usecase.activeConfig && ActiveConfig && (
           <div className='w-[418px] border-r border-r-grayModern-200 px-4 py-3'>
             <ActiveConfig />
           </div>
