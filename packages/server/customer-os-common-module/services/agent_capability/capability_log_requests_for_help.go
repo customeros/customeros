@@ -21,9 +21,9 @@ type LogRequestsForHelpCapability struct {
 	markdownEventService interfaces.MarkdownEventService
 }
 
-func NewLogRequestsForHelpCapability(markdownEvent interfaces.MarkdownEventService) *LogRequestsForHelpCapability {
+func NewLogRequestsForHelpCapability(markdownEventService interfaces.MarkdownEventService) *LogRequestsForHelpCapability {
 	return &LogRequestsForHelpCapability{
-		markdownEventService: markdownEvent,
+		markdownEventService: markdownEventService,
 	}
 }
 
