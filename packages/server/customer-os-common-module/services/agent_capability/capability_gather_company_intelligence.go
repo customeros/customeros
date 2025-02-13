@@ -38,7 +38,7 @@ type GatherCompanyIntelligenceOutput struct {
 }
 
 type CompanyDescriptions struct {
-	Description1 string `json:"description1"`
+	Description  string `json:"description"`
 	Description2 string `json:"description2"`
 	Description3 string `json:"description3"`
 	Description4 string `json:"description4"`
@@ -81,7 +81,7 @@ func (c *GatherCompanyIntelligenceCapability) DefaultConfig() any {
 	return &config
 }
 
-func (c *GatherCompanyIntelligenceCapability) ValidateConfig(config postgres_entity.NoConfig) error {
+func (c *GatherCompanyIntelligenceCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -129,7 +129,7 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 
 	result.CompanyName = company.Name
 	result.PrimaryDomain = company.PrimaryDomain
-	result.CompanyDescriptions.Description1 = company.Description
+	result.CompanyDescriptions.Description = company.Description
 	result.CompanyDescriptions.Description2 = company.SourceDescription1
 	result.CompanyDescriptions.Description3 = company.SourceDescription2
 	result.CompanyDescriptions.Description4 = company.SourceDescription3

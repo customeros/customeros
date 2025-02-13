@@ -7,6 +7,7 @@ import (
 type CapabilityExecutionStatus string
 
 const (
+	CapabilityExecutionRetry     CapabilityExecutionStatus = "RETRY"
 	CapabilityExecutionError     CapabilityExecutionStatus = "ERROR"
 	CapabilityExecutionPending   CapabilityExecutionStatus = "PENDING"
 	CapabilityExecutionCompleted CapabilityExecutionStatus = "COMPLETED"
@@ -19,6 +20,7 @@ func (t CapabilityExecutionStatus) String() string {
 func GetCapabilityExecutionStatus(s string) (CapabilityExecutionStatus, error) {
 	switch CapabilityExecutionStatus(s) {
 	case
+		CapabilityExecutionRetry,
 		CapabilityExecutionError,
 		CapabilityExecutionPending,
 		CapabilityExecutionCompleted:
