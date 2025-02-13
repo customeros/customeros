@@ -68,7 +68,7 @@ jobs:
         uses: ubicloud/cache@v4
         with:
           path: ${{ env.GOBIN }}
-          key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+          key: ${{ runner.os }}-go-tools-${{ hashFiles('./packages/server/customer-os-api/go.sum') }}
 
       - name: Install gotestsum
         run: |
@@ -84,7 +84,7 @@ jobs:
         with:
           path: |
             ~/.cache/go-build
-            ${{ github.workspace }}/go/pkg/mod
+            ${{ env.GOMODCACHE }}
           key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
@@ -130,12 +130,96 @@ jobs:
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+
+  prepare-test-matrix:
+    runs-on: ubicloud-standard-2
+    outputs:
+      matrix: ${{ steps.split-tests.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: ubicloud/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+        env:
+          GOPROXY: "direct"
+          GOSUMDB: "off"
+          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+
+      - name: Cache test list
+        id: cache-test-list
+        uses: ubicloud/cache@v4
+        with:
+          path: ./packages/server/customer-os-api/test_chunks.json
+          key: test-list-${{ hashFiles('./packages/server/customer-os-api/graphql/resolver/**/*.go') }}
+
+      - name: Split tests into chunks
+        id: split-tests
+        working-directory: ./packages/server/customer-os-api
+        run: |
+          if [ "${{ steps.cache-test-list.outputs.cache-hit }}" == "true" ]; then
+            echo "Using cached test chunks"
+            MATRIX_JSON=$(cat test_chunks.json)
+            echo "Retrieved from cache:"
+            echo "$MATRIX_JSON" | jq .
+          else
+            echo "Discovering tests..."
+            # Get all tests from resolver
+            go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
+          
+            # Read tests into array
+            readarray -t TEST_ARRAY < <(cat all_tests.txt | grep "^Test" || true)
+            TOTAL=${#TEST_ARRAY[@]}
+            echo "Found $TOTAL tests"
+          
+            # Calculate chunk size
+            CHUNK_SIZE=$(( (TOTAL + 3) / 4 ))
+            echo "Chunk size: $CHUNK_SIZE"
+          
+            # Create JSON with actual tests
+            MATRIX_JSON='{
+              "include": ['
+            for chunk in {0..3}; do
+              START_INDEX=$(( chunk * CHUNK_SIZE ))
+              END_INDEX=$(( START_INDEX + CHUNK_SIZE ))
+              if [ $END_INDEX -gt $TOTAL ]; then
+                END_INDEX=$TOTAL
+              fi
+          
+              # Extract tests for this chunk
+              CHUNK_TESTS=$(printf '%s\n' "${TEST_ARRAY[@]:$START_INDEX:$((END_INDEX-START_INDEX))}" | jq -R . | jq -sc .)
+          
+              # Add comma between chunks, but not after the last one
+              if [ $chunk -gt 0 ]; then
+                MATRIX_JSON="$MATRIX_JSON,"
+              fi
+          
+              MATRIX_JSON="$MATRIX_JSON{\"id\": $chunk, \"tests\": $CHUNK_TESTS}"
+            done
+            MATRIX_JSON="$MATRIX_JSON]}"
+          
+            # Save for cache
+            echo "$MATRIX_JSON" > test_chunks.json
+            echo "Generated new matrix JSON:"
+            echo "$MATRIX_JSON" | jq .
+          fi
+          
+          # Write to GITHUB_OUTPUT with proper delimiter
+          delimiter="EOF-$(openssl rand -hex 8)"
+          {
+            echo "matrix<<$delimiter"
+            echo "$MATRIX_JSON"
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
   test-resolver:
+    needs: prepare-test-matrix
     runs-on: ubicloud-standard-2
     strategy:
       fail-fast: false
-      matrix:
-        chunk: [0, 1, 2, 3]
+      matrix: ${{ fromJSON(needs.prepare-test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -169,7 +253,7 @@ jobs:
         with:
           path: |
             ~/.cache/go-build
-            ${{ github.workspace }}/go/pkg/mod
+            ${{ env.GOMODCACHE }}
           key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
@@ -178,85 +262,24 @@ jobs:
         if: steps.go-cache.outputs.cache-hit != 'true'
         run: make all
 
-      - name: Cache Test List
-        id: cache-test-list
-        uses: ubicloud/cache@v4
-        with:
-          path: ./packages/server/customer-os-api/.test-list
-          key: test-list-${{ hashFiles('packages/server/customer-os-api/**/*.go') }}
-          restore-keys: |
-            test-list-
-
-      - name: Get test list
-        id: get-tests
-        working-directory: ./packages/server/customer-os-api
-        run: |
-          set -x  # Enable debug output
-          
-          echo "Generating new test list..."
-          go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
-          cp all_tests.txt .test-list
-
-          echo "Number of lines in all_tests.txt:"
-          wc -l all_tests.txt
-          
-          # Get list of tests directly into array
-          readarray -t TEST_ARRAY < <(cat all_tests.txt | grep "^Test" || true)
-          TOTAL=${#TEST_ARRAY[@]}
-          
-          echo "First 10 tests found:"
-          printf '%s\n' "${TEST_ARRAY[@]:0:10}"
-          
-          echo "Total tests found: $TOTAL"
-          
-          # Calculate chunk details
-          CHUNK_SIZE=$(( (TOTAL + 3) / 4 ))
-          echo "Chunk size: $CHUNK_SIZE"
-          START_INDEX=$(( ${{ matrix.chunk }} * CHUNK_SIZE ))
-          END_INDEX=$(( START_INDEX + CHUNK_SIZE ))
-          
-          # Ensure end index doesn't exceed array size
-          if [ $END_INDEX -gt $TOTAL ]; then
-            END_INDEX=$TOTAL
-          fi
-          
-          echo "Processing chunk ${{ matrix.chunk }}: tests $START_INDEX to $END_INDEX of $TOTAL tests"
-          
-          # Show the range of tests we're about to process
-          echo "Tests in this chunk:"
-          printf '%s\n' "${TEST_ARRAY[@]:$START_INDEX:$CHUNK_SIZE}" | head -n 5
-          echo "... (and more)"
-          
-          # Extract tests for this chunk and join with |
-          TEST_PATTERN=$(printf "%s|" "${TEST_ARRAY[@]:$START_INDEX:$CHUNK_SIZE}")
-          TEST_PATTERN=${TEST_PATTERN%|}  # Remove trailing pipe
-          
-          # Count actual tests in pattern
-          TEST_COUNT=$(echo "$TEST_PATTERN" | tr '|' '\n' | wc -l)
-          echo "Number of tests in this chunk: $TEST_COUNT"
-          
-          # Debug the output
-          echo "Test pattern length: ${#TEST_PATTERN}"
-          echo "First 100 characters of test pattern:"
-          echo "$TEST_PATTERN" | head -c 100
-          
-          # Write to GITHUB_OUTPUT with quotes to preserve the pattern
-          echo "test_pattern=$TEST_PATTERN" >> "$GITHUB_OUTPUT"
-          
-          # Verify the output was written correctly
-          echo "Content of GITHUB_OUTPUT:"
-          cat "$GITHUB_OUTPUT"
-
       - name: Test
         working-directory: ./packages/server/customer-os-api
         run: |
-          if [ -z "${{ steps.get-tests.outputs.test_pattern }}" ]; then
+          echo "Running tests for chunk ${{ matrix.id }}"
+          echo "Tests to run: ${{ toJSON(matrix.tests) }}"
+          
+          if [ -z "${{ toJSON(matrix.tests) }}" ] || [ "${{ toJSON(matrix.tests) }}" = "[]" ]; then
             echo "No tests to run in this chunk"
             exit 0
           fi
+          
+          # Create test pattern from the pre-calculated list
+          TEST_PATTERN=$(echo '${{ toJSON(matrix.tests) }}' | jq -r 'join("|")')
+          echo "Test pattern: $TEST_PATTERN"
+          
           gotestsum --junitfile unit-tests.xml -- \
             -coverprofile=cover.out \
-            -run "${{ steps.get-tests.outputs.test_pattern }}" \
+            -run "$TEST_PATTERN" \
             ./graphql/resolver/...
 
       - name: Test Report
@@ -272,17 +295,16 @@ jobs:
         id: compute_code_coverage
         working-directory: ./packages/server/customer-os-api
         run: |
-          echo "## Code Coverage for resolver (chunk ${{ matrix.chunk }})" >> $GITHUB_STEP_SUMMARY
+          echo "## Code Coverage for resolver (chunk ${{ matrix.id }})" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
-  
 
   build-publish:
-    needs: [ test ]
+    needs: [ test, test-resolver ]
     runs-on: ubicloud-standard-2
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
