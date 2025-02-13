@@ -1,29 +1,20 @@
 package public
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
