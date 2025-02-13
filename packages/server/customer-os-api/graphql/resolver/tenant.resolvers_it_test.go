@@ -133,7 +133,6 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
 		LogoRepositoryFileId: "logoRepositoryFileId",
 		BaseCurrency:         neo4jenum.CurrencyUSD,
-		InvoicingEnabled:     true,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_settings"))
@@ -150,7 +149,6 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	tenantSettings := tenantGraphqlResponse.TenantSettings
 	require.Equal(t, "logoRepositoryFileId", *tenantSettings.LogoRepositoryFileID)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.BaseCurrency)
-	require.Equal(t, true, tenantSettings.BillingEnabled)
 }
 
 //func TestMutationResolver_TenantHardDelete(t *testing.T) {

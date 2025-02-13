@@ -60,7 +60,6 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 			ts.id=randomUUID(),
 		  	ts.createdAt=datetime(),	
 			ts.updatedAt=datetime(),
-			ts.invoicingEnabled=$invoicingEnabled,
 			ts.invoicingPostpaid=$invoicingPostpaid,
 			ts.enrichContacts=$enrichContacts,
 			ts.baseCurrency=$currency
@@ -68,7 +67,6 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 	params := map[string]any{
 		"name":              tenant.Name,
 		"createdBy":         tenant.CreatedBy,
-		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
 		"enrichContacts":    true,
 		"currency":          enum.CurrencyUSD.String(),
@@ -248,10 +246,6 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 					ts.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant": tenant,
-	}
-	if data.InvoicingEnabled != nil {
-		cypher += ", ts.invoicingEnabled=$invoicingEnabled"
-		params["invoicingEnabled"] = *data.InvoicingEnabled
 	}
 	if data.InvoicingPostpaid != nil {
 		cypher += ", ts.invoicingPostpaid=$invoicingPostpaid"

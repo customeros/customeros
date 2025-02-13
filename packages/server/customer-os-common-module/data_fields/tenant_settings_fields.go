@@ -2,7 +2,6 @@ package data_fields
 
 // Nil fields wil be skipped from update
 type TenantSettingsFields struct {
-	InvoicingEnabled     *bool   `json:"invoicingEnabled,omitempty"`
 	InvoicingPostpaid    *bool   `json:"invoicingPostpaid,omitempty"`
 	LogoRepositoryFileId *string `json:"logoRepositoryFileId,omitempty"`
 	BaseCurrency         *string `json:"baseCurrency,omitempty"`
@@ -12,8 +11,7 @@ type TenantSettingsFields struct {
 
 // IsEmpty returns true if there are no fields to update
 func (fields TenantSettingsFields) IsEmpty() bool {
-	return fields.InvoicingEnabled == nil &&
-		fields.InvoicingPostpaid == nil &&
+	return fields.InvoicingPostpaid == nil &&
 		fields.LogoRepositoryFileId == nil &&
 		fields.BaseCurrency == nil &&
 		fields.WorkspaceLogo == nil &&

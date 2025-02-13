@@ -65,8 +65,12 @@ func (p *InvoiceProducer) Execute() {
 		tracing.TraceErr(span, err)
 		return
 	}
+	if len(agents) == 0 {
+		p.log.Infof("No agents found for invoicing")
+		return
+	}
 
-	limit := 0 // TODO set to non zero to start invoice generation
+	limit := 100
 	delayFromPreviousInvoicingAttemptInMinutes := 240
 
 	for _, cashflowGuardianAgent := range agents {

@@ -76,6 +76,22 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 
 	referenceTime := utils.Now()
 
+	// Get all agents for cashflow guardian
+	agents, err := s.repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentCashflowGuardian})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+	if len(agents) == 0 {
+		s.log.Infof("No agents found for invoicing")
+		return
+	}
+	// collect tenants
+	var tenants []string
+	for _, agent := range agents {
+		tenants = append(tenants, agent.Tenant)
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -85,7 +101,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, referenceTime, 10)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, tenants, referenceTime, 15)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for invoicing: %v", err)

@@ -4,7 +4,6 @@ tenant_UpdateSettings(
         patch: true
         logoUrl: "https://logo.com"
         logoRepositoryFileId: "123-456-789"
-        billingEnabled: true
         baseCurrency: EUR
     }) {
     logoUrl

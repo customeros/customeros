@@ -124,7 +124,6 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	dataFields := data_fields.TenantSettingsFields{
 		WorkspaceName:        input.WorkspaceName,
 		WorkspaceLogo:        input.WorkspaceLogo,
-		InvoicingEnabled:     input.BillingEnabled,
 		LogoRepositoryFileId: input.LogoRepositoryFileID,
 	}
 	if input.BaseCurrency != nil {

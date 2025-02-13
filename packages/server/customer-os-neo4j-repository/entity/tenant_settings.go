@@ -11,7 +11,6 @@ type TenantSettingsProperty string
 const (
 	TenantSettingsPropertyLogoRepositoryFileId     TenantSettingsProperty = "logoRepositoryFileId"
 	TenantSettingsPropertyBaseCurrency             TenantSettingsProperty = "baseCurrency"
-	TenantSettingsPropertyInvoicingEnabled         TenantSettingsProperty = "invoicingEnabled"
 	TenantSettingsPropertyInvoicingPostpaid        TenantSettingsProperty = "invoicingPostpaid"
 	TenantSettingsPropertyWorkspaceLogo            TenantSettingsProperty = "workspaceLogo"
 	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
@@ -24,7 +23,6 @@ type TenantSettingsEntity struct {
 	Id                       string
 	LogoRepositoryFileId     string
 	BaseCurrency             enum.Currency
-	InvoicingEnabled         bool
 	InvoicingPostpaid        bool
 	WorkspaceLogo            string
 	WorkspaceName            string

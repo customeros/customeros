@@ -17307,7 +17307,7 @@ extend type Mutation {
 type TenantSettings {
     logoRepositoryFileId:   String
     baseCurrency:           Currency
-    billingEnabled:         Boolean!
+    billingEnabled:         Boolean! @deprecated
     opportunityStages:      [TenantSettingsOpportunityStageConfiguration!]!
     workspaceLogo:          String
     workspaceName:          String
@@ -17495,7 +17495,7 @@ input TenantSettingsInput {
     baseCurrency:           Currency
     workspaceLogo:          String
     workspaceName:          String
-    billingEnabled:         Boolean
+    billingEnabled:         Boolean @deprecated
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
     billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
