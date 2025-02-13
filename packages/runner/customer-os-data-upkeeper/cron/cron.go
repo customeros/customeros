@@ -232,7 +232,7 @@ func adjustInvoiceStatus(cont *container.Container) {
 }
 
 func sendPayInvoiceNotifications(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendPayNotifications()
+	cont.AgentProducers.SendInvoiceProducer.Execute()
 }
 
 func sendRemindInvoiceNotifications(cont *container.Container) {

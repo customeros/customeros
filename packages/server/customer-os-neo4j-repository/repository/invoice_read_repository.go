@@ -20,7 +20,7 @@ type InvoiceReadRepository interface {
 	GetInvoiceByNumber(ctx context.Context, tenant, invoiceNumber string) (*dbtype.Node, error)
 	CountInvoices(ctx context.Context, tenant, filterString string, filterParams map[string]interface{}) (int64, error)
 	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error)
-	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForPayNotifications(ctx context.Context, minutesFromCreate, minutesFromLastAttempt, lookbackWindow, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForRemindNotifications(ctx context.Context, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
@@ -254,31 +254,30 @@ func (r *invoiceReadRepository) GetInvoiceByNumber(ctx context.Context, tenant, 
 	return result.(*dbtype.Node), nil
 }
 
-func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Context, minutesFromCreate, minutesFromLastAttempt, lookbackWindow, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForPayNotifications")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Int("lookbackWindow", lookbackWindow), log.Object("referenceTime", referenceTime))
+	span.LogFields(log.Int("minutesFromCreate", minutesFromCreate), log.Int("minutesFromLastAttempt", minutesFromLastAttempt), log.Int("lookbackWindow", lookbackWindow), log.Int("limit", limit))
 
 	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
 				i.dryRun = false AND
-				NOT i.status IN $ignoredStatuses AND
-				(i.techPayNotificationRequestedAt IS NULL OR i.techPayNotificationRequestedAt + duration({hours: 1}) < $referenceTime) AND
-				i.techInvoiceFinalizedWebhookProcessedAt IS NOT NULL AND
+				i.status IN $statuses AND
+				(i.techPayNotificationRequestedAt IS NULL OR i.techPayNotificationRequestedAt + duration({minutes: $minutesFromLastAttempt}) < datetime()) AND
 				i.customerEmail IS NOT NULL AND
 				i.customerEmail <> '' AND	
 				i.techPayInvoiceNotificationSentAt IS NULL AND
-				i.createdAt+duration({days: $lookbackWindow}) > $now AND
-				(i.updatedAt + duration({minutes: $delay}) < $referenceTime)
-			RETURN distinct(i), t.name limit 100`
+				i.createdAt+duration({days: $lookbackWindow}) > datetime() AND
+				(i.updatedAt + duration({minutes: $minutesFromCreate}) < datetime())
+			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
-		"delay":          minutesFromLastUpdate,
-		"lookbackWindow": lookbackWindow,
-		"referenceTime":  referenceTime,
-		"now":            utils.Now(),
-		"ignoredStatuses": []string{
-			neo4jenum.InvoiceStatusPaid.String(), neo4jenum.InvoiceStatusInitialized.String(), neo4jenum.InvoiceStatusNone.String(), neo4jenum.InvoiceStatusVoid.String(), neo4jenum.InvoiceStatusEmpty.String(), neo4jenum.InvoiceStatusOnHold.String(),
+		"minutesFromLastAttempt": minutesFromLastAttempt,
+		"minutesFromCreate":      minutesFromCreate,
+		"lookbackWindow":         lookbackWindow,
+		"limit":                  limit,
+		"statuses": []string{
+			neo4jenum.InvoiceStatusDue.String(), neo4jenum.InvoiceStatusOverdue.String(), neo4jenum.InvoiceStatusProcessing.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))
