@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	events2 "github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
 	"log"
 	"reflect"
 
@@ -52,6 +51,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/namecheap"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/notification"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
+	events2 "github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensrs"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opportunity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/organization"
@@ -68,6 +68,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/tenant_settings"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/user"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webhook"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/workflow"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/workspace"
 )
@@ -134,6 +135,7 @@ type CommonServices struct {
 	UserService                interfaces.UserService
 	VerifyService              interfaces.VerifyService
 	QuickbooksService          interfaces.QuickbooksService
+	WebhookService             interfaces.WebhookService
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
 
@@ -216,6 +218,7 @@ func InitCommonServices(
 	tenantSettingsImpl := tenant_settings.NewTenantSettingsService(log, neo4jRepositories, eventsImpl)
 	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
 	quickbooksImpl := quickbooks.NewQuickbooksService(&cfg.External.QuickbooksConfig, postgresRepositories)
+	webhookImpl := webhook.NewWebhookService(log, postgresRepositories)
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
 
@@ -355,6 +358,7 @@ func InitCommonServices(
 		UserService:                userImpl,
 		VerifyService:              verifyImpl,
 		QuickbooksService:          quickbooksImpl,
+		WebhookService:             webhookImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
 
