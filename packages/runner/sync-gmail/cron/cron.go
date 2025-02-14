@@ -7,7 +7,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/google/uuid"
 	"github.com/robfig/cron"
@@ -81,23 +80,6 @@ func syncEmails(services *service.Services) {
 
 	for _, dt := range distinctUsersForImport {
 		// TODO add local caching per tenant for external systems
-		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, enum.SourceGmail.String(), enum.SourceGmail.String())
-		if err != nil {
-			logrus.Errorf("failed to merge external system: %s", err.Error())
-			return
-		}
-
-		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, enum.SourceOutlook.String(), enum.SourceOutlook.String())
-		if err != nil {
-			logrus.Errorf("failed to merge external system: %s", err.Error())
-			return
-		}
-
-		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, enum.SourceMailstack.String(), enum.SourceMailstack.String())
-		if err != nil {
-			logrus.Errorf("failed to merge external system: %s", err.Error())
-			return
-		}
 
 		go func(distinctUser entity.RawEmail) {
 			defer wg.Done()

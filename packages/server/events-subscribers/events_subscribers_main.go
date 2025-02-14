@@ -228,6 +228,13 @@ func (a *App) initializeListeners() error {
 		a.deps.CommonServices.AgentRunnerService,
 	))
 
+	// Email keeper listeners
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewNewEmailListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+
 	return nil
 }
 
