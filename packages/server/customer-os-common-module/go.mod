@@ -10,7 +10,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/PuerkitoBio/goquery v1.10.1
+	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/biter777/countries v1.7.5
 	github.com/cenkalti/backoff/v4 v4.3.0
