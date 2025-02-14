@@ -27,6 +27,15 @@ export class AddTagToCompanyUsecase {
     this.init();
   }
 
+  @computed
+  get listenerErrors() {
+    return this.root.agents
+      .getById(this.agentId)
+      ?.value.capabilities.find(
+        (c) => c.type === CapabilityType.ApplyTagToCompany,
+      )?.errors;
+  }
+
   @action
   setSearchTerm(searchTerm: string) {
     this.searchTerm = searchTerm;
