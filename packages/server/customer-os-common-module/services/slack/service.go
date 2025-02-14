@@ -35,6 +35,11 @@ func NewSlackService(log logger.Logger, postgres *postgres_repository.Repositori
 	}
 }
 
+type slackResponse struct {
+	OK    bool   `json:"ok"`
+	Error string `json:"error"`
+}
+
 func (s *slackService) GetSlackChannels(ctx context.Context, tenant string) ([]*postgresEntity.SlackChannel, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.GetSlackChannels")
 	defer span.Finish()
@@ -110,10 +115,11 @@ func (s *slackService) StoreSlackChannel(ctx context.Context, tenant, source, ch
 	return nil
 }
 
-func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "NotificationService.sendSlackMessage")
+func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks string, autoJoinSlackChannel bool) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "NotificationService.SendMessageFromBot")
 	defer span.Finish()
 	span.LogFields(log.String("channel", channel))
+	span.LogFields(log.Bool("autoJoinSlackChannel", autoJoinSlackChannel))
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -189,6 +195,28 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 	}
 
 	span.LogFields(log.String("response.body", string(responseBody)))
+
+	var slackResp slackResponse
+	if err := json.Unmarshal(responseBody, &slackResp); err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Handle errors from Slack API
+	if !slackResp.OK {
+		if autoJoinSlackChannel && slackResp.Error == "not_in_channel" {
+			err = s.JoinSlackChannelsWithBot(ctx, channel)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			return s.SendMessageFromBot(ctx, channel, blocks, false)
+		} else {
+			err := fmt.Errorf("slack API error: %s", slackResp.Error)
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
 
 	return nil
 }
@@ -347,18 +375,15 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId s
 		return err
 	}
 
-	var result struct {
-		OK    bool   `json:"ok"`
-		Error string `json:"error"`
-	}
-	if err := json.Unmarshal(body, &result); err != nil {
+	var slackResp slackResponse
+	if err := json.Unmarshal(body, &slackResp); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Handle errors from Slack API
-	if !result.OK {
-		err := fmt.Errorf("slack API error: %s", result.Error)
+	if !slackResp.OK {
+		err := fmt.Errorf("slack API error: %s", slackResp.Error)
 		tracing.TraceErr(span, err)
 		return err
 	}

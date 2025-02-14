@@ -30,7 +30,7 @@ func (s *notificationService) NotifySlackChannel(ctx context.Context, channelID 
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	err := s.slackService.SendMessageFromBot(ctx, channelID, message)
+	err := s.slackService.SendMessageFromBot(ctx, channelID, message, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
