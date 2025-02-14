@@ -162,7 +162,7 @@
     "typescript": "^5.2.2",
     "vite": "^5.4.11",
     "vite-plugin-graphql-loader": "^4.0.2",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.9"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
