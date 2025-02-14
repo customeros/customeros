@@ -95,7 +95,7 @@ export const SendSlackNotificationCapability = observer(() => {
         <div className='w-full flex-1'>
           <Popover open={usecase.isOpen} onOpenChange={usecase.togglePopover}>
             <PopoverTrigger className={'flex items-center w-full'}>
-              <div className='flex w-full items-center bg-white border border-grayModern-200 px-2 py-1 rounded-md'>
+              <div className='flex w-full items-center bg-white border border-grayModern-200 px-2 py-1 rounded-md min-h-8'>
                 <Slack className='mr-3 text-gray-500' />
                 {usecase.selectedChannel ? (
                   <div className='text-sm'>{usecase.selectedChannelName}</div>

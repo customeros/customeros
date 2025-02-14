@@ -10,8 +10,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
-
-import { businessTypeOptions } from '../../../../../organization/src/components/Tabs/panels/AboutPanel/util';
+import { businessTypeOptions } from '@organization/components/Tabs/panels/AboutPanel/util';
 
 interface BusinessTypeInputProps {
   id: string;

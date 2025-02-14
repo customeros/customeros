@@ -57,7 +57,7 @@ export const GeneralViewsSection = observer(
 
     const upcomingInvoices = invoicesViews[0];
     const allOrganizationsActivePreset = [allOrganizationsView?.[0]?.value?.id];
-    const showInvoices = store.settings.tenant.value?.billingEnabled;
+    // const showInvoices = store.settings.tenant.value?.billingEnabled;
     const isOpportinitiesActive = pathname.includes('prospects');
 
     return (
@@ -124,7 +124,7 @@ export const GeneralViewsSection = observer(
                 />
               )}
             />
-            {showInvoices && upcomingInvoices && (
+            {upcomingInvoices && (
               <RootSidenavItem
                 label='Invoices'
                 id={upcomingInvoices.value.id}

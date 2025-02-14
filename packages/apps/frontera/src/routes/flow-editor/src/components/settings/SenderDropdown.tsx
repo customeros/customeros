@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
+import { FlowStore } from '@store/Flows/Flow.store';
 
 import { Combobox } from '@ui/form/Combobox';
 import { SelectOption } from '@ui/utils/types';

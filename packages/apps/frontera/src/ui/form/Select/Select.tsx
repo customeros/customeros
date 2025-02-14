@@ -54,7 +54,11 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         return (
           <div
             ref={innerRef}
-            className={`flex w-full items-center group ${sizeClass}`}
+            className={
+              rest.isSearchable
+                ? `flex w-full items-center group ${sizeClass}`
+                : '!hidden'
+            }
             {...innerProps}
             data-test={dataTest}
           >
@@ -63,7 +67,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           </div>
         );
       },
-      [leftElement, size, dataTest],
+      [leftElement, size, dataTest, rest.isSearchable],
     );
 
     const ClearIndicator = useCallback(

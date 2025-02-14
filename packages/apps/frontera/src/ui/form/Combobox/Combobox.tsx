@@ -15,6 +15,7 @@ interface ComboboxProps extends Omit<SelectProps, 'size'> {
 export const Combobox = ({
   isReadOnly,
   maxHeight,
+  isSearchable = true,
   ...props
 }: ComboboxProps) => {
   return (
@@ -30,10 +31,14 @@ export const Combobox = ({
         input: () => 'pl-3',
         placeholder: () => 'pl-3 text-gray-400',
         container: ({ isFocused }) =>
-          getContainerClassNames('flex flex-col pt-2', 'unstyled', {
-            isFocused,
-            size: 'sm',
-          }),
+          getContainerClassNames(
+            cn('flex flex-col', isSearchable ? 'pt-2' : 'pt-0 mt-0'),
+            'unstyled',
+            {
+              isFocused,
+              size: 'sm',
+            },
+          ),
         option: ({ isFocused }) =>
           getOptionClassNames('!cursor-pointer', { isFocused }),
         menuList: () =>
@@ -41,11 +46,14 @@ export const Combobox = ({
             cn('p-0 border-none bg-transparent shadow-none'),
           ),
         menu: ({ menuPlacement }) =>
-          getMenuClassNames(menuPlacement)('!relative', 'sm'),
+          getMenuClassNames(menuPlacement)(
+            cn('!relative', !isSearchable && 'mt-0'),
+            'sm',
+          ),
         noOptionsMessage: () => 'text-gray-500',
-        valueContainer: () => '!cursor-text',
       }}
       {...props}
+      isSearchable={isSearchable}
       onKeyDown={(e) => {
         e.stopPropagation();
         props?.onKeyDown?.(e);

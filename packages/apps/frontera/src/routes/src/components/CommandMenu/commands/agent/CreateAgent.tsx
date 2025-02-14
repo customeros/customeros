@@ -32,6 +32,14 @@ export const CreateAgent = () => {
           <Icon name='send-03' />
           <span>Outbound campaign manager</span>
         </CommandItem>
+        <CommandItem onSelect={() => usecase.execute(AgentType.MeetingKeeper)}>
+          <Icon name='edit-04' />
+          <span>Meeting keeper</span>
+        </CommandItem>
+        <CommandItem onSelect={() => usecase.execute(AgentType.SupportSpotter)}>
+          <Icon name='life-buoy-01' />
+          <span>Support spotter</span>
+        </CommandItem>
       </Command.List>
     </Command>
   );

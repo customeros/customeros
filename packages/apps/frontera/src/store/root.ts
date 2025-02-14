@@ -165,8 +165,6 @@ export class RootStore {
   }
 
   get isAuthenticated() {
-    if (this.demoMode) return true;
-
     return Boolean(this.session.sessionToken);
   }
 
