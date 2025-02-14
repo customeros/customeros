@@ -27,12 +27,11 @@ type DetectSupportWebVisitInput struct {
 }
 
 type DetectSupportWebVisitConfig struct {
-	SupportUrls        ConfigMultipleValues `json:"supportUrls"`
-	SupportUrlPatterns ConfigMultipleValues `json:"supportUrlPatterns"`
+	SupportUrls ConfigMultipleValues `json:"supportUrls"`
 }
 
 func (c *DetectSupportWebVisitConfig) Validate() bool {
-	if len(c.SupportUrlPatterns.Value) == 0 && len(c.SupportUrls.Value) == 0 {
+	if len(c.SupportUrls.Value) == 0 {
 		return false
 	}
 
@@ -43,18 +42,6 @@ func (c *DetectSupportWebVisitConfig) Validate() bool {
 		}
 		c.SupportUrls.Value = cleanUrls
 	}
-
-	if len(c.SupportUrlPatterns.Value) > 0 {
-		cleanPatterns := make([]string, 0, len(c.SupportUrlPatterns.Value))
-		for _, pattern := range c.SupportUrlPatterns.Value {
-			clean := strings.TrimPrefix(pattern, "https://")
-			clean = strings.TrimPrefix(clean, "http://")
-			clean = strings.TrimPrefix(clean, "www.")
-			cleanPatterns = append(cleanPatterns, clean)
-		}
-		c.SupportUrlPatterns.Value = cleanPatterns
-	}
-
 	return true
 }
 
@@ -88,12 +75,11 @@ func (c *DetectSupportWebVisitCapability) NewConfig() DetectSupportWebVisitConfi
 func (c *DetectSupportWebVisitCapability) DefaultConfig() any {
 	config := c.NewConfig()
 	config.SupportUrls.Value = []string{}
-	config.SupportUrlPatterns.Value = []string{"**support**"}
 	return &config
 }
 
 func (c *DetectSupportWebVisitCapability) ValidateConfig(config DetectSupportWebVisitConfig) error {
-	if len(config.SupportUrlPatterns.Value) == 0 && len(config.SupportUrls.Value) == 0 {
+	if len(config.SupportUrls.Value) == 0 {
 		return errors.New("Support URL or pattern not configured")
 	}
 	return nil
@@ -144,16 +130,6 @@ func (c *DetectSupportWebVisitCapability) isSupportVisit(page string, config Det
 		if strings.Contains(page, url) {
 			return true
 		}
-		if strings.Contains(url, page) {
-			return true
-		}
 	}
-
-	for _, pattern := range config.SupportUrlPatterns.Value {
-		if utils.MatchUrlPattern(pattern, page) {
-			return true
-		}
-	}
-
 	return false
 }
