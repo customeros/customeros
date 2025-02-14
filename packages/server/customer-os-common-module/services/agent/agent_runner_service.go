@@ -156,7 +156,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
 
 	for _, capabilityTypeStr := range *&play.Capabilities {
-		err = a.executeCapability(ctx, capabilityParams{
+		status, err := a.executeCapability(ctx, capabilityParams{
 			executionID:       params.executionID,
 			capabilityTypeStr: capabilityTypeStr,
 			agent:             params.agent,
@@ -167,19 +167,23 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 		if err != nil {
 			return err
 		}
+		if status != enum.CapabilityExecutionCompleted {
+			return nil
+		}
 	}
 
 	return a.postgresRepositories.AgentExecutionRepository.Finish(ctx, params.executionID)
 }
 
-func (a *agentRunnerService) executeCapability(ctx context.Context, params capabilityParams) error {
+func (a *agentRunnerService) executeCapability(ctx context.Context, params capabilityParams) (enum.CapabilityExecutionStatus, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.executeCapability")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	execution, err := a.checkExecutionStatus(ctx, params.executionID)
+	execution, err := a.getExecution(ctx, params.executionID)
 	if err != nil {
-		return err
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, err
 	}
 
 	// Check if this capability was already completed
@@ -187,38 +191,57 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, params capab
 		if checkpoint, exists := execution.Checkpoints[params.capabilityTypeStr]; exists {
 			if resultMap, ok := checkpoint.(map[string]any); ok {
 				utils.MergeMapToMap(resultMap, params.allParams)
-				return nil
+				return enum.CapabilityExecutionCompleted, nil
 			}
 		}
 	}
 
 	capability, err := a.getCapability(ctx, params)
 	if err != nil {
-		return err
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, err
 	}
-	if capability == nil || !capability.Active {
-		return nil
+	if capability == nil {
+		err = errors.New("capability not found")
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, err
+	}
+	if !capability.Active {
+		span.LogFields(log.String("result", "capability not active"))
+		return enum.CapabilityExecutionCompleted, nil
 	}
 
-	status, output, execErr := a.executeCapabilityContainer(ctx, params, *capability)
+	executionContainer := interfaces.ExecutionContainer{
+		AgentExecutionID: params.executionID,
+		Capability:       *capability,
+		ExecutionParams:  params.allParams,
+		UntypedExecutors: params.untypedExecutors,
+	}
+	status, output, execErr := a.capabilityExecutionService.Execute(ctx, executionContainer)
 	if err = a.handleExecutionResult(ctx, params, status, output, execErr); err != nil {
-		return err
+		tracing.TraceErr(span, err)
+		return status, err
 	}
 
 	if status == enum.CapabilityExecutionCompleted {
 		utils.MergeMapToMap(output, params.allParams)
 	}
 
-	return nil
+	return status, nil
 }
 
-func (a *agentRunnerService) checkExecutionStatus(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.checkExecutionStatus")
+func (a *agentRunnerService) getExecution(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.getExecution")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	execution, err := a.postgresRepositories.AgentExecutionRepository.GetById(ctx, executionID)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if execution == nil {
+		err = errors.New("execution not found")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -251,20 +274,6 @@ func (a *agentRunnerService) getCapability(ctx context.Context, params capabilit
 	return capability, nil
 }
 
-func (a *agentRunnerService) executeCapabilityContainer(ctx context.Context, params capabilityParams, capability postgres_entity.Capability) (enum.CapabilityExecutionStatus, map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.executeCapabilityContainer")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	executionContainer := interfaces.ExecutionContainer{
-		AgentExecutionID: params.executionID,
-		Capability:       capability,
-		ExecutionParams:  params.allParams,
-		UntypedExecutors: params.untypedExecutors,
-	}
-	return a.capabilityExecutionService.Execute(ctx, executionContainer)
-}
-
 func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params capabilityParams, status enum.CapabilityExecutionStatus, output map[string]any, execErr error) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.handleExecutionResult")
 	defer span.Finish()
@@ -278,7 +287,6 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErr.Error()); err != nil {
 			return errors.Wrap(err, "unable to update agent execution record")
 		}
-		return execErr
 
 	case enum.CapabilityExecutionRetry:
 		// Try to schedule a retry first
@@ -290,7 +298,6 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 				return errors.Wrap(err, "unable to update agent execution record")
 			}
 		}
-		return execErr
 
 	case enum.CapabilityExecutionCompleted:
 		checkpointData := map[string]any{

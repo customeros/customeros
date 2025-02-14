@@ -112,7 +112,7 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 		}
 		result.OrganizationID = organizationEntity.ID
 		tracing.LogObjectAsJson(span, "result", result)
-		return enum.CapabilityExecutionError, result, nil
+		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{

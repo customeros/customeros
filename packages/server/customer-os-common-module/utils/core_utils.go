@@ -51,6 +51,14 @@ func BoolPtr(b bool) *bool {
 	return &b
 }
 
+func TruePtr() *bool {
+	return BoolPtr(true)
+}
+
+func FalsePtr() *bool {
+	return BoolPtr(false)
+}
+
 func TimePtr(t time.Time) *time.Time {
 	return &t
 }

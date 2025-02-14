@@ -166,7 +166,7 @@ func (l *EmailBouncedListener) handleGoalAchieved(ctx context.Context, agentExec
 	}
 
 	// update execution with goal achieved
-	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, false)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, utils.TruePtr())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
