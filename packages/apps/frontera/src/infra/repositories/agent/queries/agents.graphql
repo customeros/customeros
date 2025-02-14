@@ -20,10 +20,8 @@ query agents {
       errors
     }
     goal
-    goalType
     isActive
     scope
-    flowId
     visible
     createdAt
     updatedAt

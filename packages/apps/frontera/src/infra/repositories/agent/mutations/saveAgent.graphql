@@ -20,9 +20,7 @@ mutation saveAgent($input: AgentSaveInput!) {
       errors
     }
     goal
-    goalType
     isActive
-    flowId
     visible
     createdAt
     updatedAt

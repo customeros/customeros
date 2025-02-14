@@ -21,9 +21,7 @@ query agent($id: ID!) {
       errors
     }
     goal
-    goalType
     isActive
-    flowId
     visible
     createdAt
     updatedAt
