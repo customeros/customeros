@@ -1,4 +1,4 @@
-import React, { MouseEventHandler } from 'react';
+import { ReactNode, MouseEventHandler } from 'react';
 
 import { Button } from '@ui/form/Button/Button';
 
@@ -16,12 +16,12 @@ import {
 interface InfoDialogProps {
   label?: string;
   isOpen: boolean;
+  body?: ReactNode;
   onClose: () => void;
   description?: string;
-  body?: React.ReactNode;
+  children?: ReactNode;
   hideCloseButton?: boolean;
   confirmButtonLabel: string;
-  children?: React.ReactNode;
   onConfirm: MouseEventHandler<HTMLButtonElement>;
 }
 
@@ -45,9 +45,7 @@ export const InfoDialog = ({
               {label && (
                 <p className='pb-0 font-semibold line-clamp-2'>{label}</p>
               )}
-              {!hideCloseButton && (
-                <AlertDialogCloseIconButton className='mt-[3px]' />
-              )}
+              {!hideCloseButton && <AlertDialogCloseIconButton />}
             </div>
             <AlertDialogHeader className='font-bold'>
               {description && (
