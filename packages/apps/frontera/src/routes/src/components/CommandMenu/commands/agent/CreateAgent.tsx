@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { CreateAgentUsecase } from '@domain/usecases/agents/create-agent.usecase';
 
@@ -7,7 +8,12 @@ import { AgentType } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const CreateAgent = () => {
-  const usecase = useMemo(() => new CreateAgentUsecase(), []);
+  const navigate = useNavigate();
+
+  const navigateToAgent = (id: string) => {
+    navigate(`/agents/${id}`);
+  };
+  const usecase = useMemo(() => new CreateAgentUsecase(navigateToAgent), []);
 
   return (
     <Command>

@@ -1,6 +1,6 @@
 import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
-import { Agent } from '@store/Agents/Agent.dto.ts';
+import { Agent } from '@store/Agents/Agent.dto';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
@@ -44,9 +44,14 @@ export class RenameAgentUsecase {
       },
     });
 
+    // Default to 'Name me maybe' if the input is empty
+    const newAgentName = !this.inputValue.trim().length
+      ? 'Name me maybe'
+      : this.inputValue;
+
     const prevName = agent.value.name;
 
-    agent.setName(this.inputValue);
+    agent.setName(newAgentName);
 
     const [res, err] = await this.service.saveAgent(agent);
 

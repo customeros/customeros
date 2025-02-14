@@ -26,7 +26,9 @@ export class AgentService {
     });
 
     const req = await unwrap(
-      this.repo.saveAgent({ input: { type: agentType } }),
+      this.repo.saveAgent({
+        input: { type: agentType, name: 'Name me maybe' },
+      }),
     );
 
     span.end();

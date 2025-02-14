@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { AddWebsiteToTrackUsecase } from '@domain/usecases/agents/capabilities/add-website-to-track.usecase';
 
@@ -35,6 +36,10 @@ export const NewWebSessionListener = observer(() => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [_, copyToClipboard] = useCopyToClipboard();
+
+  useKey('Escape', usecase.close, {
+    when: usecase.isOpen,
+  });
 
   return (
     <>
@@ -93,6 +98,7 @@ export const NewWebSessionListener = observer(() => {
             variant='ghost'
             className='w-fit'
             onClick={usecase.open}
+            colorScheme={'primary'}
             leftIcon={<Icon name='plus-circle' />}
           >
             Add website
@@ -151,6 +157,17 @@ export const NewWebSessionListener = observer(() => {
                 placeholder='Website'
                 invalid={usecase.isInvalid}
                 onChange={(e) => usecase.setWebsite(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    usecase.executeAdd({
+                      onInvalid: () => inputRef.current?.focus(),
+                    });
+                  }
+
+                  if (e.key === 'Escape') {
+                    usecase.close();
+                  }
+                }}
               />
               {usecase.isInvalid && (
                 <p className='text-xs text-error-500'>

@@ -8,11 +8,11 @@ export class CreateAgentUsecase {
   private root = RootStore.getInstance();
   private service = new AgentService();
 
-  constructor() {
+  constructor(private navigateToAgent: (id: string) => void) {
     this.execute = this.execute.bind(this);
   }
 
-  public async execute(type: AgentType, callback?: (id: string) => void) {
+  public async execute(type: AgentType) {
     const span = Tracer.span('CreateAgentUsecase.execute', {
       payload: type,
     });
@@ -31,9 +31,7 @@ export class CreateAgentUsecase {
       this.root.ui.commandMenu.setType('AgentCommands');
       this.root.ui.commandMenu.setOpen(false);
 
-      if (callback) {
-        callback(res.agent_Save.id);
-      }
+      this.navigateToAgent(res.agent_Save.id);
     }
 
     span.end();

@@ -57,14 +57,18 @@ interface IcpBadgeProps {
 export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
   const store = useStore();
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
 
   const icpAgent = store.agents.icpQualificationAgent;
   const icpAgentActive = icpAgent?.value?.isActive;
   const icpAgentHasError =
     icpAgent?.value?.error !== null || !icpAgent?.value?.isConfigured;
   const organization = store.organizations.getById(id);
-  const usecase = useMemo(() => new CreateAgentUsecase(), []);
+  const navigate = useNavigate();
+
+  const navigateToAgent = (id: string) => {
+    navigate(`/agents/${id}`);
+  };
+  const usecase = useMemo(() => new CreateAgentUsecase(navigateToAgent), []);
 
   if (!organization) return null;
 
@@ -74,9 +78,7 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
 
   const handleAgentNavigation = () => {
     if (!icpAgent) {
-      return usecase.execute(AgentType.IcpQualifier, (id) =>
-        navigate(`/agents/${id}`),
-      );
+      return usecase.execute(AgentType.IcpQualifier);
     }
 
     return navigate(`/agents/${icpAgent.id}`);
