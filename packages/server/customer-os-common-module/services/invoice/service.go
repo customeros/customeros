@@ -2369,7 +2369,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	fileDTO, err := s.fileService.UploadSingleFileBytesDirect(ctx, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", pdfBytes, true)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
-		return "", errors.Wrap(err, "UploadSingleFileBytes")
+		return "", err
 	}
 
 	if fileDTO.ID == "" {
