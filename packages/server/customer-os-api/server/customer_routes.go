@@ -121,7 +121,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 	})
 }
 
-func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
+func registerWebhookRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	// webhook admin
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
@@ -143,7 +143,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", WebhooksPath),
+		path:      fmt.Sprintf("%s/:tenantHash/i/:integrationHash/rotate", WebhooksPath),
 		handler:   h.Webhooks.RotateWebhook(CustomerOSAPIURL(), WebhooksPath),
 		routeType: RouteCustomer,
 		services:  s,
@@ -152,8 +152,8 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
-		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId", WebhooksPath),
-		handler:   h.Webhooks.DeactivateWebhook(),
+		path:      fmt.Sprintf("%s/:tenantHash/i/:integrationHash", WebhooksPath),
+		handler:   h.Webhooks.DeactivateWebhook(CustomerOSAPIURL(), WebhooksPath),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     s.Cache,
