@@ -26,6 +26,7 @@ type CommonConfig struct {
 	FileStore      commonconf.FileStoreConfig
 	PdfConverter   commonconf.PdfConverterConfig
 	SlackConfig    commonconf.SlackConfig
+	NovuConfig     commonconf.NovuConfig
 }
 
 type AppConfig struct {
@@ -90,6 +91,7 @@ func Load() *Config {
 			AnthropicConfig:     cmnCfg.Anthropic,
 			BetterContactConfig: cmnCfg.BetterContact,
 			SlackConfig:         cmnCfg.SlackConfig,
+			NovuConfig:          cmnCfg.NovuConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
