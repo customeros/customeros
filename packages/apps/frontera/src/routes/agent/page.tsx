@@ -158,7 +158,6 @@ export const AgentPage = observer(() => {
                     'bg-grayModern-100 hover:bg-grayModern-100 font-medium',
                 )}
               >
-                {/*{console.log('listener', listener)}*/}
                 <div className='flex items-center gap-2'>
                   <Icon
                     stroke={listener.errors ? 'currentColor' : 'none'}
