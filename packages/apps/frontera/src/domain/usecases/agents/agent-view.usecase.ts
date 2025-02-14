@@ -86,7 +86,7 @@ export class AgentViewUsecase {
   > = {
     [AgentType.WebVisitIdentifier]: AgentListenerEvent.NewWebSession,
     [AgentType.IcpQualifier]: CapabilityType.IcpQualify,
-    [AgentType.SupportSpotter]: AgentListenerEvent.CompanyIdentified,
+    [AgentType.SupportSpotter]: AgentListenerEvent.NewMeetingRecording,
     [AgentType.MeetingKeeper]: AgentListenerEvent.NewMeetingRecording,
     [AgentType.CashflowGuardian]: CapabilityType.GenerateInvoice,
     [AgentType.CampaignManager]: CapabilityType.ManageCampaignExecution,
