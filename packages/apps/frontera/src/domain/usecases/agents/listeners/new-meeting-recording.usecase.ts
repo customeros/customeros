@@ -2,12 +2,15 @@ import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
 import { Agent } from '@store/Agents/Agent.dto';
 import { action, computed, observable } from 'mobx';
+import { WebhookIntegration } from '@infra/repositories/common';
 import { AgentService } from '@domain/services/agent/agent.service';
+import { CommonService } from '@domain/services/common/common.service';
 
 import { AgentListenerEvent } from '@graphql/types';
 
 export class NewMeetingRecordingUsecase {
   private service = new AgentService();
+  private commonService = new CommonService();
   private root = RootStore.getInstance();
   private hasInitted = false;
 
@@ -15,10 +18,11 @@ export class NewMeetingRecordingUsecase {
   @observable accessor webhookUrl: string = '';
   @observable accessor listenerErrors: string = '';
   @observable private accessor _notetaker: string = '';
+  @observable private accessor agentId: string = '';
+  @observable accessor isWebhookUrlLoading: boolean = false;
 
-  constructor(private agentId: string) {
+  constructor() {
     this.setNotetaker = this.setNotetaker.bind(this);
-    this.init();
   }
 
   @computed
@@ -55,6 +59,19 @@ export class NewMeetingRecordingUsecase {
   }
 
   @action
+  setAgentId(agentId: string) {
+    const span = Tracer.span('NewMeetingRecordingUsecase.setAgentId', {
+      previous: this.agentId,
+    });
+
+    this.agentId = agentId;
+
+    span.end({
+      current: agentId,
+    });
+  }
+
+  @action
   toggle() {
     const span = Tracer.span('NewMeetingRecordingUsecase.toggle', {
       previous: this.isOpen,
@@ -67,10 +84,91 @@ export class NewMeetingRecordingUsecase {
     });
   }
 
-  init() {
+  @action
+  setIsWebhookUrlLoading(isWebhookUrlLoading: boolean) {
+    this.isWebhookUrlLoading = isWebhookUrlLoading;
+  }
+
+  @action
+  reset() {
+    this.hasInitted = false;
+    this.agentId = '';
+    this.webhookUrl = '';
+    this.listenerErrors = '';
+    this._notetaker = '';
+    this.isWebhookUrlLoading = false;
+  }
+
+  private async initWebhookUrl(integration: WebhookIntegration) {
+    const span = Tracer.span('NewMeetingRecordingUsecase.initWebhookUrl', {
+      integration,
+    });
+
+    this.setIsWebhookUrlLoading(true);
+
+    const [res, err] = await this.commonService.getWebhookUrl(integration);
+
+    if (err) {
+      console.error(
+        'NewMeetingRecordingUsecase.initWebhookUrl: Error getting webhook URL, aborting.',
+        err,
+      );
+
+      this.setIsWebhookUrlLoading(false);
+      span.end();
+
+      return;
+    }
+
+    if (res) {
+      this.setWebhookUrl(res.data.hook.url);
+    }
+
+    this.setIsWebhookUrlLoading(false);
+
+    span.end();
+  }
+
+  private async createWebhookUrl(integration: WebhookIntegration) {
+    const span = Tracer.span('NewMeetingRecordingUsecase.createWebhookUrl', {
+      integration,
+    });
+
+    this.setIsWebhookUrlLoading(true);
+
+    const [webhookRes, webhookErr] = await this.commonService.createWebhookUrl(
+      this.notetaker?.value as WebhookIntegration,
+    );
+
+    if (webhookErr) {
+      console.error(
+        'NewMeetingRecordingUsecase.createWebhookUrl: Error creating webhook URL, aborting.',
+        webhookErr,
+      );
+
+      span.end();
+
+      this.setIsWebhookUrlLoading(false);
+
+      return;
+    }
+
+    if (webhookRes) {
+      this.setWebhookUrl(webhookRes.data.hook.url);
+    }
+
+    this.setIsWebhookUrlLoading(false);
+
+    span.end();
+  }
+
+  async init(agentId: string) {
     if (this.hasInitted) {
       return;
     }
+
+    this.hasInitted = true;
+    this.setAgentId(agentId);
 
     const span = Tracer.span('NewMeetingRecordingUsecase.init', {
       agentId: this.agentId,
@@ -101,9 +199,7 @@ export class NewMeetingRecordingUsecase {
       return;
     }
 
-    const listenerConfig = Agent.parseConfig<'webhookUrl' | 'meetingSource'>(
-      listener.config,
-    );
+    const listenerConfig = Agent.parseConfig<'meetingSource'>(listener.config);
 
     if (!listenerConfig) {
       console.error(
@@ -115,16 +211,6 @@ export class NewMeetingRecordingUsecase {
       return;
     }
 
-    // if (!listenerConfig.webhookUrl) {
-    //   console.error(
-    //     'NewMeetingRecordingUsecase.init: Webhook URL not found, aborting.',
-    //   );
-
-    //   span.end();
-
-    //   return;
-    // }
-
     if (!listenerConfig.meetingSource) {
       console.error(
         'NewMeetingRecordingUsecase.init: Meeting source not found, aborting.',
@@ -135,10 +221,14 @@ export class NewMeetingRecordingUsecase {
       return;
     }
 
-    // this.setWebhookUrl(listenerConfig.webhookUrl.value as string);
-    this.setNotetaker(listenerConfig.meetingSource.value as string);
+    if (listenerConfig.meetingSource.value) {
+      this.setNotetaker(listenerConfig.meetingSource.value as string);
 
-    this.hasInitted = true;
+      await this.initWebhookUrl(
+        listenerConfig.meetingSource.value as WebhookIntegration,
+      );
+    }
+
     span.end();
   }
 
@@ -164,6 +254,8 @@ export class NewMeetingRecordingUsecase {
       this.notetaker?.value,
     );
 
+    await this.createWebhookUrl(this.notetaker?.value as WebhookIntegration);
+
     const [res, err] = await this.service.saveAgent(agent);
 
     if (err) {
@@ -174,7 +266,7 @@ export class NewMeetingRecordingUsecase {
 
     if (res) {
       agent.put(res.agent_Save);
-      this.init();
+      this.init(this.agentId);
     }
 
     span.end();

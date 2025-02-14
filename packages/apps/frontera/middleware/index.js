@@ -206,6 +206,16 @@ async function createServer() {
     followRedirects: true,
   });
 
+  const customerOsApiRestProxyForTenant = createProxyMiddleware({
+    pathFilter: '/tenant-cos-api',
+    pathRewrite: { '^/tenant-cos-api': '' },
+    target: process.env.CUSTOMER_OS_API_PATH,
+    changeOrigin: true,
+    logger: console,
+    preserveHeaderKeyCase: true,
+    followRedirects: true,
+  });
+
   const internalApiProxy = createProxyMiddleware({
     pathFilter: '/internal',
     pathRewrite: { '^/internal': '' },
@@ -263,6 +273,7 @@ async function createServer() {
 
   app.use(customerOsApiGqlProxy);
   app.use(customerOsApiRestProxy);
+  app.use(customerOsApiRestProxyForTenant);
   app.use(internalApiProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
