@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { CreateAgentUsecase } from '@domain/usecases/agents/create-agent.usecase';
 
-import { cn } from '@ui/utils/cn.ts';
-import { IcpFit } from '@graphql/types';
+import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Icon, IconName } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Button } from '@ui/form/Button/Button.tsx';
+import { IcpFit, AgentType } from '@graphql/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 import {
   Tag,
@@ -42,6 +43,13 @@ const icpData: Record<
   },
 };
 
+type PopoverState =
+  | { isMatch: boolean; reasons: string[]; type: 'has_reasons' }
+  | { type: 'agent_error' }
+  | { type: 'agent_inactive' }
+  | { type: 'profiling' }
+  | { type: 'manual_change' };
+
 interface IcpBadgeProps {
   id: string;
 }
@@ -49,47 +57,75 @@ interface IcpBadgeProps {
 export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
   const store = useStore();
   const [open, setOpen] = useState(false);
-  const icpAgent = store.agents.icpQualificationAgent;
-  const icpAgentActive = icpAgent?.value.isActive;
   const navigate = useNavigate();
+
+  const icpAgent = store.agents.icpQualificationAgent;
+  const icpAgentActive = icpAgent?.value?.isActive;
+  const icpAgentHasError =
+    icpAgent?.value?.error !== null || !icpAgent?.value?.isConfigured;
   const organization = store.organizations.getById(id);
+  const usecase = useMemo(() => new CreateAgentUsecase(), []);
 
   if (!organization) return null;
 
   const data = organization.value.icpFit
     ? icpData[organization.value.icpFit]
-    : null;
-  const icpFitReasons = organization.value.icpFitReasons;
+    : icpData[IcpFit.IcpNotSet];
 
-  if (!data) return null;
+  const handleAgentNavigation = () => {
+    if (!icpAgent) {
+      return usecase.execute(AgentType.IcpQualifier, (id) =>
+        navigate(`/agents/${id}`),
+      );
+    }
 
-  const noAgentConfigured = !icpAgentActive;
-  const icpProfilingInProgress =
-    organization.value.icpFit === IcpFit.IcpNotSet &&
-    icpAgentActive &&
-    !organization.value.icpFitUpdatedAt;
+    return navigate(`/agents/${icpAgent.id}`);
+  };
 
-  const icpFitChangedByUserAction =
-    ((organization.value.icpFit === IcpFit.IcpNotSet &&
-      organization.value.icpFitUpdatedAt) ||
-      icpFitReasons.length === 0) &&
-    !icpProfilingInProgress;
+  const getPopoverState = (): PopoverState => {
+    const { icpFitReasons, icpFit, icpFitUpdatedAt } = organization.value;
 
-  const icpFitSetBySystem =
-    organization.value.icpFit !== IcpFit.IcpNotSet && icpFitReasons.length > 0;
+    if (icpFitReasons.length > 0) {
+      return {
+        type: 'has_reasons',
+        reasons: icpFitReasons,
+        isMatch: icpFit === IcpFit.IcpFit,
+      };
+    }
+
+    if (icpAgentHasError) {
+      return { type: 'agent_error' };
+    }
+
+    if (!icpAgentActive || !icpAgent) {
+      return { type: 'agent_inactive' };
+    }
+
+    const isProfilingInProgress =
+      icpFit === IcpFit.IcpNotSet && !icpFitUpdatedAt;
+
+    if (isProfilingInProgress) {
+      return { type: 'profiling' };
+    }
+
+    return { type: 'manual_change' };
+  };
+
+  const popoverState = getPopoverState();
+  const showSpinner = popoverState.type === 'profiling';
 
   return (
-    <Popover open={open} modal={true} onOpenChange={(value) => setOpen(value)}>
+    <Popover open={open} modal={true} onOpenChange={setOpen}>
       <PopoverTrigger>
         <Tag className='ml-4' variant='subtle' colorScheme={data.colorScheme}>
           {data.icon && (
             <TagLeftIcon className='mr-1'>
               <div>
-                {icpProfilingInProgress ? (
+                {showSpinner ? (
                   <Spinner
                     size='xs'
-                    label={'icp profiming'}
-                    className='text-gray-300 fill-gray-400 '
+                    label='icp profiling'
+                    className='text-gray-300 fill-gray-400'
                   />
                 ) : (
                   <Icon
@@ -120,96 +156,106 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
       </PopoverTrigger>
       <PopoverContent align='end' side='bottom' className='text-sm'>
         <div className='max-w-[295px]'>
-          {noAgentConfigured && (
-            <>
-              <p>
-                To determine whether this company fits your ideal customer
-                profile, configure and enable the
-                <span className='mx-1 font-medium'>ICP qualifier</span>
-                agent.
-              </p>
-              <Button
-                size='xs'
-                variant='outline'
-                colorScheme='primary'
-                className={'w-full mt-4'}
-                onClick={() => {
-                  navigate(`/agents/${icpAgent?.id}`);
-                }}
-              >
-                Go to ICP qualifier
-              </Button>
-            </>
-          )}
-          {!noAgentConfigured && icpFitSetBySystem && (
-            <>
-              <p>
-                The
-                <Link
-                  to={`/agents/${icpAgent?.id}`}
-                  className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
-                >
-                  ICP qualifier
-                </Link>
-                agent determined that this company{' '}
-                {organization.value.icpFit === IcpFit.IcpFit
-                  ? 'fits'
-                  : 'does not fit'}{' '}
-                your ideal customer profile.
-              </p>
-
-              <div className='pt-3'>
-                <span>Here's why:</span>
-                <ol className='list-decimal pl-5'>
-                  {icpFitReasons.map((reason, index) => (
-                    <li key={`${index}-reason`}>{reason}</li>
-                  ))}
-                </ol>
-              </div>
-
-              {/*<div className='p-2 px-3 mt-2 bg-grayModern-50 flex items-center'>*/}
-              {/*  <Icon*/}
-              {/*    name='message-question-circle'*/}
-              {/*    className='text-grayModern-500'*/}
-              {/*  />*/}
-              {/*  <p className='mx-2'>Is this qualification correct?</p>*/}
-              {/*  <IconButton*/}
-              {/*    size='xxs'*/}
-              {/*    aria-label={''}*/}
-              {/*    variant='ghost'*/}
-              {/*    icon={*/}
-              {/*      <Icon*/}
-              {/*        name='thumbs-down'*/}
-              {/*        className='text-grayModern-500 hover:text-grayModern-700'*/}
-              {/*      />*/}
-              {/*    }*/}
-              {/*  />*/}
-              {/*</div>*/}
-            </>
-          )}
-          {!noAgentConfigured && icpFitChangedByUserAction && (
-            <p>
-              A user changed this company’s ICP status by updating its
-              relationship and stage.
-            </p>
-          )}
-          {!noAgentConfigured &&
-            !icpFitChangedByUserAction &&
-            icpProfilingInProgress && (
-              <p>
-                The
-                <Link
-                  to={`/agents/${icpAgent?.id}`}
-                  className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
-                >
-                  ICP qualifier
-                </Link>
-                agent is busy determining whether this company fits your ideal
-                customer profile or not
-              </p>
-            )}
+          <PopoverContents
+            state={popoverState}
+            agentId={icpAgent?.id}
+            onNavigate={handleAgentNavigation}
+          />
         </div>
       </PopoverContent>
     </Popover>
   );
 });
+
+const AgentLink = ({ agentId }: { agentId?: string }) => (
+  <Link
+    to={`/agents/${agentId}`}
+    className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
+  >
+    ICP qualifier
+  </Link>
+);
+
+const QualifierButton = ({ onClick }: { onClick: () => void }) => (
+  <Button
+    size='xs'
+    variant='outline'
+    onClick={onClick}
+    colorScheme='primary'
+    className='w-full mt-4'
+  >
+    Go to ICP qualifier
+  </Button>
+);
+
+const PopoverContents = ({
+  state,
+  agentId,
+  onNavigate,
+}: {
+  agentId?: string;
+  state: PopoverState;
+  onNavigate: () => void;
+}) => {
+  switch (state.type) {
+    case 'has_reasons':
+      return (
+        <>
+          <p>
+            The <AgentLink agentId={agentId} /> agent determined that this
+            company {state.isMatch ? 'fits' : 'does not fit'} your ideal
+            customer profile.
+          </p>
+          <div className='pt-3'>
+            <span>Here's why:</span>
+            <ol className='list-decimal pl-5'>
+              {state.reasons.map((reason, index) => (
+                <li key={`${index}-reason`}>{reason}</li>
+              ))}
+            </ol>
+          </div>
+        </>
+      );
+
+    case 'agent_error':
+      return (
+        <>
+          <p>
+            To determine whether this company fits your ideal customer profile,
+            ensure the ICP qualifier agent is configured and enabled without
+            errors.
+          </p>
+          <QualifierButton onClick={onNavigate} />
+        </>
+      );
+
+    case 'agent_inactive':
+      return (
+        <>
+          <p>
+            To determine whether this company fits your ideal customer profile,
+            configure and enable the
+            <span className='mx-1 font-medium'>ICP qualifier</span>
+            agent.
+          </p>
+          <QualifierButton onClick={onNavigate} />
+        </>
+      );
+
+    case 'profiling':
+      return (
+        <p>
+          The <AgentLink agentId={agentId} /> agent is busy determining whether
+          this company fits your ideal customer profile or not
+        </p>
+      );
+
+    case 'manual_change':
+      return (
+        <p>
+          A user changed this company's ICP status by updating its relationship
+          and stage.
+        </p>
+      );
+  }
+};

@@ -12,7 +12,7 @@ export class CreateAgentUsecase {
     this.execute = this.execute.bind(this);
   }
 
-  public async execute(type: AgentType) {
+  public async execute(type: AgentType, callback?: (id: string) => void) {
     const span = Tracer.span('CreateAgentUsecase.execute', {
       payload: type,
     });
@@ -29,7 +29,11 @@ export class CreateAgentUsecase {
     if (res?.agent_Save) {
       this.root.agents.addOne(res.agent_Save);
       this.root.ui.commandMenu.setType('AgentCommands');
-      this.root.ui.commandMenu.toggle();
+      this.root.ui.commandMenu.setOpen(false);
+
+      if (callback) {
+        callback(res.agent_Save.id);
+      }
     }
 
     span.end();
