@@ -14,9 +14,11 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover.tsx';
 
-interface TagsProps {
+type MultiSelectOnChange = (selection: SelectOption[]) => void;
+type SingleSelectOnChange = (selection: SelectOption) => void;
+
+interface BaseTagsProps {
   dataTest?: string;
-  isMulti?: boolean;
   className?: string;
   inputValue: string;
   placeholder?: string;
@@ -26,8 +28,19 @@ interface TagsProps {
   leftAccessory?: React.ReactNode;
   onCreate: (value: string) => void;
   setInputValue: (value: string) => void;
-  onChange: (selection: SelectOption[] | SelectOption) => void;
 }
+
+interface MultiTagsProps extends BaseTagsProps {
+  isMulti?: true | undefined;
+  onChange: MultiSelectOnChange;
+}
+
+interface SingleTagsProps extends BaseTagsProps {
+  isMulti: false;
+  onChange: SingleSelectOnChange;
+}
+
+type TagsProps = MultiTagsProps | SingleTagsProps;
 
 export const Tags = observer(
   ({
@@ -47,10 +60,10 @@ export const Tags = observer(
     const store = useStore();
 
     const handleClear = (id: string) => {
-      if (isMulti) {
-        onChange?.(value.filter((o) => o.value !== id));
+      if (isMulti !== false) {
+        (onChange as MultiSelectOnChange)(value.filter((o) => o.value !== id));
       } else {
-        onChange?.({ value: '', label: '' });
+        (onChange as SingleSelectOnChange)({ value: '', label: '' });
       }
     };
 
