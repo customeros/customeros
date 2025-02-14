@@ -18,6 +18,9 @@ const (
 	InvoicePropertyRemindInvoiceNotificationRequestedAt InvoiceProperty = "techRemindInvoiceNotificationRequestedAt"
 	InvoicePropertyQuickbooksInvoiceId                  InvoiceProperty = "quickbooksInvoiceId"
 	InvoicePropertyPayNotificationRequestedAt           InvoiceProperty = "techPayNotificationRequestedAt"
+	InvoicePropertyProviderEmail                        InvoiceProperty = "providerEmail"
+	InvoicePropertyProviderCCEmails                     InvoiceProperty = "providerCCEmails"
+	InvoicePropertyProviderBCCEmails                    InvoiceProperty = "providerBCCEmails"
 )
 
 type InvoiceEntity struct {
@@ -71,6 +74,8 @@ type InvoiceProvider struct {
 	LogoRepositoryFileId string
 	Name                 string
 	Email                string
+	CC                   []string
+	BCC                  []string
 	AddressLine1         string
 	AddressLine2         string
 	Zip                  string

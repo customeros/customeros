@@ -131,7 +131,9 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 		Provider: neo4j_entity.InvoiceProvider{
 			LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, "providerLogoRepositoryFileId"),
 			Name:                 utils.GetStringPropOrEmpty(props, "providerName"),
-			Email:                utils.GetStringPropOrEmpty(props, "providerEmail"),
+			Email:                utils.GetStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyProviderEmail)),
+			CC:                   utils.GetListStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyProviderCCEmails)),
+			BCC:                  utils.GetListStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyProviderBCCEmails)),
 			AddressLine1:         utils.GetStringPropOrEmpty(props, "providerAddressLine1"),
 			AddressLine2:         utils.GetStringPropOrEmpty(props, "providerAddressLine2"),
 			Zip:                  utils.GetStringPropOrEmpty(props, "providerAddressZip"),

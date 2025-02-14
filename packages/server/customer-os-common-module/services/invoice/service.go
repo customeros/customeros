@@ -370,7 +370,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			VAT:                          invoiceEntity.Vat,
 			TotalAmount:                  invoiceEntity.TotalAmount,
 			Status:                       invoiceStatus,
-			//ProviderEmail:                tenantBillingProfileEntity.SendInvoicesFrom, // TODO alexb not saved on invoice
+			ProviderEmail:                dataFields.FromEmail,
 		}
 		err = s.neo4j.InvoiceWriteRepository.FillInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId, fillFields)
 		if err != nil {
@@ -1797,11 +1797,6 @@ func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoic
 	}
 
 	// load tenant billing profile from neo4j
-	tenantBillingProfileEntity, err := s.loadTenantBillingProfile(ctx, tenant, false)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))
-		return nil
-	}
 	tenantSettingsDbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetTenantSettings"))
@@ -1810,10 +1805,12 @@ func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoic
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
 
 	cc := contractEntity.InvoiceEmailCC
+	cc = append(cc, invoiceEntity.Provider.CC...)
 	cc = utils.RemoveEmpties(cc)
 	cc = utils.RemoveDuplicates(cc)
 
-	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc := contractEntity.InvoiceEmailBCC
+	bcc = append(bcc, invoiceEntity.Provider.BCC...)
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
@@ -1943,17 +1940,13 @@ func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invo
 	}
 
 	// load tenant billing profile from neo4j
-	tenantBillingProfileEntity, err := s.loadTenantBillingProfile(ctx, tenant, false)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))
-		return nil
-	}
-
 	cc := contractEntity.InvoiceEmailCC
+	cc = append(cc, invoiceEntity.Provider.CC...)
 	cc = utils.RemoveEmpties(cc)
 	cc = utils.RemoveDuplicates(cc)
 
-	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc := contractEntity.InvoiceEmailBCC
+	bcc = append(bcc, invoiceEntity.Provider.BCC...)
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
@@ -2069,22 +2062,6 @@ func (s *invoiceService) appendProviderLogoToEmail(ctx context.Context, tenant, 
 func isValidEmailSyntax(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
-}
-
-func (s *invoiceService) loadTenantBillingProfile(ctx context.Context, tenant string, failIfNotFound bool) (neo4jentity.TenantBillingProfileEntity, error) {
-	tenantBillingProfiles, err := s.neo4j.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
-	if err != nil {
-		return neo4jentity.TenantBillingProfileEntity{}, err
-	}
-	if len(tenantBillingProfiles) == 0 {
-		if failIfNotFound {
-			return neo4jentity.TenantBillingProfileEntity{}, errors.New("tenantBillingProfiles not available")
-		} else {
-			return neo4jentity.TenantBillingProfileEntity{}, nil
-		}
-	}
-	tenantBillingProfileEntity := neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
-	return *tenantBillingProfileEntity, nil
 }
 
 func (s *invoiceService) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *interfaces.PostmarkEmail) error {
@@ -2462,13 +2439,6 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
-	// load tenant billing profile from neo4j
-	tenantBillingProfileEntity, err := s.loadTenantBillingProfile(ctx, tenant, false)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))
-		return err
-	}
-
 	// Mark notification requested, to avoid double notifications
 	err = s.neo4j.InvoiceWriteRepository.MarkPayNotificationRequested(ctx, tenant, invoiceId, utils.Now())
 	if err != nil {
@@ -2485,10 +2455,12 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 	}
 
 	cc := contractEntity.InvoiceEmailCC
+	cc = append(cc, invoiceEntity.Provider.CC...)
 	cc = utils.RemoveEmpties(cc)
 	cc = utils.RemoveDuplicates(cc)
 
-	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc := contractEntity.InvoiceEmailBCC
+	bcc = append(bcc, invoiceEntity.Provider.BCC...)
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
@@ -2647,11 +2619,6 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	}
 
 	// load tenant billing profile from neo4j
-	tenantBillingProfileEntity, err := s.loadTenantBillingProfile(ctx, tenant, false)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))
-		return err
-	}
 	tenantSettingsDbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetTenantSettings"))
@@ -2675,10 +2642,12 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	}
 
 	cc := contractEntity.InvoiceEmailCC
+	cc = append(cc, invoiceEntity.Provider.CC...)
 	cc = utils.RemoveEmpties(cc)
 	cc = utils.RemoveDuplicates(cc)
 
-	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc := contractEntity.InvoiceEmailBCC
+	bcc = append(bcc, invoiceEntity.Provider.BCC...)
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 

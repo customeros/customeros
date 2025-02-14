@@ -11,6 +11,9 @@ type InvoiceFields struct {
 	InvoiceEndDate       *time.Time            `json:"invoiceEndDate"`
 	InvoiceNumber        string                `json:"invoiceNumber"`
 	TenantBillingProfile *TenantBillingProfile `json:"tenantBillingProfile"`
+	FromEmail            string                `json:"fromEmail"`
+	CcEmails             []string              `json:"ccEmails"`
+	BccEmails            []string              `json:"bccEmails"`
 }
 
 type TenantBillingProfile struct {

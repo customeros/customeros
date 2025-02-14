@@ -50,6 +50,8 @@ type InvoiceFillFields struct {
 	ProviderLogoRepositoryFileId string                  `json:"providerLogoRepositoryFileId"`
 	ProviderName                 string                  `json:"providerName"`
 	ProviderEmail                string                  `json:"providerEmail"`
+	ProviderCCEmails             []string                `json:"providerCCEmails"`
+	ProviderBCCEmails            []string                `json:"providerBCCEmails"`
 	ProviderAddressLine1         string                  `json:"providerAddressLine1"`
 	ProviderAddressLine2         string                  `json:"providerAddressLine2"`
 	ProviderAddressZip           string                  `json:"providerAddressZip"`
@@ -181,6 +183,8 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.Mana
 								i.providerLogoRepositoryFileId=$providerLogoRepositoryFileId,
 								i.providerName=$providerName,
 								i.providerEmail=$providerEmail,
+								i.providerCCEmails=$providerCCEmails,
+								i.providerBCCEmails=$providerBCCEmails,
 								i.providerAddressLine1=$providerAddressLine1,
 								i.providerAddressLine2=$providerAddressLine2,
 								i.providerAddressZip=$providerAddressZip,
@@ -212,6 +216,8 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.Mana
 		"providerAddressLocality":      data.ProviderAddressLocality,
 		"providerAddressCountry":       data.ProviderAddressCountry,
 		"providerAddressRegion":        data.ProviderAddressRegion,
+		"providerCCEmails":             data.ProviderCCEmails,
+		"providerBCCEmails":            data.ProviderBCCEmails,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
