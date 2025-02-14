@@ -2756,12 +2756,16 @@ func (s *invoiceService) AutopayInvoice(ctx context.Context, invoiceId string) e
 
 	// check if invoice can be auto-paid
 	if invoiceEntity.DryRun {
+		span.LogFields(log.String("result", "skipped autopay for dry run invoice"))
 		return nil
 	} else if invoiceEntity.TotalAmount == 0 {
+		span.LogFields(log.String("result", "skipped autopay for invoice with total amount of 0"))
 		return nil
 	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
+		span.LogFields(log.String("result", "skipped autopay for invoice not due or overdue"))
 		return nil
 	} else if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt != nil {
+		span.LogFields(log.String("result", "skipped autopay for invoice already finalized"))
 		return nil
 	}
 
