@@ -25,11 +25,17 @@ export const AgentsPage = observer(() => {
 
   useSlackOauthCallback();
 
-  if (!firstView) {
+  if ((!agents.length && store.agents.isBootstrapped) || !firstView) {
     return (
       <EmptyState
         onClick={() => {
-          setFirstView(true);
+          if (!firstView) {
+            setFirstView(true);
+
+            return;
+          }
+          store.ui.commandMenu.setType('CreateAgent');
+          store.ui.commandMenu.setOpen(true);
         }}
       />
     );
