@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase.ts';
+import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 
 import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';

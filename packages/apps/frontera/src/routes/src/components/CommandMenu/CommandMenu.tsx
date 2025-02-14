@@ -201,6 +201,7 @@ export const CommandMenu = observer(() => {
           store.ui.commandMenu.setOpen(false);
         } else {
           store.ui.commandMenu.setType('AgentsCommands');
+          store.ui.commandMenu.setOpen(false);
         }
       })
       .otherwise(() => {
