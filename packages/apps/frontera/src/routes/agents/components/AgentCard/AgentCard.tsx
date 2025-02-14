@@ -68,6 +68,7 @@ export const AgentCard = ({
                 stroke={hasError && status === 'ON' ? 'currentColor' : 'none'}
                 className={cn('size-3', {
                   'text-warning-500': hasError && status === 'ON',
+                  'text-gray-500': status === 'OFF',
                 })}
                 name={
                   hasError && status === 'ON'

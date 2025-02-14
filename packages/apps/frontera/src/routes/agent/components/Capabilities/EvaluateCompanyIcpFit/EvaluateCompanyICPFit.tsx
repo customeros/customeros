@@ -45,11 +45,11 @@ export const EvaluateCompanyIcpFit = observer(() => {
           <div className='h-[90vh] pr-4 flex flex-col gap-4'>
             <div className='flex flex-col'>
               <h2 className='text-sm font-medium mb-1'>
-                Add 5 ideal customers
+                Add 5 or more of your ideal customers
               </h2>
               <p className='text-sm'>
-                Add at least 5 company websites that match your ideal customer
-                profile. Feel free to add more.
+                Add 5 or more websites of companies that match your ideal
+                customer profile
               </p>
 
               {editIcpDomainsUsecase.icpCompanyExamples.size > 0 && (
