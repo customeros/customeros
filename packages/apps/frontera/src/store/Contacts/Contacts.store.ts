@@ -57,7 +57,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
     if (!this.value.has(id)) {
       setTimeout(() => {
-        this.retrieve([id]);
+        this.retrieveIfNotExists([id]);
       }, 0);
     }
 
@@ -162,9 +162,27 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     this.retrieve(ids);
   }
 
+  async retrieveIfNotExists(ids: string[]) {
+    try {
+      if (ids.length === 0) return;
+
+      const nonExistingIds = ids.filter((id) => !this.value.has(id));
+
+      if (nonExistingIds.length === 0) return;
+
+      await this.retrieve(nonExistingIds);
+    } catch (err) {
+      console.error(
+        'Contacts.store.retrieveIfNotExists: Failed to retrieve non-existingcontacts',
+        err,
+      );
+    }
+  }
+
   @action
   async retrieve(ids: string[]) {
     if (ids.length === 0) return;
+
     const invalidIds = ids.filter((id) => id.length !== 36);
 
     if (invalidIds.length > 0) {
@@ -184,13 +202,13 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
       runInAction(() => {
         ui_contacts.forEach((raw) => {
+          if (raw.hide) return;
+
           if (this.value.has(raw.id)) {
             const record = this.value.get(raw.id);
 
             if (!record) return;
-            record?.draft();
             Object.assign(record?.value, raw);
-            record?.commit({ syncOnly: true });
           } else {
             const record = new Contact(this, raw);
 
@@ -548,14 +566,14 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     try {
       runInAction(() => {
         if (organizationId) {
-          const organization =
-            this.root.organizations.value.get(organizationId);
+          const organization = this.root.organizations.getById(organizationId);
 
           const foundIdx = organization?.value?.contacts.findIndex(
             (c) => c === id,
           );
 
-          if (foundIdx && foundIdx > -1) {
+          if (typeof foundIdx === 'number' && foundIdx > -1) {
+            organization?.draft();
             organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });
           }
@@ -588,7 +606,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
             (c) => c === id,
           );
 
-          if (foundIdx && foundIdx > -1) {
+          if (typeof foundIdx === 'number' && foundIdx > -1) {
             organization?.draft();
             organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });

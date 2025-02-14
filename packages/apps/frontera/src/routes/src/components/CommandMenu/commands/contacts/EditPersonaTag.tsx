@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 import { EditPersonaTagUsecase } from '@domain/usecases/command-menu/edit-persona-tag.usecase';
@@ -6,9 +8,9 @@ import { Plus } from '@ui/media/icons/Plus';
 import { Check } from '@ui/media/icons/Check';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
-const usecase = new EditPersonaTagUsecase();
-
 export const EditPersonaTag = observer(() => {
+  const usecase = useMemo(() => new EditPersonaTagUsecase(), []);
+
   return (
     <Command shouldFilter={false} label='Change or add tags...'>
       <CommandInput

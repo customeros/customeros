@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 import { EditOrganizationTagUsecase } from '@domain/usecases/command-menu/edit-organization-tag.usecase.ts';
@@ -7,10 +9,10 @@ import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-const editTags = new EditOrganizationTagUsecase();
 
 export const ChangeTags = observer(() => {
   const store = useStore();
+  const editTags = useMemo(() => new EditOrganizationTagUsecase(), []);
 
   useModKey('Enter', () => {
     store.ui.commandMenu.setOpen(false);

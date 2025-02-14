@@ -1,4 +1,6 @@
 import type { UserStore } from '@store/Users/User.store';
+import type { GetOrganizationsByIdsQuery } from '@infra/repositories/organization/queries/getOrganizationsByIds.generated';
+import type { SaveOrganizationMutationVariables } from '@infra/repositories/organization/mutations/saveOrganization.generated';
 
 import { set } from 'lodash';
 import merge from 'lodash/merge';
@@ -20,9 +22,6 @@ import {
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
-
-import type { GetOrganizationsByIdsQuery } from '../../infra/repositories/organization/queries/getOrganizationsByIds.generated';
-import type { SaveOrganizationMutationVariables } from '../../infra/repositories/organization/mutations/saveOrganization.generated';
 
 import { OrganizationsStore } from './Organizations.store';
 

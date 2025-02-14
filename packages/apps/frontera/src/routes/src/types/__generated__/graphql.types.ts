@@ -125,10 +125,19 @@ export enum AgentListenerEvent {
   EmailReplyReceived = 'EMAIL_REPLY_RECEIVED',
   IcpFit = 'ICP_FIT',
   IcpNotAFit = 'ICP_NOT_A_FIT',
+  IgnoreEmail = 'IGNORE_EMAIL',
+  IngestEmail = 'INGEST_EMAIL',
+  InvoicePaid = 'INVOICE_PAID',
+  InvoicePastDue = 'INVOICE_PAST_DUE',
+  InvoiceVoided = 'INVOICE_VOIDED',
+  NewEmail = 'NEW_EMAIL',
   NewLead = 'NEW_LEAD',
   NewMeetingRecording = 'NEW_MEETING_RECORDING',
   NewWebSession = 'NEW_WEB_SESSION',
+  PaymentFailed = 'PAYMENT_FAILED',
+  PaymentProcessing = 'PAYMENT_PROCESSING',
   RunIcpQualifierAgent = 'RUN_ICP_QUALIFIER_AGENT',
+  SendInvoice = 'SEND_INVOICE',
   StartInvoiceRun = 'START_INVOICE_RUN',
   StartInvoiceRunWithAutopayment = 'START_INVOICE_RUN_WITH_AUTOPAYMENT',
   WebVisitorIdentified = 'WEB_VISITOR_IDENTIFIED',
@@ -172,6 +181,7 @@ export type AgentSlackChannel = {
 export enum AgentType {
   CampaignManager = 'CAMPAIGN_MANAGER',
   CashflowGuardian = 'CASHFLOW_GUARDIAN',
+  EmailKeeper = 'EMAIL_KEEPER',
   IcpQualifier = 'ICP_QUALIFIER',
   MeetingKeeper = 'MEETING_KEEPER',
   SupportSpotter = 'SUPPORT_SPOTTER',
@@ -403,9 +413,11 @@ export enum CapabilityType {
   AddMeetingNotesToCompany = 'ADD_MEETING_NOTES_TO_COMPANY',
   AnalyzeWebSessionIntent = 'ANALYZE_WEB_SESSION_INTENT',
   ApplyTagToCompany = 'APPLY_TAG_TO_COMPANY',
+  ClassifyEmail = 'CLASSIFY_EMAIL',
   CreateContacts = 'CREATE_CONTACTS',
   CreateMarkdownTimelineEvent = 'CREATE_MARKDOWN_TIMELINE_EVENT',
   CreateOrganization = 'CREATE_ORGANIZATION',
+  CreayePaymentLink = 'CREAYE_PAYMENT_LINK',
   DetectSupportWebvisit = 'DETECT_SUPPORT_WEBVISIT',
   EnrichEmailAddress = 'ENRICH_EMAIL_ADDRESS',
   ExtractMeetingHighlights = 'EXTRACT_MEETING_HIGHLIGHTS',
@@ -415,12 +427,20 @@ export enum CapabilityType {
   GenerateInvoice = 'GENERATE_INVOICE',
   IcpQualify = 'ICP_QUALIFY',
   IdentifyMeetingParticipants = 'IDENTIFY_MEETING_PARTICIPANTS',
+  IdentifyParticipants = 'IDENTIFY_PARTICIPANTS',
   IdentifyWebVisitor = 'IDENTIFY_WEB_VISITOR',
+  IngestEmail = 'INGEST_EMAIL',
+  LogRequestsForHelp = 'LOG_REQUESTS_FOR_HELP',
   ManageCampaignExecution = 'MANAGE_CAMPAIGN_EXECUTION',
   ManageEmailDeliveryFailure = 'MANAGE_EMAIL_DELIVERY_FAILURE',
+  ProcessAutopayment = 'PROCESS_AUTOPAYMENT',
   SelectOptimalSendingMailbox = 'SELECT_OPTIMAL_SENDING_MAILBOX',
   SendInvoiceViaEmail = 'SEND_INVOICE_VIA_EMAIL',
+  SendInvoiceVoidedNotification = 'SEND_INVOICE_VOIDED_NOTIFICATION',
+  SendPaidNotification = 'SEND_PAID_NOTIFICATION',
   SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
+  SummarizeMessage = 'SUMMARIZE_MESSAGE',
+  SummarizeThread = 'SUMMARIZE_THREAD',
   UpdateCompanyStatus = 'UPDATE_COMPANY_STATUS',
   ValidateEmailDeliverability = 'VALIDATE_EMAIL_DELIVERABILITY',
   WebVisitorSendSlackNotification = 'WEB_VISITOR_SEND_SLACK_NOTIFICATION',
@@ -1117,6 +1137,12 @@ export type Country = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   phoneCode: Scalars['String']['output'];
+};
+
+export type CreateContactBulkResponse = {
+  __typename?: 'CreateContactBulkResponse';
+  createdIds: Array<Scalars['String']['output']>;
+  failedInputs: Array<Scalars['String']['output']>;
 };
 
 export enum Currency {
@@ -2609,7 +2635,9 @@ export type Mutation = {
   contact_AddTag: ActionResponse;
   contact_Create: Scalars['ID']['output'];
   contact_CreateBulkByEmail: Array<Scalars['String']['output']>;
+  contact_CreateBulkByEmailV2: CreateContactBulkResponse;
   contact_CreateBulkByLinkedIn: Array<Scalars['String']['output']>;
+  contact_CreateBulkByLinkedInV2: CreateContactBulkResponse;
   contact_CreateForOrganization: Contact;
   contact_FindWorkEmail: ActionResponse;
   contact_HardDelete: Result;
@@ -2862,7 +2890,17 @@ export type MutationContact_CreateBulkByEmailArgs = {
   flowId?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type MutationContact_CreateBulkByEmailV2Args = {
+  emails: Array<Scalars['String']['input']>;
+  flowId?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type MutationContact_CreateBulkByLinkedInArgs = {
+  flowId?: InputMaybe<Scalars['String']['input']>;
+  linkedInUrls: Array<Scalars['String']['input']>;
+};
+
+export type MutationContact_CreateBulkByLinkedInV2Args = {
   flowId?: InputMaybe<Scalars['String']['input']>;
   linkedInUrls: Array<Scalars['String']['input']>;
 };
@@ -5133,6 +5171,7 @@ export type TenantInput = {
 export type TenantSettings = {
   __typename?: 'TenantSettings';
   baseCurrency?: Maybe<Currency>;
+  /** @deprecated No longer supported */
   billingEnabled: Scalars['Boolean']['output'];
   logoRepositoryFileId?: Maybe<Scalars['String']['output']>;
   /**

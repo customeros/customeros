@@ -298,6 +298,7 @@ export class Contact extends Entity<ContactDatum> {
         lastName: '',
         name: '',
         prefix: '',
+        hide: false,
         description: '',
         timezone: '',
         profilePhotoUrl: '',

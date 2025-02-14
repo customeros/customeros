@@ -334,6 +334,8 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
       ...opts,
       // persist: () => this.persist(id),
     });
+
+    // this.reconcile(id);
     this.version++;
   }
 
