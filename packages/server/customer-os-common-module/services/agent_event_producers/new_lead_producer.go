@@ -121,6 +121,25 @@ func (p *NewLeadProducer) processLeads(ctx context.Context, record neo4j_reposit
 		span.LogKV("message", "Organization is not a global organization")
 		return
 	}
+	// precheck if global organziation has required fields
+	for _, globalOrg := range globalOrgs {
+		if globalOrg.Description == "" {
+			span.LogKV("message", "Global organization has no description")
+			return
+		}
+		if globalOrg.EmployeeCount == 0 {
+			span.LogKV("message", "Global organization has no employee count")
+			return
+		}
+		if globalOrg.IndustryNaicsName == "" {
+			span.LogKV("message", "Global organization has no industry naics name")
+			return
+		}
+		if globalOrg.CountryA2 == "" {
+			span.LogKV("message", "Global organization has no country a2")
+			return
+		}
+	}
 
 	err = p.events.Publisher.PublishFanoutEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.NewLead{})
 	if err != nil {
