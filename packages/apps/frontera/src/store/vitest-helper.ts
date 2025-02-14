@@ -4,6 +4,8 @@ import { ContactService } from '@store/Contacts/__service__/Contacts.service.ts'
 import { contactsTestState } from '@store/Contacts/__tests__/contactsTestState.ts';
 import { organizationsTestState } from '@store/Organizations/__tests__/organizationsTestState.ts';
 
+import { SortingDirection } from '@graphql/types';
+
 interface ContactCreateInput {
   name?: string;
   socialUrl?: string;
@@ -119,22 +121,32 @@ export class VitestHelper {
 
   static async createContactBulkByLinkedInForTest(
     contactService: ContactService,
-    count: number = 1,
-    flowId?: string,
+    linkedInUrls: string[],
   ) {
-    const linkedInUrls = Array.from(
-      { length: count },
-      () => `https://www.linkedin.com/in/Vitest-${crypto.randomUUID()}`,
-    );
-
     const { contact_CreateBulkByLinkedIn: contactIds } =
       await contactService.createContactBulkByLinkedIn({
         linkedInUrls,
-        flowId,
       });
 
-    // Track all created contacts
-    contactIds.forEach((id) => trackContact(id));
+    const { ui_contacts_search } = await contactService.searchContacts({
+      where: {
+        AND: [], // Empty AND array for no specific filters
+      },
+      sort: {
+        by: 'CONTACTS_UPDATED_AT',
+        direction: SortingDirection.Desc,
+      },
+    });
+    const createContacts = (
+      await contactService.getContactsByIds({ ids: ui_contacts_search.ids })
+    ).ui_contacts.filter(
+      (contact) =>
+        contact.linkedInUrl !== null &&
+        contact.linkedInUrl !== undefined &&
+        linkedInUrls.includes(contact.linkedInUrl),
+    );
+
+    createContacts.forEach((createContacts) => trackContact(createContacts.id));
 
     return {
       contactIds,
@@ -144,22 +156,35 @@ export class VitestHelper {
 
   static async createContactBulkByEmailForTest(
     contactService: ContactService,
-    count: number = 1,
-    flowId?: string,
+    emails: string[],
   ) {
-    const emails = Array.from(
-      { length: count },
-      () => `vitest-${crypto.randomUUID()}@${crypto.randomUUID()}.com`,
-    );
-
     const { contact_CreateBulkByEmail: contactIds } =
       await contactService.createContactBulkByEmail({
         emails,
-        flowId,
       });
 
-    // Track all created contacts
-    contactIds.forEach((id) => trackContact(id));
+    const { ui_contacts_search } = await contactService.searchContacts({
+      where: {
+        AND: [],
+      },
+      sort: {
+        by: 'CONTACTS_UPDATED_AT',
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    const createContacts = (
+      await contactService.getContactsByIds({ ids: ui_contacts_search.ids })
+    ).ui_contacts.filter((contact) =>
+      contact.emails.some(
+        (emailObj) =>
+          emailObj.email !== null &&
+          emailObj.email !== undefined &&
+          emails.includes(emailObj.email),
+      ),
+    );
+
+    createContacts.forEach((createContacts) => trackContact(createContacts.id));
 
     return {
       contactIds,
@@ -174,4 +199,16 @@ export const trackOrganization = (organizationId: string) => {
 
 export const trackContact = (contactId: string) => {
   contactsTestState.createdContactsIds.add(contactId);
+};
+
+export const generateEmail = (): string => {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  const firstPart = Array.from({ length: 5 }, () =>
+    letters.charAt(Math.floor(Math.random() * letters.length)),
+  ).join('');
+  const secondPart = Array.from({ length: 4 }, () =>
+    letters.charAt(Math.floor(Math.random() * letters.length)),
+  ).join('');
+
+  return `${firstPart}.${secondPart}@msn.com`;
 };
