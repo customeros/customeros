@@ -66,7 +66,7 @@ const (
 	CapabilityScheduleEmailDelivery              AgentCapability = "schedule_email_delivery"
 	CapabilitySelectOptimalSendingMailbox        AgentCapability = "select_optimal_sending_mailbox"
 	CapabilitySendLinkedinConnectionRequest      AgentCapability = "send_linkedin_connection_request"
-	CapabililtySendLinkedinMessage               AgentCapability = "send_linkedin_message"
+	CapabilitySendLinkedinMessage                AgentCapability = "send_linkedin_message"
 	CapabilitySyncLinkedinConnections            AgentCapability = "sync_linkedin_connections"
 	CapabilitySendPaymentReminder                AgentCapability = "send_payment_reminder"
 	CapabilitySendSlackNotification              AgentCapability = "send_slack_notification"
@@ -83,6 +83,8 @@ const (
 	CapabilitySummarizeMessage                   AgentCapability = "summarize_message"
 	CapabilitySummarizeThread                    AgentCapability = "summarize_thread"
 	CapabilityIngestEmail                        AgentCapability = "ingest_email"
+	CapabilitySendPaidNotification               AgentCapability = "send_paid_notification"
+	CapabilitySendInvoiceVoidedNotification      AgentCapability = "send_invoice_voided_notification"
 )
 
 func (t AgentCapability) String() string {
@@ -124,7 +126,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityScheduleEmailDelivery,
 		CapabilitySelectOptimalSendingMailbox,
 		CapabilitySendLinkedinConnectionRequest,
-		CapabililtySendLinkedinMessage,
+		CapabilitySendLinkedinMessage,
 		CapabilitySyncLinkedinConnections,
 		CapabilitySendPaymentReminder,
 		CapabilitySendSlackNotification,
@@ -140,7 +142,9 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityIdentifyParticipants,
 		CapabilitySummarizeMessage,
 		CapabilitySummarizeThread,
-		CapabilityIngestEmail:
+		CapabilityIngestEmail,
+		CapabilitySendPaidNotification,
+		CapabilitySendInvoiceVoidedNotification:
 		return AgentCapability(s), nil
 
 	default:

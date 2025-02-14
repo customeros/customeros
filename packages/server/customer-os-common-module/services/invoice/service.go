@@ -1157,13 +1157,6 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error
 		return err
 	}
 
-	// TODO alexb move it inside update invoice method only if status changes
-	err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
-		s.log.Errorf("Error from events processing: %s", err.Error())
-	}
-
 	return nil
 }
 
@@ -1181,13 +1174,6 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) erro
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
-	}
-
-	// TODO alexb move inside update
-	err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
-		s.log.Errorf("Error from events processing: %s", err.Error())
 	}
 
 	return nil
@@ -1621,14 +1607,22 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 			// status changed
 			if invoiceEntityBeforeUpdate.Status != invoiceEntityAfterUpdate.Status {
 				if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusVoid {
-					err = s.sendVoidedInvoiceNotification(ctx, invoiceId)
+					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{
+						InvoiceID: invoiceId,
+						DryRun:    invoiceEntityAfterUpdate.DryRun,
+					})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "send voided invoice notification"))
+						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+						s.log.Errorf("Error from events processing: %s", err.Error())
 					}
 				} else if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusPaid {
-					err = s.sendPaidInvoiceNotification(ctx, invoiceId)
+					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{
+						InvoiceID: invoiceId,
+						DryRun:    invoiceEntityAfterUpdate.DryRun,
+					})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "send paid invoice notification"))
+						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+						s.log.Errorf("Error from events processing: %s", err.Error())
 					}
 				}
 			}
@@ -1757,7 +1751,7 @@ func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.Mana
 	}
 }
 
-func (s *invoiceService) sendPaidInvoiceNotification(ctx context.Context, invoiceId string) error {
+func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.sendPaidInvoiceNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -1895,7 +1889,7 @@ func (s *invoiceService) sendPaidInvoiceNotification(ctx context.Context, invoic
 	return nil
 }
 
-func (s *invoiceService) sendVoidedInvoiceNotification(ctx context.Context, invoiceId string) error {
+func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.sendPaidInvoiceNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
