@@ -107,7 +107,6 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Scope:       agentRegistry.Scope,
 		Tenant:      tenant,
 		Name:        agentRegistry.AgentName,
-		Goal:        agentRegistry.Goal,
 		IsActive:    false,
 		VisibleInUI: true,
 		Icon:        agentRegistry.Icon,
@@ -185,7 +184,6 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Color:        newAgent.Color,
 		Capabilities: newAgent.Capabilities,
 		Listeners:    newAgent.Listeners,
-		Goal:         newAgent.Goal.String(),
 		Status:       newAgent.Status,
 		FlowID:       newAgent.FlowID,
 		VisibleInUI:  newAgent.VisibleInUI,
@@ -204,6 +202,27 @@ func (a *agentService) DeleteAgent(ctx context.Context, agentId string) error {
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	return a.postgresRepositories.AgentRepository.Delete(ctx, agentId)
+}
+
+func (r *agentService) GetAgentInfo(ctx context.Context) (*map[enum.AgentType]interfaces.AgentInfo, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.GetAgentInfo")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	agentRegistry, err := r.postgresRepositories.AgentRegistryRepository.FindAll(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	infoMap := make(map[enum.AgentType]interfaces.AgentInfo)
+	for _, agent := range agentRegistry {
+		infoMap[agent.Type] = interfaces.AgentInfo{
+			Goal:        agent.Goal,
+			Description: agent.Description,
+		}
+	}
+	return &infoMap, nil
 }
 
 func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string, position int) (*postgres_entity.Capability, error) {

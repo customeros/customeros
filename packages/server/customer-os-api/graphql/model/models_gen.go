@@ -106,14 +106,13 @@ type Agent struct {
 	ID           string           `json:"id"`
 	Type         AgentType        `json:"type"`
 	Name         string           `json:"name"`
+	Description  string           `json:"description"`
 	Scope        AgentScope       `json:"scope"`
 	Capabilities []*Capability    `json:"capabilities"`
 	Listeners    []*AgentListener `json:"listeners"`
-	GoalType     string           `json:"goalType"`
 	Goal         string           `json:"goal"`
 	IsActive     bool             `json:"isActive"`
 	IsConfigured bool             `json:"isConfigured"`
-	FlowID       *string          `json:"flowId,omitempty"`
 	Visible      bool             `json:"visible"`
 	CreatedAt    time.Time        `json:"createdAt"`
 	UpdatedAt    time.Time        `json:"updatedAt"`
@@ -146,9 +145,7 @@ type AgentSaveInput struct {
 	Name         *string                   `json:"name,omitempty"`
 	Capabilities []*CapabilitySaveInput    `json:"capabilities,omitempty"`
 	Listeners    []*AgentListenerSaveInput `json:"listeners,omitempty"`
-	Goal         *string                   `json:"goal,omitempty"`
 	IsActive     *bool                     `json:"isActive,omitempty"`
-	FlowID       *string                   `json:"flowId,omitempty"`
 	Visible      *bool                     `json:"visible,omitempty"`
 	Color        *string                   `json:"color,omitempty"`
 	Icon         *string                   `json:"icon,omitempty"`

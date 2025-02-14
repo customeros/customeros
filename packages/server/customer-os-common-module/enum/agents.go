@@ -37,39 +37,6 @@ func GetAgentType(s string) (AgentType, error) {
 	}
 }
 
-type AgentGoal string
-
-const (
-	AgentGoalCaptureExternalMeeting              AgentGoal = "capture_external_meeting"
-	AgentGoalEvaluateICPFit                      AgentGoal = "evaluate_icp_fit"
-	AgentGoalIdentifyWebVisitor                  AgentGoal = "identify_web_visitor"
-	AgentGoalReceiveReply                        AgentGoal = "receive_reply"
-	AgentGoalSpotHelpNeeded                      AgentGoal = "spot_help_needed"
-	AgentGoalGetPaid                             AgentGoal = "get_paid"
-	AgentGoalCaptureCommercialEmailConversations AgentGoal = "capture_commercial_email_conversations"
-)
-
-func (t AgentGoal) String() string {
-	return string(t)
-}
-
-func GetAgentGoal(s string) (AgentGoal, error) {
-	switch AgentGoal(s) {
-	case
-		AgentGoalCaptureExternalMeeting,
-		AgentGoalEvaluateICPFit,
-		AgentGoalIdentifyWebVisitor,
-		AgentGoalReceiveReply,
-		AgentGoalSpotHelpNeeded,
-		AgentGoalGetPaid,
-		AgentGoalCaptureCommercialEmailConversations:
-		return AgentGoal(s), nil
-
-	default:
-		return "", fmt.Errorf("invalid Agent Goal: %s", s)
-	}
-}
-
 type AgentScope string
 
 const (

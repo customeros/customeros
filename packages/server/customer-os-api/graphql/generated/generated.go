@@ -107,10 +107,9 @@ type ComplexityRoot struct {
 		Capabilities func(childComplexity int) int
 		Color        func(childComplexity int) int
 		CreatedAt    func(childComplexity int) int
+		Description  func(childComplexity int) int
 		Error        func(childComplexity int) int
-		FlowID       func(childComplexity int) int
 		Goal         func(childComplexity int) int
-		GoalType     func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Icon         func(childComplexity int) int
 		IsActive     func(childComplexity int) int
@@ -2456,6 +2455,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Agent.CreatedAt(childComplexity), true
 
+	case "Agent.description":
+		if e.complexity.Agent.Description == nil {
+			break
+		}
+
+		return e.complexity.Agent.Description(childComplexity), true
+
 	case "Agent.error":
 		if e.complexity.Agent.Error == nil {
 			break
@@ -2463,26 +2469,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Agent.Error(childComplexity), true
 
-	case "Agent.flowId":
-		if e.complexity.Agent.FlowID == nil {
-			break
-		}
-
-		return e.complexity.Agent.FlowID(childComplexity), true
-
 	case "Agent.goal":
 		if e.complexity.Agent.Goal == nil {
 			break
 		}
 
 		return e.complexity.Agent.Goal(childComplexity), true
-
-	case "Agent.goalType":
-		if e.complexity.Agent.GoalType == nil {
-			break
-		}
-
-		return e.complexity.Agent.GoalType(childComplexity), true
 
 	case "Agent.id":
 		if e.complexity.Agent.ID == nil {
@@ -13468,14 +13460,13 @@ type Agent {
   id: ID!
   type: AgentType!
   name: String!
+  description: String!
   scope: AgentScope!
   capabilities: [Capability!]!
   listeners: [AgentListener!]!
-  goalType: String!
   goal: String!
   isActive: Boolean!
   isConfigured: Boolean!
-  flowId: ID
   visible: Boolean!
   createdAt: Time!
   updatedAt: Time!
@@ -13490,9 +13481,7 @@ input AgentSaveInput {
   name: String
   capabilities: [CapabilitySaveInput!]
   listeners: [AgentListenerSaveInput!]
-  goal: String @deprecated ## field is not update-able
   isActive: Boolean
-  flowId: ID
   visible: Boolean
   color: String
   icon: String
@@ -28326,6 +28315,50 @@ func (ec *executionContext) fieldContext_Agent_name(_ context.Context, field gra
 	return fc, nil
 }
 
+func (ec *executionContext) _Agent_description(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Agent_scope(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_scope(ctx, field)
 	if err != nil {
@@ -28486,50 +28519,6 @@ func (ec *executionContext) fieldContext_Agent_listeners(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_goalType(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Agent_goalType(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.GoalType, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Agent_goalType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Agent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Agent_goal(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_goal(ctx, field)
 	if err != nil {
@@ -28657,47 +28646,6 @@ func (ec *executionContext) fieldContext_Agent_isConfigured(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Agent_flowId(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Agent_flowId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.FlowID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Agent_flowId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Agent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -62970,22 +62918,20 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 				return ec.fieldContext_Agent_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Agent_description(ctx, field)
 			case "scope":
 				return ec.fieldContext_Agent_scope(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
 			case "listeners":
 				return ec.fieldContext_Agent_listeners(ctx, field)
-			case "goalType":
-				return ec.fieldContext_Agent_goalType(ctx, field)
 			case "goal":
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
 				return ec.fieldContext_Agent_isActive(ctx, field)
 			case "isConfigured":
 				return ec.fieldContext_Agent_isConfigured(ctx, field)
-			case "flowId":
-				return ec.fieldContext_Agent_flowId(ctx, field)
 			case "visible":
 				return ec.fieldContext_Agent_visible(ctx, field)
 			case "createdAt":
@@ -93084,22 +93030,20 @@ func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field g
 				return ec.fieldContext_Agent_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Agent_description(ctx, field)
 			case "scope":
 				return ec.fieldContext_Agent_scope(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
 			case "listeners":
 				return ec.fieldContext_Agent_listeners(ctx, field)
-			case "goalType":
-				return ec.fieldContext_Agent_goalType(ctx, field)
 			case "goal":
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
 				return ec.fieldContext_Agent_isActive(ctx, field)
 			case "isConfigured":
 				return ec.fieldContext_Agent_isConfigured(ctx, field)
-			case "flowId":
-				return ec.fieldContext_Agent_flowId(ctx, field)
 			case "visible":
 				return ec.fieldContext_Agent_visible(ctx, field)
 			case "createdAt":
@@ -93195,22 +93139,20 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 				return ec.fieldContext_Agent_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Agent_description(ctx, field)
 			case "scope":
 				return ec.fieldContext_Agent_scope(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
 			case "listeners":
 				return ec.fieldContext_Agent_listeners(ctx, field)
-			case "goalType":
-				return ec.fieldContext_Agent_goalType(ctx, field)
 			case "goal":
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
 				return ec.fieldContext_Agent_isActive(ctx, field)
 			case "isConfigured":
 				return ec.fieldContext_Agent_isConfigured(ctx, field)
-			case "flowId":
-				return ec.fieldContext_Agent_flowId(ctx, field)
 			case "visible":
 				return ec.fieldContext_Agent_visible(ctx, field)
 			case "createdAt":
@@ -112735,7 +112677,7 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "name", "capabilities", "listeners", "goal", "isActive", "flowId", "visible", "color", "icon"}
+	fieldsInOrder := [...]string{"id", "type", "name", "capabilities", "listeners", "isActive", "visible", "color", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -112777,13 +112719,6 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Listeners = data
-		case "goal":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("goal"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Goal = data
 		case "isActive":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -112791,13 +112726,6 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.IsActive = data
-		case "flowId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("flowId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FlowID = data
 		case "visible":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visible"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -120385,6 +120313,11 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "description":
+			out.Values[i] = ec._Agent_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "scope":
 			out.Values[i] = ec._Agent_scope(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -120397,11 +120330,6 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "listeners":
 			out.Values[i] = ec._Agent_listeners(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "goalType":
-			out.Values[i] = ec._Agent_goalType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -120420,8 +120348,6 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "flowId":
-			out.Values[i] = ec._Agent_flowId(ctx, field, obj)
 		case "visible":
 			out.Values[i] = ec._Agent_visible(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

@@ -21,12 +21,9 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 		UpdatedAt:    utils.IfNotNilTimeWithDefault(entity.UpdatedAt, entity.CreatedAt),
 		Type:         enummapper.MapAgentTypeToModel(entity.Type),
 		Color:        entity.Color,
-		GoalType:     entity.Goal.String(),
-		Goal:         enummapper.MapAgentGoalName(entity.Goal),
 		IsActive:     entity.IsActive,
 		IsConfigured: entity.Configured,
 		Visible:      entity.VisibleInUI,
-		FlowID:       utils.StringPtr(entity.FlowID),
 	}
 	for _, capability := range entity.Capabilities {
 		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
