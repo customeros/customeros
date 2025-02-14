@@ -101,7 +101,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, execution
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	err := c.notificationService.NotifySlackChannel(ctx, tenant, executionContainer.ConfigData.ChannelID.Value, &executionContainer.InputData.Message)
+	err := c.notificationService.NotifySlackChannel(ctx, executionContainer.ConfigData.ChannelID.Value, executionContainer.InputData.Message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err

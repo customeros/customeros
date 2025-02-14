@@ -142,18 +142,6 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	// check if slack notification enabled
-	slackChannel, err := c.postgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, "REVEAL-AI-WEBSITE-VISIT")
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
-	}
-	if slackChannel == nil {
-		span.LogKV("result.slackChannel", "not found")
-		return enum.CapabilityExecutionCompleted, result, nil
-	}
-	span.LogKV("result.slackChannel", slackChannel.ChannelId)
-
 	// check if notification should be suppressed
 	skip, err := c.skipNotification(ctx, executionContainer.InputData.Domain, executionContainer.ConfigData.CooldownHours.Value)
 	if err != nil {
@@ -169,7 +157,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
 	}
-	if message == nil {
+	if message == nil || *message == "" {
 		err = errors.New("Failed to build slack notification message")
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
@@ -245,15 +233,18 @@ func (c *SendWebVisitorSlackNotificationCapability) isWorkspaceDomain(ctx contex
 	}
 
 	if len(workspaceDomains) == 0 {
+		span.LogFields(log.Bool("result", false))
 		return false
 	}
 
 	for _, d := range workspaceDomains {
 		if strings.EqualFold(d, domain) {
+			span.LogFields(log.Bool("result", true))
 			return true
 		}
 	}
 
+	span.LogFields(log.Bool("result", false))
 	return false
 }
 

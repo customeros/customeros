@@ -25,11 +25,12 @@ func NewNotificationService(log logger.Logger, postgresRepo *postgres_repository
 	}
 }
 
-func (s *notificationService) NotifySlackChannel(ctx context.Context, tenant, channelID string, message *string) error {
+func (s *notificationService) NotifySlackChannel(ctx context.Context, channelID string, message string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NotificationService.NotifySlackChannel")
+	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	err := s.slackService.SendMessageFromBot(ctx, channelID, *message)
+	err := s.slackService.SendMessageFromBot(ctx, channelID, message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
