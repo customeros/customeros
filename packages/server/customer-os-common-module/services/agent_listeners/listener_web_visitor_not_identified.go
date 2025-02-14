@@ -3,6 +3,7 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -102,7 +103,7 @@ func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context
 	}
 
 	// update execution with goal achieved
-	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, false)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, utils.FalsePtr())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

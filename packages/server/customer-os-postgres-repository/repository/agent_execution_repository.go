@@ -23,7 +23,7 @@ type AgentExecutionRepository interface {
 	Fail(ctx context.Context, executionID, errorMessage string) error
 	Pending(ctx context.Context, executionID string) error
 	Finish(ctx context.Context, executionID string) error
-	Completed(ctx context.Context, executionID string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
+	Completed(ctx context.Context, executionID string, goalAchieved *bool) (*postgres_entity.AgentExecution, error)
 	ScheduleRetry(ctx context.Context, executionID string, err error) error
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
@@ -62,14 +62,16 @@ func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord p
 	return &executionRecord, nil
 }
 
-func (f *agentExecutionRepository) Completed(ctx context.Context, executionID string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
+func (f *agentExecutionRepository) Completed(ctx context.Context, executionID string, goalAchieved *bool) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Completed")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.TagEntity(span, executionID)
 	span.LogFields(log.String("executionID", executionID))
-	span.LogFields(log.Bool("goalAchieved", goalAchieved))
+	if goalAchieved != nil {
+		span.LogFields(log.Bool("goalAchieved", *goalAchieved))
+	}
 
 	if executionID == "" {
 		err := errors.New("ID is missing")
@@ -79,9 +81,11 @@ func (f *agentExecutionRepository) Completed(ctx context.Context, executionID st
 
 	// load the record
 	fields := map[string]interface{}{
-		"status":        enum.AgentExecutionCompleted.String(),
-		"goal_achieved": goalAchieved,
-		"completed_at":  utils.NowPtr(),
+		"status":       enum.AgentExecutionCompleted.String(),
+		"completed_at": utils.NowPtr(),
+	}
+	if goalAchieved != nil {
+		fields["goal_achieved"] = *goalAchieved
 	}
 
 	var updatedRecord postgres_entity.AgentExecution
@@ -135,7 +139,6 @@ func (f *agentExecutionRepository) Fail(ctx context.Context, executionID, errorM
 		Updates(map[string]interface{}{
 			"status":        enum.AgentExecutionError.String(),
 			"error_message": errorMessage,
-			"goal_achieved": false,
 		}).
 		Error
 	if err != nil {

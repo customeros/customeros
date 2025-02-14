@@ -105,7 +105,7 @@ func (l *MeetingLoggedListener) handleGoalAchieved(ctx context.Context, agentExe
 	}
 
 	// update execution with goal achieved
-	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, utils.TruePtr())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
