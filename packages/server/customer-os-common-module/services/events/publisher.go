@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"reflect"
 	"sync"
 	"time"
@@ -126,6 +127,12 @@ func (r *RabbitMQPublisher) PublishNotificationBulk(ctx context.Context, tenant 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQPublisher.PublishEventCompletedBulk")
 	defer span.Finish()
 	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds)
+
+	appSource := common.GetAppSourceFromContext(ctx)
+
+	if appSource == constants.AppSourceCustomerOsApi {
+		return
+	}
 
 	event := dto.EventCompleted{
 		Tenant:     tenant,

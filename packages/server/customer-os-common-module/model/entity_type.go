@@ -45,6 +45,7 @@ const (
 	JOB_ROLE                 EntityType = "JOB_ROLE"
 	SKU                      EntityType = "SKU"
 	WEB_SESSION              EntityType = "WEB_SESSION"
+	INGEST_EMAIL_MESSAGE     EntityType = "INGEST_EMAIL_MESSAGE"
 )
 
 func (entityType EntityType) String() string {

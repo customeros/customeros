@@ -11,22 +11,24 @@ import (
 )
 
 type CommonConfig struct {
-	Enrow          commonconf.EnrowConfig
-	Logger         logger.Config
-	Jaeger         tracing.JaegerConfig
-	RabbitMQConfig commonconf.RabbitMQConfig
-	ScrubbyIo      commonconf.ScrubbyIoConfig
-	Anthropic      commonconf.AnthropicConfig
-	CustomerOsApi  commonconf.CustomerOsApiConfig
-	BetterContact  commonconf.BetterContactConfig
-	Postgres       commonconf.PostgresConfig
-	PostgresAsync  commonconf.PostgresAsyncConfig
-	Neo4j          commonconf.Neo4jConfig
-	Mailsherpa     commonconf.MailSherpaApiConfig
-	FileStore      commonconf.FileStoreConfig
-	PdfConverter   commonconf.PdfConverterConfig
-	SlackConfig    commonconf.SlackConfig
-	NovuConfig     commonconf.NovuConfig
+	Enrow             commonconf.EnrowConfig
+	Logger            logger.Config
+	Jaeger            tracing.JaegerConfig
+	RabbitMQConfig    commonconf.RabbitMQConfig
+	ScrubbyIo         commonconf.ScrubbyIoConfig
+	Anthropic         commonconf.AnthropicConfig
+	CustomerOsApi     commonconf.CustomerOsApiConfig
+	BetterContact     commonconf.BetterContactConfig
+	Postgres          commonconf.PostgresConfig
+	PostgresAsync     commonconf.PostgresAsyncConfig
+	Neo4j             commonconf.Neo4jConfig
+	Mailsherpa        commonconf.MailSherpaApiConfig
+	FileStore         commonconf.FileStoreConfig
+	PdfConverter      commonconf.PdfConverterConfig
+	SlackConfig       commonconf.SlackConfig
+	GoogleOAuthConfig commonconf.GoogleOAuthConfig
+	AzureOAuthConfig  commonconf.AzureOAuthConfig
+	NovuConfig        commonconf.NovuConfig
 }
 
 type AppConfig struct {
@@ -84,6 +86,8 @@ func Load() *Config {
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
+			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
+			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
 		},
 		External: commonconf.ExternalServicesConfig{
 			EnrowConfig:         cmnCfg.Enrow,

@@ -70,6 +70,8 @@ type Config struct {
 	CronScheduleCheckScrubbyResult             string `env:"CRON_SCHEDULE_CHECK_SCRUBBY_RESULT" envDefault:"0 45 * * * *"`
 	CronScheduleCheckEnrowResults              string `env:"CRON_SCHEDULE_CHECK_ENROW_RESULTS" envDefault:"0 */5 * * * *"`
 	CronScheduleCleanEmails                    string `env:"CRON_SCHEDULE_CLEAN_EMAILS" envDefault:"0 30 */12 * * *"`
+	CronScheduleIngestEmailsFromProviders      string `env:"CRON_SCHEDULE_INGEST_EMAILS_FROM_PROVIDERS" envDefault:"*/5 * * * * *"`
+	CronScheduleIngestEmailsSendToAgents       string `env:"CRON_SCHEDULE_INGEST_EMAILS_SEND_TO_AGENTS " envDefault:"*/5 * * * * *"`
 
 	// Flows
 	CronScheduleRampUpMailboxes string `env:"CRON_SCHEDULE_RAMP_UP_MAILBOXES" envDefault:"* */1 * * * *"`

@@ -1,6 +1,7 @@
 package cron
 
 import (
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"sync"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -31,12 +32,15 @@ const (
 	GroupCurrency = "currency"
 
 	// Email related groups
-	GroupEmail         = "email"
-	GroupEmailBulk     = "emailBulkValidation"
-	GroupMailstack     = "mailstack"
-	GroupSendEmails    = "sendEmails"
-	GroupProcessEmails = "processSentEmails"
-	GroupRampMailboxes = "rampUpMailboxes"
+	GroupEmail                             = "email"
+	GroupEmailBulk                         = "emailBulkValidation"
+	GroupMailstack                         = "mailstack"
+	GroupSendEmails                        = "sendEmails"
+	GroupProcessEmails                     = "processSentEmails"
+	GroupRampMailboxes                     = "rampUpMailboxes"
+	GroupIngestEmailsFromProvidersRealtime = "ingestEmailsFromProvidersRealtime"
+	GroupIngestEmailsFromProvidersHistory  = "ingestEmailsFromProvidersHistory"
+	GroupIngestEmailsSendToAgents          = "ingestEmailsSendToAgents"
 
 	// Flow related groups
 	GroupFlow      = "flowExecutionGroup"
@@ -57,31 +61,34 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		GroupOrganization:    {},
-		GroupGlobalOrg:       {},
-		GroupContact:         {},
-		GroupContactBetter:   {},
-		GroupLinkedInAsk:     {},
-		GroupLinkedInProcess: {},
-		GroupContactEnrich:   {},
-		GroupOrphanContacts:  {},
-		GroupContract:        {},
-		GroupInvoice:         {},
-		GroupTouchpoint:      {},
-		GroupCurrency:        {},
-		GroupUnthreadIssues:  {},
-		GroupEmail:           {},
-		GroupEmailBulk:       {},
-		GroupFlow:            {},
-		GroupFlowStats:       {},
-		GroupRampMailboxes:   {},
-		GroupSendEmails:      {},
-		GroupProcessEmails:   {},
-		GroupDomain:          {},
-		GroupMailstack:       {},
-		GroupReminder:        {},
-		GroupWebSession:      {},
-		GroupTenant:          {},
+		GroupOrganization:                      {},
+		GroupGlobalOrg:                         {},
+		GroupContact:                           {},
+		GroupContactBetter:                     {},
+		GroupLinkedInAsk:                       {},
+		GroupLinkedInProcess:                   {},
+		GroupContactEnrich:                     {},
+		GroupOrphanContacts:                    {},
+		GroupContract:                          {},
+		GroupInvoice:                           {},
+		GroupTouchpoint:                        {},
+		GroupCurrency:                          {},
+		GroupUnthreadIssues:                    {},
+		GroupEmail:                             {},
+		GroupEmailBulk:                         {},
+		GroupFlow:                              {},
+		GroupFlowStats:                         {},
+		GroupRampMailboxes:                     {},
+		GroupIngestEmailsFromProvidersRealtime: {},
+		GroupIngestEmailsFromProvidersHistory:  {},
+		GroupIngestEmailsSendToAgents:          {},
+		GroupSendEmails:                        {},
+		GroupProcessEmails:                     {},
+		GroupDomain:                            {},
+		GroupMailstack:                         {},
+		GroupReminder:                          {},
+		GroupWebSession:                        {},
+		GroupTenant:                            {},
 	},
 }
 
@@ -125,7 +132,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Invoice Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateInvoice, GroupInvoice, generateCycleInvoices, "generateCycleInvoices")
-	//addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
+	addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateNextPreviewInvoice, GroupInvoice, generateNextPreviewInvoices, "generateNextPreviewInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleCleanupInvoices, GroupInvoice, cleanupInvoices, "cleanupInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleAdjustInvoiceStatus, GroupInvoice, adjustInvoiceStatus, "adjustInvoiceStatus")
@@ -142,7 +149,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
 
-	// Email Jobs
+	//Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckScrubbyResult, GroupEmail, checkScrubbyResult, "checkScrubbyResult")
@@ -150,6 +157,9 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleCleanEmails, GroupEmail, cleanEmails, "cleanEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendEmails, GroupSendEmails, sendEmails, "sendEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessSentEmails, GroupProcessEmails, processSentEmails, "processSentEmails")
+	//addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersRealtime, ingestEmailsFromProvidersRealtime, "ingestEmailsFromProvidersRealtime")
+	//addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersHistory, ingestEmailsFromProvidersHistory, "ingestEmailsFromProvidersHistory")
+	//addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsSendToAgents, ingestEmailsSendToAgents, "ingestEmailsSendToAgents")
 
 	// Flow Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
@@ -294,6 +304,18 @@ func sendEmails(cont *container.Container) {
 
 func processSentEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ProcessSentEmails()
+}
+
+func ingestEmailsFromProvidersRealtime(cont *container.Container) {
+	service.NewIngestEmailService(cont.Cfg, cont.Log, cont.CommonServices).SyncEmailsInState(postgres_entity.REAL_TIME)
+}
+
+func ingestEmailsFromProvidersHistory(cont *container.Container) {
+	service.NewIngestEmailService(cont.Cfg, cont.Log, cont.CommonServices).SyncEmailsInState(postgres_entity.HISTORY)
+}
+
+func ingestEmailsSendToAgents(cont *container.Container) {
+	service.NewIngestEmailService(cont.Cfg, cont.Log, cont.CommonServices).SendIngestedEmailsToAgents()
 }
 
 // Flow Jobs

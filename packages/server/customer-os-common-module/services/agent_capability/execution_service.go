@@ -241,6 +241,56 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilityClassifyEmail:
+		executor, ok := GetTypedExecutor[ClassifyEmailInput, NoOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityClassifyEmail)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityIdentifyParticipants:
+		executor, ok := GetTypedExecutor[IdentifyParticipantsInput, NoOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyParticipants)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilitySummarizeMessage:
+		executor, ok := GetTypedExecutor[SummarizeMessageInput, NoOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySummarizeMessage)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilitySummarizeThread:
+		executor, ok := GetTypedExecutor[SummarizeThreadInput, NoOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySummarizeThread)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityIngestEmail:
+		executor, ok := GetTypedExecutor[IngestEmailInput, NoOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIngestEmail)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	default:
 		err := fmt.Errorf("capability %s not configured", executionContainer.Capability.Type.String())
 		span.LogKV("capability", executionContainer.Capability.Type)

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -17,6 +17,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
+// deprecated
 type RawEmailRepository interface {
 	CountForUsername(ctx context.Context, externalSystem, tenant, username string) (int64, error)
 	GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*postgres_entity.RawEmail, error)

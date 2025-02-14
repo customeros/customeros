@@ -14,7 +14,6 @@ import (
 )
 
 type SummarizeMessageInput struct {
-	Prompt string `json:"prompt"`
 }
 
 type SummarizeMessageCapability struct {
