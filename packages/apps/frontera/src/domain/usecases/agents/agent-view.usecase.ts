@@ -80,10 +80,9 @@ export class AgentViewUsecase {
     span.end();
   }
 
-  private static defaultConfigMap: Record<
-    AgentType,
-    AgentListenerEvent | CapabilityType
-  > = {
+  private static defaultConfigMap: {
+    [key in AgentType]?: AgentListenerEvent | CapabilityType;
+  } = {
     [AgentType.WebVisitIdentifier]: AgentListenerEvent.NewWebSession,
     [AgentType.IcpQualifier]: CapabilityType.IcpQualify,
     [AgentType.SupportSpotter]: AgentListenerEvent.CompanyIdentified,

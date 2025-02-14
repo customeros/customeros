@@ -55,7 +55,7 @@ export const ContactDetails = observer(
     const { onOpen, onClose, open } = useDisclosure();
     const orgId = useParams()?.id as string;
     const contactStore = store.contacts.getById(id);
-    const jobRoles = store.contacts.getById(id)?.jobRoles;
+    const jobRoles = contactStore?.jobRoles;
 
     const [_, copyToClipboard] = useCopyToClipboard();
 

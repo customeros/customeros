@@ -17,6 +17,7 @@ export type GetContactsByIdsQuery = {
     lastName: string;
     name: string;
     prefix: string;
+    hide: boolean;
     description: string;
     timezone: string;
     profilePhotoUrl: string;

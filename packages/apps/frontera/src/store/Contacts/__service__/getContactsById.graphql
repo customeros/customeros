@@ -7,6 +7,7 @@ query getContactsByIds($ids: [ID!]) {
     lastName
     name
     prefix
+    hide
     description
     timezone
     profilePhotoUrl

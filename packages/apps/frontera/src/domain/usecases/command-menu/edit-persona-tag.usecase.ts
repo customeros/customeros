@@ -1,3 +1,4 @@
+import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
 import { TagStore } from '@store/Tags/Tag.store';
 import { TagService, ContactService } from '@domain/services';
@@ -22,7 +23,6 @@ export class EditPersonaTagUsecase {
     this.computeInitialTags = this.computeInitialTags.bind(this);
 
     reaction(() => this.newTags.size, this.computeInitialTags);
-    reaction(() => this.contextIds, this.computeInitialTags);
     this.computeInitialTags();
   }
 
@@ -70,6 +70,8 @@ export class EditPersonaTagUsecase {
 
   @action
   private computeInitialTags() {
+    const span = Tracer.span('EditPersonaTagUsecase.computeInitialTags');
+
     this.initialTags = this.root.tags
       ?.getByEntityType(EntityType.Contact)
       .filter((e) => !!e.value.name)
@@ -82,6 +84,8 @@ export class EditPersonaTagUsecase {
 
         return 0;
       });
+
+    span.end();
   }
 
   @computed

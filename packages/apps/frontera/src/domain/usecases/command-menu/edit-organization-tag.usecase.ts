@@ -23,7 +23,6 @@ export class EditOrganizationTagUsecase {
     this.computeInitialTags = this.computeInitialTags.bind(this);
 
     reaction(() => this.newTags.size, this.computeInitialTags);
-    reaction(() => this.contextIds, this.computeInitialTags);
     this.computeInitialTags();
   }
 
@@ -74,6 +73,8 @@ export class EditOrganizationTagUsecase {
 
   @action
   private computeInitialTags() {
+    const span = Tracer.span('EditOrganizationTagUsecase.computeInitialTags');
+
     this.initialTags = this.root.tags
       ?.getByEntityType(EntityType.Organization)
       .filter((e) => !!e.value.name)
@@ -86,6 +87,8 @@ export class EditOrganizationTagUsecase {
 
         return 0;
       });
+
+    span.end();
   }
 
   @computed

@@ -115,4 +115,41 @@ export class FlowContactsView {
       return sorted;
     });
   };
+
+  // TODO: Continue exploring this approach to reconcile the entity in the view
+  _reconcile(entityId: string, preset: string) {
+    const entity = this.store.getById(entityId)!;
+
+    const viewDef = this.store.root.tableViewDefs.getById(preset);
+
+    if (!viewDef) return;
+
+    const defaultFilters = getContactFilterFns(viewDef.getDefaultFilters());
+    const activeFilters = getContactFilterFns(viewDef.getFilters());
+    const sorting = JSON.parse(viewDef.value.sorting);
+    const columnId = sorting?.id as string;
+    const isDesc = sorting?.desc as boolean;
+
+    if (
+      defaultFilters.every((fn) => fn(entity)) &&
+      activeFilters.every((fn) => fn(entity))
+    ) {
+      const currentView = this.store.views.get(preset);
+
+      if (currentView) {
+        currentView.unshift(entity);
+
+        const sorted = inPlaceSort(
+          currentView.map((e) => ({
+            record: e,
+            sortValue: getContactSortFn(columnId)(e),
+          })),
+        )
+          [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
+          .map((entry) => entry.record);
+
+        this.store.setView(preset, (_) => sorted);
+      }
+    }
+  }
 }

@@ -37,7 +37,7 @@ export class JobRoleService {
 
     if (serverId) {
       this.root.contacts.getById(jobRole.contactId || '')?.addJobRole(serverId);
-      this.root.contacts.retrieve([jobRole.contactId || '']);
+      jobRole.contactId && this.root.contacts.retrieve([jobRole.contactId]);
     }
   }
 
@@ -56,7 +56,7 @@ export class JobRoleService {
     if (!res) {
       console.error('No response from saveJobRoles');
     } else {
-      this.root.contacts.retrieve([jobRole.contactId || '']);
+      jobRole.contactId && this.root.contacts.retrieve([jobRole.contactId]);
     }
   }
 }
