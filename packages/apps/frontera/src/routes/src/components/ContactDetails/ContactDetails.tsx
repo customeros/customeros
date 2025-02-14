@@ -394,10 +394,12 @@ export const ContactDetails = observer(
                 setInputValue={tagsUseCase.setSearchTerm}
                 leftAccessory={<Tag01 className='mr-4 text-gray-500 size-4' />}
                 onChange={(selected) => {
-                  if (!contactStore?.value) {
-                    throw new Error('Contact store not found');
+                  if (Array.isArray(selected)) {
+                    if (!contactStore?.value) {
+                      throw new Error('Contact store not found');
+                    }
+                    tagsUseCase.select(selected?.map((tag) => tag.value));
                   }
-                  tagsUseCase.select(selected?.map((tag) => tag.value));
                 }}
               />
 

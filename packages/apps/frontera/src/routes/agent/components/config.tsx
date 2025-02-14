@@ -4,7 +4,9 @@ import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
 
 import { NewMeetingRecording, NewWebSessionListener } from './Listeners';
 import {
+  ApplyTag,
   EvaluateCompanyIcpFit,
+  DetectSupportWebVisit,
   SendSlackNotificationCapability,
 } from './Capabilities';
 
@@ -24,6 +26,8 @@ export const configs: ConfigMap = {
   [CapabilityType.IcpQualify]: EvaluateCompanyIcpFit,
   [CapabilityType.WebVisitorSendSlackNotification]:
     SendSlackNotificationCapability,
+  [CapabilityType.ApplyTagToCompany]: ApplyTag,
+  [CapabilityType.DetectSupportWebvisit]: DetectSupportWebVisit,
   //////////////////
   //  LISTENERS   //
   //////////////////

@@ -14,7 +14,10 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover.tsx';
 
-interface TagsProps {
+type MultiSelectOnChange = (selection: SelectOption[]) => void;
+type SingleSelectOnChange = (selection: SelectOption) => void;
+
+interface BaseTagsProps {
   dataTest?: string;
   className?: string;
   inputValue: string;
@@ -25,8 +28,19 @@ interface TagsProps {
   leftAccessory?: React.ReactNode;
   onCreate: (value: string) => void;
   setInputValue: (value: string) => void;
-  onChange: (selection: SelectOption[]) => void;
 }
+
+interface MultiTagsProps extends BaseTagsProps {
+  isMulti?: true | undefined;
+  onChange: MultiSelectOnChange;
+}
+
+interface SingleTagsProps extends BaseTagsProps {
+  isMulti: false;
+  onChange: SingleSelectOnChange;
+}
+
+type TagsProps = MultiTagsProps | SingleTagsProps;
 
 export const Tags = observer(
   ({
@@ -40,12 +54,17 @@ export const Tags = observer(
     inputPlaceholder,
     dataTest,
     inputValue,
+    isMulti = true,
     setInputValue,
   }: TagsProps) => {
     const store = useStore();
 
     const handleClear = (id: string) => {
-      onChange?.(value.filter((o) => o.value !== id));
+      if (isMulti !== false) {
+        (onChange as MultiSelectOnChange)(value.filter((o) => o.value !== id));
+      } else {
+        (onChange as SingleSelectOnChange)({ value: '', label: '' });
+      }
     };
 
     return (
@@ -91,9 +110,9 @@ export const Tags = observer(
         </Tooltip>
         <PopoverContent align='start' className='min-w-[264px] max-w-[320px]'>
           <Combobox
-            isMulti
             value={value}
             options={options}
+            isMulti={isMulti}
             onChange={onChange}
             inputValue={inputValue}
             onInputChange={setInputValue}
