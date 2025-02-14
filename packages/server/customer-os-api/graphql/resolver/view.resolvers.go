@@ -303,10 +303,6 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	flowSequencesFound, flowContactsFound := false, false
 
 	for _, def := range tableViewDefinitions {
-		if def.IsShared {
-			continue
-		}
-
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) {
 			span.LogKV("customersTableId", def.ID)
 			customersFound = true
