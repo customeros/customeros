@@ -1,8 +1,13 @@
 import { it, expect, describe } from 'vitest';
-import { VitestHelper } from '@store/vitest-helper.ts';
+import { VitestHelper, generateEmail } from '@store/vitest-helper.ts';
 import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
 
-import { EmailLabel, EntityType, PhoneNumberLabel } from '@graphql/types';
+import {
+  EmailLabel,
+  EntityType,
+  PhoneNumberLabel,
+  SortingDirection,
+} from '@graphql/types';
 
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
 import { JobRolesService } from '../../JobRoles/__service__/JobRoles.service.ts';
@@ -128,7 +133,7 @@ describe('ContactsService - Integration Tests', () => {
     expect(contact?.linkedInUrl).toBeNull();
   });
 
-  it('update contact', async () => {
+  it('update contact created in an organization', async () => {
     const { organizationId } = await VitestHelper.createOrganizationForTest(
       organizationsRepository,
     );
@@ -819,5 +824,130 @@ describe('ContactsService - Integration Tests', () => {
 
     expect(contactRemovedFirstTag?.tags?.length).toBe(1);
     expect(contactRemovedFirstTag?.tags?.[0]?.name).toBe(secondTagName);
+  });
+
+  it('creates a contact by LinkedinIn, with no organization', async () => {
+    const linkedIn_urls = [
+      'https://www.linkedin.com/in/Vitest-' + crypto.randomUUID(),
+    ];
+
+    // const contactId =
+    await VitestHelper.createContactBulkByLinkedInForTest(
+      contactService,
+      linkedIn_urls,
+    );
+
+    const { ui_contacts_search } = await contactService.searchContacts({
+      where: {
+        AND: [], // Empty AND array for no specific filters
+      },
+      sort: {
+        by: 'CONTACTS_UPDATED_AT',
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    const createContacts = (
+      await contactService.getContactsByIds({ ids: ui_contacts_search.ids })
+    ).ui_contacts.filter(
+      (contact) =>
+        contact.linkedInUrl !== null &&
+        contact.linkedInUrl !== undefined &&
+        linkedIn_urls.includes(contact.linkedInUrl),
+    );
+
+    expect(createContacts).toHaveLength(linkedIn_urls.length);
+  });
+
+  it('creates multiple contacts by LinkedinIn, with no organization', async () => {
+    const linkedIn_urls = [
+      'https://www.linkedin.com/in/Vitest-' + crypto.randomUUID(),
+      'https://www.linkedin.com/in/Vitest-' + crypto.randomUUID(),
+    ];
+
+    // const contactId =
+    await VitestHelper.createContactBulkByLinkedInForTest(
+      contactService,
+      linkedIn_urls,
+    );
+
+    const { ui_contacts_search } = await contactService.searchContacts({
+      where: {
+        AND: [], // Empty AND array for no specific filters
+      },
+      sort: {
+        by: 'CONTACTS_UPDATED_AT',
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    const createContacts = (
+      await contactService.getContactsByIds({ ids: ui_contacts_search.ids })
+    ).ui_contacts.filter(
+      (contact) =>
+        contact.linkedInUrl !== null &&
+        contact.linkedInUrl !== undefined &&
+        linkedIn_urls.includes(contact.linkedInUrl),
+    );
+
+    expect(createContacts).toHaveLength(linkedIn_urls.length);
+  });
+
+  it('creates a contact by Email, with no organization', async () => {
+    const emails = [generateEmail()];
+
+    await VitestHelper.createContactBulkByEmailForTest(contactService, emails);
+
+    const { ui_contacts_search } = await contactService.searchContacts({
+      where: {
+        AND: [],
+      },
+      sort: {
+        by: 'CONTACTS_UPDATED_AT',
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    const createContacts = (
+      await contactService.getContactsByIds({ ids: ui_contacts_search.ids })
+    ).ui_contacts.filter((contact) =>
+      contact.emails.some(
+        (emailObj) =>
+          emailObj.email !== null &&
+          emailObj.email !== undefined &&
+          emails.includes(emailObj.email),
+      ),
+    );
+
+    expect(createContacts).toHaveLength(emails.length);
+  });
+
+  it('creates multiple contacts by Email, with no organization', async () => {
+    const emails = [generateEmail(), generateEmail()];
+
+    await VitestHelper.createContactBulkByEmailForTest(contactService, emails);
+
+    const { ui_contacts_search } = await contactService.searchContacts({
+      where: {
+        AND: [],
+      },
+      sort: {
+        by: 'CONTACTS_UPDATED_AT',
+        direction: SortingDirection.Desc,
+      },
+    });
+
+    const createContacts = (
+      await contactService.getContactsByIds({ ids: ui_contacts_search.ids })
+    ).ui_contacts.filter((contact) =>
+      contact.emails.some(
+        (emailObj) =>
+          emailObj.email !== null &&
+          emailObj.email !== undefined &&
+          emails.includes(emailObj.email),
+      ),
+    );
+
+    expect(createContacts).toHaveLength(emails.length);
   });
 });
