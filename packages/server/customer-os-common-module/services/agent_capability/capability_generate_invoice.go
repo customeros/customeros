@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -31,6 +32,9 @@ type GenerateInvoiceOutput struct {
 }
 
 type GenerateInvoiceConfig struct {
+	FromEmail                  ConfigSingleValue     `json:"fromEmail"`
+	CcEmails                   ConfigMultipleValues  `json:"ccEmails"`
+	BccEmails                  ConfigMultipleValues  `json:"bccEmails"`
 	Country                    ConfigSingleValue     `json:"country"`
 	LegalName                  ConfigSingleValue     `json:"legalName"`
 	AddressLine1               ConfigSingleValue     `json:"addressLine1"`
@@ -49,16 +53,29 @@ type GenerateInvoiceConfig struct {
 }
 
 func (c *GenerateInvoiceConfig) Validate() bool {
-	isValid := true
-
 	if c.LegalName.Value == "" {
 		c.LegalName.Error = "Please provide your company legal name"
-		isValid = false
+		return false
 	} else {
 		c.LegalName.Error = ""
 	}
 
-	return isValid
+	if c.FromEmail.Value == "" {
+		c.FromEmail.Error = "Please provide your company email"
+		return false
+	} else {
+		c.FromEmail.Error = ""
+	}
+
+	syntaxValidation := mailsherpa.ValidateEmailSyntax(c.FromEmail.Value)
+	if !syntaxValidation.IsValid {
+		c.FromEmail.Error = "Please provide valid email address"
+		return false
+	} else {
+		c.FromEmail.Error = ""
+	}
+
+	return true
 }
 
 func NewGenerateInvoiceCapability(postgres *postgres_repository.Repositories, invoiceService interfaces.InvoiceService) *GenerateInvoiceCapability {
@@ -124,8 +141,11 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 	}
 
 	dataFields := data_fields.InvoiceFields{
-		DryRun:  executionContainer.InputData.DryRun,
-		Preview: executionContainer.InputData.Preview,
+		DryRun:    executionContainer.InputData.DryRun,
+		Preview:   executionContainer.InputData.Preview,
+		FromEmail: executionContainer.ConfigData.FromEmail.Value,
+		CcEmails:  executionContainer.ConfigData.CcEmails.Value,
+		BccEmails: executionContainer.ConfigData.BccEmails.Value,
 		TenantBillingProfile: &data_fields.TenantBillingProfile{
 			Country:                    executionContainer.ConfigData.Country.Value,
 			LegalName:                  executionContainer.ConfigData.LegalName.Value,
