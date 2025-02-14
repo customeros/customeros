@@ -10,10 +10,8 @@ export type AgentsQuery = {
     type: Types.AgentType;
     name: string;
     goal: string;
-    goalType: string;
     isActive: boolean;
     scope: Types.AgentScope;
-    flowId?: string | null;
     visible: boolean;
     createdAt: any;
     updatedAt: any;

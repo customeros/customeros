@@ -183,14 +183,13 @@ export class Agent extends Entity<AgentDatum> {
 
   public toPayload(): Omit<
     AgentDatum,
-    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'scope'
+    'createdAt' | 'updatedAt' | 'isConfigured' | 'scope'
   > {
     return omit(this.value, [
       'createdAt',
       'updatedAt',
       'error',
       'isConfigured',
-      'goalType',
       'scope',
     ]);
   }
@@ -199,14 +198,13 @@ export class Agent extends Entity<AgentDatum> {
     name: string,
   ): Omit<
     AgentDatum,
-    'createdAt' | 'updatedAt' | 'isConfigured' | 'goalType' | 'id' | 'scope'
+    'createdAt' | 'updatedAt' | 'isConfigured' | 'id' | 'scope'
   > {
     return omit({ ...this.value, name }, [
       'createdAt',
       'updatedAt',
       'error',
       'isConfigured',
-      'goalType',
       'scope',
       'id',
     ]);
@@ -309,13 +307,11 @@ export class Agent extends Entity<AgentDatum> {
         listeners: [],
         capabilities: [],
         goal: '',
-        goalType: '',
         type: AgentType.WebVisitIdentifier,
         icon: '',
         color: '',
         visible: true,
         isActive: true,
-        flowId: '',
         error: null,
         isConfigured: false,
         scope: AgentScope.Workspace,
