@@ -11,6 +11,8 @@ export const Scope = ({ scope }: { scope: AgentScope }) => {
   return (
     <>
       <Tag
+        tabIndex={0}
+        role={'button'}
         variant='subtle'
         color='grayModern'
         className={'cursor-pointer'}
