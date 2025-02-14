@@ -151,6 +151,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilitySendInvoiceViaEmail:
+		executor, ok := GetTypedExecutor[SendInvoiceViaEmailInput, SendInvoiceViaEmailOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityProcessAutopayment)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityIdentifyMeetingParticipants:
 		executor, ok := GetTypedExecutor[IdentifyMeetingParticipantsInput, IdentifyMeetingParticipantsOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
@@ -212,7 +222,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	default:
-		err := fmt.Errorf("capability not configured")
+		err := fmt.Errorf("capability %s not configured", executionContainer.Capability.Type.String())
 		span.LogKV("capability", executionContainer.Capability.Type)
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, nil, err

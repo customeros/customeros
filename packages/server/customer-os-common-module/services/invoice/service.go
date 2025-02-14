@@ -1157,13 +1157,6 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error
 		return err
 	}
 
-	// TODO alexb move it inside update invoice method only if status changes
-	err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
-		s.log.Errorf("Error from events processing: %s", err.Error())
-	}
-
 	return nil
 }
 
@@ -1181,13 +1174,6 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) erro
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
-	}
-
-	// TODO alexb move inside update
-	err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
-		s.log.Errorf("Error from events processing: %s", err.Error())
 	}
 
 	return nil
@@ -1621,11 +1607,27 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 			// status changed
 			if invoiceEntityBeforeUpdate.Status != invoiceEntityAfterUpdate.Status {
 				if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusVoid {
+					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{
+						InvoiceID: invoiceId,
+					})
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+						s.log.Errorf("Error from events processing: %s", err.Error())
+					}
+					// TODO alexb move to capability
 					err = s.sendVoidedInvoiceNotification(ctx, invoiceId)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "send voided invoice notification"))
 					}
 				} else if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusPaid {
+					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{
+						InvoiceID: invoiceId,
+					})
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+						s.log.Errorf("Error from events processing: %s", err.Error())
+					}
+					// TODO alexb move to capability
 					err = s.sendPaidInvoiceNotification(ctx, invoiceId)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "send paid invoice notification"))
