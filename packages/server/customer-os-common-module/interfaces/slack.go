@@ -12,7 +12,7 @@ type SlackService interface {
 	GetSlackChannels(ctx context.Context, tenant string) ([]*postgres_entity.SlackChannel, error)
 	GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) (*utils.Pagination, error)
 	StoreSlackChannel(ctx context.Context, tenant, source, channelId, channelName string, organizationId *string) error
-	SendMessageFromBot(ctx context.Context, channel, blocks string) error
+	SendMessageFromBot(ctx context.Context, channel, blocks string, autoJoinSlackChannel bool) error
 	GetSlackSettings(ctx context.Context, tenant string) (*SlackSettingsResponse, error)
 	ListSlackChannelsWithBot(ctx context.Context) ([]SlackChannelResponse, error)
 	JoinSlackChannelsWithBot(ctx context.Context, channelId string) error
