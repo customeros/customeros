@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -180,8 +179,7 @@ func (l *FlowParticipantGoalAchievedListener) handle(ctx context.Context, entity
 		if slackChannel != nil && slackChannel.ChannelId != "" {
 			slackMessageText := contactName + " has replied to the email. " + organizationName + " has achieved it’s goal!"
 
-			tenant := common.GetTenantFromContext(ctx)
-			err = l.dependencies.CommonServices.NotificationService.NotifySlackChannel(ctx, tenant, slackChannel.ChannelId, &slackMessageText)
+			err = l.dependencies.CommonServices.NotificationService.NotifySlackChannel(ctx, slackChannel.ChannelId, slackMessageText)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
