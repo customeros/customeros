@@ -302,14 +302,7 @@ export class UpdateAgentIconUsecase {
     },
     {
       name: 'activity-heart',
-      keywords: [
-        'activity',
-        'health',
-        'pulse',
-        'health',
-        'monitor',
-        'heartbeat',
-      ],
+      keywords: ['activity', 'pulse', 'health', 'monitor', 'heartbeat'],
     },
     {
       name: 'anchor',
