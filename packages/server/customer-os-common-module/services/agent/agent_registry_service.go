@@ -41,6 +41,7 @@ type AgentMetadata struct {
 
 type GoalConfig struct {
 	Goal             string   `toml:"goal"`
+	Metric           string   `toml:"metric"`
 	CompletionEvents []string `toml:"completion_events"`
 }
 
@@ -131,6 +132,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 	dbAgent := postgres_entity.AgentRegistry{
 		Type:             agentType,
 		Goal:             agentConfig.Goal.Goal,
+		Metric:           agentConfig.Goal.Metric,
 		Scope:            scope,
 		AgentName:        agentConfig.Agent.Name,
 		Description:      agentConfig.Agent.Description,
