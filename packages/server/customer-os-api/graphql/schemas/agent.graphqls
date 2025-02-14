@@ -37,14 +37,13 @@ type Agent {
   id: ID!
   type: AgentType!
   name: String!
+  description: String!
   scope: AgentScope!
   capabilities: [Capability!]!
   listeners: [AgentListener!]!
-  goalType: String!
   goal: String!
   isActive: Boolean!
   isConfigured: Boolean!
-  flowId: ID
   visible: Boolean!
   createdAt: Time!
   updatedAt: Time!
@@ -59,9 +58,7 @@ input AgentSaveInput {
   name: String
   capabilities: [CapabilitySaveInput!]
   listeners: [AgentListenerSaveInput!]
-  goal: String @deprecated ## field is not update-able
   isActive: Boolean
-  flowId: ID
   visible: Boolean
   color: String
   icon: String

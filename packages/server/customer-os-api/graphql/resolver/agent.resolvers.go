@@ -32,8 +32,6 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 			Color:       input.Color,
 			Icon:        input.Icon,
 			Name:        input.Name,
-			FlowID:      input.FlowID,
-			Goal:        input.Goal,
 		}
 	}
 
@@ -146,6 +144,12 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
+	agentInfo, err := r.Services.CommonServices.AgentService.GetAgentInfo(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgents(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -154,7 +158,10 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 	}
 	agents := make([]*model.Agent, 0, len(agentEntities))
 	for _, agentEntity := range agentEntities {
-		agents = append(agents, mapper.MapAgentToModel(agentEntity))
+		agent := mapper.MapAgentToModel(agentEntity)
+		agent.Goal = (*agentInfo)[agentEntity.Type].Goal
+		agent.Description = (*agentInfo)[agentEntity.Type].Description
+		agents = append(agents, agent)
 	}
 	return agents, nil
 }

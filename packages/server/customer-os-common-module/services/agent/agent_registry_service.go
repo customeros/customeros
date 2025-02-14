@@ -2,13 +2,13 @@ package agent
 
 import (
 	"context"
-	"github.com/pkg/errors"
 
 	"github.com/BurntSushi/toml"
 	"github.com/aws/aws-sdk-go/aws"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
@@ -31,11 +31,12 @@ type Agent struct {
 }
 
 type AgentMetadata struct {
-	Version string `toml:"version"`
-	Name    string `toml:"name"`
-	Type    string `toml:"type"`
-	Scope   string `toml:"scope"`
-	Icon    string `toml:"icon"`
+	Version     string `toml:"version"`
+	Name        string `toml:"name"`
+	Description string `toml:"description"`
+	Type        string `toml:"type"`
+	Scope       string `toml:"scope"`
+	Icon        string `toml:"icon"`
 }
 
 type GoalConfig struct {
@@ -118,14 +119,6 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		return err
 	}
 
-	agentGoal, err := enum.GetAgentGoal(agentConfig.Goal.Goal)
-	if err != nil {
-		span.LogKV("agentGoal", agentConfig.Goal.Goal)
-		err := errors.New("Not a valid agent goal")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	scope, err := enum.GetAgentScope(agentConfig.Agent.Scope)
 	if err != nil {
 		span.LogKV("agentScope", agentConfig.Agent.Scope)
@@ -137,9 +130,10 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 	// Create agent registry entity
 	dbAgent := postgres_entity.AgentRegistry{
 		Type:             agentType,
-		Goal:             agentGoal,
+		Goal:             agentConfig.Goal.Goal,
 		Scope:            scope,
 		AgentName:        agentConfig.Agent.Name,
+		Description:      agentConfig.Agent.Description,
 		CompletionEvents: agentConfig.Goal.CompletionEvents,
 		ListenerEvents:   agentConfig.Listeners.Events,
 		Capabilities:     agentConfig.Capabilities.Types,
