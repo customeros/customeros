@@ -83,6 +83,8 @@ const (
 	CapabilitySummarizeMessage                   AgentCapability = "summarize_message"
 	CapabilitySummarizeThread                    AgentCapability = "summarize_thread"
 	CapabilityIngestEmail                        AgentCapability = "ingest_email"
+	CapabilitySendPaidNotification               AgentCapability = "send_paid_notification"
+	CapabilitySendInvoiceVoidedNotification      AgentCapability = "send_invoice_voided_notification"
 )
 
 func (t AgentCapability) String() string {
@@ -140,7 +142,9 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityIdentifyParticipants,
 		CapabilitySummarizeMessage,
 		CapabilitySummarizeThread,
-		CapabilityIngestEmail:
+		CapabilityIngestEmail,
+		CapabilitySendPaidNotification,
+		CapabilitySendInvoiceVoidedNotification:
 		return AgentCapability(s), nil
 
 	default:

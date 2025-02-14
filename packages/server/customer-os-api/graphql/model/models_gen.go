@@ -3517,6 +3517,8 @@ const (
 	CapabilityTypeSummarizeMessage                 CapabilityType = "SUMMARIZE_MESSAGE"
 	CapabilityTypeSummarizeThread                  CapabilityType = "SUMMARIZE_THREAD"
 	CapabilityTypeIngestEmail                      CapabilityType = "INGEST_EMAIL"
+	CapabilityTypeSendPaidNotification             CapabilityType = "SEND_PAID_NOTIFICATION"
+	CapabilityTypeSendInvoiceVoidedNotification    CapabilityType = "SEND_INVOICE_VOIDED_NOTIFICATION"
 )
 
 var AllCapabilityType = []CapabilityType{
@@ -3552,11 +3554,13 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeSummarizeMessage,
 	CapabilityTypeSummarizeThread,
 	CapabilityTypeIngestEmail,
+	CapabilityTypeSendPaidNotification,
+	CapabilityTypeSendInvoiceVoidedNotification,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeLogRequestsForHelp, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail, CapabilityTypeProcessAutopayment, CapabilityTypeCreayePaymentLink, CapabilityTypeClassifyEmail, CapabilityTypeIdentifyParticipants, CapabilityTypeSummarizeMessage, CapabilityTypeSummarizeThread, CapabilityTypeIngestEmail:
+	case CapabilityTypeAddMeetingNotesToCompany, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeApplyTagToCompany, CapabilityTypeCreateContacts, CapabilityTypeCreateOrganization, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeDetectSupportWebvisit, CapabilityTypeEnrichEmailAddress, CapabilityTypeExtractMeetingHighlights, CapabilityTypeExtractSupportSignalsFromMeeting, CapabilityTypeForwardEmailReply, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeIcpQualify, CapabilityTypeIdentifyMeetingParticipants, CapabilityTypeIdentifyWebVisitor, CapabilityTypeLogRequestsForHelp, CapabilityTypeManageCampaignExecution, CapabilityTypeManageEmailDeliveryFailure, CapabilityTypeSelectOptimalSendingMailbox, CapabilityTypeSendSLACkNotification, CapabilityTypeUpdateCompanyStatus, CapabilityTypeValidateEmailDeliverability, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeGenerateInvoice, CapabilityTypeSendInvoiceViaEmail, CapabilityTypeProcessAutopayment, CapabilityTypeCreayePaymentLink, CapabilityTypeClassifyEmail, CapabilityTypeIdentifyParticipants, CapabilityTypeSummarizeMessage, CapabilityTypeSummarizeThread, CapabilityTypeIngestEmail, CapabilityTypeSendPaidNotification, CapabilityTypeSendInvoiceVoidedNotification:
 		return true
 	}
 	return false

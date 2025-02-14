@@ -1609,28 +1609,20 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 				if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusVoid {
 					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{
 						InvoiceID: invoiceId,
+						DryRun:    invoiceEntityAfterUpdate.DryRun,
 					})
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
 						s.log.Errorf("Error from events processing: %s", err.Error())
-					}
-					// TODO alexb move to capability
-					err = s.sendVoidedInvoiceNotification(ctx, invoiceId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "send voided invoice notification"))
 					}
 				} else if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusPaid {
 					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{
 						InvoiceID: invoiceId,
+						DryRun:    invoiceEntityAfterUpdate.DryRun,
 					})
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
 						s.log.Errorf("Error from events processing: %s", err.Error())
-					}
-					// TODO alexb move to capability
-					err = s.sendPaidInvoiceNotification(ctx, invoiceId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "send paid invoice notification"))
 					}
 				}
 			}
@@ -1759,7 +1751,7 @@ func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.Mana
 	}
 }
 
-func (s *invoiceService) sendPaidInvoiceNotification(ctx context.Context, invoiceId string) error {
+func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.sendPaidInvoiceNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -1897,7 +1889,7 @@ func (s *invoiceService) sendPaidInvoiceNotification(ctx context.Context, invoic
 	return nil
 }
 
-func (s *invoiceService) sendVoidedInvoiceNotification(ctx context.Context, invoiceId string) error {
+func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.sendPaidInvoiceNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

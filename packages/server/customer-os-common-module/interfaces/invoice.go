@@ -32,6 +32,8 @@ type InvoiceService interface {
 	UpdateInvoice(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
 	SendPayInvoiceNotification(ctx context.Context, invoiceId string) error
 	SendPayReminderInvoiceNotification(ctx context.Context, invoiceId string) error
+	SendPaidInvoiceNotification(ctx context.Context, invoiceId string) error
+	SendVoidedInvoiceNotification(ctx context.Context, invoiceId string) error
 	AutopayInvoice(ctx context.Context, invoiceId string) error
 	GenerateNewPaymentLink(ctx context.Context, invoiceId string) error
 

@@ -113,10 +113,12 @@ func (l *InvoiceVoidedListener) Handle(ctx context.Context, baseEvent any) error
 		agentExecutionIds = append(agentExecutionIds, agentExecutionId)
 	}
 
-	for _, agentExecutionId := range agentExecutionIds {
-		err := l.postgresRepositories.AgentExecutionRepository.GoalAchieved(ctx, agentExecutionId, false)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to mark agent execution as goal achieved"))
+	if !data.DryRun {
+		for _, agentExecutionId := range agentExecutionIds {
+			err := l.postgresRepositories.AgentExecutionRepository.GoalAchieved(ctx, agentExecutionId, false)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to mark agent execution as goal achieved"))
+			}
 		}
 	}
 

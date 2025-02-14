@@ -157,7 +157,27 @@ func (f *agentCapabilityExecutionService) Execute(
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityProcessAutopayment)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendInvoiceViaEmail)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilitySendPaidNotification:
+		executor, ok := GetTypedExecutor[SendPaidNotificationInput, SendPaidNotificationOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendPaidNotification)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilitySendInvoiceVoidedNotification:
+		executor, ok := GetTypedExecutor[SendInvoiceVoidedNotificationInput, SendInvoiceVoidedNotificationOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendInvoiceVoidedNotification)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
