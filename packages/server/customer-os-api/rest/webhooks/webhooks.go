@@ -51,7 +51,7 @@ type CreateWebhookResponse struct {
 	Hook CreateWebhookRecord `json:"hook"`
 }
 
-func (h *WebhookHandler) CreateWebhook(baseURL, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) CreateWebhook(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateWebhook", c.Request.Header)
 		defer span.Finish()
@@ -70,8 +70,8 @@ func (h *WebhookHandler) CreateWebhook(baseURL, flowsPath string) gin.HandlerFun
 			return
 		}
 
-		integration, err := h.services.CommonServices.WebhookService.GetIntegration(strings.ToLower(req.Integration))
-		if err != nil {
+		integration := h.services.CommonServices.WebhookService.GetIntegration(strings.ToLower(req.Integration))
+		if integration == enum.SourceUnknown {
 			message := "Invalid integration value"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -85,7 +85,7 @@ func (h *WebhookHandler) CreateWebhook(baseURL, flowsPath string) gin.HandlerFun
 		}
 
 		record := CreateWebhookRecord{
-			URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhookPath),
+			URL:         fmt.Sprintf("%s%s/%s", baseURL, apiPath, webhookPath),
 			Integration: integration.String(),
 			Secret:      secret,
 		}
@@ -115,7 +115,7 @@ type ActiveWebhookRecord struct {
 	Active      bool      `json:"active"`
 }
 
-func (h *WebhookHandler) GetActiveWebhooks(baseURL, webhookPath string) gin.HandlerFunc {
+func (h *WebhookHandler) GetActiveWebhooks(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetActiveWebhooks", c.Request.Header)
 		defer span.Finish()
@@ -166,7 +166,7 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, webhookPath string) gin.Hand
 
 		for i, webhook := range *webhooks {
 			results[i] = ActiveWebhookRecord{
-				URL:         fmt.Sprintf("%s%s/%s", baseURL, webhookPath, webhook.WebhookPath),
+				URL:         fmt.Sprintf("%s%s/%s", baseURL, apiPath, webhook.WebhookPath),
 				Integration: webhook.Integration,
 				CreatedAt:   webhook.CreatedAt,
 				Active:      webhook.Enabled,
@@ -186,7 +186,7 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, webhookPath string) gin.Hand
 	}
 }
 
-func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) RotateWebhook(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
 		defer span.Finish()
@@ -197,8 +197,8 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
-		tenantId := c.Param("tenantId")
-		validTenant, err := h.services.CommonServices.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		tenantHash := c.Param("tenantHash")
+		validTenant, err := h.services.CommonServices.WebhookService.ValidateTenantId(ctx, tenant, tenantHash)
 		if err != nil {
 			message := "Unable to verify webhook ownership"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -210,8 +210,7 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 		}
 
 		// Lookup integration
-		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
-		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
+		webhookPath := h.extractWebhookPath(c.Request.URL.Path, apiPath)
 		integration, err := h.services.CommonServices.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil || integration == commonEnum.SourceUnknown {
 			message := "Unable to identify webhook"
@@ -228,7 +227,7 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 		}
 
 		record := CreateWebhookRecord{
-			URL:         fmt.Sprintf("%s%s/%s", baseURL, flowsPath, webhookPath),
+			URL:         fmt.Sprintf("%s%s/%s", baseURL, apiPath, webhookPath),
 			Integration: integration.String(),
 			Secret:      secret,
 		}
@@ -239,9 +238,9 @@ func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFun
 	}
 }
 
-func (h *WebhookHandler) DeactivateWebhook() gin.HandlerFunc {
+func (h *WebhookHandler) DeactivateWebhook(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "DeactivateWebhook", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -250,22 +249,22 @@ func (h *WebhookHandler) DeactivateWebhook() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
-		tenantId := c.Param("tenantId")
-		validTenant, err := h.services.CommonServices.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
-		if err != nil {
-			message := "Unable to verify webhook ownership"
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-		if !validTenant {
-			h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
+		tenantHash := c.Param("tenantHash")
+		validTenant, err := h.services.CommonServices.WebhookService.ValidateTenantId(ctx, tenant, tenantHash)
+		if err != nil || !validTenant {
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
 		// Call to deactivate webhook
-		deactErr := h.services.CommonServices.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
-		if deactErr != nil {
+		webhookPath := h.extractWebhookPath(c.Request.URL.Path, apiPath)
+		ok, err := h.services.CommonServices.WebhookService.DeactivateWebhookByPath(ctx, webhookPath)
+		if err != nil {
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+		if !ok {
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
@@ -281,7 +280,7 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+		tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantHash"))
 		if err != nil {
 			err := errors.Wrap(err, "Unable to identify tenant")
 			tracing.TraceErr(span, err)
@@ -315,4 +314,11 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 			return
 		}
 	}
+}
+
+func (h *WebhookHandler) extractWebhookPath(s, apiRootPath string) string {
+	webhookPath := strings.TrimSuffix(s, "/rotate")
+	webhookPath = strings.TrimPrefix(webhookPath, apiRootPath)
+	webhookPath = strings.Trim(webhookPath, "/")
+	return webhookPath
 }

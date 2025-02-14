@@ -60,7 +60,7 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId", WebhooksPath),
+		path:      fmt.Sprintf("%s/:tenantHash/i/:integrationHash", WebhooksPath),
 		handler:   h.Webhooks.HandleWebhook(WebhooksPath),
 		routeType: RoutePublic,
 	})

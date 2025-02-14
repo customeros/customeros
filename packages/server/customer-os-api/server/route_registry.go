@@ -39,7 +39,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerBillingRoutes(ctx, r, s, h)
 	registerCustomerBaseRoutes(ctx, r, s, h)
 	registerEnrichRoutes(ctx, r, s, h)
-	registerFlowRoutes(ctx, r, s, h)
+	registerWebhookRoutes(ctx, r, s, h)
 	registerIDRoutes(ctx, r, s, h)
 	registerMailstackRoutes(ctx, r, s, h)
 	registerOutreachRoutes(ctx, r, s, h)
