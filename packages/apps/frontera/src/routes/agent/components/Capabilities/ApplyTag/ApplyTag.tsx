@@ -28,23 +28,17 @@ export const ApplyTag = observer(() => {
           Choose or create one tag to identify companies that need support
         </p>
         <Tags
+          isMulti={false}
           className='mt-1'
           options={usecase.tagList}
-          placeholder='Company tags'
+          placeholder='Company tag'
+          onCreate={usecase.create}
           value={usecase.selectedTags}
           inputValue={usecase.searchTerm}
-          onCreate={() => usecase.create()}
           setInputValue={usecase.setSearchTerm}
           leftAccessory={<Icon name='tag-01' className='mr-3 text-gray-500' />}
           onChange={(selection) => {
-            if (Array.isArray(selection) && selection.length > 1) return;
-
-            if (Array.isArray(selection) && selection.length > 0) {
-              usecase.select(selection[0]?.value);
-            } else {
-              usecase.reset();
-            }
-            usecase.execute();
+            usecase.execute(selection?.value);
           }}
         />
       </div>

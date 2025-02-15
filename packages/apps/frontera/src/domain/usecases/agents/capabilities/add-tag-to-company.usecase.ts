@@ -8,19 +8,19 @@ import { AgentService } from '@domain/services/agent/agent.service';
 import { CapabilityType } from '@graphql/types';
 import { EntityType } from '@shared/types/__generated__/graphql.types';
 
+type Tag = { label: string; value: string };
+type InitialTagsTuple = [Tag] | [];
+
 export class AddTagToCompanyUsecase {
   @observable public accessor searchTerm = '';
-  @observable public accessor newTags = new Set();
-  @observable public accessor initialTags: { label: string; value: string }[] =
-    [];
+  @observable public accessor newTags = new Set<string>();
+  @observable public accessor initialTags: InitialTagsTuple = [];
 
   private root = RootStore.getInstance();
   private tagService = new TagService();
   private agentService = new AgentService();
 
-  constructor(private agentId: string) {
-    this.agentId = agentId;
-    this.select = this.select.bind(this);
+  constructor(private readonly agentId: string) {
     this.create = this.create.bind(this);
     this.setSearchTerm = this.setSearchTerm.bind(this);
 
@@ -51,8 +51,8 @@ export class AddTagToCompanyUsecase {
       { name, entityType: EntityType.Organization },
       {
         onSuccess: (id) => {
-          this.select(id);
           this.newTags.add(name);
+          this.execute(id);
           this.setSearchTerm('');
         },
       },
@@ -74,6 +74,7 @@ export class AddTagToCompanyUsecase {
 
       return;
     }
+
     const foundCapabilityConfig = agent.value?.capabilities?.find(
       (c) => c.type === CapabilityType.ApplyTagToCompany,
     )?.config;
@@ -104,32 +105,14 @@ export class AddTagToCompanyUsecase {
       return;
     }
 
-    this.initialTags = this.tagList
+    const matchingTags = this.tagList
       .filter((t) => t.label === parsedCapability.tagName.value)
       .map((t) => ({ label: t.label, value: t.value }));
 
+    this.initialTags = matchingTags.length > 0 ? [matchingTags[0]] : [];
+
     span.end({
       initialTags: this.initialTags,
-    });
-  }
-
-  @action
-  public select(id?: string) {
-    const span = Tracer.span('AddTagToCompanyUsecase.select', {
-      id,
-    });
-
-    if (!id) {
-      this.reset();
-
-      return;
-    }
-
-    this.newTags.clear();
-    this.newTags.add(id);
-
-    span.end({
-      ids: Array.from(this.newTags),
     });
   }
 
@@ -138,10 +121,14 @@ export class AddTagToCompanyUsecase {
     return this.root.tags
       .getByEntityType(EntityType.Organization)
       .filter((e) => !!e.value.name)
+
       .map((tag) => ({
         label: tag.tagName,
         value: tag.id,
-      }));
+      }))
+      .filter((tag) =>
+        tag.label.toLowerCase().includes(this.searchTerm.toLowerCase()),
+      );
   }
 
   @computed
@@ -161,7 +148,7 @@ export class AddTagToCompanyUsecase {
   }
 
   @action
-  public async execute() {
+  public async execute(id?: string) {
     const span = Tracer.span('AddTagToCompanyUsecase.execute');
 
     const agent = this.root.agents.getById(this.agentId);
@@ -172,6 +159,13 @@ export class AddTagToCompanyUsecase {
       );
 
       return;
+    }
+
+    this.reset();
+
+    if (id) {
+      this.newTags.clear();
+      this.newTags.add(id);
     }
 
     const tagName = this.selectedTags.map((tag) => tag.label).join(', ');
@@ -190,8 +184,8 @@ export class AddTagToCompanyUsecase {
       );
     }
 
-    if (res) {
-      agent.put(res?.agent_Save);
+    if (res?.agent_Save) {
+      agent.put(res.agent_Save);
       this.init();
     }
 

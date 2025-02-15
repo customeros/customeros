@@ -1,18 +1,18 @@
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 import { Icon } from '@ui/media/Icon';
+import { Plus } from '@ui/media/icons/Plus';
 import { Combobox } from '@ui/form/Combobox';
-import { Plus } from '@ui/media/icons/Plus.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
-import { SelectOption } from '@shared/types/SelectOptions.ts';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { Tag, TagLabel, TagRightButton } from '@ui/presentation/Tag';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover/Popover.tsx';
+} from '@ui/overlay/Popover/Popover';
 
 type MultiSelectOnChange = (selection: SelectOption[]) => void;
 type SingleSelectOnChange = (selection: SelectOption) => void;
@@ -76,7 +76,7 @@ export const Tags = observer(
               data-test={dataTest}
               className='flex flex-wrap gap-1 w-fit items-center'
             >
-              {value.length ? (
+              {value?.length ? (
                 value.map((option) => {
                   const tag = store.tags.getById(option.value)?.value;
 
