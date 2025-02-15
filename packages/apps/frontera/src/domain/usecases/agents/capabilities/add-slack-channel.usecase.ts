@@ -42,21 +42,30 @@ export class AddSlackChannelUsecase {
   }
 
   @computed
+  get allOptions() {
+    return this.root.common.slackChannelsArray.map((val) => {
+      return { value: val.channelId, label: val.name };
+    }, [] as SelectOption[]);
+  }
+
+  @computed
   get options() {
-    return this.root.common.slackChannelsArray.reduce((acc, curr) => {
+    return this.allOptions.reduce((acc, curr) => {
       if (!curr) return acc;
 
-      if (!curr.name.toLowerCase().includes(this.inputValue.toLowerCase())) {
+      if (!curr.label.toLowerCase().includes(this.inputValue.toLowerCase())) {
         return acc;
       }
 
-      return [...acc, { value: curr.channelId, label: curr.name }];
+      return [...acc, { value: curr.value, label: curr.label }];
     }, [] as SelectOption[]);
   }
 
   @computed
   get selectedOption() {
-    return this.options.find((option) => option.value === this.selectedChannel);
+    return this.allOptions.find(
+      (option) => option.value === this.selectedChannel,
+    );
   }
 
   @computed
