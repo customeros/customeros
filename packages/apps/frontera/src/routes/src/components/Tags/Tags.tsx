@@ -67,6 +67,10 @@ export const Tags = observer(
       }
     };
 
+    const foundOption = options.some((o) =>
+      o.label.toLowerCase().includes(inputValue.toLowerCase()),
+    );
+
     return (
       <Popover>
         <Tooltip align='start' label='Company tags'>
@@ -118,7 +122,7 @@ export const Tags = observer(
             onInputChange={setInputValue}
             placeholder={inputPlaceholder}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !options.length) {
+              if (e.key === 'Enter' && !foundOption) {
                 onCreate?.(inputValue);
                 setInputValue('');
               }
