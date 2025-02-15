@@ -4,7 +4,6 @@ import { Agent } from '@store/Agents/Agent.dto';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
-import { SelectOption } from '@ui/utils/types';
 import { CapabilityType } from '@graphql/types';
 
 export const cooldownPeriods = [1, 4, 8, 12, 24, 999999];
@@ -45,20 +44,19 @@ export class AddSlackChannelUsecase {
   get allOptions() {
     return this.root.common.slackChannelsArray.map((val) => {
       return { value: val.channelId, label: val.name };
-    }, [] as SelectOption[]);
+    });
   }
 
   @computed
   get options() {
-    return this.allOptions.reduce((acc, curr) => {
-      if (!curr) return acc;
-
-      if (!curr.label.toLowerCase().includes(this.inputValue.toLowerCase())) {
-        return acc;
-      }
-
-      return [...acc, { value: curr.value, label: curr.label }];
-    }, [] as SelectOption[]);
+    return this.allOptions
+      .filter((option) =>
+        option?.label.toLowerCase().includes(this.inputValue.toLowerCase()),
+      )
+      .map((option) => ({
+        value: option.value,
+        label: option.label,
+      }));
   }
 
   @computed
