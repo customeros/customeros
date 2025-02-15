@@ -516,8 +516,8 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 				WHERE s.url CONTAINS 'linkedin.com'
 				WITH t.name AS tenant, c.id AS contactId, c, e, o, s
 				WHERE e IS NOT NULL OR o IS NOT NULL OR s IS NOT NULL
-				RETURN DISTINCT tenant, contactId
 				ORDER BY CASE WHEN c.techEnrichRequestedAt IS NULL THEN 0 ELSE 1 END, c.techEnrichRequestedAt ASC
+				RETURN DISTINCT tenant, contactId
 				LIMIT $limit`
 	params := map[string]any{
 		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,

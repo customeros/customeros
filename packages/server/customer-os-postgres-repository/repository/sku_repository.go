@@ -1,9 +1,10 @@
 package postgres_repository
 
 import (
+	"errors"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -11,9 +12,9 @@ import (
 )
 
 type SkuRepository interface {
-	Get(ctx context.Context, tenant, id string) (*postgres_entity.SkuEntity, error)
-	GetAll(ctx context.Context, tenant string, archived *bool) ([]*postgres_entity.SkuEntity, error)
-	Save(ctx context.Context, sku *postgres_entity.SkuEntity) (*postgres_entity.SkuEntity, error)
+	Get(ctx context.Context, tenant, id string) (*postgresentity.SkuEntity, error)
+	GetAll(ctx context.Context, tenant string, archived *bool) ([]*postgresentity.SkuEntity, error)
+	Save(ctx context.Context, sku *postgresentity.SkuEntity) (*postgresentity.SkuEntity, error)
 	Archive(ctx context.Context, tenant, id string) error
 }
 
@@ -27,18 +28,21 @@ func NewSkuRepository(db *gorm.DB) SkuRepository {
 	}
 }
 
-func (repo *skuRepository) Get(ctx context.Context, tenant, id string) (*postgres_entity.SkuEntity, error) {
+func (repo *skuRepository) Get(ctx context.Context, tenant, skuId string) (*postgresentity.SkuEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SkuRepository.Get")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(tracingLog.String("skuId", skuId))
 
-	span.LogFields(tracingLog.String("id", id))
+	if skuId == "" {
+		return nil, nil
+	}
 
-	var existing *postgres_entity.SkuEntity
-	err := repo.db.First(&existing, "tenant = ? and id = ?", tenant, id).Error
+	var existing *postgresentity.SkuEntity
+	err := repo.db.First(&existing, "tenant = ? and skuId = ?", tenant, skuId).Error
 	if err != nil {
 		span.LogFields(tracingLog.Bool("result.found", false))
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)
@@ -54,13 +58,13 @@ func (repo *skuRepository) Get(ctx context.Context, tenant, id string) (*postgre
 	return existing, nil
 }
 
-func (repo *skuRepository) GetAll(ctx context.Context, tenant string, archived *bool) ([]*postgres_entity.SkuEntity, error) {
+func (repo *skuRepository) GetAll(ctx context.Context, tenant string, archived *bool) ([]*postgresentity.SkuEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SkuRepository.GetAll")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var err error
-	var existing []*postgres_entity.SkuEntity
+	var existing []*postgresentity.SkuEntity
 
 	if archived == nil {
 		err = repo.db.Find(&existing, "tenant = ?", tenant).Error
@@ -77,7 +81,7 @@ func (repo *skuRepository) GetAll(ctx context.Context, tenant string, archived *
 	return existing, nil
 }
 
-func (repo *skuRepository) Save(ctx context.Context, sku *postgres_entity.SkuEntity) (*postgres_entity.SkuEntity, error) {
+func (repo *skuRepository) Save(ctx context.Context, sku *postgresentity.SkuEntity) (*postgresentity.SkuEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SkuRepository.Save")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)

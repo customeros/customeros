@@ -302,7 +302,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 
 	//todo remove this when name is removed from SLI
-	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId {
+	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "" {
 		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.SkuId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -424,7 +424,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
-			SkuId:      utils.StringPtr(serviceLineItemDetails.SkuId),
+			SkuId:      utils.StringPtrNillable(serviceLineItemDetails.SkuId),
 			Name:       utils.StringPtr(serviceLineItemDetails.SliName),
 			Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
 			Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
