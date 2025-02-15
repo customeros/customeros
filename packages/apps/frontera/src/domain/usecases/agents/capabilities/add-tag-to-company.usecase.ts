@@ -53,6 +53,7 @@ export class AddTagToCompanyUsecase {
         onSuccess: (id) => {
           this.select(id);
           this.newTag.add(name);
+          this.execute();
           this.setSearchTerm('');
         },
       },
