@@ -10,7 +10,7 @@ import { EntityType } from '@shared/types/__generated__/graphql.types';
 
 export class AddTagToCompanyUsecase {
   @observable public accessor searchTerm = '';
-  @observable public accessor newTags = new Set();
+  @observable public accessor newTag = new Set();
   @observable public accessor initialTags: { label: string; value: string }[] =
     [];
 
@@ -52,7 +52,7 @@ export class AddTagToCompanyUsecase {
       {
         onSuccess: (id) => {
           this.select(id);
-          this.newTags.add(name);
+          this.newTag.add(name);
           this.setSearchTerm('');
         },
       },
@@ -125,11 +125,11 @@ export class AddTagToCompanyUsecase {
       return;
     }
 
-    this.newTags.clear();
-    this.newTags.add(id);
+    this.newTag.clear();
+    this.newTag.add(id);
 
     span.end({
-      ids: Array.from(this.newTags),
+      ids: Array.from(this.newTag),
     });
   }
 
@@ -145,18 +145,23 @@ export class AddTagToCompanyUsecase {
   }
 
   @computed
-  get selectedTags() {
-    return this.tagList.filter(
-      (tag) =>
-        this.newTags.has(tag.value) ||
-        this.initialTags.some((t) => t.value === tag.value),
+  get selectedTag() {
+    const newTag = this.tagList.find((tag) => this.newTag.has(tag.value));
+
+    if (newTag) {
+      return [newTag];
+    }
+    const initialTag = this.tagList.find((tag) =>
+      this.initialTags.some((t) => t.value === tag.value),
     );
+
+    return initialTag ? [initialTag] : [];
   }
 
   @action
   public reset() {
     this.searchTerm = '';
-    this.newTags.clear();
+    this.newTag.clear();
     this.initialTags = [];
   }
 
@@ -174,7 +179,7 @@ export class AddTagToCompanyUsecase {
       return;
     }
 
-    const tagName = this.selectedTags.map((tag) => tag.label).join(', ');
+    const tagName = this.selectedTag.map((tag) => tag.label).join(', ');
 
     agent?.setCapabilityConfig(
       CapabilityType.ApplyTagToCompany,
