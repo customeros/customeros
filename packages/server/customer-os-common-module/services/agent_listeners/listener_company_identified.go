@@ -2,7 +2,6 @@ package agent_listeners
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -110,9 +109,8 @@ func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID s
 
 	activeAgents := l.lookupActiveAgents(ctx)
 	if len(activeAgents) == 0 {
-		err := errors.New("No agent types configured for company identified listener")
-		tracing.TraceErr(span, err)
-		return err
+		span.LogFields(log.String("result", "no active agents found"))
+		return nil
 	}
 
 	// get web session

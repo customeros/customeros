@@ -32,6 +32,7 @@ type SendWebVisitorSlackNotificationInput struct {
 	Referrer        string   `json:"referrer"`
 	PageViews       []string `json:"pageViews"`
 	SessionDuration string   `json:"sessionDuration"`
+	WebSessionID    string   `json:"webSessionId"`
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
@@ -121,6 +122,9 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 	if input.OrganizationID == "" {
 		return errors.New("OrganizationID cannot be empty")
 	}
+	if input.WebSessionID == "" {
+		return errors.New("WebSessionID cannot be empty")
+	}
 	return nil
 }
 
@@ -173,7 +177,20 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		},
 	}
 
-	return c.sendSlackNotificationCapability.Execute(ctx, newExecutionContainer)
+	status, output, err := c.sendSlackNotificationCapability.Execute(ctx, newExecutionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return status, output, err
+	}
+	if status == enum.CapabilityExecutionCompleted {
+		err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithSlackSentAt(ctx, executionContainer.InputData.WebSessionID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionError, result, err
+		}
+	}
+
+	return status, output, nil
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int64) (bool, error) {
