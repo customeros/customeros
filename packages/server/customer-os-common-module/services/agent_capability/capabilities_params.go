@@ -31,6 +31,7 @@ type CapabilityParams struct {
 	IPAddress                      string      `json:"ipAddress"`
 	IsNewCompanyVisit              bool        `json:"isNewCompanyVisit"`
 	IsNewPersonVisit               bool        `json:"isNewPersonVisit"`
+	IsWorkspaceDomain              bool        `json:"isWorkspaceDomain"`
 	LinkedInSlug                   string      `json:"linkedinSlug"`
 	MarkdownEventID                string      `json:"markdownEventId"`
 	MeetingContent                 string      `json:"meetingContent"`

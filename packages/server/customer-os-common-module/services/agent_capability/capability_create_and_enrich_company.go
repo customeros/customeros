@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -21,15 +22,18 @@ import (
 
 type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
+	workspaceService    interfaces.WorkspaceService
 	events              *events.EventsService
 }
 
 func NewCreateOrganizationCapability(
 	events *events.EventsService,
 	orgService interfaces.OrganizationService,
+	workspaceService interfaces.WorkspaceService,
 ) *CreateOrganizationCapability {
 	return &CreateOrganizationCapability{
 		events:              events,
+		workspaceService:    workspaceService,
 		organizationService: orgService,
 	}
 }
@@ -79,7 +83,8 @@ type CreateOrganizationInput struct {
 }
 
 type CreateOrganizationOutput struct {
-	OrganizationID string `json:"organizationId"`
+	OrganizationID    string `json:"organizationId"`
+	IsWorkspaceDomain bool   `json:"isWorkspaceDomain"`
 }
 
 func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateOrganizationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateOrganizationOutput, error) {
@@ -99,6 +104,13 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
+	}
+
+	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, executionContainer.InputData.Domain)
+	if isWorkspaceDomain {
+		span.LogFields(log.Bool("result.skip", true))
+		result.IsWorkspaceDomain = true
+		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
 	// Check if the domain is already linked to an organization
