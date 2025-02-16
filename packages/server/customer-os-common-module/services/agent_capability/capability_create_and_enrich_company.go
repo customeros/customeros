@@ -108,6 +108,13 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 
 	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, executionContainer.InputData.Domain)
 	if isWorkspaceDomain {
+		err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.AgentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{
+			AgentExecutionId: executionContainer.AgentExecutionID,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+
 		span.LogFields(log.Bool("result.skip", true))
 		result.IsWorkspaceDomain = true
 		return enum.CapabilityExecutionCompleted, result, nil
