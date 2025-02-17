@@ -356,6 +356,39 @@ func (r *serviceLineItemResolver) ExternalLinks(ctx context.Context, obj *model.
 	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
+// InvoicingStatus is the resolver for the invoicing_status field.
+func (r *serviceLineItemResolver) InvoicingStatus(ctx context.Context, obj *model.ServiceLineItem) (*model.ServiceInvoicingStatus, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	if obj.BillingCycle != model.BilledTypeOnce {
+		return utils.ToPtr(model.ServiceInvoicingStatusReady), nil
+	}
+	invoices, err := dataloader.For(ctx).GetInvoicesForServiceLineItem(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get invoices for service line item %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get invoices for service line item %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	if invoices == nil {
+		return utils.ToPtr(model.ServiceInvoicingStatusReady), nil
+	}
+	status := model.ServiceInvoicingStatusReady
+	for _, invoice := range *invoices {
+		if invoice.DryRun {
+			continue
+		}
+		if invoice.Status == neo4jenum.InvoiceStatusVoid {
+			status = model.ServiceInvoicingStatusVoid
+			break
+		} else if invoice.Status != neo4jenum.InvoiceStatusInitialized {
+			status = model.ServiceInvoicingStatusInvoiced
+			break
+		}
+	}
+	return &status, nil
+}
+
 // ServiceLineItem returns generated.ServiceLineItemResolver implementation.
 func (r *Resolver) ServiceLineItem() generated.ServiceLineItemResolver {
 	return &serviceLineItemResolver{r}

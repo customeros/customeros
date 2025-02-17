@@ -736,6 +736,26 @@ func (s *invoiceService) GetInvoicesForContracts(ctx context.Context, contractId
 	return &invoiceEntities, nil
 }
 
+func (s *invoiceService) GetInvoicesForServiceLineItems(ctx context.Context, sliIds []string) (*neo4jentity.InvoiceEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoicesForServiceLineItems")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("sliIds", sliIds))
+
+	invoices, err := s.neo4j.InvoiceReadRepository.GetAllForServiceLineItems(ctx, common.GetTenantFromContext(ctx), sliIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	invoiceEntities := make(neo4jentity.InvoiceEntities, 0, len(invoices))
+	for _, v := range invoices {
+		invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(v.Node)
+		invoiceEntity.DataloaderKey = v.LinkedNodeId
+		invoiceEntities = append(invoiceEntities, *invoiceEntity)
+	}
+	return &invoiceEntities, nil
+}
+
 type SimulateInvoices struct {
 	ContractId         string
 	IssueDate          time.Time
@@ -1270,17 +1290,27 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 		invoiceLineCalculationsReady := false
 		// process one time SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
-			// Check any version of SLI not invoiced
-			result, err := s.neo4j.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, common.GetTenantFromContext(ctx), sliEntity.ParentID)
+			// Get all invoices for one time
+			invoices, err := s.GetInvoicesForServiceLineItems(ctx, []string{sliEntity.ID})
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ParentID, err.Error())
+				return nil, nil, err
 			}
-			if result != nil {
-				// SLI already invoiced
-				reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI already invoiced"
-				continue
+			if invoices != nil && len(*invoices) > 0 {
+				alreadyInvoiced := false
+				for _, invoice := range *invoices {
+					if !invoice.DryRun && invoice.Status != neo4jenum.InvoiceStatusInitialized {
+						alreadyInvoiced = true
+						break
+					}
+				}
+				if alreadyInvoiced {
+					// SLI already invoiced
+					reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI already invoiced"
+					continue
+				}
 			}
+
 			quantity := sliEntity.Quantity
 			calculatedSLIAmount = utils.RoundHalfUpFloat64(float64(quantity)*sliEntity.Price, 2)
 			calculatedSLIVat = utils.RoundHalfUpFloat64(calculatedSLIAmount*sliEntity.VatRate/100, 2)
