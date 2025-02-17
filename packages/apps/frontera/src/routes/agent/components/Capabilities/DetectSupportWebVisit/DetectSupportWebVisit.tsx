@@ -37,9 +37,9 @@ export const DetectSupportWebVisit = observer(() => {
         AgentType.WebVisitIdentifier,
       );
       navigate(`/agents/${usecase.webVisitIdentifierAgentId}`);
+    } else {
+      navigate(`/agents/${agentByType?.id}`);
     }
-
-    navigate(`/agents/${agentByType?.id}`);
   };
 
   return (

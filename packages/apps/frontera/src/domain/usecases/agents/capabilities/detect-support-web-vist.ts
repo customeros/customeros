@@ -18,6 +18,7 @@ export class DetectSupportWebVistUsecase {
   @observable public accessor isOpen: boolean = false;
   @observable public accessor validationError: string = '';
   @observable public accessor webVisitIdentifierAgentId: string | null = null;
+
   constructor(private readonly agentId: string) {
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
