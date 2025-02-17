@@ -1633,22 +1633,23 @@ type ComplexityRoot struct {
 	}
 
 	ServiceLineItem struct {
-		BillingCycle   func(childComplexity int) int
-		Closed         func(childComplexity int) int
-		Comments       func(childComplexity int) int
-		CreatedBy      func(childComplexity int) int
-		Description    func(childComplexity int) int
-		ExternalLinks  func(childComplexity int) int
-		Metadata       func(childComplexity int) int
-		ParentID       func(childComplexity int) int
-		Paused         func(childComplexity int) int
-		Price          func(childComplexity int) int
-		Quantity       func(childComplexity int) int
-		ServiceEnded   func(childComplexity int) int
-		ServiceStarted func(childComplexity int) int
-		Sku            func(childComplexity int) int
-		SkuID          func(childComplexity int) int
-		Tax            func(childComplexity int) int
+		BillingCycle    func(childComplexity int) int
+		Closed          func(childComplexity int) int
+		Comments        func(childComplexity int) int
+		CreatedBy       func(childComplexity int) int
+		Description     func(childComplexity int) int
+		ExternalLinks   func(childComplexity int) int
+		InvoicingStatus func(childComplexity int) int
+		Metadata        func(childComplexity int) int
+		ParentID        func(childComplexity int) int
+		Paused          func(childComplexity int) int
+		Price           func(childComplexity int) int
+		Quantity        func(childComplexity int) int
+		ServiceEnded    func(childComplexity int) int
+		ServiceStarted  func(childComplexity int) int
+		Sku             func(childComplexity int) int
+		SkuID           func(childComplexity int) int
+		Tax             func(childComplexity int) int
 	}
 
 	Sku struct {
@@ -2301,6 +2302,8 @@ type ServiceLineItemResolver interface {
 
 	CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error)
 	ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error)
+
+	InvoicingStatus(ctx context.Context, obj *model.ServiceLineItem) (*model.ServiceInvoicingStatus, error)
 }
 type SlackChannelResolver interface {
 	Organization(ctx context.Context, obj *model.SlackChannel) (*model.Organization, error)
@@ -12075,6 +12078,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.ExternalLinks(childComplexity), true
 
+	case "ServiceLineItem.invoicing_status":
+		if e.complexity.ServiceLineItem.InvoicingStatus == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.InvoicingStatus(childComplexity), true
+
 	case "ServiceLineItem.metadata":
 		if e.complexity.ServiceLineItem.Metadata == nil {
 			break
@@ -17062,6 +17072,7 @@ type ServiceLineItem implements MetadataInterface {
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     closed:             Boolean!
     paused:             Boolean!
+    invoicing_status:   ServiceInvoicingStatus @goField(forceResolver: true)
 }
 
 input ServiceLineItemInput {
@@ -17148,6 +17159,12 @@ enum BilledType {
     Deprecated
     """
     USAGE @deprecated(reason: "Not supported yet.")
+}
+
+enum ServiceInvoicingStatus {
+    READY
+    INVOICED
+    VOID
 }
 
 input TaxInput {
@@ -37111,6 +37128,8 @@ func (ec *executionContext) fieldContext_Contract_contractLineItems(_ context.Co
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -39188,6 +39207,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(_ context.Con
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -54716,6 +54737,8 @@ func (ec *executionContext) fieldContext_InvoiceLine_contractLineItem(_ context.
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -78869,6 +78892,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Create(ctx co
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -78992,6 +79017,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_NewVersion(ct
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -79115,6 +79142,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Update(ctx co
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -100300,6 +100329,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
+			case "invoicing_status":
+				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -103701,6 +103732,47 @@ func (ec *executionContext) fieldContext_ServiceLineItem_paused(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_invoicing_status(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ServiceLineItem().InvoicingStatus(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ServiceInvoicingStatus)
+	fc.Result = res
+	return ec.marshalOServiceInvoicingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceInvoicingStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_invoicing_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ServiceInvoicingStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -134242,6 +134314,39 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "invoicing_status":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ServiceLineItem_invoicing_status(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -143149,6 +143254,22 @@ func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustom
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOServiceInvoicingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceInvoicingStatus(ctx context.Context, v any) (*model.ServiceInvoicingStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ServiceInvoicingStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOServiceInvoicingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceInvoicingStatus(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInvoicingStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ServiceLineItem) graphql.Marshaler {

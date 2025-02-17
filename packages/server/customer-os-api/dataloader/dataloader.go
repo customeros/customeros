@@ -114,6 +114,7 @@ type Loaders struct {
 	InvoiceLinesForInvoice                      *dataloader.Loader
 	OrdersForOrganization                       *dataloader.Loader
 	InvoicesForContract                         *dataloader.Loader
+	InvoicesForServiceLineItem                  *dataloader.Loader
 	FlowParticipantsForFlow                     *dataloader.Loader
 	FlowActionsForFlow                          *dataloader.Loader
 	FlowSendersForFlow                          *dataloader.Loader
@@ -424,6 +425,7 @@ func NewDataLoader(services *cosapi_services.Services) *Loaders {
 		OpportunitiesForOrganization:                dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoiceLinesForInvoice:                      dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoicesForContract:                         dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForContract, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		InvoicesForServiceLineItem:                  dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForServiceLineItem, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowParticipantsForFlow:                     dataloader.NewBatchedLoader(flowBatcher.getFlowParticipantsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowActionsForFlow:                          dataloader.NewBatchedLoader(flowBatcher.getFlowActionsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowSendersForFlow:                          dataloader.NewBatchedLoader(flowBatcher.getFlowSendersForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

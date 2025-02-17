@@ -112,7 +112,7 @@ func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLi
 	params := map[string]any{
 		"tenant":       tenant,
 		"parentId":     sliParentId,
-		"skipStatuses": []string{neo4jenum.InvoiceStatusInitialized.String(), neo4jenum.InvoiceStatusVoid.String()},
+		"skipStatuses": []string{neo4jenum.InvoiceStatusInitialized.String()},
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

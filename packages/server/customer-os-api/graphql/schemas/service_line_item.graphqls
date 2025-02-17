@@ -30,6 +30,7 @@ type ServiceLineItem implements MetadataInterface {
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     closed:             Boolean!
     paused:             Boolean!
+    invoicing_status:   ServiceInvoicingStatus @goField(forceResolver: true)
 }
 
 input ServiceLineItemInput {
@@ -116,6 +117,12 @@ enum BilledType {
     Deprecated
     """
     USAGE @deprecated(reason: "Not supported yet.")
+}
+
+enum ServiceInvoicingStatus {
+    READY
+    INVOICED
+    VOID
 }
 
 input TaxInput {

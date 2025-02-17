@@ -29,6 +29,7 @@ type InvoiceReadRepository interface {
 	GetFirstPreviewFilledInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetExpiredDryRunInvoices(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetAllForContracts(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
+	GetAllForServiceLineItems(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetInvoicesForOverdue(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForOnHold(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
@@ -570,9 +571,44 @@ func (r *invoiceReadRepository) GetAllForContracts(ctx context.Context, tenant s
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("contractIds", ids))
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]->(c:Contract) 
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(c:Contract) 
 			WHERE c.id IN $ids
 			RETURN i, c.id`
+	params := map[string]any{
+		"tenant": tenant,
+		"ids":    ids,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *invoiceReadRepository) GetAllForServiceLineItems(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetAllForServiceLineItems")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.Object("sliIds", ids))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
+			WHERE sli.id IN $ids
+			RETURN i, sli.id`
 	params := map[string]any{
 		"tenant": tenant,
 		"ids":    ids,

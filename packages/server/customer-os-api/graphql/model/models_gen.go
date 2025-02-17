@@ -2559,22 +2559,23 @@ type Result struct {
 }
 
 type ServiceLineItem struct {
-	Metadata       *Metadata         `json:"metadata"`
-	BillingCycle   BilledType        `json:"billingCycle"`
-	Comments       string            `json:"comments"`
-	SkuID          *string           `json:"skuId,omitempty"`
-	Sku            *Sku              `json:"sku,omitempty"`
-	Description    string            `json:"description"`
-	ParentID       string            `json:"parentId"`
-	Price          float64           `json:"price"`
-	Quantity       int64             `json:"quantity"`
-	ServiceEnded   *time.Time        `json:"serviceEnded,omitempty"`
-	ServiceStarted time.Time         `json:"serviceStarted"`
-	Tax            *Tax              `json:"tax"`
-	CreatedBy      *User             `json:"createdBy,omitempty"`
-	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
-	Closed         bool              `json:"closed"`
-	Paused         bool              `json:"paused"`
+	Metadata        *Metadata               `json:"metadata"`
+	BillingCycle    BilledType              `json:"billingCycle"`
+	Comments        string                  `json:"comments"`
+	SkuID           *string                 `json:"skuId,omitempty"`
+	Sku             *Sku                    `json:"sku,omitempty"`
+	Description     string                  `json:"description"`
+	ParentID        string                  `json:"parentId"`
+	Price           float64                 `json:"price"`
+	Quantity        int64                   `json:"quantity"`
+	ServiceEnded    *time.Time              `json:"serviceEnded,omitempty"`
+	ServiceStarted  time.Time               `json:"serviceStarted"`
+	Tax             *Tax                    `json:"tax"`
+	CreatedBy       *User                   `json:"createdBy,omitempty"`
+	ExternalLinks   []*ExternalSystem       `json:"externalLinks"`
+	Closed          bool                    `json:"closed"`
+	Paused          bool                    `json:"paused"`
+	InvoicingStatus *ServiceInvoicingStatus `json:"invoicing_status,omitempty"`
 }
 
 func (ServiceLineItem) IsMetadataInterface()        {}
@@ -5139,6 +5140,49 @@ func (e *Role) UnmarshalGQL(v any) error {
 }
 
 func (e Role) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ServiceInvoicingStatus string
+
+const (
+	ServiceInvoicingStatusReady    ServiceInvoicingStatus = "READY"
+	ServiceInvoicingStatusInvoiced ServiceInvoicingStatus = "INVOICED"
+	ServiceInvoicingStatusVoid     ServiceInvoicingStatus = "VOID"
+)
+
+var AllServiceInvoicingStatus = []ServiceInvoicingStatus{
+	ServiceInvoicingStatusReady,
+	ServiceInvoicingStatusInvoiced,
+	ServiceInvoicingStatusVoid,
+}
+
+func (e ServiceInvoicingStatus) IsValid() bool {
+	switch e {
+	case ServiceInvoicingStatusReady, ServiceInvoicingStatusInvoiced, ServiceInvoicingStatusVoid:
+		return true
+	}
+	return false
+}
+
+func (e ServiceInvoicingStatus) String() string {
+	return string(e)
+}
+
+func (e *ServiceInvoicingStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ServiceInvoicingStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ServiceInvoicingStatus", str)
+	}
+	return nil
+}
+
+func (e ServiceInvoicingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
