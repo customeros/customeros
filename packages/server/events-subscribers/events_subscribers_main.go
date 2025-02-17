@@ -213,9 +213,9 @@ func (a *App) initializeListeners() error {
 		a.deps.CommonServices.AgentRunnerService,
 	))
 
-	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories)) // TODO check if still needed
-	a.events.Subscriber.RegisterListener(common_agent_listeners.NewCompanyIdentifiedListener(a.logger, a.deps.PostgresRepositories, a.deps.CommonServices.AgentRunnerService))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorNotIdentifiedListener(a.logger, a.deps.PostgresRepositories))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewCompanyIdentifiedListener(a.logger, a.deps.PostgresRepositories, a.deps.CommonServices.AgentRunnerService))
 
 	// Cashflow guardian listeners
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewStartInvoiceRun(
