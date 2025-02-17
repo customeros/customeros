@@ -138,6 +138,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 			err = agent.GetCapabilityConfigByType(enum.CapabilityGenerateInvoice, &capabilityConfig)
 			if err != nil {
 				dataFields.TenantBillingProfile = &data_fields.TenantBillingProfile{
+					LogoRepositoryFileId:       capabilityConfig.LogoRepositoryFileId.Value,
 					Country:                    capabilityConfig.Country.Value,
 					LegalName:                  capabilityConfig.LegalName.Value,
 					AddressLine1:               capabilityConfig.AddressLine1.Value,

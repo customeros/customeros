@@ -35,6 +35,7 @@ type GenerateInvoiceConfig struct {
 	FromEmail                  ConfigSingleValue     `json:"fromEmail"`
 	CcEmails                   ConfigMultipleValues  `json:"ccEmails"`
 	BccEmails                  ConfigMultipleValues  `json:"bccEmails"`
+	LogoRepositoryFileId       ConfigSingleValue     `json:"logoRepositoryFileId"`
 	Country                    ConfigSingleValue     `json:"country"`
 	LegalName                  ConfigSingleValue     `json:"legalName"`
 	AddressLine1               ConfigSingleValue     `json:"addressLine1"`
@@ -149,6 +150,7 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 		CcEmails:  executionContainer.ConfigData.CcEmails.Value,
 		BccEmails: executionContainer.ConfigData.BccEmails.Value,
 		TenantBillingProfile: &data_fields.TenantBillingProfile{
+			LogoRepositoryFileId:       executionContainer.ConfigData.LogoRepositoryFileId.Value,
 			Country:                    executionContainer.ConfigData.Country.Value,
 			LegalName:                  executionContainer.ConfigData.LegalName.Value,
 			AddressLine1:               executionContainer.ConfigData.AddressLine1.Value,

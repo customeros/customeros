@@ -17,6 +17,7 @@ type InvoiceFields struct {
 }
 
 type TenantBillingProfile struct {
+	LogoRepositoryFileId       string `json:"logoRepositoryFileId"`
 	Country                    string `json:"country"`
 	LegalName                  string `json:"legalName"`
 	AddressLine1               string `json:"addressLine1"`

@@ -358,7 +358,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			CustomerAddressLocality:      contractEntity.Locality,
 			CustomerAddressCountry:       contractCountry,
 			CustomerAddressRegion:        contractEntity.Region,
-			ProviderLogoRepositoryFileId: tenantSettingsEntity.LogoRepositoryFileId,
+			ProviderLogoRepositoryFileId: dataFields.TenantBillingProfile.LogoRepositoryFileId,
 			ProviderName:                 dataFields.TenantBillingProfile.LegalName,
 			ProviderAddressLine1:         dataFields.TenantBillingProfile.AddressLine1,
 			ProviderAddressLine2:         dataFields.TenantBillingProfile.AddressLine2,
@@ -516,6 +516,24 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 					DryRun:           true,
 					InvoiceStartDate: &start,
 					InvoiceEndDate:   &end,
+					TenantBillingProfile: &data_fields.TenantBillingProfile{
+						LogoRepositoryFileId:       dataFields.TenantBillingProfile.LogoRepositoryFileId,
+						Country:                    dataFields.TenantBillingProfile.Country,
+						LegalName:                  dataFields.TenantBillingProfile.LegalName,
+						AddressLine1:               dataFields.TenantBillingProfile.AddressLine1,
+						AddressLine2:               dataFields.TenantBillingProfile.AddressLine2,
+						Zip:                        dataFields.TenantBillingProfile.Zip,
+						Locality:                   dataFields.TenantBillingProfile.Locality,
+						Region:                     dataFields.TenantBillingProfile.Region,
+						IncludeBankTransferDetails: dataFields.TenantBillingProfile.IncludeBankTransferDetails,
+						BankName:                   dataFields.TenantBillingProfile.BankName,
+						AccountNumber:              dataFields.TenantBillingProfile.AccountNumber,
+						IBAN:                       dataFields.TenantBillingProfile.IBAN,
+						BIC:                        dataFields.TenantBillingProfile.BIC,
+						SortCode:                   dataFields.TenantBillingProfile.SortCode,
+						RoutingNumber:              dataFields.TenantBillingProfile.RoutingNumber,
+						OtherDetails:               dataFields.TenantBillingProfile.OtherDetails,
+					},
 				}
 				_, err = s.InvoiceContract(ctx, nil, contractId, previewInvoiceFields)
 				if err != nil {
