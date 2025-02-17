@@ -20,18 +20,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
 
-func (h *IntegrationHandler) GrainZapier(c *gin.Context) {
+func (h *IntegrationHandler) GrainZapier(c *gin.Context, tenant string) {
 	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.Grain", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
-
-	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantId"))
-	if err != nil {
-		err := errors.Wrap(err, "Unable to identify tenant")
-		tracing.TraceErr(span, err)
-		h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
-		return
-	}
+	tracing.TagTenant(span, tenant)
 
 	// update context with tenant, pass this where tenant is needed
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{

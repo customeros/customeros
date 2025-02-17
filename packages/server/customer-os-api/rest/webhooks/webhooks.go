@@ -298,15 +298,16 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
+		span.LogKV("result.integration", integration.String())
 
 		switch integration {
 		case commonEnum.SourceCalCom:
-			h.integrationsHandler.CalDotCom(c)
+			h.integrationsHandler.CalDotCom(c, tenant)
 		// todo
 		case commonEnum.SourceFathom:
-			h.integrationsHandler.FathomZapier(c)
+			h.integrationsHandler.FathomZapier(c, tenant)
 		case commonEnum.SourceGrain:
-			h.integrationsHandler.GrainZapier(c)
+			h.integrationsHandler.GrainZapier(c, tenant)
 		case commonEnum.SourcePostmark:
 			h.integrationsHandler.PostmarkInboundEmail(c)
 		// todo
