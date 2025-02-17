@@ -201,7 +201,7 @@ export const AddContactsBulk = observer(() => {
                 <span>
                   <span>Prospect faster.</span>{' '}
                   <a
-                    target='_blank'
+                    target='_blank' rel='noopener noreferrer'
                     className='underline hover:text-success-900'
                     href='https://chromewebstore.google.com/detail/customeros/khmdccjeodppdldkgifcnkndemjpfoml'
                   >
