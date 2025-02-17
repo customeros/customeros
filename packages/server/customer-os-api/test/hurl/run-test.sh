@@ -7,15 +7,32 @@ if [ -z "${HURL_TENANT_API_KEY}" ]; then
 fi
 
 COS_URL="https://api.customeros.ai"
+
 # Initialize arrays for final summary
 declare -a ALL_TEST_NAMES
 declare -a ALL_TEST_STATUSES
+declare -a ORGANIZATION_IDS
 
 # Initialize overall test status
 TESTS_FAILED=0
 
 # Create/clear the test-output.txt file
 : > test-output.txt
+
+# Function to extract organization ID from test output
+extract_org_id() {
+    local output_file=$1
+    local org_id=""
+
+    # Look for organization ID in the JSON response
+    if grep -q "\"organization\":{\"id\":\"[^\"]*\"" "$output_file"; then
+        org_id=$(grep -o "\"organization\":{\"id\":\"[^\"]*\"" "$output_file" | grep -o "\"id\":\"[^\"]*\"" | cut -d'"' -f4)
+        if [ ! -z "$org_id" ]; then
+            ORGANIZATION_IDS+=("$org_id")
+            echo "Captured organization ID: $org_id" >> test-output.txt
+        fi
+    fi
+}
 
 # Process each test file
 while IFS= read -r test_file
@@ -38,11 +55,17 @@ do
     done < "$test_file"
 
     # Run hurl command with verbose output to capture all details
-    hurl --very-verbose --test --continue-on-error --variable "custom_id=$capitalized_custom_id" --variable "random_str=$RANDOM_STRING" --variable "cos_url=$COS_URL" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
+    hurl --very-verbose --test --continue-on-error \
+        --variable "custom_id=$capitalized_custom_id" \
+        --variable "random_str=$RANDOM_STRING" \
+        --variable "cos_url=$COS_URL" \
+        --variable "api_key=$HURL_TENANT_API_KEY" \
+        "$test_file" > temp_output.txt 2>&1
 
     TEST_EXIT_CODE=$?
 
-    # [Rest of the script remains unchanged...]
+    # Extract organization ID if present
+    extract_org_id "temp_output.txt"
 
     # Determine test status
     if [ $TEST_EXIT_CODE -eq 0 ]; then
@@ -119,6 +142,51 @@ do
     # Cleanup temporary file
     rm -f temp_output.txt
 done < <(find . -name "*.hurl")
+
+# Run teardown for organization cleanup
+if [ ${#ORGANIZATION_IDS[@]} -gt 0 ]; then
+    echo "Running teardown operations..." | tee -a test-output.txt
+
+    # Convert organization IDs array to JSON array format
+    printf -v org_ids_json '"%s",' "${ORGANIZATION_IDS[@]}"
+    org_ids_json="[${org_ids_json%,}]"
+
+    echo "Cleaning up organizations: $org_ids_json" | tee -a test-output.txt
+
+    # Create temporary teardown.hurl file
+    cat > teardown.hurl << EOF
+# Test: Teardown - Hide test organizations
+POST ${COS_URL}/query
+Content-Type: application/json
+X-CUSTOMER-OS-API-KEY: ${HURL_TENANT_API_KEY}
+{
+    "query": "mutation OrganizationHideAll(\$ids: [ID!]!) { organization_HideAll(ids: \$ids) { result } }",
+    "variables": {
+        "ids": ${org_ids_json}
+    }
+}
+
+HTTP 200
+[Asserts]
+jsonpath "$.data.organization_HideAll.result" == true
+EOF
+
+    # Run teardown
+    hurl --very-verbose --test --continue-on-error \
+        --variable "cos_url=$COS_URL" \
+        --variable "api_key=$HURL_TENANT_API_KEY" \
+        teardown.hurl >> test-output.txt 2>&1
+
+    TEARDOWN_EXIT_CODE=$?
+    if [ $TEARDOWN_EXIT_CODE -ne 0 ]; then
+        echo "⚠️ Warning: Teardown operations completed with some errors" | tee -a test-output.txt
+    fi
+
+    # Clean up temporary teardown file
+    rm -f teardown.hurl
+else
+    echo "No organization IDs collected, skipping teardown" | tee -a test-output.txt
+fi
 
 # Print final aggregated summary
 {
