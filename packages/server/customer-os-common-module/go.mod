@@ -23,7 +23,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v27.5.1+incompatible
 	github.com/emersion/go-message v0.18.2
-	github.com/forPelevin/gomoji v1.2.0
+	github.com/forPelevin/gomoji v1.3.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/h2non/filetype v1.1.3
