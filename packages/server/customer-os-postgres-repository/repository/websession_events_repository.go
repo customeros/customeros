@@ -157,18 +157,20 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 	var result postgres_entity.WebSession
 	err := r.gormDb.
 		Model(&postgres_entity.WebSession{}).
-		Where("tenant = ? AND domain = ?", tenant, domain).
+		Where("tenant = ? AND domain = ? AND sent_slack_notification IS NOT NULL", tenant, domain).
 		Order("sent_slack_notification DESC").
 		First(&result).
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogFields(log.String("result", "No record found"))
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.String("result", "Record found: "+result.ID))
 	return &result, nil
 }
 
