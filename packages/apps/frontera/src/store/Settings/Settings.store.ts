@@ -118,9 +118,11 @@ export class SettingsStore {
     try {
       this.isLoading = true;
 
-      const res = this.transport.http.post('/sa/slack/revoke', payload);
+      const res = await this.transport.http.post('/sa/slack/revoke', payload);
 
-      options?.onSuccess?.(res);
+      if (res) {
+        options?.onSuccess?.(res);
+      }
     } catch (err) {
       this.error = (err as Error)?.message;
       options?.onError?.(err as Error);
