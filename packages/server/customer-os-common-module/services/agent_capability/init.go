@@ -64,6 +64,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewSendInvoiceViaEmailCapability(invoiceService))
 	capabilities = append(capabilities, NewSendInvoiceVoidedNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPaidNotificationCapability(invoiceService))
+	capabilities = append(capabilities, NewSendPastDueNotificationCapability(invoiceService))
 
 	agentCapabilities := AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),

@@ -71,7 +71,7 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceProvider struct {
-	LogoRepositoryFileId string
+	LogoRepositoryFileId string // TODO alexb check if set in generate invoice
 	Name                 string
 	Email                string
 	CC                   []string

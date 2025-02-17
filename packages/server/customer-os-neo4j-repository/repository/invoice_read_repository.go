@@ -21,7 +21,7 @@ type InvoiceReadRepository interface {
 	CountInvoices(ctx context.Context, tenant, filterString string, filterParams map[string]interface{}) (int64, error)
 	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error)
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromCreate, minutesFromLastAttempt, lookbackWindow, limit int) ([]*utils.DbNodeAndTenant, error)
-	GetInvoicesForRemindNotifications(ctx context.Context, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForPastDueNotifications(ctx context.Context, tenant string, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 	GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetLastIssuedOnCycleInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
@@ -301,15 +301,15 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *invoiceReadRepository) GetInvoicesForRemindNotifications(ctx context.Context, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForRemindNotifications")
+func (r *invoiceReadRepository) GetInvoicesForPastDueNotifications(ctx context.Context, tenant string, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForPastDueNotifications")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("overdueDays", overdueDays), log.Int("limit", limit))
 
-	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)--(ts:TenantSettings)
+	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			WHERE 
-				ts.enableInvoiceReminders = true AND
 				i.dryRun = false AND
 				i.totalAmount > 0 AND
 				i.status IN $acceptedStatuses AND
@@ -320,6 +320,7 @@ func (r *invoiceReadRepository) GetInvoicesForRemindNotifications(ctx context.Co
 				(i.techRemindInvoiceNotificationRequestedAt IS NULL OR i.techRemindInvoiceNotificationRequestedAt + duration({hours: 12}) < $referenceTime)
 			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
+		"tenant":        tenant,
 		"referenceTime": referenceTime,
 		"overdueDays":   overdueDays,
 		"limit":         limit,

@@ -181,6 +181,16 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
+	case enum.CapabilitySendPastDueNotification:
+		executor, ok := GetTypedExecutor[SendPastDueNotificationInput, SendPastDueNotificationOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendPastDueNotification)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
 	case enum.CapabilityIdentifyMeetingParticipants:
 		executor, ok := GetTypedExecutor[IdentifyMeetingParticipantsInput, IdentifyMeetingParticipantsOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,

@@ -35,7 +35,6 @@ type GeneratePaymentLinkEventBody struct {
 }
 
 type InvoiceService interface {
-	SendRemindNotifications()
 	CleanupInvoices()
 	GenerateNextPreviewInvoices()
 	AdjustInvoiceStatus()
@@ -197,58 +196,6 @@ func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant strin
 	currency := tenantSettings.BaseCurrency
 	cachedTenantBaseCurrencies[tenant] = currency
 	return currency
-}
-
-func (s *invoiceService) SendRemindNotifications() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendRemindNotifications")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	referenceTime := utils.Now()
-	limit := 100
-	overdueDays := 15
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForRemindNotifications(ctx, referenceTime, overdueDays, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for pay notifications: %v", err)
-			return
-		}
-
-		// no invoices found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			err = s.commonServices.InvoiceService.SendPayReminderInvoiceNotification(innerCtx, invoice.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
-			}
-		}
-		// sleep for async processing, then check again
-		time.Sleep(1 * time.Second)
-	}
 }
 
 func (s *invoiceService) GenerateOffCycleInvoices() {

@@ -222,8 +222,13 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 }
 
 func (s *slackService) GetSlackSettings(ctx context.Context, tenant string) (*interfaces.SlackSettingsResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.GetSlackSettings")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	slackSettings, err := s.postgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

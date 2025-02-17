@@ -2626,13 +2626,6 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	}
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
 
-	// Mark notification requested, to avoid double notifications
-	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceId, string(neo4jentity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error marking remind notification requested for invoice %s: %s", invoiceId, err.Error())
-	}
-
 	// prepare email
 	workflowId := ""
 	if invoiceEntity.PaymentDetails.PaymentLink == "" {
