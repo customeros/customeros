@@ -55,6 +55,15 @@ export const Header = observer(
     }, []);
     const [_ring, bg, iconColor] = colorMap;
 
+    const handleOpenCommandMenu = (type: 'RenameAgent' | 'ArchiveAgent') => {
+      store.ui.commandMenu.setType(type);
+      store.ui.commandMenu.setContext({
+        ...store.ui.commandMenu.context,
+        ids: [id],
+      });
+      store.ui.commandMenu.setOpen(true);
+    };
+
     return (
       <div className='w-full border-b border-b-gray-200 px-3 py-[11px] flex justify-between items-center'>
         <div className='flex items-center gap-1'>
@@ -90,7 +99,14 @@ export const Header = observer(
             </Popover>
 
             <div className='flex items-center gap-1'>
-              <p className='text-md font-medium'>{agentName}</p>
+              <p
+                tabIndex={0}
+                role={'button'}
+                className='text-md font-medium cursor-pointer'
+                onClick={() => handleOpenCommandMenu('RenameAgent')}
+              >
+                {agentName}
+              </p>
               <Menu open={menuOpen} onOpenChange={setMenuOpen}>
                 <MenuButton asChild>
                   <IconButton
@@ -103,14 +119,7 @@ export const Header = observer(
                 <MenuList side='bottom' align='start'>
                   <MenuItem
                     className='group'
-                    onClick={() => {
-                      store.ui.commandMenu.setType('RenameAgent');
-                      store.ui.commandMenu.setContext({
-                        ...store.ui.commandMenu.context,
-                        ids: [id],
-                      });
-                      store.ui.commandMenu.setOpen(true);
-                    }}
+                    onClick={() => handleOpenCommandMenu('RenameAgent')}
                   >
                     <Icon
                       name='edit-03'
@@ -146,14 +155,7 @@ export const Header = observer(
                   {/*</MenuItem>*/}
                   <MenuItem
                     className='group'
-                    onClick={() => {
-                      store.ui.commandMenu.setContext({
-                        ...store.ui.commandMenu.context,
-                        ids: [id],
-                      });
-                      store.ui.commandMenu.setType('ArchiveAgent');
-                      store.ui.commandMenu.setOpen(true);
-                    }}
+                    onClick={() => handleOpenCommandMenu('ArchiveAgent')}
                   >
                     <Icon
                       name='archive'
