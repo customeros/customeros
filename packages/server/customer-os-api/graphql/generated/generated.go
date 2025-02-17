@@ -12078,7 +12078,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.ExternalLinks(childComplexity), true
 
-	case "ServiceLineItem.invoicing_status":
+	case "ServiceLineItem.invoicingStatus":
 		if e.complexity.ServiceLineItem.InvoicingStatus == nil {
 			break
 		}
@@ -17072,7 +17072,7 @@ type ServiceLineItem implements MetadataInterface {
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     closed:             Boolean!
     paused:             Boolean!
-    invoicing_status:   ServiceInvoicingStatus @goField(forceResolver: true)
+    invoicingStatus:   ServiceInvoicingStatus @goField(forceResolver: true)
 }
 
 input ServiceLineItemInput {
@@ -37128,8 +37128,8 @@ func (ec *executionContext) fieldContext_Contract_contractLineItems(_ context.Co
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -39207,8 +39207,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(_ context.Con
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -54737,8 +54737,8 @@ func (ec *executionContext) fieldContext_InvoiceLine_contractLineItem(_ context.
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -78892,8 +78892,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Create(ctx co
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -79017,8 +79017,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_NewVersion(ct
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -79142,8 +79142,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Update(ctx co
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -100329,8 +100329,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_closed(ctx, field)
 			case "paused":
 				return ec.fieldContext_ServiceLineItem_paused(ctx, field)
-			case "invoicing_status":
-				return ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+			case "invoicingStatus":
+				return ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -103737,8 +103737,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_paused(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ServiceLineItem_invoicing_status(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ServiceLineItem_invoicing_status(ctx, field)
+func (ec *executionContext) _ServiceLineItem_invoicingStatus(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_invoicingStatus(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -103765,7 +103765,7 @@ func (ec *executionContext) _ServiceLineItem_invoicing_status(ctx context.Contex
 	return ec.marshalOServiceInvoicingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceInvoicingStatus(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ServiceLineItem_invoicing_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ServiceLineItem_invoicingStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServiceLineItem",
 		Field:      field,
@@ -134314,7 +134314,7 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "invoicing_status":
+		case "invoicingStatus":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -134323,7 +134323,7 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._ServiceLineItem_invoicing_status(ctx, field, obj)
+				res = ec._ServiceLineItem_invoicingStatus(ctx, field, obj)
 				return res
 			}
 

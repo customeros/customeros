@@ -2575,7 +2575,7 @@ type ServiceLineItem struct {
 	ExternalLinks   []*ExternalSystem       `json:"externalLinks"`
 	Closed          bool                    `json:"closed"`
 	Paused          bool                    `json:"paused"`
-	InvoicingStatus *ServiceInvoicingStatus `json:"invoicing_status,omitempty"`
+	InvoicingStatus *ServiceInvoicingStatus `json:"invoicingStatus,omitempty"`
 }
 
 func (ServiceLineItem) IsMetadataInterface()        {}
