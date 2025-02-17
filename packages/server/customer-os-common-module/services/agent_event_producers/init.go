@@ -3,11 +3,12 @@ package agent_producers
 import service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 
 type AgentProducers struct {
-	NewLeadProducer         *NewLeadProducer
-	NewSupportVisitProducer *NewSupportVisitProducer
-	NewWebSessionProducer   *NewWebSessionProducer
-	InvoiceProducer         *InvoiceProducer
-	SendInvoiceProducer     *SendInvoiceProducer
+	NewLeadProducer            *NewLeadProducer
+	NewSupportVisitProducer    *NewSupportVisitProducer
+	NewWebSessionProducer      *NewWebSessionProducer
+	InvoiceProducer            *InvoiceProducer
+	SendInvoiceProducer        *SendInvoiceProducer
+	SendOverdueInvoiceProducer *SendOverdueInvoiceProducer
 }
 
 func InitAgentProducers(services *service.CommonServices) *AgentProducers {
@@ -33,6 +34,12 @@ func InitAgentProducers(services *service.CommonServices) *AgentProducers {
 			services.Logger,
 		),
 		SendInvoiceProducer: NewSendInvoiceProducer(
+			services.PostgresRepositories,
+			services.Neo4jRepositories,
+			services.Events,
+			services.Logger,
+		),
+		SendOverdueInvoiceProducer: NewSendOverdueInvoiceProducer(
 			services.PostgresRepositories,
 			services.Neo4jRepositories,
 			services.Events,

@@ -42,13 +42,6 @@ func NewInvoiceProducer(
 	}
 }
 
-// Add all Agent types subscribed to this event here
-func (p *InvoiceProducer) subscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentCashflowGuardian,
-	}
-}
-
 func (p *InvoiceProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
@@ -75,16 +68,20 @@ func (p *InvoiceProducer) Execute() {
 
 	for _, cashflowGuardianAgent := range agents {
 		tenant := cashflowGuardianAgent.Tenant
+		agentCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceUpkeeper,
+		})
 		for {
 			select {
-			case <-ctx.Done():
+			case <-agentCtx.Done():
 				p.log.Infof("Context cancelled, stopping")
 				return
 			default:
 				// continue as normal
 			}
 
-			records, err := p.neo4jRepository.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, tenant, referenceTime, delayFromPreviousInvoicingAttemptInMinutes, limit)
+			records, err := p.neo4jRepository.ContractReadRepository.GetContractsToGenerateCycleInvoices(agentCtx, tenant, referenceTime, delayFromPreviousInvoicingAttemptInMinutes, limit)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				p.log.Errorf("Error getting contracts for invoicing: %s", err.Error())
@@ -97,7 +94,7 @@ func (p *InvoiceProducer) Execute() {
 			}
 
 			// prepare postpaid flag
-			dbNode, err := p.neo4jRepository.TenantReadRepository.GetTenantSettings(ctx, tenant)
+			dbNode, err := p.neo4jRepository.TenantReadRepository.GetTenantSettings(agentCtx, tenant)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
@@ -107,7 +104,7 @@ func (p *InvoiceProducer) Execute() {
 
 			// process records
 			for _, record := range records {
-				innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				innerCtx := common.WithCustomContext(agentCtx, &common.CustomContext{
 					Tenant:    tenant,
 					AppSource: constants.AppSourceUpkeeper,
 				})

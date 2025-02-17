@@ -9,3 +9,8 @@ type ConfigMultipleValues struct {
 	Value []string `json:"value"`
 	Error string   `json:"error"`
 }
+
+type ConfigSingleIntValue struct {
+	Value int64  `json:"value"`
+	Error string `json:"error"`
+}

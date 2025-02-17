@@ -92,6 +92,7 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 		EventStartInvoiceRun,
 		EventStartInvoiceRunWithAutopayment,
 		EventSendInvoice,
+		EventInvoicePastDue,
 		EventNewEmail,
 		EventIngestEmail,
 		EventIgnoreEmail,
