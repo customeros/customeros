@@ -8,21 +8,21 @@ import { AgentService } from '@domain/services/agent/agent.service';
 import { CapabilityType } from '@graphql/types';
 import { EntityType } from '@shared/types/__generated__/graphql.types';
 
+type Tag = { label: string; value: string };
+
 export class AddTagToCompanyUsecase {
   @observable public accessor searchTerm = '';
-  @observable public accessor newTags = new Set();
-  @observable public accessor initialTags: { label: string; value: string }[] =
-    [];
+  @observable public accessor newTags = new Set<string>();
+  @observable public accessor initialTag: Tag | null = null;
 
   private root = RootStore.getInstance();
   private tagService = new TagService();
   private agentService = new AgentService();
 
-  constructor(private agentId: string) {
-    this.agentId = agentId;
-    this.select = this.select.bind(this);
+  constructor(private readonly agentId: string) {
     this.create = this.create.bind(this);
     this.setSearchTerm = this.setSearchTerm.bind(this);
+    this.execute = this.execute.bind(this);
 
     this.init();
   }
@@ -51,8 +51,8 @@ export class AddTagToCompanyUsecase {
       { name, entityType: EntityType.Organization },
       {
         onSuccess: (id) => {
-          this.select(id);
-          this.newTags.add(name);
+          this.newTags.add(id);
+          this.execute({ value: id, label: '' });
           this.setSearchTerm('');
         },
       },
@@ -74,6 +74,7 @@ export class AddTagToCompanyUsecase {
 
       return;
     }
+
     const foundCapabilityConfig = agent.value?.capabilities?.find(
       (c) => c.type === CapabilityType.ApplyTagToCompany,
     )?.config;
@@ -104,64 +105,56 @@ export class AddTagToCompanyUsecase {
       return;
     }
 
-    this.initialTags = this.tagList
-      .filter((t) => t.label === parsedCapability.tagName.value)
-      .map((t) => ({ label: t.label, value: t.value }));
+    const matchingTag = this.tagList.find(
+      (t) => t.label === parsedCapability.tagName.value,
+    );
+
+    this.initialTag = matchingTag || null;
 
     span.end({
-      initialTags: this.initialTags,
-    });
-  }
-
-  @action
-  public select(id?: string) {
-    const span = Tracer.span('AddTagToCompanyUsecase.select', {
-      id,
-    });
-
-    if (!id) {
-      this.reset();
-
-      return;
-    }
-
-    this.newTags.clear();
-    this.newTags.add(id);
-
-    span.end({
-      ids: Array.from(this.newTags),
+      initialTag: this.initialTag,
     });
   }
 
   @computed
-  get tagList() {
+  get tagList(): Tag[] {
     return this.root.tags
       .getByEntityType(EntityType.Organization)
       .filter((e) => !!e.value.name)
       .map((tag) => ({
         label: tag.tagName,
         value: tag.id,
-      }));
+      }))
+      .filter((tag) =>
+        tag.label.toLowerCase().includes(this.searchTerm.toLowerCase()),
+      );
   }
 
   @computed
-  get selectedTags() {
-    return this.tagList.filter(
-      (tag) =>
-        this.newTags.has(tag.value) ||
-        this.initialTags.some((t) => t.value === tag.value),
-    );
+  get selectedTag(): Tag | null {
+    const id = this.initialTag?.value;
+
+    if (!id) return null;
+
+    const tag = this.root.tags.getById(id);
+
+    if (!tag) return null;
+
+    return {
+      label: tag.tagName,
+      value: id,
+    };
   }
 
   @action
   public reset() {
     this.searchTerm = '';
     this.newTags.clear();
-    this.initialTags = [];
+    this.initialTag = null;
   }
 
   @action
-  public async execute() {
+  public async execute(option?: Tag) {
     const span = Tracer.span('AddTagToCompanyUsecase.execute');
 
     const agent = this.root.agents.getById(this.agentId);
@@ -174,9 +167,19 @@ export class AddTagToCompanyUsecase {
       return;
     }
 
-    const tagName = this.selectedTags.map((tag) => tag.label).join(', ');
+    if (!option?.value) {
+      this.reset();
+    }
 
-    agent?.setCapabilityConfig(
+    if (option?.value) {
+      this.newTags.clear();
+      this.newTags.add(option.value);
+      this.initialTag = option;
+    }
+
+    const tagName = this.selectedTag?.label || '';
+
+    agent.setCapabilityConfig(
       CapabilityType.ApplyTagToCompany,
       'tagName',
       tagName,
@@ -190,8 +193,8 @@ export class AddTagToCompanyUsecase {
       );
     }
 
-    if (res) {
-      agent.put(res?.agent_Save);
+    if (res?.agent_Save) {
+      agent.put(res.agent_Save);
       this.init();
     }
 

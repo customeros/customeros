@@ -50,7 +50,9 @@ export class TagService {
       ids: [serverId],
     });
 
-    options?.onSuccess?.(serverId);
-    this.store.ui.toastSuccess('Tag created', 'tag-created');
+    if (serverId != null) {
+      options?.onSuccess?.(serverId);
+      this.store.ui.toastSuccess('Tag created', 'tag-created');
+    }
   }
 }
