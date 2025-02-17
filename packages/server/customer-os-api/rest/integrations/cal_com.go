@@ -49,7 +49,7 @@ func (h *IntegrationHandler) CalDotCom(c *gin.Context) {
 	}
 
 	// determine tenant
-	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantId"))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)

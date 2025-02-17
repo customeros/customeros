@@ -46,7 +46,7 @@ func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId 
 	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.String("tenantId", tenantId))
 
-	tenantFromDb, err := w.postgresRepositories.TenantRepository.GetTenant(ctx, tenantId)
+	tenantFromDb, err := w.postgresRepositories.TenantRepository.GetTenantByHashId(ctx, tenantId)
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup tenant hashId for %s: %v", tenant, err)
 		tracing.TraceErr(span, err)

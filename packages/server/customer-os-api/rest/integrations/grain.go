@@ -25,7 +25,7 @@ func (h *IntegrationHandler) GrainZapier(c *gin.Context) {
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantId"))
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
