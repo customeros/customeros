@@ -239,6 +239,7 @@ export class DetectSupportWebVistUsecase {
     span.end();
   }
 
+  @action
   async executeCreateWebVisitIdentifierAgent(type: AgentType) {
     const span = Tracer.span(
       'DetectSupportWebVistUsecase.executeCreateWebVisitIdentifierAgent',
