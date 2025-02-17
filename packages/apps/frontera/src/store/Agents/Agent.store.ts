@@ -1,8 +1,8 @@
 import { Store } from '@store/_store';
 import { Tracer } from '@infra/tracer';
+import { action, runInAction } from 'mobx';
 import { type RootStore } from '@store/root';
 import { type Transport } from '@infra/transport';
-import { action, computed, runInAction } from 'mobx';
 import { type AgentDatum, AgentRepository } from '@infra/repositories/agent';
 
 import { unwrap } from '@utils/unwrap';
@@ -19,13 +19,6 @@ export class AgentStore extends Store<AgentDatum, Agent> {
       getId: (data) => data?.id,
       factory: Agent,
     });
-  }
-
-  @computed
-  get icpQualificationAgent() {
-    return this.toArray().find(
-      (agent) => agent.value.type === AgentType.IcpQualifier,
-    );
   }
 
   getFirstAgentByType(type: AgentType) {
