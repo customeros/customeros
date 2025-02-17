@@ -606,7 +606,7 @@ func (r *invoiceReadRepository) GetAllForServiceLineItems(ctx context.Context, t
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("sliIds", ids))
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)-[:HAS_INVOICE_LINE]->(:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem)
 			WHERE sli.id IN $ids
 			RETURN i, sli.id`
 	params := map[string]any{
