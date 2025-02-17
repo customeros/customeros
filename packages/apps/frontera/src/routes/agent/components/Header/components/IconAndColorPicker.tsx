@@ -48,7 +48,7 @@ export const IconAndColorPicker = observer(() => {
         />
       </div>
 
-      <div className='grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-1'>
+      <div className='grid grid-cols-10 gap-2 overflow-y-auto p-1'>
         {iconUsecase.iconOptions.map((iconName: IconName) => (
           <IconButton
             size={'xxs'}

@@ -364,6 +364,309 @@ export class UpdateAgentIconUsecase {
       name: 'zap',
       keywords: ['zap', 'lightning', 'thunder', 'power', 'energy'],
     },
+    {
+      name: 'zap-circle',
+      keywords: ['zap', 'lightning', 'power', 'energy', 'circle'],
+    },
+    {
+      name: 'camera-lens',
+      keywords: ['camera', 'lens', 'photography', 'focus', 'capture'],
+    },
+    {
+      name: 'image-03',
+      keywords: ['image', 'picture', 'photo', 'media', 'gallery'],
+    },
+    {
+      name: 'image-02',
+      keywords: ['image', 'picture', 'photo', 'media', 'gallery'],
+    },
+
+    {
+      name: 'grid-03',
+      keywords: ['grid', 'layout', 'pattern', 'organize', 'structure'],
+    },
+    {
+      name: 'intersect-circle',
+      keywords: ['intersect', 'circle', 'overlap', 'combine', 'merge'],
+    },
+    {
+      name: 'layers-three-01',
+      keywords: ['layers', 'stack', 'multiple', 'organize', 'depth'],
+    },
+    {
+      name: 'key-01',
+      keywords: ['key', 'lock', 'security', 'access', 'password'],
+    },
+    {
+      name: 'fingerprint-04',
+      keywords: [
+        'fingerprint',
+        'biometric',
+        'security',
+        'identity',
+        'authentication',
+      ],
+    },
+    {
+      name: 'lock-01',
+      keywords: ['lock', 'security', 'protection', 'private', 'secure'],
+    },
+    {
+      name: 'shield-dollar',
+      keywords: ['shield', 'dollar', 'protection', 'security', 'finance'],
+    },
+    {
+      name: 'shield-01',
+      keywords: ['shield', 'protection', 'security', 'defense', 'guard'],
+    },
+    {
+      name: 'star-06',
+      keywords: ['star', 'favorite', 'rating', 'bookmark', 'important'],
+    },
+    {
+      name: 'calendar',
+      keywords: ['calendar', 'date', 'schedule', 'time', 'event'],
+    },
+    {
+      name: 'alarm-clock',
+      keywords: ['alarm', 'clock', 'time', 'schedule', 'alert'],
+    },
+    {
+      name: 'clock-check',
+      keywords: ['clock', 'check', 'time', 'complete', 'done'],
+    },
+    {
+      name: 'hourglass-02',
+      keywords: ['hourglass', 'time', 'wait', 'loading', 'progress'],
+    },
+    {
+      name: 'hourglass-03',
+      keywords: ['hourglass', 'time', 'wait', 'loading', 'progress'],
+    },
+    {
+      name: 'calendar-check-01',
+      keywords: ['calendar', 'check', 'schedule', 'event', 'complete'],
+    },
+    {
+      name: 'face-smile',
+      keywords: ['face', 'smile', 'happy', 'emotion', 'positive'],
+    },
+    {
+      name: 'face-frown',
+      keywords: ['face', 'frown', 'sad', 'emotion', 'negative'],
+    },
+    {
+      name: 'face-neutral',
+      keywords: ['face', 'neutral', 'emotion', 'expression', 'emoticon'],
+    },
+    {
+      name: 'cloud-01',
+      keywords: ['cloud', 'weather', 'storage', 'data', 'sky'],
+    },
+    {
+      name: 'cloud-raining-02',
+      keywords: ['cloud', 'rain', 'weather', 'storm', 'precipitation'],
+    },
+    {
+      name: 'cloud-sun-01',
+      keywords: ['cloud', 'sun', 'weather', 'partly cloudy', 'day'],
+    },
+    {
+      name: 'hurricane-01',
+      keywords: ['hurricane', 'storm', 'weather', 'cyclone', 'disaster'],
+    },
+    {
+      name: 'sun',
+      keywords: ['sun', 'weather', 'day', 'light', 'bright'],
+    },
+    {
+      name: 'sun-setting-01',
+      keywords: ['sun', 'sunset', 'dusk', 'evening', 'weather'],
+    },
+    {
+      name: 'wind-02',
+      keywords: ['wind', 'weather', 'breeze', 'air', 'nature'],
+    },
+    {
+      name: 'umbrella-03',
+      keywords: ['umbrella', 'rain', 'weather', 'protection', 'shelter'],
+    },
+    {
+      name: 'thermometer-cold',
+      keywords: ['thermometer', 'cold', 'temperature', 'weather', 'freeze'],
+    },
+    {
+      name: 'thermometer-warm',
+      keywords: ['thermometer', 'warm', 'temperature', 'weather', 'heat'],
+    },
+    {
+      name: 'scissors-02',
+      keywords: ['scissors', 'cut', 'tool', 'edit', 'craft'],
+    },
+    {
+      name: 'building-02',
+      keywords: ['building', 'architecture', 'office', 'structure', 'company'],
+    },
+    {
+      name: 'colors',
+      keywords: ['colors', 'palette', 'design', 'art', 'creative'],
+    },
+    {
+      name: 'feather',
+      keywords: ['feather', 'write', 'edit', 'light', 'pen'],
+    },
+    {
+      name: 'magic-wand-01',
+      keywords: ['magic', 'wand', 'effect', 'wizard', 'spell'],
+    },
+    {
+      name: 'pen-tool-02',
+      keywords: ['pen', 'tool', 'design', 'draw', 'vector'],
+    },
+    {
+      name: 'edit-03',
+      keywords: ['edit', 'pencil'],
+    },
+    {
+      name: 'coins-swap-01',
+      keywords: ['coins', 'swap', 'exchange', 'currency', 'money'],
+    },
+    {
+      name: 'shopping-cart-03',
+      keywords: ['shopping', 'cart', 'buy', 'purchase', 'store'],
+    },
+    {
+      name: 'heart-rounded',
+      keywords: ['heart', 'love', 'like', 'favorite', 'emotion'],
+    },
+    {
+      name: 'life-buoy-01',
+      keywords: ['life buoy', 'help', 'support', 'safety', 'rescue'],
+    },
+    {
+      name: 'life-buoy-02',
+      keywords: ['life buoy', 'help', 'support', 'safety', 'rescue'],
+    },
+    {
+      name: 'image-05',
+      keywords: ['image', 'picture', 'photo', 'media', 'gallery'],
+    },
+    {
+      name: 'bus',
+      keywords: ['bus', 'transport', 'vehicle', 'travel', 'public'],
+    },
+    {
+      name: 'car-01',
+      keywords: ['car', 'vehicle', 'transport', 'automobile', 'travel'],
+    },
+    {
+      name: 'flag-04',
+      keywords: ['flag', 'banner', 'mark', 'country', 'symbol'],
+    },
+    {
+      name: 'globe-05',
+      keywords: ['globe', 'world', 'earth', 'international', 'global'],
+    },
+    {
+      name: 'luggage-03',
+      keywords: ['luggage', 'bag', 'travel', 'suitcase', 'baggage'],
+    },
+    {
+      name: 'map-01',
+      keywords: ['map', 'location', 'navigation', 'direction', 'geography'],
+    },
+    {
+      name: 'marker-pin-04',
+      keywords: ['marker', 'pin', 'location', 'map', 'place'],
+    },
+    {
+      name: 'plane',
+      keywords: ['plane', 'flight', 'travel', 'airplane', 'transport'],
+    },
+    {
+      name: 'rocket-02',
+      keywords: ['rocket', 'launch', 'startup', 'space', 'fast'],
+    },
+    {
+      name: 'route',
+      keywords: ['route', 'path', 'direction', 'navigation', 'journey'],
+    },
+    {
+      name: 'train',
+      keywords: ['train', 'transport', 'railway', 'travel', 'public'],
+    },
+    {
+      name: 'truck-02',
+      keywords: ['truck', 'transport', 'delivery', 'shipping', 'cargo'],
+    },
+    {
+      name: 'battery-charging-01',
+      keywords: ['battery', 'charging', 'power', 'energy', 'electric'],
+    },
+    {
+      name: 'clapperboard',
+      keywords: ['clapperboard', 'movie', 'film', 'cinema', 'video'],
+    },
+    {
+      name: 'disc-02',
+      keywords: ['disc', 'cd', 'dvd', 'music', 'storage'],
+    },
+    {
+      name: 'gaming-pad-01',
+      keywords: ['gaming', 'pad', 'controller', 'game', 'play'],
+    },
+    {
+      name: 'music-note-01',
+      keywords: ['music', 'note', 'sound', 'audio', 'melody'],
+    },
+    {
+      name: 'play-circle',
+      keywords: ['play', 'circle', 'media', 'video', 'start'],
+    },
+    {
+      name: 'repeat-01',
+      keywords: ['repeat', 'loop', 'cycle', 'reload', 'refresh'],
+    },
+    {
+      name: 'repeat-03',
+      keywords: ['repeat', 'loop', 'cycle', 'reload', 'refresh'],
+    },
+    {
+      name: 'signal-01',
+      keywords: ['signal', 'wifi', 'connection', 'network', 'wireless'],
+    },
+    {
+      name: 'radar',
+      keywords: ['signal', 'radar'],
+    },
+    {
+      name: 'voicemail',
+      keywords: ['voicemail', 'message', 'phone', 'audio', 'communication'],
+    },
+    {
+      name: 'webcam-01',
+      keywords: ['webcam', 'camera', 'video', 'conference', 'stream'],
+    },
+    {
+      name: 'arrows-triangle',
+      keywords: ['arrows', 'triangle', 'direction', 'move', 'navigation'],
+    },
+    {
+      name: 'phone-hang-up',
+      keywords: ['phone', 'hang up', 'call', 'end', 'telephone'],
+    },
+    {
+      name: 'database-01',
+      keywords: ['database', 'storage', 'data', 'server', 'information'],
+    },
+    {
+      name: 'eraser',
+      keywords: ['eraser', 'delete', 'remove', 'clear', 'edit'],
+    },
+    {
+      name: 'hand',
+      keywords: ['hand', 'gesture', 'touch', 'interact', 'human'],
+    },
   ];
 
   constructor(private id?: string) {
