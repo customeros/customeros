@@ -24,6 +24,7 @@ type IdentifyWebsiteVisitorCapability struct {
 	postgresRepositories *postgres_repository.Repositories
 	enrichmentService    interfaces.EnrichmentService
 	domainService        interfaces.DomainService
+	workspaceService     interfaces.WorkspaceService
 }
 
 func NewIdentifyWebsiteVisitorCapability(
@@ -31,12 +32,14 @@ func NewIdentifyWebsiteVisitorCapability(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
 	domainService interfaces.DomainService,
+	workspaceService interfaces.WorkspaceService,
 ) *IdentifyWebsiteVisitorCapability {
 	return &IdentifyWebsiteVisitorCapability{
 		events:               events,
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
 		domainService:        domainService,
+		workspaceService:     workspaceService,
 	}
 }
 
@@ -132,6 +135,21 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 			tracing.LogObjectAsJson(span, "result", result)
 			return enum.CapabilityExecutionError, result, err
 		}
+
+		isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionError, result, err
+		}
+		if isWorkspaceDomain {
+			err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionError, result, err
+			}
+			return enum.CapabilityExecutionCompleted, result, nil
+		}
+
 		err = c.publishWebVisitorIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
 		if err != nil {
 			tracing.TraceErr(span, err)
