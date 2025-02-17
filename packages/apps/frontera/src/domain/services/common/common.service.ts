@@ -56,4 +56,20 @@ export class CommonService {
 
     return req;
   }
+
+  public async getBrowserAutomationConfig() {
+    const span = Tracer.span('CommonService.getBrowserAutomationConfig');
+
+    const req = await unwrap(
+      this.repository.getBrowserAutomationConfig({
+        headers: {
+          'X-OPENLINE-API-KEY': this.root.session.tenantApiKey!,
+        },
+      }),
+    );
+
+    span.end();
+
+    return req;
+  }
 }

@@ -1,5 +1,7 @@
+import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
+import { CommonService } from '@domain/services/common/common.service';
 import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 
 type ContactType = 'linkedin' | 'email' | 'name';
@@ -12,7 +14,12 @@ interface ValidationError {
 
 export class CreateContactUsecase {
   private service = ContactService.getInstance();
+  private commonService = new CommonService();
   private root = RootStore.getInstance();
+
+  constructor() {
+    this.checkBrowserExtensionStatus();
+  }
 
   @observable accessor inputValue: string = '';
   @observable accessor isLoading: boolean = false;
@@ -23,6 +30,8 @@ export class CreateContactUsecase {
     email: { isEmpty: false, isInvalid: false, message: '' },
     name: { isEmpty: false, isInvalid: false, message: '' },
   };
+
+  @observable static accessor isBrowserExtensionEnabled: boolean = true;
 
   private readonly PATTERNS = {
     linkedin: /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/,
@@ -159,6 +168,36 @@ export class CreateContactUsecase {
     this.inputValue = '';
     this.isLoading = false;
     this.type = 'linkedin';
+  }
+
+  @action
+  private async setIsBrowserExtensionEnabled(status: boolean) {
+    CreateContactUsecase.isBrowserExtensionEnabled = status;
+  }
+
+  private async checkBrowserExtensionStatus() {
+    const span = Tracer.span(
+      'CreateContactUsecase.checkBrowserExtensionStatus',
+    );
+    const [res, err] = await this.commonService.getBrowserAutomationConfig();
+
+    if (err || !res?.data?.data) {
+      this.setIsBrowserExtensionEnabled(false);
+      span.end();
+
+      return;
+    }
+
+    const { data } = res.data;
+
+    if (data.sessionStatus === 'VALID') {
+      this.setIsBrowserExtensionEnabled(true);
+    }
+
+    span.end({
+      browserConfigId: data.id,
+      sessionStatus: data.sessionStatus,
+    });
   }
 
   @action

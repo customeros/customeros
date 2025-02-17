@@ -1,5 +1,6 @@
 import { Transport } from '@infra/transport';
 
+import { BrowserAutomationConfigResponse } from './common.datum';
 import GetSlackChannelsDocument from './queries/getSlackChannels.graphql';
 import { GetSlackChannelsQuery } from './queries/getSlackChannels.generated';
 import TenantImpersonateListDocument from './queries/impersonateList.graphql';
@@ -52,6 +53,17 @@ export class CommonRepository {
       {
         integration,
       },
+      {
+        headers,
+      },
+    );
+  }
+
+  async getBrowserAutomationConfig({
+    headers,
+  }: { headers?: Record<string, string> } = {}) {
+    return this.transport.http.get<BrowserAutomationConfigResponse>(
+      '/bas/browser/config',
       {
         headers,
       },

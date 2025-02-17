@@ -2,8 +2,10 @@ import React, { useState, KeyboardEvent } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { AddContactsBulkUsecase } from '@domain/usecases/command-menu/add-contacts-bulk.usecase';
 
 import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { validateEmail } from '@utils/email';
 import { Spinner } from '@ui/feedback/Spinner';
 import { ColumnViewType } from '@graphql/types';
@@ -190,6 +192,26 @@ export const AddContactsBulk = observer(() => {
             !loadingError &&
             `Add one ${type === 'email' ? 'email' : 'LinkedIn URL'} per line`}
         </div>
+
+        {AddContactsBulkUsecase.isBrowserExtensionEnabled &&
+          type === 'linkedin' && (
+            <div className='flex justify-between bg-success-50 rounded-md px-2 py-1 my-4'>
+              <div className='flex items-center gap-2 text-success-700 text-sm'>
+                <Icon name='zap' />
+                <span>
+                  <span>Prospect faster.</span>{' '}
+                  <a
+                    target='_blank'
+                    className='underline hover:text-success-900'
+                    href='https://chromewebstore.google.com/detail/customeros/khmdccjeodppdldkgifcnkndemjpfoml'
+                  >
+                    Get our Chrome extension
+                  </a>
+                  <span>.</span>
+                </span>
+              </div>
+            </div>
+          )}
 
         <div className='flex justify-between gap-3 mt-2'>
           <Button
