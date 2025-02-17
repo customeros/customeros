@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useMemo, useState, KeyboardEvent } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
@@ -26,6 +26,7 @@ export const AddContactsBulk = observer(() => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingError, setLoadingError] = useState<string>('');
   const [showEmptyError, setShowEmptyError] = useState<boolean>(false);
+  const _usecase = useMemo(() => new AddContactsBulkUsecase(), []);
 
   const handleClose = (e: KeyboardEvent) => {
     e.stopPropagation();
@@ -193,7 +194,7 @@ export const AddContactsBulk = observer(() => {
             `Add one ${type === 'email' ? 'email' : 'LinkedIn URL'} per line`}
         </div>
 
-        {AddContactsBulkUsecase.isBrowserExtensionEnabled &&
+        {!AddContactsBulkUsecase.isBrowserExtensionEnabled &&
           type === 'linkedin' && (
             <div className='flex justify-between bg-success-50 rounded-md px-2 py-1 my-4'>
               <div className='flex items-center gap-2 text-success-700 text-sm'>
@@ -201,7 +202,8 @@ export const AddContactsBulk = observer(() => {
                 <span>
                   <span>Prospect faster.</span>{' '}
                   <a
-                    target='_blank' rel='noopener noreferrer'
+                    target='_blank'
+                    rel='noopener noreferrer'
                     className='underline hover:text-success-900'
                     href='https://chromewebstore.google.com/detail/customeros/khmdccjeodppdldkgifcnkndemjpfoml'
                   >

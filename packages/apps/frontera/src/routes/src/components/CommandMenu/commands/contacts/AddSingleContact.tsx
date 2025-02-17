@@ -141,7 +141,7 @@ export const AddSingleContact = observer(() => {
             }}
           />
 
-          {CreateContactUsecase.isBrowserExtensionEnabled &&
+          {!CreateContactUsecase.isBrowserExtensionEnabled &&
             usecase.type === 'linkedin' && (
               <div className='flex justify-between bg-success-50 rounded-md px-2 py-1 mb-4'>
                 <div className='flex items-center gap-2 text-success-700 text-sm'>
