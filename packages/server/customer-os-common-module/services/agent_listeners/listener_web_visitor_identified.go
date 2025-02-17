@@ -71,7 +71,7 @@ func (l *WebVisitorIdentifiedListener) Handle(ctx context.Context, baseEvent any
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.WebVisitorNotIdentified](ctx, event)
+	data, err := events.DecodeEventData[dto.WebVisitorIdentified](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
