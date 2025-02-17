@@ -8,6 +8,7 @@ import { Switch } from '@ui/form/Switch';
 import { Icon, IconName } from '@ui/media/Icon';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 
@@ -99,14 +100,14 @@ export const Header = observer(
             </Popover>
 
             <div className='flex items-center gap-1'>
-              <p
-                tabIndex={0}
-                role={'button'}
-                className='text-md font-medium cursor-pointer'
+              <Button
+                size='xxs'
+                variant='ghost'
                 onClick={() => handleOpenCommandMenu('RenameAgent')}
+                className='text-md font-medium hover:bg-transparent focus:bg-transparent'
               >
                 {agentName}
-              </p>
+              </Button>
               <Menu open={menuOpen} onOpenChange={setMenuOpen}>
                 <MenuButton asChild>
                   <IconButton
