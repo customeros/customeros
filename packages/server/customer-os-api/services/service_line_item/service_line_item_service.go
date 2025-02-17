@@ -296,7 +296,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType
 
 	// If no changes recorded, return
-	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || sliIsInvoiced) {
+	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || utils.CloseToNow(startedAt) || sliIsInvoiced) {
 		span.LogFields(log.String("result", "No changes recorded"))
 		return nil
 	}
