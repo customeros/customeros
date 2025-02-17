@@ -45,7 +45,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewGatherCompanyIntelligenceCapability(postgresRepositories, organizationService))
 	capabilities = append(capabilities, NewGenerateInvoiceCapability(postgresRepositories, invoiceService))
 	capabilities = append(capabilities, NewIdentifyMeetingParticipantsCapability(workspaceService))
-	capabilities = append(capabilities, NewIdentifyWebsiteVisitorCapability(events, postgresRepositories, enrichmentService, domainService))
+	capabilities = append(capabilities, NewIdentifyWebsiteVisitorCapability(events, postgresRepositories, enrichmentService, domainService, workspaceService))
 	capabilities = append(capabilities, NewManageCampaignExecutionCapability())
 	capabilities = append(capabilities, NewManageEmailDeliveryFailureCapability())
 	capabilities = append(capabilities, NewSelectOptimalSendingMailboxCapability())
