@@ -28,6 +28,10 @@ export class AgentStore extends Store<AgentDatum, Agent> {
     );
   }
 
+  getFirstAgentByType(type: AgentType) {
+    return this.toArray().find((agent) => agent.value.type === type);
+  }
+
   public async bootstrap() {
     const [data, err] = await unwrap(this.agentRepository.getAgents());
 

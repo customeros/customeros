@@ -4,7 +4,10 @@ import { Agent } from '@store/Agents/Agent.dto';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
-import { CapabilityType } from '@shared/types/__generated__/graphql.types';
+import {
+  AgentType,
+  CapabilityType,
+} from '@shared/types/__generated__/graphql.types';
 
 export class DetectSupportWebVistUsecase {
   private service = new AgentService();
@@ -14,7 +17,7 @@ export class DetectSupportWebVistUsecase {
   @observable public accessor pageToTrack: string = '';
   @observable public accessor isOpen: boolean = false;
   @observable public accessor validationError: string = '';
-
+  @observable public accessor webVisitIdentifierAgentId: string | null = null;
   constructor(private readonly agentId: string) {
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
@@ -232,6 +235,26 @@ export class DetectSupportWebVistUsecase {
       this.init();
     }
 
+    span.end();
+  }
+
+  async executeCreateWebVisitIdentifierAgent(type: AgentType) {
+    const span = Tracer.span(
+      'DetectSupportWebVistUsecase.executeCreateWebVisitIdentifierAgent',
+    );
+    const [res, err] = await this.service.createAgent(type);
+
+    if (err) {
+      console.error('CreateAgentUsecase.execute: Could not create agent', err);
+      span.end();
+
+      return;
+    }
+
+    if (res?.agent_Save) {
+      this.root.agents.addOne(res.agent_Save);
+      this.webVisitIdentifierAgentId = res.agent_Save.id;
+    }
     span.end();
   }
 }
