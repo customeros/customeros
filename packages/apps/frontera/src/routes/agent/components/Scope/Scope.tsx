@@ -68,10 +68,9 @@ const scopeMap: Record<AgentScope, ScopeMapType> = {
           relevant information with your team.
         </p>
         <p>
-          This agent type works with your personal account to manage and share
-          relevant information with your team. For example, when you're in a
-          meeting, an agent picks out the key points and shares the details with
-          everyone on your team, keeping everyone up to date.
+          For example, when you're in a meeting, an agent picks out the key
+          points and shares the details with everyone on your team, keeping
+          everyone up to date.
         </p>
       </div>
     ),
