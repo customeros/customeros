@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"strings"
 	"time"
@@ -280,7 +281,9 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantHash"))
+		span.LogFields(log.String("param.tenantHash", c.Param("tenantHash")))
+
+		tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantHash"))
 		if err != nil {
 			err := errors.Wrap(err, "Unable to identify tenant")
 			tracing.TraceErr(span, err)

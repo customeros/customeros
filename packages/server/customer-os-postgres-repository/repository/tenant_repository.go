@@ -15,7 +15,7 @@ import (
 
 type TenantRepository interface {
 	Create(ctx context.Context, tenantEntity postgres_entity.Tenant) (*postgres_entity.Tenant, error)
-	GetTenant(ctx context.Context, hashID string) (string, error)
+	GetTenantByHashId(ctx context.Context, hashID string) (string, error)
 	GetHashID(ctx context.Context, tenant string) (string, error)
 	PermanentlyDelete(ctx context.Context, tenant string) error
 }
@@ -28,10 +28,11 @@ func NewTenantRepository(gormDb *gorm.DB) TenantRepository {
 	return &tenantRepository{gormDb: gormDb}
 }
 
-func (e *tenantRepository) GetTenant(ctx context.Context, hashID string) (string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenant")
+func (e *tenantRepository) GetTenantByHashId(ctx context.Context, hashID string) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenantByHashId")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogKV("hashID", hashID)
 
 	var tenant postgres_entity.Tenant
 	err := e.gormDb.
