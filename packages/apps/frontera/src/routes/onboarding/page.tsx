@@ -79,7 +79,7 @@ export const OnboardingPage = observer(() => {
   });
 
   return (
-    <>
+    <div className='flex'>
       <div className='flex h-full flex-col w-full relative'>
         <div className='flex flex-col h-[323px] w-[500px] items-center self-center'>
           <div className='relative flex-col'>
@@ -149,6 +149,6 @@ export const OnboardingPage = observer(() => {
           </PreviewCard>
         )}
       </div>
-    </>
+    </div>
   );
 });
