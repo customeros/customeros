@@ -1,10 +1,11 @@
-import { useRef, useEffect, MouseEvent, KeyboardEvent } from 'react';
+import { useRef, useMemo, useEffect, MouseEvent, KeyboardEvent } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { CreateContactUsecase } from '@domain/usecases/contact-details/create-contact.usecase';
 
 import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { Input } from '@ui/form/Input';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
@@ -15,8 +16,6 @@ import { useModKey } from '@shared/hooks/useModKey';
 import { Signature } from '@ui/media/icons/Signature';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
-
-const contactCreate = new CreateContactUsecase();
 
 interface InputConfig {
   label: string;
@@ -50,12 +49,14 @@ export const AddSingleContact = observer(() => {
   const store = useStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const usecase = useMemo(() => new CreateContactUsecase(), []);
+
   const currentConfig =
-    INPUT_CONFIGS.find((config) => config.type === contactCreate.type) ??
+    INPUT_CONFIGS.find((config) => config.type === usecase.type) ??
     INPUT_CONFIGS[0];
 
   const confirmButtonText =
-    contactCreate.type === 'name' ? 'Add contact' : 'Add & enrich';
+    usecase.type === 'name' ? 'Add contact' : 'Add & enrich';
 
   const handleClose = (
     e?:
@@ -65,24 +66,22 @@ export const AddSingleContact = observer(() => {
   ) => {
     e?.stopPropagation();
     e?.preventDefault();
-    contactCreate.clearState();
+    usecase.clearState();
     store.ui.commandMenu.toggle('AddSingleContact');
     store.ui.commandMenu.clearContext();
   };
 
   const handleSubmit = async () => {
-    contactCreate.setOrganizationId(
-      store.ui.commandMenu.context?.ids?.[0] as string,
-    );
-    await contactCreate.submit();
+    usecase.setOrganizationId(store.ui.commandMenu.context?.ids?.[0] as string);
+    await usecase.submit();
   };
 
   useEffect(() => {
     const email = store.ui.commandMenu.context?.meta?.email;
 
     if (email?.length) {
-      contactCreate.setType('email');
-      contactCreate.setInputValue(email);
+      usecase.setType('email');
+      usecase.setInputValue(email);
     }
   }, [store.ui.commandMenu.context?.meta]);
 
@@ -106,14 +105,14 @@ export const AddSingleContact = observer(() => {
                 size='xs'
                 key={config.type}
                 leftIcon={config.icon}
-                onClick={() => contactCreate.setType(config.type)}
-                data-inactive={contactCreate.type !== config.type}
+                onClick={() => usecase.setType(config.type)}
+                data-inactive={usecase.type !== config.type}
+                className={cn('w-full', {
+                  selected: usecase.type === config.type,
+                })}
                 dataTest={
                   config.type === 'name' ? 'org-people-add-by-name' : undefined
                 }
-                className={cn('w-full', {
-                  selected: contactCreate.type === config.type,
-                })}
               >
                 {config.label}
               </Button>
@@ -124,11 +123,11 @@ export const AddSingleContact = observer(() => {
             autoFocus
             ref={inputRef}
             variant='unstyled'
+            value={usecase.inputValue}
             dataTest='org-people-name-input'
-            value={contactCreate.inputValue}
             placeholder={currentConfig.placeholder}
             onChange={(e) => {
-              contactCreate.setInputValue(e.target.value);
+              usecase.setInputValue(e.target.value);
             }}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
@@ -141,19 +140,39 @@ export const AddSingleContact = observer(() => {
               e.stopPropagation();
             }}
           />
+
+          {CreateContactUsecase.isBrowserExtensionEnabled &&
+            usecase.type === 'linkedin' && (
+              <div className='flex justify-between bg-success-50 rounded-md px-2 py-1 mb-4'>
+                <div className='flex items-center gap-2 text-success-700 text-sm'>
+                  <Icon name='zap' />
+                  <span>
+                    <span>Prospect faster.</span>{' '}
+                    <a
+                      target='_blank'
+                      className='underline hover:text-success-900'
+                      href='https://chromewebstore.google.com/detail/customeros/khmdccjeodppdldkgifcnkndemjpfoml'
+                    >
+                      Get our Chrome extension
+                    </a>
+                    <span>.</span>
+                  </span>
+                </div>
+              </div>
+            )}
         </div>
 
         <p className={cn('text-error-500 text-[12px] mt-0')}>
-          {contactCreate.type === 'name' &&
-            contactCreate.currentError.isEmpty &&
+          {usecase.type === 'name' &&
+            usecase.currentError.isEmpty &&
             'Every hero needs a name'}
 
-          {contactCreate.type !== 'name' && contactCreate.currentError.isEmpty
+          {usecase.type !== 'name' && usecase.currentError.isEmpty
             ? 'Huston we have a blank...'
-            : contactCreate.currentError.message
-            ? contactCreate.currentError.message
-            : contactCreate.currentError.isInvalid
-            ? `Invalid ${contactCreate.type} format`
+            : usecase.currentError.message
+            ? usecase.currentError.message
+            : usecase.currentError.isInvalid
+            ? `Invalid ${usecase.type} format`
             : ''}
         </p>
 
@@ -172,8 +191,8 @@ export const AddSingleContact = observer(() => {
             className='w-full'
             colorScheme='primary'
             onClick={handleSubmit}
+            isLoading={usecase.isLoading}
             loadingText={'Adding contact...'}
-            isLoading={contactCreate.isLoading}
             dataTest='confirm-contact-creation'
             leftSpinner={<Spinner size='sm' label='creating contacts' />}
             onKeyDown={(e) => {

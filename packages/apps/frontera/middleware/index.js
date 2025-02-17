@@ -271,6 +271,16 @@ async function createServer() {
     followRedirects: true,
   });
 
+  const basConfigProxy = createProxyMiddleware({
+    pathFilter: '/bas',
+    pathRewrite: { '^/bas': '' },
+    target: process.env.BAS_CONFIG_PATH,
+    changeOrigin: true,
+    logger: console,
+    preserveHeaderKeyCase: true,
+    followRedirects: true,
+  });
+
   app.use(customerOsApiGqlProxy);
   app.use(customerOsApiRestProxy);
   app.use(customerOsApiRestProxyForTenant);
@@ -278,6 +288,7 @@ async function createServer() {
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
   app.use(fileStorageApiProxy);
+  app.use(basConfigProxy);
 
   //login button
   app.use('/google-auth', (req, res) => {
