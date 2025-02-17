@@ -78,8 +78,7 @@ func (l *WebVisitorIdentifiedListener) Handle(ctx context.Context, baseEvent any
 	}
 
 	if data.AgentExecutionId != "" {
-		// TODO temporary disable goal achieved
-		//return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+		return l.handleGoalAchieved(ctx, data.AgentExecutionId)
 	}
 	return nil
 }

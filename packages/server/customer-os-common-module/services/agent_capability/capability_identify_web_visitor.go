@@ -122,47 +122,44 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 		tracing.LogObjectAsJson(span, "result", result)
 		return enum.CapabilityExecutionError, result, err
 	}
-	span.LogKV("domain", domain)
 
 	result.Domain = domain
 	result.LinkedInSlug = linkedInSlug
 	tracing.LogObjectAsJson(span, "result", result)
 
-	if domain != "" {
-		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, executionContainer.InputData.WebSessionID, domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			tracing.LogObjectAsJson(span, "result", result)
-			return enum.CapabilityExecutionError, result, err
-		}
-
-		isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
+	if domain == "" {
+		// domain not found
+		err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionError, result, err
 		}
-		if isWorkspaceDomain {
-			err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return enum.CapabilityExecutionError, result, err
-			}
-			return enum.CapabilityExecutionCompleted, result, nil
-		}
-
-		err = c.publishWebVisitorIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionError, result, err
-		}
-
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
-	err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+	_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, executionContainer.InputData.WebSessionID, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		tracing.LogObjectAsJson(span, "result", result)
+		return enum.CapabilityExecutionError, result, err
+	}
+
+	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
+	}
+	if isWorkspaceDomain {
+		err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		return enum.CapabilityExecutionCompleted, result, nil
+	}
+
+	err = c.publishWebVisitorIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 
 	return enum.CapabilityExecutionCompleted, result, nil
