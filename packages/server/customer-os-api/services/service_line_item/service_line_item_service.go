@@ -287,13 +287,14 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	sliIsInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
 
-	anyFieldChanged := baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId ||
+	anyFieldChanged := (baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "") ||
 		baseServiceLineItemEntity.Name != serviceLineItemDetails.SliName ||
 		baseServiceLineItemEntity.Price != serviceLineItemDetails.SliPrice ||
 		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
 		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate ||
 		baseServiceLineItemEntity.Comments != serviceLineItemDetails.SliComments ||
-		baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType
+		(baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeNone)
+	span.LogFields(log.Bool("anyFieldChanged", anyFieldChanged))
 
 	// If no changes recorded, return
 	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || utils.CloseToNow(startedAt) || sliIsInvoiced) {
