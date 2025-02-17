@@ -25,7 +25,7 @@ export class CreateContactUsecase {
   };
 
   private readonly PATTERNS = {
-    linkedin: /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/,
+    linkedin: /linkedin\.com\/in\/[^/]+$/,
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   };
 
