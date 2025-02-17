@@ -236,6 +236,7 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 	switch agentType {
 	case enum.AgentCashflowGuardian:
 		// todo
+		return "", nil
 	default:
 		goalAchievedCount, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedCountLast30Days(ctx, agentID)
 		if err != nil {
@@ -249,8 +250,7 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 			return "", err
 		}
 
-		metric := strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1)
-
+		return strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1), nil
 	}
 }
 
