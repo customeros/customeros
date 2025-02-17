@@ -3,6 +3,7 @@ package workspace
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -73,4 +74,32 @@ func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]
 
 	span.LogFields(log.String("domains", fmt.Sprintf("%v", domains)))
 	return domains, nil
+}
+
+func (s *workspaceService) IsWorkspaceDomain(ctx context.Context, domain string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceService.IsWorkspaceDomain")
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	defer span.Finish()
+
+	workspaceDomains, err := s.GetWorkspaceDomainsForTenant(ctx)
+	tracing.LogObjectAsJson(span, "workspaceDomains", workspaceDomains)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	if len(workspaceDomains) == 0 {
+		span.LogFields(log.Bool("result", false))
+		return false, nil
+	}
+
+	for _, d := range workspaceDomains {
+		if strings.EqualFold(d, domain) {
+			span.LogFields(log.Bool("result", true))
+			return true, nil
+		}
+	}
+
+	span.LogFields(log.Bool("result", false))
+	return false, nil
 }

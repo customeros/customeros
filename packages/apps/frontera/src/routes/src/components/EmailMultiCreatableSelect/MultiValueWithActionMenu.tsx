@@ -24,6 +24,8 @@ interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   removeOption: (value: string) => void;
 }
 
+const editEmailUseCase = EditEmailCase.getInstance();
+
 export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
   observer(({ name, navigateAfterAddingToPeople, removeOption, ...rest }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -108,7 +110,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  EditEmailCase.prototype.setEmail(rest.data.value);
+                  editEmailUseCase.setEmail(rest.data.value);
                   store.ui.commandMenu.setType('EditEmail');
 
                   store.ui.commandMenu.setContext({

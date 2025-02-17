@@ -85,6 +85,7 @@ const (
 	CapabilityIngestEmail                        AgentCapability = "ingest_email"
 	CapabilitySendPaidNotification               AgentCapability = "send_paid_notification"
 	CapabilitySendInvoiceVoidedNotification      AgentCapability = "send_invoice_voided_notification"
+	CapabilitySendPastDueNotification            AgentCapability = "send_past_due_notification"
 )
 
 func (t AgentCapability) String() string {
@@ -144,7 +145,8 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilitySummarizeThread,
 		CapabilityIngestEmail,
 		CapabilitySendPaidNotification,
-		CapabilitySendInvoiceVoidedNotification:
+		CapabilitySendInvoiceVoidedNotification,
+		CapabilitySendPastDueNotification:
 		return AgentCapability(s), nil
 
 	default:

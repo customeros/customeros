@@ -33,7 +33,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
 	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService))
 	capabilities = append(capabilities, NewApplyTagToCompanyCapability(tagService, events))
-	capabilities = append(capabilities, NewCreateOrganizationCapability(events, organizationService))
+	capabilities = append(capabilities, NewCreateOrganizationCapability(events, organizationService, workspaceService))
 	capabilities = append(capabilities, NewCreateContactCapability(contactService))
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
 	capabilities = append(capabilities, NewDetectSupportWebVisitCapability(events))
@@ -64,6 +64,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewSendInvoiceViaEmailCapability(invoiceService))
 	capabilities = append(capabilities, NewSendInvoiceVoidedNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPaidNotificationCapability(invoiceService))
+	capabilities = append(capabilities, NewSendPastDueNotificationCapability(invoiceService))
 
 	agentCapabilities := AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),

@@ -2,12 +2,12 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -55,7 +55,7 @@ func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tx *neo4j.
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("email", email))
 
-	cypher := fmt.Sprintf(`MATCH (e:Email_%s) WHERE e.email = $email OR e.rawEmail = $email RETURN e.id ORDER BY e.createdAt LIMIT 1`, tenant)
+	cypher := fmt.Sprintf(`MATCH (e:Email_%s) WHERE (lower(e.email) = lower($email) OR lower(e.rawEmail) = lower($email)) AND $email <> '' RETURN e.id ORDER BY e.createdAt LIMIT 1`, tenant)
 	params := map[string]any{
 		"email": email,
 	}

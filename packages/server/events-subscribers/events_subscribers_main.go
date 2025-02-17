@@ -20,7 +20,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/config"
-	agent_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/agents"
 	direct_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/direct"
 	events_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/events"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
@@ -178,9 +177,10 @@ func (a *App) initializeListeners() error {
 	a.events.Subscriber.RegisterListener(events_listeners.NewSkuUpdateListener(a.logger, a.deps))
 
 	// Invoice Listeners
-	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceFinalizedListener(a.logger, a.deps))
-	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoicePaidListener(a.logger, a.deps))
-	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceVoidedListener(a.logger, a.deps))
+	// TODO replace with quickbooks integration
+	//a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceFinalizedListener(a.logger, a.deps))
+	//a.events.Subscriber.RegisterListener(agent_listeners.NewInvoicePaidListener(a.logger, a.deps))
+	//a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceVoidedListener(a.logger, a.deps))
 
 	// Flow Listeners
 	a.events.Subscriber.RegisterListener(events_listeners.NewFlowComputeParticipantsRequirementsListener(a.logger, a.deps))
@@ -213,7 +213,8 @@ func (a *App) initializeListeners() error {
 		a.deps.CommonServices.AgentRunnerService,
 	))
 
-	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories)) // TODO check if still needed
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewCompanyIdentifiedListener(a.logger, a.deps.PostgresRepositories, a.deps.CommonServices.AgentRunnerService))
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorNotIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 
 	// Cashflow guardian listeners
@@ -223,6 +224,26 @@ func (a *App) initializeListeners() error {
 		a.deps.CommonServices.AgentRunnerService,
 	))
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewStartInvoiceRunWithAutopayment(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewInvoicePaidListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewInvoiceVoidedListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewSendInvoiceListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewPastDueInvoiceListener(
 		a.logger,
 		a.deps.PostgresRepositories,
 		a.deps.CommonServices.AgentRunnerService,

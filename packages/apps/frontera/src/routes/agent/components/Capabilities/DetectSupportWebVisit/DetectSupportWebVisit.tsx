@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { DetectSupportWebVistUsecase } from '@domain/usecases/agents/capabilities/detect-support-web-vist';
@@ -8,6 +8,8 @@ import { Icon } from '@ui/media/Icon';
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
+import { useStore } from '@shared/hooks/useStore';
+import { AgentType } from '@shared/types/__generated__/graphql.types';
 import {
   AlertDialog,
   AlertDialogBody,
@@ -17,11 +19,28 @@ import {
   AlertDialogOverlay,
   AlertDialogCloseIconButton,
 } from '@ui/overlay/AlertDialog/AlertDialog';
-
 export const DetectSupportWebVisit = observer(() => {
+  const store = useStore();
+  const navigate = useNavigate();
+
   const { id } = useParams<{ id: string }>();
   const inputRef = useRef<HTMLInputElement>(null);
   const usecase = useMemo(() => new DetectSupportWebVistUsecase(id!), [id]);
+
+  const agentByType = store.agents.getFirstAgentByType(
+    AgentType.WebVisitIdentifier,
+  );
+
+  const handleClick = () => {
+    if (!agentByType) {
+      usecase.executeCreateWebVisitIdentifierAgent(
+        AgentType.WebVisitIdentifier,
+      );
+      navigate(`/agents/${usecase.webVisitIdentifierAgentId}`);
+    } else {
+      navigate(`/agents/${agentByType?.id}`);
+    }
+  };
 
   return (
     <>
@@ -36,8 +55,14 @@ export const DetectSupportWebVisit = observer(() => {
             </div>
           )}
           <p className='text-sm'>
-            This agent’s goal relies on the results from the Website visitor
-            identifier agent
+            This agent’s goal relies on the results from the{' '}
+            <span
+              onClick={handleClick}
+              className='font-semibold underline cursor-pointer'
+            >
+              Website visitor identifier
+            </span>{' '}
+            agent
           </p>
         </div>
         <div>

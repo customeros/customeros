@@ -21,7 +21,7 @@ type WebSession struct {
 	Domain                *string        `gorm:"column:domain;type:varchar(255);index:idx_domain" json:"domain"`
 	OrganizationId        *string        `gorm:"column:organization_id;varchar(255);index:idx_organization_id" json:"organizationId"`
 	Referrer              *string        `gorm:"column:referrer;type:varchar(255);" json:"referrer"`
-	QueryParams           *string        `gorm:"column:query_params;type:varchar(255);" json:"queryParams"`
+	QueryParams           *string        `gorm:"column:query_params;type:text;" json:"queryParams"`
 	UniquePageViews       pq.StringArray `gorm:"column:unique_page_views;type:text[];" json:"uniquePageViews"`
 	StartTime             time.Time      `gorm:"column:start_time;type:timestamp;" json:"startTime"`
 	LastEventType         string         `gorm:"column:last_event_type;type:varchar(255);" json:"lastEventType"`

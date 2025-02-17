@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -61,6 +62,8 @@ func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.A
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindPlay")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("agentType", agentType.String()), log.String("triggerEvent", triggerEvent.String()))
 
 	var play postgres_entity.AgentPlay
 	err := r.gormDb.WithContext(ctx).

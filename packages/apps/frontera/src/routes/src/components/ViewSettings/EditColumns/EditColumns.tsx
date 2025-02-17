@@ -49,6 +49,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
         (c) =>
           ![
             ColumnViewType.FlowTotalCount,
+            ColumnViewType.ContactsPhoneNumbers,
             ColumnViewType.OrganizationsWebsite,
             ColumnViewType.OrganizationsParentOrganization,
           ].includes(c.columnType),

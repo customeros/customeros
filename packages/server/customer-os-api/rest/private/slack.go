@@ -8,6 +8,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -217,7 +218,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 			}
 			defer resp.Body.Close()
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -234,7 +235,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 			}
 
 			if slackResponse.Ok && slackResponse.Revoked != nil && *slackResponse.Revoked {
-				err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Delete(c, tenant.(string))
+				err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Delete(ctx, tenant.(string))
 				if err != nil {
 					tracing.TraceErr(span, err)
 					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

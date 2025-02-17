@@ -108,6 +108,8 @@ func (c *GenerateInvoiceCapability) NewConfig() GenerateInvoiceConfig {
 
 func (c *GenerateInvoiceCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.CcEmails.Value = []string{}
+	config.BccEmails.Value = []string{}
 	return &config
 }
 

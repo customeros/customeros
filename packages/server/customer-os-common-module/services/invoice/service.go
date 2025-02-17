@@ -2369,7 +2369,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	fileDTO, err := s.fileService.UploadSingleFileBytesDirect(ctx, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", pdfBytes, true)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
-		return "", errors.Wrap(err, "UploadSingleFileBytes")
+		return "", err
 	}
 
 	if fileDTO.ID == "" {
@@ -2626,13 +2626,6 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	}
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
 
-	// Mark notification requested, to avoid double notifications
-	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceId, string(neo4jentity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error marking remind notification requested for invoice %s: %s", invoiceId, err.Error())
-	}
-
 	// prepare email
 	workflowId := ""
 	if invoiceEntity.PaymentDetails.PaymentLink == "" {
@@ -2756,12 +2749,16 @@ func (s *invoiceService) AutopayInvoice(ctx context.Context, invoiceId string) e
 
 	// check if invoice can be auto-paid
 	if invoiceEntity.DryRun {
+		span.LogFields(log.String("result", "skipped autopay for dry run invoice"))
 		return nil
 	} else if invoiceEntity.TotalAmount == 0 {
+		span.LogFields(log.String("result", "skipped autopay for invoice with total amount of 0"))
 		return nil
 	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
+		span.LogFields(log.String("result", "skipped autopay for invoice not due or overdue"))
 		return nil
 	} else if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt != nil {
+		span.LogFields(log.String("result", "skipped autopay for invoice already finalized"))
 		return nil
 	}
 

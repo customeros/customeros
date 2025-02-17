@@ -58,7 +58,7 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
   const store = useStore();
   const [open, setOpen] = useState(false);
 
-  const icpAgent = store.agents.icpQualificationAgent;
+  const icpAgent = store.agents.getFirstAgentByType(AgentType.IcpQualifier);
   const icpAgentActive = icpAgent?.value?.isActive;
   const icpAgentHasError =
     icpAgent?.value?.error !== null || !icpAgent?.value?.isConfigured;

@@ -32,6 +32,7 @@ type SendWebVisitorSlackNotificationInput struct {
 	Referrer        string   `json:"referrer"`
 	PageViews       []string `json:"pageViews"`
 	SessionDuration string   `json:"sessionDuration"`
+	WebSessionID    string   `json:"webSessionId"`
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
@@ -121,6 +122,9 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 	if input.OrganizationID == "" {
 		return errors.New("OrganizationID cannot be empty")
 	}
+	if input.WebSessionID == "" {
+		return errors.New("WebSessionID cannot be empty")
+	}
 	return nil
 }
 
@@ -173,7 +177,20 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		},
 	}
 
-	return c.sendSlackNotificationCapability.Execute(ctx, newExecutionContainer)
+	status, output, err := c.sendSlackNotificationCapability.Execute(ctx, newExecutionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return status, output, err
+	}
+	if status == enum.CapabilityExecutionCompleted {
+		err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithSlackSentAt(ctx, executionContainer.InputData.WebSessionID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionError, result, err
+		}
+	}
+
+	return status, output, nil
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int64) (bool, error) {
@@ -190,7 +207,7 @@ func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context
 	}
 
 	// don't send if from workspace domain
-	isWorkspaceDomain := c.isWorkspaceDomain(ctx, domain)
+	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
 	if isWorkspaceDomain {
 		span.LogFields(log.Bool("result.skip", true))
 		return true, nil
@@ -218,34 +235,6 @@ func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context
 
 	span.LogFields(log.Bool("result.skip", false))
 	return false, nil
-}
-
-func (c *SendWebVisitorSlackNotificationCapability) isWorkspaceDomain(ctx context.Context, domain string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.isWorkspaceDomain")
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	defer span.Finish()
-
-	workspaceDomains, err := c.workspaceService.GetWorkspaceDomainsForTenant(ctx)
-	tracing.LogObjectAsJson(span, "workspaceDomains", workspaceDomains)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return false
-	}
-
-	if len(workspaceDomains) == 0 {
-		span.LogFields(log.Bool("result", false))
-		return false
-	}
-
-	for _, d := range workspaceDomains {
-		if strings.EqualFold(d, domain) {
-			span.LogFields(log.Bool("result", true))
-			return true
-		}
-	}
-
-	span.LogFields(log.Bool("result", false))
-	return false
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) buildWebVisitorSlackNotification(

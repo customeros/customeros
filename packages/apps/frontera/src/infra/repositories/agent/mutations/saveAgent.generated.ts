@@ -12,9 +12,7 @@ export type SaveAgentMutation = {
     type: Types.AgentType;
     name: string;
     goal: string;
-    goalType: string;
     isActive: boolean;
-    flowId?: string | null;
     visible: boolean;
     createdAt: any;
     updatedAt: any;

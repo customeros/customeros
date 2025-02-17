@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -25,6 +26,7 @@ type WebSessionRepository interface {
 	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
 	UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error
+	UpdateSessionWithSlackSentAt(ctx context.Context, sessionID string) error
 	UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
 	UpdateSupportSignals(ctx context.Context, sessionID, tenant string, supportSignal int8) (*postgres_entity.WebSession, error)
 }
@@ -150,6 +152,7 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLastNotification")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("tenant", tenant), log.String("domain", domain))
 
 	var result postgres_entity.WebSession
 	err := r.gormDb.
@@ -173,6 +176,7 @@ func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, ses
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateLastActivity")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, sessionID)
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.
@@ -196,6 +200,7 @@ func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessi
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionEnd")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, sessionID)
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.
@@ -220,6 +225,7 @@ func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, sessionID)
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -239,6 +245,7 @@ func (r *webSessionEventsRepository) UpdateSessionWithOrganization(ctx context.C
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithOrganization")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, sessionID)
 
 	// Perform a single-column update on organization_id for the matching session
 	result := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -277,6 +284,7 @@ func (r *webSessionEventsRepository) UpdateSupportSignals(ctx context.Context, s
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionPageViews")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, sessionID)
 
 	if supportSignal != postgres_entity.SupportNeedDetected && supportSignal != postgres_entity.SupportNeedDetected {
 		err := errors.New("invalid supportSignal value")
@@ -296,4 +304,24 @@ func (r *webSessionEventsRepository) UpdateSupportSignals(ctx context.Context, s
 	}
 
 	return &updatedSession, nil
+}
+
+func (r *webSessionEventsRepository) UpdateSessionWithSlackSentAt(ctx context.Context, sessionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithSlackSentAt")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, sessionID)
+
+	// Perform a single-column update on sent_slack_notification for the matching session
+	result := r.gormDb.Model(&postgres_entity.WebSession{}).
+		Where("id = ?", sessionID).
+		Update("sent_slack_notification", utils.Now())
+
+	if result.Error != nil {
+		// Log the error with tracing and return it
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	return nil
 }

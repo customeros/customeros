@@ -241,7 +241,7 @@ func sendPayInvoiceNotifications(cont *container.Container) {
 }
 
 func sendRemindInvoiceNotifications(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendRemindNotifications()
+	cont.AgentProducers.SendInvoiceProducer.Execute()
 }
 
 // Contact Jobs

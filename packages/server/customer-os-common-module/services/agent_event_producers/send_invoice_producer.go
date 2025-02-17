@@ -4,7 +4,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
@@ -39,13 +38,6 @@ func NewSendInvoiceProducer(
 		neo4jRepository:    neo4jRepository,
 		events:             events,
 		log:                log,
-	}
-}
-
-// Add all Agent types subscribed to this event here
-func (p *SendInvoiceProducer) subscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentCashflowGuardian,
 	}
 }
 

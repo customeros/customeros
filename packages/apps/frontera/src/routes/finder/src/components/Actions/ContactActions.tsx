@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { useKeys, useKeyBindings } from 'rooks';
 import { Contact } from '@store/Contacts/Contact.dto';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
+import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
@@ -18,6 +19,7 @@ interface TableActionsProps {
   table: TableInstance<Contact>;
   enableKeyboardShortcuts?: boolean;
 }
+const editEmailUseCase = EditEmailCase.getInstance();
 
 export const ContactTableActions = observer(
   ({
@@ -109,6 +111,11 @@ export const ContactTableActions = observer(
       (e) => {
         e.stopPropagation();
         e.preventDefault();
+        editEmailUseCase.setEmail(
+          table
+            .getRow(focusedId || '')
+            .original.value.emails?.find((e) => e.primary)?.email || '',
+        );
         handleOpen('EditEmail', 'email');
       },
       { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },

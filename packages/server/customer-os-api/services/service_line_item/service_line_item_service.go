@@ -287,22 +287,23 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	sliIsInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
 
-	anyFieldChanged := baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId ||
+	anyFieldChanged := (baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "") ||
 		baseServiceLineItemEntity.Name != serviceLineItemDetails.SliName ||
 		baseServiceLineItemEntity.Price != serviceLineItemDetails.SliPrice ||
 		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
 		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate ||
 		baseServiceLineItemEntity.Comments != serviceLineItemDetails.SliComments ||
-		baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType
+		(baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeNone)
+	span.LogFields(log.Bool("anyFieldChanged", anyFieldChanged))
 
 	// If no changes recorded, return
-	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || sliIsInvoiced) {
+	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || utils.CloseToNow(startedAt) || sliIsInvoiced) {
 		span.LogFields(log.String("result", "No changes recorded"))
 		return nil
 	}
 
 	//todo remove this when name is removed from SLI
-	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId {
+	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "" {
 		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.SkuId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -424,7 +425,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
-			SkuId:      utils.StringPtr(serviceLineItemDetails.SkuId),
+			SkuId:      utils.StringPtrNillable(serviceLineItemDetails.SkuId),
 			Name:       utils.StringPtr(serviceLineItemDetails.SliName),
 			Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
 			Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
