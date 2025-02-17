@@ -19,22 +19,14 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
 
-func (h *IntegrationHandler) FathomZapier(c *gin.Context) {
+func (h *IntegrationHandler) FathomZapier(c *gin.Context, tenant string) {
 	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.FathomZapier", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
+	tracing.TagTenant(span, tenant)
 
 	// trace all params
-	span.LogKV("param.tenantId", c.Param("tenantId"))
-
-	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantId"))
-	if err != nil {
-		err := errors.Wrap(err, "Unable to identify tenant")
-		tracing.TraceErr(span, err)
-
-		h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
-		return
-	}
+	span.LogKV("param.tenantId", c.Param("tenant"))
 
 	// update context with tenant, pass this where tenant is needed
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{

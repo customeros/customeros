@@ -20,10 +20,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
 
-func (h *IntegrationHandler) CalDotCom(c *gin.Context) {
+func (h *IntegrationHandler) CalDotCom(c *gin.Context, tenant string) {
 	span, ctx := commontracing.StartTracerSpan(c.Request.Context(), "Flows.CalDotCom")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
+	tracing.TagTenant(span, tenant)
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
 		h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
@@ -45,14 +46,6 @@ func (h *IntegrationHandler) CalDotCom(c *gin.Context) {
 	if signature == "" {
 		message := "Missing signature header"
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-		return
-	}
-
-	// determine tenant
-	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantId"))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 		return
 	}
 
