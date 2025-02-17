@@ -63,7 +63,7 @@ export const AgentCard = observer(
         store.ui.commandMenu.clearContext();
         store.ui.commandMenu.setType('AgentsCommands');
       };
-    }, [store.ui.commandMenu]);
+    }, []);
 
     const usecase = useMemo(() => new AgentViewUsecase(id), [id]);
 
