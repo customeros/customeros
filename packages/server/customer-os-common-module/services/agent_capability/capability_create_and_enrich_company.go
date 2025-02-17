@@ -124,28 +124,28 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	organizationEntity, err := c.organizationService.GetOrganizationByDomain(ctx, executionContainer.InputData.Domain, true)
 
 	// organization found
+	orgID := ""
 	if organizationEntity != nil {
 		// if organization is hidden, return early
 		if organizationEntity.Hide {
-			return enum.CapabilityExecutionError, result, errors.New("Identified organization is archived")
+			return enum.CapabilityExecutionCompleted, result, nil
 		}
-		result.OrganizationID = organizationEntity.ID
-		tracing.LogObjectAsJson(span, "result", result)
-		return enum.CapabilityExecutionCompleted, result, nil
+		orgID = organizationEntity.ID
 	}
 
-	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-		Domains: []string{executionContainer.InputData.Domain},
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+	if orgID == "" {
+		orgID, err = c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+			Domains: []string{executionContainer.InputData.Domain},
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionError, result, err
+		}
 	}
 
-	err = c.publishCompanyIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+	err = c.publishCompanyIdentifiedEvent(ctx, executionContainer.AgentExecutionID, orgID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
 	}
 
 	result.OrganizationID = orgID
@@ -153,12 +153,13 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
-func (c *CreateOrganizationCapability) publishCompanyIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
+func (c *CreateOrganizationCapability) publishCompanyIdentifiedEvent(ctx context.Context, agentExecutionID, orgId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.publishCompanyIdentifiedEvent")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
 	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.CompanyIdentified{
 		AgentExecutionId: agentExecutionID,
+		OrganizationId:   orgId,
 	})
 }
