@@ -2,6 +2,8 @@ package agent
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -220,9 +222,36 @@ func (r *agentService) GetAgentInfo(ctx context.Context) (*map[enum.AgentType]in
 		infoMap[agent.Type] = interfaces.AgentInfo{
 			Goal:        agent.Goal,
 			Description: agent.Description,
+			Metric:      agent.Metric,
 		}
 	}
 	return &infoMap, nil
+}
+
+func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID string, agentType enum.AgentType) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "agentService.GetNorthStarMetricById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	switch agentType {
+	case enum.AgentCashflowGuardian:
+		// todo
+		return "", nil
+	default:
+		goalAchievedCount, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedCountLast30Days(ctx, agentID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		registryAgent, err := a.postgresRepositories.AgentRegistryRepository.FindByType(ctx, agentType)
+		if err != nil || registryAgent == nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		return strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1), nil
+	}
 }
 
 func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string, position int) (*postgres_entity.Capability, error) {

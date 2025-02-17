@@ -28,6 +28,7 @@ type AgentExecutionRepository interface {
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
 	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error
+	GetGoalAchievedCountLast30Days(ctx context.Context, agentID string) (int64, error)
 }
 
 type agentExecutionRepository struct {
@@ -339,4 +340,23 @@ func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID
 	}
 
 	return nil
+}
+
+func (r *agentExecutionRepository) GetGoalAchievedCountLast30Days(ctx context.Context, agentID string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetGoalAchievedCountLast30Days")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var count int64
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	err := r.gormDb.Model(&postgres_entity.AgentExecution{}).
+		Where("agent_id = ? AND goal_achieved = true AND updated_at >= ?", agentID, thirtyDaysAgo).
+		Count(&count).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
+	return count, nil
 }

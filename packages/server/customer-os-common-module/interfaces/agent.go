@@ -29,4 +29,5 @@ type AgentRegistry interface {
 type AgentInfo struct {
 	Goal        string
 	Description string
+	Metric      string
 }

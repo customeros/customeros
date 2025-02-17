@@ -37,6 +37,7 @@ type Agent {
   id: ID!
   type: AgentType!
   name: String!
+  metric: String!
   description: String!
   scope: AgentScope!
   capabilities: [Capability!]!

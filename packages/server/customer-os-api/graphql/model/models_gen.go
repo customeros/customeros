@@ -106,6 +106,7 @@ type Agent struct {
 	ID           string           `json:"id"`
 	Type         AgentType        `json:"type"`
 	Name         string           `json:"name"`
+	Metric       string           `json:"metric"`
 	Description  string           `json:"description"`
 	Scope        AgentScope       `json:"scope"`
 	Capabilities []*Capability    `json:"capabilities"`
