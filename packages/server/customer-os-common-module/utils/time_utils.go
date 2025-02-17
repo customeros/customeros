@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -266,4 +267,8 @@ func ConvertToUTC(datetimeStr string) (time.Time, error) {
 	}
 
 	return parsedTime.UTC(), nil
+}
+
+func CloseToNow(t time.Time) bool {
+	return math.Abs(time.Now().Sub(t).Seconds()) < time.Minute.Seconds()
 }
