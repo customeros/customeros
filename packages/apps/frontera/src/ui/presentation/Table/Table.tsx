@@ -520,14 +520,7 @@ const TableBody = <T extends object>({
   );
 
   return (
-    <TBody
-      className='w-full'
-      data-test={dataTest}
-      style={{
-        transform: 'translate3d(0, 0, 0)',
-        willChange: 'transform',
-      }}
-    >
+    <TBody className='w-full' data-test={dataTest}>
       {!virtualRows.length && !isLoading && <NoResults tableId={tableId} />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];

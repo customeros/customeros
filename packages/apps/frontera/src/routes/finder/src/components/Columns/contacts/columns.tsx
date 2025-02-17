@@ -117,16 +117,7 @@ const columns: Record<string, Column> = {
       enableColumnFilter: false,
       enableSorting: false,
       cell: (props) => {
-        const validationDetails = props.row.original.value.emails.find(
-          (e) => e.primary === true,
-        )?.emailValidationDetails;
-
-        return (
-          <EmailCell
-            contactId={props.row.id}
-            validationDetails={validationDetails}
-          />
-        );
+        return <EmailCell contactId={props.row.id} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>
