@@ -7,6 +7,8 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
+const editEmailUseCase = EditEmailCase.getInstance();
+
 export const EditEmail = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
@@ -17,10 +19,7 @@ export const EditEmail = observer(() => {
 
   useEffect(() => {
     if (contact) {
-      EditEmailCase.prototype.setEntity(contact);
-      EditEmailCase.prototype.setEmail(
-        contact.value.emails.filter((e) => e.primary)[0]?.email || '',
-      );
+      editEmailUseCase.setEntity(contact);
     }
   }, [contact?.id]);
 
@@ -28,7 +27,7 @@ export const EditEmail = observer(() => {
 
   useEffect(() => {
     if (contact.id) {
-      EditEmailCase.prototype.setOldEmail(EditEmailCase.prototype.email);
+      editEmailUseCase.setOldEmail(editEmailUseCase.email);
     }
   }, [contact?.id]);
 
@@ -37,9 +36,9 @@ export const EditEmail = observer(() => {
       <CommandInput
         label={label}
         placeholder={'Edit email'}
-        value={EditEmailCase.prototype.email}
+        value={editEmailUseCase.email}
         onValueChange={(newValue) => {
-          EditEmailCase.prototype.setEmail(newValue);
+          editEmailUseCase.setEmail(newValue);
         }}
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
@@ -52,12 +51,12 @@ export const EditEmail = observer(() => {
         <CommandItem
           leftAccessory={<Edit03 />}
           onSelect={() => {
-            EditEmailCase.prototype.submit();
+            editEmailUseCase.submit();
             store.ui.commandMenu.setOpen(false);
             store.ui.commandMenu.setType('ContactCommands');
           }}
         >
-          {`Rename email to "${EditEmailCase.prototype.email}"`}
+          {`Rename email to "${editEmailUseCase.email}"`}
         </CommandItem>
       </Command.List>
     </Command>

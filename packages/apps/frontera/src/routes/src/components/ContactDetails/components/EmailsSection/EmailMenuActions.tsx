@@ -24,6 +24,8 @@ import {
 
 import { emailStatuses } from './EmailValidationMessage';
 
+const editEmailUseCase = EditEmailCase.getInstance();
+
 interface EmailMenuActionsProps {
   id: string;
   idx: number;
@@ -64,7 +66,7 @@ export const EmailMenuActions = observer(
           <MenuItem
             className='group/edit-email'
             onClick={() => {
-              EditEmailCase.prototype.setEmail(email);
+              editEmailUseCase.setEmail(email);
               store.ui.commandMenu.setType('EditEmail');
               store.ui.commandMenu.setContext({
                 ids: [contactStore?.value.id ?? ''],
