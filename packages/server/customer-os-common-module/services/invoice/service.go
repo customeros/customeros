@@ -1637,7 +1637,11 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 		return err
 	}
 
-	err := s.validateStatusTransition(ctx, invoiceEntityBeforeUpdate.Status, data.Status)
+	err = s.validateStatusTransition(ctx, invoiceEntityBeforeUpdate.Status, data.Status)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		err = s.neo4j.InvoiceWriteRepository.UpdateInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId, data)
@@ -3005,11 +3009,15 @@ func (s *invoiceService) GenerateNewPaymentLink(ctx context.Context, invoiceId s
 	return nil
 }
 
-func (s *invoiceService) validateStatusTransition(ctx context.Context, fromStatus neo4jenum.InvoiceStatus, toStatus neo4jenum.InvoiceStatus) interface{} {
+func (s *invoiceService) validateStatusTransition(ctx context.Context, fromStatus neo4jenum.InvoiceStatus, toStatus neo4jenum.InvoiceStatus) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.validateStatusTransition")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("fromStatus", fromStatus.String()), log.String("toStatus", toStatus.String()))
+
+	if fromStatus == toStatus {
+		return nil
+	}
 
 	transitionAllowed := true
 	if toStatus == neo4jenum.InvoiceStatusPaymentProcessing {
