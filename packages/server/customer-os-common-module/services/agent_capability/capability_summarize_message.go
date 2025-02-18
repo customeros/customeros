@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -14,6 +15,8 @@ import (
 )
 
 type SummarizeMessageInput struct {
+	EntityId   string           `json:"entityId"`
+	EntityType model.EntityType `json:"entityType"`
 }
 
 type SummarizeMessageCapability struct {
@@ -54,7 +57,12 @@ func (c *SummarizeMessageCapability) ValidateConfig(postgres_entity.NoConfig) er
 }
 
 func (c *SummarizeMessageCapability) ValidateInput(input SummarizeMessageInput) error {
-	//todo
+	if input.EntityId == "" {
+		return errors.New("entityId is required")
+	}
+	if input.EntityType == "" {
+		return errors.New("entityType is required")
+	}
 	return nil
 }
 

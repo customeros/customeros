@@ -101,7 +101,7 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 		return db
 	}
 
-	if emailMessageData.Identifiers.MessageId == "" {
+	if emailMessageData.Identifiers.ProviderMessageId == "" {
 		db.EmailProcessingStatus = postgresentity.ERROR
 		db.Error = fmt.Errorf("email message id is empty")
 		return db
@@ -231,7 +231,7 @@ func (s *mailService) processInboundEmail(ctx context.Context, tenant string, em
 	if err != nil {
 		tracing.TraceErr(span, err)
 		db.EmailProcessingStatus = postgresentity.ERROR
-		db.Error = fmt.Errorf("mail with message id %s failed processing", email.Identifiers.MessageId)
+		db.Error = fmt.Errorf("mail with message id %s failed processing", email.Identifiers.ProviderMessageId)
 		return db
 	}
 
@@ -298,7 +298,7 @@ func (s *mailService) buildEmailForCustomerOS(email *interfaces.EmailMessageData
 		Subject:        email.Content.Subject,
 		CreatedAt:      email.CreatedAt,
 		ExternalSystem: externalSystem,
-		ExternalId:     email.Identifiers.MessageId,
+		ExternalId:     email.Identifiers.ProviderMessageId,
 		EmailThreadId:  email.Identifiers.EmailThreadId,
 		Channel:        "EMAIL",
 		ChannelData:    email.ChannelData,
@@ -562,6 +562,133 @@ func (s *mailService) GetEmailIdForEmail(ctx context.Context, txWithPostCommit *
 		}
 
 		return emailId, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+		return "", err
+	}
+
+	return output.(string), nil
+}
+
+func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, email string, source string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.GetOrganizationIdForEmail")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	span.LogKV("email", email)
+
+	if email == "" {
+		return "", nil
+	}
+	emailSyntax := mailsherpa.ValidateEmailSyntax(email)
+	if !emailSyntax.IsValid {
+		return "", nil
+	}
+
+	//if email and contact exists, return the org
+	emailId, err := s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, email)
+	if err != nil {
+		err = errors.Wrap(err, "failed to get email id for email")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if emailId != "" {
+		contactByEmail, err := s.contact.GetFirstContactByEmail(ctx, email)
+		if err != nil {
+			err := errors.Wrap(err, "failed to get contact by email")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		if contactByEmail != nil {
+			orgsForContact, err := s.org.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{contactByEmail.Id})
+			if err != nil {
+				err := errors.Wrap(err, "failed to get primary organizations with job role for contacts")
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+
+			if orgsForContact != nil && len(*orgsForContact) > 0 {
+				return (*orgsForContact)[0].Organization.ID, nil
+			}
+		}
+	}
+
+	output, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		var organizationNode *neo4j.Node
+		var organizationId string
+
+		// if it's a personal email or system generated email or role account eamil, we create just the email node in tenant
+		domain := utils.ExtractDomainFromEmail(email)
+		if domain == "" {
+			err = errors.New("unable to extract domain from email: " + email)
+			return "", err
+		}
+		if utils.Contains(s.cache.GetPersonalEmailProviders(), domain) ||
+			emailSyntax.IsSystemGenerated ||
+			emailSyntax.IsRoleAccount {
+			emailIdPtr, err := s.email.Merge(ctx, txWithPostCommit, tenant, interfaces.EmailFields{
+				Email:     email,
+				Source:    neo4jentity.DecodeDataSource(source),
+				AppSource: constants.AppSourceSyncEmail,
+			}, nil)
+			if err != nil {
+				return "", err
+			}
+			emailId = utils.IfNotNilString(emailIdPtr)
+			return "", nil
+		}
+
+		organizationNode, err = s.neo4j.OrganizationReadRepository.GetOrganizationByDomain(ctx, txWithPostCommit.Tx, tenant, domain)
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
+		}
+
+		if organizationNode == nil {
+			stage := neo4jenum.Lead
+			leadSource := ""
+
+			if source == neo4jentity.DataSourceGmail.String() {
+				leadSource = "Gmail"
+			} else if source == neo4jentity.DataSourceOutlook.String() {
+				leadSource = "Outlook"
+			} else if source == neo4jentity.DataSourceMailstack.String() {
+				leadSource = "Mailstack"
+				stage = neo4jenum.Target
+			} else {
+				leadSource = "Email"
+			}
+
+			organizationFields := data_fields.OrganizationFields{
+				LeadSource:   utils.StringPtr(leadSource),
+				Stage:        utils.ToPtr(stage),
+				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
+				Domains:      []string{domain},
+				Source:       utils.StringPtr(source),
+			}
+
+			organizationId, err = s.org.Save(ctx, txWithPostCommit, nil, organizationFields)
+			if err != nil {
+				return "", fmt.Errorf("failed to create organization: %w", err)
+			}
+		} else {
+			organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
+		}
+
+		contactId, err := s.contact.CreateContactByEmail(ctx, txWithPostCommit, email)
+		if err != nil {
+			return "", fmt.Errorf("unable to create contact: %w", err)
+		}
+
+		err = s.contact.LinkContactWithOrganization(ctx, txWithPostCommit, contactId, organizationId, "", "", source, false, nil, nil)
+
+		emailId, err = s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, email)
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve email id for tenant: %w", err)
+		}
+
+		return organizationId, nil
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))

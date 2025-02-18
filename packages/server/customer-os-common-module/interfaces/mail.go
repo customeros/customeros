@@ -21,12 +21,14 @@ type MailService interface {
 	ExtractEmails(s string) []string
 	GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string)
 	LoadEmail(ctx context.Context, rawEmail *postgres_entity.RawEmail) (EmailMessageData, error)
+	LoadIngestEmailMessage(ctx context.Context, rawEmail *postgres_entity.IngestEmailMessage) (EmailMessageData, error)
 	ProcessEmailCheck(ctx context.Context, tenant string, email *EmailMessageData) HeaderAnalysis
 	ProcessEmail(ctx context.Context, tenant string, emailId uuid.UUID) postgres_entity.UpdateRawEmailTable
 	ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) postgres_entity.UpdateRawEmailTable
 	SendMail(ctx context.Context, emailMessage *postgres_entity.EmailMessage) error
 	ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTransaction, emailMessage *postgres_entity.EmailMessage) (*string, error)
 	GetEmailIdForEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, email string, source string) (string, error)
+	GetOrganizationIdForEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, email string, source string) (string, error)
 }
 
 type HeaderAnalysis struct {
@@ -41,7 +43,6 @@ type HeaderAnalysis struct {
 // Email Raw Data
 type EmailRawData struct {
 	ProviderMessageId string            `json:"ProviderMessageId"`
-	MessageId         string            `json:"MessageId"`
 	Sent              string            `json:"Sent"`
 	Subject           string            `json:"Subject"`
 	From              string            `json:"From"`
@@ -122,13 +123,10 @@ func (ep EmailParticipants) GetReplyToEmailAddresses() []string {
 
 // identifiers
 type EmailIdentifiers struct {
-	EmailThreadId       string
-	ExternalSystem      string
-	ContactsExternalIds []string
-	UserExternalId      string
-	ProviderMessageId   string
-	MessageId           string
-	References          []string
+	EmailThreadId     string
+	ExternalSystem    string
+	ProviderMessageId string
+	References        []string
 }
 
 // Headers

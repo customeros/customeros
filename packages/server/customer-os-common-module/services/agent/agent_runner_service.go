@@ -167,6 +167,9 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 		if err != nil {
 			return err
 		}
+		if status == enum.CapabilityExecutionStop {
+			break
+		}
 		if status != enum.CapabilityExecutionCompleted {
 			return nil
 		}
@@ -304,6 +307,17 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 			"status":       status.String(),
 			"output":       output,
 			"completed_at": time.Now().UTC(),
+		}
+		if err := a.postgresRepositories.AgentExecutionRepository.CompleteStep(ctx, params.executionID, params.capabilityTypeStr, checkpointData); err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+	case enum.CapabilityExecutionStop:
+		checkpointData := map[string]any{
+			"status":     status.String(),
+			"output":     output,
+			"stopped_at": time.Now().UTC(),
 		}
 		if err := a.postgresRepositories.AgentExecutionRepository.CompleteStep(ctx, params.executionID, params.capabilityTypeStr, checkpointData); err != nil {
 			tracing.TraceErr(span, err)

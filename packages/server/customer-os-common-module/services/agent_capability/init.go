@@ -24,6 +24,7 @@ func InitCapabilities(
 	enrichmentService interfaces.EnrichmentService,
 	invoiceService interfaces.InvoiceService,
 	markdownService interfaces.MarkdownEventService,
+	mailService interfaces.MailService,
 	notificationService interfaces.NotificationService,
 	organizationService interfaces.OrganizationService,
 	tagService interfaces.TagService,
@@ -56,8 +57,8 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewProcessAutopaymentCapability(invoiceService))
 	capabilities = append(capabilities, NewCreatePaymentLinkCapability(invoiceService))
 	capabilities = append(capabilities, NewLogRequestsForHelpCapability(markdownService))
-	capabilities = append(capabilities, NewClassifyEmailCapability())
-	capabilities = append(capabilities, NewIdentifyParticipantsCapability())
+	capabilities = append(capabilities, NewClassifyEmailCapability(postgresRepositories, mailService))
+	capabilities = append(capabilities, NewIdentifyEmailParticipantsCapability(postgresRepositories, mailService))
 	capabilities = append(capabilities, NewSummarizeMessageCapability())
 	capabilities = append(capabilities, NewSummarizeThreadCapability())
 	capabilities = append(capabilities, NewIngestEmailCapability())

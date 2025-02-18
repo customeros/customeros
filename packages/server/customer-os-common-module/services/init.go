@@ -277,6 +277,7 @@ func InitCommonServices(
 		enrichmentImpl,
 		invoiceImpl,
 		markdownEventImpl,
+		mailImpl,
 		notificationImpl,
 		orgImpl,
 		tagImpl,

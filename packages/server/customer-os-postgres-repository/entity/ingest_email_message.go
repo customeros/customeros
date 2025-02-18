@@ -31,6 +31,8 @@ type IngestEmailMessage struct {
 	ProviderThreadId   string `gorm:"size:255;not null;"`
 	ProviderInReplyTo  string `gorm:"type:text"`
 	ProviderReferences string `gorm:"type:text"`
+
+	Headers string `gorm:"type:text"`
 }
 
 func (IngestEmailMessage) TableName() string {

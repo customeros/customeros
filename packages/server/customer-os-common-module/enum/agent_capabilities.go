@@ -11,6 +11,7 @@ const (
 	CapabilityExecutionError     CapabilityExecutionStatus = "ERROR"
 	CapabilityExecutionPending   CapabilityExecutionStatus = "PENDING"
 	CapabilityExecutionCompleted CapabilityExecutionStatus = "COMPLETED"
+	CapabilityExecutionStop      CapabilityExecutionStatus = "STOP"
 )
 
 func (t CapabilityExecutionStatus) String() string {
@@ -23,6 +24,7 @@ func GetCapabilityExecutionStatus(s string) (CapabilityExecutionStatus, error) {
 		CapabilityExecutionRetry,
 		CapabilityExecutionError,
 		CapabilityExecutionPending,
+		CapabilityExecutionStop,
 		CapabilityExecutionCompleted:
 		return CapabilityExecutionStatus(s), nil
 
@@ -79,7 +81,7 @@ const (
 	CapabilityProcessAutopayment                 AgentCapability = "process_autopayment"
 	CapabilityCreatePaymentLink                  AgentCapability = "create_payment_link"
 	CapabilityClassifyEmail                      AgentCapability = "classify_email"
-	CapabilityIdentifyParticipants               AgentCapability = "identify_participants"
+	CapabilityIdentifyEmailParticipants          AgentCapability = "identify_email_participants"
 	CapabilitySummarizeMessage                   AgentCapability = "summarize_message"
 	CapabilitySummarizeThread                    AgentCapability = "summarize_thread"
 	CapabilityIngestEmail                        AgentCapability = "ingest_email"
@@ -140,7 +142,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityValidateEmailAddressDeliverability,
 		CapabilityProcessAutopayment,
 		CapabilityClassifyEmail,
-		CapabilityIdentifyParticipants,
+		CapabilityIdentifyEmailParticipants,
 		CapabilitySummarizeMessage,
 		CapabilitySummarizeThread,
 		CapabilityIngestEmail,
