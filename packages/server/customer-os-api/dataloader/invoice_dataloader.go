@@ -33,7 +33,7 @@ func (i *Loaders) GetInvoicesForContract(ctx context.Context, contractId string)
 }
 
 func (i *Loaders) GetInvoicesForServiceLineItem(ctx context.Context, sliId string) (*neo4jentity.InvoiceEntities, error) {
-	thunk := i.InvoicesForContract.Load(ctx, dataloader.StringKey(sliId))
+	thunk := i.InvoicesForServiceLineItem.Load(ctx, dataloader.StringKey(sliId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
