@@ -8,14 +8,15 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // AgentSave is the resolver for the agent_Save field.
@@ -161,6 +162,12 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 		agent := mapper.MapAgentToModel(agentEntity)
 		agent.Goal = (*agentInfo)[agentEntity.Type].Goal
 		agent.Description = (*agentInfo)[agentEntity.Type].Description
+		metric, err := r.Services.CommonServices.AgentService.GetNorthStarMetricById(ctx, agent.ID, agentEntity.Type)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		agent.Metric = metric
 		agents = append(agents, agent)
 	}
 	return agents, nil
@@ -173,13 +180,29 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogKV("id", id)
 
+	agentInfo, err := r.Services.CommonServices.AgentService.GetAgentInfo(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	agentEntity, err := r.Services.CommonServices.AgentService.GetAgentById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get agent")
 		return nil, nil
 	}
-	return mapper.MapAgentToModel(agentEntity), nil
+	agent := mapper.MapAgentToModel(agentEntity)
+	agent.Goal = (*agentInfo)[agentEntity.Type].Goal
+	agent.Description = (*agentInfo)[agentEntity.Type].Description
+	metric, err := r.Services.CommonServices.AgentService.GetNorthStarMetricById(ctx, agent.ID, agentEntity.Type)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	agent.Metric = metric
+
+	return agent, nil
 }
 
 // SlackChannelsWithBot is the resolver for the slackChannelsWithBot field.
