@@ -561,9 +561,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
 				}
-				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-				}
+
+				s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})

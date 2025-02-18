@@ -65,6 +65,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.EmailImportS
 		}(oAuthTokenEntity)
 	}
 
+	wg.Wait()
 }
 
 func (s *ingestEmailService) SendIngestedEmailsToAgents() {
@@ -99,17 +100,17 @@ func (s *ingestEmailService) SendIngestedEmailsToAgents() {
 			}
 
 			for _, ingestEmailMessage := range ingestEmailMessages {
-				ctx = common.WithCustomContext(ctx, &common.CustomContext{
+				localCtx := common.WithCustomContext(ctx, &common.CustomContext{
 					Tenant: distinctUser.Tenant,
 				})
 
-				err = s.commonServices.Events.Publisher.PublishFanoutEvent(ctx, ingestEmailMessage.Id, model.INGEST_EMAIL_MESSAGE, dto.NewEmail{})
+				err = s.commonServices.Events.Publisher.PublishFanoutEvent(localCtx, ingestEmailMessage.Id, model.INGEST_EMAIL_MESSAGE, dto.NewEmail{})
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return
 				}
 
-				err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.UpdateState(ctx, ingestEmailMessage.Id, postgresEntity.IngestEmailMessageStateSentToAgent)
+				err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.UpdateState(localCtx, ingestEmailMessage.Id, postgresEntity.IngestEmailMessageStateSentToAgent)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return
@@ -474,6 +475,12 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 			return nil, err
 		}
 
+		headersString, err := JSONMarshal(emailRawData.Headers)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
 		ingestEmailMessage := postgresEntity.IngestEmailMessage{
 			Tenant:   importState.Tenant,
 			Username: importState.Username,
@@ -495,6 +502,8 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 			ProviderThreadId:   emailRawData.ThreadId,
 			ProviderInReplyTo:  emailRawData.InReplyTo,
 			ProviderReferences: emailRawData.Reference,
+
+			Headers: string(headersString),
 		}
 
 		err = s.commonServices.PostgresRepositories.IngestEmailMessageRepository.Store(ctx, externalSystem, importState.Tenant, importState.Username, emailRawData.ProviderMessageId, &ingestEmailMessage)

@@ -14,6 +14,7 @@ type IngestEmailMessageRepository interface {
 	Store(ctx context.Context, tenant, username, provider, providerMessageId string, ingestEmailMessage *postgres_entity.IngestEmailMessage) error
 	UpdateState(ctx context.Context, id string, state postgres_entity.IngestEmailMessageState) error
 
+	GetEmail(ctx context.Context, id string) (*postgres_entity.IngestEmailMessage, error)
 	GetDistinctUsersForPendingMessages(ctx context.Context) ([]postgres_entity.IngestEmailMessage, error)
 	GetEmailsForUserForSync(ctx context.Context, tenant, username string) ([]postgres_entity.IngestEmailMessage, error)
 }
@@ -69,6 +70,17 @@ func (repo *ingestEmailMessageRepositoryImpl) UpdateState(ctx context.Context, i
 	}
 
 	return nil
+}
+
+func (repo *ingestEmailMessageRepositoryImpl) GetEmail(ctx context.Context, id string) (*postgres_entity.IngestEmailMessage, error) {
+	result := postgres_entity.IngestEmailMessage{}
+	err := repo.gormDb.First(&result, "id = ? ", id).Error
+	if err != nil {
+		tracing.TraceErr(nil, err)
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) GetDistinctUsersForPendingMessages(ctx context.Context) ([]postgres_entity.IngestEmailMessage, error) {

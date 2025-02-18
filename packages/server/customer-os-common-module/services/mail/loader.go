@@ -19,6 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
+// deprecated
 func (l *mailService) LoadEmail(ctx context.Context, rawEmail *postgres_entity.RawEmail) (interfaces.EmailMessageData, error) {
 	span, ctx := l.initializeTracing(ctx, "MailService.LoadEmail")
 	defer span.Finish()
@@ -36,7 +37,6 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *postgres_entity.R
 	email.Headers = l.parseHeaders(emailData.Headers)
 
 	email.Identifiers.ProviderMessageId = emailData.ProviderMessageId
-	email.Identifiers.MessageId = emailData.MessageId
 	email.Identifiers.EmailThreadId = emailData.ThreadId
 	email.Identifiers.References = extractLines(emailData.Reference)
 	email.Identifiers.ExternalSystem = rawEmail.ExternalSystem
@@ -50,6 +50,47 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *postgres_entity.R
 	email.Participants.To = l.parseParticipants(emailData.To)
 	email.Participants.Cc = l.parseParticipants(emailData.Cc)
 	email.Participants.Bcc = l.parseParticipants(emailData.Bcc)
+	email.Participants.ReplyTo = []interfaces.EmailParticipant{l.parseEmailAndName(email.Headers.ReplyTo)}
+	l.getAllEmails(&email.Participants)
+
+	span.LogKV("result.From", email.Participants.From)
+	span.LogKV("result.To", email.Participants.To)
+	span.LogKV("result.Cc", email.Participants.Cc)
+	span.LogKV("result.Bcc", email.Participants.Bcc)
+
+	return email, nil
+}
+
+func (l *mailService) LoadIngestEmailMessage(ctx context.Context, ingestEmailMessage *postgres_entity.IngestEmailMessage) (interfaces.EmailMessageData, error) {
+	span, ctx := l.initializeTracing(ctx, "MailService.LoadIngestEmailMessage")
+	defer span.Finish()
+	span.LogFields(tracingLog.Object("ingestEmailMessage", ingestEmailMessage))
+
+	email := interfaces.EmailMessageData{}
+
+	headers := make(map[string]string)
+	err := json.Unmarshal([]byte(ingestEmailMessage.Headers), &headers)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return email, err
+	}
+
+	email.Headers = l.parseHeaders(headers)
+
+	email.Identifiers.ProviderMessageId = ingestEmailMessage.ProviderMessageId
+	email.Identifiers.EmailThreadId = ingestEmailMessage.ProviderThreadId
+	email.Identifiers.References = extractLines(ingestEmailMessage.ProviderReferences)
+	email.Identifiers.ExternalSystem = ingestEmailMessage.Provider
+
+	email.Content.SentDate = ingestEmailMessage.SentAt.String()
+	email.Content.Subject = ingestEmailMessage.Subject
+	email.Content.Html = ingestEmailMessage.HtmlContent
+	email.Content.Text = ingestEmailMessage.TextContent
+
+	email.Participants.From = l.parseEmailAndName(ingestEmailMessage.From)
+	email.Participants.To = l.parseParticipants(ingestEmailMessage.To)
+	email.Participants.Cc = l.parseParticipants(ingestEmailMessage.Cc)
+	email.Participants.Bcc = l.parseParticipants(ingestEmailMessage.Bcc)
 	email.Participants.ReplyTo = []interfaces.EmailParticipant{l.parseEmailAndName(email.Headers.ReplyTo)}
 	l.getAllEmails(&email.Participants)
 

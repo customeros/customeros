@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -14,7 +15,8 @@ import (
 )
 
 type SummarizeThreadInput struct {
-	Prompt string `json:"prompt"`
+	EntityId   string           `json:"entityId"`
+	EntityType model.EntityType `json:"entityType"`
 }
 
 type SummarizeThreadCapability struct {
@@ -55,7 +57,12 @@ func (c *SummarizeThreadCapability) ValidateConfig(postgres_entity.NoConfig) err
 }
 
 func (c *SummarizeThreadCapability) ValidateInput(input SummarizeThreadInput) error {
-	//todo
+	if input.EntityId == "" {
+		return errors.New("entityId is required")
+	}
+	if input.EntityType == "" {
+		return errors.New("entityType is required")
+	}
 	return nil
 }
 

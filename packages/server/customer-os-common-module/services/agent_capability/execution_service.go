@@ -252,7 +252,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityClassifyEmail:
-		executor, ok := GetTypedExecutor[ClassifyEmailInput, NoOutput, postgres_entity.NoConfig](
+		executor, ok := GetTypedExecutor[ClassifyEmailInput, ClassifyEmailOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
@@ -261,13 +261,13 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
-	case enum.CapabilityIdentifyParticipants:
-		executor, ok := GetTypedExecutor[IdentifyParticipantsInput, NoOutput, postgres_entity.NoConfig](
+	case enum.CapabilityIdentifyEmailParticipants:
+		executor, ok := GetTypedExecutor[IdentifyEmailParticipantsInput, IdentifyEmailParticipantsOutput, postgres_entity.NoConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
 		if !ok {
-			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyParticipants)
+			return enum.CapabilityExecutionError, nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyEmailParticipants)
 		}
 		return executeCapability(ctx, executor, executionContainer)
 
@@ -360,6 +360,9 @@ func executeCapability[I, O, C any](
 	case enum.CapabilityExecutionError:
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, nil, err
+
+	case enum.CapabilityExecutionStop:
+		return enum.CapabilityExecutionStop, nil, nil
 
 	case enum.CapabilityExecutionPending:
 		// todo  -- need to implement poll until done
