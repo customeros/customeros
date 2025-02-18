@@ -12,6 +12,7 @@ COS_URL="https://api.customeros.ai"
 declare -a ALL_TEST_NAMES
 declare -a ALL_TEST_STATUSES
 declare -a ORGANIZATION_IDS
+declare -a CONTACT_IDS
 
 # Initialize overall test status
 TESTS_FAILED=0
@@ -34,6 +35,82 @@ extract_org_id() {
     fi
 }
 
+# Function to fetch and hide contacts
+fetch_and_hide_contacts() {
+    echo "Fetching contacts to hide..." | tee -a test-output.txt
+
+    # Create temporary contact search file
+    cat > contact_search.hurl << EOF
+POST ${COS_URL}/query
+Content-Type: application/json
+X-CUSTOMER-OS-API-KEY: ${HURL_TENANT_API_KEY}
+{
+    "query": "query searchContacts(\$limit: Int, \$where: Filter, \$sort: SortBy) { ui_contacts_search(limit: \$limit, where: \$where, sort: \$sort) { ids totalElements totalAvailable } }",
+    "variables": {
+        "where": {
+            "AND": [{
+                "filter": {
+                    "property": "CONTACTS_PRIMARY_EMAIL",
+                    "operation": "CONTAINS",
+                    "value": "hurl-"
+                }
+            }]
+        },
+        "sort": {
+            "by": "CONTACTS_UPDATED_AT",
+            "direction": "DESC"
+        }
+    },
+    "operationName": "searchContacts"
+}
+
+HTTP 200
+[Captures]
+contact_ids: jsonpath "$.data.ui_contacts_search.ids"
+EOF
+
+    # Run contact search
+    contact_search_output=$(hurl --very-verbose contact_search.hurl)
+    rm -f contact_search.hurl
+
+    # Extract contact IDs from the response
+    if [[ $contact_search_output =~ \"ui_contacts_search\":[[:space:]]*{[[:space:]]*\"ids\":[[:space:]]*\[([^\]]*)\] ]]; then
+        IFS=',' read -ra CONTACT_IDS <<< "${BASH_REMATCH[1]//\"/}"
+        echo "Found ${#CONTACT_IDS[@]} contacts to hide" | tee -a test-output.txt
+
+        # Hide each contact
+        for contact_id in "${CONTACT_IDS[@]}"; do
+            contact_id=${contact_id// /}  # Remove any whitespace
+            if [ ! -z "$contact_id" ]; then
+                echo "Hiding contact: $contact_id" | tee -a test-output.txt
+
+                # Create temporary hide contact file
+                cat > hide_contact.hurl << EOF
+POST ${COS_URL}/query
+Content-Type: application/json
+X-CUSTOMER-OS-API-KEY: ${HURL_TENANT_API_KEY}
+{
+    "query": "mutation HideContact(\$contactId: ID!) { contact_Hide(contactId: \$contactId) { accepted } }",
+    "variables": {
+        "contactId": "${contact_id}"
+    }
+}
+
+HTTP 200
+[Asserts]
+jsonpath "$.data.contact_Hide.accepted" == true
+EOF
+
+                # Run hide contact operation
+                hurl --very-verbose hide_contact.hurl >> test-output.txt 2>&1
+                rm -f hide_contact.hurl
+            fi
+        done
+    else
+        echo "No contacts found to hide" | tee -a test-output.txt
+    fi
+}
+
 # Process each test file
 while IFS= read -r test_file
 do
@@ -41,7 +118,7 @@ do
 
     # Generate timestamp for this specific test
     TIMESTAMP=$(date +%s)
-    capitalized_custom_id="AGENT_${TIMESTAMP}"  # Adding AGENT_ prefix for clarity
+    capitalized_custom_id="hurl-${TIMESTAMP}"  # Adding AGENT_ prefix for clarity
     RANDOM_STRING=$(openssl rand -base64 12 | tr -dc 'a-z' | fold -w 10 | head -n 1)
 
     # Get the test name from the file
@@ -143,10 +220,14 @@ do
     rm -f temp_output.txt
 done < <(find . -name "*.hurl")
 
-# Run teardown for organization cleanup
-if [ ${#ORGANIZATION_IDS[@]} -gt 0 ]; then
-    echo "Running teardown operations..." | tee -a test-output.txt
+# Run teardown for organization and contact cleanup
+echo "Running teardown operations..." | tee -a test-output.txt
 
+# First, handle contacts
+fetch_and_hide_contacts
+
+# Then handle organizations
+if [ ${#ORGANIZATION_IDS[@]} -gt 0 ]; then
     # Convert organization IDs array to JSON array format
     printf -v org_ids_json '"%s",' "${ORGANIZATION_IDS[@]}"
     org_ids_json="[${org_ids_json%,}]"
@@ -185,7 +266,7 @@ EOF
     # Clean up temporary teardown file
     rm -f teardown.hurl
 else
-    echo "No organization IDs collected, skipping teardown" | tee -a test-output.txt
+    echo "No organization IDs collected, skipping organization cleanup" | tee -a test-output.txt
 fi
 
 # Print final aggregated summary
