@@ -124,12 +124,7 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 		return nil, err
 	}
 
-	user := common.GetUserIdFromContext(ctx)
-	if user == "" {
-		err := errors.New("UserID not set on context")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	userId := common.GetUserIdFromContext(ctx)
 
 	var agents []*postgres_entity.Agent
 	query := f.gormDb.
@@ -140,8 +135,8 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 			return db.Order("position ASC")
 		}).
 		Where(
-			"(tenant = ? AND agent_scope = ? ) OR (tenant = ? AND owner = ? AND agent_scope = ?)",
-			tenant, enum.AgentScopeWorkspace, tenant, user, enum.AgentScopePersonal,
+			"(tenant = ? AND agent_scope = ? ) OR (tenant = ? AND owner = ? AND owner <> '' AND agent_scope = ?)",
+			tenant, enum.AgentScopeWorkspace, tenant, userId, enum.AgentScopePersonal,
 		)
 
 	err := query.Find(&agents).Error
