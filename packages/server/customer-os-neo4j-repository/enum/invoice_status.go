@@ -3,16 +3,16 @@ package enum
 type InvoiceStatus string
 
 const (
-	InvoiceStatusNone        InvoiceStatus = ""
-	InvoiceStatusInitialized InvoiceStatus = "INITIALIZED"
-	InvoiceStatusDue         InvoiceStatus = "DUE"
-	InvoiceStatusPaid        InvoiceStatus = "PAID"
-	InvoiceStatusVoid        InvoiceStatus = "VOID"
-	InvoiceStatusScheduled   InvoiceStatus = "SCHEDULED"
-	InvoiceStatusOverdue     InvoiceStatus = "OVERDUE"
-	InvoiceStatusProcessing  InvoiceStatus = "PROCESSING"
-	InvoiceStatusOnHold      InvoiceStatus = "ON_HOLD"
-	InvoiceStatusEmpty       InvoiceStatus = "EMPTY"
+	InvoiceStatusNone              InvoiceStatus = ""
+	InvoiceStatusInitialized       InvoiceStatus = "INITIALIZED"
+	InvoiceStatusDue               InvoiceStatus = "DUE"
+	InvoiceStatusPaid              InvoiceStatus = "PAID"
+	InvoiceStatusVoid              InvoiceStatus = "VOID"
+	InvoiceStatusScheduled         InvoiceStatus = "SCHEDULED"
+	InvoiceStatusOverdue           InvoiceStatus = "OVERDUE"
+	InvoiceStatusOnHold            InvoiceStatus = "ON_HOLD"
+	InvoiceStatusEmpty             InvoiceStatus = "EMPTY"
+	InvoiceStatusPaymentProcessing InvoiceStatus = "PAYMENT_PROCESSING"
 )
 
 var AllInvoiceStatuses = []InvoiceStatus{
@@ -25,7 +25,7 @@ var AllInvoiceStatuses = []InvoiceStatus{
 	InvoiceStatusOverdue,
 	InvoiceStatusOnHold,
 	InvoiceStatusEmpty,
-	InvoiceStatusProcessing,
+	InvoiceStatusPaymentProcessing,
 }
 
 func DecodeInvoiceStatus(s string) InvoiceStatus {

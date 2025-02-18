@@ -8,15 +8,16 @@ import (
 )
 
 var invoiceStatusByModel = map[model.InvoiceStatus]neo4jenum.InvoiceStatus{
-	model.InvoiceStatusDraft:       neo4jenum.InvoiceStatusInitialized,
-	model.InvoiceStatusInitialized: neo4jenum.InvoiceStatusInitialized,
-	model.InvoiceStatusDue:         neo4jenum.InvoiceStatusDue,
-	model.InvoiceStatusPaid:        neo4jenum.InvoiceStatusPaid,
-	model.InvoiceStatusVoid:        neo4jenum.InvoiceStatusVoid,
-	model.InvoiceStatusScheduled:   neo4jenum.InvoiceStatusScheduled,
-	model.InvoiceStatusOverdue:     neo4jenum.InvoiceStatusOverdue,
-	model.InvoiceStatusOnHold:      neo4jenum.InvoiceStatusOnHold,
-	model.InvoiceStatusEmpty:       neo4jenum.InvoiceStatusEmpty,
+	model.InvoiceStatusDraft:             neo4jenum.InvoiceStatusInitialized,
+	model.InvoiceStatusInitialized:       neo4jenum.InvoiceStatusInitialized,
+	model.InvoiceStatusDue:               neo4jenum.InvoiceStatusDue,
+	model.InvoiceStatusPaid:              neo4jenum.InvoiceStatusPaid,
+	model.InvoiceStatusVoid:              neo4jenum.InvoiceStatusVoid,
+	model.InvoiceStatusScheduled:         neo4jenum.InvoiceStatusScheduled,
+	model.InvoiceStatusOverdue:           neo4jenum.InvoiceStatusOverdue,
+	model.InvoiceStatusOnHold:            neo4jenum.InvoiceStatusOnHold,
+	model.InvoiceStatusEmpty:             neo4jenum.InvoiceStatusEmpty,
+	model.InvoiceStatusPaymentProcessing: neo4jenum.InvoiceStatusPaymentProcessing,
 }
 
 var invoiceStatusByValue = utils.ReverseMap(invoiceStatusByModel)

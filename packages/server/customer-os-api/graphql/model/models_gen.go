@@ -4596,14 +4596,15 @@ type InvoiceStatus string
 const (
 	InvoiceStatusInitialized InvoiceStatus = "INITIALIZED"
 	// Deprecated, replaced by INITIALIZED
-	InvoiceStatusDraft     InvoiceStatus = "DRAFT"
-	InvoiceStatusDue       InvoiceStatus = "DUE"
-	InvoiceStatusOverdue   InvoiceStatus = "OVERDUE"
-	InvoiceStatusPaid      InvoiceStatus = "PAID"
-	InvoiceStatusVoid      InvoiceStatus = "VOID"
-	InvoiceStatusScheduled InvoiceStatus = "SCHEDULED"
-	InvoiceStatusOnHold    InvoiceStatus = "ON_HOLD"
-	InvoiceStatusEmpty     InvoiceStatus = "EMPTY"
+	InvoiceStatusDraft             InvoiceStatus = "DRAFT"
+	InvoiceStatusDue               InvoiceStatus = "DUE"
+	InvoiceStatusOverdue           InvoiceStatus = "OVERDUE"
+	InvoiceStatusPaid              InvoiceStatus = "PAID"
+	InvoiceStatusVoid              InvoiceStatus = "VOID"
+	InvoiceStatusScheduled         InvoiceStatus = "SCHEDULED"
+	InvoiceStatusOnHold            InvoiceStatus = "ON_HOLD"
+	InvoiceStatusEmpty             InvoiceStatus = "EMPTY"
+	InvoiceStatusPaymentProcessing InvoiceStatus = "PAYMENT_PROCESSING"
 )
 
 var AllInvoiceStatus = []InvoiceStatus{
@@ -4616,11 +4617,12 @@ var AllInvoiceStatus = []InvoiceStatus{
 	InvoiceStatusScheduled,
 	InvoiceStatusOnHold,
 	InvoiceStatusEmpty,
+	InvoiceStatusPaymentProcessing,
 }
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusOverdue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled, InvoiceStatusOnHold, InvoiceStatusEmpty:
+	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusOverdue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled, InvoiceStatusOnHold, InvoiceStatusEmpty, InvoiceStatusPaymentProcessing:
 		return true
 	}
 	return false

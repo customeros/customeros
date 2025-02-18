@@ -33,8 +33,9 @@ type InvoiceReadRepository interface {
 	GetInvoicesForOverdue(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForOnHold(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
-	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	//Deprecated ,replaced with autopayment agent capability
+	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 }
 
 type invoiceReadRepository struct {
@@ -277,7 +278,7 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 		"lookbackWindow":         lookbackWindow,
 		"limit":                  limit,
 		"statuses": []string{
-			neo4jenum.InvoiceStatusDue.String(), neo4jenum.InvoiceStatusOverdue.String(), neo4jenum.InvoiceStatusProcessing.String(),
+			neo4jenum.InvoiceStatusDue.String(), neo4jenum.InvoiceStatusOverdue.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))
@@ -813,6 +814,7 @@ func (r *invoiceReadRepository) GetNonDryRunInvoicesForOrganization(ctx context.
 			neo4jenum.InvoiceStatusPaid.String(),
 			neo4jenum.InvoiceStatusVoid.String(),
 			neo4jenum.InvoiceStatusOnHold.String(),
+			neo4jenum.InvoiceStatusPaymentProcessing.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))

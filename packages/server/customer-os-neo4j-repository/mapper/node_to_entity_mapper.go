@@ -154,8 +154,9 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 			PayInvoiceNotificationSentAt:         utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
 			RemindInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyRemindInvoiceNotificationRequestedAt)),
 			LastRemindInvoiceNotificationSentAt:  utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyLastRemindInvoiceNotificationSentAt)),
-			PaidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
-			VoidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, "techVoidInvoiceNotificationSentAt"),
+			PaidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPaidInvoiceNotificationSentAt)),
+			VoidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyVoidInvoiceNotificationRequestAt)),
+			PaymentProcessingAt:                  utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPaymentProcessingAt)),
 		},
 		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),

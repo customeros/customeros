@@ -73,9 +73,13 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 			// Handle scenario: Invoice voided
 			c.JSON(http.StatusGone, gin.H{"error": "Invoice is voided"})
 			return
+		case neo4jenum.InvoiceStatusPaymentProcessing:
+			// Handle scenario: Invoice in payment processing
+			c.JSON(http.StatusSeeOther, gin.H{"error": "Processing bank payment. Cannot pay now."})
+			return
 		case neo4jenum.InvoiceStatusOnHold:
 			// Handle scenario: Invoice voided
-			c.JSON(http.StatusGone, gin.H{"error": "Invoice is on holde"})
+			c.JSON(http.StatusGone, gin.H{"error": "Invoice is on hold"})
 			return
 		}
 

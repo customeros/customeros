@@ -248,6 +248,10 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tx *neo4j.Ma
 	if data.UpdateStatus && data.Status.String() != "" {
 		cypher += `, i.status=$status`
 		params["status"] = data.Status.String()
+		if data.Status == neo4jenum.InvoiceStatusPaymentProcessing {
+			cypher += `, i.techPaymentProcessingAt = CASE WHEN i.status <> $paymentProcessingStatus THEN datetime() ELSE i.techPaymentProcessingAt END `
+			params["paymentProcessingStatus"] = neo4jenum.InvoiceStatusPaymentProcessing.String()
+		}
 	}
 	if data.UpdatePaymentLink {
 		cypher += `, i.paymentLink=$paymentLink`

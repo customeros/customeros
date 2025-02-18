@@ -191,6 +191,8 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 				invoiceUpdateFields.Status = neo4jenum.InvoiceStatusPaid
 			case "due":
 				invoiceUpdateFields.Status = neo4jenum.InvoiceStatusDue
+			case "payment_processing":
+				invoiceUpdateFields.Status = neo4jenum.InvoiceStatusPaymentProcessing
 			}
 			invoiceUpdateFields.UpdateStatus = true
 		}
