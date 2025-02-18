@@ -2,16 +2,15 @@ package dto
 
 import (
 	"encoding/json"
-	"time"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"time"
 )
 
 type NewMeetingRecording struct {
 	MeetingTitle        string      `json:"meetingTitle,omitempty"`
-	ParticipantEmails   *[]string   `json:"meetingParticipantEmails,omitempty"`
-	Content             *string     `json:"meetingContent,omitempty"`
-	Timestamp           *time.Time  `json:"meetingTimestamp,omitempty"`
+	ParticipantEmails   []string    `json:"meetingParticipantEmails,omitempty" `
+	Content             string      `json:"meetingContent,omitempty"`
+	Timestamp           time.Time   `json:"meetingTimestamp,omitempty"`
 	Source              enum.Source `json:"meetingSource,omitempty"`
 	MeetingRecordingUrl string      `json:"meetingRecordingUrl"`
 }

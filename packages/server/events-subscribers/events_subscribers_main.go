@@ -256,6 +256,13 @@ func (a *App) initializeListeners() error {
 		a.deps.CommonServices.AgentRunnerService,
 	))
 
+	// fathom and grain listeners
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewNewMeetingRecordingListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+
 	return nil
 }
 
