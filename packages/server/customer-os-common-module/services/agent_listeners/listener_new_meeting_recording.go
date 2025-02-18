@@ -121,7 +121,7 @@ func (l *NewMeetingRecordingListener) Handle(ctx context.Context, baseEvent any)
 		return err
 	}
 
-	if data.Content == nil {
+	if data.Content == "" {
 		err := errors.New("No meeting content")
 		tracing.TraceErr(span, err)
 		return err
