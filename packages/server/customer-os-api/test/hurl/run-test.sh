@@ -39,8 +39,8 @@ extract_org_id() {
 fetch_and_hide_contacts() {
     echo "Fetching contacts to hide..." | tee -a test-output.txt
 
-    # Create temporary contact search file
-    cat > contact_search.hurl << EOF
+    # First query - search by email
+    cat > contact_search_email.hurl << EOF
 POST ${COS_URL}/query
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: ${HURL_TENANT_API_KEY}
@@ -69,23 +69,84 @@ HTTP 200
 contact_ids: jsonpath "$.data.ui_contacts_search.ids"
 EOF
 
-    # Run contact search
-    contact_search_output=$(hurl --very-verbose contact_search.hurl)
-    rm -f contact_search.hurl
+    # Second query - search by LinkedIn URL
+    cat > contact_search_linkedin.hurl << EOF
+POST ${COS_URL}/query
+Content-Type: application/json
+X-CUSTOMER-OS-API-KEY: ${HURL_TENANT_API_KEY}
+{
+    "query": "query searchContacts(\$limit: Int, \$where: Filter, \$sort: SortBy) { ui_contacts_search(limit: \$limit, where: \$where, sort: \$sort) { ids totalElements totalAvailable } }",
+    "variables": {
+        "where": {
+            "AND": [{
+                "filter": {
+                    "property": "CONTACTS_LINKEDIN",
+                    "operation": "CONTAINS",
+                    "includeEmpty": false,
+                    "value": "https://linkedin.com/in/hurl"
+                }
+            }]
+        },
+        "sort": {
+            "by": "CONTACTS_UPDATED_AT",
+            "direction": "DESC"
+        }
+    },
+    "operationName": "searchContacts"
+}
 
-    # Extract contact IDs from the response
+HTTP 200
+[Captures]
+linkedin_contact_ids: jsonpath "$.data.ui_contacts_search.ids"
+EOF
+
+    # Run both contact searches
+    echo "Searching for contacts with email containing 'hurl-'..." | tee -a test-output.txt
+    contact_search_output=$(hurl --very-verbose contact_search_email.hurl)
+
+    echo "Searching for contacts with LinkedIn URLs containing 'hurl'..." | tee -a test-output.txt
+    linkedin_search_output=$(hurl --very-verbose contact_search_linkedin.hurl)
+
+    # Clean up temporary files
+    rm -f contact_search_email.hurl contact_search_linkedin.hurl
+
+    # Process both sets of contact IDs
+    declare -a all_contact_ids=()
+
+    # Process email-based contacts
     if [[ $contact_search_output =~ \"ui_contacts_search\":[[:space:]]*{[[:space:]]*\"ids\":[[:space:]]*\[([^\]]*)\] ]]; then
-        IFS=',' read -ra CONTACT_IDS <<< "${BASH_REMATCH[1]//\"/}"
-        echo "Found ${#CONTACT_IDS[@]} contacts to hide" | tee -a test-output.txt
+        IFS=',' read -ra email_contacts <<< "${BASH_REMATCH[1]//\"/}"
+        for id in "${email_contacts[@]}"; do
+            id=${id// /}  # Remove any whitespace
+            if [ ! -z "$id" ]; then
+                all_contact_ids+=("$id")
+            fi
+        done
+    fi
 
-        # Hide each contact
-        for contact_id in "${CONTACT_IDS[@]}"; do
-            contact_id=${contact_id// /}  # Remove any whitespace
-            if [ ! -z "$contact_id" ]; then
-                echo "Hiding contact: $contact_id" | tee -a test-output.txt
+    # Process LinkedIn-based contacts
+    if [[ $linkedin_search_output =~ \"ui_contacts_search\":[[:space:]]*{[[:space:]]*\"ids\":[[:space:]]*\[([^\]]*)\] ]]; then
+        IFS=',' read -ra linkedin_contacts <<< "${BASH_REMATCH[1]//\"/}"
+        for id in "${linkedin_contacts[@]}"; do
+            id=${id// /}  # Remove any whitespace
+            if [ ! -z "$id" ]; then
+                all_contact_ids+=("$id")
+            fi
+        done
+    fi
 
-                # Create temporary hide contact file
-                cat > hide_contact.hurl << EOF
+    # Remove duplicates from all_contact_ids
+    all_contact_ids=($(echo "${all_contact_ids[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+
+    echo "Found ${#all_contact_ids[@]} total unique contacts to hide" | tee -a test-output.txt
+
+    # Hide each contact
+    for contact_id in "${all_contact_ids[@]}"; do
+        if [ ! -z "$contact_id" ]; then
+            echo "Hiding contact: $contact_id" | tee -a test-output.txt
+
+            # Create temporary hide contact file
+            cat > hide_contact.hurl << EOF
 POST ${COS_URL}/query
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: ${HURL_TENANT_API_KEY}
@@ -101,14 +162,11 @@ HTTP 200
 jsonpath "$.data.contact_Hide.accepted" == true
 EOF
 
-                # Run hide contact operation
-                hurl --very-verbose hide_contact.hurl >> test-output.txt 2>&1
-                rm -f hide_contact.hurl
-            fi
-        done
-    else
-        echo "No contacts found to hide" | tee -a test-output.txt
-    fi
+            # Run hide contact operation
+            hurl --very-verbose hide_contact.hurl >> test-output.txt 2>&1
+            rm -f hide_contact.hurl
+        fi
+    done
 }
 
 # Process each test file
@@ -118,7 +176,7 @@ do
 
     # Generate timestamp for this specific test
     TIMESTAMP=$(date +%s)
-    capitalized_custom_id="hurl-${TIMESTAMP}"  # Adding AGENT_ prefix for clarity
+    capitalized_custom_id="hurl-${TIMESTAMP}"
     RANDOM_STRING=$(openssl rand -base64 12 | tr -dc 'a-z' | fold -w 10 | head -n 1)
 
     # Get the test name from the file
