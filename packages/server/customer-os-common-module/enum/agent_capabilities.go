@@ -79,7 +79,6 @@ const (
 	CapabilityValidateEmailAddressDeliverability AgentCapability = "validate_email_deliverability"
 	CapabilitySendInvoiceViaEmail                AgentCapability = "send_invoice_via_email"
 	CapabilityProcessAutopayment                 AgentCapability = "process_autopayment"
-	CapabilityCreatePaymentLink                  AgentCapability = "create_payment_link"
 	CapabilityClassifyEmail                      AgentCapability = "classify_email"
 	CapabilityIdentifyEmailParticipants          AgentCapability = "identify_email_participants"
 	CapabilitySummarizeMessage                   AgentCapability = "summarize_message"
@@ -138,7 +137,6 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityTrackCampaignEngagement,
 		CapabilityUpdateCompanyStatus,
 		CapabilitySendInvoiceViaEmail,
-		CapabilityCreatePaymentLink,
 		CapabilityValidateEmailAddressDeliverability,
 		CapabilityProcessAutopayment,
 		CapabilityClassifyEmail,

@@ -13533,7 +13533,6 @@ enum CapabilityType {
   GENERATE_INVOICE
   SEND_INVOICE_VIA_EMAIL
   PROCESS_AUTOPAYMENT
-  CREAYE_PAYMENT_LINK
   CLASSIFY_EMAIL
   IDENTIFY_PARTICIPANTS
   SUMMARIZE_MESSAGE
@@ -17082,7 +17081,7 @@ type ServiceLineItem implements MetadataInterface {
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     closed:             Boolean!
     paused:             Boolean!
-    invoicingStatus:   ServiceInvoicingStatus @goField(forceResolver: true)
+    invoicingStatus:    ServiceInvoicingStatus @goField(forceResolver: true)
 }
 
 input ServiceLineItemInput {

@@ -34,7 +34,6 @@ var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapability{
 	model.CapabilityTypeSendInvoiceViaEmail:              enum.CapabilitySendInvoiceViaEmail,
 	model.CapabilityTypeGenerateInvoice:                  enum.CapabilityGenerateInvoice,
 	model.CapabilityTypeProcessAutopayment:               enum.CapabilityProcessAutopayment,
-	model.CapabilityTypeCreayePaymentLink:                enum.CapabilityCreatePaymentLink,
 	model.CapabilityTypeSendPaidNotification:             enum.CapabilitySendPaidNotification,
 	model.CapabilityTypeSendInvoiceVoidedNotification:    enum.CapabilitySendInvoiceVoidedNotification,
 	model.CapabilityTypeClassifyEmail:                    enum.CapabilityClassifyEmail,

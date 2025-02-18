@@ -55,7 +55,6 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewValidateEmailDeliverabilityCapability())
 	capabilities = append(capabilities, NewUpdateCompanyStatusCapability(organizationService, events))
 	capabilities = append(capabilities, NewProcessAutopaymentCapability(invoiceService))
-	capabilities = append(capabilities, NewCreatePaymentLinkCapability(invoiceService))
 	capabilities = append(capabilities, NewLogRequestsForHelpCapability(markdownService))
 	capabilities = append(capabilities, NewClassifyEmailCapability(postgresRepositories, mailService))
 	capabilities = append(capabilities, NewIdentifyEmailParticipantsCapability(postgresRepositories, mailService))
