@@ -51,7 +51,7 @@ func (l *StartInvoiceRunWithAutopayment) Type() enum.AgentListenerEvent {
 }
 
 func (l *StartInvoiceRunWithAutopayment) Name() string {
-	return "Start invoice run"
+	return "Start invoice run with autopayment"
 }
 
 func (l *StartInvoiceRunWithAutopayment) DefaultConfig() any {

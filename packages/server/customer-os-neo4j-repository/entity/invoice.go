@@ -21,6 +21,9 @@ const (
 	InvoicePropertyProviderEmail                        InvoiceProperty = "providerEmail"
 	InvoicePropertyProviderCCEmails                     InvoiceProperty = "providerCCEmails"
 	InvoicePropertyProviderBCCEmails                    InvoiceProperty = "providerBCCEmails"
+	InvoicePropertyPaymentProcessingAt                  InvoiceProperty = "techPaymentProcessingAt"
+	InvoicePropertyPaidInvoiceNotificationSentAt        InvoiceProperty = "techPaidInvoiceNotificationSentAt"
+	InvoicePropertyVoidInvoiceNotificationRequestAt     InvoiceProperty = "techVoidInvoiceNotificationSentAt"
 )
 
 type InvoiceEntity struct {
@@ -101,6 +104,7 @@ type InvoiceInternalFields struct {
 	RemindInvoiceNotificationRequestAt   *time.Time
 	PaidInvoiceNotificationSentAt        *time.Time
 	VoidInvoiceNotificationSentAt        *time.Time
+	PaymentProcessingAt                  *time.Time // when invoice was set to payment processing status
 }
 
 type InvoiceEntities []InvoiceEntity
@@ -119,4 +123,8 @@ func (i InvoiceEntity) IsPaid() bool {
 
 func (i InvoiceEntity) IsVoid() bool {
 	return i.Status == enum.InvoiceStatusVoid
+}
+
+func (i InvoiceEntity) IsPaymentProcessing() bool {
+	return i.Status == enum.InvoiceStatusPaymentProcessing
 }
