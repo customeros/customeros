@@ -344,108 +344,119 @@ func (s *invoiceService) CleanupInvoices() {
 }
 
 func (s *invoiceService) AdjustInvoiceStatus() {
+	s.updateInvoiceStatusToOverdue()
+	s.updateInvoiceStatusToOnHold()
+}
+
+func (s *invoiceService) updateInvoiceStatusToOverdue() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.AdjustInvoiceStatus")
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusToOverdue")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
+	limit := 500
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOverdue(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting invoices for overdue: %v", err)
+		return
+	}
 
-		recordsForOverdueInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOverdue(ctx)
+	for _, record := range records {
+		invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+		tenant := record.Tenant
+
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			Status:       neo4jenum.InvoiceStatusOverdue,
+			UpdateStatus: true,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for overdue: %v", err)
-			return
+			s.log.Errorf("Error updating invoice %s to overdue: %s", invoice.Id, err.Error())
+			return // stop processing
 		}
+	}
 
-		for _, record := range recordsForOverdueInvoices {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
+}
 
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
+func (s *invoiceService) updateInvoiceStatusToOnHold() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
 
-			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
-				Status:       neo4jenum.InvoiceStatusOverdue,
-				UpdateStatus: true,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating invoice %s to overdue: %s", invoice.Id, err.Error())
-				return // stop processing
-			}
-		}
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusToOnHold")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
-		recordsForOnHoldInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOnHold(ctx)
+	limit := 500
+
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOnHold(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting invoices for on hold: %v", err)
+		return
+	}
+
+	for _, record := range records {
+		invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+		tenant := record.Tenant
+
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			Status:       neo4jenum.InvoiceStatusOnHold,
+			UpdateStatus: true,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for on hold: %v", err)
-			return
+			s.log.Errorf("Error updating invoice %s to on hold: %s", invoice.Id, err.Error())
+			return // stop processing
 		}
+	}
+}
 
-		for _, record := range recordsForOnHoldInvoices {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
+func (s *invoiceService) updateInvoiceStatusScheduled() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
 
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusScheduled")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
-			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
-				Status:       neo4jenum.InvoiceStatusOnHold,
-				UpdateStatus: true,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating invoice %s to on hold: %s", invoice.Id, err.Error())
-				return // stop processing
-			}
-		}
+	limit := 500
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForScheduled(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting invoices for scheduled: %v", err)
+		return
+	}
 
-		recordsForOnScheduledInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForScheduled(ctx)
+	for _, record := range records {
+		invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+		tenant := record.Tenant
+
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			Status:       neo4jenum.InvoiceStatusScheduled,
+			UpdateStatus: true,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for scheduled: %v", err)
-			return
+			s.log.Errorf("Error updating invoice %s to scheduled: %s", invoice.Id, err.Error())
+			return // stop processing
 		}
-
-		for _, record := range recordsForOnScheduledInvoices {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
-
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
-				Status:       neo4jenum.InvoiceStatusScheduled,
-				UpdateStatus: true,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating invoice %s to scheduled: %s", invoice.Id, err.Error())
-				return // stop processing
-			}
-		}
-
-		if len(recordsForOverdueInvoices) == 0 && len(recordsForOnHoldInvoices) == 0 && len(recordsForOnScheduledInvoices) == 0 {
-			return
-		}
-
-		// sleep for async processing, then check again
-		time.Sleep(10 * time.Second)
 	}
 }
