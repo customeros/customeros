@@ -99,6 +99,15 @@ func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionCo
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
+	// TODO alexb check if current agent has payment enabled. if not do not generate payment link and send extra param
+	// TODO cont.. in send pay notification to choose no pay link email template
+
+	err = c.invoiceService.GenerateNewPaymentLink(ctx, executionContainer.InputData.InvoiceID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// Do not stop capability execution if payment link generation fails
+	}
+
 	err = c.invoiceService.SendPayInvoiceNotification(ctx, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
