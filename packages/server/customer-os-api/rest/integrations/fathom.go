@@ -2,9 +2,6 @@ package integrations
 
 import (
 	"context"
-	"net/http"
-	"strings"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -15,6 +12,8 @@ import (
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"net/http"
+	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
@@ -24,9 +23,6 @@ func (h *IntegrationHandler) FathomZapier(c *gin.Context, tenant string) {
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 	tracing.TagTenant(span, tenant)
-
-	// trace all params
-	span.LogKV("param.tenantId", c.Param("tenant"))
 
 	// update context with tenant, pass this where tenant is needed
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
@@ -115,15 +111,15 @@ func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Cont
 	event := dto.NewMeetingRecording{
 		MeetingTitle:        aiSummaryData.Meeting.Title,
 		Source:              enum.SourceFathom,
-		Content:             &content,
-		ParticipantEmails:   &participants,
+		Content:             content,
+		ParticipantEmails:   participants,
 		MeetingRecordingUrl: aiSummaryData.Recording.ShareURL,
 	}
 
 	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
-		event.Timestamp = utils.NowPtr()
+		event.Timestamp = utils.Now()
 	} else {
-		event.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
+		event.Timestamp = aiSummaryData.Meeting.ScheduledStartTime.UTC()
 	}
 
 	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingID, model.MEETING, event)

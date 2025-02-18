@@ -128,15 +128,15 @@ func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Conte
 	event := dto.NewMeetingRecording{
 		MeetingTitle:        grainData.RecordingData.Title,
 		Source:              enum.SourceGrain,
-		Content:             &content,
-		ParticipantEmails:   &participants,
+		Content:             content,
+		ParticipantEmails:   participants,
 		MeetingRecordingUrl: grainData.RecordingData.PublicURL,
 	}
 
 	if grainData.RecordingData.StartDatetime.IsZero() {
-		event.Timestamp = utils.NowPtr()
+		event.Timestamp = utils.Now()
 	} else {
-		event.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
+		event.Timestamp = grainData.RecordingData.StartDatetime.UTC()
 	}
 
 	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingID, model.MEETING, event)

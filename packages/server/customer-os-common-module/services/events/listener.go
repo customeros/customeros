@@ -2,9 +2,9 @@ package events
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 
-	"github.com/mitchellh/mapstructure"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -98,9 +98,24 @@ func DecodeEventData[T any](ctx context.Context, event *dto.Event) (T, error) {
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	var decoded T
-	if err := mapstructure.Decode(event.Event.Data, &decoded); err != nil {
-		err = errors.Wrap(err, "failed to decode event data")
-		tracing.LogObjectAsJson(span, "event", event)
+
+	bytes, ok := event.Event.Data.(map[string]interface{})
+	if !ok {
+		err := errors.New("failed to cast event data to map[string]interface{}")
+		tracing.TraceErr(span, err)
+		return decoded, err
+	}
+
+	// Convert map[string]interface{} to JSON bytes
+	jsonBytes, err := json.Marshal(bytes)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return decoded, err
+	}
+
+	// Now unmarshal the JSON bytes into the target struct or map
+	err = json.Unmarshal(jsonBytes, &decoded)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return decoded, err
 	}
