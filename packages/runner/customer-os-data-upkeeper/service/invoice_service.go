@@ -346,6 +346,8 @@ func (s *invoiceService) CleanupInvoices() {
 func (s *invoiceService) AdjustInvoiceStatus() {
 	s.updateInvoiceStatusToOverdue()
 	s.updateInvoiceStatusToOnHold()
+	s.updateInvoiceStatusScheduled()
+	s.updateInvoiceStatusFromPaymentProcessingToDue()
 }
 
 func (s *invoiceService) updateInvoiceStatusToOverdue() {
@@ -459,4 +461,43 @@ func (s *invoiceService) updateInvoiceStatusScheduled() {
 			return // stop processing
 		}
 	}
+}
+
+func (s *invoiceService) updateInvoiceStatusFromPaymentProcessingToDue() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusFromPaymentProcessingToDue")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 500
+	paymentProcessingMaxDays := 8
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredPaymentProcessingInvoices(ctx, paymentProcessingMaxDays, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting invoices for overdue: %v", err)
+		return
+	}
+
+	for _, record := range records {
+		invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+		tenant := record.Tenant
+
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			Status:       neo4jenum.InvoiceStatusDue,
+			UpdateStatus: true,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error updating invoice %s to due: %s", invoice.Id, err.Error())
+			return // stop processing
+		}
+	}
+
 }
