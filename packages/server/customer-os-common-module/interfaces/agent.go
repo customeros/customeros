@@ -20,6 +20,7 @@ type AgentService interface {
 
 	CreateAgentExecutionRecord(ctx context.Context, agent postgres_entity.Agent, triggerEvent, traceId string) (string, error)
 	GetAgentInfo(ctx context.Context) (*map[enum.AgentType]AgentInfo, error)
+	GetNorthStarMetricById(ctx context.Context, agentID string, agentType enum.AgentType) (string, error)
 }
 
 type AgentRegistry interface {
