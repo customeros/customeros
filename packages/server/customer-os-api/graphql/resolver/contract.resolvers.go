@@ -390,7 +390,7 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 
 // Contracts is the resolver for the contracts field.
 func (r *queryResolver) Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contacts", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contracts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.pagination", pagination)

@@ -566,7 +566,7 @@ func (r *invoiceReadRepository) GetExpiredDryRunInvoices(ctx context.Context) ([
 }
 
 func (r *invoiceReadRepository) GetAllForContracts(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetServiceLineItemsForContracts")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetAllForContracts")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
