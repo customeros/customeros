@@ -44,7 +44,7 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
   "meeting": {
     "external_domains": "[{'domain_name': 'example.com'}, {'domain_name': 'test.com'}]",
     "has_external_invitees": "True",
-    "invitees": "[{'name': 'John Doe', 'email': 'john@example.com', 'is_external': false}, {'name': 'Jane Smith', 'email': 'jane@test.com', 'is_external': true}]",
+    "invitees": "[{'name': 'John Doe', 'email': 'hurljohn@example.com', 'is_external': false}, {'name': 'Jane Smith', 'email': 'hurljane@test.com', 'is_external': true}]",
     "join_url": "https://meet.google.com/test",
     "scheduled_duration_in_minutes": "30",
     "scheduled_end_time": "2024-05-10T10:00:00Z",
