@@ -25,3 +25,7 @@ const (
 	SkuTypeSubscription SkuType = "SUBSCRIPTION"
 	SkuTypeOneTime      SkuType = "ONE_TIME"
 )
+
+func (s SkuType) String() string {
+	return string(s)
+}

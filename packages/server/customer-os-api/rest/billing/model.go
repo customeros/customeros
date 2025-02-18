@@ -72,3 +72,34 @@ type InvoiceRecord struct {
 	// format: uri
 	PublicUrl string `json:"publicUrl,omitempty"`
 }
+
+// SkusResponse represents a collection of skus
+// @Description Response containing multiple skus
+type SkusResponse struct {
+	// List of skus
+	Skus []SkuRecord `json:"skus,omitempty"`
+}
+
+// SkuRecord represents detailed sku information
+// @Description Detailed sku information
+type SkuRecord struct {
+	// Unique identifier for the sku
+	// required: true
+	// example: 123e4567-e89b-12d3-a456-426614174000
+	ID string `json:"id"`
+
+	// Name of the sku
+	// required: true
+	// example: Product A
+	Name string `json:"name"`
+
+	// Price of the sku
+	// required: true
+	// example: 100.00
+	Price float64 `json:"price"`
+
+	// Type of the sku
+	// required: true
+	// example: SUBSCRIPTION / ONE_TIME
+	SkuType string `json:"skuType"`
+}
