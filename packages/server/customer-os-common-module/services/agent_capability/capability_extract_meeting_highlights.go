@@ -68,8 +68,8 @@ type ExtractMeetingHighlightsInput struct {
 }
 
 type ExtractMeetingHighlightsOutput struct {
-	MeetingSummary string   `json:"meetingSummary"`
-	ActionItems    []string `json:"actionItems"`
+	Summary     string   `json:"summary"`
+	ActionItems []string `json:"actionItems"`
 }
 
 func (c *ExtractMeetingHighlightsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractMeetingHighlightsInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ExtractMeetingHighlightsOutput, error) {
@@ -137,7 +137,7 @@ func (c *ExtractMeetingHighlightsCapability) parseAnswer(ctx context.Context, an
 		return ExtractMeetingHighlightsOutput{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
-	if result.MeetingSummary == "" {
+	if result.Summary == "" {
 		err := errors.New("Unable to produce meeting summary")
 		tracing.TraceErr(span, err)
 		return ExtractMeetingHighlightsOutput{}, err
