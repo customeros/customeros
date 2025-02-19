@@ -4,6 +4,7 @@ import (
 	"context"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -95,7 +96,8 @@ func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, exe
 	}
 
 	for _, email := range executionContainer.InputData.MeetingParticipantEmails {
-		if utils.IsStringInSlice(email, workspaceDomains) {
+		validation := mailvalidate.ValidateEmailSyntax(email)
+		if utils.IsStringInSlice(validation.Domain, workspaceDomains) {
 			result.MeetingParticipantEmailsTenant = append(result.MeetingParticipantEmailsTenant, email)
 		} else {
 			result.ContactEmails = append(result.ContactEmails, email)

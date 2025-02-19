@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/mailsherpa/mailvalidate"
 )
 
 // RecordingRes the top-level response structure
@@ -49,7 +49,9 @@ func (g *GrainRecording) participantEmails() []string {
 	emails := make([]string, len(g.Participants))
 
 	for v, participant := range g.Participants {
-		emails[v] = *participant.Email
+		if participant.Email != nil {
+			emails[v] = *participant.Email
+		}
 	}
 	return emails
 }
