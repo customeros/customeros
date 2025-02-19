@@ -30,9 +30,10 @@ type InvoiceReadRepository interface {
 	GetExpiredDryRunInvoices(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetAllForContracts(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetAllForServiceLineItems(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetInvoicesForOverdue(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
-	GetInvoicesForOnHold(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
-	GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForOverdue(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForOnHold(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForScheduled(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetExpiredPaymentProcessingInvoices(ctx context.Context, paymentProcessingMaxDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 	//Deprecated ,replaced with autopayment agent capability
 	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
@@ -635,20 +636,21 @@ func (r *invoiceReadRepository) GetAllForServiceLineItems(ctx context.Context, t
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *invoiceReadRepository) GetInvoicesForOverdue(ctx context.Context) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetInvoicesForOverdue(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForOverdue")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
 				i.dryRun = false AND
 				i.status = $dueStatus AND
-				date(i.dueDate) < date($now)
-			RETURN distinct(i), t.name limit 100`
+				date(i.dueDate) < date(datetime())
+			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
-		"now":       utils.Now(),
 		"dueStatus": neo4jenum.InvoiceStatusDue.String(),
+		"limit":     limit,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -672,10 +674,11 @@ func (r *invoiceReadRepository) GetInvoicesForOverdue(ctx context.Context) ([]*u
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *invoiceReadRepository) GetInvoicesForOnHold(ctx context.Context) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetInvoicesForOnHold(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForOnHold")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(c:Contract)
 			WHERE 
@@ -683,11 +686,12 @@ func (r *invoiceReadRepository) GetInvoicesForOnHold(ctx context.Context) ([]*ut
 				i.preview = true AND
 				i.status = $scheduledStatus AND
 				c.status = $outOfContractStatus
-			RETURN distinct(i), t.name limit 100`
+			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
 		"now":                 utils.Now(),
 		"scheduledStatus":     neo4jenum.InvoiceStatusScheduled.String(),
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract.String(),
+		"limit":               limit,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -711,10 +715,11 @@ func (r *invoiceReadRepository) GetInvoicesForOnHold(ctx context.Context) ([]*ut
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *invoiceReadRepository) GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetInvoicesForScheduled(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForScheduled")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(c:Contract)
 			WHERE 
@@ -722,11 +727,52 @@ func (r *invoiceReadRepository) GetInvoicesForScheduled(ctx context.Context) ([]
 				i.preview = true AND
 				i.status = $onHoldStatus AND
 				c.status <> $outOfContractStatus
-			RETURN distinct(i), t.name limit 100`
+			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
 		"now":                 utils.Now(),
 		"onHoldStatus":        neo4jenum.InvoiceStatusOnHold.String(),
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract.String(),
+		"limit":               limit,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
+	return result.([]*utils.DbNodeAndTenant), err
+}
+
+func (r *invoiceReadRepository) GetExpiredPaymentProcessingInvoices(ctx context.Context, paymentProcessingMaxDays, limit int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetExpiredPaymentProcessingInvoices")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit), log.Int("paymentProcessingMaxDays", paymentProcessingMaxDays))
+
+	cypher := `MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)
+			WHERE 
+				i.dryRun = false AND
+				i.status = $paymentProcessingStatus AND
+				i.techPaymentProcessingAt IS NOT NULL AND
+				i.techPaymentProcessingAt < datetime() - duration({days: $paymentProcessingMaxDays})
+			RETURN distinct(i), t.name limit $limit`
+	params := map[string]any{
+		"paymentProcessingStatus":  neo4jenum.InvoiceStatusPaymentProcessing.String(),
+		"paymentProcessingMaxDays": paymentProcessingMaxDays,
+		"limit":                    limit,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
