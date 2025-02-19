@@ -44,6 +44,7 @@ type GenerateInvoiceConfig struct {
 	Locality                   ConfigSingleValue     `json:"locality"`
 	Region                     ConfigSingleValue     `json:"region"`
 	IncludeBankTransferDetails ConfigSingleBoolValue `json:"includeBankTransferDetails"`
+	BankInfoTemplate           ConfigSingleValue     `json:"bankInfoTemplate"`
 	BankName                   ConfigSingleValue     `json:"bankName"`
 	AccountNumber              ConfigSingleValue     `json:"accountNumber"`
 	IBAN                       ConfigSingleValue     `json:"iban"`
