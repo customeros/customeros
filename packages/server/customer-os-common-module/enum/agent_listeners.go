@@ -23,7 +23,6 @@ const (
 	EventMeetingLogged                  AgentListenerEvent = "meeting_logged"
 	EventNewLead                        AgentListenerEvent = "new_lead"
 	EventNewMeetingRecording            AgentListenerEvent = "new_meeting_recording"
-	EventNewSupportVisit                AgentListenerEvent = "new_support_visit"
 	EventNewWebSession                  AgentListenerEvent = "new_web_session"
 	EventRunICPQualifierAgent           AgentListenerEvent = "run_icp_qualifier_agent"
 	EventWebVisitorIdentified           AgentListenerEvent = "web_visitor_identified"
@@ -83,7 +82,6 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 		EventNewLead,
 		EventNewMeetingRecording,
 		EventNewWebSession,
-		EventNewSupportVisit,
 		EventRunICPQualifierAgent,
 		EventWebVisitorIdentified,
 		EventWebVisitorNotIdentified,
