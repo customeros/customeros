@@ -71,7 +71,7 @@ func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx con
 		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 		return
 	}
-	userId, err := h.GetCustomerOSUser(ctx, []string{email})
+	userId, err := h.GetCustomerOSUser(ctx, []string{email}, enum.AgentMeetingKeeper)
 	if err != nil {
 		message := "User not found"
 		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
