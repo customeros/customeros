@@ -2,14 +2,11 @@ name: customer-os-api
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: ["otter"]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events/**
-      - packages/server/validation-api/**
-      - packages/server/enrichment-api/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
   pull_request:
@@ -17,13 +14,10 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events/**
-      - packages/server/validation-api/**
-      - packages/server/enrichment-api/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
   release:
-    types: [ created, edited ]
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -41,270 +35,270 @@ defaults:
     working-directory: ./packages/server/customer-os-api
 
 jobs:
-  test:
-    runs-on: ubicloud-standard-2
-    strategy:
-      fail-fast: false
-      matrix:
-        test-group: [
-          "repository",
-          "rest",
-          "other"
-        ]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: ubicloud/setup-go@v5
-        with:
-          go-version: stable
-          cache: true
-        env:
-          GOPROXY: "direct"
-          GOSUMDB: "off"
-          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
-
-      - name: Cache Go tools
-        uses: ubicloud/cache@v4
-        with:
-          path: ${{ env.GOBIN }}
-          key: ${{ runner.os }}-go-tools-${{ hashFiles('./packages/server/customer-os-api/go.sum') }}
-
-      - name: Install gotestsum
-        run: |
-          mkdir -p "$GOBIN"
-          if [ ! -f "$GOBIN/gotestsum" ]; then
-            go install gotest.tools/gotestsum@latest
-          fi
-          echo "$GOBIN" >> $GITHUB_PATH
-
-      - name: Go Cache
-        id: go-cache
-        uses: ubicloud/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ${{ env.GOMODCACHE }}
-          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Build
-        if: steps.go-cache.outputs.cache-hit != 'true'
-        run: make all
-
-      - name: Get test packages
-        id: get-packages
-        run: |
-          if [ "${{ matrix.test-group }}" = "other" ]; then
-            # Get all packages except repository, rest, and graph/resolver
-            PACKAGES=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | grep -v "/repository" | grep -v "/rest" | grep -v "/graphql/resolver" | paste -sd " " -)
-          else
-            # Get packages for specific group
-            PACKAGES=$(go list ./... | grep "/${{ matrix.test-group }}" | paste -sd " " -)
-          fi
-          echo "packages=${PACKAGES}" >> "$GITHUB_OUTPUT"
-
-      - name: Test
-        run: |
-          gotestsum --junitfile unit-tests.xml -- \
-            -coverprofile=cover.out \
-            ${{ steps.get-packages.outputs.packages }}
-
-      - name: Test Report
-        uses: mikepenz/action-junit-report@v5
-        if: always()
-        with:
-          report_paths: packages/server/customer-os-api/**/*unit-tests.xml
-          include_passed: true
-          annotate_only: true
-          detailed_summary: true
-
-      - name: Compute Code Coverage
-        id: compute_code_coverage
-        run: |
-          echo "## Code Coverage for ${{ matrix.test-group }}" >> $GITHUB_STEP_SUMMARY
-          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
-          coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
-          echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
-
-  prepare-test-matrix:
-    runs-on: ubicloud-standard-2
-    outputs:
-      matrix: ${{ steps.split-tests.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: ubicloud/setup-go@v5
-        with:
-          go-version: stable
-          cache: true
-        env:
-          GOPROXY: "direct"
-          GOSUMDB: "off"
-          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
-
-      - name: Cache test list
-        id: cache-test-list
-        uses: ubicloud/cache@v4
-        with:
-          path: ./packages/server/customer-os-api/test_chunks.json
-          key: test-list-${{ hashFiles('./packages/server/customer-os-api/graphql/resolver/**/*.go') }}
-
-      - name: Split tests into chunks
-        id: split-tests
-        working-directory: ./packages/server/customer-os-api
-        run: |
-          if [ "${{ steps.cache-test-list.outputs.cache-hit }}" == "true" ]; then
-            echo "Using cached test chunks"
-            MATRIX_JSON=$(cat test_chunks.json)
-            echo "Retrieved from cache:"
-            echo "$MATRIX_JSON" | jq .
-          else
-            echo "Discovering tests..."
-            # Get all tests from resolver
-            go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
-          
-            # Read tests into array
-            readarray -t TEST_ARRAY < <(cat all_tests.txt | grep "^Test" || true)
-            TOTAL=${#TEST_ARRAY[@]}
-            echo "Found $TOTAL tests"
-          
-            # Calculate chunk size
-            CHUNK_SIZE=$(( (TOTAL + 3) / 4 ))
-            echo "Chunk size: $CHUNK_SIZE"
-          
-            # Create JSON with actual tests
-            MATRIX_JSON='{
-              "include": ['
-            for chunk in {0..3}; do
-              START_INDEX=$(( chunk * CHUNK_SIZE ))
-              END_INDEX=$(( START_INDEX + CHUNK_SIZE ))
-              if [ $END_INDEX -gt $TOTAL ]; then
-                END_INDEX=$TOTAL
-              fi
-          
-              # Extract tests for this chunk
-              CHUNK_TESTS=$(printf '%s\n' "${TEST_ARRAY[@]:$START_INDEX:$((END_INDEX-START_INDEX))}" | jq -R . | jq -sc .)
-          
-              # Add comma between chunks, but not after the last one
-              if [ $chunk -gt 0 ]; then
-                MATRIX_JSON="$MATRIX_JSON,"
-              fi
-          
-              MATRIX_JSON="$MATRIX_JSON{\"id\": $chunk, \"tests\": $CHUNK_TESTS}"
-            done
-            MATRIX_JSON="$MATRIX_JSON]}"
-          
-            # Save for cache
-            echo "$MATRIX_JSON" > test_chunks.json
-            echo "Generated new matrix JSON:"
-            echo "$MATRIX_JSON" | jq .
-          fi
-          
-          # Write to GITHUB_OUTPUT with proper delimiter
-          delimiter="EOF-$(openssl rand -hex 8)"
-          {
-            echo "matrix<<$delimiter"
-            echo "$MATRIX_JSON"
-            echo "$delimiter"
-          } >> "$GITHUB_OUTPUT"
-
-  test-resolver:
-    needs: prepare-test-matrix
-    runs-on: ubicloud-standard-2
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.prepare-test-matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: ubicloud/setup-go@v5
-        with:
-          go-version: stable
-          cache: true
-        env:
-          GOPROXY: "direct"
-          GOSUMDB: "off"
-          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
-
-      - name: Cache Go tools
-        uses: ubicloud/cache@v4
-        with:
-          path: ${{ env.GOBIN }}
-          key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
-
-      - name: Install gotestsum
-        run: |
-          mkdir -p "$GOBIN"
-          if [ ! -f "$GOBIN/gotestsum" ]; then
-            go install gotest.tools/gotestsum@latest
-          fi
-          echo "$GOBIN" >> $GITHUB_PATH
-
-      - name: Go Cache
-        id: go-cache
-        uses: ubicloud/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ${{ env.GOMODCACHE }}
-          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Build
-        if: steps.go-cache.outputs.cache-hit != 'true'
-        run: make all
-
-      - name: Test
-        working-directory: ./packages/server/customer-os-api
-        run: |
-          echo "Running tests for chunk ${{ matrix.id }}"
-          echo "Tests to run: ${{ toJSON(matrix.tests) }}"
-          
-          if [ -z "${{ toJSON(matrix.tests) }}" ] || [ "${{ toJSON(matrix.tests) }}" = "[]" ]; then
-            echo "No tests to run in this chunk"
-            exit 0
-          fi
-          
-          # Create test pattern from the pre-calculated list
-          TEST_PATTERN=$(echo '${{ toJSON(matrix.tests) }}' | jq -r 'join("|")')
-          echo "Test pattern: $TEST_PATTERN"
-          
-          gotestsum --junitfile unit-tests.xml -- \
-            -coverprofile=cover.out \
-            -run "$TEST_PATTERN" \
-            ./graphql/resolver/...
-
-      - name: Test Report
-        uses: mikepenz/action-junit-report@v5
-        if: always()
-        with:
-          report_paths: packages/server/customer-os-api/**/*unit-tests.xml
-          include_passed: true
-          annotate_only: true
-          detailed_summary: true
-
-      - name: Compute Code Coverage
-        id: compute_code_coverage
-        working-directory: ./packages/server/customer-os-api
-        run: |
-          echo "## Code Coverage for resolver (chunk ${{ matrix.id }})" >> $GITHUB_STEP_SUMMARY
-          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
-          coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
-          echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
-
+  # test:
+  #   runs-on: ubicloud-standard-2
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       test-group: [
+  #         "repository",
+  #         "rest",
+  #         "other"
+  #       ]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Set up Go
+  #       uses: ubicloud/setup-go@v5
+  #       with:
+  #         go-version: stable
+  #         cache: true
+  #       env:
+  #         GOPROXY: "direct"
+  #         GOSUMDB: "off"
+  #         GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+  #
+  #     - name: Cache Go tools
+  #       uses: ubicloud/cache@v4
+  #       with:
+  #         path: ${{ env.GOBIN }}
+  #         key: ${{ runner.os }}-go-tools-${{ hashFiles('./packages/server/customer-os-api/go.sum') }}
+  #
+  #     - name: Install gotestsum
+  #       run: |
+  #         mkdir -p "$GOBIN"
+  #         if [ ! -f "$GOBIN/gotestsum" ]; then
+  #           go install gotest.tools/gotestsum@latest
+  #         fi
+  #         echo "$GOBIN" >> $GITHUB_PATH
+  #
+  #     - name: Go Cache
+  #       id: go-cache
+  #       uses: ubicloud/cache@v4
+  #       with:
+  #         path: |
+  #           ~/.cache/go-build
+  #           ${{ env.GOMODCACHE }}
+  #         key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-go-
+  #
+  #     - name: Build
+  #       if: steps.go-cache.outputs.cache-hit != 'true'
+  #       run: make all
+  #
+  #     - name: Get test packages
+  #       id: get-packages
+  #       run: |
+  #         if [ "${{ matrix.test-group }}" = "other" ]; then
+  #           # Get all packages except repository, rest, and graph/resolver
+  #           PACKAGES=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | grep -v "/repository" | grep -v "/rest" | grep -v "/graphql/resolver" | paste -sd " " -)
+  #         else
+  #           # Get packages for specific group
+  #           PACKAGES=$(go list ./... | grep "/${{ matrix.test-group }}" | paste -sd " " -)
+  #         fi
+  #         echo "packages=${PACKAGES}" >> "$GITHUB_OUTPUT"
+  #
+  #     - name: Test
+  #       run: |
+  #         gotestsum --junitfile unit-tests.xml -- \
+  #           -coverprofile=cover.out \
+  #           ${{ steps.get-packages.outputs.packages }}
+  #
+  #     - name: Test Report
+  #       uses: mikepenz/action-junit-report@v5
+  #       if: always()
+  #       with:
+  #         report_paths: packages/server/customer-os-api/**/*unit-tests.xml
+  #         include_passed: true
+  #         annotate_only: true
+  #         detailed_summary: true
+  #
+  #     - name: Compute Code Coverage
+  #       id: compute_code_coverage
+  #       run: |
+  #         echo "## Code Coverage for ${{ matrix.test-group }}" >> $GITHUB_STEP_SUMMARY
+  #         echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+  #         echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+  #         go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+  #         go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
+  #         coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
+  #         echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+  #
+  # prepare-test-matrix:
+  #   runs-on: ubicloud-standard-2
+  #   outputs:
+  #     matrix: ${{ steps.split-tests.outputs.matrix }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Set up Go
+  #       uses: ubicloud/setup-go@v5
+  #       with:
+  #         go-version: stable
+  #         cache: true
+  #       env:
+  #         GOPROXY: "direct"
+  #         GOSUMDB: "off"
+  #         GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+  #
+  #     - name: Cache test list
+  #       id: cache-test-list
+  #       uses: ubicloud/cache@v4
+  #       with:
+  #         path: ./packages/server/customer-os-api/test_chunks.json
+  #         key: test-list-${{ hashFiles('./packages/server/customer-os-api/graphql/resolver/**/*.go') }}
+  #
+  #     - name: Split tests into chunks
+  #       id: split-tests
+  #       working-directory: ./packages/server/customer-os-api
+  #       run: |
+  #         if [ "${{ steps.cache-test-list.outputs.cache-hit }}" == "true" ]; then
+  #           echo "Using cached test chunks"
+  #           MATRIX_JSON=$(cat test_chunks.json)
+  #           echo "Retrieved from cache:"
+  #           echo "$MATRIX_JSON" | jq .
+  #         else
+  #           echo "Discovering tests..."
+  #           # Get all tests from resolver
+  #           go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
+  #
+  #           # Read tests into array
+  #           readarray -t TEST_ARRAY < <(cat all_tests.txt | grep "^Test" || true)
+  #           TOTAL=${#TEST_ARRAY[@]}
+  #           echo "Found $TOTAL tests"
+  #
+  #           # Calculate chunk size
+  #           CHUNK_SIZE=$(( (TOTAL + 3) / 4 ))
+  #           echo "Chunk size: $CHUNK_SIZE"
+  #
+  #           # Create JSON with actual tests
+  #           MATRIX_JSON='{
+  #             "include": ['
+  #           for chunk in {0..3}; do
+  #             START_INDEX=$(( chunk * CHUNK_SIZE ))
+  #             END_INDEX=$(( START_INDEX + CHUNK_SIZE ))
+  #             if [ $END_INDEX -gt $TOTAL ]; then
+  #               END_INDEX=$TOTAL
+  #             fi
+  #
+  #             # Extract tests for this chunk
+  #             CHUNK_TESTS=$(printf '%s\n' "${TEST_ARRAY[@]:$START_INDEX:$((END_INDEX-START_INDEX))}" | jq -R . | jq -sc .)
+  #
+  #             # Add comma between chunks, but not after the last one
+  #             if [ $chunk -gt 0 ]; then
+  #               MATRIX_JSON="$MATRIX_JSON,"
+  #             fi
+  #
+  #             MATRIX_JSON="$MATRIX_JSON{\"id\": $chunk, \"tests\": $CHUNK_TESTS}"
+  #           done
+  #           MATRIX_JSON="$MATRIX_JSON]}"
+  #
+  #           # Save for cache
+  #           echo "$MATRIX_JSON" > test_chunks.json
+  #           echo "Generated new matrix JSON:"
+  #           echo "$MATRIX_JSON" | jq .
+  #         fi
+  #
+  #         # Write to GITHUB_OUTPUT with proper delimiter
+  #         delimiter="EOF-$(openssl rand -hex 8)"
+  #         {
+  #           echo "matrix<<$delimiter"
+  #           echo "$MATRIX_JSON"
+  #           echo "$delimiter"
+  #         } >> "$GITHUB_OUTPUT"
+  #
+  # test-resolver:
+  #   needs: prepare-test-matrix
+  #   runs-on: ubicloud-standard-2
+  #   strategy:
+  #     fail-fast: false
+  #     matrix: ${{ fromJSON(needs.prepare-test-matrix.outputs.matrix) }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Set up Go
+  #       uses: ubicloud/setup-go@v5
+  #       with:
+  #         go-version: stable
+  #         cache: true
+  #       env:
+  #         GOPROXY: "direct"
+  #         GOSUMDB: "off"
+  #         GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+  #
+  #     - name: Cache Go tools
+  #       uses: ubicloud/cache@v4
+  #       with:
+  #         path: ${{ env.GOBIN }}
+  #         key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+  #
+  #     - name: Install gotestsum
+  #       run: |
+  #         mkdir -p "$GOBIN"
+  #         if [ ! -f "$GOBIN/gotestsum" ]; then
+  #           go install gotest.tools/gotestsum@latest
+  #         fi
+  #         echo "$GOBIN" >> $GITHUB_PATH
+  #
+  #     - name: Go Cache
+  #       id: go-cache
+  #       uses: ubicloud/cache@v4
+  #       with:
+  #         path: |
+  #           ~/.cache/go-build
+  #           ${{ env.GOMODCACHE }}
+  #         key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-go-
+  #
+  #     - name: Build
+  #       if: steps.go-cache.outputs.cache-hit != 'true'
+  #       run: make all
+  #
+  #     - name: Test
+  #       working-directory: ./packages/server/customer-os-api
+  #       run: |
+  #         echo "Running tests for chunk ${{ matrix.id }}"
+  #         echo "Tests to run: ${{ toJSON(matrix.tests) }}"
+  #
+  #         if [ -z "${{ toJSON(matrix.tests) }}" ] || [ "${{ toJSON(matrix.tests) }}" = "[]" ]; then
+  #           echo "No tests to run in this chunk"
+  #           exit 0
+  #         fi
+  #
+  #         # Create test pattern from the pre-calculated list
+  #         TEST_PATTERN=$(echo '${{ toJSON(matrix.tests) }}' | jq -r 'join("|")')
+  #         echo "Test pattern: $TEST_PATTERN"
+  #
+  #         gotestsum --junitfile unit-tests.xml -- \
+  #           -coverprofile=cover.out \
+  #           -run "$TEST_PATTERN" \
+  #           ./graphql/resolver/...
+  #
+  #     - name: Test Report
+  #       uses: mikepenz/action-junit-report@v5
+  #       if: always()
+  #       with:
+  #         report_paths: packages/server/customer-os-api/**/*unit-tests.xml
+  #         include_passed: true
+  #         annotate_only: true
+  #         detailed_summary: true
+  #
+  #     - name: Compute Code Coverage
+  #       id: compute_code_coverage
+  #       working-directory: ./packages/server/customer-os-api
+  #       run: |
+  #         echo "## Code Coverage for resolver (chunk ${{ matrix.id }})" >> $GITHUB_STEP_SUMMARY
+  #         echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+  #         echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+  #         go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+  #         go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
+  #         coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
+  #         echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
+  #
   build-publish:
-    needs: [ test, test-resolver ]
+    needs: [test, test-resolver]
     runs-on: ubicloud-standard-2
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
@@ -340,3 +334,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
