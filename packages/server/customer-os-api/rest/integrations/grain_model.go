@@ -49,7 +49,7 @@ func (g *GrainRecording) participantEmails() []string {
 	emails := make([]string, len(g.Participants))
 
 	for v, participant := range g.Participants {
-		if participant.Email != nil {
+		if participant.Email != nil && *participant.Email != "" {
 			emails[v] = *participant.Email
 		}
 	}

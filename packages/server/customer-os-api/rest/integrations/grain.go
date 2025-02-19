@@ -6,14 +6,12 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -76,7 +74,7 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 		return
 	}
 
-	userID, err := h.GetCustomerOSUser(ctx, grainData.RecordingData.Owners)
+	userID, err := h.GetCustomerOSUser(ctx, grainData.RecordingData.Owners, enum.AgentMeetingKeeper)
 	if err != nil {
 		message := "User not found"
 		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
@@ -99,36 +97,6 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 		}
 	}()
 	return
-}
-
-func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, meetingOwners []string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.getCustomerOSUser")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
-
-	if len(meetingOwners) == 0 {
-		return "", coserrors.ErrCannotIdentifyUser
-	}
-
-	for _, owner := range meetingOwners {
-		validation := mailvalidate.ValidateEmailSyntax(owner)
-		email := validation.CleanEmail
-		if email == "" {
-			continue
-		}
-		user, _ := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
-		if user != nil && user.Id != "" {
-			ctx = common.SetUserIdInContext(ctx, user.Id)
-			agent, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, []enum.AgentType{enum.AgentMeetingKeeper})
-			if agent != nil {
-				return user.Id, nil
-			}
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-		}
-	}
-	return "", coserrors.ErrCannotIdentifyUser
 }
 
 func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, grainData *GrainRecordingData) error {
