@@ -8,7 +8,6 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -42,7 +41,7 @@ func NewSyncInvoiceToAccountingCapability(
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingOutput, postgresentity.NoConfig] = (*SyncInvoiceToAccountingCapability)(nil)
+	_ interfaces.AgentCapability[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingOutput, SyncInvoiceToAccountingConfig] = (*SyncInvoiceToAccountingCapability)(nil)
 )
 
 func (c *SyncInvoiceToAccountingCapability) Type() enum.AgentCapability {
@@ -57,8 +56,8 @@ func (c *SyncInvoiceToAccountingCapability) NewInput() SyncInvoiceToAccountingIn
 	return SyncInvoiceToAccountingInput{}
 }
 
-func (c *SyncInvoiceToAccountingCapability) NewConfig() postgresentity.NoConfig {
-	return postgresentity.NoConfig{}
+func (c *SyncInvoiceToAccountingCapability) NewConfig() SyncInvoiceToAccountingConfig {
+	return SyncInvoiceToAccountingConfig{}
 }
 
 func (c *SyncInvoiceToAccountingCapability) DefaultConfig() any {
@@ -73,7 +72,7 @@ func (c *SyncInvoiceToAccountingCapability) ValidateInput(input SyncInvoiceToAcc
 	return nil
 }
 
-func (c *SyncInvoiceToAccountingCapability) ValidateConfig(postgresentity.NoConfig) error {
+func (c *SyncInvoiceToAccountingCapability) ValidateConfig(SyncInvoiceToAccountingConfig) error {
 	return nil
 }
 
@@ -83,7 +82,11 @@ type SyncInvoiceToAccountingInput struct {
 
 type SyncInvoiceToAccountingOutput struct{}
 
-func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SyncInvoiceToAccountingInput, postgresentity.NoConfig]) (enum.CapabilityExecutionStatus, SyncInvoiceToAccountingOutput, error) {
+type SyncInvoiceToAccountingConfig struct {
+	Quickbooks ConfigSingleBoolValue `json:"quickbooks"`
+}
+
+func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingConfig]) (enum.CapabilityExecutionStatus, SyncInvoiceToAccountingOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)

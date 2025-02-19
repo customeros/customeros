@@ -192,7 +192,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilitySyncInvoiceToAccounting:
-		executor, ok := GetTypedExecutor[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingOutput, postgres_entity.NoConfig](
+		executor, ok := GetTypedExecutor[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingOutput, SyncInvoiceToAccountingConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
