@@ -2,6 +2,7 @@ package agent_listeners
 
 import (
 	"context"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -103,8 +104,8 @@ func (l *NewMeetingRecordingListener) Handle(ctx context.Context, baseEvent any)
 		return err
 	}
 
-	if common.GetUserEmailFromContext(ctx) == "" {
-		err := coserrors.ErrUserEmailNotSet
+	if common.GetUserIdFromContext(ctx) == "" {
+		err := coserrors.ErrUserIDNotSet
 		tracing.TraceErr(span, err)
 		return err
 	}

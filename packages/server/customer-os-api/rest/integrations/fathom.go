@@ -2,6 +2,9 @@ package integrations
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -11,9 +14,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"net/http"
-	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
@@ -50,7 +52,7 @@ func (h *IntegrationHandler) FathomZapier(c *gin.Context, tenant string) {
 }
 
 func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx context.Context) {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleFathomAISummaryZapier")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.handleFathomAISummaryZapier")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
@@ -69,7 +71,18 @@ func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx con
 		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 		return
 	}
-	ctx = common.SetUserEmailInContext(ctx, email)
+	userId, err := h.GetCustomerOSUser(ctx, []string{email})
+	if err != nil {
+		message := "User not found"
+		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
+		return
+	}
+	if userId == "" {
+		h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
+		return
+	}
+	span.LogKV("userId", userId)
+	ctx = common.SetUserIdInContext(ctx, userId)
 
 	aiSummaryData := &aiSummaryDataPayload
 	err = aiSummaryData.toCleanPayload()
@@ -96,7 +109,7 @@ func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx con
 }
 
 func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, aiSummaryData *FathomZapierPayload) error {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishFathomMeetingSummaryCreatedEvent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.publishFathomMeetingSummaryCreatedEvent")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 

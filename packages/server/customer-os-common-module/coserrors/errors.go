@@ -6,8 +6,8 @@ import (
 
 var (
 	// context errors
-	ErrUserEmailNotSet = errors.New("User email not set")
-	ErrTenantNotSet    = errors.New("Tenant not set")
+	ErrUserIDNotSet = errors.New("UserID not set")
+	ErrTenantNotSet = errors.New("Tenant not set")
 
 	ErrAccessDenied        = errors.New("Access denied")
 	ErrInvalidEntityType   = errors.New("Invalid entity type")
