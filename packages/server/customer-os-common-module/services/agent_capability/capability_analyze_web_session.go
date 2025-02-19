@@ -78,7 +78,7 @@ func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput)
 	return nil
 }
 
-func (c *AnalyzeWebSessionCapability) ValidateConfig(config postgres_entity.NoConfig) error {
+func (c *AnalyzeWebSessionCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
