@@ -68,7 +68,6 @@ func TestStartCron(t *testing.T) {
 				CronScheduleSyncFromGlobalOrgsToTenantOrgs:                        "0 0 */1 * * *",
 				CronScheduleCheckTenantOnboarding:                                 "0 0 */1 * * *",
 				CronScheduleIcpCheck:                                              "0 0 */1 * * *",
-				CronScheduleAnalyzeWebSessionsForSupport:                          "0 0 */1 * * *",
 			},
 		},
 	}

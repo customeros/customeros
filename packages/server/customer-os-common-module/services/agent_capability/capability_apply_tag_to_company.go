@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -102,14 +101,6 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 	}
 
 	err := c.applyTag(ctx, entityType, entityID, executionContainer.ConfigData.TagName.Value)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
-	}
-
-	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationID, model.ORGANIZATION, dto.CompanyNeedsHelp{
-		AgentExecutionId: executionContainer.AgentExecutionID,
-	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
