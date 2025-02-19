@@ -270,6 +270,7 @@ func InitCommonServices(
 	capabilityImpl := agent_capability.InitCapabilities(
 		eventsImpl,
 		postgresRepositories,
+		neo4jRepositories,
 		actionImpl,
 		aiImpl,
 		contactImpl,
@@ -282,6 +283,7 @@ func InitCommonServices(
 		orgImpl,
 		tagImpl,
 		workspaceImpl,
+		quickbooksImpl,
 	)
 
 	// initialize agents
