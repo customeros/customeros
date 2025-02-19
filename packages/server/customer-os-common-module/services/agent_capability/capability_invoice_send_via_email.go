@@ -13,68 +13,68 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type SendPastDueNotificationCapability struct {
+type SendInvoiceViaEmailCapability struct {
 	invoiceService interfaces.InvoiceService
 }
 
-func NewSendPastDueNotificationCapability(invoiceService interfaces.InvoiceService) *SendPastDueNotificationCapability {
-	return &SendPastDueNotificationCapability{
+func NewSendInvoiceViaEmailCapability(invoiceService interfaces.InvoiceService) *SendInvoiceViaEmailCapability {
+	return &SendInvoiceViaEmailCapability{
 		invoiceService: invoiceService,
 	}
 }
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[SendPastDueNotificationInput, SendPastDueNotificationOutput, postgres_entity.NoConfig] = (*SendPastDueNotificationCapability)(nil)
+	_ interfaces.AgentCapability[SendInvoiceViaEmailInput, SendInvoiceViaEmailOutput, postgres_entity.NoConfig] = (*SendInvoiceViaEmailCapability)(nil)
 )
 
-func (c *SendPastDueNotificationCapability) Type() enum.AgentCapability {
-	return enum.CapabilitySendPastDueNotification
+func (c *SendInvoiceViaEmailCapability) Type() enum.AgentCapability {
+	return enum.CapabilitySendInvoiceViaEmail
 }
 
-func (c *SendPastDueNotificationCapability) Name() string {
-	return "Send invoice paid notification"
+func (c *SendInvoiceViaEmailCapability) Name() string {
+	return "Send an invoice via email"
 }
 
-func (c *SendPastDueNotificationCapability) NewInput() SendPastDueNotificationInput {
-	return SendPastDueNotificationInput{}
+func (c *SendInvoiceViaEmailCapability) NewInput() SendInvoiceViaEmailInput {
+	return SendInvoiceViaEmailInput{}
 }
 
-func (c *SendPastDueNotificationCapability) NewConfig() postgres_entity.NoConfig {
+func (c *SendInvoiceViaEmailCapability) NewConfig() postgres_entity.NoConfig {
 	return postgres_entity.NoConfig{}
 }
 
-func (c *SendPastDueNotificationCapability) DefaultConfig() any {
+func (c *SendInvoiceViaEmailCapability) DefaultConfig() any {
 	config := c.NewConfig()
 	return &config
 }
 
-func (c *SendPastDueNotificationCapability) ValidateInput(input SendPastDueNotificationInput) error {
+func (c *SendInvoiceViaEmailCapability) ValidateInput(input SendInvoiceViaEmailInput) error {
 	if input.InvoiceID == "" {
 		return errors.New("InvoiceID required")
 	}
 	return nil
 }
 
-func (c *SendPastDueNotificationCapability) ValidateConfig(postgres_entity.NoConfig) error {
+func (c *SendInvoiceViaEmailCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
-type SendPastDueNotificationInput struct {
+type SendInvoiceViaEmailInput struct {
 	InvoiceID string `json:"invoiceId"`
 }
 
-type SendPastDueNotificationOutput struct{}
+type SendInvoiceViaEmailOutput struct{}
 
-func (c *SendPastDueNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendPastDueNotificationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendPastDueNotificationOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendPastDueNotificationCapability.Execute")
+func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendInvoiceViaEmailInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendInvoiceViaEmailOutput, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceViaEmailCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
-	result := SendPastDueNotificationOutput{}
+	result := SendInvoiceViaEmailOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
@@ -99,7 +99,16 @@ func (c *SendPastDueNotificationCapability) Execute(ctx context.Context, executi
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
-	err = c.invoiceService.SendPayReminderInvoiceNotification(ctx, invoice.Id)
+	// TODO alexb check if current agent has payment enabled. if not do not generate payment link and send extra param
+	// TODO cont.. in send pay notification to choose no pay link email template
+
+	err = c.invoiceService.GenerateNewPaymentLink(ctx, executionContainer.InputData.InvoiceID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// Do not stop capability execution if payment link generation fails
+	}
+
+	err = c.invoiceService.SendPayInvoiceNotification(ctx, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionCompleted, result, err // failed send invoice email is not a blocker, since a new attempt will be made automatically by cron

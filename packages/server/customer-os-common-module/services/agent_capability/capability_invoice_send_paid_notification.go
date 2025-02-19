@@ -33,7 +33,7 @@ func (c *SendPaidNotificationCapability) Type() enum.AgentCapability {
 }
 
 func (c *SendPaidNotificationCapability) Name() string {
-	return "Send invoice paid notification"
+	return "Send a paid notification"
 }
 
 func (c *SendPaidNotificationCapability) NewInput() SendPaidNotificationInput {

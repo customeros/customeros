@@ -50,7 +50,7 @@ func (l *InvoicePaidListener) Type() enum.AgentListenerEvent {
 }
 
 func (l *InvoicePaidListener) Name() string {
-	return "Invoice paid"
+	return "Invoices that are paid"
 }
 
 func (l *InvoicePaidListener) DefaultConfig() any {

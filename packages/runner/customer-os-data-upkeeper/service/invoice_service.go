@@ -385,7 +385,6 @@ func (s *invoiceService) updateInvoiceStatusToOverdue() {
 			return // stop processing
 		}
 	}
-
 }
 
 func (s *invoiceService) updateInvoiceStatusToOnHold() {

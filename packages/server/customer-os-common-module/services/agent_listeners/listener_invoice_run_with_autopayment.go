@@ -18,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type StartInvoiceRun struct {
+type StartInvoiceRunWithAutopayment struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
@@ -26,46 +26,46 @@ type StartInvoiceRun struct {
 
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*StartInvoiceRun)(nil)
-	_ interfaces.EventListener        = (*StartInvoiceRun)(nil)
+	_ interfaces.AgentListenerUntyped = (*StartInvoiceRunWithAutopayment)(nil)
+	_ interfaces.EventListener        = (*StartInvoiceRunWithAutopayment)(nil)
 )
 
-func NewStartInvoiceRun(
+func NewStartInvoiceRunWithAutopayment(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
 	agentRunnerService interfaces.AgentRunnerService,
-) *StartInvoiceRun {
-	return &StartInvoiceRun{
+) *StartInvoiceRunWithAutopayment {
+	return &StartInvoiceRunWithAutopayment{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.InvoiceContract](), // subscribed event
-			events.QueueAgents,                         // listening on Agents queue
+			events.GetEventType[dto.InvoiceContractWithAutopayment](), // subscribed event
+			events.QueueAgents, // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
 	}
 }
 
-func (l *StartInvoiceRun) Type() enum.AgentListenerEvent {
-	return enum.EventStartInvoiceRun
+func (l *StartInvoiceRunWithAutopayment) Type() enum.AgentListenerEvent {
+	return enum.EventStartInvoiceRunWithAutopayment
 }
 
-func (l *StartInvoiceRun) Name() string {
-	return "Start invoice run"
+func (l *StartInvoiceRunWithAutopayment) Name() string {
+	return "Scheduled invoices with auto payment"
 }
 
-func (l *StartInvoiceRun) DefaultConfig() any {
+func (l *StartInvoiceRunWithAutopayment) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *StartInvoiceRun) ExecutingAgents() []enum.AgentType {
+func (l *StartInvoiceRunWithAutopayment) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentCashflowGuardian,
 	}
 }
 
-func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.Handle")
+func (l *StartInvoiceRunWithAutopayment) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRunWithAutopayment.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -76,14 +76,14 @@ func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.InvoiceContract](ctx, event)
+	data, err := events.DecodeEventData[dto.InvoiceContractWithAutopayment](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if data.ContractId == "" {
-		err := errors.New("missing contract id")
+		err := errors.New("Missing contract id")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -91,8 +91,8 @@ func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
 	return l.handleExecution(ctx, data)
 }
 
-func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceContract) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.handleExecution")
+func (l *StartInvoiceRunWithAutopayment) handleExecution(ctx context.Context, data dto.InvoiceContractWithAutopayment) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRunWithAutopayment.handleExecution")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -119,8 +119,8 @@ func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceC
 	return errs
 }
 
-func (l *StartInvoiceRun) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.lookupActiveAgents")
+func (l *StartInvoiceRunWithAutopayment) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRunWithAutopayment.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 

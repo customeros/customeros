@@ -2,11 +2,9 @@ package agent_listeners
 
 import (
 	"context"
-
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"errors"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -18,54 +16,64 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type StartInvoiceRunWithAutopayment struct {
+type PastDueInvoiceListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
 }
 
+type PastDueInvoiceConfig struct {
+	OverdueDays ConfigSingleIntValue `json:"overdueDays"`
+}
+
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*StartInvoiceRunWithAutopayment)(nil)
-	_ interfaces.EventListener        = (*StartInvoiceRunWithAutopayment)(nil)
+	_ interfaces.AgentListenerUntyped = (*PastDueInvoiceListener)(nil)
+	_ interfaces.EventListener        = (*PastDueInvoiceListener)(nil)
 )
 
-func NewStartInvoiceRunWithAutopayment(
+func NewPastDueInvoiceListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
 	agentRunnerService interfaces.AgentRunnerService,
-) *StartInvoiceRunWithAutopayment {
-	return &StartInvoiceRunWithAutopayment{
+) *PastDueInvoiceListener {
+	return &PastDueInvoiceListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.InvoiceContractWithAutopayment](), // subscribed event
-			events.QueueAgents, // listening on Agents queue
+			events.GetEventType[dto.PastDueInvoice](), // subscribed event
+			events.QueueAgents,                        // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
 	}
 }
 
-func (l *StartInvoiceRunWithAutopayment) Type() enum.AgentListenerEvent {
-	return enum.EventStartInvoiceRunWithAutopayment
+func (l *PastDueInvoiceListener) Type() enum.AgentListenerEvent {
+	return enum.EventInvoicePastDue
 }
 
-func (l *StartInvoiceRunWithAutopayment) Name() string {
-	return "Start invoice run with autopayment"
+func (l *PastDueInvoiceListener) Name() string {
+	return "Invoices that are past their due date"
 }
 
-func (l *StartInvoiceRunWithAutopayment) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+func (l *PastDueInvoiceListener) DefaultConfig() any {
+	config := PastDueInvoiceConfig{
+		OverdueDays: ConfigSingleIntValue{
+			Value: 15,
+		},
+	}
+	return &config
 }
 
-func (l *StartInvoiceRunWithAutopayment) ExecutingAgents() []enum.AgentType {
+func (l *PastDueInvoiceListener) ExecutingAgents() []enum.AgentType {
+	// add execution agents
 	return []enum.AgentType{
 		enum.AgentCashflowGuardian,
 	}
 }
 
-func (l *StartInvoiceRunWithAutopayment) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRunWithAutopayment.Handle")
+func (l *PastDueInvoiceListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PastDueInvoiceListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -76,14 +84,14 @@ func (l *StartInvoiceRunWithAutopayment) Handle(ctx context.Context, baseEvent a
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.InvoiceContractWithAutopayment](ctx, event)
+	data, err := events.DecodeEventData[dto.PastDueInvoice](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if data.ContractId == "" {
-		err := errors.New("Missing contract id")
+	if data.InvoiceId == "" {
+		err := errors.New("missing invoice id")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -91,13 +99,17 @@ func (l *StartInvoiceRunWithAutopayment) Handle(ctx context.Context, baseEvent a
 	return l.handleExecution(ctx, data)
 }
 
-func (l *StartInvoiceRunWithAutopayment) handleExecution(ctx context.Context, data dto.InvoiceContractWithAutopayment) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRunWithAutopayment.handleExecution")
+func (l *PastDueInvoiceListener) handleExecution(ctx context.Context, data dto.PastDueInvoice) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PastDueInvoiceListener.handleExecution")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	activeAgents := l.lookupActiveAgents(ctx)
-	if activeAgents == nil || len(activeAgents) == 0 {
+	activeAgents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	if len(activeAgents) == 0 {
 		return nil
 	}
 
@@ -117,17 +129,4 @@ func (l *StartInvoiceRunWithAutopayment) handleExecution(ctx context.Context, da
 	}
 
 	return errs
-}
-
-func (l *StartInvoiceRunWithAutopayment) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRunWithAutopayment.lookupActiveAgents")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil
-	}
-	return agents
 }

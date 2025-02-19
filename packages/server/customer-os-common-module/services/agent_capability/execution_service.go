@@ -142,7 +142,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityProcessAutopayment:
-		executor, ok := GetTypedExecutor[ProcessAutopaymentInput, ProcessAutopaymentOutput, postgres_entity.NoConfig](
+		executor, ok := GetTypedExecutor[ProcessAutopaymentInput, ProcessAutopaymentOutput, ProcessAutopaymentConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
