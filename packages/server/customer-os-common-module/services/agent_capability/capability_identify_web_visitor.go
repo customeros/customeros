@@ -154,7 +154,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
-		return enum.CapabilityExecutionCompleted, result, nil
+		return enum.CapabilityExecutionStop, result, nil
 	}
 
 	err = c.publishWebVisitorIdentifiedEvent(ctx, executionContainer.AgentExecutionID)

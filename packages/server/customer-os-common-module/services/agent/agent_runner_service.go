@@ -306,7 +306,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		checkpointData := map[string]any{
 			"status":       status.String(),
 			"output":       output,
-			"completed_at": time.Now().UTC(),
+			"completed_at": utils.Now(),
 		}
 		if err := a.postgresRepositories.AgentExecutionRepository.CompleteStep(ctx, params.executionID, params.capabilityTypeStr, checkpointData); err != nil {
 			tracing.TraceErr(span, err)
@@ -317,7 +317,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		checkpointData := map[string]any{
 			"status":     status.String(),
 			"output":     output,
-			"stopped_at": time.Now().UTC(),
+			"stopped_at": utils.Now(),
 		}
 		if err := a.postgresRepositories.AgentExecutionRepository.CompleteStep(ctx, params.executionID, params.capabilityTypeStr, checkpointData); err != nil {
 			tracing.TraceErr(span, err)
