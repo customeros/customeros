@@ -32,11 +32,14 @@ func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, emails []str
 		if email == "" {
 			continue
 		}
-		user, _ := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
+		user, err := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
 		if user != nil && user.Id != "" {
 			ctx = common.SetUserIdInContext(ctx, user.Id)
-			agent, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, []enum.AgentType{agent})
-			if agent != nil {
+			activeAgent, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, []enum.AgentType{agent})
+			if activeAgent != nil {
 				return user.Id, nil
 			}
 			if err != nil {
