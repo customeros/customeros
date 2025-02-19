@@ -118,7 +118,13 @@ func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, meetingOwner
 		}
 		user, _ := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
 		if user != nil && user.Id != "" {
-			return user.Id, nil
+			agent, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, []enum.AgentType{enum.AgentMeetingKeeper})
+			if agent != nil {
+				return user.Id, nil
+			}
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 		}
 	}
 	return "", coserrors.ErrCannotIdentifyUser

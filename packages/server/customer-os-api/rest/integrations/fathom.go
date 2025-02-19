@@ -128,7 +128,9 @@ func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Cont
 		ParticipantEmails:   participants,
 		MeetingRecordingUrl: aiSummaryData.Recording.ShareURL,
 	}
-	if !contains(event.ParticipantEmails, aiSummaryData.FathomUser.Email) { event.ParticipantEmails = append(event.ParticipantEmails, aiSummaryData.FathomUser.Email) }
+	if !utils.IsStringInSlice(aiSummaryData.FathomUser.Email, event.ParticipantEmails) {
+		event.ParticipantEmails = append(event.ParticipantEmails, aiSummaryData.FathomUser.Email)
+	}
 
 	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
 		event.Timestamp = utils.Now()
