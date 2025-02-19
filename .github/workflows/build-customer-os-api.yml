@@ -35,57 +35,53 @@ defaults:
     working-directory: ./packages/server/customer-os-api
 
 jobs:
-  # test:
-  #   runs-on: ubicloud-standard-2
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       test-group: [
-  #         "repository",
-  #         "rest",
-  #         "other"
-  #       ]
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #
-  #     - name: Set up Go
-  #       uses: ubicloud/setup-go@v5
-  #       with:
-  #         go-version: stable
-  #         cache: true
-  #       env:
-  #         GOPROXY: "direct"
-  #         GOSUMDB: "off"
-  #         GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
-  #
-  #     - name: Cache Go tools
-  #       uses: ubicloud/cache@v4
-  #       with:
-  #         path: ${{ env.GOBIN }}
-  #         key: ${{ runner.os }}-go-tools-${{ hashFiles('./packages/server/customer-os-api/go.sum') }}
-  #
-  #     - name: Install gotestsum
-  #       run: |
-  #         mkdir -p "$GOBIN"
-  #         if [ ! -f "$GOBIN/gotestsum" ]; then
-  #           go install gotest.tools/gotestsum@latest
-  #         fi
-  #         echo "$GOBIN" >> $GITHUB_PATH
-  #
-  #     - name: Go Cache
-  #       id: go-cache
-  #       uses: ubicloud/cache@v4
-  #       with:
-  #         path: |
-  #           ~/.cache/go-build
-  #           ${{ env.GOMODCACHE }}
-  #         key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-go-
-  #
-  #     - name: Build
-  #       if: steps.go-cache.outputs.cache-hit != 'true'
-  #       run: make all
+  test:
+    runs-on: ubicloud-standard-2
+    strategy:
+      fail-fast: false
+      matrix:
+        test-group: ["repository", "rest", "other"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: ubicloud/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+        env:
+          GOPROXY: "direct"
+          GOSUMDB: "off"
+          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+
+      - name: Cache Go tools
+        uses: ubicloud/cache@v4
+        with:
+          path: ${{ env.GOBIN }}
+          key: ${{ runner.os }}-go-tools-${{ hashFiles('./packages/server/customer-os-api/go.sum') }}
+
+      - name: Install gotestsum
+        run: |
+          mkdir -p "$GOBIN"
+          if [ ! -f "$GOBIN/gotestsum" ]; then
+            go install gotest.tools/gotestsum@latest
+          fi
+          echo "$GOBIN" >> $GITHUB_PATH
+
+      - name: Go Cache
+        id: go-cache
+        uses: ubicloud/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ${{ env.GOMODCACHE }}
+          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build
+        if: steps.go-cache.outputs.cache-hit != 'true'
+        run: make all
   #
   #     - name: Get test packages
   #       id: get-packages
@@ -334,4 +330,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
-
