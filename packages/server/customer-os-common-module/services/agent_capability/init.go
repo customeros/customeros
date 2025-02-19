@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"fmt"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -17,6 +18,7 @@ type AgentCapabilities struct {
 func InitCapabilities(
 	events *events.EventsService,
 	postgresRepositories *postgres_repository.Repositories,
+	neo4jRepositories *neo4j_repository.Repositories,
 	actionService interfaces.ActionService,
 	aiService interfaces.AIService,
 	contactService interfaces.ContactService,
@@ -29,6 +31,7 @@ func InitCapabilities(
 	organizationService interfaces.OrganizationService,
 	tagService interfaces.TagService,
 	workspaceService interfaces.WorkspaceService,
+	quickbooksService interfaces.QuickbooksService,
 ) *AgentCapabilities {
 	var capabilities []interfaces.AgentCapabilityUntyped
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
@@ -65,6 +68,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewSendInvoiceVoidedNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPaidNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPastDueNotificationCapability(invoiceService))
+	capabilities = append(capabilities, NewSyncInvoiceToAccountingCapability(postgresRepositories, neo4jRepositories, invoiceService, quickbooksService))
 
 	agentCapabilities := AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),

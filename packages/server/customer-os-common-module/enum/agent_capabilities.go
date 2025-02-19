@@ -73,7 +73,6 @@ const (
 	CapabilitySendPaymentReminder                AgentCapability = "send_payment_reminder"
 	CapabilitySendSlackNotification              AgentCapability = "send_slack_notification"
 	CapabilitySendWebVisitorSlackNotification    AgentCapability = "send_web_visitor_slack_notification"
-	CapabilitySyncWithAccountingSystem           AgentCapability = "sync_with_accounting_system"
 	CapabilityTrackCampaignEngagement            AgentCapability = "track_campaign_engagement"
 	CapabilityUpdateCompanyStatus                AgentCapability = "update_company_status"
 	CapabilityValidateEmailAddressDeliverability AgentCapability = "validate_email_deliverability"
@@ -87,6 +86,7 @@ const (
 	CapabilitySendPaidNotification               AgentCapability = "send_paid_notification"
 	CapabilitySendInvoiceVoidedNotification      AgentCapability = "send_invoice_voided_notification"
 	CapabilitySendPastDueNotification            AgentCapability = "send_past_due_notification"
+	CapabilitySyncInvoiceToAccounting            AgentCapability = "sync_invoice_to_accounting_system"
 )
 
 func (t AgentCapability) String() string {
@@ -133,7 +133,6 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilitySendPaymentReminder,
 		CapabilitySendSlackNotification,
 		CapabilitySendWebVisitorSlackNotification,
-		CapabilitySyncWithAccountingSystem,
 		CapabilityTrackCampaignEngagement,
 		CapabilityUpdateCompanyStatus,
 		CapabilitySendInvoiceViaEmail,
@@ -146,6 +145,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityIngestEmail,
 		CapabilitySendPaidNotification,
 		CapabilitySendInvoiceVoidedNotification,
+		CapabilitySyncInvoiceToAccounting,
 		CapabilitySendPastDueNotification:
 		return AgentCapability(s), nil
 

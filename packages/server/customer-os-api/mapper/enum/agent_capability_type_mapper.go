@@ -42,6 +42,7 @@ var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapability{
 	model.CapabilityTypeSummarizeThread:                  enum.CapabilitySummarizeThread,
 	model.CapabilityTypeIngestEmail:                      enum.CapabilityIngestEmail,
 	model.CapabilityTypeSendPastDueNotification:          enum.CapabilitySendPastDueNotification,
+	model.CapabilityTypeSyncInvoiceToAccounting:          enum.CapabilitySyncInvoiceToAccounting,
 }
 
 var agentCapabilityTypeByValue = utils.ReverseMap(agentCapabilityTypeByModel)
