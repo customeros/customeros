@@ -3,6 +3,7 @@ package sli
 import (
 	"context"
 	"fmt"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"strconv"
 	"time"
 
@@ -44,14 +45,16 @@ type serviceLineItemService struct {
 	log      logger.Logger
 	events   *events.EventsService
 	neo4j    *neo4j_repository.Repositories
+	postgres *postgres_repository.Repositories
 	contract interfaces.ContractService
 }
 
-func NewServiceLineItemService(log logger.Logger, events *events.EventsService, neo4j *neo4j_repository.Repositories, contract interfaces.ContractService) interfaces.ServiceLineItemService {
+func NewServiceLineItemService(log logger.Logger, events *events.EventsService, neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, contract interfaces.ContractService) interfaces.ServiceLineItemService {
 	return &serviceLineItemService{
 		log:      log,
 		events:   events,
 		neo4j:    neo4j,
+		postgres: postgres,
 		contract: contract,
 	}
 }
@@ -87,24 +90,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		createFlow = true
 		span.LogKV("flow", "create")
 
-		// prepare missing fields
-		if dataFields.CreatedAt == nil || dataFields.CreatedAt.IsZero() {
-			dataFields.CreatedAt = utils.NowPtr()
-		}
-		if dataFields.StartedAt == nil || dataFields.StartedAt.IsZero() {
-			dataFields.StartedAt = utils.NowPtr()
-		}
-		if utils.IfNotNilString(dataFields.Source) == "" {
-			dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
-		}
-		if utils.IfNotNilString(dataFields.AppSource) == "" {
-			dataFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
-		}
-		if utils.IfNotNilFloat64(dataFields.TaxRate) < 0 {
-			dataFields.TaxRate = utils.Float64Ptr(0)
-		}
-		dataFields.TaxRate = utils.Float64Ptr(utils.TruncateFloat64(utils.IfNotNilFloat64(dataFields.TaxRate), 2))
-
 		// validate data
 		if utils.IfNotNilInt64(dataFields.Quantity) < 0 {
 			err = errors.New("quantity cannot be negative")
@@ -128,6 +113,64 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *dataFields.ContractId, model.NodeLabelContract)
 			if err != nil || !exists {
 				err = errors.New("contract not found")
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+
+		if dataFields.IsNewVersion() && utils.IfNotNilString(dataFields.ParentId) == "" {
+			err = errors.New("parentId is required for new version")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		// prepare missing fields
+		if dataFields.CreatedAt == nil || dataFields.CreatedAt.IsZero() {
+			dataFields.CreatedAt = utils.NowPtr()
+		}
+		if dataFields.StartedAt == nil || dataFields.StartedAt.IsZero() {
+			dataFields.StartedAt = utils.NowPtr()
+		}
+		if utils.IfNotNilString(dataFields.Source) == "" {
+			dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+		}
+		if utils.IfNotNilString(dataFields.AppSource) == "" {
+			dataFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
+		}
+		if utils.IfNotNilFloat64(dataFields.TaxRate) < 0 {
+			dataFields.TaxRate = utils.Float64Ptr(0)
+		}
+		dataFields.TaxRate = utils.Float64Ptr(utils.TruncateFloat64(utils.IfNotNilFloat64(dataFields.TaxRate), 2))
+
+		// set sku id from previous version
+		if dataFields.IsNewVersion() {
+			parentEntities, err := s.GetServiceLineItemsByParentId(ctx, *dataFields.ParentId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			for _, parentEntity := range *parentEntities {
+				if parentEntity.SkuId != "" {
+					dataFields.SkuId = utils.StringPtr(parentEntity.SkuId)
+					break
+				}
+			}
+		}
+
+		// validate sku id exists
+		if utils.IfNotNilString(dataFields.SkuId) != "" {
+			sku, err := s.postgres.SkuRepository.Get(ctx, tenant, *dataFields.SkuId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if sku == nil {
+				err = errors.New("sku not found")
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if sku.Archived && !dataFields.IsNewVersion() {
+				err = errors.New("sku is archived")
 				tracing.TraceErr(span, err)
 				return "", err
 			}
@@ -262,7 +305,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 					if dataFields.BilledType.IsRecurrent() {
 						message := userName
-						if dataFields.NewVersion != nil && *dataFields.NewVersion {
+						if dataFields.IsNewVersion() {
 							message += " updated recurring service for "
 						} else {
 							message += " added a recurring service to "

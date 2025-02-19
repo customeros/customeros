@@ -22,3 +22,7 @@ type SLIFields struct {
 	ParentId   *string               `json:"parentId,omitempty"`
 	NewVersion *bool                 `json:"newVersion,omitempty"`
 }
+
+func (s *SLIFields) IsNewVersion() bool {
+	return s.NewVersion != nil && *s.NewVersion
+}
