@@ -80,9 +80,9 @@ func SetAppSourceInContext(ctx context.Context, appSource string) context.Contex
 	return WithCustomContext(ctx, customContext)
 }
 
-func SetUserEmailInContext(ctx context.Context, userEmail string) context.Context {
+func SetUserIdInContext(ctx context.Context, userId string) context.Context {
 	customContext := GetContext(ctx)
-	customContext.UserEmail = userEmail
+	customContext.UserId = userId
 	return WithCustomContext(ctx, customContext)
 }
 

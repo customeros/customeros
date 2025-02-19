@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -231,11 +232,14 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByUserAndType(ctx context.Co
 	tracing.TagComponentPostgresRepository(span)
 
 	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		tracing.TraceErr(span, coserrors.ErrTenantNotSet)
+		return nil, coserrors.ErrTenantNotSet
+	}
 	user := common.GetUserIdFromContext(ctx)
-	if tenant == "" || user == "" {
-		err := errors.New("tenant or userEmail not set")
-		tracing.TraceErr(span, err)
-		return nil, err
+	if user == "" {
+		tracing.TraceErr(span, coserrors.ErrUserIDNotSet)
+		return nil, coserrors.ErrUserIDNotSet
 	}
 
 	var records []postgres_entity.Agent

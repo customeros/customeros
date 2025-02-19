@@ -15,13 +15,14 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
 
 func (h *IntegrationHandler) GrainZapier(c *gin.Context, tenant string) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.Grain", c.Request.Header)
+	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Integrations.Grain", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 	tracing.TagTenant(span, tenant)
@@ -49,7 +50,7 @@ func (h *IntegrationHandler) GrainZapier(c *gin.Context, tenant string) {
 }
 
 func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context) {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleGrainNewRecorderEventZapier")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.handleGrainNewRecorderEventZapier")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
@@ -75,13 +76,20 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 		return
 	}
 
-	userEmail, err := h.getCustomerOSUser(ctx, grainData.RecordingData.Owners)
+	userID, err := h.GetCustomerOSUser(ctx, grainData.RecordingData.Owners)
 	if err != nil {
 		message := "User not found"
 		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 		return
 	}
-	ctx = common.SetUserEmailInContext(ctx, userEmail)
+	if userID == "" {
+		message := "User not found"
+		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
+		return
+	}
+
+	span.LogKV("userId", userID)
+	ctx = common.SetUserIdInContext(ctx, userID)
 
 	h.responseHandler.HandleAccepted(c)
 
@@ -93,8 +101,8 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 	return
 }
 
-func (h *IntegrationHandler) getCustomerOSUser(ctx context.Context, meetingOwners []string) (string, error) {
-	span, _ := commontracing.StartTracerSpan(ctx, "Flows.getCustomerOSUser")
+func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, meetingOwners []string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.getCustomerOSUser")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
@@ -110,14 +118,14 @@ func (h *IntegrationHandler) getCustomerOSUser(ctx context.Context, meetingOwner
 		}
 		user, _ := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
 		if user != nil && user.Id != "" {
-			return owner, nil
+			return user.Id, nil
 		}
 	}
 	return "", coserrors.ErrCannotIdentifyUser
 }
 
 func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, grainData *GrainRecordingData) error {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishGrainMeetingSummaryEvent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.publishGrainMeetingSummaryCreatedEvent")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
