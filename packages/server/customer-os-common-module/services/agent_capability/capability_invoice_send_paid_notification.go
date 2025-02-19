@@ -13,68 +13,68 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type SendInvoiceVoidedNotificationCapability struct {
+type SendPaidNotificationCapability struct {
 	invoiceService interfaces.InvoiceService
 }
 
-func NewSendInvoiceVoidedNotificationCapability(invoiceService interfaces.InvoiceService) *SendInvoiceVoidedNotificationCapability {
-	return &SendInvoiceVoidedNotificationCapability{
+func NewSendPaidNotificationCapability(invoiceService interfaces.InvoiceService) *SendPaidNotificationCapability {
+	return &SendPaidNotificationCapability{
 		invoiceService: invoiceService,
 	}
 }
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[SendInvoiceVoidedNotificationInput, SendInvoiceVoidedNotificationOutput, postgres_entity.NoConfig] = (*SendInvoiceVoidedNotificationCapability)(nil)
+	_ interfaces.AgentCapability[SendPaidNotificationInput, SendPaidNotificationOutput, postgres_entity.NoConfig] = (*SendPaidNotificationCapability)(nil)
 )
 
-func (c *SendInvoiceVoidedNotificationCapability) Type() enum.AgentCapability {
-	return enum.CapabilitySendInvoiceVoidedNotification
+func (c *SendPaidNotificationCapability) Type() enum.AgentCapability {
+	return enum.CapabilitySendPaidNotification
 }
 
-func (c *SendInvoiceVoidedNotificationCapability) Name() string {
-	return "Send invoice via email"
+func (c *SendPaidNotificationCapability) Name() string {
+	return "Send a paid notification"
 }
 
-func (c *SendInvoiceVoidedNotificationCapability) NewInput() SendInvoiceVoidedNotificationInput {
-	return SendInvoiceVoidedNotificationInput{}
+func (c *SendPaidNotificationCapability) NewInput() SendPaidNotificationInput {
+	return SendPaidNotificationInput{}
 }
 
-func (c *SendInvoiceVoidedNotificationCapability) NewConfig() postgres_entity.NoConfig {
+func (c *SendPaidNotificationCapability) NewConfig() postgres_entity.NoConfig {
 	return postgres_entity.NoConfig{}
 }
 
-func (c *SendInvoiceVoidedNotificationCapability) DefaultConfig() any {
+func (c *SendPaidNotificationCapability) DefaultConfig() any {
 	config := c.NewConfig()
 	return &config
 }
 
-func (c *SendInvoiceVoidedNotificationCapability) ValidateInput(input SendInvoiceVoidedNotificationInput) error {
+func (c *SendPaidNotificationCapability) ValidateInput(input SendPaidNotificationInput) error {
 	if input.InvoiceID == "" {
 		return errors.New("InvoiceID required")
 	}
 	return nil
 }
 
-func (c *SendInvoiceVoidedNotificationCapability) ValidateConfig(postgres_entity.NoConfig) error {
+func (c *SendPaidNotificationCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
-type SendInvoiceVoidedNotificationInput struct {
+type SendPaidNotificationInput struct {
 	InvoiceID string `json:"invoiceId"`
 }
 
-type SendInvoiceVoidedNotificationOutput struct{}
+type SendPaidNotificationOutput struct{}
 
-func (c *SendInvoiceVoidedNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendInvoiceVoidedNotificationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendInvoiceVoidedNotificationOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceVoidedNotificationCapability.Execute")
+func (c *SendPaidNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendPaidNotificationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendPaidNotificationOutput, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SendPaidNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
-	result := SendInvoiceVoidedNotificationOutput{}
+	result := SendPaidNotificationOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
@@ -99,7 +99,7 @@ func (c *SendInvoiceVoidedNotificationCapability) Execute(ctx context.Context, e
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
-	err = c.invoiceService.SendVoidedInvoiceNotification(ctx, invoice.Id)
+	err = c.invoiceService.SendPaidInvoiceNotification(ctx, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionCompleted, result, err // failed send invoice email is not a blocker, since a new attempt will be made automatically by cron

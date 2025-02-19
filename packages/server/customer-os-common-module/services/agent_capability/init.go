@@ -61,7 +61,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewSummarizeMessageCapability())
 	capabilities = append(capabilities, NewSummarizeThreadCapability())
 	capabilities = append(capabilities, NewIngestEmailCapability())
-	capabilities = append(capabilities, NewSendInvoiceViaEmailCapability(invoiceService))
+	capabilities = append(capabilities, NewSendInvoiceViaEmailCapability(postgresRepositories, invoiceService))
 	capabilities = append(capabilities, NewSendInvoiceVoidedNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPaidNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPastDueNotificationCapability(invoiceService))

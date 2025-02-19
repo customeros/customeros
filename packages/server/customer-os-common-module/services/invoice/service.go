@@ -2433,11 +2433,12 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	return fileDTO.ID, nil
 }
 
-func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoiceId string) error {
+func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoiceId string, allowPayLinkInEmail bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendPayInvoiceNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, invoiceId)
+	span.LogFields(log.Bool("allowPayLinkInEmail", allowPayLinkInEmail))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -2502,7 +2503,7 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 
 	// prepare email
 	workflowId := ""
-	if contractEntity.PayOnline || contractEntity.PayAutomatically {
+	if allowPayLinkInEmail && (contractEntity.PayOnline || contractEntity.PayAutomatically) {
 		workflowId = postmark.WorkflowInvoiceReadyWithPaymentLink
 	} else {
 		workflowId = postmark.WorkflowInvoiceReadyNoPaymentLink

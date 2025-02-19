@@ -96,7 +96,7 @@ func (c *GenerateInvoiceCapability) Type() enum.AgentCapability {
 }
 
 func (c *GenerateInvoiceCapability) Name() string {
-	return "Generate an invoice"
+	return "Generate invoices"
 }
 
 func (c *GenerateInvoiceCapability) NewInput() GenerateInvoiceInput {

@@ -3,7 +3,6 @@ package agent_capability
 import (
 	"context"
 
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -25,7 +24,7 @@ func NewProcessAutopaymentCapability(invoiceService interfaces.InvoiceService) *
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[ProcessAutopaymentInput, ProcessAutopaymentOutput, postgres_entity.NoConfig] = (*ProcessAutopaymentCapability)(nil)
+	_ interfaces.AgentCapability[ProcessAutopaymentInput, ProcessAutopaymentOutput, ProcessAutopaymentConfig] = (*ProcessAutopaymentCapability)(nil)
 )
 
 func (c *ProcessAutopaymentCapability) Type() enum.AgentCapability {
@@ -33,15 +32,15 @@ func (c *ProcessAutopaymentCapability) Type() enum.AgentCapability {
 }
 
 func (c *ProcessAutopaymentCapability) Name() string {
-	return "Process autopayment"
+	return "Manage online payment"
 }
 
 func (c *ProcessAutopaymentCapability) NewInput() ProcessAutopaymentInput {
 	return ProcessAutopaymentInput{}
 }
 
-func (c *ProcessAutopaymentCapability) NewConfig() postgres_entity.NoConfig {
-	return postgres_entity.NoConfig{}
+func (c *ProcessAutopaymentCapability) NewConfig() ProcessAutopaymentConfig {
+	return ProcessAutopaymentConfig{}
 }
 
 func (c *ProcessAutopaymentCapability) DefaultConfig() any {
@@ -53,8 +52,12 @@ func (c *ProcessAutopaymentCapability) ValidateInput(ProcessAutopaymentInput) er
 	return nil
 }
 
-func (c *ProcessAutopaymentCapability) ValidateConfig(postgres_entity.NoConfig) error {
+func (c *ProcessAutopaymentCapability) ValidateConfig(ProcessAutopaymentConfig) error {
 	return nil
+}
+
+type ProcessAutopaymentConfig struct {
+	Stripe ConfigSingleBoolValue `json:"stripe"`
 }
 
 type ProcessAutopaymentInput struct {
@@ -63,7 +66,7 @@ type ProcessAutopaymentInput struct {
 
 type ProcessAutopaymentOutput struct{}
 
-func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ProcessAutopaymentInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ProcessAutopaymentOutput, error) {
+func (c *ProcessAutopaymentCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ProcessAutopaymentInput, ProcessAutopaymentConfig]) (enum.CapabilityExecutionStatus, ProcessAutopaymentOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ProcessAutopaymentCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)

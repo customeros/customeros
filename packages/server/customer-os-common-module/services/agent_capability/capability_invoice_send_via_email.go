@@ -2,6 +2,9 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -14,12 +17,14 @@ import (
 )
 
 type SendInvoiceViaEmailCapability struct {
-	invoiceService interfaces.InvoiceService
+	postgresRepositories *postgres_repository.Repositories
+	invoiceService       interfaces.InvoiceService
 }
 
-func NewSendInvoiceViaEmailCapability(invoiceService interfaces.InvoiceService) *SendInvoiceViaEmailCapability {
+func NewSendInvoiceViaEmailCapability(postgresRepositories *postgres_repository.Repositories, invoiceService interfaces.InvoiceService) *SendInvoiceViaEmailCapability {
 	return &SendInvoiceViaEmailCapability{
-		invoiceService: invoiceService,
+		postgresRepositories: postgresRepositories,
+		invoiceService:       invoiceService,
 	}
 }
 
@@ -33,7 +38,7 @@ func (c *SendInvoiceViaEmailCapability) Type() enum.AgentCapability {
 }
 
 func (c *SendInvoiceViaEmailCapability) Name() string {
-	return "Send invoice via email"
+	return "Send an invoice via email"
 }
 
 func (c *SendInvoiceViaEmailCapability) NewInput() SendInvoiceViaEmailInput {
@@ -99,16 +104,20 @@ func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionCo
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
-	// TODO alexb check if current agent has payment enabled. if not do not generate payment link and send extra param
-	// TODO cont.. in send pay notification to choose no pay link email template
-
-	err = c.invoiceService.GenerateNewPaymentLink(ctx, executionContainer.InputData.InvoiceID)
+	paymentEnabled, err := c.isPaymentCapabilityEnabled(ctx, executionContainer.AgentExecutionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		// Do not stop capability execution if payment link generation fails
 	}
 
-	err = c.invoiceService.SendPayInvoiceNotification(ctx, executionContainer.InputData.InvoiceID)
+	if paymentEnabled {
+		err = c.invoiceService.GenerateNewPaymentLink(ctx, executionContainer.InputData.InvoiceID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			// Do not stop capability execution if payment link generation fails
+		}
+	}
+
+	err = c.invoiceService.SendPayInvoiceNotification(ctx, executionContainer.InputData.InvoiceID, paymentEnabled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionCompleted, result, err // failed send invoice email is not a blocker, since a new attempt will be made automatically by cron
@@ -116,4 +125,39 @@ func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionCo
 
 	tracing.LogObjectAsJson(span, "result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
+}
+
+func (c *SendInvoiceViaEmailCapability) isPaymentCapabilityEnabled(ctx context.Context, agentExecutionId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceViaEmailCapability.isPaymentCapabilityEnabled")
+	defer span.Finish()
+	span.LogFields(log.String("agentExecutionId", agentExecutionId))
+
+	// get agent id from execution
+	agentExecution, err := c.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	if agentExecution == nil || utils.IfNotNilString(agentExecution.AgentID) == "" {
+		err := errors.New("agent execution not found")
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	agentId := utils.IfNotNilString(agentExecution.AgentID)
+
+	// get agent
+	agent, err := c.postgresRepositories.AgentRepository.GetById(ctx, agentId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	// check capability
+	for _, capability := range agent.Capabilities {
+		if capability.Type == enum.CapabilityProcessAutopayment {
+			return capability.Active, nil
+		}
+	}
+
+	return false, nil
 }
