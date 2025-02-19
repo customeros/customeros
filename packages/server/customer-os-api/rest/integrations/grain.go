@@ -50,7 +50,7 @@ func (h *IntegrationHandler) GrainZapier(c *gin.Context, tenant string) {
 }
 
 func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.handleGrainNewRecorderEventZapier")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.handleGrainNewRecordingEventZapier")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
