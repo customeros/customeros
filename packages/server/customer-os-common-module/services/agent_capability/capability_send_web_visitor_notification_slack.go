@@ -150,7 +150,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	skip, err := c.skipNotification(ctx, executionContainer.InputData.Domain, executionContainer.ConfigData.CooldownHours.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 	if skip {
 		return enum.CapabilityExecutionCompleted, result, nil
@@ -159,12 +159,12 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	message, err := c.buildWebVisitorSlackNotification(ctx, executionContainer.InputData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 	if message == nil || *message == "" {
 		err = errors.New("Failed to build slack notification message")
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 
 	newExecutionContainer := interfaces.TypedExecutionContainer[SendSlackNotificationInput, SendSlackNotificationConfig]{
@@ -186,7 +186,6 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithSlackSentAt(ctx, executionContainer.InputData.WebSessionID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionError, result, err
 		}
 	}
 

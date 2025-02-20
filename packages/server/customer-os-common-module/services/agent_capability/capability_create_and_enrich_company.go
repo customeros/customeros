@@ -117,6 +117,7 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 
 		span.LogFields(log.Bool("result.skip", true))
 		result.IsWorkspaceDomain = true
+		tracing.LogObjectAsJson(span, "result", result)
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
@@ -128,7 +129,7 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	if organizationEntity != nil {
 		// if organization is hidden, return early
 		if organizationEntity.Hide {
-			return enum.CapabilityExecutionCompleted, result, nil
+			return enum.CapabilityExecutionStop, result, nil
 		}
 		orgID = organizationEntity.ID
 	}
@@ -139,7 +140,7 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionError, result, err
+			return enum.CapabilityExecutionRetry, result, err
 		}
 	}
 
