@@ -46,11 +46,11 @@ type GrainParticipant struct {
 }
 
 func (g *GrainRecording) participantEmails() []string {
-	emails := make([]string, len(g.Participants))
+	var emails []string
 
-	for v, participant := range g.Participants {
+	for _, participant := range g.Participants {
 		if participant.Email != nil && *participant.Email != "" {
-			emails[v] = *participant.Email
+			emails = append(emails, *participant.Email)
 		}
 	}
 	return emails
