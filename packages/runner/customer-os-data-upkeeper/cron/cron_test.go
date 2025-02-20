@@ -69,6 +69,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleCheckTenantOnboarding:                                 "0 0 */1 * * *",
 				CronScheduleIcpCheck:                                              "0 0 */1 * * *",
 				CronScheduleRerunAgent:                                            "0 0 */1 * * *",
+				CronScheduleGlobalOrgScrape:                                       "0 0 */1 * * *",
 			},
 		},
 	}
