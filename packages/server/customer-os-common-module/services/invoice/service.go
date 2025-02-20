@@ -2348,6 +2348,9 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Amount, 2),
 			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Vat, 2),
 		}
+		if invoiceLine.Description != "" {
+			invoiceLineItem["InvoiceLineDescription"] = invoiceLine.Description
+		}
 		sliDbNode, _ := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, tenant, invoiceLine.ServiceLineItemId)
 		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
 
