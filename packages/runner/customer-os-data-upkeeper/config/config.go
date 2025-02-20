@@ -1,13 +1,15 @@
 package config
 
 import (
+	"log"
+
 	"github.com/caarlos0/env/v6"
-	cronconf "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron/config"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
-	"log"
+
+	cronconf "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron/config"
 )
 
 type CommonConfig struct {
@@ -29,6 +31,7 @@ type CommonConfig struct {
 	GoogleOAuthConfig commonconf.GoogleOAuthConfig
 	AzureOAuthConfig  commonconf.AzureOAuthConfig
 	NovuConfig        commonconf.NovuConfig
+	JinaConfig        commonconf.JinaConfig
 }
 
 type AppConfig struct {
