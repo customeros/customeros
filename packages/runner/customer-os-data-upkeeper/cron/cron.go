@@ -53,6 +53,7 @@ const (
 	GroupTouchpoint     = "refreshLastTouchpoint"
 	GroupUnthreadIssues = "linkUnthreadIssues"
 	GroupTenant         = "tenant"
+	GroupAgent          = "agent"
 )
 
 // LOCK MANAGEMENT
@@ -89,6 +90,7 @@ var jobLocks = struct {
 		GroupReminder:                          {},
 		GroupWebSession:                        {},
 		GroupTenant:                            {},
+		GroupAgent:                             {},
 	},
 }
 
@@ -168,6 +170,9 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Tenant Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckTenantOnboarding, GroupTenant, checkTenantOnboarding, "checkTenantOnboarding")
+
+	// Agent Jobs
+	addJob(cont.Cfg.App.Cron.CronScheduleRerunAgent, GroupAgent, rerunAgent, "rerunAgent")
 
 	// Other Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleRefreshLastTouchpoint, GroupTouchpoint, refreshLastTouchpoint, "refreshLastTouchpoint")
@@ -369,4 +374,8 @@ func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {
 
 func checkTenantOnboarding(cont *container.Container) {
 	service.NewTenantService(cont.Cfg, cont.Log, cont.CommonServices).CheckOnboarding()
+}
+
+func rerunAgent(cont *container.Container) {
+	service.NewAgentService(cont.Cfg, cont.Log, cont.CommonServices).RerunExecutions()
 }

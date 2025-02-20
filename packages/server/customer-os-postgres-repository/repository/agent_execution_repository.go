@@ -24,11 +24,12 @@ type AgentExecutionRepository interface {
 	Pending(ctx context.Context, executionID string) error
 	Finish(ctx context.Context, executionID string) error
 	Completed(ctx context.Context, executionID string, goalAchieved *bool) (*postgres_entity.AgentExecution, error)
-	ScheduleRetry(ctx context.Context, executionID string, err error) error
+	ScheduleRetry(ctx context.Context, executionID string, err error, stateData map[string]any) error
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
 	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error
 	GetGoalAchievedCountLast30Days(ctx context.Context, agentID string) (int64, error)
+	GetExecutionsForRetry(ctx context.Context, limit int) ([]postgres_entity.AgentExecution, error)
 }
 
 type agentExecutionRepository struct {
@@ -80,10 +81,10 @@ func (f *agentExecutionRepository) Completed(ctx context.Context, executionID st
 		return nil, err
 	}
 
-	// load the record
 	fields := map[string]interface{}{
-		"status":       enum.AgentExecutionCompleted.String(),
-		"completed_at": utils.NowPtr(),
+		"status":        enum.AgentExecutionCompleted.String(),
+		"completed_at":  utils.NowPtr(),
+		"next_retry_at": nil,
 	}
 	if goalAchieved != nil {
 		fields["goal_achieved"] = *goalAchieved
@@ -225,7 +226,7 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 	return &agentExecution, nil
 }
 
-func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error) error {
+func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error, stateData map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.ScheduleRetry")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -244,8 +245,11 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		return result.Error
 	}
 
-	// Increment retry count and set next retry time
-	execution.RetryCount++
+	// Increment retry count and set next retry time if it's not the first scheduling
+	if execution.NextRetryAt != nil {
+		execution.RetryCount++
+	}
+	execution.StateData = stateData
 	if execution.RetryCount > execution.MaxRetries {
 		execution.Status = enum.AgentExecutionError
 		if inputError != nil {
@@ -253,14 +257,13 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		}
 		execution.NextRetryAt = nil
 	} else {
-
 		backoff := utils.CalculateExponentialBackoffDelay(execution.RetryCount, utils.BackoffConfig{
 			InitialDelay: 30 * time.Second,
 			MaxDelay:     12 * time.Hour,
 			Factor:       2.0,
 			Jitter:       0.12,
 		})
-		nextRetry := time.Now().Add(backoff)
+		nextRetry := utils.Now().Add(backoff)
 		execution.NextRetryAt = &nextRetry
 		if inputError != nil {
 			execution.ErrorMessage = utils.StringPtr(inputError.Error())
@@ -359,4 +362,26 @@ func (r *agentExecutionRepository) GetGoalAchievedCountLast30Days(ctx context.Co
 	}
 
 	return count, nil
+}
+
+func (f *agentExecutionRepository) GetExecutionsForRetry(ctx context.Context, limit int) ([]postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetExecutionsForRetry")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.Int("limit", limit))
+
+	var executions []postgres_entity.AgentExecution
+	err := f.gormDb.
+		Where("status = ?", enum.AgentExecutionRetrying.String()).
+		Where("next_retry_at IS NULL OR next_retry_at <= ?", utils.Now()).
+		Where("retry_count <= max_retries").
+		Limit(limit).
+		Find(&executions).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return executions, nil
 }

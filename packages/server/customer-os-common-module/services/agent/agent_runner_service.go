@@ -282,22 +282,27 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	execErrStr := ""
+	if execErr != nil {
+		execErrStr = execErr.Error()
+	}
+
 	switch status {
 	case enum.CapabilityExecutionError:
-		if execErr == nil {
-			return nil
-		}
-		if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErr.Error()); err != nil {
+		if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErrStr); err != nil {
 			return errors.Wrap(err, "unable to update agent execution record")
 		}
 
 	case enum.CapabilityExecutionRetry:
-		// Try to schedule a retry first
-		retryErr := a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, params.executionID, execErr)
+		// Save state for retry
+		stateData := map[string]any{
+			"params": params.allParams,
+		}
+		retryErr := a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, params.executionID, execErr, stateData)
 		if retryErr != nil {
 			tracing.TraceErr(span, retryErr)
 			// If retry scheduling fails, mark as failed
-			if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErr.Error()); err != nil {
+			if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErrStr); err != nil {
 				return errors.Wrap(err, "unable to update agent execution record")
 			}
 		}
@@ -422,7 +427,7 @@ func (a *agentRunnerService) RetryExecution(ctx context.Context, executionID str
 		return errors.New("execution is not in retry state")
 	}
 
-	// Check retry count and timing
+	// Check retry timing
 	if execution.NextRetryAt != nil && execution.NextRetryAt.After(time.Now()) {
 		return errors.New("retry attempt too early")
 	}
