@@ -39,7 +39,7 @@ func (repo *skuRepository) Get(ctx context.Context, tenant, skuId string) (*post
 	}
 
 	var existing *postgresentity.SkuEntity
-	err := repo.db.First(&existing, "tenant = ? and skuId = ?", tenant, skuId).Error
+	err := repo.db.First(&existing, "tenant = ? and id = ?", tenant, skuId).Error
 	if err != nil {
 		span.LogFields(tracingLog.Bool("result.found", false))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
