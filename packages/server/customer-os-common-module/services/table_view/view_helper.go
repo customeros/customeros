@@ -3,6 +3,7 @@ package table_view
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -85,24 +86,24 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) [
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	defaultViewDefinitions := []postgres_entity.TableViewDefinition{
-		upcomingInvoicesTableViewDefinition,
-		pastInvoicesTableViewDefinition,
-		organizationsTableViewDefinition,
-		customersTableViewDefinition,
-		targetsTableViewDefinition,
-		contactsTableViewDefinition,
-		contactsForTargetOrganizations,
-		contractsTableViewDefinition,
-		opportunitiesRecordsTableViewDefinition,
-		flowsTableViewDefinition,
-		flowContactsTableViewDefinition,
-	}
+	var defaultViewDefinitions []postgres_entity.TableViewDefinition
+	defaultViewDefinitions = append(defaultViewDefinitions, upcomingInvoicesTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, pastInvoicesTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, organizationsTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, customersTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, targetsTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, contactsTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, contactsForTargetOrganizations)
+	defaultViewDefinitions = append(defaultViewDefinitions, contractsTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesRecordsTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, flowsTableViewDefinition)
+	defaultViewDefinitions = append(defaultViewDefinitions, flowContactsTableViewDefinition)
 
 	if !hasSharedPresets {
 		defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
 	}
 
+	span.LogFields(log.Int("defaultViewDefinitions.count", len(defaultViewDefinitions)))
 	return defaultViewDefinitions
 }
 
