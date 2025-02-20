@@ -91,9 +91,16 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 	}
 
 	for _, org := range orgs {
-		err := s.commonServices.WebscraperService.Scrape(ctx, org.PrimaryDomain, org.PrimaryDomain)
+		page := "https://" + org.PrimaryDomain
+		err := s.commonServices.WebscraperService.Scrape(ctx, page, org.PrimaryDomain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error scraping global org primary domain"))
+			continue
+		}
+
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkScraped(ctx, org.ID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
 			continue
 		}
 	}

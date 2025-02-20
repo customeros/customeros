@@ -99,6 +99,7 @@ func Load() *Config {
 			BetterContactConfig: cmnCfg.BetterContact,
 			SlackConfig:         cmnCfg.SlackConfig,
 			NovuConfig:          cmnCfg.NovuConfig,
+			JinaConfig:          cmnCfg.JinaConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -60,6 +61,7 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	requestUrl := s.config.Url + url
+	span.LogKV("requestUrl", requestUrl)
 
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
@@ -67,10 +69,17 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 		return "", err
 	}
 
+	// Align headers with working curl command
 	req.Header.Set("Authorization", "Bearer "+s.config.ApiKey)
-	req.Header.Set("X-Return-Format", "markdown")
+	req.Header.Set("X-Return-Format", "markdown")  // Get markdown output
+	req.Header.Set("X-Retain-Images", "none")      // Don't retain images
+	req.Header.Set("X-With-Links-Summary", "true") // Include links summary
 
-	client := &http.Client{}
+	// Add a timeout
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -79,12 +88,16 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error code: %d", resp.StatusCode)
+		err = fmt.Errorf("error code: %d", resp.StatusCode)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error reading response body: %v", err)
+		err = fmt.Errorf("error reading response body: %v", err)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	return string(body), nil
