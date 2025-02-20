@@ -303,23 +303,23 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	flowSequencesFound, flowContactsFound := false, false
 
 	for _, def := range tableViewDefinitions {
-		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) {
+		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) && !def.IsShared {
 			span.LogKV("customersTableId", def.ID)
 			customersFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeOrganizations) {
+		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeOrganizations) && !def.IsShared {
 			span.LogKV("organizationTableId", def.ID)
 			organizationFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeTargets) {
+		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeTargets) && !def.IsShared {
 			span.LogKV("targetsTableId", def.ID)
 			targetsFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContacts) {
+		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContacts) && !def.IsShared {
 			span.LogKV("contactsTableId", def.ID)
 			contactsFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContactsForTargetOrganizations) {
+		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContactsForTargetOrganizations) && !def.IsShared {
 			span.LogKV("contactsForTargetOrganizationsTableId", def.ID)
 			contactsForTargetOrganizationsFound = true
 		}
@@ -327,27 +327,27 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			span.LogKV("opportunitiesTableId", def.ID)
 			opportunitiesFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunitiesRecords) {
+		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunitiesRecords) && !def.IsShared {
 			span.LogKV("opportunitiesRecordsTableId", def.ID)
 			opportunitiesRecordsFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeContracts) && def.TableId == string(postgresEntity.TableIDTypeContracts) {
+		if def.TableType == string(postgresEntity.TableViewTypeContracts) && def.TableId == string(postgresEntity.TableIDTypeContracts) && !def.IsShared {
 			span.LogKV("contractsTableId", def.ID)
 			contractsFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeFlow) && def.TableId == string(postgresEntity.TableIDTypeFlowActions) {
+		if def.TableType == string(postgresEntity.TableViewTypeFlow) && def.TableId == string(postgresEntity.TableIDTypeFlowActions) && !def.IsShared {
 			span.LogKV("flowSequencesTableId", def.ID)
 			flowSequencesFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeFlowContacts) {
+		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeFlowContacts) && !def.IsShared {
 			span.LogKV("flowContactsTableId", def.ID)
 			flowContactsFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypePastInvoices) {
+		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypePastInvoices) && !def.IsShared {
 			span.LogKV("pastInvoicesTableId", def.ID)
 			pastInvoicesFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypeUpcomingInvoices) {
+		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypeUpcomingInvoices) && !def.IsShared {
 			span.LogKV("upcomingInvoicesTableId", def.ID)
 			upcomingInvoiceFound = true
 		}
