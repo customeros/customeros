@@ -532,3 +532,19 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 
 	return bodyBytes, nil
 }
+
+func (s *quickbooksService) QuickbooksConnected(ctx context.Context) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.QuickbooksConnected")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	return quickbooksSettingsEntity != nil, nil
+}
