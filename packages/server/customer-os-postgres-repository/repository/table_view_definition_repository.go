@@ -61,6 +61,7 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 
 	allTableViewDefinitions := append(tableViewDefinitions, tableViewSharedDefinitions...)
 
+	span.LogFields(log.Int("result.count", len(allTableViewDefinitions)))
 	return helper.QueryResult{Result: allTableViewDefinitions}
 }
 
@@ -70,8 +71,7 @@ func (t tableViewDefinitionRepository) CreateTableViewDefinition(ctx context.Con
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, viewDefinition.Tenant)
 	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
-
-	span.LogKV("viewDefinition", viewDefinition)
+	tracing.LogObjectAsJson(span, "viewDefinition", viewDefinition)
 
 	// if the view is a preset, set the UserId to empty string
 	if viewDefinition.IsShared {
