@@ -222,16 +222,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		priceChanged = dataFields.Price != nil && previousSliEntity.Price != *dataFields.Price
 		quantityChanged = dataFields.Quantity != nil && previousSliEntity.Quantity != *dataFields.Quantity
 	}
-
-	// reset name and description based on known billed type
-	if dataFields.BilledType != nil {
-		if *dataFields.BilledType == neo4jenum.BilledTypeOnce {
-			dataFields.Name = utils.StringPtr("")
-		} else {
-			dataFields.Description = utils.StringPtr("")
-		}
-	}
-
 	tracing.TagEntity(span, sliId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
@@ -937,8 +927,5 @@ func (s *serviceLineItemService) GetServiceLineItemName(ctx context.Context, sli
 		}
 		return skuEntity.Name, nil
 	}
-	if sli.Name != "" {
-		return sli.Name, nil
-	}
-	return "Unnamed service", nil
+	return "", nil
 }

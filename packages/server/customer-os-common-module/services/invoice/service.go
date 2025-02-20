@@ -876,19 +876,15 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 				if sliData.ServiceLineItemID == "" {
 					// new sli item - adding it to the sli entities and trigger proration
 					sliEntity := neo4jentity.ServiceLineItemEntity{
-						ID:        sliData.Key,
-						SkuId:     sliData.SkuID,
-						Comments:  sliData.Comments,
-						Billed:    sliData.BillingCycle,
-						Price:     sliData.Price,
-						Quantity:  sliData.Quantity,
-						StartedAt: sliData.ServiceStarted,
-						EndedAt:   nil,
-					}
-					if sliEntity.Billed == neo4jenum.BilledTypeOnce {
-						sliEntity.Description = sliData.Description
-					} else {
-						sliEntity.Name = sliData.Description
+						ID:          sliData.Key,
+						SkuId:       sliData.SkuID,
+						Comments:    sliData.Comments,
+						Billed:      sliData.BillingCycle,
+						Price:       sliData.Price,
+						Quantity:    sliData.Quantity,
+						StartedAt:   sliData.ServiceStarted,
+						Description: sliData.Description,
+						EndedAt:     nil,
 					}
 					sliEntities = append(sliEntities, sliEntity)
 					prorationNeeded = true
@@ -989,22 +985,18 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 		for _, sliData := range simulateInvoicesWithChanges.ServiceLines {
 			sliEntity := neo4jentity.ServiceLineItemEntity{
-				ID:        utils.IfNotNilString(sliData.ServiceLineItemID),
-				ParentID:  utils.IfNotNilString(sliData.ParentID),
-				SkuId:     sliData.SkuID,
-				Comments:  sliData.Comments,
-				Billed:    sliData.BillingCycle,
-				Price:     sliData.Price,
-				Quantity:  sliData.Quantity,
-				StartedAt: sliData.ServiceStarted,
-				EndedAt:   sliData.ServiceEnded,
-				VatRate:   utils.IfNotNilFloat64(sliData.TaxRate),
-				Canceled:  sliData.Canceled,
-			}
-			if sliData.BillingCycle == neo4jenum.BilledTypeOnce {
-				sliEntity.Description = sliData.Description
-			} else {
-				sliEntity.Name = sliData.Description
+				ID:          utils.IfNotNilString(sliData.ServiceLineItemID),
+				ParentID:    utils.IfNotNilString(sliData.ParentID),
+				SkuId:       sliData.SkuID,
+				Comments:    sliData.Comments,
+				Billed:      sliData.BillingCycle,
+				Price:       sliData.Price,
+				Quantity:    sliData.Quantity,
+				StartedAt:   sliData.ServiceStarted,
+				EndedAt:     sliData.ServiceEnded,
+				VatRate:     utils.IfNotNilFloat64(sliData.TaxRate),
+				Canceled:    sliData.Canceled,
+				Description: sliData.Description,
 			}
 
 			onCycleSliEntities = append(onCycleSliEntities, sliEntity)
@@ -1130,19 +1122,15 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 	sliEntitiesForProration := neo4jentity.ServiceLineItemEntities{}
 	for _, sliData := range *sliEntities {
 		sliEntity := neo4jentity.ServiceLineItemEntity{
-			SkuId:     sliData.SkuId,
-			Comments:  sliData.Comments,
-			Billed:    sliData.Billed,
-			Price:     sliData.Price,
-			Quantity:  sliData.Quantity,
-			StartedAt: sliData.StartedAt,
-			EndedAt:   nil,
-			VatRate:   sliData.VatRate,
-		}
-		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
-			sliEntity.Description = sliData.Description
-		} else {
-			sliEntity.Name = sliData.Description
+			SkuId:       sliData.SkuId,
+			Comments:    sliData.Comments,
+			Billed:      sliData.Billed,
+			Price:       sliData.Price,
+			Quantity:    sliData.Quantity,
+			StartedAt:   sliData.StartedAt,
+			EndedAt:     nil,
+			VatRate:     sliData.VatRate,
+			Description: sliData.Description,
 		}
 		sliEntitiesForProration = append(sliEntitiesForProration, sliEntity)
 	}
@@ -1533,7 +1521,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		amount += finalSLIAmount
 		vat += calculatedSLIVat
 		invoiceLine := neo4jentity.InvoiceLineEntity{
-			Name:                    sliEntityToInvoice.Name,
+			Name:                    sliEntityToInvoice.Description,
 			Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycleInMonths), 2),
 			Quantity:                sliEntityToInvoice.Quantity,
 			Amount:                  finalSLIAmount,

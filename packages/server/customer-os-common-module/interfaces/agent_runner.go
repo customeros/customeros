@@ -6,7 +6,7 @@ import (
 )
 
 type AgentRunnerService interface {
-	Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any) (string, error)
+	Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any, executionID *string) (string, error)
 	RetryExecution(ctx context.Context, executionID string) error
 	GetExecutionStatus(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error)
 }

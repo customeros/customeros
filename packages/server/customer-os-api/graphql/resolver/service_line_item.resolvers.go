@@ -37,7 +37,6 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 		StartedAt:      input.ServiceStarted,
 		EndedAt:        input.ServiceEnded,
 		SkuId:          utils.IfNotNilString(input.SkuID),
-		SliName:        utils.IfNotNilString(input.Description),
 		SliDescription: input.Description,
 		SliPrice:       utils.IfNotNilFloat64(input.Price),
 		SliQuantity:    utils.IfNotNilInt64(input.Quantity),
@@ -83,7 +82,6 @@ func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input
 	data := cosapi_interfaces.ServiceLineItemNewVersionData{
 		Id:        utils.IfNotNilString(input.ID),
 		SkuId:     utils.IfNotNilString(input.SkuID),
-		Name:      utils.IfNotNilString(input.Description),
 		Price:     utils.IfNotNilFloat64(input.Price),
 		Quantity:  utils.IfNotNilInt64(input.Quantity),
 		Comments:  utils.IfNotNilString(input.Comments),
@@ -124,7 +122,6 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 		Id:                      utils.IfNotNilString(input.ID),
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
 		SkuId:                   utils.IfNotNilString(input.SkuID),
-		SliName:                 utils.IfNotNilString(input.Description),
 		SliDescription:          input.Description,
 		SliPrice:                utils.IfNotNilFloat64(input.Price),
 		SliQuantity:             utils.IfNotNilInt64(input.Quantity),

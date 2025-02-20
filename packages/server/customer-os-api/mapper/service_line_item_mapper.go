@@ -1,11 +1,9 @@
 package mapper
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *model.ServiceLineItem {
@@ -31,14 +29,9 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 		Tax: &model.Tax{
 			TaxRate: entity.VatRate,
 		},
-		Closed: entity.Canceled,
-		Paused: entity.Paused,
-	}
-
-	if entity.Billed == neo4jenum.BilledTypeOnce {
-		result.Description = utils.StringPtrNillable(entity.Description)
-	} else {
-		result.Description = utils.StringPtr(entity.Name)
+		Closed:      entity.Canceled,
+		Paused:      entity.Paused,
+		Description: utils.StringPtrNillable(entity.Description),
 	}
 
 	return result

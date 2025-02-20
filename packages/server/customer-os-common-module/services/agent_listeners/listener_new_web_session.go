@@ -135,7 +135,7 @@ func (l *NewWebSessionListener) handleExecution(ctx context.Context, data dto.Ne
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

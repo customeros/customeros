@@ -157,7 +157,7 @@ func (l *NewMeetingRecordingListener) handleExecution(ctx context.Context, data 
 		}
 
 		// run
-		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

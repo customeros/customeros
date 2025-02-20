@@ -51,7 +51,6 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 								sli.source=$source,
 								sli.appSource=$appSource,
 								sli.skuId=$skuId,
-								sli.name=$name,
 								sli.description=$description,
 								sli.price=toFloat($price),
 								sli.quantity=$quantity,
@@ -73,7 +72,6 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		"price":             utils.IfNotNilFloat64(data.Price),
 		"quantity":          utils.IfNotNilInt64(data.Quantity),
 		"skuId":             utils.IfNotNilString(data.SkuId),
-		"name":              utils.IfNotNilString(data.Name),
 		"description":       utils.IfNotNilString(data.Description),
 		"comments":          utils.IfNotNilString(data.Comments),
 		"vatRate":           utils.IfNotNilFloat64(data.TaxRate),
@@ -115,10 +113,6 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.M
 	if data.SkuId != nil {
 		params["skuId"] = *data.SkuId
 		cypher += `, sli.skuId = $skuId`
-	}
-	if data.Name != nil {
-		params["name"] = *data.Name
-		cypher += `, sli.name = $name`
 	}
 	if data.Description != nil {
 		params["description"] = *data.Description

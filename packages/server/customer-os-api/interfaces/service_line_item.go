@@ -18,7 +18,6 @@ type ServiceLineItemService interface {
 
 type ServiceLineItemCreateData struct {
 	ContractId        string                            `json:"contractId"`
-	SliName           string                            `json:"sliName"` //deprecated
 	SliDescription    *string                           `json:"sliDescription"`
 	SkuId             string                            `json:"skuId"`
 	SliPrice          float64                           `json:"sliPrice"`
@@ -33,23 +32,22 @@ type ServiceLineItemCreateData struct {
 }
 
 type ServiceLineItemNewVersionData struct {
-	Id        string                 `json:"id"`
-	SkuId     string                 `json:"skuId"`
-	Name      string                 `json:"sliName"` //deprecated
-	Price     float64                `json:"sliPrice"`
-	Quantity  int64                  `json:"sliQuantity"`
-	Comments  string                 `json:"sliComments"`
-	Source    neo4jentity.DataSource `json:"source"`
-	AppSource string                 `json:"appSource"`
-	VatRate   float64                `json:"sliVatRate"`
-	StartedAt *time.Time             `json:"startedAt"`
+	Id          string                 `json:"id"`
+	SkuId       string                 `json:"skuId"`
+	Description *string                `json:"sliDescription"`
+	Price       float64                `json:"sliPrice"`
+	Quantity    int64                  `json:"sliQuantity"`
+	Comments    string                 `json:"sliComments"`
+	Source      neo4jentity.DataSource `json:"source"`
+	AppSource   string                 `json:"appSource"`
+	VatRate     float64                `json:"sliVatRate"`
+	StartedAt   *time.Time             `json:"startedAt"`
 }
 
 type ServiceLineItemUpdateData struct {
 	Id                      string                 `json:"id"`
 	IsRetroactiveCorrection bool                   `json:"isRetroactiveCorrection"`
 	SkuId                   string                 `json:"skuId"`
-	SliName                 string                 `json:"sliName"` //deprecated
 	SliDescription          *string                `json:"sliDescription"`
 	SliPrice                float64                `json:"sliPrice"`
 	SliQuantity             int64                  `json:"sliQuantity"`
@@ -63,7 +61,7 @@ type ServiceLineItemUpdateData struct {
 
 type ServiceLineItemDetails struct {
 	Id                      string
-	Name                    string
+	Description             *string
 	Price                   float64
 	Quantity                int64
 	Billed                  neo4jenum.BilledType

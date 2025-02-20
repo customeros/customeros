@@ -13,7 +13,6 @@ type SLIFields struct {
 	Quantity    *int64                `json:"quantity,omitempty"`
 	Price       *float64              `json:"price,omitempty"`
 	SkuId       *string               `json:"skuId,omitempty"`
-	Name        *string               `json:"name,omitempty"` //deprecated
 	Description *string               `json:"description,omitempty"`
 	ContractId  *string               `json:"contractId,omitempty"`
 	StartedAt   *time.Time            `json:"startedAt,omitempty"`

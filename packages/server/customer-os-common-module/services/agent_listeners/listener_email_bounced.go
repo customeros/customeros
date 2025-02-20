@@ -136,7 +136,7 @@ func (l *EmailBouncedListener) run(ctx context.Context, agent postgres_entity.Ag
 		tracing.TraceErr(span, err)
 		return err
 	}
-	_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+	_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
