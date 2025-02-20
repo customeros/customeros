@@ -19,7 +19,7 @@ type ServiceLineItem implements MetadataInterface {
     comments:           String!
     skuId:              ID  #todo make it mandatory
     sku:                Sku @goField(forceResolver: true) #todo make it mandatory
-    description:        String! @deprecated(reason: "use skuId")
+    description:        String
     parentId:           ID!
     price:              Float!
     quantity:           Int64!
@@ -36,7 +36,7 @@ type ServiceLineItem implements MetadataInterface {
 input ServiceLineItemInput {
     contractId:         ID!
     skuId:              ID #todo make this mandatory after FE changes
-    description:        String @deprecated(reason: "use skuId")
+    description:        String
     billingCycle:       BilledType
     price:              Float
     quantity:           Int64
@@ -48,7 +48,7 @@ input ServiceLineItemInput {
 
 input ServiceLineItemUpdateInput {
     id:                         ID
-    description:                String @deprecated(reason: "use skuId")
+    description:                String
     skuId:                      ID #todo make this mandatory after FE changes
     """
     Deprecated: billing cycle is not updatable.
@@ -67,7 +67,7 @@ input ServiceLineItemUpdateInput {
 input ServiceLineItemNewVersionInput {
     id:                         ID
     skuId:                      ID  #todo make this mandatory after FE changes
-    description:                String @deprecated(reason: "use skuId")
+    description:                String
     price:                      Float
     quantity:                   Int64
     tax:                        TaxInput

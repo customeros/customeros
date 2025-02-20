@@ -32,14 +32,15 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 	tracing.LogObjectAsJson(span, "request.input", input)
 
 	data := cosapi_interfaces.ServiceLineItemCreateData{
-		ContractId:  input.ContractID,
-		Source:      neo4jentity.DataSourceOpenline,
-		StartedAt:   input.ServiceStarted,
-		EndedAt:     input.ServiceEnded,
-		SkuId:       utils.IfNotNilString(input.SkuID),
-		SliName:     utils.IfNotNilString(input.Description),
-		SliPrice:    utils.IfNotNilFloat64(input.Price),
-		SliQuantity: utils.IfNotNilInt64(input.Quantity),
+		ContractId:     input.ContractID,
+		Source:         neo4jentity.DataSourceOpenline,
+		StartedAt:      input.ServiceStarted,
+		EndedAt:        input.ServiceEnded,
+		SkuId:          utils.IfNotNilString(input.SkuID),
+		SliName:        utils.IfNotNilString(input.Description),
+		SliDescription: input.Description,
+		SliPrice:       utils.IfNotNilFloat64(input.Price),
+		SliQuantity:    utils.IfNotNilInt64(input.Quantity),
 	}
 	if input.ServiceStarted != nil {
 		data.StartedAt = input.ServiceStarted
@@ -124,6 +125,7 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
 		SkuId:                   utils.IfNotNilString(input.SkuID),
 		SliName:                 utils.IfNotNilString(input.Description),
+		SliDescription:          input.Description,
 		SliPrice:                utils.IfNotNilFloat64(input.Price),
 		SliQuantity:             utils.IfNotNilInt64(input.Quantity),
 		SliComments:             utils.IfNotNilString(input.Comments),

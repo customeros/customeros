@@ -1538,6 +1538,7 @@ type InvoiceSimulateServiceLineInput struct {
 	ServiceStarted    time.Time  `json:"serviceStarted"`
 	TaxRate           *float64   `json:"taxRate,omitempty"`
 	CloseVersion      *bool      `json:"closeVersion,omitempty"`
+	SkuID             *string    `json:"skuId,omitempty"`
 }
 
 type InvoiceUpdateInput struct {
@@ -2566,7 +2567,7 @@ type ServiceLineItem struct {
 	Comments        string                  `json:"comments"`
 	SkuID           *string                 `json:"skuId,omitempty"`
 	Sku             *Sku                    `json:"sku,omitempty"`
-	Description     string                  `json:"description"`
+	Description     *string                 `json:"description,omitempty"`
 	ParentID        string                  `json:"parentId"`
 	Price           float64                 `json:"price"`
 	Quantity        int64                   `json:"quantity"`

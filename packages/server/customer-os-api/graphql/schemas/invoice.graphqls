@@ -138,6 +138,7 @@ input InvoiceSimulateServiceLineInput {
     serviceStarted:     Time!
     taxRate:            Float
     closeVersion:       Boolean
+    skuId:              ID
 }
 
 type InvoiceSimulate{

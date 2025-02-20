@@ -257,6 +257,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			ServiceStarted:    serviceLine.ServiceStarted,
 			TaxRate:           serviceLine.TaxRate,
 			Canceled:          utils.IfNotNilBool(serviceLine.CloseVersion),
+			SkuID:             utils.IfNotNilString(serviceLine.SkuID),
 		})
 	}
 
