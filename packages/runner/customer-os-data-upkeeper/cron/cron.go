@@ -1,10 +1,10 @@
 package cron
 
 import (
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"sync"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/robfig/cron"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/container"
@@ -128,6 +128,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
+	addJob(cont.Cfg.App.Cron.CronScheduleGlobalOrgScrape, GroupGlobalOrg, scapeGlobalOrganizations, "scrapeGlobalOrganizations")
 
 	// Contract Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
@@ -151,7 +152,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
 
-	//Email Jobs
+	// Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckScrubbyResult, GroupEmail, checkScrubbyResult, "checkScrubbyResult")
@@ -159,9 +160,9 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleCleanEmails, GroupEmail, cleanEmails, "cleanEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendEmails, GroupSendEmails, sendEmails, "sendEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessSentEmails, GroupProcessEmails, processSentEmails, "processSentEmails")
-	//addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersRealtime, ingestEmailsFromProvidersRealtime, "ingestEmailsFromProvidersRealtime")
-	//addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersHistory, ingestEmailsFromProvidersHistory, "ingestEmailsFromProvidersHistory")
-	//addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsSendToAgents, ingestEmailsSendToAgents, "ingestEmailsSendToAgents")
+	// addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersRealtime, ingestEmailsFromProvidersRealtime, "ingestEmailsFromProvidersRealtime")
+	// addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersHistory, ingestEmailsFromProvidersHistory, "ingestEmailsFromProvidersHistory")
+	// addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsSendToAgents, ingestEmailsSendToAgents, "ingestEmailsSendToAgents")
 
 	// Flow Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
@@ -225,7 +226,7 @@ func generateCycleInvoices(cont *container.Container) {
 }
 
 func generateOffCycleInvoices(cont *container.Container) {
-	//service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
+	// service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
 }
 
 func generateNextPreviewInvoices(cont *container.Container) {
@@ -370,6 +371,10 @@ func processWebSessions(cont *container.Container) {
 
 func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncGlobalOrgsToTenantOrganizations()
+}
+
+func scapeGlobalOrganizations(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapeGlobalOrgs()
 }
 
 func checkTenantOnboarding(cont *container.Container) {

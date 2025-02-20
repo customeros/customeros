@@ -3,13 +3,15 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
-	"time"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type GlobalOrganizationRepository interface {
@@ -22,6 +24,7 @@ type GlobalOrganizationRepository interface {
 	GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichName(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
+	GetOrganizationsToScrape(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
 	MarkNameEnrichRequested(ctx context.Context, id uint64) error
@@ -159,6 +162,25 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichIndustry(ctx cont
 		Order("CASE WHEN industry_requested_at IS NULL THEN 0 ELSE 1 END ASC").
 		Order("CASE WHEN industry_requested_at IS NULL THEN created_at END DESC").
 		Order("industry_requested_at ASC").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(organizations)))
+	return organizations, nil
+}
+
+func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToScrape")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	organizations := make([]*postgres_entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Where("scraped = ?", false).
+		Order("created_at DESC").
 		Limit(limit).
 		Find(&organizations)
 	if result.Error != nil {

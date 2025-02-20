@@ -39,6 +39,7 @@ type GlobalOrganization struct {
 	SourceDescription4      string     `gorm:"column:source_description_4;type:text" json:"sourceDescription4"`
 	SourceDescription5      string     `gorm:"column:source_description_5;type:text" json:"sourceDescription5"`
 	SyncedToNeoAt           *time.Time `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
+	Scraped                 bool       `gorm:"column:scraped;type:boolean" json:"scraped"`
 }
 
 // TableName sets the name of the table for GORM
@@ -46,7 +47,7 @@ func (GlobalOrganization) TableName() string {
 	return "global_organization"
 }
 
-//CREATE EXTENSION IF NOT EXISTS pg_trgm;
-//CREATE INDEX idx_global_organization_name_trgm ON global_organization USING gin (name gin_trgm_ops);
-//CREATE INDEX idx_global_organization_primary_domain_trgm ON global_organization USING gin (primary_domain gin_trgm_ops);
-//CREATE INDEX idx_global_organization_other_domains_trgm ON global_organization USING gin (other_domains gin_trgm_ops);
+// CREATE EXTENSION IF NOT EXISTS pg_trgm;
+// CREATE INDEX idx_global_organization_name_trgm ON global_organization USING gin (name gin_trgm_ops);
+// CREATE INDEX idx_global_organization_primary_domain_trgm ON global_organization USING gin (primary_domain gin_trgm_ops);
+// CREATE INDEX idx_global_organization_other_domains_trgm ON global_organization USING gin (other_domains gin_trgm_ops);

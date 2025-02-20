@@ -41,6 +41,7 @@ type ExternalServicesConfig struct {
 	EnrowConfig          EnrowConfig
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig
+	JinaConfig           JinaConfig
 	NamecheapConfig      NamecheapConfig
 	NovuConfig           NovuConfig
 	OpenSRSConfig        OpenSRSConfig

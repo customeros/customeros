@@ -46,3 +46,8 @@ type QuickbooksConfig struct {
 	ClientSecret string `env:"QUICKBOOKS_CLIENT_SECRET"`
 	RedirectUrl  string `env:"QUICKBOOKS_REDIRECT_URL"`
 }
+
+type JinaConfig struct {
+	Url    string `env:"JINA_URL" envDefault:"https://r.jina.ai"`
+	ApiKey string `env:"JINA_API_KEY" envDefault:"N/A"`
+}

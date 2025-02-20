@@ -2,8 +2,9 @@ package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type Repositories struct {
@@ -50,6 +51,7 @@ type Repositories struct {
 	FlowNodeRepository                           FlowNodeRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
+	GlobalOrganizationWebpageRepository          GlobalOrganizationWebpageRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
 	InvoiceRepository                            InvoiceRepository
@@ -134,6 +136,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowNodeRepository:                           NewFlowNodeRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
+		GlobalOrganizationWebpageRepository:          NewGlobalOrganizationWebpageRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 		InvoiceRepository:                            NewInvoiceRepository(postgresDB.GormDB),
 		IngestEmailMessageRepository:                 NewIngestEmailMessageRepository(postgresDB.GormDB),
@@ -208,6 +211,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.FlowNode{},
 		&postgres_entity.FlowTransitionsRegistry{},
 		&postgres_entity.GlobalOrganization{},
+		&postgres_entity.GlobalOrganizationWebpages{},
 		&postgres_entity.GlobalOrganizationWebsiteToProcess{},
 		&postgres_entity.IngestEmailMessage{},
 		&postgres_entity.InvoiceNumberEntity{},
