@@ -422,7 +422,7 @@ func (a *agentRunnerService) RetryExecution(ctx context.Context, executionID str
 		return errors.New("execution is not in retry state")
 	}
 
-	// Check retry count and timing
+	// Check retry timing
 	if execution.NextRetryAt != nil && execution.NextRetryAt.After(time.Now()) {
 		return errors.New("retry attempt too early")
 	}

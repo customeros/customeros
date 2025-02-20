@@ -89,4 +89,7 @@ type Config struct {
 
 	// Tenants
 	CronScheduleCheckTenantOnboarding string `env:"CRON_SCHEDULE_CHECK_TENANT_ONBOARDING" envDefault:"0 */15 * * * *"`
+
+	// Agents
+	CronScheduleRerunAgent string `env:"CRON_SCHEDULE_RERUN_AGENT" envDefault:"0 */1 * * * *"`
 }
