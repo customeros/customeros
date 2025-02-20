@@ -383,6 +383,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 				SkuId:                   item.SkuId,
 				SkuName:                 item.SkuName,
 				Name:                    utils.FirstNotEmptyString(item.SkuName, item.Name),
+				Description:             item.Description,
 				Price:                   item.Price,
 				Quantity:                item.Quantity,
 				Amount:                  item.Amount,
@@ -874,16 +875,22 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 				if sliData.ServiceLineItemID == "" {
 					// new sli item - adding it to the sli entities and trigger proration
-					sliEntities = append(sliEntities, neo4jentity.ServiceLineItemEntity{
+					sliEntity := neo4jentity.ServiceLineItemEntity{
 						ID:        sliData.Key,
-						Name:      sliData.Description,
+						SkuId:     sliData.SkuID,
 						Comments:  sliData.Comments,
 						Billed:    sliData.BillingCycle,
 						Price:     sliData.Price,
 						Quantity:  sliData.Quantity,
 						StartedAt: sliData.ServiceStarted,
 						EndedAt:   nil,
-					})
+					}
+					if sliEntity.Billed == neo4jenum.BilledTypeOnce {
+						sliEntity.Description = sliData.Description
+					} else {
+						sliEntity.Name = sliData.Description
+					}
+					sliEntities = append(sliEntities, sliEntity)
 					prorationNeeded = true
 				} else {
 					// existing sli item - to check if there is any change in the sli item to decide if proration is needed
@@ -984,7 +991,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 			sliEntity := neo4jentity.ServiceLineItemEntity{
 				ID:        utils.IfNotNilString(sliData.ServiceLineItemID),
 				ParentID:  utils.IfNotNilString(sliData.ParentID),
-				Name:      sliData.Description,
+				SkuId:     sliData.SkuID,
 				Comments:  sliData.Comments,
 				Billed:    sliData.BillingCycle,
 				Price:     sliData.Price,
@@ -993,6 +1000,11 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 				EndedAt:   sliData.ServiceEnded,
 				VatRate:   utils.IfNotNilFloat64(sliData.TaxRate),
 				Canceled:  sliData.Canceled,
+			}
+			if sliData.BillingCycle == neo4jenum.BilledTypeOnce {
+				sliEntity.Description = sliData.Description
+			} else {
+				sliEntity.Name = sliData.Description
 			}
 
 			onCycleSliEntities = append(onCycleSliEntities, sliEntity)
@@ -1119,7 +1131,6 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 	for _, sliData := range *sliEntities {
 		sliEntity := neo4jentity.ServiceLineItemEntity{
 			SkuId:     sliData.SkuId,
-			Name:      sliData.Name,
 			Comments:  sliData.Comments,
 			Billed:    sliData.Billed,
 			Price:     sliData.Price,
@@ -1127,6 +1138,11 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 			StartedAt: sliData.StartedAt,
 			EndedAt:   nil,
 			VatRate:   sliData.VatRate,
+		}
+		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
+			sliEntity.Description = sliData.Description
+		} else {
+			sliEntity.Name = sliData.Description
 		}
 		sliEntitiesForProration = append(sliEntitiesForProration, sliEntity)
 	}
@@ -1345,8 +1361,13 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			amount += calculatedSLIAmount
 			vat += calculatedSLIVat
 
+			sliName, err := s.sli.GetServiceLineItemName(ctx, sliEntity.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 			invoiceLine := neo4jentity.InvoiceLineEntity{
-				Name:                    sliEntity.Name,
+				Name:                    sliName,
+				Description:             sliEntity.Description,
 				Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
@@ -1356,7 +1377,6 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 				ServiceLineItemParentId: sliEntity.ParentID,
 				BilledType:              sliEntity.Billed,
 			}
-
 			if sliEntity.SkuId != "" {
 				sku, err := s.postgresRepositories.SkuRepository.Get(ctx, tenant, sliEntity.SkuId)
 				if err != nil {
@@ -1366,7 +1386,6 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 				if sku != nil {
 					invoiceLine.SkuId = sku.ID
 					invoiceLine.SkuName = sku.Name
-					invoiceLine.Name = sku.Name
 				}
 			}
 

@@ -12,17 +12,6 @@ import (
 	"time"
 )
 
-type ServiceLineItemUpdateFields struct {
-	Price     float64    `json:"price"`
-	Quantity  int64      `json:"quantity"`
-	Name      string     `json:"name"`
-	Billed    string     `json:"billed"`
-	Comments  string     `json:"comments"`
-	Source    string     `json:"source"`
-	VatRate   float64    `json:"vatRate"`
-	StartedAt *time.Time `json:"startedAt"`
-}
-
 type ServiceLineItemWriteRepository interface {
 	CreateForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
@@ -63,6 +52,7 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 								sli.appSource=$appSource,
 								sli.skuId=$skuId,
 								sli.name=$name,
+								sli.description=$description,
 								sli.price=toFloat($price),
 								sli.quantity=$quantity,
 								sli.billed=$billed,
@@ -84,6 +74,7 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		"quantity":          utils.IfNotNilInt64(data.Quantity),
 		"skuId":             utils.IfNotNilString(data.SkuId),
 		"name":              utils.IfNotNilString(data.Name),
+		"description":       utils.IfNotNilString(data.Description),
 		"comments":          utils.IfNotNilString(data.Comments),
 		"vatRate":           utils.IfNotNilFloat64(data.TaxRate),
 	}
@@ -128,6 +119,10 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.M
 	if data.Name != nil {
 		params["name"] = *data.Name
 		cypher += `, sli.name = $name`
+	}
+	if data.Description != nil {
+		params["description"] = *data.Description
+		cypher += `, sli.description = $description`
 	}
 	if data.Price != nil {
 		params["price"] = *data.Price

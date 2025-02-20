@@ -73,16 +73,27 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	}
 
 	sliDataFields := data_fields.SLIFields{
-		ContractId: utils.StringPtr(serviceLineItemDetails.ContractId),
-		SkuId:      utils.StringPtr(serviceLineItemDetails.SkuId),
-		Name:       utils.StringPtr(serviceLineItemDetails.SliName),
-		Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
-		Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
-		TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
-		StartedAt:  serviceLineItemDetails.StartedAt,
-		EndedAt:    serviceLineItemDetails.EndedAt,
-		Source:     utils.StringPtr(serviceLineItemDetails.Source.String()),
-		NewVersion: utils.BoolPtr(false),
+		ContractId:  utils.StringPtr(serviceLineItemDetails.ContractId),
+		SkuId:       utils.StringPtr(serviceLineItemDetails.SkuId),
+		Name:        utils.StringPtr(serviceLineItemDetails.SliName),
+		Description: serviceLineItemDetails.SliDescription,
+		Quantity:    utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
+		Price:       utils.Float64Ptr(serviceLineItemDetails.SliPrice),
+		TaxRate:     utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
+		StartedAt:   serviceLineItemDetails.StartedAt,
+		EndedAt:     serviceLineItemDetails.EndedAt,
+		Source:      utils.StringPtr(serviceLineItemDetails.Source.String()),
+		NewVersion:  utils.BoolPtr(false),
+	}
+
+	if serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce {
+		sliDataFields.Description = utils.StringPtr("")
+	}
+
+	if serviceLineItemDetails.SliBilledType == neo4jenum.BilledTypeOnce && serviceLineItemDetails.SkuId == "" {
+		err := fmt.Errorf("sku id is required for one time contract line item")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	if serviceLineItemDetails.SkuId != "" && serviceLineItemDetails.SliName == "" {
@@ -234,7 +245,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	sliDataFields := data_fields.SLIFields{
 		ContractId: utils.StringPtr(contractEntity.Id),
 		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
-		SkuId:      utils.StringPtr(utils.StringFirstNonEmpty(data.SkuId, baseServiceLineItemEntity.SkuId)),
+		SkuId:      utils.StringPtr(utils.StringFirstNonEmpty(baseServiceLineItemEntity.SkuId, data.SkuId)),
 		Name:       utils.StringPtr(utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name)),
 		Quantity:   utils.Int64Ptr(data.Quantity),
 		Price:      utils.Float64Ptr(data.Price),
@@ -282,6 +293,10 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
+	if baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
+		serviceLineItemDetails.SliDescription = nil
+	}
+
 	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
 	contractIsInvoiced, _ := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 	sliIsInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
@@ -293,6 +308,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
 		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate ||
 		baseServiceLineItemEntity.Comments != serviceLineItemDetails.SliComments ||
+		baseServiceLineItemEntity.Description != utils.IfNotNilString(serviceLineItemDetails.SliDescription) ||
 		(baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeNone)
 	span.LogFields(log.Bool("anyFieldChanged", anyFieldChanged))
 
@@ -302,7 +318,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return nil
 	}
 
-	//todo remove this when name is removed from SLI
+	//TODO remove this when name is removed from SLI
 	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "" {
 		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.SkuId)
 		if err != nil {
@@ -425,15 +441,16 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
-			SkuId:      utils.StringPtrNillable(serviceLineItemDetails.SkuId),
-			Name:       utils.StringPtr(serviceLineItemDetails.SliName),
-			Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
-			Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
-			TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
-			Comments:   utils.StringPtr(serviceLineItemDetails.SliComments),
-			BilledType: utils.ToPtr(serviceLineItemDetails.SliBilledType),
-			ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
-			NewVersion: utils.BoolPtr(false),
+			SkuId:       utils.StringPtrNillable(serviceLineItemDetails.SkuId),
+			Name:        utils.StringPtr(serviceLineItemDetails.SliName),
+			Description: serviceLineItemDetails.SliDescription,
+			Quantity:    utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
+			Price:       utils.Float64Ptr(serviceLineItemDetails.SliPrice),
+			TaxRate:     utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
+			Comments:    utils.StringPtr(serviceLineItemDetails.SliComments),
+			BilledType:  utils.ToPtr(serviceLineItemDetails.SliBilledType),
+			ParentId:    utils.StringPtr(baseServiceLineItemEntity.ParentID),
+			NewVersion:  utils.BoolPtr(false),
 		}
 
 		// if start date is changed, validate that change is allowed

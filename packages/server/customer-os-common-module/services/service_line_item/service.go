@@ -222,6 +222,16 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		priceChanged = dataFields.Price != nil && previousSliEntity.Price != *dataFields.Price
 		quantityChanged = dataFields.Quantity != nil && previousSliEntity.Quantity != *dataFields.Quantity
 	}
+
+	// reset name and description based on known billed type
+	if dataFields.BilledType != nil {
+		if *dataFields.BilledType == neo4jenum.BilledTypeOnce {
+			dataFields.Name = utils.StringPtr("")
+		} else {
+			dataFields.Description = utils.StringPtr("")
+		}
+	}
+
 	tracing.TagEntity(span, sliId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
@@ -278,9 +288,9 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 
 			if createFlow {
 				if dataFields.BilledType != nil && utils.IfNotNilString(dataFields.BilledType.String()) != "" {
-					name := "Unnamed service"
-					if utils.IfNotNilString(dataFields.Name) != "" {
-						name = *dataFields.Name
+					sliName, err := s.GetServiceLineItemName(ctx, sliId)
+					if err != nil {
+						tracing.TraceErr(span, err)
 					}
 
 					extraActionProperties := map[string]interface{}{
@@ -290,11 +300,11 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 
 					metadataBilledType, err := utils.ToJson(SLIActionMetadata{
 						UserName:        userName,
-						ServiceName:     name,
+						ServiceName:     sliName,
 						BilledType:      dataFields.BilledType.String(),
 						Quantity:        utils.IfNotNilInt64(dataFields.Quantity),
 						Price:           utils.IfNotNilFloat64(dataFields.Price),
-						Comment:         "billed type is " + dataFields.BilledType.String() + " for service " + name,
+						Comment:         "billed type is " + dataFields.BilledType.String() + " for service " + sliName,
 						ReasonForChange: utils.IfNotNilString(dataFields.Comments),
 						StartedAt:       dataFields.StartedAt,
 						Currency:        contractEntity.Currency.String(),
@@ -311,7 +321,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 						} else {
 							message += " added a recurring service to "
 						}
-						message += contractEntity.Name + ": " + name + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						message += contractEntity.Name + ": " + sliName + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
@@ -319,7 +329,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 						}
 					}
 					if *dataFields.BilledType == neo4jenum.BilledTypeOnce {
-						message := userName + " added a one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						message := userName + " added a one time service to " + contractEntity.Name + ": " + sliName + " at " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
@@ -327,7 +337,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 						}
 					}
 					if *dataFields.BilledType == neo4jenum.BilledTypeUsage {
-						message := userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						message := userName + " added a per use service to " + contractEntity.Name + ": " + sliName + " at " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
@@ -348,9 +358,9 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				s.events.Publisher.PublishNotification(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
 				s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			} else {
-				name := "Unnamed service"
-				if utils.IfNotNilString(dataFields.Name) != "" {
-					name = *dataFields.Name
+				sliName, err := s.GetServiceLineItemName(ctx, sliId)
+				if err != nil {
+					tracing.TraceErr(span, err)
 				}
 
 				extraActionProperties := map[string]interface{}{
@@ -366,23 +376,23 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 
 				actionPriceMetadata := SLIActionMetadata{
 					UserName:        userName,
-					ServiceName:     newSliEntity.Name,
+					ServiceName:     sliName,
 					Price:           utils.IfNotNilFloat64(dataFields.Price),
 					PreviousPrice:   newSliEntity.Price,
 					BilledType:      newSliEntity.Billed.String(),
 					Quantity:        newSliEntity.Quantity,
-					Comment:         "price changed is " + fmt.Sprintf("%.2f", newSliEntity.Price) + " for service " + name,
+					Comment:         "price changed is " + fmt.Sprintf("%.2f", newSliEntity.Price) + " for service " + sliName,
 					ReasonForChange: utils.IfNotNilString(dataFields.Comments),
 					Currency:        contractEntity.Currency.String(),
 				}
 				actionQuantityMetadata := SLIActionMetadata{
 					UserName:         userName,
-					ServiceName:      newSliEntity.Name,
+					ServiceName:      sliName,
 					PreviousQuantity: newSliEntity.Quantity,
 					Quantity:         utils.IfNotNilInt64(dataFields.Quantity),
 					Price:            newSliEntity.Price,
 					BilledType:       newSliEntity.Billed.String(),
-					Comment:          "quantity changed is " + strconv.FormatInt(newSliEntity.Quantity, 10) + " for service " + name,
+					Comment:          "quantity changed is " + strconv.FormatInt(newSliEntity.Quantity, 10) + " for service " + sliName,
 					ReasonForChange:  utils.IfNotNilString(dataFields.Comments),
 					Currency:         contractEntity.Currency.String(),
 				}
@@ -407,10 +417,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if priceChanged && dataFields.BilledType != nil && dataFields.BilledType.IsRecurrent() {
 					message := ""
 					if newSliEntity.Price > previousSliEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", newSliEntity.Price) + "/" + cycle
+						message = userName + " retroactively increased the price for " + sliName + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", newSliEntity.Price) + "/" + cycle
 					}
 					if newSliEntity.Price < previousSliEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", newSliEntity.Price) + "/" + cycle
+						message = userName + " retroactively decreased the price for " + sliName + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", newSliEntity.Price) + "/" + cycle
 					}
 					if message != "" {
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
@@ -424,10 +434,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if priceChanged && dataFields.BilledType != nil && *dataFields.BilledType == neo4jenum.BilledTypeOnce {
 					message := ""
 					if newSliEntity.Price > previousSliEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.2f", newSliEntity.Price)
+						message = userName + " retroactively increased the price for " + sliName + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.2f", newSliEntity.Price)
 					}
 					if newSliEntity.Price < previousSliEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.2f", newSliEntity.Price)
+						message = userName + " retroactively decreased the price for " + sliName + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.2f", newSliEntity.Price)
 					}
 					if message != "" {
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
@@ -440,10 +450,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if priceChanged && *dataFields.BilledType == neo4jenum.BilledTypeUsage {
 					message := ""
 					if newSliEntity.Price > previousSliEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.4f", newSliEntity.Price)
+						message = userName + " retroactively increased the price for " + sliName + " from " + fmt.Sprintf("%.4f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.4f", newSliEntity.Price)
 					}
 					if newSliEntity.Price < previousSliEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.4f", newSliEntity.Price)
+						message = userName + " retroactively decreased the price for " + sliName + " from " + fmt.Sprintf("%.4f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.4f", newSliEntity.Price)
 					}
 					if message != "" {
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
@@ -457,10 +467,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if quantityChanged {
 					message := ""
 					if newSliEntity.Quantity > previousSliEntity.Quantity {
-						message = userName + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(previousSliEntity.Quantity, 10) + " to " + strconv.FormatInt(newSliEntity.Quantity, 10)
+						message = userName + " retroactively increased the quantity of " + sliName + " from " + strconv.FormatInt(previousSliEntity.Quantity, 10) + " to " + strconv.FormatInt(newSliEntity.Quantity, 10)
 					}
 					if newSliEntity.Quantity < previousSliEntity.Quantity {
-						message = userName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(previousSliEntity.Quantity, 10) + " to " + strconv.FormatInt(newSliEntity.Quantity, 10)
+						message = userName + " retroactively decreased the quantity of " + sliName + " from " + strconv.FormatInt(previousSliEntity.Quantity, 10) + " to " + strconv.FormatInt(newSliEntity.Quantity, 10)
 					}
 					if message != "" {
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
@@ -759,10 +769,11 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 				tracing.TraceErr(span, err)
 			}
 
-			serviceLineItemName := "Unnamed service"
-			if serviceLineItemEntity.Name != "" {
-				serviceLineItemName = serviceLineItemEntity.Name
+			sliName, err := s.GetServiceLineItemName(ctx, serviceLineItemId)
+			if err != nil {
+				tracing.TraceErr(span, err)
 			}
+
 			userName := ""
 			userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
 			if err != nil {
@@ -779,10 +790,10 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 
 			metadata, err := utils.ToJson(SLIActionMetadata{
 				UserName:    userName,
-				ServiceName: serviceLineItemName,
-				Comment:     "service line item removed is " + serviceLineItemName + " from " + contractName + " by " + userName,
+				ServiceName: sliName,
+				Comment:     "service line item removed is " + sliName + " from " + contractName + " by " + userName,
 			})
-			message := userName + " removed " + serviceLineItemName + " from " + contractName
+			message := userName + " removed " + sliName + " from " + contractName
 
 			_, err = s.neo4j.ActionWriteRepository.Create(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemRemoved, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 			if err != nil {
@@ -900,4 +911,34 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 	}
 
 	return nil
+}
+
+func (s *serviceLineItemService) GetServiceLineItemName(ctx context.Context, sliId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetServiceLineItemName")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	sli, err := s.GetById(ctx, sliId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if sli.SkuId != "" {
+		skuEntity, err := s.postgres.SkuRepository.Get(ctx, common.GetTenantFromContext(ctx), sli.SkuId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		if skuEntity == nil {
+			err := fmt.Errorf("sku with id {%s} not found", sli.SkuId)
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		return skuEntity.Name, nil
+	}
+	if sli.Name != "" {
+		return sli.Name, nil
+	}
+	return "Unnamed service", nil
 }

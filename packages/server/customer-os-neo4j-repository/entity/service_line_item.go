@@ -17,6 +17,7 @@ type ServiceLineItemEntity struct {
 	ID               string
 	SkuId            string
 	Name             string //deprecated
+	Description      string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	StartedAt        time.Time  // DateTime
@@ -30,7 +31,6 @@ type ServiceLineItemEntity struct {
 	PreviousQuantity int64
 	Comments         string
 	Source           DataSource
-	SourceOfTruth    DataSource
 	AppSource        string
 	ParentID         string
 	VatRate          float64

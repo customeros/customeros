@@ -17,6 +17,7 @@ type InvoiceLineCreateFields struct {
 	SkuId                   string          `json:"skuId"`
 	SkuName                 string          `json:"skuName"`
 	Name                    string          `json:"name"` //deprecated
+	Description             string          `json:"description"`
 	Price                   float64         `json:"price"`
 	Quantity                int64           `json:"quantity"`
 	Amount                  float64         `json:"amount"`
@@ -61,6 +62,7 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tx *
 								il.skuId=$skuId,
 								il.skuName=$skuName,
 								il.name=$name,
+								il.description=$description,
 								il.price=$price,
 								il.quantity=$quantity,
 								il.amount=$amount,
@@ -83,6 +85,7 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tx *
 		"skuId":                   data.SkuId,
 		"skuName":                 data.SkuName,
 		"name":                    data.Name,
+		"description":             data.Description,
 		"price":                   data.Price,
 		"quantity":                data.Quantity,
 		"amount":                  data.Amount,

@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
@@ -11,19 +12,17 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 	if entity == nil {
 		return nil
 	}
-	return &model.ServiceLineItem{
+	result := &model.ServiceLineItem{
 		Metadata: &model.Metadata{
-			ID:            entity.ID,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        MapDataSourceToModel(entity.Source),
-			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-			AppSource:     entity.AppSource,
+			ID:          entity.ID,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      MapDataSourceToModel(entity.Source),
+			AppSource:   entity.AppSource,
 		},
 		BillingCycle:   MapBilledTypeToModel(entity.Billed),
 		Comments:       entity.Comments,
 		SkuID:          utils.StringPtr(entity.SkuId),
-		Description:    entity.Name,
 		ParentID:       entity.ParentID,
 		Price:          entity.Price,
 		Quantity:       entity.Quantity,
@@ -35,6 +34,14 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 		Closed: entity.Canceled,
 		Paused: entity.Paused,
 	}
+
+	if entity.Billed == neo4jenum.BilledTypeOnce {
+		result.Description = utils.StringPtrNillable(entity.Description)
+	} else {
+		result.Description = utils.StringPtr(entity.Name)
+	}
+
+	return result
 }
 
 func MapEntitiesToServiceLineItems(entities *neo4jentity.ServiceLineItemEntities) []*model.ServiceLineItem {

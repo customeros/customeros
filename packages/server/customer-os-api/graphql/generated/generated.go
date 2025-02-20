@@ -15772,6 +15772,7 @@ input InvoiceSimulateServiceLineInput {
     serviceStarted:     Time!
     taxRate:            Float
     closeVersion:       Boolean
+    skuId:              ID
 }
 
 type InvoiceSimulate{
@@ -17072,7 +17073,7 @@ type ServiceLineItem implements MetadataInterface {
     comments:           String!
     skuId:              ID  #todo make it mandatory
     sku:                Sku @goField(forceResolver: true) #todo make it mandatory
-    description:        String! @deprecated(reason: "use skuId")
+    description:        String
     parentId:           ID!
     price:              Float!
     quantity:           Int64!
@@ -17089,7 +17090,7 @@ type ServiceLineItem implements MetadataInterface {
 input ServiceLineItemInput {
     contractId:         ID!
     skuId:              ID #todo make this mandatory after FE changes
-    description:        String @deprecated(reason: "use skuId")
+    description:        String
     billingCycle:       BilledType
     price:              Float
     quantity:           Int64
@@ -17101,7 +17102,7 @@ input ServiceLineItemInput {
 
 input ServiceLineItemUpdateInput {
     id:                         ID
-    description:                String @deprecated(reason: "use skuId")
+    description:                String
     skuId:                      ID #todo make this mandatory after FE changes
     """
     Deprecated: billing cycle is not updatable.
@@ -17120,7 +17121,7 @@ input ServiceLineItemUpdateInput {
 input ServiceLineItemNewVersionInput {
     id:                         ID
     skuId:                      ID  #todo make this mandatory after FE changes
-    description:                String @deprecated(reason: "use skuId")
+    description:                String
     price:                      Float
     quantity:                   Int64
     tax:                        TaxInput
@@ -103273,14 +103274,11 @@ func (ec *executionContext) _ServiceLineItem_description(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -115420,7 +115418,7 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateServiceLineInput(ctx co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"key", "serviceLineItemId", "parentId", "description", "billingCycle", "price", "quantity", "serviceStarted", "taxRate", "closeVersion"}
+	fieldsInOrder := [...]string{"key", "serviceLineItemId", "parentId", "description", "billingCycle", "price", "quantity", "serviceStarted", "taxRate", "closeVersion", "skuId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -115497,6 +115495,13 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateServiceLineInput(ctx co
 				return it, err
 			}
 			it.CloseVersion = data
+		case "skuId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skuId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SkuID = data
 		}
 	}
 
@@ -134278,9 +134283,6 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "description":
 			out.Values[i] = ec._ServiceLineItem_description(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "parentId":
 			out.Values[i] = ec._ServiceLineItem_parentId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

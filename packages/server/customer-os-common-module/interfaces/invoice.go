@@ -51,6 +51,7 @@ type SimulateInvoiceRequestServiceLineData struct {
 	Key               string
 	ServiceLineItemID string
 	ParentID          string
+	SkuID             string
 	Description       string
 	Comments          string
 	BillingCycle      neo4jenum.BilledType
