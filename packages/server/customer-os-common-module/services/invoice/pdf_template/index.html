@@ -242,6 +242,12 @@
                                 <div class="invoice-title-3 TextsmMedium">
                                     {{.Name}}
                                 </div>
+                                {{if .InvoiceLineDescription}}
+                                <div class="invoice-title-3 TextsmRegular">
+                                    {{.InvoiceLineDescription}}
+                                </div>
+                                {{else}}
+                                {{end}}
                                 <div class="invoice-subtitle-3 TextsmRegular">
                                     {{.InvoiceLineSubtitle}}
                                 </div>
@@ -329,7 +335,7 @@
     {{if .BankDetailsAvailable}}
     <div class="invoice-printed-frame3615">
         <div class="invoice-title-3 TextsmMedium">
-            Bank transfer
+            Bank details
         </div>
         <div style="width: 100%; display:flex;">
             {{if .BankAccountName}}
