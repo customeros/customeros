@@ -69,6 +69,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("agentID", agent.ID), log.String("agentEventName", agentEventName), log.String("existingExecutionId", utils.IfNotNilString(existingExecutionId)))
 
 	if err := a.validateAgent(ctx, agent); err != nil {
 		return "", err
@@ -284,6 +285,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.handleExecutionResult")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("status", status.String()))
 
 	execErrStr := ""
 	if execErr != nil {

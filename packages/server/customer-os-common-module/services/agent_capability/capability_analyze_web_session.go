@@ -120,26 +120,24 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	}
 
 	// update session with organization id
-	if executionContainer.InputData.OrganizationID != "" {
-		err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionError, result, err
-		}
-	}
-
-	// analyze session
-	result, err := c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
+	err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
+	}
+
+	// analyze session
+	result, err = c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionRetry, result, err
 	}
 
 	// determine if a new company visit
 	isNewCompany, err := c.isNewCompanyVisit(ctx, executionContainer.InputData.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
 
@@ -147,7 +145,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, executionContainer.InputData.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 	result.IsNewPersonVisit = isNewVisitor
 
@@ -155,7 +153,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	timelineMessage, err := c.buildTimelineMessage(ctx, executionContainer.InputData.WebSessionID, result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 
 	// write event to timeline
