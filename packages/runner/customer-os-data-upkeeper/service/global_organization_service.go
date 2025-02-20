@@ -42,6 +42,7 @@ type GlobalOrganizationService interface {
 	ScrapinCompanyByWebsite()
 	EnrichGlobalOrganization()
 	SyncGlobalOrgsToTenantOrganizations()
+	ScrapeGlobalOrgs()
 }
 
 type globalOrganizationService struct {
@@ -67,6 +68,35 @@ func (s *globalOrganizationService) EnrichGlobalOrganization() {
 	s.enrichName()
 	s.enrichIndustry()
 	s.enrichDescription()
+}
+
+func (s *globalOrganizationService) ScrapeGlobalOrgs() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 10
+
+	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToScrape(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
+		return
+	}
+
+	if len(orgs) == 0 {
+		return
+	}
+
+	for _, org := range orgs {
+		err := s.commonServices.WebscraperService.Scrape(ctx, org.PrimaryDomain, org.PrimaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error scraping global org primary domain"))
+			continue
+		}
+	}
 }
 
 func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {

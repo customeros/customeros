@@ -69,6 +69,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/user"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webhook"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webscraper"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/workflow"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/workspace"
 )
@@ -136,6 +137,7 @@ type CommonServices struct {
 	VerifyService              interfaces.VerifyService
 	QuickbooksService          interfaces.QuickbooksService
 	WebhookService             interfaces.WebhookService
+	WebscraperService          interfaces.WebscraperService
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
 
@@ -219,6 +221,7 @@ func InitCommonServices(
 	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
 	quickbooksImpl := quickbooks.NewQuickbooksService(&cfg.External.QuickbooksConfig, postgresRepositories)
 	webhookImpl := webhook.NewWebhookService(log, postgresRepositories)
+	webscrapeImpl := webscraper.NewWebscraperService(&cfg.External.JinaConfig, postgresRepositories)
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
 
@@ -362,6 +365,7 @@ func InitCommonServices(
 		VerifyService:              verifyImpl,
 		QuickbooksService:          quickbooksImpl,
 		WebhookService:             webhookImpl,
+		WebscraperService:          webscrapeImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
 
