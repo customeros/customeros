@@ -24,7 +24,7 @@ type AgentExecutionRepository interface {
 	Pending(ctx context.Context, executionID string) error
 	Finish(ctx context.Context, executionID string) error
 	Completed(ctx context.Context, executionID string, goalAchieved *bool) (*postgres_entity.AgentExecution, error)
-	ScheduleRetry(ctx context.Context, executionID string, err error) error
+	ScheduleRetry(ctx context.Context, executionID string, err error, stateData map[string]any) error
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
 	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error
@@ -226,7 +226,7 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 	return &agentExecution, nil
 }
 
-func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error) error {
+func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error, stateData map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.ScheduleRetry")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -249,6 +249,7 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 	if execution.NextRetryAt != nil {
 		execution.RetryCount++
 	}
+	execution.StateData = stateData
 	if execution.RetryCount > execution.MaxRetries {
 		execution.Status = enum.AgentExecutionError
 		if inputError != nil {
