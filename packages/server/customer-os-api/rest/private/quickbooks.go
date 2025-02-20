@@ -53,3 +53,14 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{})
 	}
 }
+
+func GetQuickbooksSettings(s *cosapi_services.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		quickbooksConnected, err := s.CommonServices.QuickbooksService.QuickbooksConnected(c.Request.Context())
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"quickbooksConnected": quickbooksConnected})
+	}
+}

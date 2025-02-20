@@ -1,6 +1,7 @@
 package postgres_repository
 
 import (
+	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -36,7 +37,7 @@ func (repo *quickbooksSettingsRepository) Get(ctx context.Context, tenant string
 
 	if err != nil {
 		span.LogFields(tracingLog.Bool("result.found", false))
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)

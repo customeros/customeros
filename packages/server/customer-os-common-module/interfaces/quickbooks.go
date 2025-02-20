@@ -8,6 +8,7 @@ import (
 )
 
 type QuickbooksService interface {
+	QuickbooksConnected(ctx context.Context) (bool, error)
 	GetAndStoreAccessToken(ctx context.Context, realmId string, requestData url.Values) (*postgres_entity.QuickbooksSettingsEntity, error)
 	SaveProduct(ctx context.Context, id, productName string, archived bool) (*QuickbooksSaveProductResponse, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
