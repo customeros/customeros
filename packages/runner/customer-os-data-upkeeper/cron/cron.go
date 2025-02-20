@@ -128,7 +128,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
-	addJob(cont.Cfg.App.Cron.CronScheduleGlobalOrgScrape, GroupGlobalOrg, scapeGlobalOrganizations, "scrapeGlobalOrganizations")
+	addJob(cont.Cfg.App.Cron.CronScheduleGlobalOrgScrape, GroupGlobalOrg, scrapeGlobalOrganizations, "scrapeGlobalOrganizations")
 
 	// Contract Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
@@ -373,7 +373,7 @@ func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncGlobalOrgsToTenantOrganizations()
 }
 
-func scapeGlobalOrganizations(cont *container.Container) {
+func scrapeGlobalOrganizations(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapeGlobalOrgs()
 }
 
