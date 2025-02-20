@@ -28,6 +28,7 @@ type GlobalOrganizationRepository interface {
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
 	MarkNameEnrichRequested(ctx context.Context, id uint64) error
+	MarkScraped(ctx context.Context, id uint64) error
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
 	SetDescription(ctx context.Context, id uint64, description string) error
 	SetName(ctx context.Context, id uint64, name string) error
@@ -179,7 +180,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Cont
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Where("scraped = ?", false).
+		Where("scraped = ? OR scraped IS NULL", false).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&organizations)
@@ -388,5 +389,28 @@ func (r *globalOrganizationRepository) markEnrichRequested(ctx context.Context, 
 	if result.Error != nil {
 		return result.Error
 	}
+	return nil
+}
+
+func (r *globalOrganizationRepository) MarkScraped(ctx context.Context, id uint64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkScraped")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		UpdateColumn("scraped", true)
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := errors.New("no organization found with provided ID")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	return nil
 }

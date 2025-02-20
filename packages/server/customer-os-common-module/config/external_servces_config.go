@@ -48,6 +48,6 @@ type QuickbooksConfig struct {
 }
 
 type JinaConfig struct {
-	Url    string `env:"JINA_URL" envDefault:"https://r.jina.ai"`
+	Url    string `env:"JINA_URL" envDefault:"https://r.jina.ai/"`
 	ApiKey string `env:"JINA_API_KEY" envDefault:"N/A"`
 }
