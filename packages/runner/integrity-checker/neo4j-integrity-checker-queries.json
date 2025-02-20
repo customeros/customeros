@@ -487,6 +487,15 @@
           "query": "MATCH (n:FlowActionExecution) WHERE n.status = 'TECH_ERROR'  RETURN count(n)"
         }
       ]
+    },
+    {
+      "name": "Action",
+      "queries": [
+        {
+          "name": "Contract actions without content",
+          "query": "MATCH (:Contract)--(a:Action) where a.content = '' or a.content is null return count(a)"
+        }
+      ]
     }
   ],
   "queries": [
