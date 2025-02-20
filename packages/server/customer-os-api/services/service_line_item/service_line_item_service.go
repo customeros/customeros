@@ -57,8 +57,6 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
-	tenant := common.GetTenantFromContext(ctx)
-
 	// check that quantity is not negative
 	if serviceLineItemDetails.SliQuantity < 0 {
 		err := errors.New("quantity must not be negative")
@@ -75,7 +73,6 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	sliDataFields := data_fields.SLIFields{
 		ContractId:  utils.StringPtr(serviceLineItemDetails.ContractId),
 		SkuId:       utils.StringPtr(serviceLineItemDetails.SkuId),
-		Name:        utils.StringPtr(serviceLineItemDetails.SliName),
 		Description: serviceLineItemDetails.SliDescription,
 		Quantity:    utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
 		Price:       utils.Float64Ptr(serviceLineItemDetails.SliPrice),
@@ -85,9 +82,9 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		Source:      utils.StringPtr(serviceLineItemDetails.Source.String()),
 		NewVersion:  utils.BoolPtr(false),
 	}
-
+	// TODO: remove once tenants adapted their APIs
 	if serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce {
-		sliDataFields.Description = utils.StringPtr("")
+		sliDataFields.Description = nil
 	}
 
 	if serviceLineItemDetails.SliBilledType == neo4jenum.BilledTypeOnce && serviceLineItemDetails.SkuId == "" {
@@ -95,22 +92,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-
-	if serviceLineItemDetails.SkuId != "" && serviceLineItemDetails.SliName == "" {
-		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, tenant, serviceLineItemDetails.SkuId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return "", err
-		}
-
-		if skuEntity == nil {
-			err := fmt.Errorf("sku with id {%s} not found", serviceLineItemDetails.SkuId)
-			tracing.TraceErr(span, err)
-			return "", err
-		}
-
-		sliDataFields.Name = utils.StringPtr(skuEntity.Name)
-	}
+	// TODO add similar validation for other billed types
 
 	sliDataFields.BilledType = utils.ToPtr(serviceLineItemDetails.SliBilledType)
 
@@ -243,18 +225,23 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	}
 
 	sliDataFields := data_fields.SLIFields{
-		ContractId: utils.StringPtr(contractEntity.Id),
-		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
-		SkuId:      utils.StringPtr(utils.StringFirstNonEmpty(baseServiceLineItemEntity.SkuId, data.SkuId)),
-		Name:       utils.StringPtr(utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name)),
-		Quantity:   utils.Int64Ptr(data.Quantity),
-		Price:      utils.Float64Ptr(data.Price),
-		TaxRate:    utils.Float64Ptr(data.VatRate),
-		StartedAt:  &startedAtDate,
-		Comments:   utils.StringPtr(data.Comments),
-		Source:     utils.StringPtr(data.Source.String()),
-		BilledType: utils.ToPtr(baseServiceLineItemEntity.Billed),
-		NewVersion: utils.BoolPtr(true),
+		ContractId:  utils.StringPtr(contractEntity.Id),
+		ParentId:    utils.StringPtr(baseServiceLineItemEntity.ParentID),
+		SkuId:       utils.StringPtr(utils.StringFirstNonEmpty(baseServiceLineItemEntity.SkuId, data.SkuId)),
+		Description: utils.StringPtr(utils.StringFirstNonEmpty(utils.IfNotNilString(data.Description), baseServiceLineItemEntity.Description)),
+		Quantity:    utils.Int64Ptr(data.Quantity),
+		Price:       utils.Float64Ptr(data.Price),
+		TaxRate:     utils.Float64Ptr(data.VatRate),
+		StartedAt:   &startedAtDate,
+		Comments:    utils.StringPtr(data.Comments),
+		Source:      utils.StringPtr(data.Source.String()),
+		BilledType:  utils.ToPtr(baseServiceLineItemEntity.Billed),
+		NewVersion:  utils.BoolPtr(true),
+	}
+
+	// TODO: remove once tenants adapted their APIs
+	if baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
+		sliDataFields.Description = nil
 	}
 
 	sliId, err := s.sli.Save(ctx, nil, nil, sliDataFields)
@@ -293,6 +280,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
+	// TODO: remove once tenants adapted their APIs
 	if baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
 		serviceLineItemDetails.SliDescription = nil
 	}
@@ -303,7 +291,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
 
 	anyFieldChanged := (baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "") ||
-		baseServiceLineItemEntity.Name != serviceLineItemDetails.SliName ||
 		baseServiceLineItemEntity.Price != serviceLineItemDetails.SliPrice ||
 		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
 		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate ||
@@ -316,23 +303,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || utils.CloseToNow(startedAt) || sliIsInvoiced) {
 		span.LogFields(log.String("result", "No changes recorded"))
 		return nil
-	}
-
-	//TODO remove this when name is removed from SLI
-	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId && serviceLineItemDetails.SkuId != "" {
-		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.SkuId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if skuEntity == nil {
-			err := fmt.Errorf("sku with id {%s} not found", serviceLineItemDetails.SkuId)
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		serviceLineItemDetails.SliName = skuEntity.Name
 	}
 
 	if baseServiceLineItemEntity.Canceled {
@@ -442,7 +412,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
 			SkuId:       utils.StringPtrNillable(serviceLineItemDetails.SkuId),
-			Name:        utils.StringPtr(serviceLineItemDetails.SliName),
 			Description: serviceLineItemDetails.SliDescription,
 			Quantity:    utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
 			Price:       utils.Float64Ptr(serviceLineItemDetails.SliPrice),
@@ -480,16 +449,16 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	} else {
 		// Create new SLI version
 		_, err := s.NewVersion(ctx, cosapi_interfaces.ServiceLineItemNewVersionData{
-			Id:        baseServiceLineItemEntity.ParentID,
-			SkuId:     utils.StringFirstNonEmpty(serviceLineItemDetails.SkuId, baseServiceLineItemEntity.SkuId),
-			Name:      utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, baseServiceLineItemEntity.Name),
-			Price:     serviceLineItemDetails.SliPrice,
-			Quantity:  serviceLineItemDetails.SliQuantity,
-			Comments:  utils.IfNotNilString(serviceLineItemDetails.SliComments),
-			Source:    serviceLineItemDetails.Source,
-			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-			VatRate:   serviceLineItemDetails.SliVatRate,
-			StartedAt: serviceLineItemDetails.StartedAt,
+			Id:          baseServiceLineItemEntity.ParentID,
+			SkuId:       utils.StringFirstNonEmpty(serviceLineItemDetails.SkuId, baseServiceLineItemEntity.SkuId),
+			Description: serviceLineItemDetails.SliDescription,
+			Price:       serviceLineItemDetails.SliPrice,
+			Quantity:    serviceLineItemDetails.SliQuantity,
+			Comments:    utils.IfNotNilString(serviceLineItemDetails.SliComments),
+			Source:      serviceLineItemDetails.Source,
+			AppSource:   utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
+			VatRate:     serviceLineItemDetails.SliVatRate,
+			StartedAt:   serviceLineItemDetails.StartedAt,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -636,15 +605,15 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 	for _, serviceLineItem := range sliBulkData {
 		if serviceLineItem.Id == "" && !serviceLineItem.CloseVersion && !serviceLineItem.NewVersion {
 			itemId, err := s.Create(ctx, cosapi_interfaces.ServiceLineItemCreateData{
-				ContractId:    contractId,
-				SliName:       serviceLineItem.Name,
-				SliPrice:      serviceLineItem.Price,
-				SliQuantity:   serviceLineItem.Quantity,
-				SliBilledType: serviceLineItem.Billed,
-				SliVatRate:    serviceLineItem.VatRate,
-				Source:        neo4jentity.DataSourceOpenline,
-				AppSource:     constants.AppSourceCustomerOsApi,
-				StartedAt:     serviceLineItem.StartedAt,
+				ContractId:     contractId,
+				SliDescription: serviceLineItem.Description,
+				SliPrice:       serviceLineItem.Price,
+				SliQuantity:    serviceLineItem.Quantity,
+				SliBilledType:  serviceLineItem.Billed,
+				SliVatRate:     serviceLineItem.VatRate,
+				Source:         neo4jentity.DataSourceOpenline,
+				AppSource:      constants.AppSourceCustomerOsApi,
+				StartedAt:      serviceLineItem.StartedAt,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -660,15 +629,15 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 			}
 		} else if serviceLineItem.NewVersion && !serviceLineItem.CloseVersion {
 			itemId, err := s.NewVersion(ctx, cosapi_interfaces.ServiceLineItemNewVersionData{
-				Id:        serviceLineItem.Id,
-				Name:      serviceLineItem.Name,
-				Price:     serviceLineItem.Price,
-				Quantity:  serviceLineItem.Quantity,
-				Comments:  serviceLineItem.Comments,
-				Source:    neo4jentity.DataSourceOpenline,
-				AppSource: constants.AppSourceCustomerOsApi,
-				VatRate:   serviceLineItem.VatRate,
-				StartedAt: serviceLineItem.StartedAt,
+				Id:          serviceLineItem.Id,
+				Description: serviceLineItem.Description,
+				Price:       serviceLineItem.Price,
+				Quantity:    serviceLineItem.Quantity,
+				Comments:    serviceLineItem.Comments,
+				Source:      neo4jentity.DataSourceOpenline,
+				AppSource:   constants.AppSourceCustomerOsApi,
+				VatRate:     serviceLineItem.VatRate,
+				StartedAt:   serviceLineItem.StartedAt,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -680,7 +649,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 			err := s.Update(ctx, cosapi_interfaces.ServiceLineItemUpdateData{
 				Id:                      serviceLineItem.Id,
 				IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
-				SliName:                 serviceLineItem.Name,
+				SliDescription:          serviceLineItem.Description,
 				SliPrice:                serviceLineItem.Price,
 				SliQuantity:             serviceLineItem.Quantity,
 				SliBilledType:           serviceLineItem.Billed,
@@ -723,7 +692,7 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 	}
 	return &cosapi_interfaces.ServiceLineItemDetails{
 		Id:                      utils.IfNotNilString(input.ServiceLineItemID),
-		Name:                    utils.IfNotNilString(input.Name),
+		Description:             input.Name,
 		Price:                   utils.IfNotNilFloat64(input.Price),
 		Quantity:                utils.IfNotNilInt64(input.Quantity),
 		Billed:                  billed,

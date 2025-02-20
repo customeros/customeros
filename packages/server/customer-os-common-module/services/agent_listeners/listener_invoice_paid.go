@@ -105,7 +105,7 @@ func (l *InvoicePaidListener) Handle(ctx context.Context, baseEvent any) error {
 			errs = multierr.Append(errs, err)
 			continue
 		}
-		agentExecutionId, err := l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
+		agentExecutionId, err := l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

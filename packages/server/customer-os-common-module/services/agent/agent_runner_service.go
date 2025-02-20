@@ -65,7 +65,7 @@ type capabilityParams struct {
 	span              opentracing.Span
 }
 
-func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any) (string, error) {
+func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any, existingExecutionId *string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -79,9 +79,12 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		return "", err
 	}
 
-	executionID, err := a.setupExecution(ctx, agent, agentEventName)
-	if err != nil {
-		return "", err
+	executionID := utils.IfNotNilString(existingExecutionId)
+	if executionID == "" {
+		executionID, err = a.setupExecution(ctx, agent, agentEventName)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return executionID, a.processCapabilities(ctx, executionParams{
@@ -407,7 +410,7 @@ func (a *agentRunnerService) ResumeExecution(ctx context.Context, executionID st
 	}
 
 	// Resume execution
-	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params)
+	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params, utils.StringPtr(executionID))
 	return err
 }
 
@@ -448,7 +451,7 @@ func (a *agentRunnerService) RetryExecution(ctx context.Context, executionID str
 	}
 
 	// Retry execution
-	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params)
+	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params, utils.StringPtr(executionID))
 	return err
 }
 

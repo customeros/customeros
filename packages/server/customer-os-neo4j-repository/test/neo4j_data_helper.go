@@ -785,7 +785,6 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"contractId":       contractId,
 		"tenant":           tenant,
 		"skuId":            serviceLineItem.SkuId,
-		"name":             serviceLineItem.Name,
 		"description":      serviceLineItem.Description,
 		"source":           serviceLineItem.Source,
 		"appSource":        serviceLineItem.AppSource,
