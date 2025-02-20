@@ -20,7 +20,7 @@ type WebSession struct {
 	Hostname              string         `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
 	Domain                *string        `gorm:"column:domain;type:varchar(255);index:idx_domain" json:"domain"`
 	OrganizationId        *string        `gorm:"column:organization_id;varchar(255);index:idx_organization_id" json:"organizationId"`
-	Referrer              *string        `gorm:"column:referrer;type:varchar(255);" json:"referrer"`
+	Referrer              *string        `gorm:"column:referrer;type:text;" json:"referrer"`
 	QueryParams           *string        `gorm:"column:query_params;type:text;" json:"queryParams"`
 	UniquePageViews       pq.StringArray `gorm:"column:unique_page_views;type:text[];" json:"uniquePageViews"`
 	StartTime             time.Time      `gorm:"column:start_time;type:timestamp;" json:"startTime"`
