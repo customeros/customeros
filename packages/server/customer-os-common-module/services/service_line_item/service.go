@@ -85,6 +85,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 	sliId := ""
 	priceChanged := false
 	quantityChanged := false
+	var previousSliEntity *neo4jentity.ServiceLineItemEntity
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
@@ -189,15 +190,15 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		span.LogKV("flow", "update")
 		sliId = *id
 
-		sliEntity, err := s.GetById(ctx, sliId)
+		previousSliEntity, err = s.GetById(ctx, sliId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
 
 		// reset non-updatable fields
-		if sliEntity.Billed != neo4jenum.BilledTypeNone {
-			dataFields.BilledType = utils.ToPtr(sliEntity.Billed)
+		if previousSliEntity.Billed != neo4jenum.BilledTypeNone {
+			dataFields.BilledType = utils.ToPtr(previousSliEntity.Billed)
 		}
 		if utils.IfNotNilFloat64(dataFields.TaxRate) < 0 {
 			dataFields.TaxRate = utils.Float64Ptr(0)
@@ -205,7 +206,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		dataFields.TaxRate = utils.Float64Ptr(utils.TruncateFloat64(utils.IfNotNilFloat64(dataFields.TaxRate), 2))
 
 		// validate data
-		if sliEntity.Canceled {
+		if previousSliEntity.Canceled {
 			err = errors.New("service line item is canceled")
 			tracing.TraceErr(span, err)
 			return "", err
@@ -218,8 +219,8 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 			return "", err
 		}
 
-		priceChanged = dataFields.Price != nil && sliEntity.Price != *dataFields.Price
-		quantityChanged = dataFields.Quantity != nil && sliEntity.Quantity != *dataFields.Quantity
+		priceChanged = dataFields.Price != nil && previousSliEntity.Price != *dataFields.Price
+		quantityChanged = dataFields.Quantity != nil && previousSliEntity.Quantity != *dataFields.Quantity
 	}
 	tracing.TagEntity(span, sliId)
 
@@ -357,7 +358,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				}
 				cycle := getBillingCycleNamingConvention(dataFields.BilledType.String())
 
-				serviceLineItemEntity, err := s.GetById(ctx, sliId)
+				newSliEntity, err := s.GetById(ctx, sliId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
@@ -365,23 +366,23 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 
 				actionPriceMetadata := SLIActionMetadata{
 					UserName:        userName,
-					ServiceName:     serviceLineItemEntity.Name,
+					ServiceName:     newSliEntity.Name,
 					Price:           utils.IfNotNilFloat64(dataFields.Price),
-					PreviousPrice:   serviceLineItemEntity.Price,
-					BilledType:      serviceLineItemEntity.Billed.String(),
-					Quantity:        serviceLineItemEntity.Quantity,
-					Comment:         "price changed is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
+					PreviousPrice:   newSliEntity.Price,
+					BilledType:      newSliEntity.Billed.String(),
+					Quantity:        newSliEntity.Quantity,
+					Comment:         "price changed is " + fmt.Sprintf("%.2f", newSliEntity.Price) + " for service " + name,
 					ReasonForChange: utils.IfNotNilString(dataFields.Comments),
 					Currency:        contractEntity.Currency.String(),
 				}
 				actionQuantityMetadata := SLIActionMetadata{
 					UserName:         userName,
-					ServiceName:      serviceLineItemEntity.Name,
-					PreviousQuantity: serviceLineItemEntity.Quantity,
+					ServiceName:      newSliEntity.Name,
+					PreviousQuantity: newSliEntity.Quantity,
 					Quantity:         utils.IfNotNilInt64(dataFields.Quantity),
-					Price:            serviceLineItemEntity.Price,
-					BilledType:       serviceLineItemEntity.Billed.String(),
-					Comment:          "quantity changed is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
+					Price:            newSliEntity.Price,
+					BilledType:       newSliEntity.Billed.String(),
+					Comment:          "quantity changed is " + strconv.FormatInt(newSliEntity.Quantity, 10) + " for service " + name,
 					ReasonForChange:  utils.IfNotNilString(dataFields.Comments),
 					Currency:         contractEntity.Currency.String(),
 				}
@@ -401,64 +402,72 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					s.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
 					return errors.Wrap(err, "Failed to serialize quantity metadata")
 				}
-				oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed.String())
+				oldCycle := getBillingCycleNamingConvention(previousSliEntity.Billed.String())
 
 				if priceChanged && dataFields.BilledType != nil && dataFields.BilledType.IsRecurrent() {
 					message := ""
-					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle
+					if newSliEntity.Price > previousSliEntity.Price {
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", newSliEntity.Price) + "/" + cycle
 					}
-					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle
+					if newSliEntity.Price < previousSliEntity.Price {
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", newSliEntity.Price) + "/" + cycle
 					}
-					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					if message != "" {
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+						}
 					}
 				}
 
 				if priceChanged && dataFields.BilledType != nil && *dataFields.BilledType == neo4jenum.BilledTypeOnce {
 					message := ""
-					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price))
+					if newSliEntity.Price > previousSliEntity.Price {
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.2f", newSliEntity.Price)
 					}
-					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price))
+					if newSliEntity.Price < previousSliEntity.Price {
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.2f", newSliEntity.Price)
 					}
-					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					if message != "" {
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+						}
 					}
 				}
 				if priceChanged && *dataFields.BilledType == neo4jenum.BilledTypeUsage {
 					message := ""
-					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price))
+					if newSliEntity.Price > previousSliEntity.Price {
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.4f", newSliEntity.Price)
 					}
-					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price))
+					if newSliEntity.Price < previousSliEntity.Price {
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousSliEntity.Price) + " to " + fmt.Sprintf("%.4f", newSliEntity.Price)
 					}
-					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					if message != "" {
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+						}
 					}
 				}
 
 				if quantityChanged {
 					message := ""
-					if utils.IfNotNilInt64(dataFields.Quantity) > serviceLineItemEntity.Quantity {
-						message = userName + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10)
+					if newSliEntity.Quantity > previousSliEntity.Quantity {
+						message = userName + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(previousSliEntity.Quantity, 10) + " to " + strconv.FormatInt(newSliEntity.Quantity, 10)
 					}
-					if utils.IfNotNilInt64(dataFields.Quantity) < serviceLineItemEntity.Quantity {
-						message = userName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10)
+					if newSliEntity.Quantity < previousSliEntity.Quantity {
+						message = userName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(previousSliEntity.Quantity, 10) + " to " + strconv.FormatInt(newSliEntity.Quantity, 10)
 					}
-					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						s.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					if message != "" {
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+						}
 					}
 				}
 
