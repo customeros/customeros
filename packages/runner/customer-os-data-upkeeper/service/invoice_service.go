@@ -68,6 +68,8 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	tracing.TagComponentCronJob(span)
 
 	referenceTime := utils.Now()
+	delayFromPreviousScheduleInvoiceRun := 15
+	limit := 50
 
 	// Get all agents for cashflow guardian
 	agents, err := s.repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentCashflowGuardian})
@@ -75,15 +77,9 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 		tracing.TraceErr(span, err)
 		return
 	}
-	if len(agents) == 0 {
-		s.log.Infof("No agents found for invoicing")
-		return
-	}
-	// collect tenants
-	var tenants []string
+
 	agentByTenant := map[string]postgres_entity.Agent{}
 	for _, agent := range agents {
-		tenants = append(tenants, agent.Tenant)
 		agentByTenant[agent.Tenant] = agent
 	}
 
@@ -96,74 +92,77 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, tenants, referenceTime, 15)
+		contractRecords, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, referenceTime, delayFromPreviousScheduleInvoiceRun, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contracts for invoicing: %v", err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error getting contracts for preview invoicing"))
+			s.log.Errorf("Error getting contracts for preview invoicing: %v", err)
 			return
 		}
 
 		// no contracts found
-		if len(records) == 0 {
+		if len(contractRecords) == 0 {
 			return
 		}
 
 		// process records
-		for _, record := range records {
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-			recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateNextPreviewInvoices.Record")
-			defer recordSpan.Finish()
-			tracing.TagTenant(recordSpan, record.Tenant)
-			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
-			tenant := record.Tenant
+		for _, record := range contractRecords {
+			func(record *utils.DbNodeAndTenant) {
+				innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+					Tenant:    record.Tenant,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
+				recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateNextPreviewInvoices.Record")
+				defer recordSpan.Finish()
+				tracing.TagTenant(recordSpan, record.Tenant)
 
-			// mark next preview invoice requested
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkNextPreviewInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
-				return
-			}
+				contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 
-			// get agent for tenant
-			dataFields := data_fields.InvoiceFields{
-				DryRun:  true,
-				Preview: true,
-			}
-			agent := agentByTenant[tenant]
-			capabilityConfig := agent_capability.GenerateInvoiceConfig{}
-			err = agent.GetCapabilityConfigByType(enum.CapabilityGenerateInvoice, &capabilityConfig)
-			if err != nil {
-				dataFields.TenantBillingProfile = &data_fields.TenantBillingProfile{
-					LogoRepositoryFileId:       capabilityConfig.LogoRepositoryFileId.Value,
-					Country:                    capabilityConfig.Country.Value,
-					LegalName:                  capabilityConfig.LegalName.Value,
-					AddressLine1:               capabilityConfig.AddressLine1.Value,
-					AddressLine2:               capabilityConfig.AddressLine2.Value,
-					Zip:                        capabilityConfig.ZIP.Value,
-					Locality:                   capabilityConfig.Locality.Value,
-					Region:                     capabilityConfig.Region.Value,
-					IncludeBankTransferDetails: capabilityConfig.IncludeBankTransferDetails.Value,
-					BankName:                   capabilityConfig.BankName.Value,
-					AccountNumber:              capabilityConfig.AccountNumber.Value,
-					IBAN:                       capabilityConfig.IBAN.Value,
-					BIC:                        capabilityConfig.BIC.Value,
-					SortCode:                   capabilityConfig.SortCode.Value,
-					RoutingNumber:              capabilityConfig.RoutingNumber.Value,
-					OtherDetails:               capabilityConfig.OtherDetails.Value,
+				// mark next preview invoice requested
+				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkNextPreviewInvoicingRequested(innerCtx, record.Tenant, contract.Id, utils.Now())
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
+					return
 				}
-			}
-			_, err = s.commonServices.InvoiceService.InvoiceContract(innerCtx, nil, contract.Id, dataFields)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
-			}
+
+				// get agent for tenant
+				dataFields := data_fields.InvoiceFields{
+					DryRun:  true,
+					Preview: true,
+				}
+				// if agent exist in map use it
+				agent, ok := agentByTenant[record.Tenant]
+				if ok {
+					capabilityConfig := agent_capability.GenerateInvoiceConfig{}
+					err = agent.GetCapabilityConfigByType(enum.CapabilityGenerateInvoice, &capabilityConfig)
+					if err != nil {
+						dataFields.TenantBillingProfile = &data_fields.TenantBillingProfile{
+							LogoRepositoryFileId:       capabilityConfig.LogoRepositoryFileId.Value,
+							Country:                    capabilityConfig.Country.Value,
+							LegalName:                  capabilityConfig.LegalName.Value,
+							AddressLine1:               capabilityConfig.AddressLine1.Value,
+							AddressLine2:               capabilityConfig.AddressLine2.Value,
+							Zip:                        capabilityConfig.ZIP.Value,
+							Locality:                   capabilityConfig.Locality.Value,
+							Region:                     capabilityConfig.Region.Value,
+							IncludeBankTransferDetails: capabilityConfig.IncludeBankTransferDetails.Value,
+							BankName:                   capabilityConfig.BankName.Value,
+							AccountNumber:              capabilityConfig.AccountNumber.Value,
+							IBAN:                       capabilityConfig.IBAN.Value,
+							BIC:                        capabilityConfig.BIC.Value,
+							SortCode:                   capabilityConfig.SortCode.Value,
+							RoutingNumber:              capabilityConfig.RoutingNumber.Value,
+							OtherDetails:               capabilityConfig.OtherDetails.Value,
+						}
+					}
+				}
+				_, err = s.commonServices.InvoiceService.InvoiceContract(innerCtx, nil, contract.Id, dataFields)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "Error generating preview invoice"))
+					s.log.Errorf("Error generating preview invoice for contract %s: %s", contract.Id, err.Error())
+				}
+			}(record)
 		}
-		// sleep for async processing, then check again
-		time.Sleep(10 * time.Second)
 	}
 }
 
