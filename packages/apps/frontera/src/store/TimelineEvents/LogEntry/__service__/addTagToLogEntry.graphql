@@ -1,3 +1,0 @@
-mutation addTagToLogEntry($id: ID!, $input: TagIdOrNameInput!) {
-  logEntry_AddTag(id: $id, input: $input)
-}

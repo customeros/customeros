@@ -1,3 +1,0 @@
-mutation removeTagFromLogEntry($id: ID!, $input: TagIdOrNameInput!) {
-  logEntry_RemoveTag(id: $id, input: $input)
-}

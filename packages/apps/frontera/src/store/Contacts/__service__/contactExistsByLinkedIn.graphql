@@ -1,7 +1,0 @@
-query contactExistsByLinkedIn($linkedIn: String!) {
-  contact_ByLinkedIn(linkedInUrl: $linkedIn) {
-    metadata {
-      id
-    }
-  }
-}

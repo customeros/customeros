@@ -1,7 +1,0 @@
-mutation saveOpportunity($input: OpportunitySaveInput!) {
-  opportunity_Save(input: $input) {
-    metadata {
-      id
-    }
-  }
-}

@@ -12,10 +12,11 @@ export class BrowserRouter {
     this.router.post("/config", this.browserController.createBrowserConfig);
     this.router.patch("/config", this.browserController.updateBrowserConfig);
     this.router.get("/runs", this.browserController.getBrowserAutomationRuns);
+    this.router.get("/scrape", this.browserController.scrape);
     this.router.get(
       "/run/:id",
       getBrowserRunByIdValidators,
-      this.browserController.getBrowserAutomationRun,
+      this.browserController.getBrowserAutomationRun
     );
   }
 }

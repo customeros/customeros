@@ -1,6 +1,0 @@
-query RevenueAtRisk($period: DashboardPeriodInput) {
-  dashboard_RevenueAtRisk(period: $period) {
-    highConfidence
-    atRisk
-  }
-}

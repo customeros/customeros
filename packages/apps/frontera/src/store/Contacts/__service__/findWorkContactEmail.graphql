@@ -1,8 +1,0 @@
-mutation findWorkContactEmail($contactId: ID!, $organizationId: ID!) {
-  contact_FindWorkEmail(
-    contactId: $contactId
-    organizationId: $organizationId
-  ) {
-    accepted
-  }
-}

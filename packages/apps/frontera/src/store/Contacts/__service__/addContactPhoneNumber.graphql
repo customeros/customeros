@@ -1,6 +1,0 @@
-mutation addContactPhoneNumber($contactId: ID!, $input: PhoneNumberInput!) {
-  phoneNumberMergeToContact(contactId: $contactId, input: $input) {
-    id
-    rawPhoneNumber
-  }
-}

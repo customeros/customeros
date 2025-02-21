@@ -1,3 +1,0 @@
-query getDomainSuggestions($domain: String!) {
-  mailstack_DomainPurchaseSuggestions(domain: $domain)
-}

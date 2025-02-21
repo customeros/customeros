@@ -1,5 +1,0 @@
-mutation TenantUpdateBillingProfile($input: TenantBillingProfileUpdateInput!) {
-  tenant_UpdateBillingProfile(input: $input) {
-    id
-  }
-}

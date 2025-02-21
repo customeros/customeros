@@ -1,3 +1,0 @@
-mutation agentArchive($id: ID!) {
-  agent_Delete(id: $id)
-}

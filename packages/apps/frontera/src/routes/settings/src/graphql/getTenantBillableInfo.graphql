@@ -1,8 +1,0 @@
-query getBillableInfo {
-  billableInfo {
-    whitelistedOrganizations
-    whitelistedContacts
-    greylistedOrganizations
-    greylistedContacts
-  }
-}

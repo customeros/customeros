@@ -1,3 +1,0 @@
-query validateDomains($domains: [String!]!) {
-  mailstack_CheckUnavailableDomains(domains: $domains)
-}

@@ -1,5 +1,0 @@
-query BankAccountsCurrencies {
-    bankAccounts {
-        currency
-    }
-}

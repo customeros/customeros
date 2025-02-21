@@ -1,7 +1,0 @@
-query tenant_impersonateList {
-  tenant_impersonateList {
-    tenant
-    createdBy
-    personal
-  }
-}

@@ -1,6 +1,0 @@
-mutation deleteBankAccount($id: ID!) {
-  bankAccount_Delete(id: $id) {
-    accepted
-    completed
-  }
-}
