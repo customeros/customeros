@@ -14,7 +14,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	api_sli "github.com/customeros/customeros/packages/server/customer-os-api/services/service_line_item"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -248,38 +247,6 @@ func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string)
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
 	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
-}
-
-// ServiceLineItemBulkUpdate is the resolver for the serviceLineItemBulkUpdate field.
-func (r *mutationResolver) ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemBulkUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	sliEntitiesForBulkSync := api_sli.MapServiceLineItemBulkItemsToData(input.ServiceLineItems)
-
-	updatedServiceLineItemIds, err := r.Services.ServiceLineItemService.CreateOrUpdateOrCloseInBulk(ctx, input.ContractID, sliEntitiesForBulkSync)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed to bulk update service line items")
-		return nil, nil
-	}
-
-	if input.InvoiceNote != nil && input.ContractID != "" {
-		err = r.Services.ContractService.Update(ctx, model.ContractUpdateInput{
-			Patch:       utils.ToPtr(true),
-			ContractID:  input.ContractID,
-			InvoiceNote: input.InvoiceNote,
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "failed to update contract invoice note")
-			return nil, nil
-		}
-	}
-
-	return updatedServiceLineItemIds, nil
 }
 
 // ServiceLineItem is the resolver for the serviceLineItem field.

@@ -12,7 +12,6 @@ type ServiceLineItemService interface {
 	Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
-	CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*ServiceLineItemDetails) ([]string, error)
 	NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error)
 }
 
@@ -57,18 +56,4 @@ type ServiceLineItemUpdateData struct {
 	AppSource               string                 `json:"appSource"`
 	SliVatRate              float64                `json:"sliVatRate"`
 	StartedAt               *time.Time             `json:"startedAt"`
-}
-
-type ServiceLineItemDetails struct {
-	Id                      string
-	Description             *string
-	Price                   float64
-	Quantity                int64
-	Billed                  neo4jenum.BilledType
-	Comments                string
-	IsRetroactiveCorrection bool
-	VatRate                 float64
-	StartedAt               *time.Time
-	CloseVersion            bool
-	NewVersion              bool
 }

@@ -2584,27 +2584,6 @@ type ServiceLineItem struct {
 func (ServiceLineItem) IsMetadataInterface()        {}
 func (this ServiceLineItem) GetMetadata() *Metadata { return this.Metadata }
 
-type ServiceLineItemBulkUpdateInput struct {
-	ServiceLineItems []*ServiceLineItemBulkUpdateItem `json:"serviceLineItems"`
-	ContractID       string                           `json:"contractId"`
-	InvoiceNote      *string                          `json:"invoiceNote,omitempty"`
-}
-
-type ServiceLineItemBulkUpdateItem struct {
-	ServiceLineItemID       *string     `json:"serviceLineItemId,omitempty"`
-	SkuID                   *string     `json:"skuId,omitempty"`
-	Name                    *string     `json:"name,omitempty"`
-	Billed                  *BilledType `json:"billed,omitempty"`
-	Price                   *float64    `json:"price,omitempty"`
-	Quantity                *int64      `json:"quantity,omitempty"`
-	VatRate                 *float64    `json:"vatRate,omitempty"`
-	Comments                *string     `json:"comments,omitempty"`
-	IsRetroactiveCorrection *bool       `json:"isRetroactiveCorrection,omitempty"`
-	ServiceStarted          *time.Time  `json:"serviceStarted,omitempty"`
-	CloseVersion            *bool       `json:"closeVersion,omitempty"`
-	NewVersion              *bool       `json:"newVersion,omitempty"`
-}
-
 type ServiceLineItemCloseInput struct {
 	ID           string     `json:"id"`
 	EndedAt      *time.Time `json:"endedAt,omitempty"`

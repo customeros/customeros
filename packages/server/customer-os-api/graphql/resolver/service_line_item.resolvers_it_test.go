@@ -32,14 +32,14 @@ func TestMutationResolver_ServiceLineItemUpdate_NoChanges(t *testing.T) {
 		InvoicingStartDate:   &now,
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
-		Name:     "service",
-		ID:       baseSliId,
-		ParentID: baseSliId,
-		Billed:   neo4jenum.BilledTypeMonthly,
-		Quantity: 2,
-		Price:    30,
-		Comments: "test comments",
-		VatRate:  10.5,
+		Description: "service",
+		ID:          baseSliId,
+		ParentID:    baseSliId,
+		Billed:      neo4jenum.BilledTypeMonthly,
+		Quantity:    2,
+		Price:       30,
+		Comments:    "test comments",
+		VatRate:     10.5,
 	})
 
 	rawResponse := callGraphQL(t, "service_line_item/update_service_line_item_parameterized", map[string]interface{}{

@@ -10,7 +10,6 @@ extend type Mutation {
     contractLineItem_Resume(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ServiceLineItem implements MetadataInterface {
@@ -74,27 +73,6 @@ input ServiceLineItemNewVersionInput {
     comments:                   String
     appSource:                  String
     serviceStarted:             Time
-}
-
-input ServiceLineItemBulkUpdateInput {
-    serviceLineItems:   [ServiceLineItemBulkUpdateItem]!
-    contractId:         ID!
-    invoiceNote:        String
-}
-
-input ServiceLineItemBulkUpdateItem {
-    serviceLineItemId:       ID
-    skuId:                   ID
-    name:                    String @deprecated(reason: "use skuId")
-    billed:                  BilledType
-    price:                   Float
-    quantity:                Int64
-    vatRate:                 Float
-    comments:                String
-    isRetroactiveCorrection: Boolean
-    serviceStarted:          Time
-    closeVersion:            Boolean
-    newVersion:              Boolean
 }
 
 input ServiceLineItemCloseInput {
