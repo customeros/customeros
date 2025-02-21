@@ -369,7 +369,7 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		`match (au:AuthenticationUser)
 					optional match (au)-[r:HAS_WORKSPACE]-(t:Tenant{name: $tenant})
 					with au, r, t
-					delete r`, nil)
+					delete r`, map[string]any{"tenant": tenant})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
