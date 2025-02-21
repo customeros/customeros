@@ -1,8 +1,0 @@
-mutation flowChangeName($id: ID!, $name: String!) {
-  flow_ChangeName(id: $id, name: $name) {
-    metadata {
-      id
-    }
-   name
-  }
-}

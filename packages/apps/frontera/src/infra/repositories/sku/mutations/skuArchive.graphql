@@ -1,5 +1,0 @@
-mutation skuArchive($id: ID!) {
-  sku_Archive(id: $id) {
-    result
-  }
-}

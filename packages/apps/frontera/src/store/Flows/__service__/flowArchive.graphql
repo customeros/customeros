@@ -1,5 +1,0 @@
-mutation flowArchive($id: ID!) {
-  flow_Archive(id: $id) {
-    result
-  }
-}

@@ -1,3 +1,0 @@
-query getDomains {
-  mailstack_Domains
-}

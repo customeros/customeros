@@ -1,5 +1,0 @@
-mutation flowParticipantAddBulk($flowId: ID!, $entitiIds: [ID!]!, $entityType: FlowEntityType!) {
-  flowParticipant_AddBulk(flowId: $flowId, entityIds: $entitiIds, entityType: $entityType) {
-    result
-  }
-}

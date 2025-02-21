@@ -5,6 +5,8 @@ import { ErrorParser } from "@/util/error";
 import { BrowserService } from "@/application/services/browser-service";
 import { validationResult } from "express-validator";
 
+import { Scraper } from "@/infrastructure/scraper/scraper";
+
 export class BrowserController {
   private browserService = new BrowserService();
 
@@ -98,6 +100,13 @@ export class BrowserController {
         error: error.message,
       });
     }
+  }
+
+  async scrape(req: Request, res: Response) {
+    const scraper = new Scraper();
+    try {
+      await scraper.doScrape();
+    } catch (err) {}
   }
 
   async getBrowserAutomationRuns(req: Request, res: Response) {

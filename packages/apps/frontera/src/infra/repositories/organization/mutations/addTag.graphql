@@ -1,5 +1,0 @@
-mutation addTagsToOrganization($input: OrganizationTagInput!) {
-  organization_AddTag(input: $input) {
-    accepted
-  }
-}

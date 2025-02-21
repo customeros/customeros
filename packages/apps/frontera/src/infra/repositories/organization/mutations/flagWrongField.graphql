@@ -1,5 +1,0 @@
-mutation flagWrongField($input: FlagWrongFieldInput!) {
-  flagWrongField(input: $input) {
-    result
-  }
-}

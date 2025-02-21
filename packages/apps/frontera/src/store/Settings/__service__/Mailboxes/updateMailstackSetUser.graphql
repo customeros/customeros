@@ -1,5 +1,0 @@
-mutation mailstack_SetUser($mailbox: String!, $userId: ID!) {
-  mailstack_SetUser(mailbox: $mailbox, userId: $userId) {
-    result
-  }
-}

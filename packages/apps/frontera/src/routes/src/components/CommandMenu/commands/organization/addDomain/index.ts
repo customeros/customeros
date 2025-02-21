@@ -1,1 +1,0 @@
-export { AddNewDomain } from './AddNewDomain';

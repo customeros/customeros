@@ -1,5 +1,0 @@
-mutation updateOpportunityStage($input: TenantSettingsOpportunityStageConfigurationInput!) {
-  tenant_UpdateSettingsOpportunityStage(input: $input) {
-    accepted
-  }
-}

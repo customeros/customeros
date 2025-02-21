@@ -1,9 +1,0 @@
-mutation bulkUpdateOpportunityRenewal(
-  $input: OpportunityRenewalUpdateAllForOrganizationInput!
-) {
-  opportunityRenewal_UpdateAllForOrganization(input: $input) {
-    metadata {
-      id
-    }
-  }
-}

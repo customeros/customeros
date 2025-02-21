@@ -1,3 +1,0 @@
-mutation createContactBulkByEmail($emails: [String!]!, $flowId: String) {
-  contact_CreateBulkByEmail(emails: $emails, flowId: $flowId)
-}

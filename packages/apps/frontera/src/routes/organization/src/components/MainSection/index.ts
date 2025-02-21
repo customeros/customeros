@@ -1,1 +1,0 @@
-export { MainSection } from './MainSection';

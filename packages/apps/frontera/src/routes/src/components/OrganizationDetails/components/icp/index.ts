@@ -1,1 +1,0 @@
-export { IcpBadge } from './IcpBadge';

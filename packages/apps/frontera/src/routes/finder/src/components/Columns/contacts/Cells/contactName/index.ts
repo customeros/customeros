@@ -1,1 +1,0 @@
-export { ContactNameCell } from './ContactNameCell';

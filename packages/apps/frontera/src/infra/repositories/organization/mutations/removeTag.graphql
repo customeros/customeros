@@ -1,5 +1,0 @@
-mutation removeTagFromOrganization($input: OrganizationTagInput!) {
-  organization_RemoveTag(input: $input) {
-    accepted
-  }
-}

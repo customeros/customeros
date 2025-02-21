@@ -1,5 +1,0 @@
-mutation addDomain($organizationId: ID!, $domain: String!) {
-  organization_AddDomain(organizationId: $organizationId, domain: $domain) {
-    accepted
-  }
-}

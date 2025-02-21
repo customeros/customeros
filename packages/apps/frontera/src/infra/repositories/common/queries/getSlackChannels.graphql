@@ -1,6 +1,0 @@
-query getSlackChannels {
-  slackChannelsWithBot {
-    channelId
-    name
-  }
-}
