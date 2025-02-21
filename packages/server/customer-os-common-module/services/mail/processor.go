@@ -64,17 +64,6 @@ func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant,
 		return
 	}
 
-	for _, externalSystem := range distinctExternalSystems {
-		// TODO add caching for each tenant of external systems
-		err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(
-			ctx, tenant, externalSystem, externalSystem,
-		)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to merge external system"))
-			return
-		}
-	}
-
 	s.processRawEmails(ctx, tenant, rawEmailsIdsForProcess, span)
 }
 
@@ -586,7 +575,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 	}
 
 	//if email and contact exists, return the org
-	emailId, err := s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, email)
+	emailId, err := s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, nil, tenant, email)
 	if err != nil {
 		err = errors.Wrap(err, "failed to get email id for email")
 		tracing.TraceErr(span, err)

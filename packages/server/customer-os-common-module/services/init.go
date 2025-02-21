@@ -284,6 +284,7 @@ func InitCommonServices(
 		mailImpl,
 		notificationImpl,
 		orgImpl,
+		opensearchImpl,
 		tagImpl,
 		workspaceImpl,
 		quickbooksImpl,

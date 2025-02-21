@@ -3,6 +3,7 @@ package tenant
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"math/rand"
 	"strings"
@@ -114,28 +115,52 @@ func (s *tenantService) Merge(ctx context.Context, tx neo4j.ManagedTransaction, 
 		tracing.TraceErr(span, err)
 	}
 
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gmail", "gmail")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceGmail.String(), enum.SourceGmail.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("merge: %w", err)
+		return nil, err
 	}
 
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "slack", "slack")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceOutlook.String(), enum.SourceOutlook.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("merge: %w", err)
+		return nil, err
 	}
 
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "intercom", "intercom")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceMailstack.String(), enum.SourceMailstack.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("merge: %w", err)
+		return nil, err
 	}
 
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gcal", "gcal")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceSlack.String(), enum.SourceSlack.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("merge: %w", err)
+		return nil, err
+	}
+
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceIntercom.String(), enum.SourceIntercom.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceGCal.String(), enum.SourceGCal.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceGrain.String(), enum.SourceGrain.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceFathom.String(), enum.SourceFathom.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil

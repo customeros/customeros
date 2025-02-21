@@ -448,6 +448,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		//user in tenant
 		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 		if userInTenantNode != nil {
@@ -483,13 +484,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		return
 	}
 
-	if !isPersonalEmail && isNewTenant {
-		err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-	}
-
 	if isNewTenant {
 		go func() {
 			c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
@@ -501,7 +495,31 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return
+			}
+
+			if !isPersonalEmail {
+				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+
+				platformOwners, err := services.Repositories.Neo4jRepositories.UserReadRepository.FindPlatformOwners(ctx)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+
+				for _, platformOwner := range platformOwners {
+
+					err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, defaultTenant)
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+
+					_, err := services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, nil, defaultTenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
 			}
 
 			span.LogFields(tracingLog.String("result", "ok"))

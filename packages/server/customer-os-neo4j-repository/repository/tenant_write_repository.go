@@ -365,20 +365,18 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		return err
 	}
 
-	//drop tenant
-	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:Tenant{name: $tenant}) DELETE t`, map[string]any{"tenant": tenant})
+	err = utils.ExecuteWriteQuery(ctx, *r.driver,
+		`match (au:AuthenticationUser)
+					optional match (au)-[r:HAS_WORKSPACE]-(t:Tenant{name: $tenant})
+					with au, r, t
+					delete r`, map[string]any{"tenant": tenant})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	//clear Player nodes not linked to a user in the system
-	err = utils.ExecuteWriteQuery(ctx, *r.driver,
-		`match (p:Player)
-					optional match (p)-[r]-(u:User)
-					with p, r, u
-					where u is null
-					delete p`, nil)
+	//drop tenant
+	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:Tenant{name: $tenant}) DELETE t`, map[string]any{"tenant": tenant})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

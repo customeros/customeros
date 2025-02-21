@@ -17,6 +17,9 @@ type AuthenticatedUserInTenant struct {
 	Tenant              string
 	AuthenticatedUserId string
 	UserId              string
+	UserFirstname       string
+	UserLastname        string
+	UserPrimaryEmail    string
 	Roles               []string
 }
 
@@ -25,6 +28,7 @@ type UserReadRepository interface {
 	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error)
+	FindPlatformOwners(ctx context.Context) ([]*AuthenticatedUserInTenant, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error)
 	FindTestUser(ctx context.Context) (*dbtype.Node, error)
 	GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error)
@@ -162,12 +166,71 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 	return result.(*dbtype.Node), nil
 }
 
-func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindAllUsersWithRolesByEmail")
+func (u *userReadRepository) FindPlatformOwners(ctx context.Context) ([]*AuthenticatedUserInTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindPlatformOwners")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	span.LogFields(log.String("email", email))
+	session := utils.NewNeo4jReadSession(ctx, *u.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (e:Email)-[:HAS{primary:true}]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant{name:"openlineai"}), (au)--(a:Authentication{provider:"google"})
+			WHERE 'PLATFORM_OWNER' in u.roles
+			RETURN t.name, au.id, u.id, u.roles, e.rawEmail, u.firstName, u.lastName ORDER BY u.createdAt ASC`),
+			map[string]interface{}{})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if len(records.([]*neo4j.Record)) > 0 {
+
+		var result []*AuthenticatedUserInTenant
+
+		for _, record := range records.([]*neo4j.Record) {
+
+			tenant := record.Values[0].(string)
+			authenticatedUserId := record.Values[1].(string)
+			userId := record.Values[2].(string)
+			roleList, ok := record.Values[3].([]interface{})
+			var roles []string
+			if !ok {
+				roles = []string{}
+			} else {
+				roles = u.toStringList(roleList)
+			}
+			rawEmail := record.Values[4].(string)
+			userFirstname := record.Values[5].(string)
+			userLastname := record.Values[6].(string)
+
+			result = append(result, &AuthenticatedUserInTenant{
+				Tenant:              tenant,
+				AuthenticatedUserId: authenticatedUserId,
+				UserId:              userId,
+				UserPrimaryEmail:    rawEmail,
+				UserFirstname:       userFirstname,
+				UserLastname:        userLastname,
+				Roles:               roles,
+			})
+		}
+
+		return result, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindAllUsersWithRoles")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)

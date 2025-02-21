@@ -3,7 +3,6 @@ package registration
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -116,10 +115,6 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 
 	if err = s.createDefaultAgents(ctx); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error creating default agents during tenant onboarding"))
-	}
-
-	if err = s.createDefaultExternalSystems(ctx); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating default external systems during tenant onboarding"))
 	}
 
 	return nil
@@ -490,38 +485,6 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 	//		tracing.TraceErr(span, errors.Wrap(err, "error creating ICP qualification agent"))
 	//	}
 	//}
-
-	return nil
-}
-
-func (s *registrationService) createDefaultExternalSystems(ctx context.Context) error {
-	span, ctx := s.initializeTracing(ctx, "createDefaultExternalSystems", nil)
-	defer span.Finish()
-
-	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	err := s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenant, enum.SourceGmail.String(), enum.SourceGmail.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenant, enum.SourceOutlook.String(), enum.SourceOutlook.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenant, enum.SourceMailstack.String(), enum.SourceMailstack.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
 
 	return nil
 }
