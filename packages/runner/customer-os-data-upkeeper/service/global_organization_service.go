@@ -100,13 +100,13 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 		// Acquire semaphore
 		semaphore <- struct{}{}
 
-		// Create a child span for each scraping operation
-		childSpan, childCtx := opentracing.StartSpanFromContext(ctx, "ScrapeGlobalOrg:"+org.PrimaryDomain)
+		go func(org *postgres_entity.GlobalOrganization) {
+			childSpan, childCtx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrg")
+			defer childSpan.Finish()
+			span.LogFields(log.String("primaryDomain", org.PrimaryDomain))
 
-		go func(org *postgres_entity.GlobalOrganization, childCtx context.Context, childSpan opentracing.Span) {
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore when done
-			defer childSpan.Finish()
 
 			page := "https://" + org.PrimaryDomain
 			err := s.commonServices.WebscraperService.Scrape(childCtx, page, org.PrimaryDomain)
@@ -125,7 +125,7 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 				tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
 				return
 			}
-		}(org, childCtx, childSpan)
+		}(org)
 	}
 
 	// Wait for all goroutines to finish

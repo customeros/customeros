@@ -21,6 +21,7 @@ type AgentRepository interface {
 	GetById(ctx context.Context, id string) (*postgres_entity.Agent, error)
 	GetAll(ctx context.Context) ([]*postgres_entity.Agent, error)
 	GetAllAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
+	GetAllAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByUserAndType(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
@@ -184,6 +185,38 @@ func (f *agentsRepository) GetAllAgentsByTypes(ctx context.Context, agentTypes [
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	return records, nil
+}
+
+func (f *agentsRepository) GetAllAgentsByTypesCrossTenant(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetAllAgentsByTypesCrossTenant")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.Object("agentTypes", agentTypes))
+
+	var records []postgres_entity.Agent
+	types := make([]string, len(agentTypes))
+	for i, agentType := range agentTypes {
+		types[i] = agentType.String()
+	}
+
+	query := f.gormDb.
+		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		})
+	if len(types) > 0 {
+		query = query.Where("type IN (?)", types)
+	}
+
+	err := query.Find(&records).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(records)))
 	return records, nil
 }
 

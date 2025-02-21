@@ -36,13 +36,14 @@ func (s *webscraperService) Scrape(ctx context.Context, url, primaryDomain strin
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.Scrape")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("url", url), log.String("primaryDomain", primaryDomain))
 
 	// fetch page contents
 	contents, err := s.fetchPage(ctx, url)
 	if err != nil {
 		if isPaymentRequiredError(err) {
 			// Log the 402 error but don't treat it as a failure
-			span.LogFields(log.String("event", "payment_required"), log.String("url", url))
+			span.LogFields(log.String("event", "payment_required"))
 			return nil
 		}
 		tracing.TraceErr(span, err)
