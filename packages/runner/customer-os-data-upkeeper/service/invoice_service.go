@@ -72,7 +72,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	limit := 50
 
 	// Get all agents for cashflow guardian
-	agents, err := s.repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentCashflowGuardian})
+	agents, err := s.repositories.PostgresRepositories.AgentRepository.GetAllAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentCashflowGuardian})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
