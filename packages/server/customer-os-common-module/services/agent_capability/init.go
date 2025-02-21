@@ -29,6 +29,7 @@ func InitCapabilities(
 	mailService interfaces.MailService,
 	notificationService interfaces.NotificationService,
 	organizationService interfaces.OrganizationService,
+	opensearchService interfaces.OpensearchService,
 	tagService interfaces.TagService,
 	workspaceService interfaces.WorkspaceService,
 	quickbooksService interfaces.QuickbooksService,
@@ -63,7 +64,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewIdentifyEmailParticipantsCapability(postgresRepositories, mailService))
 	capabilities = append(capabilities, NewSummarizeMessageCapability())
 	capabilities = append(capabilities, NewSummarizeThreadCapability())
-	capabilities = append(capabilities, NewIngestEmailCapability())
+	capabilities = append(capabilities, NewIngestEmailCapability(postgresRepositories, mailService, opensearchService))
 	capabilities = append(capabilities, NewSendInvoiceViaEmailCapability(postgresRepositories, invoiceService))
 	capabilities = append(capabilities, NewSendInvoiceVoidedNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPaidNotificationCapability(invoiceService))

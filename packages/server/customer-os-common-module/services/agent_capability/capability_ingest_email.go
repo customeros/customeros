@@ -2,6 +2,8 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -14,13 +16,23 @@ import (
 )
 
 type IngestEmailInput struct {
+	EntityId        string           `json:"entityId"`
+	EntityType      model.EntityType `json:"entityType"`
+	OrganizationIds []string         `json:"organizationIds"`
 }
 
 type IngestEmailCapability struct {
+	postgres    *postgres_repository.Repositories
+	mailService interfaces.MailService
+	opensearch  interfaces.OpensearchService
 }
 
-func NewIngestEmailCapability() *IngestEmailCapability {
-	return &IngestEmailCapability{}
+func NewIngestEmailCapability(postgresRepositories *postgres_repository.Repositories, mailService interfaces.MailService, opensearch interfaces.OpensearchService) *IngestEmailCapability {
+	return &IngestEmailCapability{
+		postgres:    postgresRepositories,
+		mailService: mailService,
+		opensearch:  opensearch,
+	}
 }
 
 // Compile-time interface check
@@ -54,7 +66,15 @@ func (c *IngestEmailCapability) ValidateConfig(postgres_entity.NoConfig) error {
 }
 
 func (c *IngestEmailCapability) ValidateInput(input IngestEmailInput) error {
-	//todo
+	if input.EntityId == "" {
+		return errors.New("entityId is required")
+	}
+	if input.EntityType == "" {
+		return errors.New("entityType is required")
+	}
+	if len(input.OrganizationIds) == 0 {
+		return errors.New("organizationIds is required")
+	}
 	return nil
 }
 
@@ -74,7 +94,71 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
-	//todo implement
+	ingestEmailMessage, err := c.postgres.IngestEmailMessageRepository.GetEmail(ctx, executionContainer.InputData.EntityId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get email"))
+		return enum.CapabilityExecutionError, NoOutput{}, err
+	}
+
+	emailMessageData, err := c.mailService.LoadIngestEmailMessage(ctx, ingestEmailMessage)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to load email"))
+		return enum.CapabilityExecutionError, NoOutput{}, err
+	}
+
+	for _, organizationId := range executionContainer.InputData.OrganizationIds {
+
+		osTo := []map[string]string{}
+		for _, to := range emailMessageData.Participants.To {
+			osTo = append(osTo, map[string]string{
+				"email":     to.Email,
+				"firstName": to.FirstName,
+				"lastName":  to.LastName,
+			})
+		}
+
+		osCc := []map[string]string{}
+		for _, cc := range emailMessageData.Participants.Cc {
+			osCc = append(osCc, map[string]string{
+				"email":     cc.Email,
+				"firstName": cc.FirstName,
+				"lastName":  cc.LastName,
+			})
+		}
+
+		osBcc := []map[string]string{}
+		for _, bcc := range emailMessageData.Participants.Bcc {
+			osBcc = append(osBcc, map[string]string{
+				"email":     bcc.Email,
+				"firstName": bcc.FirstName,
+				"lastName":  bcc.LastName,
+			})
+		}
+
+		osData := map[string]interface{}{
+			"type": "EMAIL",
+			"id":   ingestEmailMessage.Id,
+			"from": map[string]string{
+				"email":     emailMessageData.Participants.From.Email,
+				"firstName": emailMessageData.Participants.From.FirstName,
+				"lastName":  emailMessageData.Participants.From.LastName,
+			},
+			"to":         osTo,
+			"cc":         osCc,
+			"bcc":        osBcc,
+			"subject":    emailMessageData.Content.Subject,
+			"sentDate":   emailMessageData.Content.SentDate,
+			"html":       emailMessageData.Content.Html,
+			"text":       emailMessageData.Content.Text,
+			"providerId": emailMessageData.Identifiers.ProviderMessageId,
+			"threadId":   emailMessageData.Identifiers.EmailThreadId,
+		}
+
+		err := c.opensearch.IndexDocument("timeline-"+organizationId, osData)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to index document"))
+		}
+	}
 
 	return enum.CapabilityExecutionCompleted, NoOutput{}, nil
 }

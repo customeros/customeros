@@ -2,17 +2,17 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 )
 
 type ExternalSystemWriteRepository interface {
-	CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error
+	CreateIfNotExists(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, externalSystemId, externalSystemName string) error
 	LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	LinkWithEntityInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error
 	SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error
@@ -35,7 +35,7 @@ func (r *externalSystemWriteRepository) prepareWriteSession(ctx context.Context)
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error {
+func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, externalSystemId, externalSystemName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.CreateIfNotExists")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -54,10 +54,17 @@ func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, t
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
