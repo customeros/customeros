@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -28,7 +29,7 @@ type GlobalOrganizationRepository interface {
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
 	MarkNameEnrichRequested(ctx context.Context, id uint64) error
-	MarkScraped(ctx context.Context, id uint64) error
+	SetScrapeStatus(ctx context.Context, id uint64, status enum.ScrapeStatus) error
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
 	SetDescription(ctx context.Context, id uint64, description string) error
 	SetName(ctx context.Context, id uint64, name string) error
@@ -180,7 +181,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Cont
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Where("scraped = ? OR scraped IS NULL", false).
+		Where("scrape_status = ? OR scrape_status IS NULL", enum.ScrapeNotScraped.String()).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&organizations)
@@ -392,14 +393,14 @@ func (r *globalOrganizationRepository) markEnrichRequested(ctx context.Context, 
 	return nil
 }
 
-func (r *globalOrganizationRepository) MarkScraped(ctx context.Context, id uint64) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkScraped")
+func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id uint64, status enum.ScrapeStatus) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetScrapeStatus")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		UpdateColumn("scraped", true)
+		UpdateColumn("scrape_status", status.String())
 
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)

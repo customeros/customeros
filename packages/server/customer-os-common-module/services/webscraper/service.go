@@ -2,14 +2,18 @@ package webscraper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -36,6 +40,11 @@ func (s *webscraperService) Scrape(ctx context.Context, url, primaryDomain strin
 	// fetch page contents
 	contents, err := s.fetchPage(ctx, url)
 	if err != nil {
+		if isPaymentRequiredError(err) {
+			// Log the 402 error but don't treat it as a failure
+			span.LogFields(log.String("event", "payment_required"), log.String("url", url))
+			return nil
+		}
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -101,4 +110,29 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	}
 
 	return string(body), nil
+}
+
+func isPaymentRequiredError(err error) bool {
+	// Check for HTTP errors with status code 402
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		// For standard http client errors
+		if resp, ok := urlErr.Unwrap().(interface{ StatusCode() int }); ok {
+			return resp.StatusCode() == 402
+		}
+	}
+
+	// Try to find error types that embed an HTTP response
+	type statusCoder interface {
+		StatusCode() int
+	}
+
+	var scErr statusCoder
+	if errors.As(err, &scErr) {
+		return scErr.StatusCode() == 402
+	}
+
+	// Fallback to string checking for other HTTP client implementations
+	return strings.Contains(err.Error(), "402") ||
+		strings.Contains(strings.ToLower(err.Error()), "payment required")
 }

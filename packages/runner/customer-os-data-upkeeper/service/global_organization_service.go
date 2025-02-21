@@ -8,6 +8,7 @@ import (
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/biter777/countries"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -17,6 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
@@ -74,37 +76,60 @@ func (s *globalOrganizationService) EnrichGlobalOrganization() {
 func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-
 	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 10
-
+	limit := 100
 	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToScrape(ctx, limit)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
 		return
 	}
-
 	if len(orgs) == 0 {
 		return
 	}
 
-	for _, org := range orgs {
-		page := "https://" + org.PrimaryDomain
-		err := s.commonServices.WebscraperService.Scrape(ctx, page, org.PrimaryDomain)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error scraping global org primary domain"))
-			continue
-		}
+	// Use a WaitGroup to wait for all goroutines to finish
+	var wg sync.WaitGroup
+	// Create a semaphore to limit concurrent goroutines
+	semaphore := make(chan struct{}, 10) // Adjust the number based on your needs
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkScraped(ctx, org.ID)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
-			continue
-		}
+	for _, org := range orgs {
+		wg.Add(1)
+		// Acquire semaphore
+		semaphore <- struct{}{}
+
+		// Create a child span for each scraping operation
+		childSpan, childCtx := opentracing.StartSpanFromContext(ctx, "ScrapeGlobalOrg:"+org.PrimaryDomain)
+
+		go func(org *postgres_entity.GlobalOrganization, childCtx context.Context, childSpan opentracing.Span) {
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release semaphore when done
+			defer childSpan.Finish()
+
+			page := "https://" + org.PrimaryDomain
+			err := s.commonServices.WebscraperService.Scrape(childCtx, page, org.PrimaryDomain)
+			if err != nil {
+				tracing.TraceErr(childSpan, errors.Wrap(err, "error scraping global org primary domain"))
+				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
+				if err != nil {
+					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
+					return
+				}
+				return
+			}
+
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
+			if err != nil {
+				tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
+				return
+			}
+		}(org, childCtx, childSpan)
 	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
 }
 
 func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
