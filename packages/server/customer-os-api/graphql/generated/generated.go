@@ -1225,7 +1225,6 @@ type ComplexityRoot struct {
 		ReminderCreate                             func(childComplexity int, input model.ReminderInput) int
 		ReminderUpdate                             func(childComplexity int, input model.ReminderUpdateInput) int
 		RemoveTag                                  func(childComplexity int, input model.RemoveTagInput) int
-		ServiceLineItemBulkUpdate                  func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
 		ServiceLineItemDelete                      func(childComplexity int, id string) int
 		SkuArchive                                 func(childComplexity int, id string) int
 		SkuSave                                    func(childComplexity int, input model.SkuInput) int
@@ -2137,7 +2136,6 @@ type MutationResolver interface {
 	ContractLineItemPause(ctx context.Context, id string) (*model.ActionResponse, error)
 	ContractLineItemResume(ctx context.Context, id string) (*model.ActionResponse, error)
 	ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
-	ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error)
 	SkuSave(ctx context.Context, input model.SkuInput) (*model.Sku, error)
 	SkuArchive(ctx context.Context, id string) (*model.Result, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
@@ -9233,18 +9231,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RemoveTag(childComplexity, args["input"].(model.RemoveTagInput)), true
 
-	case "Mutation.serviceLineItem_BulkUpdate":
-		if e.complexity.Mutation.ServiceLineItemBulkUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_serviceLineItem_BulkUpdate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ServiceLineItemBulkUpdate(childComplexity, args["input"].(model.ServiceLineItemBulkUpdateInput)), true
-
 	case "Mutation.serviceLineItem_Delete":
 		if e.complexity.Mutation.ServiceLineItemDelete == nil {
 			break
@@ -13253,8 +13239,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputReminderInput,
 		ec.unmarshalInputReminderUpdateInput,
 		ec.unmarshalInputRemoveTagInput,
-		ec.unmarshalInputServiceLineItemBulkUpdateInput,
-		ec.unmarshalInputServiceLineItemBulkUpdateItem,
 		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
 		ec.unmarshalInputServiceLineItemNewVersionInput,
@@ -17064,7 +17048,6 @@ extend type Mutation {
     contractLineItem_Resume(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ServiceLineItem implements MetadataInterface {
@@ -17128,27 +17111,6 @@ input ServiceLineItemNewVersionInput {
     comments:                   String
     appSource:                  String
     serviceStarted:             Time
-}
-
-input ServiceLineItemBulkUpdateInput {
-    serviceLineItems:   [ServiceLineItemBulkUpdateItem]!
-    contractId:         ID!
-    invoiceNote:        String
-}
-
-input ServiceLineItemBulkUpdateItem {
-    serviceLineItemId:       ID
-    skuId:                   ID
-    name:                    String @deprecated(reason: "use skuId")
-    billed:                  BilledType
-    price:                   Float
-    quantity:                Int64
-    vatRate:                 Float
-    comments:                String
-    isRetroactiveCorrection: Boolean
-    serviceStarted:          Time
-    closeVersion:            Boolean
-    newVersion:              Boolean
 }
 
 input ServiceLineItemCloseInput {
@@ -24490,34 +24452,6 @@ func (ec *executionContext) field_Mutation_removeTag_argsInput(
 	}
 
 	var zeroVal model.RemoveTagInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_serviceLineItem_BulkUpdate_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.ServiceLineItemBulkUpdateInput, error) {
-	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal model.ServiceLineItemBulkUpdateInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateInput(ctx, tmp)
-	}
-
-	var zeroVal model.ServiceLineItemBulkUpdateInput
 	return zeroVal, nil
 }
 
@@ -79590,95 +79524,6 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Delete(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_serviceLineItem_BulkUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItem_BulkUpdate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ServiceLineItemBulkUpdate(rctx, fc.Args["input"].(model.ServiceLineItemBulkUpdateInput))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal []string
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal []string
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (any, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal []string
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_serviceLineItem_BulkUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItem_BulkUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_sku_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_sku_Save(ctx, field)
 	if err != nil {
@@ -117962,151 +117807,6 @@ func (ec *executionContext) unmarshalInputRemoveTagInput(ctx context.Context, ob
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateInput(ctx context.Context, obj any) (model.ServiceLineItemBulkUpdateInput, error) {
-	var it model.ServiceLineItemBulkUpdateInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"serviceLineItems", "contractId", "invoiceNote"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "serviceLineItems":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItems"))
-			data, err := ec.unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ServiceLineItems = data
-		case "contractId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ContractID = data
-		case "invoiceNote":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("invoiceNote"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.InvoiceNote = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx context.Context, obj any) (model.ServiceLineItemBulkUpdateItem, error) {
-	var it model.ServiceLineItemBulkUpdateItem
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"serviceLineItemId", "skuId", "name", "billed", "price", "quantity", "vatRate", "comments", "isRetroactiveCorrection", "serviceStarted", "closeVersion", "newVersion"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "serviceLineItemId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItemId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ServiceLineItemID = data
-		case "skuId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skuId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.SkuID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "billed":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
-			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Billed = data
-		case "price":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Price = data
-		case "quantity":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
-			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Quantity = data
-		case "vatRate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vatRate"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.VatRate = data
-		case "comments":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Comments = data
-		case "isRetroactiveCorrection":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isRetroactiveCorrection"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IsRetroactiveCorrection = data
-		case "serviceStarted":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStarted"))
-			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ServiceStarted = data
-		case "closeVersion":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("closeVersion"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CloseVersion = data
-		case "newVersion":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newVersion"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.NewVersion = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputServiceLineItemCloseInput(ctx context.Context, obj any) (model.ServiceLineItemCloseInput, error) {
 	var it model.ServiceLineItemCloseInput
 	asMap := map[string]any{}
@@ -129613,13 +129313,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "serviceLineItem_BulkUpdate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItem_BulkUpdate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "sku_Save":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_sku_Save(ctx, field)
@@ -140735,28 +140428,6 @@ func (ec *executionContext) marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomeros
 	return ec._ServiceLineItem(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateInput(ctx context.Context, v any) (model.ServiceLineItemBulkUpdateInput, error) {
-	res, err := ec.unmarshalInputServiceLineItemBulkUpdateInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx context.Context, v any) ([]*model.ServiceLineItemBulkUpdateItem, error) {
-	var vSlice []any
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.ServiceLineItemBulkUpdateItem, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
 func (ec *executionContext) unmarshalNServiceLineItemCloseInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemCloseInput(ctx context.Context, v any) (model.ServiceLineItemCloseInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemCloseInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -143392,14 +143063,6 @@ func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋcustome
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx context.Context, v any) (*model.ServiceLineItemBulkUpdateItem, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputServiceLineItemBulkUpdateItem(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOSku2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSku(ctx context.Context, sel ast.SelectionSet, v *model.Sku) graphql.Marshaler {

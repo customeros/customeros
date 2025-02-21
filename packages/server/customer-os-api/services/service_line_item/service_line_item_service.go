@@ -21,9 +21,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 )
 
@@ -539,7 +537,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		return err
 	}
 
-	sliEntity, err := s.sli.GetById(ctx, serviceLineItemId)
+	currentSliEntity, err := s.sli.GetById(ctx, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemId, err.Error())
@@ -547,23 +545,23 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	}
 
 	// Future SLI to be deleted
-	if sliEntity.StartedAt.After(utils.Today()) {
+	if currentSliEntity.StartedAt.After(utils.Today()) {
 		_, err = s.Delete(ctx, serviceLineItemId)
 		return err
 	}
 
 	// closing past SLIs not allowed
-	if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(utils.Today()) {
-		err = fmt.Errorf("cannot close contract line item with id {%s} in the past", serviceLineItemId)
+	if currentSliEntity.EndedAt != nil && currentSliEntity.EndedAt.Before(utils.Today()) {
+		err = fmt.Errorf("contract line item with id {%s} is already closed", serviceLineItemId)
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// First remove any future SLI with same parent ID
-	sliEntities, err := s.sli.GetServiceLineItemsByParentId(ctx, sliEntity.ParentID)
+	sliEntities, err := s.sli.GetServiceLineItemsByParentId(ctx, currentSliEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error on getting service line items by parent id {%s}: %s", sliEntity.ParentID, err.Error())
+		s.log.Errorf("Error on getting service line items by parent id {%s}: %s", currentSliEntity.ParentID, err.Error())
 		return err
 	}
 	for _, sli := range *sliEntities {
@@ -583,124 +581,4 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	}
 
 	return nil
-}
-
-func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context, contractId string, sliBulkData []*cosapi_interfaces.ServiceLineItemDetails) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.CreateOrUpdateOrCloseInBulk")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
-
-	var responseIds []string
-
-	for _, serviceLineItem := range sliBulkData {
-		// check all quantities are not negative
-		if serviceLineItem.Quantity < 0 {
-			err := fmt.Errorf("quantity must not be negative")
-			tracing.TraceErr(span, err)
-			return []string{}, err
-		}
-	}
-
-	for _, serviceLineItem := range sliBulkData {
-		if serviceLineItem.Id == "" && !serviceLineItem.CloseVersion && !serviceLineItem.NewVersion {
-			itemId, err := s.Create(ctx, cosapi_interfaces.ServiceLineItemCreateData{
-				ContractId:     contractId,
-				SliDescription: serviceLineItem.Description,
-				SliPrice:       serviceLineItem.Price,
-				SliQuantity:    serviceLineItem.Quantity,
-				SliBilledType:  serviceLineItem.Billed,
-				SliVatRate:     serviceLineItem.VatRate,
-				Source:         neo4jentity.DataSourceOpenline,
-				AppSource:      constants.AppSourceCustomerOsApi,
-				StartedAt:      serviceLineItem.StartedAt,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error from events processing: %s", err.Error())
-				return []string{}, err
-			}
-			responseIds = append(responseIds, itemId)
-		} else if serviceLineItem.CloseVersion && serviceLineItem.Id != "" {
-			err := s.Close(ctx, serviceLineItem.Id, nil)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Failed to close service line item: %s", err.Error())
-			}
-		} else if serviceLineItem.NewVersion && !serviceLineItem.CloseVersion {
-			itemId, err := s.NewVersion(ctx, cosapi_interfaces.ServiceLineItemNewVersionData{
-				Id:          serviceLineItem.Id,
-				Description: serviceLineItem.Description,
-				Price:       serviceLineItem.Price,
-				Quantity:    serviceLineItem.Quantity,
-				Comments:    serviceLineItem.Comments,
-				Source:      neo4jentity.DataSourceOpenline,
-				AppSource:   constants.AppSourceCustomerOsApi,
-				VatRate:     serviceLineItem.VatRate,
-				StartedAt:   serviceLineItem.StartedAt,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error from events processing: %s", err.Error())
-				return []string{}, err
-			}
-			responseIds = append(responseIds, itemId)
-		} else if serviceLineItem.Id != "" && !serviceLineItem.CloseVersion && !serviceLineItem.NewVersion {
-			err := s.Update(ctx, cosapi_interfaces.ServiceLineItemUpdateData{
-				Id:                      serviceLineItem.Id,
-				IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
-				SliDescription:          serviceLineItem.Description,
-				SliPrice:                serviceLineItem.Price,
-				SliQuantity:             serviceLineItem.Quantity,
-				SliBilledType:           serviceLineItem.Billed,
-				SliComments:             serviceLineItem.Comments,
-				SliVatRate:              serviceLineItem.VatRate,
-				Source:                  neo4jentity.DataSourceOpenline,
-				AppSource:               constants.AppSourceCustomerOsApi,
-				StartedAt:               serviceLineItem.StartedAt,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error from events processing: %s", err.Error())
-				return []string{}, err
-			}
-			responseIds = append(responseIds, serviceLineItem.Id)
-		}
-	}
-
-	return responseIds, nil
-}
-
-func MapServiceLineItemBulkItemsToData(input []*model.ServiceLineItemBulkUpdateItem) []*cosapi_interfaces.ServiceLineItemDetails {
-	var arr []*cosapi_interfaces.ServiceLineItemDetails
-	for _, item := range input {
-		sli := MapServiceLineItemBulkItemToData(item)
-		if sli != nil {
-			arr = append(arr, sli)
-		}
-	}
-	return arr
-}
-
-func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem) *cosapi_interfaces.ServiceLineItemDetails {
-	if input == nil {
-		return nil
-	}
-	billed := neo4jenum.BilledTypeNone
-	if input.Billed != nil {
-		billed = mapper.MapBilledTypeFromModel(*input.Billed)
-	}
-	return &cosapi_interfaces.ServiceLineItemDetails{
-		Id:                      utils.IfNotNilString(input.ServiceLineItemID),
-		Description:             input.Name,
-		Price:                   utils.IfNotNilFloat64(input.Price),
-		Quantity:                utils.IfNotNilInt64(input.Quantity),
-		Billed:                  billed,
-		Comments:                utils.IfNotNilString(input.Comments),
-		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
-		VatRate:                 utils.IfNotNilFloat64(input.VatRate),
-		StartedAt:               input.ServiceStarted,
-		CloseVersion:            utils.IfNotNilBool(input.CloseVersion),
-		NewVersion:              utils.IfNotNilBool(input.NewVersion),
-	}
 }
