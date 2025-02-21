@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"net/http"
 	"strings"
 
@@ -856,54 +857,63 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 
 	// process records
 	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
-		defer recordSpan.Finish()
-		recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
-		tracing.TagEntity(recordSpan, record.PrimaryDomain)
+		func(record *postgresentity.GlobalOrganization) {
+			recordSpan, recordCtx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
+			defer recordSpan.Finish()
+			recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
+			tracing.TagEntity(recordSpan, record.PrimaryDomain)
 
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
-		}
-
-		// Find organizations by domain across all tenants
-		tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, record.PrimaryDomain)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error getting organizations by domain"))
-			s.log.Errorf("Error getting organizations by domain: %s", err.Error())
-			continue
-		}
-
-		for _, tenantOrgs := range tenantWithOrgId {
-			innerCtx := common.WithCustomContext(recordCtx, &common.CustomContext{
-				Tenant:    tenantOrgs.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			if record.IndustryNaicsCode == "" && record.Description == "" {
-				continue
-			}
-
-			// sync organization
-			dataFields := data_fields.OrganizationFields{}
-			if record.IndustryNaicsCode != "" {
-				dataFields.IndustryCode = utils.StringPtr(record.IndustryNaicsCode)
-			}
-			if record.Description != "" {
-				dataFields.Description = utils.StringPtr(record.Description)
-			}
-			if record.Name != "" {
-				dataFields.Name = utils.StringPtr(record.Name)
-			}
-			_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrgs.OrganizationId), dataFields)
+			// mark record as processed initially to not process same record again, even if error occurs
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
 			if err != nil {
-				tracing.TraceErr(recordSpan, errors.Wrap(err, "error syncing organization"))
-				s.log.Errorf("Error syncing organization: %s", err.Error())
-				continue
+				tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
+				s.log.Errorf("Error marking record as processed: %s", err.Error())
+				return
 			}
-		}
+
+			// Find organizations by domain across all tenants
+			tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, record.PrimaryDomain)
+			if err != nil {
+				tracing.TraceErr(recordSpan, errors.Wrap(err, "error getting organizations by domain"))
+				s.log.Errorf("Error getting organizations by domain: %s", err.Error())
+				return
+			}
+
+			for _, tenantOrg := range tenantWithOrgId {
+				func(tenantOrg neo4jrepository.TenantAndOrganizationId) {
+					innerCtx := common.WithCustomContext(recordCtx, &common.CustomContext{
+						Tenant:    tenantOrg.Tenant,
+						AppSource: constants.AppSourceDataUpkeeper,
+					})
+					innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
+					defer innerSpan.Finish()
+					innerSpan.LogKV("industryNaicsCode", record.IndustryNaicsCode, "description", record.Description, "name", record.Name)
+
+					if record.IndustryNaicsCode == "" && record.Description == "" {
+						innerSpan.LogFields(log.String("message", "skipping record as industry and description are empty"))
+						innerSpan.Finish()
+						return
+					}
+
+					// sync organization
+					dataFields := data_fields.OrganizationFields{}
+					if record.IndustryNaicsCode != "" {
+						dataFields.IndustryCode = utils.StringPtr(record.IndustryNaicsCode)
+					}
+					if record.Description != "" {
+						dataFields.Description = utils.StringPtr(record.Description)
+					}
+					if record.Name != "" {
+						dataFields.Name = utils.StringPtr(record.Name)
+					}
+					_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrg.OrganizationId), dataFields)
+					if err != nil {
+						tracing.TraceErr(innerSpan, errors.Wrap(err, "error syncing organization"))
+						s.log.Errorf("Error syncing organization: %s", err.Error())
+					}
+					return
+				}(tenantOrg)
+			}
+		}(record)
 	}
 }
