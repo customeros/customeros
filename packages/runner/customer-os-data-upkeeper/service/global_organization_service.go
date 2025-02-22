@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/biter777/countries"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -16,8 +16,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webscraper"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -76,6 +78,7 @@ func (s *globalOrganizationService) EnrichGlobalOrganization() {
 func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
+
 	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
@@ -86,6 +89,7 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
 		return
 	}
+
 	if len(orgs) == 0 {
 		return
 	}
@@ -101,22 +105,46 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 		semaphore <- struct{}{}
 
 		go func(org *postgres_entity.GlobalOrganization) {
-			childSpan, childCtx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrg")
+			// Create timeout context for this goroutine
+			childCtx, childCancel := context.WithTimeout(ctx, time.Minute)
+			defer childCancel()
+
+			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
 			defer childSpan.Finish()
-			span.LogFields(log.String("primaryDomain", org.PrimaryDomain))
+			childSpan.LogFields(log.String("primaryDomain", org.PrimaryDomain))
 
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore when done
 
 			page := "https://" + org.PrimaryDomain
-			err := s.commonServices.WebscraperService.Scrape(childCtx, page, org.PrimaryDomain)
+			contents, err := s.commonServices.WebscraperService.Scrape(childCtx, page, org.PrimaryDomain)
 			if err != nil {
-				tracing.TraceErr(childSpan, errors.Wrap(err, "error scraping global org primary domain"))
+				switch {
+				case errors.Is(err, webscraper.ErrUnprocessable):
+					childSpan.LogKV("error", "Unprocessable content")
+					childSpan.LogKV("url", page)
+				default:
+					tracing.TraceErr(childSpan, errors.Wrap(err, "error scraping global org primary domain"))
+				}
+
 				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
 				if err != nil {
 					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-					return
 				}
+				return
+			}
+
+			if contents == "" {
+				return
+			}
+
+			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationWebpageRepository.Save(childCtx, postgres_entity.GlobalOrganizationWebpages{
+				Url:           page,
+				PrimaryDomain: org.PrimaryDomain,
+				Content:       contents,
+			})
+			if err != nil {
+				tracing.TraceErr(childSpan, errors.Wrap(err, "error saving webpage content"))
 				return
 			}
 
