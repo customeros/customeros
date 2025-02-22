@@ -438,7 +438,7 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes), log.Int("limit", limit))
 
-	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
+	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice {dryRun: true, preview: true})
 			WITH c, t, ts, o, i
 			WHERE 
