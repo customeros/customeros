@@ -26,6 +26,7 @@ type GlobalOrganizationRepository interface {
 	GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichName(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToScrape(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error)
+	GetOrganizationsToFetchLogo(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
 	MarkNameEnrichRequested(ctx context.Context, id uint64) error
@@ -33,6 +34,8 @@ type GlobalOrganizationRepository interface {
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
 	SetDescription(ctx context.Context, id uint64, description string) error
 	SetName(ctx context.Context, id uint64, name string) error
+	SetLogo(ctx context.Context, id uint64, logoPath string) error
+	SetIcon(ctx context.Context, id uint64, iconPath string) error
 	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
 }
@@ -182,6 +185,26 @@ func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Cont
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
 		Where("scrape_status = ? OR scrape_status IS NULL", enum.ScrapeNotScraped.String()).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(organizations)))
+	return organizations, nil
+}
+
+func (r *globalOrganizationRepository) GetOrganizationsToFetchLogo(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToFetchLogo")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	organizations := make([]*postgres_entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Where("(icon_path = ? OR icon_path IS NULL)", "").
+		Where("(logo_path = ? OR logo_path IS NULL)", "").
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&organizations)
@@ -401,6 +424,52 @@ func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id u
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
 		UpdateColumn("scrape_status", status.String())
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := errors.New("no organization found with provided ID")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *globalOrganizationRepository) SetLogo(ctx context.Context, id uint64, logoPath string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetLogo")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		UpdateColumn("logo_path", logoPath)
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := errors.New("no organization found with provided ID")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *globalOrganizationRepository) SetIcon(ctx context.Context, id uint64, iconPath string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetIcon")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		UpdateColumn("icon_path", iconPath)
 
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)

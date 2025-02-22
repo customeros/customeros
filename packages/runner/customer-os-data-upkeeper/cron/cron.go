@@ -131,6 +131,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
 	addJob(cont.Cfg.App.Cron.CronScheduleGlobalOrgScrape, GroupScraper, scrapeGlobalOrganizations, "scrapeGlobalOrganizations")
+	addJob(cont.Cfg.App.Cron.CronScheduleDownloadIconAndLogo, GroupGlobalOrg, downloadGlobalOrganizationLogo, "downloadGlobalOrganizationLogo")
 
 	// Contract Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
@@ -377,6 +378,10 @@ func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {
 
 func scrapeGlobalOrganizations(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapeGlobalOrgs()
+}
+
+func downloadGlobalOrganizationLogo(cont *container.Container) {
+	service.NewMediaService(cont.Log, cont.CommonServices).FetchAndStoreCompanyLogos()
 }
 
 func checkTenantOnboarding(cont *container.Container) {
