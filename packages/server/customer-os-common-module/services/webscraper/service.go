@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -32,7 +30,12 @@ func NewWebscraperService(config *config.JinaConfig, postgres *postgres_reposito
 	}
 }
 
-func (s *webscraperService) Scrape(ctx context.Context, url, primaryDomain string) error {
+var (
+	ErrPaymentRequired = errors.New("Jina balance requires topup")
+	ErrUnprocessable   = errors.New("Jina cannot process webpage")
+)
+
+func (s *webscraperService) Scrape(ctx context.Context, url, primaryDomain string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.Scrape")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -41,28 +44,26 @@ func (s *webscraperService) Scrape(ctx context.Context, url, primaryDomain strin
 	// fetch page contents
 	contents, err := s.fetchPage(ctx, url)
 	if err != nil {
-		if isPaymentRequiredError(err) {
-			// Log the 402 error but don't treat it as a failure
-			span.LogFields(log.String("event", "payment_required"))
-			return nil
+		switch err {
+		case ErrPaymentRequired:
+			tracing.TraceErr(span, err)
+			return "", nil
+
+		case ErrUnprocessable:
+			span.LogKV("error", ErrUnprocessable)
+			return "", err
+
+		default:
+			tracing.TraceErr(span, err)
+			return "", err
 		}
-		tracing.TraceErr(span, err)
-		return err
 	}
 
-	_, err = s.postgresRepositories.GlobalOrganizationWebpageRepository.Save(ctx, postgres_entity.GlobalOrganizationWebpages{
-		Url:           url,
-		PrimaryDomain: primaryDomain,
-		Content:       contents,
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	if strings.Contains(contents, "403 Forbidden") {
+		return "", ErrUnprocessable
 	}
 
-	// todo parse page urls and scrape them
-
-	return nil
+	return contents, nil
 }
 
 func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, error) {
@@ -98,9 +99,18 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("error code: %d", resp.StatusCode)
-		tracing.TraceErr(span, err)
-		return "", err
+		switch resp.StatusCode {
+		case 402:
+			return "", ErrPaymentRequired
+
+		case 422:
+			return "", ErrUnprocessable
+
+		default:
+			err = fmt.Errorf("error code: %d", resp.StatusCode)
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -111,29 +121,4 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	}
 
 	return string(body), nil
-}
-
-func isPaymentRequiredError(err error) bool {
-	// Check for HTTP errors with status code 402
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
-		// For standard http client errors
-		if resp, ok := urlErr.Unwrap().(interface{ StatusCode() int }); ok {
-			return resp.StatusCode() == 402
-		}
-	}
-
-	// Try to find error types that embed an HTTP response
-	type statusCoder interface {
-		StatusCode() int
-	}
-
-	var scErr statusCoder
-	if errors.As(err, &scErr) {
-		return scErr.StatusCode() == 402
-	}
-
-	// Fallback to string checking for other HTTP client implementations
-	return strings.Contains(err.Error(), "402") ||
-		strings.Contains(strings.ToLower(err.Error()), "payment required")
 }
