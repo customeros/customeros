@@ -106,7 +106,7 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 
 		go func(org *postgres_entity.GlobalOrganization) {
 			// Create timeout context for this goroutine
-			childCtx, childCancel := context.WithTimeout(ctx, time.Minute)
+			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
 			defer childCancel()
 
 			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
@@ -117,7 +117,7 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 			defer func() { <-semaphore }() // Release semaphore when done
 
 			page := "https://" + org.PrimaryDomain
-			contents, err := s.commonServices.WebscraperService.Scrape(childCtx, page, org.PrimaryDomain)
+			contents, err := s.commonServices.WebscraperService.Scrape(childCtx, page)
 			if err != nil {
 				switch {
 				case errors.Is(err, webscraper.ErrUnprocessable):

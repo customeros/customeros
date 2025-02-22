@@ -35,11 +35,11 @@ var (
 	ErrUnprocessable   = errors.New("Jina cannot process webpage")
 )
 
-func (s *webscraperService) Scrape(ctx context.Context, url, primaryDomain string) (string, error) {
+func (s *webscraperService) Scrape(ctx context.Context, url string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.Scrape")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("url", url), log.String("primaryDomain", primaryDomain))
+	span.LogFields(log.String("url", url))
 
 	// fetch page contents
 	contents, err := s.fetchPage(ctx, url)

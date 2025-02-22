@@ -420,6 +420,7 @@ func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id u
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetScrapeStatus")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("status", status.String()))
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
