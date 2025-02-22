@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
@@ -51,39 +53,40 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 		// download icon
 		if org.IconUrl != "" {
 			iconPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "icon")
-			iconPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, org.IconUrl, BUCKET, iconPath)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-			if iconPath != "" {
-				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, org.ID, iconPath)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			}
+			s.downloadImage(ctx, org.ID, org.IconUrl, iconPath)
 		}
 
 		// download logo
 		logoPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "logo")
 		clearbitUrl := "https://logo.clearbit.com/" + org.PrimaryDomain
-		logoPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, clearbitUrl, BUCKET, logoPath)
+		if !s.downloadImage(ctx, org.ID, clearbitUrl, logoPath) && org.LogoUrl != "" {
+			s.downloadImage(ctx, org.ID, org.LogoUrl, logoPath)
+		}
+
+	}
+}
+
+func (s *mediaService) downloadImage(ctx context.Context, orgId uint64, imageUrl, imagePath string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "mediaService.download")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, orgId, enum.DownloadError)
 		if err != nil {
 			tracing.TraceErr(span, err)
-
-			// try linkedin url
-			if org.LogoUrl != "" {
-				logoPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, org.LogoUrl, BUCKET, logoPath)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			}
 		}
+		return false
+	}
 
-		if logoPath != "" {
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, org.ID, logoPath)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
+	if imagePath != "" {
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, orgId, imagePath)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return false
 		}
 	}
+	return true
 }
