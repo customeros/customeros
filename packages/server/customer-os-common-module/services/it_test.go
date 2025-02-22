@@ -2,11 +2,13 @@ package service
 
 import (
 	"database/sql"
+	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"os"
 	"testing"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/testcontainers/testcontainers-go"
 	"golang.org/x/net/context"
@@ -42,6 +44,7 @@ func TestMain(m *testing.M) {
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		test.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
+	createPostgresTables(postgresGormDB)
 
 	//rabbitMqContainer, rabbitMqConn = test.InitTestRabbitMQ()
 	//defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
@@ -74,4 +77,15 @@ func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
 		neo4jtest.CleanupAllData(ctx, driver)
 	}
+}
+
+func createPostgresTables(db *gorm.DB) {
+	db.Exec("create schema if not exists derived")
+
+	postgresDB := commonconfig.PostgresDB{
+		GormDB:      db,
+		AsyncGormDB: db,
+	}
+
+	postgresrepository.InitRepositories(&postgresDB).Migration(&postgresDB)
 }

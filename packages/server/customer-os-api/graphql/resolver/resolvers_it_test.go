@@ -2,9 +2,9 @@ package resolver
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"log"
 	"os"
 	"testing"
@@ -35,7 +35,6 @@ var (
 
 	postgresContainer testcontainers.Container
 	gormDB            *gorm.DB
-	sqlDB             *sql.DB
 
 	rabbitMqContainer testcontainers.Container
 	rabbitMqUrl       string
@@ -65,10 +64,11 @@ func TestMain(m *testing.M) {
 	}(neo4jContainer, *driver, context.Background())
 
 	// Start Postgres container
-	postgresContainer, gormDB, sqlDB = commontest.InitTestDB()
+	postgresContainer, gormDB, _ = commontest.InitTestDB()
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		commontest.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
+	createPostgresTables(gormDB)
 
 	// Start RabbitMQ container
 	rabbitMqContainer, rabbitMqUrl = commontest.InitTestRabbitMQ()
@@ -79,6 +79,17 @@ func TestMain(m *testing.M) {
 	prepareClient()
 
 	os.Exit(m.Run())
+}
+
+func createPostgresTables(db *gorm.DB) {
+	db.Exec("create schema if not exists derived")
+
+	postgresDB := commonConfig.PostgresDB{
+		GormDB:      db,
+		AsyncGormDB: db,
+	}
+
+	postgresRepository.InitRepositories(&postgresDB).Migration(&postgresDB)
 }
 
 func tearDownTestCase(ctx context.Context) func(tb testing.TB) {

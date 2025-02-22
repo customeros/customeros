@@ -68,6 +68,7 @@ jobs:
           fi
           echo "$GOBIN" >> $GITHUB_PATH
 
+
       - name: Go Cache
         id: go-cache
         uses: ubicloud/cache@v4
@@ -82,6 +83,14 @@ jobs:
       - name: Build
         if: steps.go-cache.outputs.cache-hit != 'true'
         run: make all
+
+      - name: Run Repository Tests
+        run: |
+          echo "Running tests for Postgres and Neo4j repositories..."
+          gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out \
+            ./packages/server/customer-os-postgres-repository/... \
+            ./packages/server/customer-os-neo4j-repository/...
+
   #
   #     - name: Get test packages
   #       id: get-packages
