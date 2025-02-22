@@ -32,6 +32,7 @@ type CommonConfig struct {
 	AzureOAuthConfig  commonconf.AzureOAuthConfig
 	NovuConfig        commonconf.NovuConfig
 	JinaConfig        commonconf.JinaConfig
+	AwsConfig         commonconf.AwsConfig
 }
 
 type AppConfig struct {
