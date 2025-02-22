@@ -1,0 +1,146 @@
+package media
+
+import (
+	"context"
+	"net/http"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+)
+
+const (
+	AWS_REGION = "eu-west-1"
+)
+
+type mediaService struct {
+	postgresRepository *postgres_repository.Repositories
+	s3client           aws_client.S3Client
+}
+
+func NewMediaService(postgres *postgres_repository.Repositories) interfaces.MediaService {
+	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String(AWS_REGION)})
+
+	return &mediaService{
+		postgresRepository: postgres,
+		s3client:           s3,
+	}
+}
+
+// DownloadImageToS3 downloads an image from a URL directly to an S3 bucket
+// using the existing S3Client implementation
+func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "media.DownloadImageToS3")
+	defer span.Finish()
+	span.LogFields(
+		tracingLog.String("url", imageURL),
+		tracingLog.String("bucket", bucketName),
+		tracingLog.String("key", s3FilePath),
+	)
+
+	// Get the image from the URL
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+		return "", err
+	}
+
+	// Add User-Agent to avoid being blocked
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; CustomerOS/1.0)")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// Check if request was successful
+	if resp.StatusCode != http.StatusOK {
+		err := &HTTPError{StatusCode: resp.StatusCode, URL: imageURL}
+		span.LogFields(tracingLog.Error(err))
+		return "", err
+	}
+
+	// Get content type from response headers
+	contentType := resp.Header.Get("Content-Type")
+	span.LogFields(tracingLog.String("content_type", contentType))
+
+	// Check if s3FilePath already has an extension
+	extension := filepath.Ext(s3FilePath)
+	if extension == "" {
+		// No extension found, let's add one based on content type
+		newExt := detectExtension(contentType, imageURL)
+		if newExt != "" {
+			s3FilePath = s3FilePath + newExt
+			span.LogFields(
+				tracingLog.String("detected_extension", newExt),
+				tracingLog.String("updated_key", s3FilePath),
+			)
+		}
+	}
+
+	// Upload directly to S3 using the provided S3Client
+	err = s.s3client.Upload(ctx, bucketName, s3FilePath, resp.Body)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+		return "", err
+	}
+
+	return s3FilePath, nil
+}
+
+// detectExtension determines the appropriate file extension based on content type
+// and falls back to extracting from URL if content type is not recognized
+func detectExtension(contentType, url string) string {
+	// Map of content types to file extensions
+	contentTypeMap := map[string]string{
+		"image/jpeg":      ".jpg",
+		"image/jpg":       ".jpg",
+		"image/png":       ".png",
+		"image/gif":       ".gif",
+		"image/webp":      ".webp",
+		"image/tiff":      ".tiff",
+		"image/bmp":       ".bmp",
+		"image/x-icon":    ".ico",
+		"image/svg+xml":   ".svg",
+		"image/svg":       ".svg",
+		"application/pdf": ".pdf",
+	}
+
+	// Check if we have a mapping for this content type
+	if ext, ok := contentTypeMap[contentType]; ok {
+		return ext
+	}
+
+	// If content type doesn't match or is empty, try to extract from URL
+	urlExt := filepath.Ext(url)
+	if urlExt != "" {
+		return urlExt
+	}
+
+	// If we still can't determine the extension, default to .jpg
+	// since it's a common image format
+	return ".jpg"
+}
+
+// HTTPError represents an HTTP error when downloading an image
+type HTTPError struct {
+	StatusCode int
+	URL        string
+}
+
+// Error implements the error interface
+func (e *HTTPError) Error() string {
+	return "HTTP error: " + strings.TrimSpace(http.StatusText(e.StatusCode)) +
+		" (" + strconv.Itoa(e.StatusCode) + ") when downloading " + e.URL
+}

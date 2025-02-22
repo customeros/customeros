@@ -48,6 +48,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailbox"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/markdown_event"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/media"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/namecheap"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/notification"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
@@ -117,6 +118,7 @@ type CommonServices struct {
 	MailService                interfaces.MailService
 	MailstackService           interfaces.MailstackService
 	MarkdownEventService       interfaces.MarkdownEventService
+	MediaService               interfaces.MediaService
 	NamecheapService           interfaces.NamecheapService
 	NotificationService        interfaces.NotificationService
 	NovuService                interfaces.NovuService
@@ -209,6 +211,7 @@ func InitCommonServices(
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
+	mediaImpl := media.NewMediaService(postgresRepositories)
 	namecheapImpl := namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories)
 	novuImpl := novu.NewNovuService(cfg.External.NovuConfig.ApiKey)
 	openSRSImpl := opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories)
@@ -346,6 +349,7 @@ func InitCommonServices(
 		MailboxService:             mailboxImpl,
 		MailstackService:           mailstackImpl,
 		MarkdownEventService:       markdownEventImpl,
+		MediaService:               mediaImpl,
 		NamecheapService:           namecheapImpl,
 		NotificationService:        notificationImpl,
 		NovuService:                novuImpl,

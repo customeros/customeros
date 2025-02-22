@@ -44,6 +44,8 @@ type GlobalOrganization struct {
 	SourceDescription5      string            `gorm:"column:source_description_5;type:text" json:"sourceDescription5"`
 	SyncedToNeoAt           *time.Time        `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
 	ScrapedStatus           enum.ScrapeStatus `gorm:"column:scrape_status;type:varchar(55);default:'NOT_SCRAPED'" json:"scrapeStatus"`
+	IconPath                string            `gorm:"column:icon_path;type:varchar(2000)" json:"iconPath"`
+	LogoPath                string            `gorm:"column:logo_path;type:varchar(2000)" json:"logoPath"`
 }
 
 // TableName sets the name of the table for GORM

@@ -17,6 +17,7 @@ type Config struct {
 	CronScheduleEnrichGlobalOrg                string `env:"CRON_SCHEDULE_ENRICH_GLOBAL_ORG" envDefault:"30 */1 * * * *"`
 	CronScheduleSyncFromGlobalOrgsToTenantOrgs string `env:"CRON_SCHEDULE_SYNC_FROM_GLOBAL_ORGS_TO_TENANT_ORGS" envDefault:"45 */1 * * * *"`
 	CronScheduleGlobalOrgScrape                string `env:"CRON_SCHEDULE_GLOBAL_ORG_SCRAPE" envDefault:"20 */2 * * * *"`
+	CronScheduleDownloadIconAndLogo            string `env:"CRON_SCHEDULE_DOWNLOAD_ICON_AND_LOGO" envDefault:"20 */3 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
