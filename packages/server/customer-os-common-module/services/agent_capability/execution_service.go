@@ -334,9 +334,10 @@ func executeCapability[I, O, C any](
 	cap interfaces.AgentCapability[I, O, C],
 	executionContainer interfaces.ExecutionContainer,
 ) (enum.CapabilityExecutionStatus, map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("AgentCapabilityExecutionService.executeCapability.%s", executionContainer.Capability.Type.String()))
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("AgentCapabilityExecutionService.executeCapability"))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("capabilityType", executionContainer.Capability.Type.String()))
 
 	input := cap.NewInput()
 	err := utils.MapToStruct(executionContainer.ExecutionParams, &input)

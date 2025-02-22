@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 	"strconv"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -122,9 +123,8 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 		return enum.CapabilityExecutionError, result, err
 	}
 	if company == nil {
-		err := errors.New("Company not set in global orgs, cannot run ICP qualification")
-		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		span.LogFields(log.String("result", "Company not set in global orgs"))
+		return enum.CapabilityExecutionRetry, result, nil
 	}
 
 	result.CompanyName = company.Name
