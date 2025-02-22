@@ -147,7 +147,7 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 			"AccountType": "Income",
 		}
 
-		qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest)
+		qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -186,7 +186,7 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 
 	if id != "" {
 		productByIdUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
-		qbProductResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, productByIdUrl, "GET", request)
+		qbProductResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, productByIdUrl, "GET", request, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -204,7 +204,7 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 
 	requestUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/item", quickbooksSettingsEntity.RealmId)
 
-	qbResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "POST", request)
+	qbResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -246,7 +246,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 		request["Id"] = id
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/customer", "POST", request)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/customer", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -294,7 +294,7 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, 
 		"Line":    lines,
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -340,7 +340,7 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 
 	if invoiceId != "" {
 		invoiceByIdUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/invoice/%s", quickbooksSettingsEntity.RealmId, invoiceId)
-		qbInvoiceResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, invoiceByIdUrl, "GET", request)
+		qbInvoiceResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, invoiceByIdUrl, "GET", request, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -356,7 +356,7 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 		request["SyncToken"] = qbInvoice.Invoice.SyncToken
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice?operation=void", "POST", request)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice?operation=void", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -414,7 +414,7 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 		},
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/payment", "POST", request)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/payment", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -436,9 +436,13 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettingsEntity *postgres_entity.QuickbooksSettingsEntity, requestUrl string, requestMethod string, requestBody map[string]interface{}) ([]byte, error) {
+func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettingsEntity *postgres_entity.QuickbooksSettingsEntity, requestUrl string, requestMethod string, requestBody map[string]interface{}, rerunOnTokenRefresh bool) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.performRequest")
 	defer span.Finish()
+	span.LogFields(log.String("requestUrl", requestUrl))
+	span.LogFields(log.String("requestMethod", requestMethod))
+	tracing.LogObjectAsJson(span, "requestBody", requestBody)
+	span.LogFields(log.Bool("rerunOnTokenRefresh", rerunOnTokenRefresh))
 
 	payload, err := json.Marshal(requestBody)
 	if err != nil {
@@ -476,6 +480,8 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 		return nil, err
 	}
 
+	span.LogFields(log.String("quickbooks.body", string(bodyBytes)))
+
 	// convert body to OauthSlackResponse
 	var quickbooksCheckFaultResponse interfaces.QuickbooksCheckFaultResponse
 	err = json.Unmarshal(bodyBytes, &quickbooksCheckFaultResponse)
@@ -486,10 +492,8 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 
 	fault := quickbooksCheckFaultResponse.Fault
 	if fault != nil {
-
 		if (*fault).Type == "AUTHENTICATION" {
 			//refresh token
-
 			requestData := url.Values{}
 			requestData.Set("grant_type", "refresh_token")
 			requestData.Set("refresh_token", quickbooksSettingsEntity.RefreshToken)
@@ -521,12 +525,14 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
+			// re-run original request
+			if rerunOnTokenRefresh {
+				return s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, requestMethod, requestBody, false)
+			}
 
 		} else {
-
 			span.LogFields(log.Object("error", fault))
 			return nil, fmt.Errorf("error: %s", fault.Error[0].Message)
-
 		}
 	}
 

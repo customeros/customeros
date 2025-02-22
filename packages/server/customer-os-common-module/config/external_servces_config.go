@@ -44,7 +44,6 @@ type NovuConfig struct {
 type QuickbooksConfig struct {
 	ClientId     string `env:"QUICKBOOKS_CLIENT_ID"`
 	ClientSecret string `env:"QUICKBOOKS_CLIENT_SECRET"`
-	RedirectUrl  string `env:"QUICKBOOKS_REDIRECT_URL"`
 }
 
 type JinaConfig struct {
