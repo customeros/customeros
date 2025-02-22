@@ -38,7 +38,7 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 25
+	limit := 10
 
 	// get companies
 	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToFetchLogo(ctx, limit)
@@ -48,30 +48,42 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 	}
 
 	for _, org := range orgs {
-		// download logo
-		logoPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "logo")
-		logoPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, org.LogoUrl, BUCKET, logoPath)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
-		}
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, org.ID, logoPath)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
+		// download icon
+		if org.IconUrl != "" {
+			iconPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "icon")
+			iconPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, org.IconUrl, BUCKET, iconPath)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			if iconPath != "" {
+				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, org.ID, iconPath)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
 		}
 
-		// download icon
-		iconPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "icon")
-		iconPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, org.IconUrl, BUCKET, iconPath)
+		// download logo
+		logoPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "logo")
+		clearbitUrl := "https://logo.clearbit.com/" + org.PrimaryDomain
+		logoPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, clearbitUrl, BUCKET, logoPath)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			continue
+
+			// try linkedin url
+			if org.LogoUrl != "" {
+				logoPath, err = s.commonServices.MediaService.DownloadImageToS3(ctx, org.LogoUrl, BUCKET, logoPath)
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+			}
 		}
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, org.ID, iconPath)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
+
+		if logoPath != "" {
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, org.ID, logoPath)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 		}
 	}
 }
