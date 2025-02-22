@@ -500,7 +500,7 @@ func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		UpdateColumn("downloadStatus", status.String())
+		UpdateColumn("download_status", status.String())
 
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)

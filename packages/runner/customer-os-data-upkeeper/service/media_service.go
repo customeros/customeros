@@ -53,20 +53,20 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 		// download icon
 		if org.IconUrl != "" {
 			iconPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "icon")
-			s.downloadImage(ctx, org.ID, org.IconUrl, iconPath)
+			s.downloadImage(ctx, org.ID, org.IconUrl, iconPath, "icon")
 		}
 
 		// download logo
 		logoPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "logo")
 		clearbitUrl := "https://logo.clearbit.com/" + org.PrimaryDomain
-		if !s.downloadImage(ctx, org.ID, clearbitUrl, logoPath) && org.LogoUrl != "" {
-			s.downloadImage(ctx, org.ID, org.LogoUrl, logoPath)
+		if !s.downloadImage(ctx, org.ID, clearbitUrl, logoPath, "logo") && org.LogoUrl != "" {
+			s.downloadImage(ctx, org.ID, org.LogoUrl, logoPath, "logo")
 		}
 
 	}
 }
 
-func (s *mediaService) downloadImage(ctx context.Context, orgId uint64, imageUrl, imagePath string) bool {
+func (s *mediaService) downloadImage(ctx context.Context, orgId uint64, imageUrl, imagePath, imageType string) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "mediaService.download")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
@@ -82,7 +82,11 @@ func (s *mediaService) downloadImage(ctx context.Context, orgId uint64, imageUrl
 	}
 
 	if imagePath != "" {
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, orgId, imagePath)
+		if imageType == "icon" {
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, orgId, imagePath)
+		} else {
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, orgId, imagePath)
+		}
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return false
