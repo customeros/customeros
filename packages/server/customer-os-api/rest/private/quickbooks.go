@@ -16,7 +16,21 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		_, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/requestAccess", c.Request.Header)
 		defer span.Finish()
 
-		quickbooksRequestAccessUrl := "https://appcenter.intuit.com/connect/oauth2?client_id=" + s.Cfg.Common.External.QuickbooksConfig.ClientId + "&redirect_uri=" + s.Cfg.Common.External.QuickbooksConfig.RedirectUrl + "&response_type=code&scope=com.intuit.quickbooks.accounting&state=12345"
+		quickbooksRequestAccessUrl := "https://appcenter.intuit.com/connect/oauth2?client_id=" + s.Cfg.Common.External.QuickbooksConfig.ClientId
+
+		redirectUrl := c.Query("redirect_url")
+		if redirectUrl != "" {
+			quickbooksRequestAccessUrl += "&redirect_uri=" + url.QueryEscape(redirectUrl)
+		}
+
+		quickbooksRequestAccessUrl += "&response_type=code&scope=com.intuit.quickbooks.accounting"
+
+		state := c.Query("state")
+		if state != "" {
+			quickbooksRequestAccessUrl += "&state=" + state
+		} else {
+			quickbooksRequestAccessUrl += "&state=12345"
+		}
 
 		span.LogFields(log.Object("quickbooksRequestAccessUrl", quickbooksRequestAccessUrl))
 
@@ -31,11 +45,15 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 		code := c.Request.URL.Query().Get("code")
 		realmId := c.Request.URL.Query().Get("realmId")
+		redirectUrl := c.Request.URL.Query().Get("redirect_url")
+		span.LogKV("code", code)
+		span.LogKV("redirectUrl", url.QueryEscape(redirectUrl))
+		span.LogKV("realmId", realmId)
 
 		requestData := url.Values{}
 		requestData.Set("grant_type", "authorization_code")
 		requestData.Set("code", code)
-		requestData.Set("redirect_uri", s.Cfg.Common.External.QuickbooksConfig.RedirectUrl)
+		requestData.Set("redirect_uri", redirectUrl)
 
 		tenant, _ := c.Get(security.KEY_TENANT_NAME)
 
