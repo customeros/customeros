@@ -760,7 +760,6 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 				SET 
 					sli:ServiceLineItem_%s,
 					sli.skuId=$skuId,
-					sli.name=$name,
 					sli.description=$description,
 					sli.source=$source,
 					sli.appSource=$appSource,
