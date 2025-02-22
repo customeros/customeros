@@ -23,7 +23,7 @@ type AgentExecution struct {
 
 	// Retry related fields
 	RetryCount  int        `gorm:"column:retry_count;type:int;default:0" json:"retryCount"`
-	MaxRetries  int        `gorm:"column:max_retries;type:int;default:5" json:"maxRetries"`
+	MaxRetries  int        `gorm:"column:max_retries;type:int;default:12" json:"maxRetries"`
 	NextRetryAt *time.Time `gorm:"column:next_retry_at" json:"nextRetryAt"`
 
 	// Async state management

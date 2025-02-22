@@ -68,6 +68,7 @@ jobs:
           fi
           echo "$GOBIN" >> $GITHUB_PATH
 
+
       - name: Go Cache
         id: go-cache
         uses: ubicloud/cache@v4
@@ -82,6 +83,21 @@ jobs:
       - name: Build
         if: steps.go-cache.outputs.cache-hit != 'true'
         run: make all
+
+      - name: Get test packages
+        id: get-packages
+        run: |
+          # Get all packages except repository, rest, and graph/resolver
+          PACKAGES=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | grep -v "/rest" | grep -v "/graphql/resolver" | paste -sd " " -)
+          echo "packages=${PACKAGES}" >> "$GITHUB_OUTPUT"
+
+      - name: Run Repository Tests
+        run: |
+          echo "Running tests for Postgres and Neo4j repositories..."
+          gotestsum --junitfile unit-tests.xml -- \
+             -coverprofile=cover.out \
+             ${{ steps.get-packages.outputs.packages }}
+
   #
   #     - name: Get test packages
   #       id: get-packages
