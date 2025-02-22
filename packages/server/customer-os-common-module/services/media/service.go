@@ -5,8 +5,10 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -105,8 +107,29 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 		}
 	}
 
+	if contentType == "" {
+		ext := strings.ToLower(filepath.Ext(s3FilePath))
+		switch ext {
+		case ".jpg", ".jpeg":
+			contentType = "image/jpeg"
+		case ".png":
+			contentType = "image/png"
+		case ".gif":
+			contentType = "image/gif"
+		case ".webp":
+			contentType = "image/webp"
+		default:
+			contentType = "image/jpeg" // fallback
+		}
+	}
+
 	// Upload directly to S3 using the provided S3Client
-	err = s.s3client.Upload(ctx, bucketName, s3FilePath, resp.Body)
+	err = s.s3client.Upload(ctx, s3manager.UploadInput{
+		Bucket:      aws.String(bucketName),
+		Key:         aws.String(s3FilePath),
+		Body:        resp.Body,
+		ContentType: aws.String(contentType),
+	})
 	if err != nil {
 		span.LogFields(tracingLog.Error(err))
 		return "", err
