@@ -2,10 +2,9 @@ package media
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -14,11 +13,14 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const (
 	AWS_REGION = "eu-west-1"
 )
+
+var ErrNotFound = errors.New("Could not find asset to download")
 
 type mediaService struct {
 	postgresRepository *postgres_repository.Repositories
@@ -45,6 +47,13 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 		tracingLog.String("key", s3FilePath),
 	)
 
+	if imageURL == "" {
+		return "", errors.New("imageURL cannot be empty")
+	}
+	if s3FilePath == "" {
+		return "", errors.New("s3FilePath cannot be empty")
+	}
+
 	// Get the image from the URL
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
 	if err != nil {
@@ -69,9 +78,13 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 
 	// Check if request was successful
 	if resp.StatusCode != http.StatusOK {
-		err := &HTTPError{StatusCode: resp.StatusCode, URL: imageURL}
-		span.LogFields(tracingLog.Error(err))
-		return "", err
+		switch {
+		case resp.StatusCode == http.StatusNotFound:
+			return "", ErrNotFound
+		default:
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 	}
 
 	// Get content type from response headers
@@ -134,16 +147,4 @@ func detectExtension(contentType, url string) string {
 	// If we still can't determine the extension, default to .jpg
 	// since it's a common image format
 	return ".jpg"
-}
-
-// HTTPError represents an HTTP error when downloading an image
-type HTTPError struct {
-	StatusCode int
-	URL        string
-}
-
-// Error implements the error interface
-func (e *HTTPError) Error() string {
-	return "HTTP error: " + strings.TrimSpace(http.StatusText(e.StatusCode)) +
-		" (" + strconv.Itoa(e.StatusCode) + ") when downloading " + e.URL
 }
