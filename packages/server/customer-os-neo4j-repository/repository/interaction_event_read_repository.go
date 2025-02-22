@@ -3,10 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -305,7 +305,7 @@ func (r *interactionEventReadRepository) GetInteractionEventIdByExternalId(ctx c
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s)-[IS_LINKED_WITH{externalId:$externalId}]-(e:ExternalSystem{id:$externalSystemId}) RETURN ie.id`, tenant)
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s)-[IS_LINKED_WITH {externalId:$externalId}]-(e:ExternalSystem{id:$externalSystemId}) RETURN ie.id`, tenant)
 	params := map[string]any{
 		"externalId":       externalId,
 		"externalSystemId": externalSystemId,
