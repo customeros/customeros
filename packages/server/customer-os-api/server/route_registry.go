@@ -58,7 +58,7 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 				config.services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository,
 				config.services.Repositories.PostgresRepositories.AppKeyRepository,
 				security.PLATFORM_ADMIN_API,
-				security.WithCache(config.services.Cache),
+				security.WithCache(config.cache),
 			),
 			security.TenantUserContextEnhancer(
 				config.services.Repositories.Neo4jRepositories,
