@@ -2,7 +2,6 @@ package aws_client
 
 import (
 	"context"
-	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -14,7 +13,7 @@ import (
 )
 
 type S3Client interface {
-	Upload(ctx context.Context, bucket, key string, content io.Reader) error
+	Upload(ctx context.Context, uploadContainer s3manager.UploadInput) error
 	Download(ctx context.Context, bucket, key string) (string, error)
 	ListFiles(ctx context.Context, bucket string) ([]string, error)
 	ChangeRegion(ctx context.Context, region string)
@@ -37,16 +36,12 @@ func NewS3Client(config *aws.Config) S3Client {
 	}
 }
 
-func (s *s3Client) Upload(ctx context.Context, bucket, key string, content io.Reader) error {
+func (s *s3Client) Upload(ctx context.Context, uploadContainer s3manager.UploadInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "s3Client.Upload")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	_, err := s.Uploader.Upload(&s3manager.UploadInput{
-		Bucket: &bucket,
-		Key:    &key,
-		Body:   content,
-	})
+	_, err := s.Uploader.Upload(&uploadContainer)
 	return err
 }
 
