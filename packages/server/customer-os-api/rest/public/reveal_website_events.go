@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"net/http"
 	"strings"
 
@@ -57,6 +58,7 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, tenant)
+		ctx = common.SetTenantInContext(ctx, tenant)
 
 		trackerData := h.buildTrackerDbData(c, tenant)
 		if trackerData == nil {
@@ -317,8 +319,10 @@ func (h *WebsiteTrackerEventsHandler) buildTrackerDbData(c *gin.Context, tenant 
 }
 
 func (h *WebsiteTrackerEventsHandler) isTrustedIP(ctx context.Context, ipAddress string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteTrackerEventsHandler.isTrustedIp")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.isTrustedIp")
 	defer span.Finish()
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogKV("ipAddress", ipAddress)
 
 	ipThreats, err := h.services.CommonServices.VerifyService.Threats(ctx, ipAddress)
 	if err != nil || ipThreats == nil {
