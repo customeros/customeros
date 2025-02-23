@@ -169,7 +169,7 @@ func (s *verifyService) IdentifyCompanyDomain(ctx context.Context, ipAddress str
 }
 
 func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*interfaces.IpThreats, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.IsBot")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.Threats")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
 	span.LogKV("ipAddress", ipAddress)

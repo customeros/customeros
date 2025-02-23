@@ -3,5 +3,5 @@ package interfaces
 import "context"
 
 type WebscraperService interface {
-	Scrape(ctx context.Context, url, primaryDomain string) (string, error)
+	Scrape(ctx context.Context, url string) (string, error)
 }

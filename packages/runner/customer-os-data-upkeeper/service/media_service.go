@@ -67,7 +67,7 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 }
 
 func (s *mediaService) downloadImage(ctx context.Context, orgId uint64, imageUrl, imagePath, imageType string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "mediaService.download")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadImage")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 

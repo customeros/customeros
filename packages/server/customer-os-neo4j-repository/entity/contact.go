@@ -24,6 +24,7 @@ const (
 	ContactPropertyFindMobilePhoneWithBetterContactCompletedAt ContactProperty = "techFindMobilePhoneWithBetterContactCompletedAt"
 	ContactPropertyFindMobilePhoneWithBetterContactFound       ContactProperty = "techFindMobilePhoneWithBetterContactFound"
 	ContactPropertyUpdateWithWorkEmailRequestedAt              ContactProperty = "techUpdateWithWorkEmailRequestedAt"
+	ContactPropertyLinkWithOrgRequestedAt                      ContactProperty = "techLinkWithOrgRequestedAt"
 	ContactPropertyCheckedAt                                   ContactProperty = "techCheckedAt"
 	ContactPropertyPrefix                                      ContactProperty = "prefix"
 	ContactPropertyFirstName                                   ContactProperty = "firstName"

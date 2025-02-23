@@ -231,6 +231,7 @@ func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[stri
 		output[mailStackDomain.Domain] = mailStackDomain.Tenant
 	}
 
+	span.LogFields(tracingLog.Int("response.count", len(output)))
 	return output, nil
 }
 

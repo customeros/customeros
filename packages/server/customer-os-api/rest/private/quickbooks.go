@@ -28,8 +28,6 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		state := c.Query("state")
 		if state != "" {
 			quickbooksRequestAccessUrl += "&state=" + state
-		} else {
-			quickbooksRequestAccessUrl += "&state=12345"
 		}
 
 		span.LogFields(log.Object("quickbooksRequestAccessUrl", quickbooksRequestAccessUrl))
@@ -40,9 +38,10 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/slack/oauth/callback", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/oauth/callback", c.Request.Header)
 		defer span.Finish()
 
+		// TODO if realm not used, delete it
 		code := c.Request.URL.Query().Get("code")
 		realmId := c.Request.URL.Query().Get("realmId")
 		redirectUrl := c.Request.URL.Query().Get("redirect_url")
@@ -74,7 +73,16 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func GetQuickbooksSettings(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		quickbooksConnected, err := s.CommonServices.QuickbooksService.QuickbooksConnected(c.Request.Context())
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/tenant/settings", c.Request.Header)
+		defer span.Finish()
+
+		tenant, _ := c.Get(security.KEY_TENANT_NAME)
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: tenant.(string),
+		})
+
+		quickbooksConnected, err := s.CommonServices.QuickbooksService.QuickbooksConnected(ctx)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

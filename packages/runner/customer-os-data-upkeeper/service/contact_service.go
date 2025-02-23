@@ -429,7 +429,7 @@ func (s *contactService) LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx)
+	s.linkOrphanContactsToOrganizationBasedOnLinkedin(ctx)
 }
 
 type BetterContactRequestBody struct {
@@ -672,12 +672,15 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 	return nil
 }
 
-func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn")
+func (s *contactService) linkOrphanContactsToOrganizationBasedOnLinkedin(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBasedOnLinkedin")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	orphanContacts, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization(ctx)
+	limit := 200
+	delayFromPreviousAttemptDays := 14
+
+	orphanContacts, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization(ctx, delayFromPreviousAttemptDays, limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -685,68 +688,73 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 
 	span.LogFields(log.Int("orphanContactsCount", len(orphanContacts)))
 
-	for _, orpanContact := range orphanContacts {
+	for _, orphanContact := range orphanContacts {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    orpanContact.Tenant,
+			Tenant:    orphanContact.Tenant,
 			AppSource: constants.AppSourceDataUpkeeper,
 		})
+		s.processLinkOrphanContactToOrganizationBasedOnLinkedin(innerCtx, orphanContact)
+	}
+}
 
-		tenant := orpanContact.Tenant
+func (s *contactService) processLinkOrphanContactToOrganizationBasedOnLinkedin(ctx context.Context, record neo4jrepository.TenantAndContactIdAndParams) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.processLinkOrphanContactToOrganizationBasedOnLinkedin")
+	defer span.Finish()
+	tracing.TagTenant(span, record.Tenant)
+	tracing.TagEntity(span, record.ContactId)
 
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
+	// Mark contact with link requested
+	err := s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyLinkWithOrgRequestedAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
 
-		scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, orpanContact.FieldStr1, postgresentity.ScrapInFlowPersonProfile)
+	scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, record.FieldStr1, postgresentity.ScrapInFlowPersonProfile)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
+		return
+	}
+
+	if scrapIn != nil && scrapIn.Success && scrapIn.CompanyFound {
+
+		var scrapinContactResponse postgresentity.ScrapInResponseBody
+		err := json.Unmarshal([]byte(scrapIn.Data), &scrapinContactResponse)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
+			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
 			return
 		}
 
-		if scrapIn != nil && scrapIn.Success && scrapIn.CompanyFound {
+		domain := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+		if domain == "" {
+			return
+		}
 
-			var scrapinContactResponse postgresentity.ScrapInResponseBody
-			err := json.Unmarshal([]byte(scrapIn.Data), &scrapinContactResponse)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-				return
-			}
+		organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, record.Tenant, domain)
+		if err != nil {
+			// TODO uncomment when data is fixed in DB
+			// tracing.TraceErr(innerSpan, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
+			// return
+			return
+		}
 
-			domain := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
-			if domain == "" {
-				continue
-			}
+		if organizationByDomainNode != nil {
+			organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
 
-			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
-			if err != nil {
-				// TODO uncomment when data is fixed in DB
-				// tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
-				// return
-				continue
-			}
-
-			if organizationByDomainNode != nil {
-				organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
-
-				positionName := ""
-				if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
-					for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
-						if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
-							positionName = position.Title
-							break
-						}
+			positionName := ""
+			if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
+				for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
+					if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
+						positionName = position.Title
+						break
 					}
 				}
+			}
 
-				err = s.commonServices.ContactService.LinkContactWithOrganization(innerCtx, nil, orpanContact.ContactId, organizationId, positionName, "",
-					neo4jentity.DataSourceOpenline.String(), false, nil, nil)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
+			err = s.commonServices.ContactService.LinkContactWithOrganization(ctx, nil, record.ContactId, organizationId, positionName, "",
+				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
+			if err != nil {
+				tracing.TraceErr(span, err)
 			}
 		}
 	}
