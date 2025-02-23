@@ -28,8 +28,6 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		state := c.Query("state")
 		if state != "" {
 			quickbooksRequestAccessUrl += "&state=" + state
-		} else {
-			quickbooksRequestAccessUrl += "&state=12345"
 		}
 
 		span.LogFields(log.Object("quickbooksRequestAccessUrl", quickbooksRequestAccessUrl))
