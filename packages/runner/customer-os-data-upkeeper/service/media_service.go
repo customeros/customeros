@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -66,29 +69,32 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 	}
 }
 
-func (s *mediaService) downloadImage(ctx context.Context, orgId uint64, imageUrl, imagePath, imageType string) bool {
+func (s *mediaService) downloadImage(ctx context.Context, globalOrgId uint64, imageUrl, imagePath, imageType string) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadImage")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
+	span.LogFields(log.String("imageUrl", imageUrl), log.String("imagePath", imagePath), log.String("imageType", imageType), log.Uint64("globalOrgId", globalOrgId))
 
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, orgId, enum.DownloadError)
+		if !errors.Is(err, coserrors.ErrResourceNotFound) {
+			tracing.TraceErr(span, errors.Wrap(err, "image not found"))
+		}
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, globalOrgId, enum.DownloadError)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
 		}
 		return false
 	}
 
 	if imagePath != "" {
 		if imageType == "icon" {
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, orgId, imagePath)
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, globalOrgId, imagePath)
 		} else {
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, orgId, imagePath)
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, globalOrgId, imagePath)
 		}
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
 			return false
 		}
 	}

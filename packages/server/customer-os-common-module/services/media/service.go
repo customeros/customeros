@@ -3,6 +3,7 @@ package media
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -21,8 +22,6 @@ import (
 const (
 	AWS_REGION = "eu-west-1"
 )
-
-var ErrNotFound = errors.New("Could not find asset to download")
 
 type mediaService struct {
 	postgresRepository *postgres_repository.Repositories
@@ -50,15 +49,20 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 	)
 
 	if imageURL == "" {
-		return "", errors.New("imageURL cannot be empty")
+		err := errors.New("imageURL cannot be empty")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 	if s3FilePath == "" {
-		return "", errors.New("s3FilePath cannot be empty")
+		err := errors.New("s3FilePath cannot be empty")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	// Get the image from the URL
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		span.LogFields(tracingLog.Error(err))
 		return "", err
 	}
@@ -73,6 +77,7 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		span.LogFields(tracingLog.Error(err))
 		return "", err
 	}
@@ -82,7 +87,7 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 	if resp.StatusCode != http.StatusOK {
 		switch {
 		case resp.StatusCode == http.StatusNotFound:
-			return "", ErrNotFound
+			return "", coserrors.ErrResourceNotFound
 		default:
 			tracing.TraceErr(span, err)
 			return "", err
@@ -131,6 +136,7 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 		ContentType: aws.String(contentType),
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		span.LogFields(tracingLog.Error(err))
 		return "", err
 	}
