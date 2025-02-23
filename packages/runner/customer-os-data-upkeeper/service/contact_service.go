@@ -429,7 +429,7 @@ func (s *contactService) LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx)
+	s.linkOrphanContactsToOrganizationBasedOnLinkedin(ctx)
 }
 
 type BetterContactRequestBody struct {
@@ -672,13 +672,13 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 	return nil
 }
 
-func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn")
+func (s *contactService) linkOrphanContactsToOrganizationBasedOnLinkedin(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBasedOnLinkedin")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
 	limit := 200
-	delayFromPreviousAttemptDays := 7
+	delayFromPreviousAttemptDays := 14
 
 	orphanContacts, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization(ctx, delayFromPreviousAttemptDays, limit)
 	if err != nil {
@@ -694,7 +694,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 				Tenant:    record.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
-			innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "ContactService.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn.record")
+			innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "ContactService.linkOrphanContactsToOrganizationBasedOnLinkedin.record")
 			defer innerSpan.Finish()
 			tracing.TagTenant(innerSpan, record.Tenant)
 			tracing.TagEntity(innerSpan, record.ContactId)
