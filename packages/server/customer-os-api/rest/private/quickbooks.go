@@ -38,7 +38,7 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/slack/oauth/callback", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/oauth/callback", c.Request.Header)
 		defer span.Finish()
 
 		code := c.Request.URL.Query().Get("code")
