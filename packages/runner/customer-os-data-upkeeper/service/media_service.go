@@ -78,7 +78,7 @@ func (s *mediaService) downloadImage(ctx context.Context, globalOrgId uint64, im
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) {
-			tracing.TraceErr(span, errors.Wrap(err, "image not found"))
+			tracing.TraceErr(span, err)
 		}
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, globalOrgId, enum.DownloadError)
 		if err != nil {
