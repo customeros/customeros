@@ -1,6 +1,7 @@
 package private
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
@@ -68,6 +69,38 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func RevokeQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Start a tracer span for the revoke callback endpoint.
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/revoke", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
+		// Retrieve the tenant from context.
+		tenant, exists := c.Get(security.KEY_TENANT_NAME)
+		if !exists || tenant == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tenant not found in context"})
+			return
+		}
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant.(string),
+			AppSource: constants.AppSourceCustomerOsApi,
+		})
+		tracing.TagTenant(span, tenant.(string))
+
+		// Call the QuickBooks service to revoke the access.
+		err := s.CommonServices.QuickbooksService.RevokeAccess(ctx)
+		if err != nil {
+			span.LogFields(log.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revoke QuickBooks access"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true})
 	}
 }
 
