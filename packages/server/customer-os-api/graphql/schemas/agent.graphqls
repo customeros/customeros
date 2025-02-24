@@ -55,8 +55,9 @@ type Agent {
 
 input AgentSaveInput {
   id: ID
-  type: AgentType @deprecated ## field is not update-able
-  metric: String  @deprecated ## field is not updata-able
+  type: AgentType ## field is not update-able
+  metric: String ## field is not update-able
+  description: String ## field is not update-able
   name: String
   capabilities: [CapabilitySaveInput!]
   listeners: [AgentListenerSaveInput!]
