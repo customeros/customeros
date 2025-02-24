@@ -3,6 +3,10 @@ package workspace
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/pkg/errors"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -19,12 +23,14 @@ import (
 )
 
 type workspaceService struct {
-	neo4j *neo4j_repository.Repositories
+	neo4j  *neo4j_repository.Repositories
+	events *events.EventsService
 }
 
-func NewWorkspaceService(neo4j *neo4j_repository.Repositories) interfaces.WorkspaceService {
+func NewWorkspaceService(neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.WorkspaceService {
 	return &workspaceService{
-		neo4j: neo4j,
+		neo4j:  neo4j,
+		events: events,
 	}
 }
 
@@ -42,7 +48,62 @@ func (s *workspaceService) MergeToTenant(ctx context.Context, tx *neo4j.ManagedT
 		return false, err
 	}
 
+	// send event
+	eventData := dto.AddWorkspaceDomainToTenant{
+		Domain:   workspaceEntity.Name,
+		Provider: workspaceEntity.Provider,
+	}
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT, eventData)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddWorkspaceDomainToTenant"))
+	}
+
 	return true, err
+}
+
+func (s *workspaceService) AddDomainAsWorkspace(ctx context.Context, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceService.AddDomainAsWorkspace")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// check if domain is valid
+	if !utils.IsValidDomain(domain) {
+		err = errors.New("invalid domain")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// check if domain not registered with other workspace
+	isUsed, err := s.IsAnyTenantWorkspaceDomain(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if isUsed {
+		err = errors.New("domain already used as workspace")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	workspaceEntity := neo4jentity.WorkspaceEntity{
+		Name: domain,
+	}
+
+	_, err = s.MergeToTenant(ctx, nil, workspaceEntity, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]string, error) {
@@ -98,6 +159,26 @@ func (s *workspaceService) IsWorkspaceDomain(ctx context.Context, domain string)
 			span.LogFields(log.Bool("result", true))
 			return true, nil
 		}
+	}
+
+	span.LogFields(log.Bool("result", false))
+	return false, nil
+}
+
+func (s *workspaceService) IsAnyTenantWorkspaceDomain(ctx context.Context, domain string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceService.IsAnyTenantWorkspaceDomain")
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	defer span.Finish()
+
+	workspaceDbNodes, err := s.neo4j.WorkspaceReadRepository.GetByNameCrossTenant(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	if len(workspaceDbNodes) > 0 {
+		span.LogFields(log.Bool("result", true))
+		return true, nil
 	}
 
 	span.LogFields(log.Bool("result", false))

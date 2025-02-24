@@ -226,7 +226,7 @@ func InitCommonServices(
 	webhookImpl := webhook.NewWebhookService(log, postgresRepositories)
 	webscrapeImpl := webscraper.NewWebscraperService(&cfg.External.JinaConfig, postgresRepositories)
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
-	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
+	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories, eventsImpl)
 
 	// Services that only depend on Simple
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
