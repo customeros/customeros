@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -18,6 +20,7 @@ type TenantRepository interface {
 	GetTenantByHashId(ctx context.Context, hashID string) (string, error)
 	GetHashID(ctx context.Context, tenant string) (string, error)
 	PermanentlyDelete(ctx context.Context, tenant string) error
+	SetCompanyReport(ctx context.Context, companyReport string) error
 }
 
 type tenantRepository struct {
@@ -92,5 +95,29 @@ func (e *tenantRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "failed to delete tenant")
 	}
+	return nil
+}
+
+func (e *tenantRepository) SetCompanyReport(ctx context.Context, companyReport string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.SetCompanyReport")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		return coserrors.ErrTenantNotSet
+	}
+	result := e.gormDb.Model(&postgres_entity.Tenant{}).
+		Where("name = ?", tenant).
+		Update("company_report", companyReport)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("Tenant not found")
+	}
+
 	return nil
 }

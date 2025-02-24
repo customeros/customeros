@@ -15,6 +15,7 @@ import (
 type GlobalOrganizationWebpageRepository interface {
 	Save(ctx context.Context, webpageData postgres_entity.GlobalOrganizationWebpages) (*postgres_entity.GlobalOrganizationWebpages, error)
 	GetWebpage(ctx context.Context, url string, lookbackInDays int) (*postgres_entity.GlobalOrganizationWebpages, error)
+	GetAllWebpagesByPrimaryDomains(ctx context.Context, primaryDomains []string) ([]*postgres_entity.GlobalOrganizationWebpages, error)
 }
 
 type globalOrganizationWebpageRepository struct {
@@ -86,4 +87,22 @@ func (r *globalOrganizationWebpageRepository) GetWebpage(ctx context.Context, ur
 	}
 
 	return &record, nil
+}
+
+func (r *globalOrganizationWebpageRepository) GetAllWebpagesByPrimaryDomains(ctx context.Context, primaryDomains []string) ([]*postgres_entity.GlobalOrganizationWebpages, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "globalOrganizationWebpageRepository.GetAllWebpagesByPrimaryDomain")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var records []*postgres_entity.GlobalOrganizationWebpages
+
+	err := r.gormDb.
+		Where("primary_domain IN ?", primaryDomains).
+		Find(&records).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }
