@@ -8,6 +8,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -103,13 +104,13 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		code := c.Request.URL.Query().Get("code")
 		redirectUri := c.Request.URL.Query().Get("redirect_uri")
 		span.LogKV("code", code)
-		span.LogKV("redirectUri", url.QueryEscape(redirectUri))
+		span.LogKV("redirectUri", redirectUri)
 
 		requestData := url.Values{}
 		requestData.Set("code", code)
 		requestData.Set("client_id", s.Cfg.Common.External.SlackConfig.ClientID)
 		requestData.Set("client_secret", s.Cfg.Common.External.SlackConfig.ClientSecret)
-		requestData.Set("redirect_uri", url.QueryEscape(redirectUri))
+		requestData.Set("redirect_uri", redirectUri)
 
 		// Encode the form data
 		requestBody := requestData.Encode()
@@ -175,7 +176,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 				return
 			}
 		} else {
-			span.LogKV("slackResponse", slackResponse)
+			tracing.TraceErr(span, errors.Wrap(errors.New("slack response not ok"), slackResponse.Error))
 
 			c.JSON(http.StatusInternalServerError, gin.H{"error": slackResponse.Error})
 			return
