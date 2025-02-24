@@ -148,7 +148,7 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 	}
 
 	// Prepare the revoke request
-	revokeURL := "https://oauth.platform.intuit.com/oauth2/v1/revoke"
+	revokeURL := "https://developer.api.intuit.com/v2/oauth2/tokens/revoke"
 	formData := url.Values{}
 	formData.Set("token", token)
 	requestBody := formData.Encode()
@@ -184,8 +184,9 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 
 	// Check for a successful response
 	if resp.StatusCode != http.StatusOK {
-		errMsg := fmt.Sprintf("revoke token request returned status %d, response: %s", resp.StatusCode, string(bodyBytes))
+		errMsg := fmt.Sprintf("revoke quickbooks request returned status %d", resp.StatusCode)
 		tracing.TraceErr(span, fmt.Errorf(errMsg))
+		span.LogFields(log.String("quickbooks.response", string(bodyBytes)))
 		return fmt.Errorf(errMsg)
 	}
 
