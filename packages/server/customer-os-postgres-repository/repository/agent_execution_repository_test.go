@@ -384,7 +384,7 @@ func TestAgentExecutionRepository_GoalAchieved(t *testing.T) {
 		t.Fatalf("failed to create record: %v", err)
 	}
 
-	if err := repositories.AgentExecutionRepository.GoalAchieved(ctx, saved.ID, true); err != nil {
+	if err := repositories.AgentExecutionRepository.GoalAchieved(ctx, saved.ID, true, utils.StringPtr("123")); err != nil {
 		t.Fatalf("GoalAchieved failed: %v", err)
 	}
 
@@ -397,6 +397,9 @@ func TestAgentExecutionRepository_GoalAchieved(t *testing.T) {
 	}
 	if fetched.CompletedAt == nil {
 		t.Error("expected CompletedAt to be set")
+	}
+	if fetched.ImpactedId == nil || *fetched.ImpactedId != "123" {
+		t.Errorf("expected ImpactedId '123', got %v", fetched.ImpactedId)
 	}
 }
 

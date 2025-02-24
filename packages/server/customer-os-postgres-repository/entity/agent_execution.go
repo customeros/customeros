@@ -20,6 +20,7 @@ type AgentExecution struct {
 	ErrorMessage *string                   `gorm:"column:error_message;type:text" json:"errorMessage"`
 	GoalAchieved *bool                     `gorm:"column:goal_achieved;type:boolean" json:"goalAchieved"`
 	TraceId      string                    `gorm:"column:trace_id;type:varchar(255)" json:"traceId"`
+	ImpactedId   *string                   `gorm:"column:impacted_id;type:varchar(255)" json:"impactedId"`
 
 	// Retry related fields
 	RetryCount  int        `gorm:"column:retry_count;type:int;default:0" json:"retryCount"`

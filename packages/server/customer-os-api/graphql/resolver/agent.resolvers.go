@@ -122,7 +122,6 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 	}
 
 	updatedAgent := mapper.MapAgentToModel(updatedAgentEntity)
-	updatedAgent.Metric = input.Metric
 	return updatedAgent, nil
 }
 

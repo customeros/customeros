@@ -22,6 +22,7 @@ require (
 	github.com/customeros/mailwatcher v0.1.6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v28.0.0+incompatible
+	github.com/dustin/go-humanize v1.0.1
 	github.com/emersion/go-message v0.18.2
 	github.com/forPelevin/gomoji v1.3.0
 	github.com/gin-gonic/gin v1.10.0
