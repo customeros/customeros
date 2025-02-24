@@ -78,6 +78,7 @@ func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		if redirectUrl != "" {
 			slackRequestAccessUrl += "&redirect_url=" + url.QueryEscape(redirectUrl)
+			slackRequestAccessUrl += "&redirect_uri=" + url.QueryEscape(redirectUrl)
 		}
 
 		span.LogFields(log.Object("slackRequestAccessUrl", slackRequestAccessUrl))
@@ -110,6 +111,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		requestData.Set("client_id", s.Cfg.Common.External.SlackConfig.ClientID)
 		requestData.Set("client_secret", s.Cfg.Common.External.SlackConfig.ClientSecret)
 		requestData.Set("redirect_url", url.QueryEscape(redirectUrl))
+		requestData.Set("redirect_uri", url.QueryEscape(redirectUrl))
 
 		// Encode the form data
 		requestBody := requestData.Encode()
