@@ -231,7 +231,7 @@ func InitCommonServices(
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories, eventsImpl)
 
 	// Services that only depend on Simple
-	companyResearchImpl := company_research.NewCompanyResearchService(postgresRepositories, aiImpl, webscrapeImpl)
+	companyResearchImpl := company_research.NewCompanyResearchService(postgresRepositories, aiImpl, webscrapeImpl, workspaceImpl)
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	notificationImpl := notification.NewNotificationService(log, postgresRepositories, slackImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)

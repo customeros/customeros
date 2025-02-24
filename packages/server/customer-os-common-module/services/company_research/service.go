@@ -36,6 +36,11 @@ func NewCompanyResearchService(
 	}
 }
 
+const (
+	WebpagesInChunk = 25
+	AIModel         = enum.AIModelAnthropicSonnet
+)
+
 func (s *companyResearchService) GenerateIdealCustomerProfile(ctx context.Context, tenantDomain string, trainingWebsites []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "icpService.GenerateIdealCustomerProfile")
 	defer span.Finish()
@@ -118,15 +123,11 @@ func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domai
 		globalOrgDetails, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		if globalOrgDetails == nil {
-			return nil, errors.New("unable to get global org details")
 		}
 
 		for i, chunk := range chunks[domain] {
 			systemPrompt, prompt := s.buildChunkPrompt(domain, chunk, i+1, *globalOrgDetails)
-			answer, err := s.aiService.AskAI(ctx, enum.AIModelAnthropicSonnet, systemPrompt, prompt)
+			answer, err := s.aiService.AskAI(ctx, AIModel, systemPrompt, prompt)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -173,7 +174,7 @@ func (s *companyResearchService) buildFinalReport(ctx context.Context, analyses 
 		p.WriteString("\n\n")
 	}
 
-	report, err := s.aiService.AskAI(ctx, enum.AIModelAnthropicSonnet, sp.String(), p.String())
+	report, err := s.aiService.AskAI(ctx, AIModel, sp.String(), p.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -207,9 +208,10 @@ func (s *companyResearchService) buildChunkPrompt(domain string, webpageChunk []
 	prompt.WriteString("\n\n")
 
 	for i, page := range webpageChunk {
+		sections := strings.Split(page.Content, "Links/Buttons")
 		prompt.WriteString(fmt.Sprintf("--- PAGE %d: ---\n", i+1))
 		prompt.WriteString(fmt.Sprintf("URL: %s\n", page.Url))
-		prompt.WriteString(page.Content)
+		prompt.WriteString(sections[0])
 		prompt.WriteString("\n\n")
 	}
 
@@ -227,15 +229,15 @@ func (s *companyResearchService) buildDomainChunks(webpages []*postgres_entity.G
 		domainMap[domain] = append(domainMap[domain], webpage)
 	}
 
-	// Create chunks of max 50 URLs per domain
+	// Create chunks
 	result := make(map[string][][]*postgres_entity.GlobalOrganizationWebpages)
 
 	for domain, pages := range domainMap {
 		var chunks [][]*postgres_entity.GlobalOrganizationWebpages
 
-		// Split into chunks of 50
-		for i := 0; i < len(pages); i += 50 {
-			end := i + 50
+		// Split into chunks
+		for i := 0; i < len(pages); i += WebpagesInChunk {
+			end := i + WebpagesInChunk
 			if end > len(pages) {
 				end = len(pages)
 			}
