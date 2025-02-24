@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -24,16 +25,21 @@ import (
 type webscraperService struct {
 	config               *config.JinaConfig
 	postgresRepositories *postgres_repository.Repositories
+	visitedURLs          sync.Map
+	limiter              chan struct{}
 }
 
 func NewWebscraperService(config *config.JinaConfig, postgres *postgres_repository.Repositories) interfaces.WebscraperService {
 	return &webscraperService{
 		config:               config,
 		postgresRepositories: postgres,
+		limiter:              make(chan struct{}, 5),
 	}
 }
 
-const WebpageScrapeTTLInDays = 180
+const (
+	WebpageScrapeTTLInDays = 180
+)
 
 var (
 	ErrPaymentRequired = errors.New("Jina balance requires topup")
@@ -45,6 +51,16 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("url", url))
+
+	// check cache
+	cachedData, err := s.checkCache(ctx, url, WebpageScrapeTTLInDays)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if cachedData != "" {
+		return cachedData, nil
+	}
 
 	// fetch page contents
 	contents, err := s.fetchPage(ctx, url)
@@ -87,25 +103,10 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	return contents, nil
 }
 
-func (s *webscraperService) Crawl(ctx context.Context, startUrl string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.Crawl")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-}
-
 func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.fetchPage")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	cachedData, err := s.checkCache(ctx, url, WebpageScrapeTTLInDays)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if cachedData != "" {
-		return cachedData, nil
-	}
 
 	requestUrl := s.config.Url + url
 	span.LogKV("requestUrl", requestUrl)

@@ -22,6 +22,7 @@ type RestHandlers struct {
 
 	AskAI                *private.AskAIHandler
 	Billing              *billing.BillingHandler
+	BrowserExtension     *public.BrowserExtensionHandler
 	Contact              *customerbase.ContactHandler
 	Enrich               *enrich.EnrichHandler
 	Files                *files.FileHandler
@@ -33,9 +34,9 @@ type RestHandlers struct {
 	PrivateIntegrations  *private.PrivateIntegrationHandler
 	Verify               *verify.VerifyHandler
 	Webhooks             *webhooks.WebhookHandler
+	Webscrape            *private.WebscrapeHandler
 	WebTracker           *reveal.WebTrackerHandler
 	WebsiteTrackerEvents *public.WebsiteTrackerEventsHandler
-	BrowserExtension     *public.BrowserExtensionHandler
 }
 
 func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
@@ -45,6 +46,7 @@ func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
 	handlers := RestHandlers{
 		AskAI:                private.NewAskAIHandler(services, responseHandler),
 		Billing:              billing.NewBillingHandler(services, responseHandler),
+		BrowserExtension:     public.NewBrowserExtensionHandler(services, responseHandler),
 		Contact:              customerbase.NewContactHandler(services, responseHandler),
 		Enrich:               enrich.NewEnrichHandler(services, responseHandler),
 		Files:                files.NewFileHandler(services, responseHandler),
@@ -56,9 +58,9 @@ func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
 		PrivateIntegrations:  private.NewPrivateIntegrationHandler(services, responseHandler),
 		Verify:               verify.NewVerifyHandler(services, responseHandler),
 		Webhooks:             webhooks.NewWebhookHandler(services, responseHandler, integrationsHandler),
+		Webscrape:            private.NewWebscrapeHandler(services, responseHandler),
 		WebTracker:           reveal.NewWebTrackerHandler(services, responseHandler),
 		WebsiteTrackerEvents: public.NewWebsiteTrackerEventsHandler(services, responseHandler),
-		BrowserExtension:     public.NewBrowserExtensionHandler(services, responseHandler),
 	}
 
 	return &handlers

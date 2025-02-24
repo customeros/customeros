@@ -189,4 +189,12 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 		routeType: RouteInternal,
 		services:  s,
 	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/crawl", InternalPath),
+		handler:   h.Webscrape.Crawl(),
+		routeType: RouteInternal,
+		services:  s,
+	})
 }
