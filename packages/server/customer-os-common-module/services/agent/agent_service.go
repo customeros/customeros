@@ -116,6 +116,20 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		return nil, err
 	}
 
+	// if agent registry is unique, check no other instances of agent exist before creation
+	if agentRegistry.IsUnique {
+		agents, err := a.postgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{agentType})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if len(agents) > 0 {
+			err := errors.New("agent already exists")
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
 	// build new agent
 	agent := postgresentity.Agent{
 		Type:        agentType,

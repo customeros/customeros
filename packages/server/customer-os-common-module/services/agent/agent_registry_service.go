@@ -37,6 +37,7 @@ type AgentMetadata struct {
 	Type        string `toml:"type"`
 	Scope       string `toml:"scope"`
 	Icon        string `toml:"icon"`
+	Unique      bool   `toml:"unique"`
 }
 
 type GoalConfig struct {
@@ -142,6 +143,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		Version:          agentConfig.Agent.Version,
 		Filename:         filename,
 		Icon:             agentConfig.Agent.Icon,
+		IsUnique:         agentConfig.Agent.Unique,
 		IsActive:         true,
 	}
 

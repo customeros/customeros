@@ -23,6 +23,7 @@ type AgentRegistry struct {
 	Goal             string          `gorm:"column:goal;type:varchar(255)" json:"goal"`
 	Metric           string          `gorm:"column:metric;type:varchar(255)" json:"metric"`
 	IsActive         bool            `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
+	IsUnique         bool            `gorm:"column:unique;type:boolean;default:false" json:"unique"`
 	Icon             string          `gorm:"column:icon;type:text" json:"icon"`
 }
 
