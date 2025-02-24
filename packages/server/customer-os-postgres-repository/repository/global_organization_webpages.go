@@ -14,6 +14,7 @@ import (
 
 type GlobalOrganizationWebpageRepository interface {
 	Save(ctx context.Context, webpageData postgres_entity.GlobalOrganizationWebpages) (*postgres_entity.GlobalOrganizationWebpages, error)
+	GetWebpage(ctx context.Context, url string, lookbackInDays int) (*postgres_entity.GlobalOrganizationWebpages, error)
 }
 
 type globalOrganizationWebpageRepository struct {
@@ -61,4 +62,28 @@ func (r *globalOrganizationWebpageRepository) Save(ctx context.Context, webpageD
 	}
 
 	return &existingRecord, nil
+}
+
+func (r *globalOrganizationWebpageRepository) GetWebpage(ctx context.Context, url string, lookbackInDays int) (*postgres_entity.GlobalOrganizationWebpages, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "globalOrganizationWebpageRepository.GetWebpage")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	// Calculate the cutoff date
+	cutoffDate := time.Now().AddDate(0, 0, -lookbackInDays)
+
+	var record postgres_entity.GlobalOrganizationWebpages
+	err := r.gormDb.
+		Where("url = ?", url).
+		Where("updated_at > ?", cutoffDate).
+		First(&record).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &record, nil
 }

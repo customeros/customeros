@@ -138,16 +138,6 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 				return
 			}
 
-			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationWebpageRepository.Save(childCtx, postgres_entity.GlobalOrganizationWebpages{
-				Url:           page,
-				PrimaryDomain: org.PrimaryDomain,
-				Content:       contents,
-			})
-			if err != nil {
-				tracing.TraceErr(childSpan, errors.Wrap(err, "error saving webpage content"))
-				return
-			}
-
 			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
 			if err != nil {
 				tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))

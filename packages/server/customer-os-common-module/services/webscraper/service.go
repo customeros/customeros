@@ -9,13 +9,16 @@ import (
 	"strings"
 	"time"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type webscraperService struct {
@@ -29,6 +32,8 @@ func NewWebscraperService(config *config.JinaConfig, postgres *postgres_reposito
 		postgresRepositories: postgres,
 	}
 }
+
+const WebpageScrapeTTLInDays = 180
 
 var (
 	ErrPaymentRequired = errors.New("Jina balance requires topup")
@@ -63,6 +68,22 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 		return "", ErrUnprocessable
 	}
 
+	if contents == "" {
+		return "", nil
+	}
+
+	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
+
+	_, err = s.postgresRepositories.GlobalOrganizationWebpageRepository.Save(ctx, postgres_entity.GlobalOrganizationWebpages{
+		PrimaryDomain: primaryDomain,
+		Url:           url,
+		Content:       contents,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
 	return contents, nil
 }
 
@@ -70,6 +91,15 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.fetchPage")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	cachedData, err := s.checkCache(ctx, url, WebpageScrapeTTLInDays)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if cachedData != "" {
+		return cachedData, nil
+	}
 
 	requestUrl := s.config.Url + url
 	span.LogKV("requestUrl", requestUrl)
@@ -121,4 +151,21 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	}
 
 	return string(body), nil
+}
+
+func (s *webscraperService) checkCache(ctx context.Context, url string, cacheTTL int) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.checkCache")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	record, err := s.postgresRepositories.GlobalOrganizationWebpageRepository.GetWebpage(ctx, url, cacheTTL)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if record == nil || record.Content == "" {
+		return "", nil
+	}
+
+	return record.Content, nil
 }
