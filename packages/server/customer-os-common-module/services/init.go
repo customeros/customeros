@@ -22,6 +22,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/azure"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/cloudflare"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/comment"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/company_research"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/contact"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/contract"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/currency"
@@ -93,6 +94,7 @@ type CommonServices struct {
 	AzureService               interfaces.AzureService
 	CloudflareService          interfaces.CloudflareService
 	CommentService             interfaces.CommentService
+	CompanyResearch            interfaces.CompanyResearch
 	ContactService             interfaces.ContactService
 	ContractService            interfaces.ContractService
 	CurrencyService            interfaces.CurrencyService
@@ -229,6 +231,7 @@ func InitCommonServices(
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories, eventsImpl)
 
 	// Services that only depend on Simple
+	companyResearchImpl := company_research.NewCompanyResearchService(postgresRepositories, aiImpl, webscrapeImpl)
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	notificationImpl := notification.NewNotificationService(log, postgresRepositories, slackImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
@@ -325,6 +328,7 @@ func InitCommonServices(
 		AzureService:               azureImpl,
 		CloudflareService:          cloudfareImpl,
 		CommentService:             commentImpl,
+		CompanyResearch:            companyResearchImpl,
 		ContactService:             contactImpl,
 		ContractService:            contractImpl,
 		CurrencyService:            currencyImpl,

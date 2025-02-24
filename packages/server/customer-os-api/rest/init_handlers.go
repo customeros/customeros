@@ -23,6 +23,7 @@ type RestHandlers struct {
 	AskAI                *private.AskAIHandler
 	Billing              *billing.BillingHandler
 	BrowserExtension     *public.BrowserExtensionHandler
+	CompanyResearch      *private.CompanyResearchHandler
 	Contact              *customerbase.ContactHandler
 	Enrich               *enrich.EnrichHandler
 	Files                *files.FileHandler
@@ -47,6 +48,7 @@ func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
 		AskAI:                private.NewAskAIHandler(services, responseHandler),
 		Billing:              billing.NewBillingHandler(services, responseHandler),
 		BrowserExtension:     public.NewBrowserExtensionHandler(services, responseHandler),
+		CompanyResearch:      private.NewCompanyResearchHandler(services, responseHandler),
 		Contact:              customerbase.NewContactHandler(services, responseHandler),
 		Enrich:               enrich.NewEnrichHandler(services, responseHandler),
 		Files:                files.NewFileHandler(services, responseHandler),
