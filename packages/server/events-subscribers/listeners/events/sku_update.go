@@ -73,7 +73,7 @@ func (l *SkuUpdateListener) handle(ctx context.Context, skuId string) error {
 		return err
 	}
 
-	qbProduct, err := l.dependencies.CommonServices.QuickbooksService.SaveProduct(ctx, skuEntity.QuickbooksId, skuEntity.Name, skuEntity.Archived)
+	qbProduct, err := l.dependencies.CommonServices.QuickbooksService.SaveProduct(ctx, skuEntity.QuickbooksId, skuEntity.Name, skuEntity.Archived, skuEntity.Price)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -86,7 +86,7 @@ func (l *SkuUpdateListener) handle(ctx context.Context, skuId string) error {
 		return err
 	}
 
-	if skuEntity != nil && skuEntity.QuickbooksId == "" {
+	if skuEntity.QuickbooksId == "" {
 		skuEntity.QuickbooksId = qbProduct.Product.Id
 		_, err = l.dependencies.CommonServices.PostgresRepositories.SkuRepository.Save(ctx, skuEntity)
 		if err != nil {
