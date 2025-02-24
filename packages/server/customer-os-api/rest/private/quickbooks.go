@@ -42,7 +42,6 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/oauth/callback", c.Request.Header)
 		defer span.Finish()
 
-		// TODO if realm not used, delete it
 		code := c.Request.URL.Query().Get("code")
 		realmId := c.Request.URL.Query().Get("realmId")
 		redirectUrl := c.Request.URL.Query().Get("redirect_url")

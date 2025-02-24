@@ -11,7 +11,7 @@ type QuickbooksService interface {
 	QuickbooksConnected(ctx context.Context) (bool, error)
 	GetAndStoreAccessToken(ctx context.Context, realmId string, requestData url.Values) (*postgres_entity.QuickbooksSettingsEntity, error)
 	RevokeAccess(ctx context.Context) error
-	SaveProduct(ctx context.Context, id, productName string, archived bool) (*QuickbooksSaveProductResponse, error)
+	SaveProduct(ctx context.Context, id, productName string, archived bool, price float64) (*QuickbooksSaveProductResponse, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
 	SaveInvoice(ctx context.Context, customerId string, invoiceDate time.Time, lines []QuickbooksInvoiceLine) (*QuickbooksSaveInvoiceResponse, error)
 	PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*QuickbooksSavePaymentResponse, error)

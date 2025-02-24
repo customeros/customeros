@@ -89,21 +89,17 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 			return nil, err
 		}
 
-		entity := postgres_entity.QuickbooksSettingsEntity{
-			Tenant:                tenant,
-			RealmId:               realmId,
-			AccessToken:           quickbooksResponse.AccessToken,
-			AccessTokenExpiresIn:  quickbooksResponse.ExpiresIn,
-			AccessTokenExpiresAt:  now.Add(time.Duration(quickbooksResponse.ExpiresIn) * time.Second),
-			RefreshToken:          quickbooksResponse.RefreshToken,
-			RefreshTokenExpiresIn: quickbooksResponse.XRefreshTokenExpiresIn,
-			RefreshTokenExpiresAt: now.Add(time.Duration(quickbooksResponse.XRefreshTokenExpiresIn) * time.Second),
-			RefreshTokenExpired:   false,
-		}
-
+		entity := postgres_entity.QuickbooksSettingsEntity{}
 		if quickbooksSettingsEntity != nil {
-			entity.Id = quickbooksSettingsEntity.Id
+			entity = *quickbooksSettingsEntity
 		}
+		entity.AccessToken = quickbooksResponse.AccessToken
+		entity.AccessTokenExpiresIn = quickbooksResponse.ExpiresIn
+		entity.AccessTokenExpiresAt = now.Add(time.Duration(quickbooksResponse.ExpiresIn) * time.Second)
+		entity.RefreshToken = quickbooksResponse.RefreshToken
+		entity.RefreshTokenExpiresIn = quickbooksResponse.XRefreshTokenExpiresIn
+		entity.RefreshTokenExpiresAt = now.Add(time.Duration(quickbooksResponse.XRefreshTokenExpiresIn) * time.Second)
+		entity.RefreshTokenExpired = false
 
 		stored, err := s.postgres.QuickbooksSettingsRepository.Save(ctx, entity)
 		if err != nil {
@@ -201,9 +197,12 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 
 //TODO create a CustomerOS invoice Account in QB and link services to it
 
-func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName string, archived bool) (*interfaces.QuickbooksSaveProductResponse, error) {
+func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName string, archived bool, price float64) (*interfaces.QuickbooksSaveProductResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveProduct")
 	defer span.Finish()
+	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("productName", productName), log.Bool("archived", archived), log.Float64("price", price), log.String("id", id))
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -213,14 +212,12 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		return nil, err
 	}
 
-	//TODO check how we return in case of missing integration
 	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("error", "Quickbooks settings not found"))
+		span.LogFields(log.String("result.error", "Quickbooks settings not found"))
 		return nil, nil
 	}
 
 	if quickbooksSettingsEntity.SalesAccountId == "" {
-
 		salesAccountUrl := fmt.Sprintf("https://quickbooks.api.intuit.com/v3/company/%s/account", quickbooksSettingsEntity.RealmId)
 		salesAccountRequest := map[string]interface{}{
 			"Name":        "CustomerOS Sales",
@@ -250,10 +247,10 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 	}
 
 	// load product from QB to get the SyncToken
-
 	request := map[string]interface{}{
-		"Name": productName,
-		"Type": "Service",
+		"Name":      productName,
+		"Type":      "Service",
+		"UnitPrice": price,
 		"IncomeAccountRef": map[string]interface{}{
 			"value": quickbooksSettingsEntity.SalesAccountId,
 		},
@@ -560,7 +557,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 		return nil, err
 	}
 
-	span.LogFields(log.String("quickbooks.body", string(bodyBytes)))
+	span.LogFields(log.String("result.quickbooksBody", string(bodyBytes)))
 
 	// convert body to OauthSlackResponse
 	var quickbooksCheckFaultResponse interfaces.QuickbooksCheckFaultResponse
@@ -612,6 +609,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 
 		} else {
 			span.LogFields(log.Object("error", fault))
+
 			return nil, fmt.Errorf("error: %s", fault.Error[0].Message)
 		}
 	}
