@@ -15,6 +15,7 @@ import (
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -117,6 +118,84 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 		tracing.TraceErr(span, fmt.Errorf("error: %s", *quickbooksResponse.Error))
 		return nil, fmt.Errorf("error: %s", *quickbooksResponse.Error)
 	}
+}
+
+func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.RevokeAccess")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Retrieve QuickBooks settings for the tenant
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
+	}
+	if qbSettings == nil {
+		err = errors.New("QuickBooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Ensure that an access token exists
+	token := qbSettings.AccessToken
+	if token == "" {
+		err := fmt.Errorf("no access token available for tenant %s", tenant)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Prepare the revoke request
+	revokeURL := "https://oauth.platform.intuit.com/oauth2/v1/revoke"
+	formData := url.Values{}
+	formData.Set("token", token)
+	requestBody := formData.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", revokeURL, strings.NewReader(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to create revoke request: %w", err)
+	}
+
+	// Build the basic authorization header using client credentials
+	credentials := s.qbConfig.ClientId + ":" + s.qbConfig.ClientSecret
+	encodedCreds := base64.StdEncoding.EncodeToString([]byte(credentials))
+	req.Header.Set("Authorization", "Basic "+encodedCreds)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Execute the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to send revoke request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to read revoke response: %w", err)
+	}
+
+	span.LogFields(log.String("revokeResponse", string(bodyBytes)))
+
+	// Check for a successful response
+	if resp.StatusCode != http.StatusOK {
+		errMsg := fmt.Sprintf("revoke token request returned status %d, response: %s", resp.StatusCode, string(bodyBytes))
+		tracing.TraceErr(span, fmt.Errorf(errMsg))
+		return fmt.Errorf(errMsg)
+	}
+
+	err = s.postgres.QuickbooksSettingsRepository.Delete(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 //TODO create a CustomerOS invoice Account in QB and link services to it

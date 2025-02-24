@@ -9,11 +9,13 @@ var (
 	ErrUserIDNotSet = errors.New("UserID not set")
 	ErrTenantNotSet = errors.New("Tenant not set")
 
+	// common errors
 	ErrAccessDenied        = errors.New("Access denied")
 	ErrInvalidEntityType   = errors.New("Invalid entity type")
 	ErrNotSupported        = errors.New("Not supported")
 	ErrConnectionTimeout   = errors.New("Connection timeout")
 	ErrOperationNotAllowed = errors.New("Operation not allowed")
+	ErrResourceNotFound    = errors.New("Resource not found")
 
 	// domain errors
 	ErrDomainUnavailable         = errors.New("domain unavailable")
