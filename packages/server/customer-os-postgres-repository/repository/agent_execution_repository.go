@@ -27,9 +27,10 @@ type AgentExecutionRepository interface {
 	ScheduleRetry(ctx context.Context, executionID string, err error, stateData map[string]any) error
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
-	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error
+	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool, impactedId *string) error
 	GetGoalAchievedCountLast30Days(ctx context.Context, agentID string) (int64, error)
 	GetExecutionsForRetry(ctx context.Context, limit int) ([]postgres_entity.AgentExecution, error)
+	GetGoalAchievedImpactedIdsLast30Days(ctx context.Context, agentID string) ([]string, error)
 }
 
 type agentExecutionRepository struct {
@@ -314,7 +315,7 @@ func (f *agentExecutionRepository) CompleteStep(ctx context.Context, executionID
 	return f.gormDb.Save(execution).Error
 }
 
-func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID string, goalAchieved bool) error {
+func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID string, goalAchieved bool, impactedId *string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GoalAchieved")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -328,14 +329,18 @@ func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID
 		return err
 	}
 
+	fieldsToUpdate := map[string]interface{}{
+		"goal_achieved": goalAchieved,
+		"completed_at":  utils.NowPtr(),
+	}
+	if impactedId != nil {
+		fieldsToUpdate["impacted_id"] = *impactedId
+	}
+
 	err := f.gormDb.
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
-		Updates(
-			map[string]interface{}{
-				"goal_achieved": goalAchieved,
-				"completed_at":  utils.NowPtr(),
-			}).
+		Updates(fieldsToUpdate).
 		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -384,4 +389,28 @@ func (f *agentExecutionRepository) GetExecutionsForRetry(ctx context.Context, li
 	}
 
 	return executions, nil
+}
+
+func (f *agentExecutionRepository) GetGoalAchievedImpactedIdsLast30Days(ctx context.Context, agentID string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetGoalAchievedImpactedIdsLast30Days")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var impactedIds []string
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	err := f.gormDb.Model(&postgres_entity.AgentExecution{}).
+		Where("agent_id = ? AND goal_achieved = true AND updated_at >= ? AND impacted_id IS NOT NULL", agentID, thirtyDaysAgo).
+		Pluck("impacted_id", &impactedIds).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	impactedIds = utils.RemoveEmpties(impactedIds)
+	impactedIds = utils.RemoveDuplicates(impactedIds)
+
+	span.LogFields(log.Int("result.count", len(impactedIds)))
+	return impactedIds, nil
 }

@@ -40,6 +40,7 @@ type InvoiceService interface {
 
 	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD
 	FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error)
+	GetInvoicesByIds(ctx context.Context, ids []string) (*neo4jentity.InvoiceEntities, error)
 }
 
 type SimulateInvoiceRequestData struct {

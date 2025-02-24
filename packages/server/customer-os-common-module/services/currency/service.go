@@ -59,3 +59,24 @@ func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency 
 
 	return finalRate, nil
 }
+
+func (c *currencyService) GetAmountInCurrency(ctx context.Context, amount float64, fromCurrency, toCurrency string) (float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CurrencyService.GetAmountInCurrency")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, "service")
+	span.LogFields(log.Float64("amount", amount))
+	span.LogFields(log.String("fromCurrency", fromCurrency))
+	span.LogFields(log.String("toCurrency", toCurrency))
+
+	if amount == 0 {
+		return 0, nil
+	}
+
+	rate, err := c.GetRate(ctx, fromCurrency, toCurrency)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
+	return amount * rate, nil
+}

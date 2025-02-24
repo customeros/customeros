@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"github.com/dustin/go-humanize"
 	"strconv"
 	"strings"
 
@@ -30,18 +31,30 @@ type agentService struct {
 	agentCapabilities               *agent_capability.AgentCapabilities
 	agentListeners                  *agent_listeners.AgentListeners
 	agentCapabilityExecutionService interfaces.AgentCapabilityExecutionService
+	tenantSettingsService           interfaces.TenantSettingsService
+	invoiceService                  interfaces.InvoiceService
+	currencyService                 interfaces.CurrencyService
 }
 
 func (a *agentService) SetListeners(listeners any) {
 	a.agentListeners = listeners.(*agent_listeners.AgentListeners)
 }
 
-func NewAgentService(postgresRepositories *postgresrepository.Repositories, events *events.EventsService, agentCapabilities *agent_capability.AgentCapabilities) interfaces.AgentService {
+func NewAgentService(
+	postgresRepositories *postgresrepository.Repositories,
+	events *events.EventsService,
+	agentCapabilities *agent_capability.AgentCapabilities,
+	tenantSettingsService interfaces.TenantSettingsService,
+	invoiceService interfaces.InvoiceService,
+	currencyService interfaces.CurrencyService) interfaces.AgentService {
 	return &agentService{
 		postgresRepositories:            postgresRepositories,
 		events:                          events,
 		agentCapabilities:               agentCapabilities,
 		agentCapabilityExecutionService: agent_capability.NewAgentCapabilityExecutionService(),
+		tenantSettingsService:           tenantSettingsService,
+		invoiceService:                  invoiceService,
+		currencyService:                 currencyService,
 	}
 }
 
@@ -233,23 +246,56 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	registryAgent, err := a.postgresRepositories.AgentRegistryRepository.FindByType(ctx, agentType)
+	if err != nil || registryAgent == nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
 	switch agentType {
 	case enum.AgentCashflowGuardian:
-		// todo
-		return "", nil
+		tenantSettings, err := a.tenantSettingsService.GetTenantSettings(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", nil
+		}
+		output := strings.Replace(registryAgent.Metric, "{currencySymbol}", tenantSettings.BaseCurrency.Symbol(), 1)
+
+		// get invoice ids
+		invoiceIds, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedImpactedIdsLast30Days(ctx, agentID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", nil
+		}
+
+		invoices, err := a.invoiceService.GetInvoicesByIds(ctx, invoiceIds)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", nil
+		}
+		amount := float64(0)
+		if invoices != nil && len(*invoices) >= 0 {
+			for _, invoice := range *invoices {
+				if invoice.Currency == tenantSettings.BaseCurrency {
+					amount += invoice.TotalAmount
+				} else {
+					amountInBaseCurrency, err := a.currencyService.GetAmountInCurrency(ctx, invoice.TotalAmount, invoice.Currency.String(), tenantSettings.BaseCurrency.String())
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return "", nil
+					}
+					amount += amountInBaseCurrency
+				}
+			}
+		}
+		output = strings.Replace(output, "{amount}", humanize.CommafWithDigits(amount, 2), 1)
+		return output, nil
 	default:
 		goalAchievedCount, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedCountLast30Days(ctx, agentID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-
-		registryAgent, err := a.postgresRepositories.AgentRegistryRepository.FindByType(ctx, agentType)
-		if err != nil || registryAgent == nil {
-			tracing.TraceErr(span, err)
-			return "", err
-		}
-
 		return strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1), nil
 	}
 }
