@@ -144,6 +144,7 @@ type AgentSaveInput struct {
 	ID           *string                   `json:"id,omitempty"`
 	Type         *AgentType                `json:"type,omitempty"`
 	Metric       *string                   `json:"metric,omitempty"`
+	Description  *string                   `json:"description,omitempty"`
 	Name         *string                   `json:"name,omitempty"`
 	Capabilities []*CapabilitySaveInput    `json:"capabilities,omitempty"`
 	Listeners    []*AgentListenerSaveInput `json:"listeners,omitempty"`

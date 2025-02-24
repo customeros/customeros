@@ -13480,8 +13480,9 @@ type Agent {
 
 input AgentSaveInput {
   id: ID
-  type: AgentType @deprecated ## field is not update-able
-  metric: String  @deprecated ## field is not updata-able
+  type: AgentType ## field is not update-able
+  metric: String ## field is not update-able
+  description: String ## field is not update-able
   name: String
   capabilities: [CapabilitySaveInput!]
   listeners: [AgentListenerSaveInput!]
@@ -112654,7 +112655,7 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "metric", "name", "capabilities", "listeners", "isActive", "visible", "color", "icon"}
+	fieldsInOrder := [...]string{"id", "type", "metric", "description", "name", "capabilities", "listeners", "isActive", "visible", "color", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -112682,6 +112683,13 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Metric = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

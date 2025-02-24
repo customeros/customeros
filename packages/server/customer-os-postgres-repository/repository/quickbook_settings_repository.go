@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -60,6 +61,7 @@ func (repo *quickbooksSettingsRepository) Save(ctx context.Context, quickbooksSe
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
+	quickbooksSettings.UpdatedAt = utils.NowPtr()
 	result := repo.db.Save(&quickbooksSettings)
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
