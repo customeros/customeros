@@ -43,19 +43,17 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedT
 				  w.createdAt = datetime(), 
 				  w.updatedAt = datetime(), 
 				  w.source = $source, 
-				  w.sourceOfTruth = $sourceOfTruth, 
 				  w.appSource = $appSource 
 				
 				MERGE (t)-[:HAS_WORKSPACE]->(w) 
 				
 				RETURN t, w`
 	params := map[string]any{
-		"tenant":        tenant,
-		"name":          workspace.Name,
-		"provider":      workspace.Provider,
-		"source":        utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
-		"sourceOfTruth": utils.StringFirstNonEmpty(workspace.SourceOfTruth.String(), neo4j_entity.DataSourceOpenline.String()),
-		"appSource":     workspace.AppSource,
+		"tenant":    tenant,
+		"name":      workspace.Name,
+		"provider":  workspace.Provider,
+		"source":    utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
+		"appSource": workspace.AppSource,
 	}
 	tracing.LogObjectAsJson(span, "params", params)
 	span.LogFields(log.String("cypher", cypher))

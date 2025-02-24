@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// TODO to be removed
 type TenantBillingProfileEntity struct {
 	Id                     string
 	CreatedAt              time.Time

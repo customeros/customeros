@@ -5,14 +5,13 @@ import (
 )
 
 type WorkspaceEntity struct {
-	Id            string
-	Name          string
-	Provider      string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Id        string
+	Name      string
+	Provider  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Source    DataSource
+	AppSource string
 
 	DataloaderKey string
 }

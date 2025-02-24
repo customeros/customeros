@@ -3,10 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -14,6 +14,7 @@ import (
 type WorkspaceReadRepository interface {
 	GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetByName(ctx context.Context, tenant, name string) (*dbtype.Node, error)
+	GetByNameCrossTenant(ctx context.Context, name string) ([]*dbtype.Node, error)
 }
 
 type workspaceReadRepository struct {
@@ -82,4 +83,34 @@ func (r *workspaceReadRepository) GetByName(ctx context.Context, tenant, name st
 	} else {
 		return result.(*dbtype.Node), nil
 	}
+}
+
+func (r *workspaceReadRepository) GetByNameCrossTenant(ctx context.Context, name string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceReadRepository.GetByNameCrossTenant")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+
+	cypher := `MATCH (t:Tenant)--(w:Workspace{name:$workspaceName}) return w`
+	params := map[string]any{
+		"workspaceName": name,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), nil
 }
