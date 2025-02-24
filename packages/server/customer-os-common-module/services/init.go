@@ -291,6 +291,7 @@ func InitCommonServices(
 		tagImpl,
 		workspaceImpl,
 		quickbooksImpl,
+		webscrapeImpl,
 	)
 
 	// initialize agents

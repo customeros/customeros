@@ -2,8 +2,8 @@ package agent_capability
 
 import (
 	"fmt"
-	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -33,6 +33,7 @@ func InitCapabilities(
 	tagService interfaces.TagService,
 	workspaceService interfaces.WorkspaceService,
 	quickbooksService interfaces.QuickbooksService,
+	webscraperService interfaces.WebscraperService,
 ) *AgentCapabilities {
 	var capabilities []interfaces.AgentCapabilityUntyped
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
@@ -43,7 +44,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
 	capabilities = append(capabilities, NewDetectSupportWebVisitCapability(events))
 	capabilities = append(capabilities, NewEnrichEmailAddressCapability())
-	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService))
+	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService, webscraperService))
 	capabilities = append(capabilities, NewExtractMeetingHighlightsCapability(aiService))
 	capabilities = append(capabilities, NewExtractSupportSignalsFromMeetingCapability(aiService))
 	capabilities = append(capabilities, NewForwardEmailReplyCapability())
