@@ -29,10 +29,14 @@ func (s *companyResearchService) GenerateIdealCustomerProfile(ctx context.Contex
 	span, ctx := opentracing.StartSpanFromContext(ctx, "icpService.GenerateIdealCustomerProfile")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	return "", nil
 }
 
 func (s *companyResearchService) GenerateCompanyBrief(ctx context.Context, domains []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "companyResearchService.GenerateCompanyBrief")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	return "", nil
 }

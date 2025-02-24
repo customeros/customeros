@@ -3,5 +3,6 @@ package interfaces
 import "context"
 
 type CompanyResearch interface {
-	GetIdealCustomerProfile(ctx context.Context) (string, error)
+	GenerateIdealCustomerProfile(ctx context.Context, tenantDomain string, trainingWebsites []string) (string, error)
+	GenerateCompanyBrief(ctx context.Context, domains []string) (string, error)
 }
