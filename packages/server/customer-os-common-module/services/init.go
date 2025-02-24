@@ -294,7 +294,7 @@ func InitCommonServices(
 	)
 
 	// initialize agents
-	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl, capabilityImpl, tenantSettingsImpl)
+	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl, capabilityImpl, tenantSettingsImpl, invoiceImpl, currencyImpl)
 	capabilityExecutionImpl := agent_capability.NewAgentCapabilityExecutionService()
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl, capabilityExecutionImpl)
 
