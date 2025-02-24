@@ -49,6 +49,7 @@ type CommonConfig struct {
 	PdfConverter      commonconf.PdfConverterConfig
 	GoogleOAuthConfig commonconf.GoogleOAuthConfig
 	AzureOAuthConfig  commonconf.AzureOAuthConfig
+	Jina              commonconf.JinaConfig
 }
 
 type AppConfig struct {
@@ -132,6 +133,7 @@ func InitConfig() (*Config, error) {
 			NovuConfig:           cmnCfg.Novu,
 			TemporalConfig:       cmnCfg.Temporal,
 			BrandfetchConfig:     cmnCfg.Brandfetch,
+			JinaConfig:           cmnCfg.Jina,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CosApi,

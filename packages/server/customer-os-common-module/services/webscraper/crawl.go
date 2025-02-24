@@ -58,14 +58,7 @@ func (s *webscraperService) Crawl(ctx context.Context, startUrl string) ([]strin
 		allUrls = append(allUrls, url)
 	}
 
-	// Check for errors
-	select {
-	case err := <-errChan:
-		tracing.TraceErr(span, err)
-		return nil, err
-	default:
-		return allUrls, nil
-	}
+	return allUrls, nil
 }
 
 func (s *webscraperService) crawlRecursive(
@@ -176,6 +169,7 @@ func (s *webscraperService) linksToCrawl(content string, workspaceDomains []stri
 	var urls []string
 	links := s.extractLinks(content)
 	for _, link := range links {
+		link = strings.TrimSuffix(link, "#")
 		if s.shouldCrawl(link, workspaceDomains) {
 			urls = append(urls, link)
 		}
@@ -184,9 +178,35 @@ func (s *webscraperService) linksToCrawl(content string, workspaceDomains []stri
 }
 
 func (s *webscraperService) shouldCrawl(url string, workspaceDomains []string) bool {
+	if shouldSkipURL(url) {
+		return false
+	}
+
 	urlDomain := utils.ExtractDomain(url)
 	for _, domain := range workspaceDomains {
 		if strings.Contains(urlDomain, domain) {
+			return true
+		}
+	}
+	return false
+}
+
+func shouldSkipURL(url string) bool {
+	skipKeywords := []string{
+		"login", "logout", "signin", "signout", "register", "signup",
+		"account", "profile", "dashboard", "settings", "preferences",
+		"cart", "checkout", "order", "payment", "billing",
+		"mailto", "tel", "api", "webhook", "feed", "rss",
+		"staging", "stage", "dev", "test", "beta", "sandbox",
+		"session", "token", "search", "filter", "sort", "page",
+		"share", "support", "help", "faq", "ticket", "contact",
+		"calendar", "date", "archive", "tag", "admin", "manage",
+		"status", "password",
+	}
+
+	lowercaseURL := strings.ToLower(url)
+	for _, keyword := range skipKeywords {
+		if strings.Contains(lowercaseURL, keyword) {
 			return true
 		}
 	}

@@ -52,6 +52,12 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("url", url))
 
+	url = strings.TrimSuffix(url, "/")
+	url = strings.TrimSuffix(url, "#")
+	if !strings.HasPrefix(url, "http") {
+		url = "https://" + url
+	}
+
 	// check cache
 	cachedData, err := s.checkCache(ctx, url, WebpageScrapeTTLInDays)
 	if err != nil {
@@ -84,6 +90,10 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 		return "", ErrUnprocessable
 	}
 
+	if strings.Contains(contents, "Robot Challenge") {
+		return "", ErrUnprocessable
+	}
+
 	if contents == "" {
 		return "", nil
 	}
@@ -107,6 +117,10 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.fetchPage")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	if s.config.ApiKey == "" {
+		return "", errors.New("Jina API key not set")
+	}
 
 	requestUrl := s.config.Url + url
 	span.LogKV("requestUrl", requestUrl)
