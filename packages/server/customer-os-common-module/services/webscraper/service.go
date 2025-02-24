@@ -66,6 +66,12 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	return contents, nil
 }
 
+func (s *webscraperService) Crawl(ctx context.Context, startUrl string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.Crawl")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+}
+
 func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.fetchPage")
 	defer span.Finish()

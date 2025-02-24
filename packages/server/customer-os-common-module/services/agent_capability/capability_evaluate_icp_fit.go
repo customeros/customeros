@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -19,20 +18,20 @@ import (
 const MinICPCompanyExamples = 5
 
 type EvaluateICPFitCapability struct {
-	aiService interfaces.AIService
+	aiService         interfaces.AIService
+	webscraperService interfaces.WebscraperService
 }
 
 type EvaluateICPFitInput struct {
-	OrganizationID      string              `json:"organizationId"`
-	CompanyName         string              `json:"companyName"`
-	PrimaryDomain       string              `json:"primaryDomain"`
-	CompanyDescriptions CompanyDescriptions `json:"companyDescriptions"`
-	IndustryNAICSName   string              `json:"industryName"`
-	YearCompanyFounded  string              `json:"yearCompanyFounded"`
-	EmployeeCount       int64               `json:"employeeCount"`
-	CompanyCity         string              `json:"companyCity"`
-	CompanyRegion       string              `json:"companyRegion"`
-	CompanyCountryA2    string              `json:"companyCountry"`
+	OrganizationID     string `json:"organizationId"`
+	CompanyName        string `json:"companyName"`
+	PrimaryDomain      string `json:"primaryDomain"`
+	IndustryNAICSName  string `json:"industryName"`
+	YearCompanyFounded string `json:"yearCompanyFounded"`
+	EmployeeCount      int64  `json:"employeeCount"`
+	CompanyCity        string `json:"companyCity"`
+	CompanyRegion      string `json:"companyRegion"`
+	CompanyCountryA2   string `json:"companyCountry"`
 }
 
 type EvaluateICPFitOutput struct {
@@ -49,12 +48,6 @@ type EvaluateICPFitConfig struct {
 func (c *EvaluateICPFitConfig) Validate() bool {
 	isValid := true
 
-	if c.QualificationCriteria.Value == "" {
-		c.QualificationCriteria.Error = "Please provide a qualification criteria"
-		isValid = false
-	} else {
-		c.QualificationCriteria.Error = ""
-	}
 	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
 		c.ICPCompanyExamples.Error = "Add at least 5 websites"
 		isValid = false
@@ -65,9 +58,10 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 	return isValid
 }
 
-func NewEvaluateICPFitCapability(aiService interfaces.AIService) *EvaluateICPFitCapability {
+func NewEvaluateICPFitCapability(aiService interfaces.AIService, webscraperService interfaces.WebscraperService) *EvaluateICPFitCapability {
 	return &EvaluateICPFitCapability{
-		aiService: aiService,
+		aiService:         aiService,
+		webscraperService: webscraperService,
 	}
 }
 
@@ -113,8 +107,6 @@ func (c *EvaluateICPFitCapability) ValidateInput(input EvaluateICPFitInput) erro
 		return errors.New("missing required input: PrimaryDomain")
 	case input.CompanyName == "":
 		return errors.New("missing required input: CompanyName")
-	case input.CompanyDescriptions.Description == "":
-		return errors.New("missing required input: CompanyDescription")
 	case input.IndustryNAICSName == "":
 		return errors.New("missing required input: IndustryNAICSName")
 	case input.EmployeeCount == 0:
@@ -151,8 +143,14 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		return enum.CapabilityExecutionError, result, err
 	}
 
+	// get ICP profile
+
 	// build prompt
-	systemPrompt, content := c.buildPrompts(executionContainer)
+	systemPrompt, content, err := c.buildPrompts(ctx, executionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, result, err
+	}
 
 	// askAI
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, content)
@@ -184,8 +182,18 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
-func (c *EvaluateICPFitCapability) buildPrompts(executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string) {
+func (c *EvaluateICPFitCapability) buildPrompts(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.buildPrompts")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
 	company := executionContainer.InputData
+
+	homepage, err := c.webscraperService.Scrape(ctx, company.PrimaryDomain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", "", err
+	}
 
 	systemPrompt := `You are a world class company analyst. Your objective is to determine whether the company I provide you fits our ideal customer profile or not. I will provide you with three datasets: 1. a description of our ideal customer, 2. criteria that automatically disqualifies companies, and 3. all the context I have about the company, including their name, location, and several descriptions taken from their website and linkedin pages.
 
@@ -205,15 +213,6 @@ Important:
 - Follow the JSON format exactly.
 - Pay special attention to location criteria in your decision making.`
 
-	var descLines []string
-	descriptions := []string{company.CompanyDescriptions.Description2, company.CompanyDescriptions.Description3, company.CompanyDescriptions.Description4, company.CompanyDescriptions.Description5}
-	for i, d := range descriptions {
-		if strings.TrimSpace(d) != "" {
-			descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
-		}
-	}
-	additionalCompanyDescriptions := strings.Join(descLines, ";")
-
 	content := fmt.Sprintf(`
         ICP Qualificaton Criteria: %s
         ICP Disqualification Criteria: %s
@@ -223,14 +222,13 @@ Important:
         Employee Count: %d
         Location: %s, %s, %s
         Industry Name: %s
-		Company Description: %s
-		Additional Company Descriptions: %s
+		Company Homepage: %s
         `, executionContainer.ConfigData.QualificationCriteria.Value, executionContainer.ConfigData.DisqualificationCriteria.Value,
 		company.CompanyName, company.PrimaryDomain, company.YearCompanyFounded, company.EmployeeCount,
 		company.CompanyCity, company.CompanyRegion, company.CompanyCountryA2,
-		company.IndustryNAICSName, company.CompanyDescriptions.Description, additionalCompanyDescriptions)
+		company.IndustryNAICSName, homepage)
 
-	return systemPrompt, content
+	return systemPrompt, content, nil
 }
 
 func (c *EvaluateICPFitCapability) parseAnswer(ctx context.Context, answer string) (*ICPAnswer, error) {
