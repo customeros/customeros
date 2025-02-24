@@ -16,6 +16,7 @@ import (
 
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string) (*dbtype.Node, error)
+	GetInvoicesByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetInvoiceByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*dbtype.Node, string, error)
 	GetInvoiceByNumber(ctx context.Context, tenant, invoiceNumber string) (*dbtype.Node, error)
 	CountInvoices(ctx context.Context, tenant, filterString string, filterParams map[string]interface{}) (int64, error)
@@ -187,6 +188,39 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tx *neo4j.Ma
 	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetInvoicesByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesByIds")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.Object("ids", ids))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice) WHERE i.id IN $ids RETURN i`
+	params := map[string]any{
+		"tenant": tenant,
+		"ids":    ids,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), nil
 }
 
 func (r *invoiceReadRepository) GetInvoiceByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*dbtype.Node, string, error) {

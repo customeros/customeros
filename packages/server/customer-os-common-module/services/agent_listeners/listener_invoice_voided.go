@@ -115,7 +115,7 @@ func (l *InvoiceVoidedListener) Handle(ctx context.Context, baseEvent any) error
 
 	if !data.DryRun {
 		for _, agentExecutionId := range agentExecutionIds {
-			err := l.postgresRepositories.AgentExecutionRepository.GoalAchieved(ctx, agentExecutionId, false)
+			err := l.postgresRepositories.AgentExecutionRepository.GoalAchieved(ctx, agentExecutionId, false, utils.StringPtr(data.InvoiceID))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to mark agent execution as goal achieved"))
 			}

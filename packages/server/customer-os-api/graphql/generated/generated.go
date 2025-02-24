@@ -13481,7 +13481,7 @@ type Agent {
 input AgentSaveInput {
   id: ID
   type: AgentType @deprecated ## field is not update-able
-  metric: String! @deprecated ## field is not updata-able
+  metric: String  @deprecated ## field is not updata-able
   name: String
   capabilities: [CapabilitySaveInput!]
   listeners: [AgentListenerSaveInput!]
@@ -112677,7 +112677,7 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 			it.Type = data
 		case "metric":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metric"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

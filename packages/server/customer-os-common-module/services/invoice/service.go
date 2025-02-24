@@ -3119,3 +3119,41 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 	}
 	return nil
 }
+
+func (s *invoiceService) GetInvoicesByIds(ctx context.Context, ids []string) (*neo4jentity.InvoiceEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoicesByIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// validate tenant
+	if err := common.ValidateTenant(ctx); err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+	invoiceEntities := neo4jentity.InvoiceEntities{}
+
+	// Define chunk size
+	const chunkSize = 1000
+
+	// Process IDs in chunks
+	for i := 0; i < len(ids); i += chunkSize {
+		end := i + chunkSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		chunk := ids[i:end]
+		invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetInvoicesByIds(ctx, tenant, chunk)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		// Map each DB node to an invoice entity and append to the final result
+		for _, invoiceDbNode := range invoiceDbNodes {
+			invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode)
+			invoiceEntities = append(invoiceEntities, *invoiceEntity)
+		}
+	}
+
+	return &invoiceEntities, nil
+}
