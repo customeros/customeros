@@ -17,6 +17,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -25,14 +26,16 @@ import (
 type webscraperService struct {
 	config               *config.JinaConfig
 	postgresRepositories *postgres_repository.Repositories
+	aiService            interfaces.AIService
 	visitedURLs          sync.Map
 	limiter              chan struct{}
 }
 
-func NewWebscraperService(config *config.JinaConfig, postgres *postgres_repository.Repositories) interfaces.WebscraperService {
+func NewWebscraperService(config *config.JinaConfig, postgres *postgres_repository.Repositories, aiService interfaces.AIService) interfaces.WebscraperService {
 	return &webscraperService{
 		config:               config,
 		postgresRepositories: postgres,
+		aiService:            aiService,
 		limiter:              make(chan struct{}, 5),
 	}
 }
@@ -45,6 +48,38 @@ var (
 	ErrPaymentRequired = errors.New("Jina balance requires topup")
 	ErrUnprocessable   = errors.New("Jina cannot process webpage")
 )
+
+func (s *webscraperService) ScrapeAndClean(ctx context.Context, url string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.ScrapeAndClean")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	contents, err := s.Scrape(ctx, url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	cleanContents, err := s.cleanPageContents(ctx, contents)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
+
+	_, err = s.postgresRepositories.GlobalOrganizationWebpageRepository.Save(ctx, postgres_entity.GlobalOrganizationWebpages{
+		PrimaryDomain: primaryDomain,
+		Url:           url,
+		CleanContent:  cleanContents,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return cleanContents, nil
+}
 
 func (s *webscraperService) Scrape(ctx context.Context, url string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.Scrape")
@@ -111,6 +146,21 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	}
 
 	return contents, nil
+}
+
+func (s *webscraperService) cleanPageContents(ctx context.Context, contents string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.cleanPageContents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	systemPrompt := "I'm giving you scraped website content to cleanup.  Provide back only the content in paragraph form.  No links.  No cookie warnings.  Only return the exact text from the webpage. Here's the webpage content:"
+
+	cleanContent, err := s.aiService.AskAI(ctx, enum.AIModelDeepseekChat, systemPrompt, contents)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	return *cleanContent, nil
 }
 
 func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, error) {

@@ -18,13 +18,20 @@ type aiService struct {
 	log             logger.Logger
 	anthropicConfig *config.AnthropicConfig
 	deepseekConfig  *config.DeepseekConfig
+	groqConfig      *config.GroqConfig
 }
 
-func NewAIService(log logger.Logger, anthropicConfig *config.AnthropicConfig, deepseekConfig *config.DeepseekConfig) interfaces.AIService {
+func NewAIService(
+	log logger.Logger,
+	anthropicConfig *config.AnthropicConfig,
+	deepseekConfig *config.DeepseekConfig,
+	groqConfig *config.GroqConfig,
+) interfaces.AIService {
 	return &aiService{
 		log:             log,
 		anthropicConfig: anthropicConfig,
 		deepseekConfig:  deepseekConfig,
+		groqConfig:      groqConfig,
 	}
 }
 
@@ -51,6 +58,20 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt 
 
 	case enum.AIModelDeepseekChat:
 		result, err = s.askDeepseek(ctx, model, systemPrompt, prompt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+	case
+		enum.AIModelDeepseekQwen,
+		enum.AIModelGemma,
+		enum.AIModelLlama8B,
+		enum.AIModelLlama70B,
+		enum.AIModelMixtral,
+		enum.AIModelWhisper:
+
+		result, err = s.askGroq(ctx, model, systemPrompt, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -112,6 +133,29 @@ func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, system
 
 	// setup client
 	client := NewAnthropicClient(s.anthropicConfig, model)
+	response, err := client.Invoke(ctx, systemPrompt, prompt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (s *aiService) askGroq(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGroq")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	if s.groqConfig.ApiKey == "" || s.groqConfig.Url == "" {
+		err := errors.New("Groq API key or path not set")
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return nil, err
+	}
+
+	// setup client
+	client := NewGroqClient(s.groqConfig, model)
 	response, err := client.Invoke(ctx, systemPrompt, prompt)
 	if err != nil {
 		tracing.TraceErr(span, err)

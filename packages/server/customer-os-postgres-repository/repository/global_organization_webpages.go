@@ -49,11 +49,14 @@ func (r *globalOrganizationWebpageRepository) Save(ctx context.Context, webpageD
 		return nil, result.Error
 	}
 
-	// URL exists, update the content and updated_at timestamp
-	existingRecord.Content = webpageData.Content
-	existingRecord.UpdatedAt = time.Now()
-
-	// If primary domain is provided, update it too
+	if webpageData.Content != "" {
+		existingRecord.Content = webpageData.Content
+		existingRecord.UpdatedAt = time.Now()
+	}
+	if webpageData.CleanContent != "" {
+		existingRecord.CleanContent = webpageData.CleanContent
+		existingRecord.UpdatedAt = time.Now()
+	}
 	if webpageData.PrimaryDomain != "" {
 		existingRecord.PrimaryDomain = webpageData.PrimaryDomain
 	}

@@ -50,3 +50,8 @@ type JinaConfig struct {
 	Url    string `env:"JINA_URL" envDefault:"https://r.jina.ai/"`
 	ApiKey string `env:"JINA_API_KEY" envDefault:"N/A"`
 }
+
+type GroqConfig struct {
+	Url    string `env:"GROQ_CONFIG" envDefault:"https://api.groq.com/openai/v1/chat/completions"`
+	ApiKey string `env:"GROQ_API_KEY" envDefault:"N/A"`
+}
