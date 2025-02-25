@@ -77,17 +77,17 @@ type QuickbooksGetProductResponse struct {
 			Value string `json:"value"`
 			Name  string `json:"name"`
 		} `json:"ParentRef"`
-		Level              int    `json:"Level"`
-		FullyQualifiedName string `json:"FullyQualifiedName"`
-		Taxable            bool   `json:"Taxable"`
-		UnitPrice          int    `json:"UnitPrice"`
-		Type               string `json:"Type"`
+		Level              int     `json:"Level"`
+		FullyQualifiedName string  `json:"FullyQualifiedName"`
+		Taxable            bool    `json:"Taxable"`
+		UnitPrice          float64 `json:"UnitPrice"`
+		Type               string  `json:"Type"`
 		IncomeAccountRef   struct {
 			Value string `json:"value"`
 			Name  string `json:"name"`
 		} `json:"IncomeAccountRef"`
-		PurchaseDesc      string `json:"PurchaseDesc"`
-		PurchaseCost      int    `json:"PurchaseCost"`
+		PurchaseDesc      string  `json:"PurchaseDesc"`
+		PurchaseCost      float64 `json:"PurchaseCost"`
 		ExpenseAccountRef struct {
 			Value string `json:"value"`
 			Name  string `json:"name"`
