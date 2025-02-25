@@ -220,84 +220,112 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 	}
 
 	if quickbooksSettingsEntity.SalesAccountId == "" {
-		salesAccountUrl := fmt.Sprintf("https://quickbooks.api.intuit.com/v3/company/%s/account", quickbooksSettingsEntity.RealmId)
-		salesAccountRequest := map[string]interface{}{
-			"Name":        "CustomerOS Sales",
-			"AccountType": "Income",
-		}
-
-		qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest, true)
+		//search for the sales account
+		searchSalesAccountUrl := s.qbConfig.Url + fmt.Sprintf("/v3/company/%s/query?query=select+Id+from+Account+where+Name='CustomerOS+Sales'", quickbooksSettingsEntity.RealmId)
+		searchSalesAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, searchSalesAccountUrl, "POST", nil, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		var qbAccount interfaces.QuickbooksSaveAccountResponse
-		err = json.Unmarshal(qbAccountResponse, &qbAccount)
+		var searchSalesAccount interfaces.QuickbooksSearchAccountResponse
+		err = json.Unmarshal(searchSalesAccountResponse, &searchSalesAccount)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		quickbooksSettingsEntity.SalesAccountId = qbAccount.Account.Id
-		_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+		if len(searchSalesAccount.QueryResponse.Account) > 0 {
+			quickbooksSettingsEntity.SalesAccountId = searchSalesAccount.QueryResponse.Account[0].Id
+			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		} else {
+			salesAccountUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/account", quickbooksSettingsEntity.RealmId)
+			salesAccountRequest := map[string]interface{}{
+				"Name":        "CustomerOS Sales",
+				"AccountType": "Income",
+			}
 
+			qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest, true)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			var qbAccount interfaces.QuickbooksSaveAccountResponse
+			err = json.Unmarshal(qbAccountResponse, &qbAccount)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			quickbooksSettingsEntity.SalesAccountId = qbAccount.Account.Id
+			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		}
 	}
 
-	// load product from QB to get the SyncToken
-	request := map[string]interface{}{
-		"Name":      productName,
-		"Type":      "Service",
-		"UnitPrice": price,
-		"Active":    !archived,
-	}
+	var qbSaveProductRequest map[string]interface{}
+	var qbProduct interfaces.QuickbooksGetProductResponse
 
 	if id != "" {
-		request["Id"] = id
-	} else {
-		request["IncomeAccountRef"] = map[string]interface{}{
-			"value": quickbooksSettingsEntity.SalesAccountId,
-		}
-	}
-
-	if id != "" {
-		productByIdUrl := fmt.Sprintf("https://quickbooks.api.intuit.com/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
-		qbProductResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, productByIdUrl, "GET", request, true)
+		productByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
+		qbProductResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, productByIdUrl, "GET", nil, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		var qbProduct interfaces.QuickbooksGetProductResponse
 		err = json.Unmarshal(qbProductResponse, &qbProduct)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		request["SyncToken"] = qbProduct.Product.SyncToken
+		qbProduct.Item.Type = "Service"
+		qbProduct.Item.Name = productName
+		qbProduct.Item.UnitPrice = int(price)
+		qbProduct.Item.Active = !archived
+
+		jsonBytes, _ := json.Marshal(qbProduct.Item)
+		err = json.Unmarshal(jsonBytes, &qbSaveProductRequest)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	} else {
+		qbSaveProductRequest = map[string]interface{}{
+			"Name":      productName,
+			"Active":    !archived,
+			"UnitPrice": price,
+			"Type":      "Service",
+			"IncomeAccountRef": map[string]interface{}{
+				"value": quickbooksSettingsEntity.SalesAccountId,
+			},
+		}
 	}
 
-	requestUrl := fmt.Sprintf("https://quickbooks.api.intuit.com/v3/company/%s/item", quickbooksSettingsEntity.RealmId)
-
-	qbResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "POST", request, true)
+	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item", quickbooksSettingsEntity.RealmId)
+	qbResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "POST", qbSaveProductRequest, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	var quickbooksResponse interfaces.QuickbooksSaveProductResponse
-	err = json.Unmarshal(qbResponse, &quickbooksResponse)
+	var qbProductResponse interfaces.QuickbooksSaveProductResponse
+	err = json.Unmarshal(qbResponse, &qbProductResponse)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	return &quickbooksResponse, nil
+	return &qbProductResponse, nil
 }
 
 func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName string) (*interfaces.QuickbooksSaveCustomerResponse, error) {
@@ -326,7 +354,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 		request["Id"] = id
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/customer", "POST", request, true)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/customer", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -374,7 +402,7 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, 
 		"Line":    lines,
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request, true)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -419,7 +447,7 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 	}
 
 	if invoiceId != "" {
-		invoiceByIdUrl := fmt.Sprintf("https://quickbooks.api.intuit.com/v3/company/%s/invoice/%s", quickbooksSettingsEntity.RealmId, invoiceId)
+		invoiceByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/invoice/%s", quickbooksSettingsEntity.RealmId, invoiceId)
 		qbInvoiceResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, invoiceByIdUrl, "GET", request, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -436,7 +464,7 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 		request["SyncToken"] = qbInvoice.Invoice.SyncToken
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice?operation=void", "POST", request, true)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice?operation=void", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -494,7 +522,7 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 		},
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/payment", "POST", request, true)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/payment", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

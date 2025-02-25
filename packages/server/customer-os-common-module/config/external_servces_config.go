@@ -42,6 +42,7 @@ type NovuConfig struct {
 }
 
 type QuickbooksConfig struct {
+	Url          string `env:"QUICKBOOKS_URL"`
 	ClientId     string `env:"QUICKBOOKS_CLIENT_ID"`
 	ClientSecret string `env:"QUICKBOOKS_CLIENT_SECRET"`
 }

@@ -67,11 +67,64 @@ type QuickbooksGetInvoiceResponse struct {
 }
 
 type QuickbooksGetProductResponse struct {
-	QuickbooksCheckFaultResponse
-	Product *struct {
-		Id        string `json:"Id"`
-		SyncToken string `json:"SyncToken"`
+	Item struct {
+		Name        string `json:"Name"`
+		Sku         string `json:"Sku"`
+		Description string `json:"Description"`
+		Active      bool   `json:"Active"`
+		SubItem     bool   `json:"SubItem"`
+		ParentRef   struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"ParentRef"`
+		Level              int    `json:"Level"`
+		FullyQualifiedName string `json:"FullyQualifiedName"`
+		Taxable            bool   `json:"Taxable"`
+		UnitPrice          int    `json:"UnitPrice"`
+		Type               string `json:"Type"`
+		IncomeAccountRef   struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"IncomeAccountRef"`
+		PurchaseDesc      string `json:"PurchaseDesc"`
+		PurchaseCost      int    `json:"PurchaseCost"`
+		ExpenseAccountRef struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"ExpenseAccountRef"`
+		PrefVendorRef struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"PrefVendorRef"`
+		TrackQtyOnHand       bool `json:"TrackQtyOnHand"`
+		TaxClassificationRef struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"TaxClassificationRef"`
+		DeferredRevenue bool   `json:"DeferredRevenue"`
+		Domain          string `json:"domain"`
+		Sparse          bool   `json:"sparse"`
+		Id              string `json:"Id"`
+		SyncToken       string `json:"SyncToken"`
+		MetaData        struct {
+			CreateTime      time.Time `json:"CreateTime"`
+			LastUpdatedTime time.Time `json:"LastUpdatedTime"`
+		} `json:"MetaData"`
 	} `json:"Item"`
+	Time time.Time `json:"time"`
+}
+
+type QuickbooksSearchAccountResponse struct {
+	QuickbooksCheckFaultResponse
+	QueryResponse struct {
+		Account []struct {
+			Sparse bool   `json:"sparse"`
+			Id     string `json:"Id"`
+		} `json:"Account"`
+		StartPosition int `json:"startPosition"`
+		MaxResults    int `json:"maxResults"`
+	} `json:"QueryResponse"`
+	Time time.Time `json:"time"`
 }
 
 type QuickbooksSaveAccountResponse struct {
