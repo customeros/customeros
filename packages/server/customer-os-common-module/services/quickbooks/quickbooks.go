@@ -290,7 +290,7 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 
 		qbProduct.Item.Type = "Service"
 		qbProduct.Item.Name = productName
-		qbProduct.Item.UnitPrice = int(price)
+		qbProduct.Item.UnitPrice = price
 		qbProduct.Item.Active = !archived
 
 		jsonBytes, _ := json.Marshal(qbProduct.Item)
