@@ -255,44 +255,25 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	isNewTenant := false
 	isPersonalEmail := false
 
-	var authId string
-	var authUserId string
 	var currentTenant string
 	var defaultTenant string
-
 	var userId string
+	var authId string
+	var authUserId string
 
-	_, err = common_utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, services.CommonServices.Neo4jRepositories.Neo4jDriver, services.CommonServices.Neo4jRepositories.Database, nil, func(txWithPostCommit *common_utils.TxWithPostCommit) (any, error) {
+	if signInRequest.Tenant == "" {
 
-		//authentication
-		authIdAndProviderNode, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthIdAndProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
-		if err != nil {
-			return nil, err
-		}
+		_, err = common_utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, services.CommonServices.Neo4jRepositories.Neo4jDriver, services.CommonServices.Neo4jRepositories.Database, nil, func(txWithPostCommit *common_utils.TxWithPostCommit) (any, error) {
 
-		//auth with the same provider found
-		if authIdAndProviderNode != nil {
-			authProps := common_utils.GetPropsFromNode(*authIdAndProviderNode)
-			authId = common_utils.GetStringPropOrEmpty(authProps, "id")
-
-			authUserNode, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetAuthUser(ctx, authId)
+			//authentication
+			authIdAndProviderNode, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthIdAndProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
 			if err != nil {
 				return nil, err
 			}
 
-			authUserProps := common_utils.GetPropsFromNode(*authUserNode)
-			authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
-			defaultTenant = common_utils.GetStringPropOrEmpty(authUserProps, "defaultTenant")
-			currentTenant = common_utils.GetStringPropOrEmpty(authUserProps, "currentTenant")
-		} else {
-			//auth with different provider found. link back to the same user and add new auth
-			authNodes, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthId(ctx, signInRequest.LoggedInEmail)
-			if err != nil {
-				return nil, err
-			}
-
-			if authNodes != nil && len(authNodes) > 0 {
-				authProps := common_utils.GetPropsFromNode(*authNodes[0])
+			//auth with the same provider found
+			if authIdAndProviderNode != nil {
+				authProps := common_utils.GetPropsFromNode(*authIdAndProviderNode)
 				authId = common_utils.GetStringPropOrEmpty(authProps, "id")
 
 				authUserNode, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetAuthUser(ctx, authId)
@@ -304,7 +285,53 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
 				defaultTenant = common_utils.GetStringPropOrEmpty(authUserProps, "defaultTenant")
 				currentTenant = common_utils.GetStringPropOrEmpty(authUserProps, "currentTenant")
+			} else {
+				//auth with different provider found. link back to the same user and add new auth
+				authNodes, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthId(ctx, signInRequest.LoggedInEmail)
+				if err != nil {
+					return nil, err
+				}
 
+				if authNodes != nil && len(authNodes) > 0 {
+					authProps := common_utils.GetPropsFromNode(*authNodes[0])
+					authId = common_utils.GetStringPropOrEmpty(authProps, "id")
+
+					authUserNode, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetAuthUser(ctx, authId)
+					if err != nil {
+						return nil, err
+					}
+
+					authUserProps := common_utils.GetPropsFromNode(*authUserNode)
+					authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
+					defaultTenant = common_utils.GetStringPropOrEmpty(authUserProps, "defaultTenant")
+					currentTenant = common_utils.GetStringPropOrEmpty(authUserProps, "currentTenant")
+
+					authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
+						AuthId:     signInRequest.LoggedInEmail,
+						Provider:   signInRequest.Provider,
+						IdentityId: signInRequest.OAuthToken.ProviderAccountId,
+					})
+					if err != nil {
+						return nil, err
+					}
+
+					err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationWithAuthenticationUser(ctx, *txWithPostCommit.Tx, authId, authUserId)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+
+			span.LogKV("authId", authId)
+			span.LogKV("authUserId", authUserId)
+
+			if authId != "" && authUserId == "" {
+				return nil, fmt.Errorf("authId found but authUserId not found")
+			}
+
+			//auth doesn't exist at all
+			if authId == "" {
+				//create auth + user
 				authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
 					AuthId:     signInRequest.LoggedInEmail,
 					Provider:   signInRequest.Provider,
@@ -314,216 +341,194 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					return nil, err
 				}
 
-				err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationWithAuthenticationUser(ctx, *txWithPostCommit.Tx, authId, authUserId)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		span.LogKV("authId", authId)
-		span.LogKV("authUserId", authUserId)
-
-		if authId != "" && authUserId == "" {
-			return nil, fmt.Errorf("authId found but authUserId not found")
-		}
-
-		//auth doesn't exist at all
-		if authId == "" {
-			//create auth + user
-			authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
-				AuthId:     signInRequest.LoggedInEmail,
-				Provider:   signInRequest.Provider,
-				IdentityId: signInRequest.OAuthToken.ProviderAccountId,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			authUserId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthenticationUser(ctx, *txWithPostCommit.Tx, authId, neoEntity.AuthenticationUserEntity{
-				FirstName: firstName,
-				LastName:  lastName,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-		}
-
-		span.LogKV("authId", authId)
-		span.LogKV("authUserId", authUserId)
-
-		//tenant
-		tenants, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetTenants(ctx, authUserId)
-		if err != nil {
-			return nil, err
-		}
-
-		if tenants == nil || len(tenants) == 0 {
-
-			domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
-			span.LogFields(tracingLog.String("domainExtractedFromEmail", domain))
-
-			// check if the user is using a personal email provider
-			for _, personalEmailProviderItem := range personalEmailProviders {
-				domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-				personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-				if domainLowercase == personalEmailProviderDomainLowercase {
-					isPersonalEmail = true
-					break
-				}
-			}
-			span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
-
-			if !isPersonalEmail {
-				tenantWithWorkspace, err := services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
-				if err != nil {
-					return nil, err
-				}
-
-				if tenantWithWorkspace != nil {
-					tenantEntity := mapper.MapDbNodeToTenantEntity(tenantWithWorkspace)
-
-					isNewTenant = false
-					currentTenant = tenantEntity.Name
-					defaultTenant = tenantEntity.Name
-				} else {
-					isNewTenant = true
-				}
-			}
-
-			if isNewTenant {
-				tenantStr := ""
-				if isPersonalEmail {
-					tenantStr = utils.GenerateName()
-				} else {
-					tenantStr = utils.Sanitize(domain)
-				}
-
-				span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
-
-				tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
-					Name:      tenantStr,
-					CreatedBy: signInRequest.LoggedInEmail,
+				authUserId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthenticationUser(ctx, *txWithPostCommit.Tx, authId, neoEntity.AuthenticationUserEntity{
+					FirstName: firstName,
+					LastName:  lastName,
 				})
 				if err != nil {
 					return nil, err
 				}
 
+			}
+
+			span.LogKV("authId", authId)
+			span.LogKV("authUserId", authUserId)
+
+			//tenant
+			tenants, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetTenants(ctx, authUserId)
+			if err != nil {
+				return nil, err
+			}
+
+			if tenants == nil || len(tenants) == 0 {
+
+				domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
+				span.LogFields(tracingLog.String("domainExtractedFromEmail", domain))
+
+				// check if the user is using a personal email provider
+				for _, personalEmailProviderItem := range personalEmailProviders {
+					domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+					personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+					if domainLowercase == personalEmailProviderDomainLowercase {
+						isPersonalEmail = true
+						break
+					}
+				}
+				span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
+
 				if !isPersonalEmail {
-					_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
-						Name:     domain,
-						Provider: signInRequest.Provider,
-					}, tenantEntity.Name)
+					tenantWithWorkspace, err := services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
 					if err != nil {
 						return nil, err
 					}
+
+					if tenantWithWorkspace != nil {
+						tenantEntity := mapper.MapDbNodeToTenantEntity(tenantWithWorkspace)
+
+						isNewTenant = false
+						currentTenant = tenantEntity.Name
+						defaultTenant = tenantEntity.Name
+					} else {
+						isNewTenant = true
+					}
 				}
 
-				currentTenant = tenantEntity.Name
-				defaultTenant = tenantEntity.Name
+				if isNewTenant {
+					tenantStr := ""
+					if isPersonalEmail {
+						tenantStr = utils.GenerateName()
+					} else {
+						tenantStr = utils.Sanitize(domain)
+					}
+
+					span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
+
+					tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
+						Name:      tenantStr,
+						CreatedBy: signInRequest.LoggedInEmail,
+					})
+					if err != nil {
+						return nil, err
+					}
+
+					if !isPersonalEmail {
+						_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
+							Name:     domain,
+							Provider: signInRequest.Provider,
+						}, tenantEntity.Name)
+						if err != nil {
+							return nil, err
+						}
+					}
+
+					currentTenant = tenantEntity.Name
+					defaultTenant = tenantEntity.Name
+				}
+
+				err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
+				if err != nil {
+					return nil, err
+				}
+
+				err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.SetDefaultTenant(ctx, *txWithPostCommit.Tx, authUserId, defaultTenant)
+				if err != nil {
+					return nil, err
+				}
+
+				err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.SetCurrentTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
+				if err != nil {
+					return nil, err
+				}
 			}
 
-			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
-			if err != nil {
-				return nil, err
-			}
+			// lookup user in default tenant or current tenant to set it up below
+			ctx = common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant: currentTenant,
+			})
 
-			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.SetDefaultTenant(ctx, *txWithPostCommit.Tx, authUserId, defaultTenant)
-			if err != nil {
-				return nil, err
-			}
-
-			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.SetCurrentTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// lookup user in default tenant or current tenant to set it up below
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant: currentTenant,
-		})
-
-		//user in tenant
-		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		if userInTenantNode != nil {
-			userId = mapper.MapDbNodeToUserEntity(userInTenantNode).Id
-			span.LogFields(tracingLog.Object("user", "found"))
-		} else {
-			span.LogFields(tracingLog.Object("user", "not found"))
-
-			userId, err = services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, txWithPostCommit, defaultTenant, false, authUserId, signInRequest.LoggedInEmail, firstName, lastName)
-		}
-
-		return nil, nil
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		ginContext.JSON(http.StatusInternalServerError, gin.H{
-			"result": fmt.Sprintf("unable to create auth: %v", err.Error()),
-		})
-		return
-	}
-
-	ctx = common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    currentTenant,
-		UserEmail: signInRequest.LoggedInEmail,
-	})
-
-	_, err = initializeUserInTenant(ctx, services, userId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		ginContext.JSON(http.StatusInternalServerError, gin.H{
-			"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
-		})
-		return
-	}
-
-	if isNewTenant {
-		go func() {
-			c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-			defer cancelFunc()
-
-			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
-			defer span.Finish()
-
-			err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
+			//user in tenant
+			userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
+				return nil, err
+			}
+			if userInTenantNode != nil {
+				userId = mapper.MapDbNodeToUserEntity(userInTenantNode).Id
+				span.LogFields(tracingLog.Object("user", "found"))
+			} else {
+				span.LogFields(tracingLog.Object("user", "not found"))
+
+				userId, err = services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, txWithPostCommit, defaultTenant, false, authUserId, signInRequest.LoggedInEmail, firstName, lastName)
 			}
 
-			if !isPersonalEmail {
-				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to create auth: %v", err.Error()),
+			})
+			return
+		}
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    currentTenant,
+			UserEmail: signInRequest.LoggedInEmail,
+		})
+
+		_, err = initializeUserInTenant(ctx, services, userId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
+			})
+			return
+		}
+
+		if isNewTenant {
+			go func() {
+				c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+				defer cancelFunc()
+
+				ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
+				defer span.Finish()
+
+				err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
 
-				platformOwners, err := services.Repositories.Neo4jRepositories.UserReadRepository.FindPlatformOwners(ctx)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-
-				for _, platformOwner := range platformOwners {
-
-					err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, defaultTenant)
+				if !isPersonalEmail {
+					err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}
 
-					_, err := services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, nil, defaultTenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
+					platformOwners, err := services.Repositories.Neo4jRepositories.UserReadRepository.FindPlatformOwners(ctx)
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}
-				}
-			}
 
-			span.LogFields(tracingLog.String("result", "ok"))
-		}()
+					for _, platformOwner := range platformOwners {
+
+						err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, defaultTenant)
+						if err != nil {
+							tracing.TraceErr(span, err)
+						}
+
+						_, err := services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, nil, defaultTenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
+						if err != nil {
+							tracing.TraceErr(span, err)
+						}
+					}
+				}
+
+				span.LogFields(tracingLog.String("result", "ok"))
+			}()
+		}
+	} else {
+		currentTenant = signInRequest.Tenant
+		defaultTenant = signInRequest.Tenant
 	}
 
 	// handle email token
