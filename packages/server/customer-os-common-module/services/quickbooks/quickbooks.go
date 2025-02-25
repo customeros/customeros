@@ -92,7 +92,11 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 		entity := postgres_entity.QuickbooksSettingsEntity{}
 		if quickbooksSettingsEntity != nil {
 			entity = *quickbooksSettingsEntity
+		} else {
+			entity.Tenant = tenant
+			entity.RealmId = realmId
 		}
+
 		entity.AccessToken = quickbooksResponse.AccessToken
 		entity.AccessTokenExpiresIn = quickbooksResponse.ExpiresIn
 		entity.AccessTokenExpiresAt = now.Add(time.Duration(quickbooksResponse.ExpiresIn) * time.Second)
@@ -195,8 +199,6 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 	return nil
 }
 
-//TODO create a CustomerOS invoice Account in QB and link services to it
-
 func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName string, archived bool, price float64) (*interfaces.QuickbooksSaveProductResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveProduct")
 	defer span.Finish()
@@ -251,14 +253,15 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		"Name":      productName,
 		"Type":      "Service",
 		"UnitPrice": price,
-		"IncomeAccountRef": map[string]interface{}{
-			"value": quickbooksSettingsEntity.SalesAccountId,
-		},
-		"Active": !archived,
+		"Active":    !archived,
 	}
 
 	if id != "" {
 		request["Id"] = id
+	} else {
+		request["IncomeAccountRef"] = map[string]interface{}{
+			"value": quickbooksSettingsEntity.SalesAccountId,
+		}
 	}
 
 	if id != "" {

@@ -247,7 +247,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 		}
 	}
 
-	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.IssuedDate, quickbooksInvoiceLines)
+	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.PeriodStartDate, quickbooksInvoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
