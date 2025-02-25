@@ -4,6 +4,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
@@ -65,6 +67,23 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 			span.LogFields(log.Error(err))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
+		}
+
+		//publish SKUs not pushed already to QB on initial connection
+		skuList, err := s.CommonServices.PostgresRepositories.SkuRepository.GetAll(ctx, tenant.(string), nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+
+		if skuList != nil && len(skuList) > 0 {
+			for _, sku := range skuList {
+				if sku.QuickbooksId == "" {
+					err = s.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, sku.ID, model.SKU, dto.SkuUpdate{})
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{})
