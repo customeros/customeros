@@ -7,6 +7,7 @@ type GlobalOrganizationWebpages struct {
 	PrimaryDomain string    `gorm:"column:primary_domain;type:varchar(255);NOT NULL;index:idx_global_organization_primary_domain,unique" json:"primaryDomain"`
 	Url           string    `gorm:"column:url;type:text" json:"url"`
 	Content       string    `gorm:"column:content;type:text" json:"content"`
+	CleanContent  string    `gorm:"column:clean_content;type:text" json:"cleanContent"`
 	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 }

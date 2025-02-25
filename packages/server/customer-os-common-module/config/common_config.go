@@ -39,6 +39,7 @@ type ExternalServicesConfig struct {
 	CloudflareConfig     CloudflareConfig
 	DeepseekConfig       DeepseekConfig
 	EnrowConfig          EnrowConfig
+	GroqConfig           GroqConfig
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig
 	JinaConfig           JinaConfig

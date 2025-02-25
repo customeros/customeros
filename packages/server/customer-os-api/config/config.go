@@ -28,28 +28,29 @@ type CommonConfig struct {
 	CosApi         commonconf.CustomerOsApiConfig
 
 	Anthropic         commonconf.AnthropicConfig
+	AzureOAuthConfig  commonconf.AzureOAuthConfig
 	BetterContact     commonconf.BetterContactConfig
 	Brandfetch        commonconf.BrandfetchConfig
 	Cloudflare        commonconf.CloudflareConfig
 	Deepseek          commonconf.DeepseekConfig
 	FileStore         commonconf.FileStoreConfig
+	GoogleOAuthConfig commonconf.GoogleOAuthConfig
+	Groq              commonconf.GroqConfig
 	IntegrationApp    commonconf.IntegrationAppConfig
 	IpData            commonconf.IpDataConfig
+	Jina              commonconf.JinaConfig
 	Mailsherpa        commonconf.MailSherpaApiConfig
 	Mailstack         commonconf.MailstackConfig
 	Namecheap         commonconf.NamecheapConfig
 	Novu              commonconf.NovuConfig
 	OpenSRS           commonconf.OpenSRSConfig
+	PdfConverter      commonconf.PdfConverterConfig
 	Postmark          commonconf.PostmarkConfig
 	QuickbooksConfig  commonconf.QuickbooksConfig
 	Stripe            commonconf.StripeConfig
 	Scrapin           commonconf.ScrapinConfig
 	SlackConfig       commonconf.SlackConfig
 	Temporal          commonconf.TemporalConfig
-	PdfConverter      commonconf.PdfConverterConfig
-	GoogleOAuthConfig commonconf.GoogleOAuthConfig
-	AzureOAuthConfig  commonconf.AzureOAuthConfig
-	Jina              commonconf.JinaConfig
 }
 
 type AppConfig struct {
@@ -118,10 +119,12 @@ func InitConfig() (*Config, error) {
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,
+			BrandfetchConfig:     cmnCfg.Brandfetch,
+			CloudflareConfig:     cmnCfg.Cloudflare,
 			DeepseekConfig:       cmnCfg.Deepseek,
 			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSRS,
-			CloudflareConfig:     cmnCfg.Cloudflare,
+			JinaConfig:           cmnCfg.Jina,
 			IpDataConfig:         cmnCfg.IpData,
 			StripeConfig:         cmnCfg.Stripe,
 			BetterContactConfig:  cmnCfg.BetterContact,
@@ -132,8 +135,7 @@ func InitConfig() (*Config, error) {
 			IntegrationAppConfig: cmnCfg.IntegrationApp,
 			NovuConfig:           cmnCfg.Novu,
 			TemporalConfig:       cmnCfg.Temporal,
-			BrandfetchConfig:     cmnCfg.Brandfetch,
-			JinaConfig:           cmnCfg.Jina,
+			GroqConfig:           cmnCfg.Groq,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CosApi,

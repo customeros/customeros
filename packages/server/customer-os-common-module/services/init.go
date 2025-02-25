@@ -199,7 +199,7 @@ func InitCommonServices(
 	}
 
 	// Simple - Services that depend only on base services
-	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig)
+	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig, &cfg.External.GroqConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
 	cloudfareImpl := cloudflare.NewCloudflareService(log, &cfg.External.CloudflareConfig, postgresRepositories)
@@ -226,7 +226,7 @@ func InitCommonServices(
 	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
 	quickbooksImpl := quickbooks.NewQuickbooksService(&cfg.External.QuickbooksConfig, postgresRepositories)
 	webhookImpl := webhook.NewWebhookService(log, postgresRepositories)
-	webscrapeImpl := webscraper.NewWebscraperService(&cfg.External.JinaConfig, postgresRepositories)
+	webscrapeImpl := webscraper.NewWebscraperService(&cfg.External.JinaConfig, postgresRepositories, aiImpl)
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories, eventsImpl)
 

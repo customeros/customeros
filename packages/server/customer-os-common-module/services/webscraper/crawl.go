@@ -94,7 +94,7 @@ func (s *webscraperService) crawlRecursive(
 	span.SetTag("depth", depth)
 
 	// Scrape current URL
-	content, err := s.Scrape(ctx, url)
+	content, err := s.ScrapeAndClean(ctx, url)
 	if err != nil {
 		select {
 		case errChan <- errors.Wrapf(err, "failed to scrape %s", url):
