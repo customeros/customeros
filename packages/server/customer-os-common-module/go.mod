@@ -1,7 +1,6 @@
 module github.com/customeros/customeros/packages/server/customer-os-common-module
 
 go 1.23
-
 toolchain go1.23.1
 
 replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
@@ -47,7 +46,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d
 	golang.org/x/net v0.35.0
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.210.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
