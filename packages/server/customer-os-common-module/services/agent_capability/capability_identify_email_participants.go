@@ -113,7 +113,9 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 		return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 	}
-	orgIds = append(orgIds, fromOrgId)
+	if fromOrgId != "" {
+		orgIds = append(orgIds, fromOrgId)
+	}
 
 	//process FROM email
 	for _, to := range emailMessageData.Participants.To {
@@ -122,7 +124,9 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 		}
-		orgIds = utils.AddToListIfNotExists(orgIds, toOrgId)
+		if toOrgId != "" {
+			orgIds = utils.AddToListIfNotExists(orgIds, toOrgId)
+		}
 	}
 
 	//process CC email
@@ -132,7 +136,9 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 		}
-		orgIds = utils.AddToListIfNotExists(orgIds, ccOrgId)
+		if ccOrgId != "" {
+			orgIds = utils.AddToListIfNotExists(orgIds, ccOrgId)
+		}
 	}
 
 	//process BCC email
@@ -142,7 +148,9 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 		}
-		orgIds = utils.AddToListIfNotExists(orgIds, bccOrgId)
+		if bccOrgId != "" {
+			orgIds = utils.AddToListIfNotExists(orgIds, bccOrgId)
+		}
 	}
 
 	return enum.CapabilityExecutionCompleted, IdentifyEmailParticipantsOutput{

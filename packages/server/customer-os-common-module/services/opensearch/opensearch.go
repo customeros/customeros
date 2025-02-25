@@ -7,8 +7,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
+	"github.com/opentracing/opentracing-go"
 	"strings"
 )
 
@@ -35,7 +37,10 @@ func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig)
 }
 
 // IndexDocument indexes a single document
-func (c *opensearchService) IndexDocument(indexName string, document interface{}) error {
+func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string, documentId *string, document interface{}) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpensearchService.UpsertDocument")
+	defer span.Finish()
+
 	jsonDoc, err := json.Marshal(document)
 	if err != nil {
 		return fmt.Errorf("error marshaling document: %w", err)
@@ -47,13 +52,19 @@ func (c *opensearchService) IndexDocument(indexName string, document interface{}
 		Refresh: "true",
 	}
 
-	res, err := req.Do(context.Background(), c.client)
+	if documentId != nil {
+		req.DocumentID = *documentId
+	}
+
+	res, err := req.Do(ctx, c.client)
 	if err != nil {
-		return fmt.Errorf("error indexing document: %w", err)
+		tracing.TraceErr(span, err)
+		return err
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
+		tracing.TraceErr(span, fmt.Errorf("error indexing document: %s", res.String()))
 		return fmt.Errorf("error indexing document: %s", res.String())
 	}
 

@@ -2,7 +2,6 @@ package agent_listeners
 
 import (
 	"context"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -22,6 +21,10 @@ type NewEmailListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   interfaces.AgentRunnerService
+}
+
+type NewEmailConfig struct {
+	Emails ConfigMultipleValuesWithObject `json:"emails"`
 }
 
 // Compile-time interface check for AgentListenerUntyped
@@ -55,7 +58,10 @@ func (l *NewEmailListener) Name() string {
 }
 
 func (l *NewEmailListener) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	n := &NewEmailConfig{}
+	n.Emails = ConfigMultipleValuesWithObject{}
+	n.Emails.Value = []interface{}{}
+	return n
 }
 
 func (l *NewEmailListener) ExecutingAgents() []enum.AgentType {

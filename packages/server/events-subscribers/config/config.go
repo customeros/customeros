@@ -25,6 +25,7 @@ type CommonConfig struct {
 	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
 	RabbitMQ         commonconf.RabbitMQConfig
+	OpensearchConfig commonconf.OpensearchConfig
 	MailSherpaApi    commonconf.MailSherpaApiConfig
 	BetterContact    commonconf.BetterContactConfig
 	Scrapin          commonconf.ScrapinConfig
@@ -67,6 +68,7 @@ func Load() *Config {
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
 			RabbitMQConfig:      cmnCfg.RabbitMQ,
+			OpensearchConfig:    cmnCfg.OpensearchConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,

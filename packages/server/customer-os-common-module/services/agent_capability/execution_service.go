@@ -262,7 +262,7 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityClassifyEmail:
-		executor, ok := GetTypedExecutor[ClassifyEmailInput, ClassifyEmailOutput, postgres_entity.NoConfig](
+		executor, ok := GetTypedExecutor[ClassifyEmailInput, ClassifyEmailOutput, ClassifyEmailConfig](
 			executionContainer.UntypedExecutors,
 			executionContainer.Capability.Type,
 		)
