@@ -5,7 +5,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -29,6 +28,10 @@ type ClassifyEmailCapability struct {
 	mailService interfaces.MailService
 }
 
+type ClassifyEmailConfig struct {
+	ImportEmails ConfigSingleValue `json:"importEmails"`
+}
+
 func NewClassifyEmailCapability(postgresRepositories *postgres_repository.Repositories, mailService interfaces.MailService) *ClassifyEmailCapability {
 	return &ClassifyEmailCapability{
 		postgres:    postgresRepositories,
@@ -38,7 +41,7 @@ func NewClassifyEmailCapability(postgresRepositories *postgres_repository.Reposi
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[ClassifyEmailInput, ClassifyEmailOutput, postgres_entity.NoConfig] = (*ClassifyEmailCapability)(nil)
+	_ interfaces.AgentCapability[ClassifyEmailInput, ClassifyEmailOutput, ClassifyEmailConfig] = (*ClassifyEmailCapability)(nil)
 )
 
 func (c *ClassifyEmailCapability) Type() enum.AgentCapability {
@@ -53,16 +56,20 @@ func (c *ClassifyEmailCapability) NewInput() ClassifyEmailInput {
 	return ClassifyEmailInput{}
 }
 
-func (c *ClassifyEmailCapability) NewConfig() postgres_entity.NoConfig {
-	return postgres_entity.NoConfig{}
+func (c *ClassifyEmailCapability) NewConfig() ClassifyEmailConfig {
+	return ClassifyEmailConfig{}
 }
 
 func (c *ClassifyEmailCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.ImportEmails.Value = "AUTOMATICALLY"
 	return &config
 }
 
-func (c *ClassifyEmailCapability) ValidateConfig(postgres_entity.NoConfig) error {
+func (c *ClassifyEmailCapability) ValidateConfig(config ClassifyEmailConfig) error {
+	if config.ImportEmails.Value != "AUTOMATICALLY" && config.ImportEmails.Value != "MANUALLY" {
+		return errors.New("import emails is invalid")
+	}
 	return nil
 }
 
@@ -73,7 +80,7 @@ func (c *ClassifyEmailCapability) ValidateInput(input ClassifyEmailInput) error 
 	return nil
 }
 
-func (c *ClassifyEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ClassifyEmailInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ClassifyEmailOutput, error) {
+func (c *ClassifyEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ClassifyEmailInput, ClassifyEmailConfig]) (enum.CapabilityExecutionStatus, ClassifyEmailOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ClassifyEmailCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)

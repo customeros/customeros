@@ -154,7 +154,7 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 			"threadId":   emailMessageData.Identifiers.EmailThreadId,
 		}
 
-		err := c.opensearch.IndexDocument("timeline-"+organizationId, osData)
+		err := c.opensearch.UpsertDocument(ctx, "timeline-"+organizationId, &ingestEmailMessage.Id, osData)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to index document"))
 		}
