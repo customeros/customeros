@@ -40,6 +40,7 @@ type ExternalServicesConfig struct {
 	DeepseekConfig       DeepseekConfig
 	EnrowConfig          EnrowConfig
 	GroqConfig           GroqConfig
+	GeminiConfig         GeminiConfig
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig
 	JinaConfig           JinaConfig

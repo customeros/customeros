@@ -160,6 +160,9 @@ func (s *webscraperService) cleanPageContents(ctx context.Context, contents stri
 		tracing.TraceErr(span, err)
 		return "", err
 	}
+	if cleanContent == nil {
+		return "", nil
+	}
 	return *cleanContent, nil
 }
 

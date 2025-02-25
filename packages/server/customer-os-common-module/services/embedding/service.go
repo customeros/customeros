@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -50,7 +51,7 @@ func (s *embeddingService) postRequest(ctx context.Context, body any, url string
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", authorization)
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
