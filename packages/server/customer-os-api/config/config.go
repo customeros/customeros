@@ -36,6 +36,7 @@ type CommonConfig struct {
 	FileStore         commonconf.FileStoreConfig
 	GoogleOAuthConfig commonconf.GoogleOAuthConfig
 	Groq              commonconf.GroqConfig
+	Gemini            commonconf.GeminiConfig
 	IntegrationApp    commonconf.IntegrationAppConfig
 	IpData            commonconf.IpDataConfig
 	Jina              commonconf.JinaConfig
@@ -136,6 +137,7 @@ func InitConfig() (*Config, error) {
 			NovuConfig:           cmnCfg.Novu,
 			TemporalConfig:       cmnCfg.Temporal,
 			GroqConfig:           cmnCfg.Groq,
+			GeminiConfig:         cmnCfg.Gemini,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CosApi,

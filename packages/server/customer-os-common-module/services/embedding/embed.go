@@ -81,7 +81,7 @@ const (
 )
 
 func (s *embeddingService) BuildEmbeddingRecord(ctx context.Context, content string) ([]*EmbeddingResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.Embedd")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.BuildEmbeddingRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	return nil, nil
