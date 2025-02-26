@@ -15,15 +15,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type EmbeddingTask string
-
-const (
-	Classification   EmbeddingTask = "classification"
-	Generic          EmbeddingTask = "text-matching"
-	PassageRetrieval EmbeddingTask = "retrieval.passage"
-	Query            EmbeddingTask = "retrieval.query"
-)
-
 type EmbeddingRequestBody struct {
 	Model         string   `json:"model"`
 	Task          string   `json:"task"`
@@ -71,7 +62,7 @@ func (s *embeddingService) newEmbeddingRecord(contentType enum.EmbeddingContentT
 	return record
 }
 
-func (s *embeddingService) getEmbedding(ctx context.Context, content string, task EmbeddingTask) ([]float64, error) {
+func (s *embeddingService) GetEmbedding(ctx context.Context, content string, task enum.EmbeddingTask) ([]float64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embedWebpageSegment")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -93,7 +84,7 @@ func (s *embeddingService) getEmbedding(ctx context.Context, content string, tas
 	return embedding.Data[0].Embedding, nil
 }
 
-func (s *embeddingService) embed(ctx context.Context, task EmbeddingTask, input []string) (*EmbeddingResponse, error) {
+func (s *embeddingService) embed(ctx context.Context, task enum.EmbeddingTask, input []string) (*EmbeddingResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embedd")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

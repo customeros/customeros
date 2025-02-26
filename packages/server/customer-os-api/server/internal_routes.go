@@ -213,4 +213,12 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 		routeType: RouteInternal,
 		services:  s,
 	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/hybridSearch", InternalPath),
+		handler:   h.HybridSearch.Search(),
+		routeType: RouteInternal,
+		services:  s,
+	})
 }
