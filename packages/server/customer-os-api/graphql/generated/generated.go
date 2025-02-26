@@ -1027,6 +1027,16 @@ type ComplexityRoot struct {
 		UserID          func(childComplexity int) int
 	}
 
+	MailboxV2 struct {
+		Mailbox            func(childComplexity int) int
+		NeedsManualRefresh func(childComplexity int) int
+		Provider           func(childComplexity int) int
+		RampUpCurrent      func(childComplexity int) int
+		RampUpMax          func(childComplexity int) int
+		RampUpRate         func(childComplexity int) int
+		UsedInFlows        func(childComplexity int) int
+	}
+
 	MarkdownEvent struct {
 		Content  func(childComplexity int) int
 		Metadata func(childComplexity int) int
@@ -1561,6 +1571,7 @@ type ComplexityRoot struct {
 		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string) int
 		MailstackDomains                   func(childComplexity int) int
 		MailstackMailboxes                 func(childComplexity int) int
+		MailstackMailboxesV2               func(childComplexity int) int
 		MailstackUniqueUsernames           func(childComplexity int) int
 		Meeting                            func(childComplexity int, id string) int
 		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
@@ -2259,6 +2270,7 @@ type QueryResolver interface {
 	MailstackCheckUnavailableDomains(ctx context.Context, domains []string) ([]string, error)
 	MailstackUniqueUsernames(ctx context.Context) ([]string, error)
 	MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error)
+	MailstackMailboxesV2(ctx context.Context) ([]*model.MailboxV2, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
@@ -7176,6 +7188,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mailbox.UserID(childComplexity), true
 
+	case "MailboxV2.mailbox":
+		if e.complexity.MailboxV2.Mailbox == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.Mailbox(childComplexity), true
+
+	case "MailboxV2.needsManualRefresh":
+		if e.complexity.MailboxV2.NeedsManualRefresh == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.NeedsManualRefresh(childComplexity), true
+
+	case "MailboxV2.provider":
+		if e.complexity.MailboxV2.Provider == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.Provider(childComplexity), true
+
+	case "MailboxV2.rampUpCurrent":
+		if e.complexity.MailboxV2.RampUpCurrent == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.RampUpCurrent(childComplexity), true
+
+	case "MailboxV2.rampUpMax":
+		if e.complexity.MailboxV2.RampUpMax == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.RampUpMax(childComplexity), true
+
+	case "MailboxV2.rampUpRate":
+		if e.complexity.MailboxV2.RampUpRate == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.RampUpRate(childComplexity), true
+
+	case "MailboxV2.usedInFlows":
+		if e.complexity.MailboxV2.UsedInFlows == nil {
+			break
+		}
+
+		return e.complexity.MailboxV2.UsedInFlows(childComplexity), true
+
 	case "MarkdownEvent.content":
 		if e.complexity.MarkdownEvent.Content == nil {
 			break
@@ -11521,6 +11582,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.MailstackMailboxes(childComplexity), true
+
+	case "Query.mailstack_MailboxesV2":
+		if e.complexity.Query.MailstackMailboxesV2 == nil {
+			break
+		}
+
+		return e.complexity.Query.MailstackMailboxesV2(childComplexity), true
 
 	case "Query.mailstack_UniqueUsernames":
 		if e.complexity.Query.MailstackUniqueUsernames == nil {
@@ -16004,7 +16072,8 @@ input LogEntryUpdateInput {
     mailstack_CheckUnavailableDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
 
     mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
-    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by tenant
+    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    mailstack_MailboxesV2: [MailboxV2!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by user
 }
 
 extend type Mutation {
@@ -16013,6 +16082,7 @@ extend type Mutation {
     mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
+#deprecated
 type Mailbox {
     domain:             String!
     mailbox:            String!
@@ -16028,8 +16098,26 @@ type Mailbox {
     currentFlowIds:     [ID!]
 }
 
+type MailboxV2 {
+    provider:           MailboxProvider!
+    mailbox:            String!
+    usedInFlows:        Boolean!
+
+    rampUpRate:         Int!
+    rampUpMax:          Int!
+    rampUpCurrent:      Int!
+
+    needsManualRefresh: Boolean!
+}
+
 type GetPaymentIntent {
     clientSecret:       String!
+}
+
+enum MailboxProvider {
+    GOOGLE
+    MICROSOFT
+    MAILSTACK
 }`, BuiltIn: false},
 	{Name: "../schemas/markdown_event.graphqls", Input: `type MarkdownEvent {
     metadata: Metadata!
@@ -60892,6 +60980,314 @@ func (ec *executionContext) fieldContext_Mailbox_currentFlowIds(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _MailboxV2_provider(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_provider(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Provider, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.MailboxProvider)
+	fc.Result = res
+	return ec.marshalNMailboxProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxProvider(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_provider(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MailboxProvider does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailboxV2_mailbox(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_mailbox(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Mailbox, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_mailbox(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailboxV2_usedInFlows(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_usedInFlows(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UsedInFlows, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_usedInFlows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailboxV2_rampUpRate(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_rampUpRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RampUpRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_rampUpRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailboxV2_rampUpMax(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_rampUpMax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RampUpMax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_rampUpMax(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailboxV2_rampUpCurrent(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_rampUpCurrent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RampUpCurrent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_rampUpCurrent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MailboxV2_needsManualRefresh(ctx context.Context, field graphql.CollectedField, obj *model.MailboxV2) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MailboxV2_needsManualRefresh(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NeedsManualRefresh, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MailboxV2_needsManualRefresh(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MailboxV2",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MarkdownEvent_metadata(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MarkdownEvent_metadata(ctx, field)
 	if err != nil {
@@ -97696,6 +98092,100 @@ func (ec *executionContext) fieldContext_Query_mailstack_Mailboxes(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_mailstack_MailboxesV2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_mailstack_MailboxesV2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().MailstackMailboxesV2(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []*model.MailboxV2
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.MailboxV2
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.MailboxV2
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.MailboxV2); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.MailboxV2`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MailboxV2)
+	fc.Result = res
+	return ec.marshalNMailboxV22ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxV2ᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_mailstack_MailboxesV2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "provider":
+				return ec.fieldContext_MailboxV2_provider(ctx, field)
+			case "mailbox":
+				return ec.fieldContext_MailboxV2_mailbox(ctx, field)
+			case "usedInFlows":
+				return ec.fieldContext_MailboxV2_usedInFlows(ctx, field)
+			case "rampUpRate":
+				return ec.fieldContext_MailboxV2_rampUpRate(ctx, field)
+			case "rampUpMax":
+				return ec.fieldContext_MailboxV2_rampUpMax(ctx, field)
+			case "rampUpCurrent":
+				return ec.fieldContext_MailboxV2_rampUpCurrent(ctx, field)
+			case "needsManualRefresh":
+				return ec.fieldContext_MailboxV2_needsManualRefresh(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MailboxV2", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_meeting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_meeting(ctx, field)
 	if err != nil {
@@ -127773,6 +128263,75 @@ func (ec *executionContext) _Mailbox(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var mailboxV2Implementors = []string{"MailboxV2"}
+
+func (ec *executionContext) _MailboxV2(ctx context.Context, sel ast.SelectionSet, obj *model.MailboxV2) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mailboxV2Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MailboxV2")
+		case "provider":
+			out.Values[i] = ec._MailboxV2_provider(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "mailbox":
+			out.Values[i] = ec._MailboxV2_mailbox(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "usedInFlows":
+			out.Values[i] = ec._MailboxV2_usedInFlows(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rampUpRate":
+			out.Values[i] = ec._MailboxV2_rampUpRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rampUpMax":
+			out.Values[i] = ec._MailboxV2_rampUpMax(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rampUpCurrent":
+			out.Values[i] = ec._MailboxV2_rampUpCurrent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "needsManualRefresh":
+			out.Values[i] = ec._MailboxV2_needsManualRefresh(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var markdownEventImplementors = []string{"MarkdownEvent", "TimelineEvent"}
 
 func (ec *executionContext) _MarkdownEvent(ctx context.Context, sel ast.SelectionSet, obj *model.MarkdownEvent) graphql.Marshaler {
@@ -132908,6 +133467,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_mailstack_Mailboxes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "mailstack_MailboxesV2":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mailstack_MailboxesV2(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -139630,6 +140211,70 @@ func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋcustomerosᚋcusto
 		return graphql.Null
 	}
 	return ec._Mailbox(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMailboxProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxProvider(ctx context.Context, v any) (model.MailboxProvider, error) {
+	var res model.MailboxProvider
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMailboxProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxProvider(ctx context.Context, sel ast.SelectionSet, v model.MailboxProvider) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNMailboxV22ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxV2ᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MailboxV2) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMailboxV22ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxV2(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMailboxV22ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxV2(ctx context.Context, sel ast.SelectionSet, v *model.MailboxV2) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MailboxV2(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMeeting2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {

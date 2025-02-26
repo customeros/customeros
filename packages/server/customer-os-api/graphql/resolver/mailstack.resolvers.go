@@ -230,3 +230,69 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 
 	return response, nil
 }
+
+// MailstackMailboxesV2 is the resolver for the mailstack_MailboxesV2 field.
+func (r *queryResolver) MailstackMailboxesV2(ctx context.Context) ([]*model.MailboxV2, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackMailboxesV2", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	userId := common.GetUserIdFromContext(ctx)
+	userEmail := common.GetUserEmailFromContext(ctx)
+
+	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, userId)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get all mailboxes")
+		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
+		return nil, nil
+	}
+
+	userIds := []string{}
+	response := []*model.MailboxV2{}
+	for _, mailbox := range allMailboxes {
+		response = append(response, &model.MailboxV2{
+			Provider:           model.MailboxProviderMailstack,
+			Mailbox:            mailbox.MailboxUsername,
+			RampUpCurrent:      40,
+			RampUpMax:          40,
+			RampUpRate:         3,
+			NeedsManualRefresh: false,
+		})
+		if mailbox.UserId != "" {
+			userIds = append(userIds, mailbox.UserId)
+		}
+	}
+
+	oauthTokens, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get all mailboxes")
+		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
+		return nil, nil
+	}
+
+	for _, oauthToken := range oauthTokens {
+		if oauthToken.EmailAddress != userEmail {
+			continue
+		}
+
+		v2 := model.MailboxV2{
+			Mailbox:            oauthToken.EmailAddress,
+			RampUpCurrent:      40,
+			RampUpMax:          40,
+			RampUpRate:         3,
+			NeedsManualRefresh: false,
+		}
+
+		if oauthToken.Provider == "google" {
+			v2.Provider = model.MailboxProviderGoogle
+		} else {
+			v2.Provider = model.MailboxProviderMicrosoft
+		}
+
+		response = append(response, &v2)
+	}
+
+	return response, nil
+}

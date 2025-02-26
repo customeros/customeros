@@ -413,6 +413,13 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						return nil, err
 					}
 
+					currentTenant = tenantEntity.Name
+					defaultTenant = tenantEntity.Name
+
+					ctx = common.WithCustomContext(ctx, &common.CustomContext{
+						Tenant: currentTenant,
+					})
+
 					if !isPersonalEmail {
 						_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
 							Name:     domain,
@@ -422,9 +429,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 							return nil, err
 						}
 					}
-
-					currentTenant = tenantEntity.Name
-					defaultTenant = tenantEntity.Name
 				}
 
 				err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
@@ -442,11 +446,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					return nil, err
 				}
 			}
-
-			// lookup user in default tenant or current tenant to set it up below
-			ctx = common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant: currentTenant,
-			})
 
 			//user in tenant
 			userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
