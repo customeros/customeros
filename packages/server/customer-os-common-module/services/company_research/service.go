@@ -201,7 +201,7 @@ func (s *companyResearchService) buildChunkPrompt(domain string, webpageChunk []
 
 	prompt.WriteString("--- BASIC COMPANY FACTS ---\n")
 	prompt.WriteString(fmt.Sprintf("Company Name: %s\n", globalOrgDetails.Name))
-	prompt.WriteString(fmt.Sprintf("Year Founded: %s\n", globalOrgDetails.YearFounded))
+	prompt.WriteString(fmt.Sprintf("Year Founded: %d\n", globalOrgDetails.YearFounded))
 	prompt.WriteString(fmt.Sprintf("Employee Count: %d\n", globalOrgDetails.EmployeeCount))
 	prompt.WriteString(fmt.Sprintf("Location: %s, %s, %s\n", globalOrgDetails.City, globalOrgDetails.Region, globalOrgDetails.CountryA2))
 	prompt.WriteString(fmt.Sprintf("Industry Name: %s\n", globalOrgDetails.IndustryNaicsName))
