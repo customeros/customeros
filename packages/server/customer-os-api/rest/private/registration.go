@@ -261,6 +261,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	var authId string
 	var authUserId string
 
+	signInRequest.LoggedInEmail = strings.ToLower(signInRequest.LoggedInEmail)
+
 	if signInRequest.Tenant == "" {
 
 		_, err = common_utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, services.CommonServices.Neo4jRepositories.Neo4jDriver, services.CommonServices.Neo4jRepositories.Database, nil, func(txWithPostCommit *common_utils.TxWithPostCommit) (any, error) {
