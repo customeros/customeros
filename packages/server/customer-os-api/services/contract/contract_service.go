@@ -77,7 +77,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_in
 		CanPayWithCard:         utils.BoolPtr(true),
 		CanPayWithDirectDebit:  utils.BoolPtr(true),
 		CanPayWithBankTransfer: utils.BoolPtr(true),
-		Check:                  utils.BoolPtr(true),
+		Check:                  utils.BoolPtr(false),
 		AutoRenew:              contractDetails.Input.AutoRenew,
 		BillingCycleInMonths:   utils.Int64Ptr(1),
 		DueDays:                contractDetails.Input.DueDays,
@@ -281,14 +281,14 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 			contractDataFields.LengthInMonths = utils.Int64Ptr(3)
 		case model.ContractRenewalCycleAnnualRenewal.String():
 			contractDataFields.LengthInMonths = utils.Int64Ptr(12)
-		default:
-			contractDataFields.LengthInMonths = utils.Int64Ptr(0)
 		}
-		if *contractDataFields.LengthInMonths == 12 {
-			if input.CommittedPeriods != nil && *input.CommittedPeriods > 1 {
-				contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *input.CommittedPeriods)
-			} else if input.RenewalPeriods != nil && *input.RenewalPeriods > 1 {
-				contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *input.RenewalPeriods)
+		if contractDataFields.LengthInMonths != nil {
+			if *contractDataFields.LengthInMonths == 12 {
+				if input.CommittedPeriods != nil && *input.CommittedPeriods > 1 {
+					contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *input.CommittedPeriods)
+				} else if input.RenewalPeriods != nil && *input.RenewalPeriods > 1 {
+					contractDataFields.LengthInMonths = utils.Int64Ptr(*contractDataFields.LengthInMonths * *input.RenewalPeriods)
+				}
 			}
 		}
 	}
