@@ -376,6 +376,11 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			return nil, err
 		}
 		for _, item := range invoiceLines {
+			invoiceLineId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelInvoiceLine)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
 			invoiceLineData := neo4jrepository.InvoiceLineCreateFields{
 				CreatedAt:               utils.Now(),
 				SkuId:                   item.SkuId,
@@ -393,9 +398,9 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 				ServiceLineItemId:       item.ServiceLineItemId,
 				ServiceLineItemParentId: item.ServiceLineItemParentId,
 			}
-			err = s.neo4j.InvoiceLineWriteRepository.CreateInvoiceLine(ctx, txWithPostCommit.Tx, tenant, invoiceId, item.Id, invoiceLineData)
+			err = s.neo4j.InvoiceLineWriteRepository.CreateInvoiceLine(ctx, txWithPostCommit.Tx, tenant, invoiceId, invoiceLineId, invoiceLineData)
 			if err != nil {
-				s.log.Errorf("Error while inserting invoice line %s for invoice %s: %s", item.Id, invoiceId, err.Error())
+				s.log.Errorf("Error while inserting invoice line %s for invoice %s: %s", invoiceLineId, invoiceId, err.Error())
 				return "", err
 			}
 		}

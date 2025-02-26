@@ -53,6 +53,12 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tx *
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceLineId)
 
+	if invoiceLineId == "" || invoiceId == "" {
+		err := fmt.Errorf("invoiceLineId or invoiceId is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 							MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:$invoiceLineId})
 							ON CREATE SET 
