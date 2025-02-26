@@ -1,6 +1,6 @@
 module github.com/customeros/customeros/packages/server/mailsherpa-api
 
-go 1.23
+go 1.23.0
 
 toolchain go1.23.1
 
@@ -94,7 +94,7 @@ require (
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d // indirect
-	golang.org/x/oauth2 v0.26.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
