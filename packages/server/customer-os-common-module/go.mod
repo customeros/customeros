@@ -1,6 +1,7 @@
 module github.com/customeros/customeros/packages/server/customer-os-common-module
 
-go 1.23
+go 1.23.0
+
 toolchain go1.23.1
 
 replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
