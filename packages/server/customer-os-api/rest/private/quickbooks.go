@@ -92,7 +92,6 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func RevokeQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Start a tracer span for the revoke callback endpoint.
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/revoke", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)

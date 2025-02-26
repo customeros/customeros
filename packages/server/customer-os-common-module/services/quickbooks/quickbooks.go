@@ -180,20 +180,21 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 		return fmt.Errorf("failed to read revoke response: %w", err)
 	}
 
-	span.LogFields(log.String("revokeResponse", string(bodyBytes)))
+	span.LogFields(log.String("quickbooks.response", string(bodyBytes)))
 
 	// Check for a successful response
 	if resp.StatusCode != http.StatusOK {
 		errMsg := fmt.Sprintf("revoke quickbooks request returned status %d", resp.StatusCode)
 		tracing.TraceErr(span, fmt.Errorf(errMsg))
-		span.LogFields(log.String("quickbooks.response", string(bodyBytes)))
-		return fmt.Errorf(errMsg)
 	}
 
-	err = s.postgres.QuickbooksSettingsRepository.Delete(ctx, tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	// http.StatusBadRequest is returned when revoking access from already removed app
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusBadRequest {
+		err = s.postgres.QuickbooksSettingsRepository.Delete(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	return nil
