@@ -380,8 +380,9 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId, invoiceNumber string, invoiceDate time.Time, lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveInvoice")
 	defer span.Finish()
-
 	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("customerId", customerId), log.String("invoiceNumber", invoiceNumber), log.Object("invoiceDate", invoiceDate))
 
 	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
@@ -399,7 +400,7 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId, invoice
 		"CustomerRef": map[string]interface{}{
 			"value": customerId,
 		},
-		"TxnDate":   invoiceDate.Format("2006/01/25"),
+		"TxnDate":   invoiceDate.Format("2006/01/02"),
 		"Line":      lines,
 		"DocNumber": invoiceNumber,
 	}
