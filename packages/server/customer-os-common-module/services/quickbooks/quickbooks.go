@@ -595,7 +595,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 	var quickbooksCheckFaultResponse interfaces.QuickbooksCheckFaultResponse
 	err = json.Unmarshal(bodyBytes, &quickbooksCheckFaultResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
 		return nil, err
 	}
 
@@ -613,36 +613,14 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 				return nil, err
 			}
 
-			// retry the HTTP request
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-			defer resp.Body.Close()
-
-			// Read response body
-			bodyBytes, err = ioutil.ReadAll(resp.Body)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-
-			err = json.Unmarshal(bodyBytes, &quickbooksCheckFaultResponse)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
 			// re-run original request
 			if rerunOnTokenRefresh {
 				return s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, requestMethod, requestBody, false)
 			}
-
 		} else {
-			span.LogFields(log.Object("error", fault))
-
-			return nil, fmt.Errorf("error: %s", fault.Error[0].Message)
+			err = fmt.Errorf("error: %s", fault.Error[0].Message)
+			tracing.TraceErr(span, err)
+			return nil, err
 		}
 	}
 
