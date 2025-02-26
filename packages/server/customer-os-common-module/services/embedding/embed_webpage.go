@@ -66,7 +66,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 		record.SourceUrl = webpage.Url
 
 		// embed webpage content
-		embeddings, err := s.getEmbedding(ctx, segment, PassageRetrieval)
+		embeddings, err := s.GetEmbedding(ctx, segment, enum.EmbeddingPassageRetrieval)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			continue
@@ -85,7 +85,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 		}
 
 		// embed summary
-		summaryEmbeddings, err := s.getEmbedding(ctx, *summary, PassageRetrieval)
+		summaryEmbeddings, err := s.GetEmbedding(ctx, *summary, enum.EmbeddingPassageRetrieval)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			continue
@@ -106,7 +106,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 
 		// embed questions
 		for _, question := range questions {
-			embeddings, err := s.getEmbedding(ctx, question, Query)
+			embeddings, err := s.GetEmbedding(ctx, question, enum.EmbeddingQuery)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				continue
@@ -140,7 +140,7 @@ func (s *embeddingService) cleanWebpage(ctx context.Context, content string) (*s
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	systemPrompt := "I'm going to give you scraped markdown content from a B2B company's website.  Your job is to remove all links, cookie warnings, menus, headers, footers, etc and return only the core page content. Remove all extra whitespace. Ensure you do not miss any content. Return only the exact text on the page, nothing else."
+	systemPrompt := "I'm going to give you scraped markdown content from a B2B company's website.  Your job is to remove all links, cookie warnings, menus, headers, footers, etc and return only the core page content. Remove all extra whitespace. Ensure you do not miss any content. Return only the exact text on the page, nothing else. Do not add your own comments or preamble."
 
 	temperature := float32(0.1)
 	maxOutput := int32(8000)

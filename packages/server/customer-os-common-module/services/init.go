@@ -63,6 +63,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/quickbooks"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/registration"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/reminders"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/search"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/service_line_item"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/slack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/social"
@@ -133,6 +134,7 @@ type CommonServices struct {
 	PostmarkService            interfaces.PostmarkService
 	RegistrationService        interfaces.RegistrationService
 	ReminderService            interfaces.ReminderService
+	SearchService              interfaces.SearchService
 	ServiceLineItemService     interfaces.ServiceLineItemService
 	SlackService               interfaces.SlackService
 	SocialService              interfaces.SocialService
@@ -241,6 +243,7 @@ func InitCommonServices(
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	notificationImpl := notification.NewNotificationService(log, postgresRepositories, slackImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
+	searchImpl := search.NewSearchService(opensearchImpl, embeddingImpl, aiImpl)
 
 	// Complex dependencies (ordered by dependency chain)
 	authenticationImpl := authentication.NewAuthenticationService(neo4jRepositories, nil, nil)
@@ -372,6 +375,7 @@ func InitCommonServices(
 		PostmarkService:            postmarkImpl,
 		RegistrationService:        registrationImpl,
 		ReminderService:            reminderImpl,
+		SearchService:              searchImpl,
 		ServiceLineItemService:     sliImpl,
 		SlackService:               slackImpl,
 		SocialService:              socialImpl,

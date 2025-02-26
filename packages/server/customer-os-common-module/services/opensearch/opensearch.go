@@ -20,6 +20,12 @@ type opensearchService struct {
 	client *opensearch.Client
 }
 
+const (
+	SEARCH_LIMIT           = 20
+	SEMANTIC_SEARCH_WEIGHT = 70
+	KEYWORD_SEARCH_WEIGHT  = 30
+)
+
 func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig) interfaces.OpensearchService {
 	opensearchConfig := opensearch.Config{
 		Addresses: []string{config.Url},
@@ -76,6 +82,163 @@ func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string
 	}
 
 	return nil
+}
+
+// HybridSearch performs both vector and keyword search and combines the results
+func (c *opensearchService) HybridSearch(ctx context.Context, searchParams interfaces.HybridSearchRequest) ([]interfaces.HybridSearchResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "opensearchService.hybridSearch")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Set default limit if not provided
+	if searchParams.ResultsLimit == nil {
+		limit := SEARCH_LIMIT
+		searchParams.ResultsLimit = &limit
+	}
+	if searchParams.KeywordWeight == nil {
+		keyword := KEYWORD_SEARCH_WEIGHT
+		searchParams.KeywordWeight = &keyword
+	}
+	if searchParams.SemanticWeight == nil {
+		semantic := SEMANTIC_SEARCH_WEIGHT
+		searchParams.SemanticWeight = &semantic
+	}
+
+	keywordBoost := float64(*searchParams.KeywordWeight) / 100.0
+	semanticBoost := float64(*searchParams.SemanticWeight) / 100.0
+
+	// Create the hybrid search query
+	searchBody := map[string]interface{}{
+		"size": *searchParams.ResultsLimit,
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					{
+						// Vector search component
+						"knn": map[string]interface{}{
+							"vector": map[string]interface{}{
+								"vector": searchParams.EmbeddedQuery,
+								"k":      *searchParams.ResultsLimit,
+								"boost":  semanticBoost, // Vector search weight
+							},
+						},
+					},
+					{
+						// Keyword search component
+						"multi_match": map[string]interface{}{
+							"query":  searchParams.Query,
+							"fields": []string{"content^2", "summary^1.5", "questions.text^1"},
+							"type":   "best_fields",
+							"boost":  keywordBoost, // Keyword search weight
+						},
+					},
+				},
+				"minimum_should_match": 1,
+			},
+		},
+	}
+
+	// Add filters if provided
+	if searchParams.Filter != nil && len(searchParams.Filter) > 0 {
+		mustClauses := make([]map[string]interface{}, 0)
+
+		for key, value := range searchParams.Filter {
+			// Handle special case for tags which is a nested field
+			if key == "tags" {
+				if tags, ok := value.([]map[string]string); ok {
+					for _, tag := range tags {
+						mustClauses = append(mustClauses, map[string]interface{}{
+							"nested": map[string]interface{}{
+								"path": "tags",
+								"query": map[string]interface{}{
+									"bool": map[string]interface{}{
+										"must": []map[string]interface{}{
+											{
+												"match": map[string]interface{}{
+													"tags.type": tag["type"],
+												},
+											},
+											{
+												"match": map[string]interface{}{
+													"tags.value": tag["value"],
+												},
+											},
+										},
+									},
+								},
+							},
+						})
+					}
+				}
+			} else {
+				// Standard field filter
+				mustClauses = append(mustClauses, map[string]interface{}{
+					"match": map[string]interface{}{
+						key: value,
+					},
+				})
+			}
+		}
+
+		if len(mustClauses) > 0 {
+			searchBody["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"] = mustClauses
+		}
+	}
+
+	// Convert query to JSON
+	jsonBody, err := json.Marshal(searchBody)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("error marshaling search query: %w", err)
+	}
+
+	// Create and execute search request
+	req := opensearchapi.SearchRequest{
+		Index: []string{searchParams.Index},
+		Body:  strings.NewReader(string(jsonBody)),
+	}
+
+	res, err := req.Do(ctx, c.client)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("error executing search: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		err = fmt.Errorf("search error: %s", res.String())
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Parse the search results
+	var searchResult struct {
+		Hits struct {
+			Total struct {
+				Value int `json:"value"`
+			} `json:"total"`
+			Hits []struct {
+				Score  float64                       `json:"_score"`
+				ID     string                        `json:"_id"`
+				Source interfaces.HybridSearchResult `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&searchResult); err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("error parsing search response: %w", err)
+	}
+
+	// Extract results
+	results := make([]interfaces.HybridSearchResult, 0, len(searchResult.Hits.Hits))
+	for _, hit := range searchResult.Hits.Hits {
+		// Add the score to the result
+		hit.Source.Score = hit.Score
+		results = append(results, hit.Source)
+	}
+
+	return results, nil
 }
 
 func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName string) error {

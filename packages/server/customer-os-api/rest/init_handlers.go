@@ -27,6 +27,7 @@ type RestHandlers struct {
 	Contact              *customerbase.ContactHandler
 	Enrich               *enrich.EnrichHandler
 	Files                *files.FileHandler
+	HybridSearch         *private.HybridSearchHandler
 	Integrations         *integrations.IntegrationHandler
 	Mail                 *private.MailHandler
 	Mailtstack           *mailstack.MailstackHandler
@@ -52,6 +53,7 @@ func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
 		Contact:              customerbase.NewContactHandler(services, responseHandler),
 		Enrich:               enrich.NewEnrichHandler(services, responseHandler),
 		Files:                files.NewFileHandler(services, responseHandler),
+		HybridSearch:         private.NewHybridSearchHandler(services, responseHandler),
 		Integrations:         integrationsHandler,
 		Mail:                 private.NewMailHandler(services, responseHandler),
 		Mailtstack:           mailstack.NewMailstackHandler(services, responseHandler),
