@@ -120,10 +120,11 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		return enum.CapabilityExecutionCompleted, result, err
 	}
 	if invoice.DryRun {
+		span.LogFields(log.String("skip", "Dry run"))
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
-	if invoice.QuickbooksInvoiceId != "" {
+	if invoice.QuickbooksInvoiceId == "" {
 		err = c.syncInvoiceToQuickbooks(ctx, *invoice)
 		if err != nil {
 			tracing.TraceErr(span, err)
