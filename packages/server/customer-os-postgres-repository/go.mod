@@ -1,6 +1,6 @@
 module github.com/customeros/customeros/packages/server/customer-os-postgres-repository
 
-go 1.23
+go 1.23.0
 
 toolchain go1.23.1
 
