@@ -28,6 +28,7 @@ type UserReadRepository interface {
 	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error)
+	GetCurrentTenantByUserEmail(ctx context.Context, email string) (string, error)
 	FindPlatformOwners(ctx context.Context) ([]*AuthenticatedUserInTenant, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error)
 	FindTestUser(ctx context.Context) (*dbtype.Node, error)
@@ -282,6 +283,38 @@ func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, e
 	} else {
 		return nil, nil
 	}
+}
+
+func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetCurrentTenantByUserEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *u.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN au.currentTenant`),
+			map[string]interface{}{
+				"email": email,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if len(records.([]string)) == 0 {
+		return "", nil
+	}
+	return records.([]string)[0], nil
 }
 
 func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error) {
