@@ -3,8 +3,8 @@ package ai
 type GroqRequest struct {
 	Model               string         `json:"model"`
 	Messages            []Message      `json:"messages"`
-	MaxCompletionTokens int            `json:"max_completion_tokens,omitempty"`
-	Temperature         float64        `json:"temperature,omitempty"`
+	MaxCompletionTokens int32          `json:"max_completion_tokens,omitempty"`
+	Temperature         float32        `json:"temperature,omitempty"`
 	ResponseFormat      ResponseFormat `json:"response_format,omitempty"`
 }
 

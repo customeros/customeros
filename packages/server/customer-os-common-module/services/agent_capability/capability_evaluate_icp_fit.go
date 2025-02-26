@@ -157,7 +157,11 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	}
 
 	// askAI
-	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, content)
+	answer, err := c.aiService.AskAI(ctx, interfaces.AskAIRequest{
+		Model:        enum.AIModelGemini,
+		SystemPrompt: &systemPrompt,
+		Prompt:       &content,
+	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to ask AI"))
 		if answer != nil {

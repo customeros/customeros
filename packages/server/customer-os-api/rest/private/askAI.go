@@ -11,8 +11,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 
@@ -78,8 +78,9 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		// call appropriate model
 		prompt := request.Prompt.GetData()
 		// convert prompt to string
-		if promptStr, ok := prompt.(string); ok {
-			prompt = promptStr
+		var promptStr string
+		if str, ok := prompt.(string); ok {
+			promptStr = str
 		} else {
 			promptBytes, err := json.Marshal(prompt)
 			if err != nil {
@@ -88,9 +89,16 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
-			prompt = string(promptBytes)
+			promptStr = string(promptBytes)
 		}
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, utils.IfNotNilString(request.SystemPrompt), prompt.(string))
+
+		AIRequest := interfaces.AskAIRequest{
+			Model:        request.AIModel,
+			SystemPrompt: request.SystemPrompt,
+			Prompt:       &promptStr,
+		}
+
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, AIRequest)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"

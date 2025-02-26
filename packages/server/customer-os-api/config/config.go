@@ -25,6 +25,7 @@ type CommonConfig struct {
 	Postgres       commonconf.PostgresConfig
 	PostgresAsync  commonconf.PostgresAsyncConfig
 	Neo4j          commonconf.Neo4jConfig
+	Opensearch     commonconf.OpensearchConfig
 	CosApi         commonconf.CustomerOsApiConfig
 
 	Anthropic         commonconf.AnthropicConfig
@@ -109,14 +110,15 @@ func InitConfig() (*Config, error) {
 
 	cfg.Common = &commonconf.CommonConfig{
 		Infrastructure: commonconf.InfrastructureConfig{
-			LoggerConfig:        cmnCfg.Logger,
+			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
+			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
 			JaegerConfig:        cmnCfg.Jaeger,
-			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
+			LoggerConfig:        cmnCfg.Logger,
+			Neo4jConfig:         cmnCfg.Neo4j,
+			OpensearchConfig:    cmnCfg.Opensearch,
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
-			Neo4jConfig:         cmnCfg.Neo4j,
-			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
-			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
+			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,

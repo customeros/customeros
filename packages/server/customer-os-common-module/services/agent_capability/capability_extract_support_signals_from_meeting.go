@@ -106,7 +106,11 @@ Please analyze the meeting and respond in this exact JSON format:
 
 Important: Always provide your answer as valid JSON. If there is no help required, simply return help_needed with an empty array.`
 
-	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, executionContainer.InputData.MeetingContent)
+	answer, err := c.aiService.AskAI(ctx, interfaces.AskAIRequest{
+		Model:        enum.AIModelGemini,
+		SystemPrompt: &systemPrompt,
+		Prompt:       &executionContainer.InputData.MeetingContent,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err

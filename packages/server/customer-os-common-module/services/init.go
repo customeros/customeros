@@ -30,6 +30,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/domain"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/email"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/emailing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/embedding"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/enrichment"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	externalsystem "github.com/customeros/customeros/packages/server/customer-os-common-module/services/external_system"
@@ -53,7 +54,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/namecheap"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/notification"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
-	events2 "github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensrs"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opportunity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/organization"
@@ -102,6 +103,7 @@ type CommonServices struct {
 	DomainService              interfaces.DomainService
 	EmailingService            interfaces.EmailingService
 	EmailService               interfaces.EmailService
+	EmbeddingService           interfaces.EmbeddingService
 	EnrichmentService          interfaces.EnrichmentService
 	ExternalSystemService      interfaces.ExternalSystemService
 	FileService                interfaces.FileService
@@ -195,7 +197,10 @@ func InitCommonServices(
 
 	var opensearchImpl interfaces.OpensearchService
 	if cfg.Infrastructure.OpensearchConfig.Url != "" {
-		opensearchImpl = events2.NewOpensearchService(log, &cfg.Infrastructure.OpensearchConfig)
+		opensearchImpl = opensearch.NewOpensearchService(log, &cfg.Infrastructure.OpensearchConfig)
+	}
+	if opensearchImpl == nil {
+		log.Warn("opensearch service is nil")
 	}
 
 	// Simple - Services that depend only on base services
@@ -232,6 +237,7 @@ func InitCommonServices(
 
 	// Services that only depend on Simple
 	companyResearchImpl := company_research.NewCompanyResearchService(postgresRepositories, aiImpl, webscrapeImpl, workspaceImpl)
+	embeddingImpl := embedding.NewEmbeddingService(&cfg.External.JinaConfig, aiImpl, opensearchImpl)
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	notificationImpl := notification.NewNotificationService(log, postgresRepositories, slackImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
@@ -336,6 +342,7 @@ func InitCommonServices(
 		DomainService:              domainImpl,
 		EmailService:               emailImpl,
 		EmailingService:            emailingImpl,
+		EmbeddingService:           embeddingImpl,
 		EnrichmentService:          enrichmentImpl,
 		ExternalSystemService:      externalSystemImpl,
 		FileService:                fileImpl,

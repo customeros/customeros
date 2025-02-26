@@ -80,3 +80,44 @@ func (h *WebscrapeHandler) parseRequest(c *gin.Context) (*WebscrapeRequest, erro
 
 	return &request, nil
 }
+
+type EmbedRequest struct {
+	Url string `json:"url"`
+}
+
+func (h *WebscrapeHandler) EmbedWebpage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/embedWebpage", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultServiceSpanTags(ctx, span)
+
+		var request EmbedRequest
+		err := c.BindJSON(&request)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
+			return
+		}
+
+		_, err = h.services.CommonServices.WebscraperService.Scrape(ctx, request.Url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+		}
+
+		record, err := h.services.CommonServices.PostgresRepositories.GlobalOrganizationWebpageRepository.GetWebpage(ctx, request.Url, 90)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+		}
+
+		embeddingIds, err := h.services.CommonServices.EmbeddingService.EmbedWebpage(ctx, *record)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+		}
+		h.responseHandler.HandleSuccess(c, embeddingIds)
+	}
+}

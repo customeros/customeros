@@ -15,74 +15,59 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type DeepseekClient struct {
 	apiUrl string
 	apiKey string
-	model  string
 	client *http.Client
 }
 
-func NewDeepseekClient(cfg *config.DeepseekConfig, model enum.AIModel) *DeepseekClient {
+func NewDeepseekClient(cfg *config.DeepseekConfig) *DeepseekClient {
 	return &DeepseekClient{
 		apiKey: cfg.ApiKey,
 		apiUrl: cfg.Url,
-		model:  model.String(),
 		client: &http.Client{
 			Timeout: DefaultTimeoutSeconds * time.Second,
 		},
 	}
 }
 
-func (c *DeepseekClient) AskDeepseek(ctx context.Context, systemPrompt string, content any) (*string, error) {
+func (c *DeepseekClient) AskDeepseek(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DeepseekClient.AskDeepseek")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("model", c.model, "systemPrompt", utils.IfNotNilString(systemPrompt))
-	tracing.LogObjectAsJson(span, "content", content)
+	tracing.LogObjectAsJson(span, "request", request)
 
-	if c.model != enum.AIModelDeepseekChat.String() {
+	if request.Model != enum.AIModelDeepseekChat {
 		err := errors.New("model not a deepseek model")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	if content == nil {
+	if request.Prompt == nil {
 		err := errors.New("content cannot be nil")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	req := c.buildRequest(systemPrompt, content)
+	req := c.buildRequest(request)
 	return c.executeWithRetry(ctx, req)
 }
 
-func (c *DeepseekClient) buildRequest(systemPrompt string, content any) *DeepseekRequest {
+func (c *DeepseekClient) buildRequest(request interfaces.AskAIRequest) *DeepseekRequest {
 	sysPromptStr := "You are a helpful assistant."
-	if systemPrompt != "" {
-		sysPromptStr = systemPrompt
-	}
-
-	var promptContent string
-	switch p := content.(type) {
-	case string:
-		promptContent = p
-	default:
-		jsonBytes, err := json.Marshal(p)
-		if err != nil {
-			return nil
-		}
-		promptContent = string(jsonBytes)
+	if request.SystemPrompt != nil {
+		sysPromptStr = *request.SystemPrompt
 	}
 
 	return &DeepseekRequest{
-		Model: c.model,
+		Model: request.Model.String(),
 		Messages: []Message{
 			{Role: "system", Content: sysPromptStr},
-			{Role: "user", Content: promptContent},
+			{Role: "user", Content: *request.Prompt},
 		},
 		Stream: false,
 	}

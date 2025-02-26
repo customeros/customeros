@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/lib/pq"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
@@ -16,6 +17,8 @@ type GlobalOrganizationWebpageRepository interface {
 	Save(ctx context.Context, webpageData postgres_entity.GlobalOrganizationWebpages) (*postgres_entity.GlobalOrganizationWebpages, error)
 	GetWebpage(ctx context.Context, url string, lookbackInDays int) (*postgres_entity.GlobalOrganizationWebpages, error)
 	GetAllWebpagesByPrimaryDomains(ctx context.Context, primaryDomains []string) ([]*postgres_entity.GlobalOrganizationWebpages, error)
+	SetLinks(ctx context.Context, primaryDomain string, links []string) error
+	SetCleanContent(ctx context.Context, primaryDomain string, cleanContent string) error
 }
 
 type globalOrganizationWebpageRepository struct {
@@ -40,6 +43,8 @@ func (r *globalOrganizationWebpageRepository) Save(ctx context.Context, webpageD
 			// URL doesn't exist, create a new record
 			webpageData.CreatedAt = time.Now()
 			webpageData.UpdatedAt = time.Now()
+
+			// Make sure Links is properly handled for PostgreSQL array
 			if err := r.gormDb.Create(&webpageData).Error; err != nil {
 				return nil, err
 			}
@@ -49,16 +54,20 @@ func (r *globalOrganizationWebpageRepository) Save(ctx context.Context, webpageD
 		return nil, result.Error
 	}
 
+	// Update existing record fields if they're provided
 	if webpageData.Content != "" {
 		existingRecord.Content = webpageData.Content
 		existingRecord.UpdatedAt = time.Now()
 	}
-	if webpageData.CleanContent != "" {
-		existingRecord.CleanContent = webpageData.CleanContent
-		existingRecord.UpdatedAt = time.Now()
-	}
+
 	if webpageData.PrimaryDomain != "" {
 		existingRecord.PrimaryDomain = webpageData.PrimaryDomain
+	}
+
+	// Add handling for Links field
+	if len(webpageData.Links) > 0 {
+		existingRecord.Links = webpageData.Links
+		existingRecord.UpdatedAt = time.Now()
 	}
 
 	if err := r.gormDb.Save(&existingRecord).Error; err != nil {
@@ -108,4 +117,30 @@ func (r *globalOrganizationWebpageRepository) GetAllWebpagesByPrimaryDomains(ctx
 	}
 
 	return records, nil
+}
+
+func (r *globalOrganizationWebpageRepository) SetLinks(ctx context.Context, primaryDomain string, links []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "globalOrganizationWebpageRepository.SetLinks")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	err := r.gormDb.Model(&postgres_entity.GlobalOrganizationWebpages{}).
+		Where("primary_domain = ?", primaryDomain).
+		Update("links", pq.StringArray(links)).
+		Error
+
+	return err
+}
+
+func (r *globalOrganizationWebpageRepository) SetCleanContent(ctx context.Context, primaryDomain string, cleanContent string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "globalOrganizationWebpageRepository.SetCleanContent")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	err := r.gormDb.Model(&postgres_entity.GlobalOrganizationWebpages{}).
+		Where("primary_domain = ?", primaryDomain).
+		Update("clean_content", cleanContent).
+		Error
+
+	return err
 }

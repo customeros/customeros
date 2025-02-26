@@ -5,8 +5,8 @@ type AnthropicApiRequest struct {
 	Model       string    `json:"model"`
 	System      string    `json:"system,omitempty"` // Add this field
 	Messages    []Message `json:"messages"`
-	MaxTokens   int       `json:"max_tokens,omitempty"`
-	Temperature float64   `json:"temperature,omitempty"`
+	MaxTokens   int32     `json:"max_tokens,omitempty"`
+	Temperature float32   `json:"temperature,omitempty"`
 }
 
 // Message represents a single message in the conversation

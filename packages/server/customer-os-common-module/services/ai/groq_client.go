@@ -15,54 +15,62 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type GroqClient struct {
 	apiKey string
 	apiUrl string
-	model  string
 	client *http.Client
 }
 
-func NewGroqClient(cfg *config.GroqConfig, model enum.AIModel) *GroqClient {
+func NewGroqClient(cfg *config.GroqConfig) *GroqClient {
 	return &GroqClient{
 		apiKey: cfg.ApiKey,
 		apiUrl: cfg.Url,
-		model:  model.String(),
 		client: &http.Client{
 			Timeout: DefaultTimeoutSeconds * time.Second,
 		},
 	}
 }
 
-func (c *GroqClient) Invoke(ctx context.Context, systemPrompt, prompt string) (string, error) {
+func (c *GroqClient) Invoke(ctx context.Context, request interfaces.AskAIRequest) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.Invoke")
 	defer span.Finish()
-	span.LogKV("systemPrompt", systemPrompt)
-	span.LogKV("prompt", prompt)
+	tracing.LogObjectAsJson(span, "request", request)
 
-	if prompt == "" {
+	if request.Prompt == nil {
 		err := errors.New("content (user prompt) cannot be nil")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	reqBody := c.buildRequest(systemPrompt, prompt)
+	reqBody := c.buildRequest(request)
 	return c.executeWithRetry(ctx, reqBody)
 }
 
-func (c *GroqClient) buildRequest(systemPrompt, content string) GroqRequest {
+func (c *GroqClient) buildRequest(request interfaces.AskAIRequest) GroqRequest {
+	var outputFormat string
+	switch request.OutputFormat {
+	case enum.AIOutputText:
+		outputFormat = "text"
+	case enum.AIOutputJson:
+		outputFormat = "json_object"
+	default:
+		outputFormat = "text"
+	}
+
 	req := GroqRequest{
-		Model: c.model,
+		Model: request.Model.String(),
 		Messages: []Message{
-			{Role: "system", Content: systemPrompt},
-			{Role: "user", Content: content},
+			{Role: "system", Content: *request.SystemPrompt},
+			{Role: "user", Content: *request.Prompt},
 		},
-		MaxCompletionTokens: MaxTokens,
-		Temperature:         DefaultTemperature,
+		MaxCompletionTokens: *request.MaxOutputTokens,
+		Temperature:         *request.ModelTemperature,
 		ResponseFormat: ResponseFormat{
-			Type: "text",
+			Type: outputFormat,
 		},
 	}
 
