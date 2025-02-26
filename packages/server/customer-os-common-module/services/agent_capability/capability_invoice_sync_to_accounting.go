@@ -132,6 +132,13 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		}
 	}
 
+	// refetch invoice to get updated quickbooks invoice id
+	invoice, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionCompleted, result, err
+	}
+
 	if invoice.Status == neo4jenum.InvoiceStatusPaid {
 		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoice)
 		if err != nil {
