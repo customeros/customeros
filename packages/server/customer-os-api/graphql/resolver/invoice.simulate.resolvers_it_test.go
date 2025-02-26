@@ -212,11 +212,11 @@ func TestMutationResolver_InvoiceSimulate_OnCycle_PostPaidFalse_4(t *testing.T) 
 		NextInvoiceDate:      &februaryFirst,
 	})
 	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{
-		Name:      "S1",
-		Billed:    neo4jenum.BilledTypeMonthly,
-		Price:     5,
-		Quantity:  1,
-		StartedAt: decemberFirst,
+		Description: "S1",
+		Billed:      neo4jenum.BilledTypeMonthly,
+		Price:       5,
+		Quantity:    1,
+		StartedAt:   decemberFirst,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/simulate_invoice", map[string]interface{}{
