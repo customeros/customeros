@@ -1,7 +1,6 @@
 package webscraper
 
 import (
-	"bufio"
 	"context"
 	"strings"
 	"sync"
@@ -94,7 +93,7 @@ func (s *webscraperService) crawlRecursive(
 	span.SetTag("depth", depth)
 
 	// Scrape current URL
-	content, err := s.ScrapeAndClean(ctx, url)
+	content, err := s.Scrape(ctx, url)
 	if err != nil {
 		select {
 		case errChan <- errors.Wrapf(err, "failed to scrape %s", url):
@@ -107,7 +106,11 @@ func (s *webscraperService) crawlRecursive(
 	results <- url
 
 	// Get new links
-	links := s.linksToCrawl(content, workspaceDomains)
+	links, err := s.linksToCrawl(ctx, content, workspaceDomains)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
 
 	// Rate limiting channel
 	limiter := make(chan struct{}, 5)
@@ -125,70 +128,6 @@ func (s *webscraperService) crawlRecursive(
 			}(link)
 		}
 	}
-}
-
-func (s *webscraperService) extractLinks(content string) []string {
-	var urls []string
-
-	// Find the Links/Buttons section
-	sections := strings.Split(content, "Links/Buttons:")
-	if len(sections) < 2 {
-		return urls
-	}
-
-	// Process the Links/Buttons section
-	linksSection := sections[1]
-	scanner := bufio.NewScanner(strings.NewReader(linksSection))
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Skip empty lines
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-
-		// Extract URL from markdown link format [text](url)
-		if strings.Contains(line, "](") {
-			start := strings.Index(line, "](") + 2
-			end := strings.Index(line[start:], ")")
-			if end != -1 {
-				url := line[start : start+end]
-				// Skip empty URLs and fragment-only URLs
-				if url != "" && url != "#" {
-					urls = append(urls, url)
-				}
-			}
-		}
-	}
-
-	return urls
-}
-
-func (s *webscraperService) linksToCrawl(content string, workspaceDomains []string) []string {
-	var urls []string
-	links := s.extractLinks(content)
-	for _, link := range links {
-		link = strings.TrimSuffix(link, "#")
-		if s.shouldCrawl(link, workspaceDomains) {
-			urls = append(urls, link)
-		}
-	}
-	return urls
-}
-
-func (s *webscraperService) shouldCrawl(url string, workspaceDomains []string) bool {
-	if shouldSkipURL(url) {
-		return false
-	}
-
-	urlDomain := utils.ExtractDomain(url)
-	for _, domain := range workspaceDomains {
-		if strings.Contains(urlDomain, domain) {
-			return true
-		}
-	}
-	return false
 }
 
 func shouldSkipURL(url string) bool {

@@ -127,7 +127,11 @@ func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domai
 
 		for i, chunk := range chunks[domain] {
 			systemPrompt, prompt := s.buildChunkPrompt(domain, chunk, i+1, *globalOrgDetails)
-			answer, err := s.aiService.AskAI(ctx, AIModel, systemPrompt, prompt)
+			answer, err := s.aiService.AskAI(ctx, interfaces.AskAIRequest{
+				Model:        enum.AIModelGemini,
+				SystemPrompt: &systemPrompt,
+				Prompt:       &prompt,
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -174,7 +178,14 @@ func (s *companyResearchService) buildFinalReport(ctx context.Context, analyses 
 		p.WriteString("\n\n")
 	}
 
-	report, err := s.aiService.AskAI(ctx, AIModel, sp.String(), p.String())
+	systemPrompt := sp.String()
+	prompt := p.String()
+
+	report, err := s.aiService.AskAI(ctx, interfaces.AskAIRequest{
+		Model:        AIModel,
+		SystemPrompt: &systemPrompt,
+		Prompt:       &prompt,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

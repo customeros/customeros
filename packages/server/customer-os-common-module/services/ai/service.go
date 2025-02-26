@@ -41,29 +41,42 @@ func NewAIService(
 	}
 }
 
-func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error) {
+func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAI")
 	defer span.Finish()
-	span.LogKV("model", model)
-	span.LogKV("systemPrompt", systemPrompt)
-	span.LogKV("prompt", prompt)
+	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	var result *string
 	var err error
 
-	switch model {
+	if request.Prompt == nil {
+		err := errors.New("Prompt cannot be empty")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if request.ModelTemperature == nil {
+		temp := float32(DefaultTemperature)
+		request.ModelTemperature = &temp
+	}
+	if request.MaxOutputTokens == nil {
+		maxTokens := int32(MaxTokens)
+		request.MaxOutputTokens = &maxTokens
+	}
+
+	switch request.Model {
 	case
 		enum.AIModelAnthropicHaiku,
 		enum.AIModelAnthropicSonnet:
 
-		result, err = s.askAnthropic(ctx, model, systemPrompt, prompt)
+		result, err = s.askAnthropic(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
 	case enum.AIModelDeepseekChat:
-		result, err = s.askDeepseek(ctx, model, systemPrompt, prompt)
+		result, err = s.askDeepseek(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -77,14 +90,16 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt 
 		enum.AIModelMixtral,
 		enum.AIModelWhisper:
 
-		result, err = s.askGroq(ctx, model, systemPrompt, prompt)
+		result, err = s.askGroq(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-	case enum.AIModelGemini:
-		result, err = s.askGemini(ctx, model, systemPrompt, prompt)
+	case
+		enum.AIModelGemini,
+		enum.AIModelGeminiLite:
+		result, err = s.askGemini(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -103,7 +118,7 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt 
 	return result, nil
 }
 
-func (s *aiService) askGemini(ctx context.Context, aiModel enum.AIModel, systemPrompt string, prompt string) (*string, error) {
+func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGemini")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -122,19 +137,29 @@ func (s *aiService) askGemini(ctx context.Context, aiModel enum.AIModel, systemP
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel(aiModel.String())
-	model.SetTemperature(DefaultTemperature)
-	model.SetMaxOutputTokens(MaxTokens)
-	model.ResponseMIMEType = "text/plain"
+	model := client.GenerativeModel(request.Model.String())
+	model.SetTemperature(*request.ModelTemperature)
+	model.SetMaxOutputTokens(*request.MaxOutputTokens)
 
-	model.SystemInstruction = &genai.Content{
-		Parts: []genai.Part{genai.Text(systemPrompt)},
+	switch request.OutputFormat {
+	case enum.AIOutputText:
+		model.ResponseMIMEType = "text/plain"
+	case enum.AIOutputJson:
+		model.ResponseMIMEType = "application/json"
+	default:
+		return nil, errors.New("unsupported output type")
+	}
+
+	if request.SystemPrompt != nil {
+		model.SystemInstruction = &genai.Content{
+			Parts: []genai.Part{genai.Text(*request.SystemPrompt)},
+		}
 	}
 
 	session := model.StartChat()
 	session.History = []*genai.Content{}
 
-	resp, err := session.SendMessage(ctx, genai.Text(prompt))
+	resp, err := session.SendMessage(ctx, genai.Text(*request.Prompt))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -153,7 +178,7 @@ func (s *aiService) askGemini(ctx context.Context, aiModel enum.AIModel, systemP
 	return &respStr, nil
 }
 
-func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemPrompt string, prompt any) (*string, error) {
+func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askDeepseek")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -172,8 +197,8 @@ func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemP
 		return nil, err
 	}
 
-	client := NewDeepseekClient(s.deepseekConfig, model)
-	response, err := client.AskDeepseek(ctx, systemPrompt, prompt)
+	client := NewDeepseekClient(s.deepseekConfig)
+	response, err := client.AskDeepseek(ctx, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -182,7 +207,7 @@ func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemP
 	return response, nil
 }
 
-func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error) {
+func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAnthropic")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -195,8 +220,8 @@ func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, system
 	}
 
 	// setup client
-	client := NewAnthropicClient(s.anthropicConfig, model)
-	response, err := client.Invoke(ctx, systemPrompt, prompt)
+	client := NewAnthropicClient(s.anthropicConfig)
+	response, err := client.Invoke(ctx, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -205,7 +230,7 @@ func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, system
 	return &response, nil
 }
 
-func (s *aiService) askGroq(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error) {
+func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGroq")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -218,8 +243,8 @@ func (s *aiService) askGroq(ctx context.Context, model enum.AIModel, systemPromp
 	}
 
 	// setup client
-	client := NewGroqClient(s.groqConfig, model)
-	response, err := client.Invoke(ctx, systemPrompt, prompt)
+	client := NewGroqClient(s.groqConfig)
+	response, err := client.Invoke(ctx, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

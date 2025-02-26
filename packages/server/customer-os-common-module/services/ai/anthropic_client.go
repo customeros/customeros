@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -40,46 +40,44 @@ type ErrorResponse struct {
 type AnthropicClient struct {
 	apiKey string
 	apiUrl string
-	model  string
 	client *http.Client
 }
 
-func NewAnthropicClient(cfg *config.AnthropicConfig, model enum.AIModel) *AnthropicClient {
+func NewAnthropicClient(cfg *config.AnthropicConfig) *AnthropicClient {
 	return &AnthropicClient{
 		apiKey: cfg.ApiKey,
 		apiUrl: cfg.ApiPath,
-		model:  model.String(),
 		client: &http.Client{
 			Timeout: DefaultTimeoutSeconds * time.Second,
 		},
 	}
 }
 
-func (c *AnthropicClient) Invoke(ctx context.Context, systemPrompt, prompt string) (string, error) {
+func (c *AnthropicClient) Invoke(ctx context.Context, request interfaces.AskAIRequest) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnthropicClient.Invoke")
 	defer span.Finish()
-	span.LogKV("systemPrompt", systemPrompt)
-	span.LogKV("prompt", prompt)
+	span.LogKV("systemPrompt", request.SystemPrompt)
+	span.LogKV("prompt", request.Prompt)
 
-	if prompt == "" {
+	if *request.Prompt == "" {
 		err := errors.New("content (user prompt) cannot be nil")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	reqBody := c.buildRequest(systemPrompt, prompt)
+	reqBody := c.buildRequest(request)
 	return c.executeWithRetry(ctx, reqBody)
 }
 
-func (c *AnthropicClient) buildRequest(systemPrompt, content string) AnthropicApiRequest {
+func (c *AnthropicClient) buildRequest(request interfaces.AskAIRequest) AnthropicApiRequest {
 	req := AnthropicApiRequest{
-		Model:       c.model,
-		Messages:    []Message{{Role: "user", Content: content}},
-		MaxTokens:   MaxTokens,
-		Temperature: DefaultTemperature,
+		Model:       request.Model.String(),
+		Messages:    []Message{{Role: "user", Content: request.Prompt}},
+		MaxTokens:   *request.MaxOutputTokens,
+		Temperature: *request.ModelTemperature,
 	}
 
-	req.System = systemPrompt
+	req.System = *request.SystemPrompt
 
 	return req
 }

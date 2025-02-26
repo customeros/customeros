@@ -18,12 +18,16 @@ import (
 )
 
 type embeddingService struct {
-	config *config.JinaConfig
+	config            *config.JinaConfig
+	aiService         interfaces.AIService
+	opensearchService interfaces.OpensearchService
 }
 
-func NewEmbeddingService(config *config.JinaConfig) interfaces.EmbeddingService {
+func NewEmbeddingService(config *config.JinaConfig, aiService interfaces.AIService, opensearch interfaces.OpensearchService) interfaces.EmbeddingService {
 	return &embeddingService{
-		config: config,
+		config:            config,
+		aiService:         aiService,
+		opensearchService: opensearch,
 	}
 }
 

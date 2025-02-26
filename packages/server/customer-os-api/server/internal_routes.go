@@ -205,4 +205,12 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 		routeType: RouteInternal,
 		services:  s,
 	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/embedWebpage", InternalPath),
+		handler:   h.Webscrape.EmbedWebpage(),
+		routeType: RouteInternal,
+		services:  s,
+	})
 }

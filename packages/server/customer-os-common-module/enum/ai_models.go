@@ -10,6 +10,7 @@ const (
 	AIModelDeepseekChat    AIModel = "deepseek-chat"
 	AIModelDeepseekQwen    AIModel = "deepseek-r1-distill-qwen-32b"
 	AIModelGemini          AIModel = "gemini-2.0-flash"
+	AIModelGeminiLite      AIModel = "gemini-2.0-flash-lite"
 	AIModelGemma           AIModel = "gemma2-9b-it"
 	AIModelJinaEmbeddings  AIModel = "jina-embeddings-v3"
 	AIModelLlama8B         AIModel = "llama-3.1-8b-instant"
@@ -41,4 +42,15 @@ func GetAIModel(s string) (AIModel, error) {
 	default:
 		return "", fmt.Errorf("invalid AIModel: %s", s)
 	}
+}
+
+type AIOutputFormat string
+
+const (
+	AIOutputText AIOutputFormat = "text"
+	AIOutputJson AIOutputFormat = "json"
+)
+
+func (a AIOutputFormat) String() string {
+	return string(a)
 }

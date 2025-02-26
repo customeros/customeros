@@ -9,8 +9,10 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type EmbeddingTask string
@@ -49,45 +51,49 @@ type EmbeddingObj struct {
 	Embedding []float64 `json:"embedding"`
 }
 
-type EmbeddingRecord struct {
-	ID               string     `json:"id"`
-	Vector           []float64  `json:"vector"`
-	ContentID        string     `json:"contentId"`
-	ContentSourceURL string     `json:"contentSourceUrl"`
-	ContentType      string     `json:"contentType"`
-	Content          string     `json:"content"`
-	EmbeddingModel   string     `json:"embeddingModel"`
-	ContentCreatedAt time.Time  `json:"contentCreatedAt"`
-	EmbeddedAt       time.Time  `json:"embeddedAt"`
-	Tags             []Tag      `json:"tags"`
-	Summary          string     `json:"summary"`
-	SummaryVector    []float64  `json:"summaryVector"`
-	Questions        []Question `json:"questions"`
-}
-
-type Tag struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
-type Question struct {
-	Text   string    `json:"text"`
-	Vector []float64 `json:"vector"`
-}
-
 const (
 	EmbeddingModel = enum.AIModelJinaEmbeddings
 	EmbeddingURL   = "https://api.jina.ai/v1/embeddings"
 )
 
-func (s *embeddingService) BuildEmbeddingRecord(ctx context.Context, content string) ([]*EmbeddingResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.BuildEmbeddingRecord")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	return nil, nil
+func (s *embeddingService) newEmbeddingRecord(contentType enum.EmbeddingContentType, content string, contentCreatedAt *time.Time) *dto.EmbeddingRecord {
+	record := &dto.EmbeddingRecord{
+		ID:             utils.GenerateNanoIdWithPrefix("emb", 21),
+		ContentType:    contentType.String(),
+		Content:        content,
+		EmbeddingModel: EmbeddingModel.String(),
+	}
+	if contentCreatedAt == nil {
+		record.ContentCreatedAt = utils.Now()
+	} else {
+		record.ContentCreatedAt = *contentCreatedAt
+	}
+	return record
 }
 
-func (s *embeddingService) embedd(ctx context.Context, task EmbeddingTask, input []string) (*EmbeddingResponse, error) {
+func (s *embeddingService) getEmbedding(ctx context.Context, content string, task EmbeddingTask) ([]float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embedWebpageSegment")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	embedding, err := s.embed(ctx, task, []string{content})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if embedding == nil {
+		err := errors.New("unable to embed content")
+		return nil, err
+	}
+	if len(embedding.Data) == 0 {
+		err := errors.New("no embeddings returned")
+		return nil, err
+	}
+
+	return embedding.Data[0].Embedding, nil
+}
+
+func (s *embeddingService) embed(ctx context.Context, task EmbeddingTask, input []string) (*EmbeddingResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embedd")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

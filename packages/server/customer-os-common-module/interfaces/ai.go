@@ -7,5 +7,14 @@ import (
 )
 
 type AIService interface {
-	AskAI(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error)
+	AskAI(ctx context.Context, request AskAIRequest) (*string, error)
+}
+
+type AskAIRequest struct {
+	Model            enum.AIModel
+	SystemPrompt     *string
+	Prompt           *string
+	ModelTemperature *float32
+	MaxOutputTokens  *int32
+	OutputFormat     enum.AIOutputFormat
 }

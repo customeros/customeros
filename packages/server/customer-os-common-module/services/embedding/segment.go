@@ -7,6 +7,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -17,16 +18,9 @@ type SegmentRequest struct {
 	MaxChunkLength int    `json:"max_chunk_length"`
 }
 
-type SegmentResponse struct {
-	NumTokens int      `json:"num_tokens"`
-	Tokenizer string   `json:"tokenizer"`
-	NumChunks int      `json:"num_chunks"`
-	Chunks    []string `json:"chunks"`
-}
-
 const SegmentURL = "https://api.jina.ai/v1/segment"
 
-func (s *embeddingService) Segment(ctx context.Context, input string, maxLength int) (*SegmentResponse, error) {
+func (s *embeddingService) Segment(ctx context.Context, input string) (*interfaces.ContentSegments, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.Segment")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -52,12 +46,12 @@ func (s *embeddingService) Segment(ctx context.Context, input string, maxLength 
 	return parsedResp, nil
 }
 
-func (s *embeddingService) parseSegments(ctx context.Context, jsonStr string) (*SegmentResponse, error) {
+func (s *embeddingService) parseSegments(ctx context.Context, jsonStr string) (*interfaces.ContentSegments, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.parseSegments")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	var response SegmentResponse
+	var response interfaces.ContentSegments
 	err := json.Unmarshal([]byte(jsonStr), &response)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse chunking response: %w", err)

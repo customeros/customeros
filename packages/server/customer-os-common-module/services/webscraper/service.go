@@ -42,44 +42,13 @@ func NewWebscraperService(config *config.JinaConfig, postgres *postgres_reposito
 
 const (
 	WebpageScrapeTTLInDays = 180
+	CleanPageModel         = enum.AIModelGemini
 )
 
 var (
 	ErrPaymentRequired = errors.New("Jina balance requires topup")
 	ErrUnprocessable   = errors.New("Jina cannot process webpage")
 )
-
-func (s *webscraperService) ScrapeAndClean(ctx context.Context, url string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.ScrapeAndClean")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	contents, err := s.Scrape(ctx, url)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	cleanContents, err := s.cleanPageContents(ctx, contents)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
-
-	_, err = s.postgresRepositories.GlobalOrganizationWebpageRepository.Save(ctx, postgres_entity.GlobalOrganizationWebpages{
-		PrimaryDomain: primaryDomain,
-		Url:           url,
-		CleanContent:  cleanContents,
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	return cleanContents, nil
-}
 
 func (s *webscraperService) Scrape(ctx context.Context, url string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.Scrape")
@@ -133,12 +102,15 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 		return "", nil
 	}
 
+	content, links := s.processWebContent(ctx, contents)
+
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
 
 	_, err = s.postgresRepositories.GlobalOrganizationWebpageRepository.Save(ctx, postgres_entity.GlobalOrganizationWebpages{
 		PrimaryDomain: primaryDomain,
 		Url:           url,
-		Content:       contents,
+		Content:       content,
+		Links:         links,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -148,22 +120,22 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	return contents, nil
 }
 
-func (s *webscraperService) cleanPageContents(ctx context.Context, contents string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.cleanPageContents")
+func (s *webscraperService) processWebContent(ctx context.Context, content string) (string, []string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.postProcessWebContent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	systemPrompt := "I'm giving you scraped website content to cleanup.  Provide back only the content in paragraph form.  No links.  No cookie warnings.  Only return the exact text from the webpage. Here's the webpage content:"
+	// extract links and save
+	sections := strings.Split(content, "Links/Buttons:")
+	if len(sections) < 2 {
+		cleanContent := s.processMarkdownWebpage(content)
+		return cleanContent, nil
+	}
 
-	cleanContent, err := s.aiService.AskAI(ctx, enum.AIModelDeepseekChat, systemPrompt, contents)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if cleanContent == nil {
-		return "", nil
-	}
-	return *cleanContent, nil
+	content = s.processMarkdownWebpage(sections[0])
+	links := s.extractLinks(sections[1])
+
+	return content, links
 }
 
 func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, error) {
@@ -186,7 +158,6 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 
 	// Align headers with working curl command
 	req.Header.Set("Authorization", "Bearer "+s.config.ApiKey)
-	req.Header.Set("X-Return-Format", "markdown")  // Get markdown output
 	req.Header.Set("X-Retain-Images", "none")      // Don't retain images
 	req.Header.Set("X-With-Links-Summary", "true") // Include links summary
 
