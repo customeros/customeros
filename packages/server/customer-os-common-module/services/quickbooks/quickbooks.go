@@ -377,7 +377,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, invoiceDate time.Time, lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
+func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId, invoiceNumber string, invoiceDate time.Time, lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveInvoice")
 	defer span.Finish()
 
@@ -399,8 +399,9 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, 
 		"CustomerRef": map[string]interface{}{
 			"value": customerId,
 		},
-		"TxnDate": invoiceDate.Format("2006/01/25"),
-		"Line":    lines,
+		"TxnDate":   invoiceDate.Format("2006/01/25"),
+		"Line":      lines,
+		"DocNumber": invoiceNumber,
 	}
 
 	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request, true)
