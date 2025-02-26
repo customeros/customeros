@@ -287,6 +287,10 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
 				defaultTenant = common_utils.GetStringPropOrEmpty(authUserProps, "defaultTenant")
 				currentTenant = common_utils.GetStringPropOrEmpty(authUserProps, "currentTenant")
+
+				ctx = common.WithCustomContext(ctx, &common.CustomContext{
+					Tenant: currentTenant,
+				})
 			} else {
 				//auth with different provider found. link back to the same user and add new auth
 				authNodes, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthId(ctx, signInRequest.LoggedInEmail)
@@ -307,6 +311,10 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
 					defaultTenant = common_utils.GetStringPropOrEmpty(authUserProps, "defaultTenant")
 					currentTenant = common_utils.GetStringPropOrEmpty(authUserProps, "currentTenant")
+
+					ctx = common.WithCustomContext(ctx, &common.CustomContext{
+						Tenant: currentTenant,
+					})
 
 					authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
 						AuthId:     signInRequest.LoggedInEmail,
