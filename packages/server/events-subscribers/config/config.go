@@ -44,6 +44,7 @@ type CommonConfig struct {
 	SlackConfig      commonconf.SlackConfig
 	CustomerOsApi    commonconf.CustomerOsApiConfig
 	IntegrationApp   commonconf.IntegrationAppConfig
+	Temporal         commonconf.TemporalConfig
 }
 
 func Load() *Config {
@@ -91,6 +92,7 @@ func Load() *Config {
 			QuickbooksConfig:     cmnCfg.QuickbooksConfig,
 			SlackConfig:          cmnCfg.SlackConfig,
 			IntegrationAppConfig: cmnCfg.IntegrationApp,
+			TemporalConfig:       cmnCfg.Temporal,
 		},
 	}
 
