@@ -373,7 +373,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	//endregion
 
 	// sort region
-	sortingCypher := ""
 	aliases := ""
 
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsName) {
@@ -552,10 +551,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 	}
 
-	if sort != nil {
-		sortingCypher += " ORDER BY SORT_BY " + string(sort.Direction)
-	}
-
 	if len(aliases) > 0 {
 		selectQuery += " WITH *, " + aliases
 	} else {
@@ -563,8 +558,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 
 	cypherSort := utils.CypherSort{}
-	if sort != nil {
-		selectQuery += " " + sortingCypher
+	if sort != nil && len(aliases) > 0 {
+		selectQuery += " ORDER BY SORT_BY " + string(sort.Direction)
 	} else {
 		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.OrganizationEntity{}))
 		selectQuery += string(cypherSort.SortingCypherFragment("o"))
