@@ -223,6 +223,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 			Amount:     invoiceLine.Amount,
 		}
 		quickbooksInvoiceLine.SalesItemLineDetail.ItemRef.Value = sku.QuickbooksId
+		quickbooksInvoiceLine.SalesItemLineDetail.ServiceDate = invoice.PeriodStartDate.Format("2006-01-02")
 
 		quickbooksInvoiceLines = append(quickbooksInvoiceLines, quickbooksInvoiceLine)
 	}
@@ -260,7 +261,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 		}
 	}
 
-	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.Number, invoice.PeriodStartDate, quickbooksInvoiceLines)
+	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.Number, invoice.IssuedDate, quickbooksInvoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
