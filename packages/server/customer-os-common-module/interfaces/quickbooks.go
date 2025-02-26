@@ -68,48 +68,49 @@ type QuickbooksGetInvoiceResponse struct {
 
 type QuickbooksGetProductResponse struct {
 	Item struct {
-		Name        string `json:"Name"`
-		Sku         string `json:"Sku"`
-		Description string `json:"Description"`
-		Active      bool   `json:"Active"`
-		SubItem     bool   `json:"SubItem"`
-		ParentRef   struct {
-			Value string `json:"value"`
-			Name  string `json:"name"`
-		} `json:"ParentRef"`
-		Level              int     `json:"Level"`
-		FullyQualifiedName string  `json:"FullyQualifiedName"`
-		Taxable            bool    `json:"Taxable"`
-		UnitPrice          float64 `json:"UnitPrice"`
-		Type               string  `json:"Type"`
-		IncomeAccountRef   struct {
+		Type             string  `json:"Type"`
+		Name             string  `json:"Name"`
+		Active           bool    `json:"Active"`
+		UnitPrice        float64 `json:"UnitPrice"`
+		Sku              *string `json:"Sku"`
+		IncomeAccountRef struct {
 			Value string `json:"value"`
 			Name  string `json:"name"`
 		} `json:"IncomeAccountRef"`
-		PurchaseDesc      string  `json:"PurchaseDesc"`
-		PurchaseCost      float64 `json:"PurchaseCost"`
-		ExpenseAccountRef struct {
-			Value string `json:"value"`
-			Name  string `json:"name"`
-		} `json:"ExpenseAccountRef"`
-		PrefVendorRef struct {
-			Value string `json:"value"`
-			Name  string `json:"name"`
-		} `json:"PrefVendorRef"`
-		TrackQtyOnHand       bool `json:"TrackQtyOnHand"`
-		TaxClassificationRef struct {
-			Value string `json:"value"`
-			Name  string `json:"name"`
-		} `json:"TaxClassificationRef"`
-		DeferredRevenue bool   `json:"DeferredRevenue"`
-		Domain          string `json:"domain"`
-		Sparse          bool   `json:"sparse"`
-		Id              string `json:"Id"`
-		SyncToken       string `json:"SyncToken"`
-		MetaData        struct {
+		Sparse    bool   `json:"sparse"`
+		Id        string `json:"Id"`
+		SyncToken string `json:"SyncToken"`
+		MetaData  struct {
 			CreateTime      time.Time `json:"CreateTime"`
 			LastUpdatedTime time.Time `json:"LastUpdatedTime"`
 		} `json:"MetaData"`
+
+		Description *string `json:"Description"`
+		SubItem     *bool   `json:"SubItem"`
+		ParentRef   *struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"ParentRef"`
+		Level              *int     `json:"Level"`
+		FullyQualifiedName *string  `json:"FullyQualifiedName"`
+		Taxable            *bool    `json:"Taxable"`
+		PurchaseDesc       *string  `json:"PurchaseDesc"`
+		PurchaseCost       *float64 `json:"PurchaseCost"`
+		ExpenseAccountRef  *struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"ExpenseAccountRef"`
+		PrefVendorRef *struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"PrefVendorRef"`
+		TrackQtyOnHand       *bool `json:"TrackQtyOnHand"`
+		TaxClassificationRef *struct {
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"TaxClassificationRef"`
+		DeferredRevenue *bool   `json:"DeferredRevenue"`
+		Domain          *string `json:"domain"`
 	} `json:"Item"`
 	Time time.Time `json:"time"`
 }
