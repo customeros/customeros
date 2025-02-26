@@ -49,6 +49,10 @@ func (c *SendSlackNotificationCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SendSlackNotificationCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *SendSlackNotificationCapability) ValidateConfig(config SendSlackNotificationConfig) error {
 	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")

@@ -62,6 +62,10 @@ func (c *ApplyTagToCompanyCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ApplyTagToCompanyCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ApplyTagToCompanyCapability) ValidateConfig(config ApplyTagToCompanyConfig) error {
 	if config.TagName.Value == "" {
 		return errors.New("Tag not configured")

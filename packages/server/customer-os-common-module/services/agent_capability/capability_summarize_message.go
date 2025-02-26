@@ -52,6 +52,10 @@ func (c *SummarizeMessageCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SummarizeMessageCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *SummarizeMessageCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }

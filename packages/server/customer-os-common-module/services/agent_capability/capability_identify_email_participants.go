@@ -63,6 +63,10 @@ func (c *IdentifyEmailParticipantsCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *IdentifyEmailParticipantsCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *IdentifyEmailParticipantsCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }

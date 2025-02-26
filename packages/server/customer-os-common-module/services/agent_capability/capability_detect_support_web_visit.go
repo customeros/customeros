@@ -78,6 +78,10 @@ func (c *DetectSupportWebVisitCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *DetectSupportWebVisitCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *DetectSupportWebVisitCapability) ValidateConfig(config DetectSupportWebVisitConfig) error {
 	if len(config.SupportUrls.Value) == 0 {
 		return errors.New("Support URL or pattern not configured")

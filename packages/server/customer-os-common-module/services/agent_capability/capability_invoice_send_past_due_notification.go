@@ -49,6 +49,10 @@ func (c *SendPastDueNotificationCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SendPastDueNotificationCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *SendPastDueNotificationCapability) ValidateInput(input SendPastDueNotificationInput) error {
 	if input.InvoiceID == "" {
 		return errors.New("InvoiceID required")

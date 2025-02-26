@@ -60,6 +60,10 @@ func (c *IdentifyMeetingParticipantsCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *IdentifyMeetingParticipantsCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *IdentifyMeetingParticipantsCapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }

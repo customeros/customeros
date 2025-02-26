@@ -52,6 +52,10 @@ func (c *CreateMarkdownTimelineEventCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *CreateMarkdownTimelineEventCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *CreateMarkdownTimelineEventCapability) Type() enum.AgentCapability {
 	return enum.CapabilityCreateMarkdownTimelineEvent
 }

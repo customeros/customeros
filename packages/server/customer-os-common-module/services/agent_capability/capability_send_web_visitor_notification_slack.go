@@ -105,6 +105,10 @@ func (c *SendWebVisitorSlackNotificationCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SendWebVisitorSlackNotificationCapability) DefaultActive() bool {
+	return false
+}
+
 func (c *SendWebVisitorSlackNotificationCapability) ValidateConfig(config SendWebVisitorSlackNotificationConfig) error {
 	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")

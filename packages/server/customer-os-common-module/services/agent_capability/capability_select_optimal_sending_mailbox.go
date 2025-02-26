@@ -50,6 +50,10 @@ func (c *SelectOptimalSendingMailboxCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SelectOptimalSendingMailboxCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *SelectOptimalSendingMailboxCapability) ValidateConfig(config SelectOptimalSendingMailboxConfig) error {
 	return nil
 }

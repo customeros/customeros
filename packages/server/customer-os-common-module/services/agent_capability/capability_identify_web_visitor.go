@@ -69,6 +69,10 @@ func (c *IdentifyWebsiteVisitorCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *IdentifyWebsiteVisitorCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVisitorInput) error {
 	if data.IPAddress == "" {
 		return errors.New("IP address cannot be empty")

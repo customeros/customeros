@@ -52,6 +52,10 @@ func (c *SummarizeThreadCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SummarizeThreadCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *SummarizeThreadCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }

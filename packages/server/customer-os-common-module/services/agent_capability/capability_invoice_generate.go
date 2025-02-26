@@ -115,6 +115,10 @@ func (c *GenerateInvoiceCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *GenerateInvoiceCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *GenerateInvoiceCapability) ValidateConfig(GenerateInvoiceConfig) error {
 	return nil
 }

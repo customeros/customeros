@@ -64,6 +64,10 @@ func (c *CreateOrganizationCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *CreateOrganizationCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInput) error {
 	if input.Domain == "" {
 		return coserrors.ErrCapabilityDomainMissing

@@ -52,6 +52,10 @@ func (c *ExtractSupportSignalsFromMeetingCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ExtractSupportSignalsFromMeetingCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ExtractSupportSignalsFromMeetingCapability) ValidateInput(input ExtractSupportSignalsFromMeetingInput) error {
 	if input.MeetingContent == "" {
 		return coserrors.ErrMeetingContentMissing

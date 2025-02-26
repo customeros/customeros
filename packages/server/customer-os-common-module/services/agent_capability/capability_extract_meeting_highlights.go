@@ -52,6 +52,10 @@ func (c *ExtractMeetingHighlightsCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ExtractMeetingHighlightsCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ExtractMeetingHighlightsCapability) ValidateInput(input ExtractMeetingHighlightsInput) error {
 	if input.MeetingContent == "" {
 		return coserrors.ErrMeetingContentMissing

@@ -61,6 +61,10 @@ func (c *IngestEmailCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *IngestEmailCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *IngestEmailCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }

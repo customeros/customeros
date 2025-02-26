@@ -57,6 +57,10 @@ func (c *AddMeetingNotesToCompanyCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *AddMeetingNotesToCompanyCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *AddMeetingNotesToCompanyCapability) ValidateInput(input AddMeetingNotesToCompanyInput) error {
 	switch {
 	case input.MeetingTimestamp.IsZero():

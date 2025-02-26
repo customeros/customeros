@@ -65,6 +65,10 @@ func (c *SyncInvoiceToAccountingCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SyncInvoiceToAccountingCapability) DefaultActive() bool {
+	return false
+}
+
 func (c *SyncInvoiceToAccountingCapability) ValidateInput(input SyncInvoiceToAccountingInput) error {
 	if input.InvoiceID == "" {
 		return errors.New("InvoiceID required")

@@ -92,6 +92,10 @@ func (c *EvaluateICPFitCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *EvaluateICPFitCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *EvaluateICPFitCapability) ValidateConfig(config EvaluateICPFitConfig) error {
 	if len(config.ICPCompanyExamples.Value) < MinICPCompanyExamples {
 		return errors.New("missing required config: ICPCompanyExamples")

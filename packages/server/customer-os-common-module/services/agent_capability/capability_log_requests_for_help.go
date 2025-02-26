@@ -53,6 +53,10 @@ func (c *LogRequestsForHelpCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *LogRequestsForHelpCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *LogRequestsForHelpCapability) ValidateInput(input LogRequestsForHelpInput) error {
 	if input.OrganizationID == "" {
 		return errors.New("OrganizationID required")
