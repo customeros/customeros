@@ -25,6 +25,7 @@ type QuickbooksInvoiceLine struct {
 		ItemRef struct {
 			Value string `json:"value"`
 		} `json:"ItemRef"`
+		ServiceDate string `json:"ServiceDate"`
 	} `json:"SalesItemLineDetail"`
 }
 
