@@ -14,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webscraper"
@@ -654,8 +655,15 @@ func (s *globalOrganizationService) enrichIndustry() {
 		}
 		promptString := string(jsonBytes)
 
+		temperature := float32(0.1)
 		// ask AI for NAICS code
-		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, promptString)
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, interfaces.AskAIRequest{
+			Model:            enum.AIModelAnthropicHaiku,
+			SystemPrompt:     &systemPrompt,
+			Prompt:           &promptString,
+			ModelTemperature: &temperature,
+			OutputFormat:     enum.AIOutputText,
+		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
 			continue
@@ -758,7 +766,14 @@ func (s *globalOrganizationService) enrichDescription() {
 		promptString := string(jsonBytes)
 
 		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, systemPrompt, promptString)
+		temperature := float32(1.0)
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, interfaces.AskAIRequest{
+			Model:            enum.AIModelAnthropicHaiku,
+			SystemPrompt:     &systemPrompt,
+			Prompt:           &promptString,
+			ModelTemperature: &temperature,
+			OutputFormat:     enum.AIOutputText,
+		})
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
@@ -855,7 +870,14 @@ Provide the final name or N/A as your entire response.
 		promptString := string(jsonBytes)
 
 		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, systemPrompt, promptString)
+		temperature := float32(0.1)
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, interfaces.AskAIRequest{
+			Model:            enum.AIModelAnthropicHaiku,
+			SystemPrompt:     &systemPrompt,
+			Prompt:           &promptString,
+			ModelTemperature: &temperature,
+			OutputFormat:     enum.AIOutputText,
+		})
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
