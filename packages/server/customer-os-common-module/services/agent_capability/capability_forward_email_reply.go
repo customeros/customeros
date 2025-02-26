@@ -50,6 +50,10 @@ func (c *ForwardEmailReplyCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ForwardEmailReplyCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ForwardEmailReplyCapability) ValidateConfig(config ForwardEmailReplyConfig) error {
 	return nil
 }

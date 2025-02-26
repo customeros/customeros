@@ -50,6 +50,10 @@ func (c *ManageCampaignExecutionCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ManageCampaignExecutionCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ManageCampaignExecutionCapability) ValidateConfig(config ManageCampaignExecutionConfig) error {
 	return nil
 }

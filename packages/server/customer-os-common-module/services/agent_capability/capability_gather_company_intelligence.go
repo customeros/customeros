@@ -82,6 +82,10 @@ func (c *GatherCompanyIntelligenceCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *GatherCompanyIntelligenceCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *GatherCompanyIntelligenceCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }

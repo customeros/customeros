@@ -50,6 +50,10 @@ func (c *CreateContactCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *CreateContactCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *CreateContactCapability) ValidateInput(input CreateContactInput) error {
 	if len(input.ContactEmails) == 0 {
 		return coserrors.ErrCapabilityContactMissing

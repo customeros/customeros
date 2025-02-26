@@ -50,6 +50,10 @@ func (c *ManageEmailDeliveryFailureCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ManageEmailDeliveryFailureCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ManageEmailDeliveryFailureCapability) ValidateConfig(config ManageEmailDeliveryFailureConfig) error {
 	return nil
 }

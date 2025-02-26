@@ -65,6 +65,10 @@ func (c *UpdateCompanyStatusCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *UpdateCompanyStatusCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *UpdateCompanyStatusCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }

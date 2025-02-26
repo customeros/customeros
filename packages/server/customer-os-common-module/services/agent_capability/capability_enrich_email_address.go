@@ -52,6 +52,10 @@ func (c *EnrichEmailAddressCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *EnrichEmailAddressCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *EnrichEmailAddressCapability) ValidateConfig(config EnrichEmailAddressConfig) error {
 	return nil
 }

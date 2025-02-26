@@ -65,6 +65,10 @@ func (c *AnalyzeWebSessionCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *AnalyzeWebSessionCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
 	if data.WebSessionID == "" {
 		return errors.New("missing required input data: SessionID")

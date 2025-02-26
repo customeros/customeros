@@ -66,6 +66,10 @@ func (c *ClassifyEmailCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ClassifyEmailCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *ClassifyEmailCapability) ValidateConfig(config ClassifyEmailConfig) error {
 	if config.ImportEmails.Value != "AUTOMATICALLY" && config.ImportEmails.Value != "MANUALLY" {
 		return errors.New("import emails is invalid")

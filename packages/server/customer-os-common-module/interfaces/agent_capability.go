@@ -21,6 +21,7 @@ type AgentCapabilityUntyped interface {
 	Type() enum.AgentCapability
 	Name() string
 	DefaultConfig() any
+	DefaultActive() bool
 }
 
 type AgentCapabilityExecutionService interface {

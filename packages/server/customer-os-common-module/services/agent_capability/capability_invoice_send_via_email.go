@@ -54,6 +54,10 @@ func (c *SendInvoiceViaEmailCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *SendInvoiceViaEmailCapability) DefaultActive() bool {
+	return true
+}
+
 func (c *SendInvoiceViaEmailCapability) ValidateInput(input SendInvoiceViaEmailInput) error {
 	if input.InvoiceID == "" {
 		return errors.New("InvoiceID required")

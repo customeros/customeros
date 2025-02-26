@@ -329,7 +329,7 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 		ID:       utils.GenerateNanoIdWithPrefix("cap", 16),
 		Name:     capabilityName,
 		Type:     capabilityType,
-		Active:   true,
+		Active:   executor.DefaultActive(),
 		Tenant:   common.GetTenantFromContext(ctx),
 		Position: position,
 	}

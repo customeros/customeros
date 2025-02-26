@@ -48,6 +48,10 @@ func (c *ProcessAutopaymentCapability) DefaultConfig() any {
 	return &config
 }
 
+func (c *ProcessAutopaymentCapability) DefaultActive() bool {
+	return false
+}
+
 func (c *ProcessAutopaymentCapability) ValidateInput(ProcessAutopaymentInput) error {
 	return nil
 }
