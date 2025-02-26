@@ -130,19 +130,19 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionCompleted, result, err
 		}
-	} else {
-		if invoice.Status == neo4jenum.InvoiceStatusPaid {
-			err = c.syncPaidInvoiceToQuickbooks(ctx, *invoice)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return enum.CapabilityExecutionCompleted, result, err
-			}
-		} else if invoice.Status == neo4jenum.InvoiceStatusVoid {
-			err = c.syncVoidInvoiceToQuickbooks(ctx, *invoice)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return enum.CapabilityExecutionCompleted, result, err
-			}
+	}
+
+	if invoice.Status == neo4jenum.InvoiceStatusPaid {
+		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoice)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionCompleted, result, err
+		}
+	} else if invoice.Status == neo4jenum.InvoiceStatusVoid {
+		err = c.syncVoidInvoiceToQuickbooks(ctx, *invoice)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionCompleted, result, err
 		}
 	}
 
@@ -252,7 +252,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 		}
 	}
 
-	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.PeriodStartDate, quickbooksInvoiceLines)
+	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.Number, invoice.PeriodStartDate, quickbooksInvoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
