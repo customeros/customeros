@@ -128,7 +128,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		err = c.syncInvoiceToQuickbooks(ctx, *invoice)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionCompleted, result, err
+			return enum.CapabilityExecutionRetry, result, err
 		}
 	}
 
@@ -136,13 +136,13 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoice)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionCompleted, result, err
+			return enum.CapabilityExecutionRetry, result, err
 		}
 	} else if invoice.Status == neo4jenum.InvoiceStatusVoid {
 		err = c.syncVoidInvoiceToQuickbooks(ctx, *invoice)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionCompleted, result, err
+			return enum.CapabilityExecutionRetry, result, err
 		}
 	}
 
@@ -196,8 +196,9 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 		}
 
 		if sku.QuickbooksId == "" {
-			span.LogFields(log.String("skip", fmt.Sprintf("QuickbooksId not found for sku %s", sku.ID)))
-			return nil
+			err = errors.New(fmt.Sprintf("QuickbooksId not found for sku %s", sku.ID))
+			tracing.TraceErr(span, err)
+			return err
 		}
 	}
 
