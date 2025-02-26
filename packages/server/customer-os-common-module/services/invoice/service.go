@@ -8,10 +8,8 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/dgrijalva/jwt-go"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -2065,22 +2063,14 @@ func (s *invoiceService) appendCustomerOSLogoToEmail(ctx context.Context, postma
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.appendCustomerOSLogoToEmail")
 	defer span.Finish()
 
-	currentDir, err := os.Getwd()
+	logoData, err := Templates.ReadFile("pdf_template/customer-os-512.png")
 	if err != nil {
-		return errors.Wrap(err, "os.Getwd")
-	}
-
-	file, err := utils.GetFileByName(filepath.Join(currentDir, "/static", "customer-os.png"))
-
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ioutil.ReadAll"))
-		return err
+		return errors.Wrap(err, "failed to read static file 'customer-os-512.png'")
 	}
 
 	postmarkEmail.Attachments = append(postmarkEmail.Attachments, interfaces.PostmarkEmailAttachment{
 		Filename:       "customer-os-encoded",
-		ContentEncoded: base64.StdEncoding.EncodeToString(b),
+		ContentEncoded: base64.StdEncoding.EncodeToString(logoData),
 		ContentType:    "image/png",
 		ContentID:      "cid:customer-os-encoded",
 	})
