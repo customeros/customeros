@@ -123,7 +123,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 
 	//process FROM email
 	for _, to := range emailMessageData.Participants.To {
-		toOrgId, err := c.mailService.GetEmailIdForEmail(ctx, nil, ingestEmailMessage.Tenant, to.Email, ingestEmailMessage.Provider)
+		toOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, to.Email, ingestEmailMessage.Provider)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
@@ -135,7 +135,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 
 	//process CC email
 	for _, cc := range emailMessageData.Participants.Cc {
-		ccOrgId, err := c.mailService.GetEmailIdForEmail(ctx, nil, ingestEmailMessage.Tenant, cc.Email, ingestEmailMessage.Provider)
+		ccOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, cc.Email, ingestEmailMessage.Provider)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
@@ -147,7 +147,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 
 	//process BCC email
 	for _, bcc := range emailMessageData.Participants.Bcc {
-		bccOrgId, err := c.mailService.GetEmailIdForEmail(ctx, nil, ingestEmailMessage.Tenant, bcc.Email, ingestEmailMessage.Provider)
+		bccOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, bcc.Email, ingestEmailMessage.Provider)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err

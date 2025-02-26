@@ -650,11 +650,11 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 			}
 
 			organizationFields := data_fields.OrganizationFields{
-				LeadSource:   utils.StringPtr(leadSource),
-				Stage:        utils.ToPtr(stage),
-				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
-				Domains:      []string{domain},
-				Source:       utils.StringPtr(source),
+				LeadSource:    utils.StringPtr(leadSource),
+				Stage:         utils.ToPtr(stage),
+				Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
+				PrimaryDomain: &domain,
+				Source:        utils.StringPtr(source),
 			}
 
 			organizationId, err = s.org.Save(ctx, txWithPostCommit, nil, organizationFields)

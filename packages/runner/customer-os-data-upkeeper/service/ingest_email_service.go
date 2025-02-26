@@ -12,6 +12,7 @@ import (
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -47,22 +48,80 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.EmailImportS
 
 	span.LogKV("state", state)
 
+	runImportFor := []map[string]interface{}{}
+
 	//TODO base logic on email keeper agents to get oauth tokens
 
-	oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetAll(ctx)
+	agents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypesCrossTenant(ctx, []commonenum.AgentType{commonenum.AgentEmailKeeper})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(oAuthTokenEntities))
+	for _, agent := range agents {
+		if agent.IsActive == false {
+			continue
+		}
 
-	for _, oAuthTokenEntity := range oAuthTokenEntities {
-		go func(oAuthTokenEntity postgresEntity.OAuthTokenEntity) {
+		for _, listener := range agent.Listeners {
+			var listenerConfig agent_listeners.NewEmailConfig
+			err := json.Unmarshal(listener.Config, &listenerConfig)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				continue
+			}
+
+			agentError := ""
+
+			for _, email := range listenerConfig.Emails.Value {
+				emailAddress := email.(map[string]interface{})["email"].(string)
+				provider := email.(map[string]interface{})["provider"].(string)
+
+				oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, agent.Tenant, provider, emailAddress)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+
+				if oAuthTokenEntities == nil {
+					//todo mark error on agent
+					agentError += fmt.Sprintf("No OAuth token found for provider: %s and email: %s", provider, emailAddress)
+				} else {
+					runImportFor = append(runImportFor, map[string]interface{}{
+						"agentId":  agent.ID,
+						"tenant":   agent.Tenant,
+						"provider": provider,
+						"email":    emailAddress,
+					})
+				}
+			}
+
+			if agentError != "" {
+				// TODO set error on agent / listener ??
+			}
+		}
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(runImportFor))
+
+	for _, importFor := range runImportFor {
+		agentId := importFor["agentId"].(string)
+		tenant := importFor["tenant"].(string)
+		provider := importFor["provider"].(string)
+		email := importFor["email"].(string)
+
+		go func(agentId, tenant, provider, email string) {
 			defer wg.Done()
-			s.syncEmailsForEmailAddress(ctx, &oAuthTokenEntity, state)
-		}(oAuthTokenEntity)
+
+			oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, provider, email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			s.syncEmailsForEmailAddress(ctx, oAuthTokenEntities, state)
+		}(agentId, tenant, provider, email)
 	}
 
 	wg.Wait()
@@ -130,6 +189,11 @@ func (s *ingestEmailService) syncEmailsForEmailAddress(ctx context.Context, auth
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailService.syncEmailsForEmailAddress - "+authTokenEntity.TenantName+" - "+authTokenEntity.EmailAddress)
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
+
+	if authTokenEntity == nil {
+		span.LogKV("message", "no oauth token found for tenant: %s and username: %s", authTokenEntity.TenantName, authTokenEntity.EmailAddress)
+		return
+	}
 
 	tenant := authTokenEntity.TenantName
 	provider := authTokenEntity.Provider

@@ -1786,6 +1786,16 @@ type Mailbox struct {
 	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
 }
 
+type MailboxV2 struct {
+	Provider           MailboxProvider `json:"provider"`
+	Mailbox            string          `json:"mailbox"`
+	UsedInFlows        bool            `json:"usedInFlows"`
+	RampUpRate         int             `json:"rampUpRate"`
+	RampUpMax          int             `json:"rampUpMax"`
+	RampUpCurrent      int             `json:"rampUpCurrent"`
+	NeedsManualRefresh bool            `json:"needsManualRefresh"`
+}
+
 type MarkdownEvent struct {
 	Metadata *Metadata `json:"metadata"`
 	Content  *string   `json:"content,omitempty"`
@@ -4691,6 +4701,49 @@ func (e *LastTouchpointType) UnmarshalGQL(v any) error {
 }
 
 func (e LastTouchpointType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MailboxProvider string
+
+const (
+	MailboxProviderGoogle    MailboxProvider = "GOOGLE"
+	MailboxProviderMicrosoft MailboxProvider = "MICROSOFT"
+	MailboxProviderMailstack MailboxProvider = "MAILSTACK"
+)
+
+var AllMailboxProvider = []MailboxProvider{
+	MailboxProviderGoogle,
+	MailboxProviderMicrosoft,
+	MailboxProviderMailstack,
+}
+
+func (e MailboxProvider) IsValid() bool {
+	switch e {
+	case MailboxProviderGoogle, MailboxProviderMicrosoft, MailboxProviderMailstack:
+		return true
+	}
+	return false
+}
+
+func (e MailboxProvider) String() string {
+	return string(e)
+}
+
+func (e *MailboxProvider) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MailboxProvider(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MailboxProvider", str)
+	}
+	return nil
+}
+
+func (e MailboxProvider) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
