@@ -12,10 +12,13 @@ type QuickbooksService interface {
 	GetAndStoreAccessToken(ctx context.Context, realmId string, requestData url.Values) (*postgres_entity.QuickbooksSettingsEntity, error)
 	RevokeAccess(ctx context.Context) error
 	SaveProduct(ctx context.Context, id, productName string, archived bool, price float64) (*QuickbooksSaveProductResponse, error)
+	GetProduct(ctx context.Context, id string) (*QuickbooksGetProductResponse, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
 	SaveInvoice(ctx context.Context, customerId, invoiceNumber string, invoiceDate time.Time, lines []QuickbooksInvoiceLine) (*QuickbooksSaveInvoiceResponse, error)
 	PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*QuickbooksSavePaymentResponse, error)
 	VoidInvoice(ctx context.Context, invoiceId string) (*QuickbooksSaveInvoiceResponse, error)
+	SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []QuickbooksJournalEntryLine) (*QuickbooksJournalEntryResponse, error)
+	ZeroJournalEntry(ctx context.Context, journalEntryId string) error
 }
 
 type QuickbooksInvoiceLine struct {
@@ -153,4 +156,51 @@ type QuickbooksCheckFaultResponse struct {
 		} `json:"error"`
 		Type string `json:"type"`
 	} `json:"fault"`
+}
+
+// QuickbooksJournalEntry represents a Journal Entry in QuickBooks.
+type QuickbooksJournalEntryResponse struct {
+	QuickbooksCheckFaultResponse
+	JournalEntry *struct {
+		Id          string                       `json:"Id"`
+		TxnDate     string                       `json:"TxnDate"`
+		PrivateNote string                       `json:"PrivateNote,omitempty"`
+		Line        []QuickbooksJournalEntryLine `json:"Line"`
+	} `json:"JournalEntry"`
+}
+
+// JournalEntryLine represents a single line in a Journal Entry.
+type QuickbooksJournalEntryLine struct {
+	// DetailType is typically "JournalEntryLineDetail"
+	DetailType             string                           `json:"DetailType"`
+	Amount                 float64                          `json:"Amount"`
+	Description            string                           `json:"Description"`
+	JournalEntryLineDetail QuickbooksJournalEntryLineDetail `json:"JournalEntryLineDetail"`
+}
+
+type QuickbooksEntityRef struct {
+	Value string `json:"value"`
+	Name  string `json:"name"`
+}
+
+type QuickbooksEntity struct {
+	Type      string              `json:"type"`
+	EntityRef QuickbooksEntityRef `json:"EntityRef"`
+}
+
+// JournalEntryLineDetail contains information such as posting type and account reference.
+type QuickbooksJournalEntryLineDetail struct {
+	// PostingType indicates whether the line is a "Debit" or "Credit".
+	PostingType string `json:"PostingType"`
+	// AccountRef references the account impacted.
+	AccountRef QuickbooksAccountRef `json:"AccountRef"`
+	Entity     QuickbooksEntity     `json:"Entity"`
+}
+
+// AccountRef represents a reference to an account in QuickBooks.
+type QuickbooksAccountRef struct {
+	// Value is the unique identifier of the account.
+	Value string `json:"value"`
+	// Name is an optional friendly name for the account.
+	Name string `json:"name,omitempty"`
 }

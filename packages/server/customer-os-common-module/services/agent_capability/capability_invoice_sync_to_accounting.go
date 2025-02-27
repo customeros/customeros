@@ -89,7 +89,8 @@ type SyncInvoiceToAccountingInput struct {
 type SyncInvoiceToAccountingOutput struct{}
 
 type SyncInvoiceToAccountingConfig struct {
-	Quickbooks ConfigSingleBoolValue `json:"quickbooks"`
+	Quickbooks              ConfigSingleBoolValue `json:"quickbooks"`
+	AccountingMethodAccrual ConfigSingleBoolValue `json:"accruedRevRec"`
 }
 
 func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingConfig]) (enum.CapabilityExecutionStatus, SyncInvoiceToAccountingOutput, error) {
@@ -134,7 +135,15 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		}
 	}
 
-	// refetch invoice to get updated quickbooks invoice id
+	if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoice.QuickbooksJournalEntryId == "" {
+		err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoice)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return enum.CapabilityExecutionRetry, result, err
+		}
+	}
+
+	// re-fetch invoice to get updated quickbooks invoice id
 	invoice, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -152,6 +161,13 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionRetry, result, err
+		}
+		if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoice.QuickbooksJournalEntryId != "" {
+			err = c.quickbooksService.ZeroJournalEntry(ctx, invoice.QuickbooksJournalEntryId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
 		}
 	}
 
@@ -270,6 +286,121 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 	}
 
 	err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksInvoiceId), savedInvoiced.Invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncInvoiceToQuickbooksJournalEntry")
+	defer span.Finish()
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if quickbooksSettingsEntity == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	invoiceLines, err := c.invoiceService.GetInvoiceLinesForInvoices(ctx, []string{invoice.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if invoiceLines == nil || len(*invoiceLines) == 0 {
+		span.LogKV("skip", "Invoice lines not found")
+		return nil
+	}
+
+	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// prepare amounts by income account
+	journalLineAmountsByIncomeAccount := make(map[string]float64)
+	for _, invoiceLine := range *invoiceLines {
+		sku, err := c.postgresRepositories.SkuRepository.Get(ctx, tenant, invoiceLine.SkuId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if sku == nil {
+			err = errors.New(fmt.Sprintf("Sku not found for invoice line %s", invoiceLine.Id))
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if sku.QuickbooksId == "" {
+			err = errors.New(fmt.Sprintf("QuickbooksId not found for sku %s", sku.ID))
+			tracing.TraceErr(span, err)
+			return err
+		}
+		quickbooksProduct, err := c.quickbooksService.GetProduct(ctx, sku.QuickbooksId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if quickbooksProduct == nil {
+			err = errors.New(fmt.Sprintf("Quickbooks product not found for sku %s", sku.ID))
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if _, ok := journalLineAmountsByIncomeAccount[quickbooksProduct.Item.IncomeAccountRef.Value]; !ok {
+			journalLineAmountsByIncomeAccount[quickbooksProduct.Item.IncomeAccountRef.Value] = invoiceLine.Amount
+		} else {
+			journalLineAmountsByIncomeAccount[quickbooksProduct.Item.IncomeAccountRef.Value] += invoiceLine.Amount
+		}
+	}
+
+	// prepare debit journal line item
+	journalLineItems := make([]interfaces.QuickbooksJournalEntryLine, 0)
+	debitJournalLineItem := interfaces.QuickbooksJournalEntryLine{
+		DetailType:  "JournalEntryLineDetail",
+		Amount:      invoice.Amount,
+		Description: invoice.Number,
+	}
+	debitJournalLineItem.JournalEntryLineDetail.PostingType = "Debit"
+	debitJournalLineItem.JournalEntryLineDetail.Entity.Type = "Customer"
+	debitJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
+	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Debtors"
+	journalLineItems = append(journalLineItems, debitJournalLineItem)
+
+	// prepare credit journal line items
+	for incomeAccount, amount := range journalLineAmountsByIncomeAccount {
+		journalLineItem := interfaces.QuickbooksJournalEntryLine{
+			DetailType:  "JournalEntryLineDetail",
+			Amount:      amount,
+			Description: invoice.Number,
+		}
+		journalLineItem.JournalEntryLineDetail.PostingType = "Credit"
+		journalLineItem.JournalEntryLineDetail.AccountRef.Value = incomeAccount
+		journalLineItems = append(journalLineItems, journalLineItem)
+	}
+
+	savedJournalEntry, err := c.quickbooksService.SaveJournalEntry(ctx, invoice.PeriodEndDate, journalLineItems)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if savedJournalEntry == nil {
+		err := errors.New("Journal entry not saved in quickbooks")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksJournalEntryId), savedJournalEntry.JournalEntry.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
