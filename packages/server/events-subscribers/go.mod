@@ -98,7 +98,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.7.0 // indirect
-	github.com/nexus-rpc/sdk-go v0.1.0 // indirect
+	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.5.0 // indirect
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0 // indirect
@@ -127,7 +127,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.temporal.io/api v1.44.1 // indirect
-	go.temporal.io/sdk v1.32.1 // indirect
+	go.temporal.io/sdk v1.33.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
