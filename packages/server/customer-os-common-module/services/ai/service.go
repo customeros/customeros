@@ -206,8 +206,8 @@ func (s *aiService) newObservabilityContainer(ctx context.Context, span opentrac
 		Tenant:       common.GetTenantFromContext(ctx),
 		Model:        request.Model.String(),
 		TraceID:      traceID,
-		SystemPrompt: *request.SystemPrompt,
-		Prompt:       *request.Prompt,
+		SystemPrompt: utils.IfNotNilString(request.SystemPrompt),
+		Prompt:       utils.IfNotNilString(request.Prompt),
 	}
 }
 
