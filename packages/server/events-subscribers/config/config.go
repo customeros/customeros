@@ -46,6 +46,7 @@ type CommonConfig struct {
 	IntegrationApp   commonconf.IntegrationAppConfig
 	Temporal         commonconf.TemporalConfig
 	JinaConfig       commonconf.JinaConfig
+	GeminiConfig     commonconf.GeminiConfig
 }
 
 func Load() *Config {
@@ -95,6 +96,7 @@ func Load() *Config {
 			IntegrationAppConfig: cmnCfg.IntegrationApp,
 			TemporalConfig:       cmnCfg.Temporal,
 			JinaConfig:           cmnCfg.JinaConfig,
+			GeminiConfig:         cmnCfg.GeminiConfig,
 		},
 	}
 
