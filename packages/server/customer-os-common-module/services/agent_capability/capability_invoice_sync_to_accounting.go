@@ -90,7 +90,7 @@ type SyncInvoiceToAccountingOutput struct{}
 
 type SyncInvoiceToAccountingConfig struct {
 	Quickbooks              ConfigSingleBoolValue `json:"quickbooks"`
-	AccountingMethodAccrual ConfigSingleBoolValue `json:"accruedRevRec"`
+	AccountingMethodAccrual ConfigSingleBoolValue `json:"accountingMethodAccrual"`
 }
 
 func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingConfig]) (enum.CapabilityExecutionStatus, SyncInvoiceToAccountingOutput, error) {
