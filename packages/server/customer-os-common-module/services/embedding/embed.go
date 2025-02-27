@@ -85,7 +85,7 @@ func (s *embeddingService) GetEmbedding(ctx context.Context, content string, tas
 }
 
 func (s *embeddingService) embed(ctx context.Context, task enum.EmbeddingTask, input []string) (*EmbeddingResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embedd")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embed")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

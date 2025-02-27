@@ -4,18 +4,18 @@ import "time"
 
 type EmbeddingRecord struct {
 	ID               string     `json:"id"`
-	SourceContentID  string     `json:"sourceContentId"`
-	SourceUrl        string     `json:"sourceUrl"`
+	SourceContentID  string     `json:"sourceContentId,omitempty"`
+	SourceUrl        string     `json:"sourceUrl,omitempty"`
 	ContentType      string     `json:"contentType"`
 	Content          string     `json:"content"`
 	ContentCreatedAt time.Time  `json:"contentCreatedAt"`
 	EmbeddingModel   string     `json:"embeddingModel"`
 	Vector           []float64  `json:"vector"`
 	EmbeddedAt       time.Time  `json:"embeddedAt"`
-	Tags             []Tag      `json:"tags"`
-	Summary          string     `json:"summary"`
-	SummaryVector    []float64  `json:"summaryVector"`
-	Questions        []Question `json:"questions"`
+	Tags             []Tag      `json:"tags,omitempty"`
+	Summary          string     `json:"summary,omitempty"`
+	SummaryVector    []float64  `json:"summaryVector,omitempty"`
+	Questions        []Question `json:"questions,omitempty"`
 }
 
 type Tag struct {

@@ -61,19 +61,40 @@ func (c *GroqClient) buildRequest(request interfaces.AskAIRequest) GroqRequest {
 		outputFormat = "text"
 	}
 
+	// Initialize with default values
+	var systemPrompt, prompt string
+	var maxCompletionTokens int32
+	var temperature float32
+
+	// Safely dereference pointers with nil checks
+	if request.SystemPrompt != nil {
+		systemPrompt = *request.SystemPrompt
+	}
+
+	if request.Prompt != nil {
+		prompt = *request.Prompt
+	}
+
+	if request.MaxOutputTokens != nil {
+		maxCompletionTokens = *request.MaxOutputTokens
+	}
+
+	if request.ModelTemperature != nil {
+		temperature = *request.ModelTemperature
+	}
+
 	req := GroqRequest{
 		Model: request.Model.String(),
 		Messages: []Message{
-			{Role: "system", Content: *request.SystemPrompt},
-			{Role: "user", Content: *request.Prompt},
+			{Role: "system", Content: systemPrompt},
+			{Role: "user", Content: prompt},
 		},
-		MaxCompletionTokens: *request.MaxOutputTokens,
-		Temperature:         *request.ModelTemperature,
+		MaxCompletionTokens: maxCompletionTokens,
+		Temperature:         temperature,
 		ResponseFormat: ResponseFormat{
 			Type: outputFormat,
 		},
 	}
-
 	return req
 }
 

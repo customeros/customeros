@@ -7,9 +7,12 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	"google.golang.org/api/option"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -23,6 +26,7 @@ type aiService struct {
 	deepseekConfig  *config.DeepseekConfig
 	groqConfig      *config.GroqConfig
 	geminiConfig    *config.GeminiConfig
+	opensearch      interfaces.OpensearchService
 }
 
 func NewAIService(
@@ -31,6 +35,7 @@ func NewAIService(
 	deepseekConfig *config.DeepseekConfig,
 	groqConfig *config.GroqConfig,
 	geminiConfig *config.GeminiConfig,
+	opensearch interfaces.OpensearchService,
 ) interfaces.AIService {
 	return &aiService{
 		log:             log,
@@ -38,6 +43,7 @@ func NewAIService(
 		deepseekConfig:  deepseekConfig,
 		groqConfig:      groqConfig,
 		geminiConfig:    geminiConfig,
+		opensearch:      opensearch,
 	}
 }
 
@@ -46,12 +52,15 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
+	llmTracker := s.newObservabilityContainer(ctx, span, request)
+
 	var result *string
 	var err error
 
 	if request.Prompt == nil {
 		err := errors.New("Prompt cannot be empty")
 		tracing.TraceErr(span, err)
+		s.trackError(llmTracker, err.Error())
 		return nil, err
 	}
 
@@ -115,7 +124,44 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
 	return result, nil
+}
+
+func (s *aiService) trackError(llmTracker *dto.LLMObservability, errorMessage string) {
+	llmTracker.Success = false
+	llmTracker.ErrorMessage = errorMessage
+}
+
+func (s *aiService) newObservabilityContainer(ctx context.Context, span opentracing.Span, request interfaces.AskAIRequest) *dto.LLMObservability {
+	var traceID, spanID string
+
+	// For Jaeger specifically
+	if jaegerSpan, ok := span.(*jaeger.Span); ok {
+		spanContext := jaegerSpan.Context().(jaeger.SpanContext)
+		traceID = spanContext.TraceID().String()
+		spanID = spanContext.SpanID().String()
+	} else {
+		// Fallback for other tracers - get carrier with all span context info
+		carrier := opentracing.TextMapCarrier{}
+		err := opentracing.GlobalTracer().Inject(span.Context(), opentracing.TextMap, carrier)
+		if err == nil {
+			// Many tracers use these standard field names
+			traceID = carrier["uber-trace-id"]
+		}
+	}
+
+	return &dto.LLMObservability{
+		RequestID:    utils.GenerateNanoIdWithPrefix("llm", 16),
+		Timestamp:    utils.Now(),
+		UserID:       common.GetUserIdFromContext(ctx),
+		Tenant:       common.GetTenantFromContext(ctx),
+		Model:        request.Model.String(),
+		TraceID:      traceID,
+		SpanID:       spanID,
+		SystemPrompt: *request.SystemPrompt,
+		Prompt:       *request.Prompt,
+	}
 }
 
 func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {

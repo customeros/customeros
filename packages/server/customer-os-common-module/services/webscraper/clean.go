@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// PreprocessMarkdownContent extracts core content from Markdown by removing navigation,
+// PreprocessMarkdownWebpage extracts core content from Markdown by removing navigation,
 // menus, headers, footers while preserving the main content
 func (s *webscraperService) processMarkdownWebpage(markdownContent string) string {
 	// Phase 1: Remove navigation sections

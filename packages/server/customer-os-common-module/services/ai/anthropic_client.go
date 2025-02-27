@@ -59,7 +59,7 @@ func (c *AnthropicClient) Invoke(ctx context.Context, request interfaces.AskAIRe
 	span.LogKV("systemPrompt", request.SystemPrompt)
 	span.LogKV("prompt", request.Prompt)
 
-	if *request.Prompt == "" {
+	if *request.Prompt == "" || request.Prompt == nil {
 		err := errors.New("content (user prompt) cannot be nil")
 		tracing.TraceErr(span, err)
 		return "", err
@@ -77,7 +77,9 @@ func (c *AnthropicClient) buildRequest(request interfaces.AskAIRequest) Anthropi
 		Temperature: *request.ModelTemperature,
 	}
 
-	req.System = *request.SystemPrompt
+	if request.SystemPrompt != nil {
+		req.System = *request.SystemPrompt
+	}
 
 	return req
 }

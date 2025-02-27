@@ -159,9 +159,8 @@ func (s *embeddingService) cleanWebpage(ctx context.Context, content string) (*s
 	}
 
 	noWhitespace := strings.Join(strings.Fields(*answer), " ")
-	singleSpaced := strings.Join(strings.Fields(noWhitespace), " ")
 
-	return &singleSpaced, nil
+	return &noWhitespace, nil
 }
 
 func (s *embeddingService) generateQuestionsForWebsiteContent(ctx context.Context, content string) ([]string, error) {
@@ -203,7 +202,7 @@ func (s *embeddingService) generateSummary(ctx context.Context, content string) 
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	systemPrompt := "Please provide a short summary for the content providid below."
+	systemPrompt := "Please provide a short summary for the content provided below."
 	temperature := float32(1.0)
 	maxOutput := int32(1024)
 
