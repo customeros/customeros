@@ -83,6 +83,7 @@ func MapDbNodeToAuthenticationUserEntity(dbNode *dbtype.Node) *neo4j_entity.Auth
 		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
 		DefaultTenant: utils.GetStringPropOrEmpty(props, "defaultTenant"),
+		CurrentTenant: utils.GetStringPropOrEmpty(props, "currentTenant"),
 	}
 	return &authenticationUser
 }
