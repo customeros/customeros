@@ -844,7 +844,7 @@ type ActionStatusMetadata struct {
 }
 
 func (s *contractService) createActionForStatusChange(ctx context.Context, tenant, contractId, status, contractName string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "contractService.createActionForStatusChange")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createActionForStatusChange")
 	defer span.Finish()
 	var name string
 	span.SetTag(tracing.SpanTagTenant, tenant)

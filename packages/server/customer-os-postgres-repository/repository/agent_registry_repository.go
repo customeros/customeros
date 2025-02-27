@@ -87,6 +87,7 @@ func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindByType")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("agentType", agentType.String()))
 
 	var agent postgres_entity.AgentRegistry
 	err := r.gormDb.WithContext(ctx).
