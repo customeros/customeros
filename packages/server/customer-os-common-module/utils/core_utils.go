@@ -12,6 +12,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 )
 
 type Pair[T, U any] struct {
@@ -111,11 +112,9 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 func MergeMapToMap(src, dst map[string]any) {
 	if dst == nil {
 		logrus.Error("expecting not nil map")
-	} else if src != nil {
-		for k, v := range src {
-			dst[k] = v
-		}
+		return
 	}
+	maps.Copy(dst, src)
 }
 
 func MergeMaps[K comparable, V any](dst, src map[K]V) map[K]V {

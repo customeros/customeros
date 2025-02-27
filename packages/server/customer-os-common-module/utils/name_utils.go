@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/forPelevin/gomoji"
 	"strings"
+
+	"github.com/forPelevin/gomoji"
 )
 
 // SplitFullName splits a fullName into (firstName, lastName).
@@ -58,9 +59,6 @@ func CleanName(input string) string {
 
 	// Remove non-ASCII characters
 	output = SanitizeUTF8(output)
-
-	// Capitalize the first letter of each word
-	output = CapitalizeAllParts(output, []string{" "})
 
 	return output
 }
