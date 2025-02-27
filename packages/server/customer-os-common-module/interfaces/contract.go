@@ -24,4 +24,5 @@ type ContractService interface {
 	UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error
 	UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error
 	UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error
+	GetContractForInvoice(ctx context.Context, invoiceId string) (*neo4j_entity.ContractEntity, error)
 }

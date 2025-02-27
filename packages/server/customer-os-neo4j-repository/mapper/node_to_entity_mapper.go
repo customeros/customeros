@@ -437,6 +437,7 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *neo4j_entity.ContractEntity
 		LengthInMonths:                  utils.GetInt64PropOrZero(props, "lengthInMonths"),
 		Approved:                        utils.GetBoolPropOrFalse(props, "approved"),
 		Ltv:                             utils.GetFloatPropOrZero(props, "ltv"),
+		QuickbooksCustomerId:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContractPropertyQuickbooksCustomerId)),
 		ContractInternalFields: neo4j_entity.ContractInternalFields{
 			StatusRenewalRequestedAt:      utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
 			RolloutRenewalRequestedAt:     utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),

@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type ContractProperty string
+
+const (
+	ContractPropertyQuickbooksCustomerId ContractProperty = "quickbooksCustomerId"
+)
+
 type ContractInternalFields struct {
 	StatusRenewalRequestedAt      *time.Time
 	RolloutRenewalRequestedAt     *time.Time
@@ -56,6 +62,7 @@ type ContractEntity struct {
 	LengthInMonths                  int64
 	Approved                        bool
 	Ltv                             float64
+	QuickbooksCustomerId            string
 }
 
 type ContractEntities []ContractEntity

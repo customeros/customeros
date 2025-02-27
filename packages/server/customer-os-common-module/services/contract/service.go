@@ -1188,3 +1188,21 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 	}
 	return &contractEntities, nil
 }
+
+func (s *contractService) GetContractForInvoice(ctx context.Context, invoiceId string) (*neo4jentity.ContractEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractForInvoice")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("invoiceId", invoiceId))
+
+	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, common.GetTenantFromContext(ctx), invoiceId)
+	if err != nil {
+		return nil, err
+	}
+	if contractDbNode == nil {
+		err = errors.New("contract not found")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return neo4jmapper.MapDbNodeToContractEntity(contractDbNode), nil
+}

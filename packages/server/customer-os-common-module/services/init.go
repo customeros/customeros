@@ -304,6 +304,7 @@ func InitCommonServices(
 		workspaceImpl,
 		quickbooksImpl,
 		webscrapeImpl,
+		contractImpl,
 	)
 
 	// initialize agents
