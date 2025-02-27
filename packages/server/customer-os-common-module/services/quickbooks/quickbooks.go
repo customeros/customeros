@@ -334,6 +334,43 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 	return &qbProductResponse, nil
 }
 
+func (s *quickbooksService) GetProduct(ctx context.Context, id string) (*interfaces.QuickbooksGetProductResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.GetProduct")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if quickbooksSettingsEntity == nil {
+		span.LogFields(log.String("result.error", "Quickbooks settings not found"))
+		return nil, nil
+	}
+
+	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "GET", nil, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var quickbooksResponse interfaces.QuickbooksGetProductResponse
+	err = json.Unmarshal(resp, &quickbooksResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &quickbooksResponse, nil
+}
+
 func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName string) (*interfaces.QuickbooksSaveCustomerResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveCustomer")
 	defer span.Finish()
@@ -648,4 +685,124 @@ func (s *quickbooksService) QuickbooksConnected(ctx context.Context) (bool, erro
 	}
 
 	return quickbooksSettingsEntity != nil, nil
+}
+
+func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []interfaces.QuickbooksJournalEntryLine) (*interfaces.QuickbooksJournalEntryResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveJournalEntry")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("txnDate", txnDate.Format("2006-01-02")))
+
+	// Retrieve QuickBooks settings for the tenant.
+	qbSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if qbSettingsEntity == nil {
+		span.LogFields(log.String("error", "QuickBooks settings not found"))
+		return nil, nil
+	}
+
+	// Build the request payload.
+	request := map[string]interface{}{
+		"TxnDate": txnDate.Format("2006-01-02"),
+		"Line":    journalLineItems,
+	}
+
+	// Construct the URL for creating a journal entry.
+	requestUrl := fmt.Sprintf("%s/v3/company/%s/journalentry", s.qbConfig.Url, qbSettingsEntity.RealmId)
+
+	// Perform the request.
+	resp, err := s.performRequest(ctx, qbSettingsEntity, requestUrl, "POST", request, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Unmarshal the response into a QuickbooksJournalEntry.
+	var qbJournalEntryResponse interfaces.QuickbooksJournalEntryResponse
+	err = json.Unmarshal(resp, &qbJournalEntryResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if qbJournalEntryResponse.Fault != nil {
+		span.LogFields(log.Object("error", qbJournalEntryResponse.Fault))
+		return nil, fmt.Errorf("error: %s", qbJournalEntryResponse.Fault.Error[0].Message)
+	}
+
+	return &qbJournalEntryResponse, nil
+}
+
+func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.ZeroJournalEntry")
+	defer span.Finish()
+	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("journalEntryId", journalEntryId))
+
+	// Retrieve QuickBooks settings for the tenant.
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
+	}
+	if qbSettings == nil {
+		err := fmt.Errorf("QuickBooks settings not found for tenant %s", tenant)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Construct URL to fetch the journal entry by ID.
+	getURL := fmt.Sprintf("%s/v3/company/%s/journalentry/%s", s.qbConfig.Url, qbSettings.RealmId, journalEntryId)
+	// Fetch the existing journal entry.
+	resp, err := s.performRequest(ctx, qbSettings, getURL, "GET", nil, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to fetch journal entry: %w", err)
+	}
+
+	var journalEntryResp interfaces.QuickbooksJournalEntryResponse
+	err = json.Unmarshal(resp, &journalEntryResp)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to unmarshal journal entry response: %w", err)
+	}
+
+	// Set all line item amounts to zero.
+	for i := range journalEntryResp.JournalEntry.Line {
+		journalEntryResp.JournalEntry.Line[i].Amount = 0
+	}
+
+	// Build the update payload.
+	updatePayload := map[string]interface{}{
+		"TxnDate": journalEntryResp.JournalEntry.TxnDate, // Preserve the original transaction date
+		"Line":    journalEntryResp.JournalEntry.Line,    // Updated lines with zero amounts
+	}
+
+	// Construct URL for updating the journal entry (QuickBooks updates via POST to the same endpoint).
+	updateURL := fmt.Sprintf("%s/v3/company/%s/journalentry", s.qbConfig.Url, qbSettings.RealmId)
+	updateResp, err := s.performRequest(ctx, qbSettings, updateURL, "POST", updatePayload, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to update journal entry: %w", err)
+	}
+
+	var updateJournalEntryResp interfaces.QuickbooksJournalEntryResponse
+	err = json.Unmarshal(updateResp, &updateJournalEntryResp)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to unmarshal updated journal entry response: %w", err)
+	}
+
+	if updateJournalEntryResp.Fault != nil {
+		span.LogFields(log.Object("error", updateJournalEntryResp.Fault))
+		return fmt.Errorf("error updating journal entry: %s", updateJournalEntryResp.Fault.Error[0].Message)
+	}
+
+	return nil
 }
