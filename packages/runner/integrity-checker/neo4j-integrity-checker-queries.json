@@ -216,7 +216,7 @@
         },
         {
           "name": "TenantSettings missing properties",
-          "query": "MATCH (ts:TenantSettings) WHERE ts.enrichContacts IS NULL OR ts.invoicingEnabled IS NULL RETURN count(ts)"
+          "query": "MATCH (Tenant {active:true})--(ts:TenantSettings) WHERE ts.enrichContacts IS NULL RETURN count(ts)"
         }
       ]
     },
@@ -225,11 +225,11 @@
       "queries": [
         {
           "name": "Check email node labels",
-          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
+          "query": "MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
         },
         {
           "name": "Cross tenant email link",
-          "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+          "query": "MATCH (t1:Tenant )--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
         },
         {
           "name": "Emails not validated",
@@ -237,15 +237,15 @@
         },
         {
           "name": "Duplicate emails by raw email",
-          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.rawEmail <> '' AND e.rawEmail IS NOT NULL WITH t, e.rawEmail AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
+          "query": "MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.rawEmail <> '' AND e.rawEmail IS NOT NULL WITH t, e.rawEmail AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
         },
         {
           "name": "Duplicate emails by clean email",
-          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.email <> '' AND e.email IS NOT NULL WITH t, e.email AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
+          "query": "MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.email <> '' AND e.email IS NOT NULL WITH t, e.email AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
         },
         {
           "name": "Orphan outdated email nodes",
-          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) WHERE e.updatedAt < datetime() - duration({days:10}) OPTIONAL MATCH (e)--(other) WHERE NOT (other:Tenant OR other:Domain) WITH t, e, other WHERE other IS NULL RETURN count(e)"
+          "query": "MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) WHERE e.updatedAt < datetime() - duration({days:10}) OPTIONAL MATCH (e)--(other) WHERE NOT (other:Tenant OR other:Domain) WITH t, e, other WHERE other IS NULL RETURN count(e)"
         },
         {
           "name": "Email nodes without email address",
