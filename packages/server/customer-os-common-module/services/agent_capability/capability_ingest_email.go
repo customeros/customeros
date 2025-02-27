@@ -169,7 +169,7 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 
 	err = c.postgres.AgentExecutionRepository.GoalAchieved(ctx, executionContainer.AgentExecutionID, true, nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish ignore email event"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish ingest email event"))
 	}
 
 	return enum.CapabilityExecutionCompleted, NoOutput{}, nil
