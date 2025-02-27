@@ -34,6 +34,7 @@ func InitCapabilities(
 	workspaceService interfaces.WorkspaceService,
 	quickbooksService interfaces.QuickbooksService,
 	webscraperService interfaces.WebscraperService,
+	contractService interfaces.ContractService,
 ) *AgentCapabilities {
 	var capabilities []interfaces.AgentCapabilityUntyped
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
@@ -70,7 +71,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewSendInvoiceVoidedNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPaidNotificationCapability(invoiceService))
 	capabilities = append(capabilities, NewSendPastDueNotificationCapability(invoiceService))
-	capabilities = append(capabilities, NewSyncInvoiceToAccountingCapability(postgresRepositories, neo4jRepositories, invoiceService, quickbooksService))
+	capabilities = append(capabilities, NewSyncInvoiceToAccountingCapability(postgresRepositories, neo4jRepositories, invoiceService, quickbooksService, contractService))
 
 	agentCapabilities := AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),

@@ -6,7 +6,6 @@ import (
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -24,18 +23,21 @@ type SyncInvoiceToAccountingCapability struct {
 	neo4jRepositories    *neo4jrepository.Repositories
 	invoiceService       interfaces.InvoiceService
 	quickbooksService    interfaces.QuickbooksService
+	contractService      interfaces.ContractService
 }
 
 func NewSyncInvoiceToAccountingCapability(
 	postgresRepositories *postgresrepository.Repositories,
 	neo4jRepositories *neo4jrepository.Repositories,
 	invoiceService interfaces.InvoiceService,
-	quickbooksService interfaces.QuickbooksService) *SyncInvoiceToAccountingCapability {
+	quickbooksService interfaces.QuickbooksService,
+	contractService interfaces.ContractService) *SyncInvoiceToAccountingCapability {
 	return &SyncInvoiceToAccountingCapability{
 		neo4jRepositories:    neo4jRepositories,
 		postgresRepositories: postgresRepositories,
 		invoiceService:       invoiceService,
 		quickbooksService:    quickbooksService,
+		contractService:      contractService,
 	}
 }
 
@@ -228,20 +230,14 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 		quickbooksInvoiceLines = append(quickbooksInvoiceLines, quickbooksInvoiceLine)
 	}
 
-	organizationNode, err := c.neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if organizationNode == nil {
-		err := errors.New("Organization not found for invoice")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	organization := mapper.MapDbNodeToOrganizationEntity(organizationNode)
 
-	if organization.QuickbooksCustomerId == "" {
-		quickbooksSaveCustomerResponse, err := c.quickbooksService.SaveCustomer(ctx, "", organization.Name)
+	if contractEntity.QuickbooksCustomerId == "" {
+		quickbooksSaveCustomerResponse, err := c.quickbooksService.SaveCustomer(ctx, "", contractEntity.OrganizationLegalName)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -252,16 +248,16 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 			return err
 		}
 
-		organization.QuickbooksCustomerId = quickbooksSaveCustomerResponse.Customer.Id
+		contractEntity.QuickbooksCustomerId = quickbooksSaveCustomerResponse.Customer.Id
 
-		err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelOrganization, organization.ID, string(neo4jentity.OrganizationPropertyQuickbooksCustomerId), organization.QuickbooksCustomerId)
+		err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelContract, contractEntity.Id, string(neo4jentity.ContractPropertyQuickbooksCustomerId), contractEntity.QuickbooksCustomerId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 	}
 
-	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, organization.QuickbooksCustomerId, invoice.Number, invoice.IssuedDate, quickbooksInvoiceLines)
+	savedInvoiced, err := c.quickbooksService.SaveInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.Number, invoice.IssuedDate, quickbooksInvoiceLines)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -299,19 +295,13 @@ func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx cont
 		return err
 	}
 
-	organizationNode, err := c.neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if organizationNode == nil {
-		err := errors.New("Organization not found for invoice")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	organization := mapper.MapDbNodeToOrganizationEntity(organizationNode)
 
-	paymentResponse, err := c.quickbooksService.PayInvoice(ctx, organization.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.TotalAmount)
+	paymentResponse, err := c.quickbooksService.PayInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.TotalAmount)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
