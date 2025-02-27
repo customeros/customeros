@@ -48,7 +48,7 @@ func (h *HybridSearchHandler) Search() gin.HandlerFunc {
 			return
 		}
 
-		answer, err := h.services.CommonServices.SearchService.SearchWebsites(ctx, "customeros.ai", request.Query)
+		answer, err := h.services.CommonServices.SearchService.SearchWebsites(ctx, "nuso.cloud", request.Query)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)

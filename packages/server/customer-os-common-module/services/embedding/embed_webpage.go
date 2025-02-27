@@ -23,7 +23,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	// ensure index exists in OpenSearch
-	index := fmt.Sprintf("%s-%s-%s", "embeddings", "webpage", webpage.PrimaryDomain)
+	index := fmt.Sprintf("%s-%s", "embeddings", utils.CurrentMonth())
 	err := s.opensearchService.EmbeddingsIndexCheck(ctx, index)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -62,7 +62,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 	var created []string
 	for _, segment := range segments.Chunks {
 		// build embedding record for each segment
-		record := s.newEmbeddingRecord("WEBPAGE", segment, &webpage.UpdatedAt)
+		record := s.newEmbeddingRecord(enum.EmbeddingWebpage, segment, &webpage.UpdatedAt)
 		record.SourceUrl = webpage.Url
 
 		// embed webpage content
@@ -159,9 +159,8 @@ func (s *embeddingService) cleanWebpage(ctx context.Context, content string) (*s
 	}
 
 	noWhitespace := strings.Join(strings.Fields(*answer), " ")
-	singleSpaced := strings.Join(strings.Fields(noWhitespace), " ")
 
-	return &singleSpaced, nil
+	return &noWhitespace, nil
 }
 
 func (s *embeddingService) generateQuestionsForWebsiteContent(ctx context.Context, content string) ([]string, error) {
@@ -203,7 +202,7 @@ func (s *embeddingService) generateSummary(ctx context.Context, content string) 
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	systemPrompt := "Please provide a short summary for the content providid below."
+	systemPrompt := "Please provide a short summary for the content provided below."
 	temperature := float32(1.0)
 	maxOutput := int32(1024)
 

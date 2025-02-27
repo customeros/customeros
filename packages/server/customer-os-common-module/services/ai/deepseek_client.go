@@ -48,7 +48,7 @@ func (c *DeepseekClient) AskDeepseek(ctx context.Context, request interfaces.Ask
 	}
 
 	if request.Prompt == nil {
-		err := errors.New("content cannot be nil")
+		err := errors.New("prompt cannot be nil")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

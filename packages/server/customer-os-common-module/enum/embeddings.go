@@ -3,7 +3,7 @@ package enum
 type EmbeddingContentType string
 
 const (
-	EmbeddingWebpage EmbeddingContentType = "WEBPAGE"
+	EmbeddingWebpage EmbeddingContentType = "webpage"
 )
 
 func (t EmbeddingContentType) String() string {
