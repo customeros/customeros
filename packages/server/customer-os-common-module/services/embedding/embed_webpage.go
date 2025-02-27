@@ -23,7 +23,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	// ensure index exists in OpenSearch
-	index := fmt.Sprintf("%s-%s-%s", "embeddings", "webpage", webpage.PrimaryDomain)
+	index := fmt.Sprintf("%s-%s", "embeddings", utils.CurrentMonth())
 	err := s.opensearchService.EmbeddingsIndexCheck(ctx, index)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -62,7 +62,7 @@ func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_en
 	var created []string
 	for _, segment := range segments.Chunks {
 		// build embedding record for each segment
-		record := s.newEmbeddingRecord("WEBPAGE", segment, &webpage.UpdatedAt)
+		record := s.newEmbeddingRecord(enum.EmbeddingWebpage, segment, &webpage.UpdatedAt)
 		record.SourceUrl = webpage.Url
 
 		// embed webpage content

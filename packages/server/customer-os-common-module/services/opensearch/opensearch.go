@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go/v2"
@@ -262,10 +263,10 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
             "method": {
               "name": "hnsw",
               "space_type": "cosinesimil",
-              "engine": "nmslib",
+              "engine": "lucene",
               "parameters": {
-                "ef_construction": 128,
-                "m": 16
+                "ef_construction": 256,
+                "m": 24
               }
             }
           },
@@ -284,7 +285,7 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
             "method": {
               "name": "hnsw",
               "space_type": "cosinesimil",
-              "engine": "nmslib"
+              "engine": "lucene"
             }
           },
           "questions": {
@@ -297,7 +298,7 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
                 "method": {
                   "name": "hnsw",
                   "space_type": "cosinesimil",
-                  "engine": "nmslib"
+                  "engine": "lucene"
                 }
               }
             }
@@ -307,19 +308,85 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
       "settings": {
         "index": {
           "knn": true,
-          "knn.algo_param.ef_search": 100,
-          "number_of_shards": 5,
-          "number_of_replicas": 1
+          "knn.algo_param.ef_search": 250,
+          "number_of_shards": 3,
+          "number_of_replicas": 1,
+          "refresh_interval": "10s"
         }
       }
     }`
+
+	return c.ensureIndexExists(ctx, indexName, mapping)
+}
+
+func (c *opensearchService) LLMObservabilityIndexCheck(ctx context.Context, indexName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	mapping := `{
+      "mappings": {
+        "properties": {
+          "request_id": { "type": "keyword" },
+          "timestamp": { "type": "date" },
+          "user_id": { "type": "keyword" },
+          "tenant": { "type": "keyword" },
+          "model": { "type": "keyword" },
+          "temperature": { "type": "float" },
+          "prompt_tokens": { "type": "integer" },
+          "response_tokens": { "type": "integer" },
+          "total_tokens": { "type": "integer" },
+          "cost_usd": { "type": "float" },
+          "success": { "type": "boolean" },
+          "error_message": { 
+            "type": "text",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          },
+          "trace_id": { "type": "keyword" },
+          "systemPrompt": { 
+            "type": "text",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          },
+          "prompt": { 
+            "type": "text",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          },
+          "response": { 
+            "type": "text",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          }
+        }
+      },
+      "settings": {
+        "index": {
+          "number_of_shards": 3,
+          "number_of_replicas": 1,
+          "refresh_interval": "10s"
+        }
+      }
+    }`
+
+	return c.ensureIndexExists(ctx, indexName, mapping)
+}
+
+func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, mapping string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "opensearchService.ensureIndexExists")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("indexName", indexName)
 
 	// Check if index exists
 	existsReq := opensearchapi.IndicesExistsRequest{
 		Index: []string{indexName},
 	}
-
-	// Use the passed context instead of creating a new one
 	existsRes, err := existsReq.Do(ctx, c.client)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -344,8 +411,6 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
 			Index: indexName,
 			Body:  strings.NewReader(mapping),
 		}
-
-		// Use the passed context
 		createRes, err := createReq.Do(ctx, c.client)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -365,7 +430,10 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
 		}
 
 		if createRes.StatusCode >= 300 {
-			err := fmt.Errorf("failed to create index, status: %d", createRes.StatusCode)
+			responseBody, _ := io.ReadAll(createRes.Body)
+			errorMsg := fmt.Sprintf("failed to create index, status: %d, response: %s",
+				createRes.StatusCode, string(responseBody))
+			err := fmt.Errorf(errorMsg)
 			tracing.TraceErr(span, err)
 			return err
 		}

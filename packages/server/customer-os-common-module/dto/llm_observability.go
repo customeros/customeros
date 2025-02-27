@@ -10,8 +10,8 @@ type LLMObservability struct {
 	Tenant    string    `json:"tenant,omitempty"`
 
 	// Model information
-	Model       string `json:"model"`
-	Temperature string `json:"temperature"`
+	Model       string  `json:"model"`
+	Temperature float32 `json:"temperature"`
 
 	// Request details
 	PromptTokens   int `json:"prompt_tokens"`
@@ -26,9 +26,7 @@ type LLMObservability struct {
 	ErrorMessage string `json:"error_message,omitempty"`
 
 	// Tracing context
-	TraceID      string `json:"trace_id,omitempty"` // For Jaeger integration
-	SpanID       string `json:"span_id,omitempty"`
-	ParentSpanID string `json:"parent_span_id,omitempty"`
+	TraceID string `json:"trace_id,omitempty"` // For Jaeger integration
 
 	// Content analysis
 	SystemPrompt string `json:"systemPrompt,omitempty"`

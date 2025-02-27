@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/google/generative-ai-go/genai"
@@ -60,7 +61,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 	if request.Prompt == nil {
 		err := errors.New("Prompt cannot be empty")
 		tracing.TraceErr(span, err)
-		s.trackError(llmTracker, err.Error())
+		s.trackError(ctx, llmTracker, err.Error())
 		return nil, err
 	}
 
@@ -68,6 +69,8 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		temp := float32(DefaultTemperature)
 		request.ModelTemperature = &temp
 	}
+	llmTracker.Temperature = *request.ModelTemperature
+
 	if request.MaxOutputTokens == nil {
 		maxTokens := int32(MaxTokens)
 		request.MaxOutputTokens = &maxTokens
@@ -81,6 +84,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askAnthropic(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			s.trackError(ctx, llmTracker, err.Error())
 			return nil, err
 		}
 
@@ -88,6 +92,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askDeepseek(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			s.trackError(ctx, llmTracker, err.Error())
 			return nil, err
 		}
 
@@ -102,6 +107,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askGroq(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			s.trackError(ctx, llmTracker, err.Error())
 			return nil, err
 		}
 
@@ -111,36 +117,78 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askGemini(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			s.trackError(ctx, llmTracker, err.Error())
 			return nil, err
 		}
 
 	default:
 		err := errors.New("Unsupported model")
+		s.trackError(ctx, llmTracker, err.Error())
 		return nil, err
 	}
 
 	span.LogKV("result", utils.IfNotNilString(result))
 	if err != nil {
 		tracing.TraceErr(span, err)
+		s.trackError(ctx, llmTracker, err.Error())
 		return nil, err
 	}
 
+	s.trackSuccess(ctx, llmTracker, result)
 	return result, nil
 }
 
-func (s *aiService) trackError(llmTracker *dto.LLMObservability, errorMessage string) {
+func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservability, errorMessage string) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackError")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
+	err := s.opensearch.LLMObservabilityIndexCheck(ctx, index)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
 	llmTracker.Success = false
 	llmTracker.ErrorMessage = errorMessage
+	err = s.opensearch.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+	return
+}
+
+func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObservability, result *string) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackSuccess")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
+	err := s.opensearch.LLMObservabilityIndexCheck(ctx, index)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	llmTracker.Success = true
+	llmTracker.Response = *result
+	err = s.opensearch.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+	return
 }
 
 func (s *aiService) newObservabilityContainer(ctx context.Context, span opentracing.Span, request interfaces.AskAIRequest) *dto.LLMObservability {
-	var traceID, spanID string
+	var traceID string
 
 	// For Jaeger specifically
 	if jaegerSpan, ok := span.(*jaeger.Span); ok {
 		spanContext := jaegerSpan.Context().(jaeger.SpanContext)
 		traceID = spanContext.TraceID().String()
-		spanID = spanContext.SpanID().String()
 	} else {
 		// Fallback for other tracers - get carrier with all span context info
 		carrier := opentracing.TextMapCarrier{}
@@ -158,7 +206,6 @@ func (s *aiService) newObservabilityContainer(ctx context.Context, span opentrac
 		Tenant:       common.GetTenantFromContext(ctx),
 		Model:        request.Model.String(),
 		TraceID:      traceID,
-		SpanID:       spanID,
 		SystemPrompt: *request.SystemPrompt,
 		Prompt:       *request.Prompt,
 	}
