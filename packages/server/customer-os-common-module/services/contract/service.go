@@ -850,6 +850,13 @@ func (s *contractService) createActionForStatusChange(ctx context.Context, tenan
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId), log.String("status", status), log.String("contractName", contractName))
 
+	// if status is not one of the predefined statuses, return
+	if status != string(neo4jenum.ContractStatusLive) &&
+		status != string(neo4jenum.ContractStatusEnded) &&
+		status != string(neo4jenum.ContractStatusOutOfContract) {
+		return
+	}
+
 	if contractName != "" {
 		name = contractName
 	} else {
@@ -860,8 +867,8 @@ func (s *contractService) createActionForStatusChange(ctx context.Context, tenan
 		ContractName: name,
 		Comment:      name + " is now " + status,
 	}
-	message := ""
 
+	message := ""
 	switch status {
 	case string(neo4jenum.ContractStatusLive):
 		message = contractName + " is now live"
