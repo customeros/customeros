@@ -177,7 +177,7 @@ func (u *userReadRepository) FindPlatformOwners(ctx context.Context) ([]*Authent
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (e:Email)-[:HAS{primary:true}]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant{name:"openlineai"}), (au)--(a:Authentication{provider:"google"})
+			MATCH (e:Email)-[:HAS{primary:true}]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant{name:"customerosai"}), (au)--(a:Authentication{provider:"google"})
 			WHERE 'PLATFORM_OWNER' in u.roles
 			RETURN t.name, au.id, u.id, u.roles, e.rawEmail, u.firstName, u.lastName ORDER BY u.createdAt ASC`),
 			map[string]interface{}{})
