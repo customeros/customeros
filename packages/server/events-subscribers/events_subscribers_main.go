@@ -197,9 +197,6 @@ func (a *App) initializeListeners() error {
 		a.deps.CommonServices.AgentRunnerService,
 	))
 
-	a.events.Subscriber.RegisterListener(common_agent_listeners.NewIcpNotAFitListener(a.logger, a.deps.PostgresRepositories))
-	a.events.Subscriber.RegisterListener(common_agent_listeners.NewIcpFitListener(a.logger, a.deps.PostgresRepositories))
-
 	// Webvisit Listeners
 	a.events.Subscriber.RegisterListener(common_agent_listeners.NewNewWebSessionListener(
 		a.logger,

@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -23,13 +24,15 @@ type IngestEmailInput struct {
 
 type IngestEmailCapability struct {
 	postgres    *postgres_repository.Repositories
+	events      *events.EventsService
 	mailService interfaces.MailService
 	opensearch  interfaces.OpensearchService
 }
 
-func NewIngestEmailCapability(postgresRepositories *postgres_repository.Repositories, mailService interfaces.MailService, opensearch interfaces.OpensearchService) *IngestEmailCapability {
+func NewIngestEmailCapability(postgresRepositories *postgres_repository.Repositories, events *events.EventsService, mailService interfaces.MailService, opensearch interfaces.OpensearchService) *IngestEmailCapability {
 	return &IngestEmailCapability{
 		postgres:    postgresRepositories,
+		events:      events,
 		mailService: mailService,
 		opensearch:  opensearch,
 	}
@@ -162,6 +165,11 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to index document"))
 		}
+	}
+
+	err = c.postgres.AgentExecutionRepository.GoalAchieved(ctx, executionContainer.AgentExecutionID, true, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish ignore email event"))
 	}
 
 	return enum.CapabilityExecutionCompleted, NoOutput{}, nil
