@@ -216,7 +216,7 @@
         },
         {
           "name": "TenantSettings missing properties",
-          "query": "MATCH (Tenant {active:true})--(ts:TenantSettings) WHERE ts.enrichContacts IS NULL RETURN count(ts)"
+          "query": "MATCH (:Tenant {active:true})--(ts:TenantSettings) WHERE ts.enrichContacts IS NULL RETURN count(ts)"
         }
       ]
     },
