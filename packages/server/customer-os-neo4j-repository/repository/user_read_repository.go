@@ -297,7 +297,8 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
 			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN au.currentTenant`),
+			WITH COALESCE(au.currentTenant, au.defaultTenant) as tenant
+			WHERE tenant IS NOT NULL RETURN tenant`),
 			map[string]interface{}{
 				"email": email,
 			})

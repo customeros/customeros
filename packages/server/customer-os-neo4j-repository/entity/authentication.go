@@ -24,6 +24,7 @@ type AuthenticationUserEntity struct {
 	FirstName     string
 	LastName      string
 	DefaultTenant string
+	CurrentTenant string
 }
 
 func (AuthenticationUserEntity) Labels(tenant string) []string {
