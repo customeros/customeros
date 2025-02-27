@@ -244,7 +244,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 				}
 				c.JSON(http.StatusOK, gin.H{})
 			} else {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(errors.New("slack response not ok"), *slackResponse.Error))
 				c.JSON(http.StatusInternalServerError, gin.H{"error": slackResponse.Error})
 			}
 		}

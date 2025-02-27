@@ -401,7 +401,7 @@ func (s *googleService) ReadEmails(ctx context.Context, batchSize int64, importS
 	var results []*postgresEntity.EmailRawData
 
 	gmailService, err := s.GetGmailService(ctx, importState.Username, importState.Tenant)
-	if err != nil {
+	if err != nil || gmailService == nil {
 		logrus.Errorf("failed to create gmail service: %v", err)
 		return nil, "", fmt.Errorf("failed to create gmail service: %v", err)
 	}
