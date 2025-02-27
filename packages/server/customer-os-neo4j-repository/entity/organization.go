@@ -37,7 +37,6 @@ const (
 	OrganizationPropertyRenewalLikelihood         OrganizationProperty = "derivedRenewalLikelihood"
 	OrganizationPropertyContactCount              OrganizationProperty = "derivedContactCount"
 	OrganizationPropertyLeadSource                OrganizationProperty = "leadSource"
-	OrganizationPropertyQuickbooksCustomerId      OrganizationProperty = "quickbooksCustomerId"
 	OrganizationPropertyIcpCheckedAt              OrganizationProperty = "techIcpCheckedAt"
 	OrganizationPropertyIcpCheckRequestedAt       OrganizationProperty = "techIcpCheckRequestedAt"
 )
@@ -94,8 +93,6 @@ type OrganizationEntity struct {
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 	OrganizationInternalFields         OrganizationInternalFields
 	DerivedData                        DerivedData
-
-	QuickbooksCustomerId string
 }
 
 type DerivedData struct {
