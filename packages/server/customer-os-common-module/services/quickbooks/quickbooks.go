@@ -294,6 +294,11 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		qbProduct.Item.UnitPrice = price
 		qbProduct.Item.Active = !archived
 
+		// nullify PurchaseCost if ExpenseAccountRef is not set
+		if qbProduct.Item.ExpenseAccountRef == nil {
+			qbProduct.Item.PurchaseCost = nil
+		}
+
 		jsonBytes, _ := json.Marshal(qbProduct.Item)
 		err = json.Unmarshal(jsonBytes, &qbSaveProductRequest)
 		if err != nil {
