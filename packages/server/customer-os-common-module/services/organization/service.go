@@ -3,9 +3,11 @@ package organization
 import (
 	"context"
 	"fmt"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"strings"
 	"time"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/forPelevin/gomoji"
 
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -209,7 +211,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 	}
 
-	if id == nil {
+	if utils.IfNotNilString(id) == "" {
 		createFlow = true
 		span.LogFields(log.String("process.flow", "create"))
 	} else {
@@ -316,7 +318,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		organizationId = generatedId
 
 	} else {
-		organizationId = *id
+		organizationId = utils.IfNotNilString(id)
 		existingOrganizationEntity, err = s.GetById(ctx, tenant, organizationId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -346,7 +348,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to get global orgs by primary domains"))
 			}
-			if globalOrganizations != nil && len(globalOrganizations) > 0 {
+			if len(globalOrganizations) > 0 {
 				globalOrganization := (globalOrganizations)[0]
 				input.Name = utils.StringPtr(globalOrganization.Name)
 				input.PrimaryDomain = utils.StringPtr(globalOrganization.PrimaryDomain)
@@ -414,7 +416,9 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	// Adjust name if it is empty
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 		if input.Name != nil {
-			input.Name = utils.StringPtr(utils.CleanName(*input.Name))
+			cleanName := gomoji.RemoveEmojis(utils.IfNotNilString(input.Name))
+			cleanName = utils.SanitizeUTF8(cleanName)
+			input.Name = utils.StringPtr(cleanName)
 		}
 	}
 	// trim left spaces from name
@@ -463,7 +467,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		// link with domains
-		if domains != nil && len(domains) > 0 {
+		if len(domains) > 0 {
 			for _, domain := range domains {
 				linked, err := s.LinkWithDomain(ctx, txWithPostCommit, organizationId, domain)
 				if err != nil {
@@ -551,13 +555,13 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		// add post commit actions to send events
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
-				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{input})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{OrganizationFields: input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{OrganizationFields: input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
 				}
@@ -1540,7 +1544,7 @@ func (s *organizationService) UpdateRenewalSummary(ctx context.Context, organiza
 		}
 	}
 
-	renewalLikelihoodOrderPtr := utils.ToPtr[int64](renewalLikelihoodOrder)
+	renewalLikelihoodOrderPtr := utils.ToPtr(renewalLikelihoodOrder)
 	if renewalLikelihoodOrder == 0 {
 		renewalLikelihoodOrderPtr = nil
 	}
@@ -1755,7 +1759,7 @@ func (s *organizationService) GetOrganizationByDomain(ctx context.Context, domai
 }
 
 func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields *data_fields.OrganizationFields, currentOrganizationEntity *neo4jentity.OrganizationEntity) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.adjustIcpFitFields")
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationService.adjustIcpFitFields")
 	defer span.Finish()
 
 	if dataFields.Relationship != nil {
