@@ -25,9 +25,10 @@ type mailService struct {
 	email              interfaces.EmailService
 	interactionEvent   interfaces.InteractionEventService
 	org                interfaces.OrganizationService
+	workspace          interfaces.WorkspaceService
 }
 
-func NewMailService(cache *caches.Cache, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, azure interfaces.AzureService, contact interfaces.ContactService, email interfaces.EmailService, google interfaces.GoogleService, interactionEvent interfaces.InteractionEventService, interactionSession interfaces.InteractionSessionService, opensrs interfaces.OpenSrsService, org interfaces.OrganizationService) interfaces.MailService {
+func NewMailService(cache *caches.Cache, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, azure interfaces.AzureService, contact interfaces.ContactService, email interfaces.EmailService, google interfaces.GoogleService, interactionEvent interfaces.InteractionEventService, interactionSession interfaces.InteractionSessionService, opensrs interfaces.OpenSrsService, org interfaces.OrganizationService, workspace interfaces.WorkspaceService) interfaces.MailService {
 	return &mailService{
 		cache:              cache,
 		postgres:           postgres,
@@ -40,6 +41,7 @@ func NewMailService(cache *caches.Cache, postgres *postgres_repository.Repositor
 		email:              email,
 		interactionEvent:   interactionEvent,
 		org:                org,
+		workspace:          workspace,
 	}
 }
 

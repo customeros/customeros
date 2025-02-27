@@ -614,6 +614,17 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 			err = errors.New("unable to extract domain from email: " + email)
 			return "", err
 		}
+
+		tenantWorkspaces, err := s.workspace.GetWorkspaceDomainsForTenant(ctx)
+		if err != nil {
+			err = errors.Wrap(err, "failed to get workspace domains for tenant")
+			return "", err
+		}
+
+		if utils.Contains(tenantWorkspaces, domain) {
+			return "", nil
+		}
+
 		if utils.Contains(s.cache.GetPersonalEmailProviders(), domain) ||
 			emailSyntax.IsSystemGenerated ||
 			emailSyntax.IsRoleAccount {

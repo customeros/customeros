@@ -1087,6 +1087,7 @@ type ComplexityRoot struct {
 		AdminAddWorkspaceAccess                    func(childComplexity int, authenticatedUserEmail string, tenant string) int
 		AdminRemoveWorkspaceAccess                 func(childComplexity int, authenticatedUserEmail string, tenant string) int
 		AdminSwitchCurrentWorkspace                func(childComplexity int, switchToTenant string) int
+		AdminTenantAddDomainAsWorkspace            func(childComplexity int, domain string) int
 		AdminTenantHardDelete                      func(childComplexity int, tenant string, confirmTenant string) int
 		AgentDelete                                func(childComplexity int, id string) int
 		AgentSave                                  func(childComplexity int, input model.AgentSaveInput) int
@@ -1997,6 +1998,7 @@ type MutationResolver interface {
 	AdminAddWorkspaceAccess(ctx context.Context, authenticatedUserEmail string, tenant string) (bool, error)
 	AdminRemoveWorkspaceAccess(ctx context.Context, authenticatedUserEmail string, tenant string) (bool, error)
 	AdminSwitchCurrentWorkspace(ctx context.Context, switchToTenant string) (bool, error)
+	AdminTenantAddDomainAsWorkspace(ctx context.Context, domain string) (bool, error)
 	AdminTenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error)
 	AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error)
 	AgentDelete(ctx context.Context, id string) (bool, error)
@@ -7515,6 +7517,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AdminSwitchCurrentWorkspace(childComplexity, args["switchToTenant"].(string)), true
+
+	case "Mutation.admin_tenant_AddDomainAsWorkspace":
+		if e.complexity.Mutation.AdminTenantAddDomainAsWorkspace == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_admin_tenant_AddDomainAsWorkspace_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminTenantAddDomainAsWorkspace(childComplexity, args["domain"].(string)), true
 
 	case "Mutation.admin_tenant_hardDelete":
 		if e.complexity.Mutation.AdminTenantHardDelete == nil {
@@ -13483,6 +13497,8 @@ extend type Mutation {
 
     admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 
+    admin_tenant_AddDomainAsWorkspace(domain: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+
     admin_tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
 
@@ -18369,6 +18385,34 @@ func (ec *executionContext) field_Mutation_admin_switchCurrentWorkspace_argsSwit
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("switchToTenant"))
 	if tmp, ok := rawArgs["switchToTenant"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_tenant_AddDomainAsWorkspace_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_admin_tenant_AddDomainAsWorkspace_argsDomain(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["domain"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_admin_tenant_AddDomainAsWorkspace_argsDomain(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["domain"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
+	if tmp, ok := rawArgs["domain"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -63155,6 +63199,95 @@ func (ec *executionContext) fieldContext_Mutation_admin_switchCurrentWorkspace(c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_admin_switchCurrentWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_admin_tenant_AddDomainAsWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_admin_tenant_AddDomainAsWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AdminTenantAddDomainAsWorkspace(rctx, fc.Args["domain"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_admin_tenant_AddDomainAsWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_admin_tenant_AddDomainAsWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -128856,6 +128989,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "admin_switchCurrentWorkspace":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_admin_switchCurrentWorkspace(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "admin_tenant_AddDomainAsWorkspace":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_admin_tenant_AddDomainAsWorkspace(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
