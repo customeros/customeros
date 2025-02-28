@@ -134,6 +134,13 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		return nil, err
 	}
 
+	if request.OutputFormat == enum.AIOutputText {
+		answer := strings.TrimPrefix(*result, `"""`)
+		answer = strings.TrimSuffix(answer, `"""`)
+		s.trackSuccess(ctx, llmTracker, result)
+		return &answer, nil
+	}
+
 	s.trackSuccess(ctx, llmTracker, result)
 	return result, nil
 }

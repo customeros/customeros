@@ -17,7 +17,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -42,7 +41,6 @@ func NewWebscraperService(config *config.JinaConfig, postgres *postgres_reposito
 
 const (
 	WebpageScrapeTTLInDays = 180
-	CleanPageModel         = enum.AIModelGemini
 )
 
 var (
@@ -102,11 +100,11 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 		return "", nil
 	}
 
-	content, links := s.processWebContent(ctx, contents)
+	content, links := s.ProcessWebContent(ctx, contents)
 
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
 
-	_, err = s.postgresRepositories.GlobalOrganizationWebpageRepository.Save(ctx, postgres_entity.GlobalOrganizationWebpages{
+	_, err = s.postgresRepositories.ScrapedWebpageRepository.Save(ctx, postgres_entity.ScrapedWebpage{
 		PrimaryDomain: primaryDomain,
 		Url:           url,
 		Content:       content,
@@ -120,7 +118,7 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	return contents, nil
 }
 
-func (s *webscraperService) processWebContent(ctx context.Context, content string) (string, []string) {
+func (s *webscraperService) ProcessWebContent(ctx context.Context, content string) (string, []string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.postProcessWebContent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -203,7 +201,7 @@ func (s *webscraperService) checkCache(ctx context.Context, url string, cacheTTL
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	record, err := s.postgresRepositories.GlobalOrganizationWebpageRepository.GetWebpage(ctx, url, cacheTTL)
+	record, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, cacheTTL)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err

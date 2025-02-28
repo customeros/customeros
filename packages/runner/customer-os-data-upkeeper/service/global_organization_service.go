@@ -49,6 +49,7 @@ type GlobalOrganizationService interface {
 	EnrichGlobalOrganization()
 	SyncGlobalOrgsToTenantOrganizations()
 	ScrapeGlobalOrgs()
+	ExtractWebpageLinks()
 }
 
 type globalOrganizationService struct {
@@ -74,6 +75,63 @@ func (s *globalOrganizationService) EnrichGlobalOrganization() {
 	s.enrichName()
 	s.enrichIndustry()
 	s.enrichDescription()
+}
+
+func (s *globalOrganizationService) ExtractWebpageLinks() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ExtractWebpageLinks")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 100
+	webpages, err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.GetWebpagesWithoutLinks(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
+		return
+	}
+
+	if len(webpages) == 0 || webpages == nil {
+		return
+	}
+
+	// Use a WaitGroup to wait for all goroutines to finish
+	var wg sync.WaitGroup
+	// Create a semaphore to limit concurrent goroutines
+	semaphore := make(chan struct{}, 10) // Adjust the number based on your needs
+
+	for _, page := range webpages {
+		wg.Add(1)
+		// Acquire semaphore
+		semaphore <- struct{}{}
+
+		go func(org *postgres_entity.ScrapedWebpage) {
+			// Create timeout context for this goroutine
+			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
+			defer childCancel()
+
+			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ExtractWebpageLinks")
+			defer childSpan.Finish()
+			childSpan.LogFields(log.String("url", page.Url))
+
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release semaphore when done
+
+			content, links := s.commonServices.WebscraperService.ProcessWebContent(childCtx, page.Content)
+			err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetLinks(childCtx, page.Url, links)
+			if err != nil {
+				tracing.TraceErr(childSpan, err)
+			}
+			err = s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetContent(childCtx, page.Url, content)
+			if err != nil {
+				tracing.TraceErr(childSpan, err)
+			}
+		}(page)
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
 }
 
 func (s *globalOrganizationService) ScrapeGlobalOrgs() {

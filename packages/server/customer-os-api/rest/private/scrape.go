@@ -107,7 +107,7 @@ func (h *WebscrapeHandler) EmbedWebpage() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 		}
 
-		record, err := h.services.CommonServices.PostgresRepositories.GlobalOrganizationWebpageRepository.GetWebpage(ctx, request.Url, 90)
+		record, err := h.services.CommonServices.PostgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, request.Url, 180)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
