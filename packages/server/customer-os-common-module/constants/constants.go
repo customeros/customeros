@@ -19,10 +19,8 @@ const (
 	PromptType_ExtractIndustryValue = "ExtractIndustryValueFromAiResponse"
 	PromptTypeExtractLocationValue  = "ExtractLocationValue"
 
-	Anthropic         = "anthropic"
-	OpenAI            = "openai"
-	AnthropicApiModel = "claude-3-5-sonnet-20240620"
-	// AnthropicApiModel = "claude-3-haiku-20240307"
+	Anthropic = "anthropic"
+	OpenAI    = "openai"
 
 	UrlCustomerOsApi                 = "https://customeros.ai"
 	FileStoreFileDownloadUrlTemplate = UrlCustomerOsApi + "/files/v1/files/%s/download"

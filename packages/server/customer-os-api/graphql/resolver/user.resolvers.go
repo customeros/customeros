@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
@@ -13,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -40,6 +42,43 @@ func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, inpu
 		graphql.AddErrorf(ctx, "Failed to update onboarding details for user %s", input.ID)
 		return nil, nil
 	}
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userEntity), nil
+}
+
+// UserUpdate is the resolver for the user_Update field.
+func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpdateInput) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	userData := data_fields.UserFields{
+		FirstName:       input.FirstName,
+		LastName:        input.LastName,
+		ProfilePhotoUrl: input.ProfilePhotoURL,
+	}
+
+	// Validate logged-in user can only update own user details
+	if common.GetUserIdFromContext(ctx) != input.ID {
+		err := errors.New("user can only update own user details")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User can only update own user details")
+		return nil, err
+	}
+
+	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, userData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
+		return nil, err
+	}
+
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)

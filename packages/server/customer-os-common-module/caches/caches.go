@@ -2,11 +2,12 @@ package caches
 
 import (
 	"encoding/json"
-	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
 	"github.com/coocood/freecache"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
