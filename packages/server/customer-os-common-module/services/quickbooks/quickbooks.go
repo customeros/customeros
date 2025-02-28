@@ -221,23 +221,14 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 	}
 
 	if quickbooksSettingsEntity.SalesAccountId == "" {
-		//search for the sales account
-		searchSalesAccountUrl := s.qbConfig.Url + fmt.Sprintf("/v3/company/%s/query?query=select+Id+from+Account+where+Name='CustomerOS+Sales'", quickbooksSettingsEntity.RealmId)
-		searchSalesAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, searchSalesAccountUrl, "POST", nil, true)
+		salesAccountId, err := s.GetAccountIdByName(ctx, "CustomerOS Sales")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		var searchSalesAccount interfaces.QuickbooksSearchAccountResponse
-		err = json.Unmarshal(searchSalesAccountResponse, &searchSalesAccount)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		if len(searchSalesAccount.QueryResponse.Account) > 0 {
-			quickbooksSettingsEntity.SalesAccountId = searchSalesAccount.QueryResponse.Account[0].Id
+		if salesAccountId != "" {
+			quickbooksSettingsEntity.SalesAccountId = salesAccountId
 			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -807,4 +798,45 @@ func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId
 	}
 
 	return nil
+}
+
+func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.GetAccountIdByName")
+	defer span.Finish()
+	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("accountName", accountName))
+
+	// Retrieve QuickBooks settings for the tenant.
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
+	}
+	if qbSettings == nil {
+		err = errors.New("QuickBooks settings not found")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// Construct the URL for querying the account by name.
+	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, accountName)
+	// Perform the request.
+	resp, err := s.performRequest(ctx, qbSettings, queryURL, "POST", nil, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", fmt.Errorf("failed to query account: %w", err)
+	}
+
+	var searchAccountResp interfaces.QuickbooksSearchAccountResponse
+	err = json.Unmarshal(resp, &searchAccountResp)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", fmt.Errorf("failed to unmarshal account response: %w", err)
+	}
+
+	if len(searchAccountResp.QueryResponse.Account) > 0 {
+		return searchAccountResp.QueryResponse.Account[0].Id, nil
+	}
+	return "", nil
 }
