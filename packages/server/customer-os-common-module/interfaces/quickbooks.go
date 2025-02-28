@@ -13,6 +13,7 @@ type QuickbooksService interface {
 	RevokeAccess(ctx context.Context) error
 	SaveProduct(ctx context.Context, id, productName string, archived bool, price float64) (*QuickbooksSaveProductResponse, error)
 	GetProduct(ctx context.Context, id string) (*QuickbooksGetProductResponse, error)
+	GetAccountIdByName(ctx context.Context, accountName string) (string, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
 	SaveInvoice(ctx context.Context, customerId, invoiceNumber string, invoiceDate time.Time, lines []QuickbooksInvoiceLine) (*QuickbooksSaveInvoiceResponse, error)
 	PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*QuickbooksSavePaymentResponse, error)

@@ -373,6 +373,12 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 	debitJournalLineItem.JournalEntryLineDetail.PostingType = "Debit"
 	debitJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Debtors"
+	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, "Debtors")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Value = debtorsAccountId
 	journalLineItems = append(journalLineItems, debitJournalLineItem)
 
 	// prepare credit journal line items
