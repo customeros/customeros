@@ -2795,7 +2795,7 @@ type Task struct {
 	Name          string     `json:"name"`
 	Description   *string    `json:"description,omitempty"`
 	Context       string     `json:"context"`
-	AsigneeID     string     `json:"asigneeId"`
+	Asignees      []string   `json:"asignees"`
 	OwnerID       string     `json:"ownerId"`
 	Status        TaskStatus `json:"status"`
 	OpportunityID *string    `json:"opportunityId,omitempty"`
@@ -2805,15 +2805,15 @@ type Task struct {
 }
 
 type TaskInput struct {
-	ID            *string    `json:"id,omitempty"`
-	Name          string     `json:"name"`
-	Description   *string    `json:"description,omitempty"`
-	Context       string     `json:"context"`
-	AsigneeID     string     `json:"asigneeId"`
-	OwnerID       string     `json:"ownerId"`
-	Status        TaskStatus `json:"status"`
-	OpportunityID *string    `json:"opportunityId,omitempty"`
-	DueAt         time.Time  `json:"dueAt"`
+	ID            *string     `json:"id,omitempty"`
+	Name          *string     `json:"name,omitempty"`
+	Description   *string     `json:"description,omitempty"`
+	Context       *string     `json:"context,omitempty"`
+	Asignees      []string    `json:"asignees,omitempty"`
+	OwnerID       *string     `json:"ownerId,omitempty"`
+	Status        *TaskStatus `json:"status,omitempty"`
+	OpportunityID *string     `json:"opportunityId,omitempty"`
+	DueAt         *time.Time  `json:"dueAt,omitempty"`
 }
 
 type Tax struct {

@@ -8,14 +8,14 @@ extend type Mutation {
 
 input TaskInput {
     id           : ID
-    name         : String!
+    name         : String
     description  : String
-    context      : String!
-    asigneeId    : ID!
-    ownerId      : ID!
-    status       : TaskStatus!
+    context      : String
+    asignees     : [ID!]
+    ownerId      : ID
+    status       : TaskStatus
     opportunityId: ID
-    dueAt        : Time!
+    dueAt        : Time
 }
 
 type Task {
@@ -23,7 +23,7 @@ type Task {
     name         : String!
     description  : String
     context      : String!
-    asigneeId    : ID!
+    asignees     : [ID!]!
     ownerId      : ID!
     status       : TaskStatus!
     opportunityId: ID

@@ -6,17 +6,49 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 // TaskSave is the resolver for the task_Save field.
 func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) (*model.Task, error) {
-	panic(fmt.Errorf("not implemented: TaskSave - task_Save"))
+	data := &model.Task{
+		ID:            *input.ID,
+		Name:          *input.Name,
+		Description:   input.Description,
+		Context:       *input.Context,
+		Asignees:      input.Asignees,
+		OwnerID:       *input.OwnerID,
+		Status:        *input.Status,
+		OpportunityID: input.OpportunityID,
+		DueAt:         *input.DueAt,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	return data, nil
 }
 
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
-	panic(fmt.Errorf("not implemented: Tasks - tasks"))
+	description := "Task description number 1"
+	opportunityID := ""
+
+	task := &model.Task{
+		ID:            "1",
+		Name:          "Task 1",
+		Description:   &description,
+		Context:       "Some context for the task",
+		Asignees:      []string{},
+		OwnerID:       "1",
+		Status:        "TODO",
+		OpportunityID: &opportunityID,
+		DueAt:         time.Now(),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	// Return an array with the sample task
+	return []*model.Task{task}, nil
 }
