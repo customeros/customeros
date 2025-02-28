@@ -22,7 +22,7 @@ func (s WebpageCategory) String() string {
 }
 
 func GetWebpageCategory(s string) WebpageCategory {
-	switch s {
+	switch WebpageCategory(s) {
 	case
 		WebpageAbout,
 		WebpageAccount,
