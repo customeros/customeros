@@ -888,16 +888,16 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 				"Amount": totalAmount,
 				"LinkedTxn": []map[string]interface{}{
 					{
-						"TxnId":   quickbooksInvoiceId,
-						"TxnType": "Invoice",
+						"TxnId":   quickbooksJournalEntryId,
+						"TxnType": "JournalEntry",
 					},
 				},
 			},
 		},
 		"LinkedTxn": []map[string]interface{}{
 			{
-				"TxnId":   quickbooksJournalEntryId,
-				"TxnType": "JournalEntry",
+				"TxnId":   quickbooksInvoiceId,
+				"TxnType": "Invoice",
 			},
 		},
 	}
