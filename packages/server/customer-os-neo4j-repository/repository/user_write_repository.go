@@ -2,18 +2,18 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 )
 
 type UserUpdateFields struct {
-	Name            string `json:"name"`
 	FirstName       string `json:"firstName"`
 	LastName        string `json:"lastName"`
 	Source          string `json:"source"`
@@ -56,8 +56,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.Mana
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
-		 ON CREATE SET 	u.name = $name,
-						u.firstName = $firstName,
+		 ON CREATE SET 	u.firstName = $firstName,
 						u.lastName = $lastName,
 						u.source = $source,
 						u.appSource = $appSource,
@@ -77,7 +76,6 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.Mana
 		"tenant":          tenant,
 		"id":              userId,
 		"createdAt":       utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
-		"name":            utils.IfNotNilString(data.Name),
 		"firstName":       utils.IfNotNilString(data.FirstName),
 		"lastName":        utils.IfNotNilString(data.LastName),
 		"internal":        utils.IfNotNilBool(data.Internal),
@@ -119,10 +117,6 @@ func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.Mana
 		"tenant": tenant,
 	}
 
-	if data.Name != nil {
-		params["name"] = *data.Name
-		cypher += ", u.name=$name"
-	}
 	if data.FirstName != nil {
 		params["firstName"] = *data.FirstName
 		cypher += ", u.firstName=$firstName"
