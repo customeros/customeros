@@ -543,8 +543,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			Tenant: currentTenant,
 		})
 
-		// TODO replace, get user id linked to AuthUserId
-		user, err := services.CommonServices.UserService.FindUserByEmail(ctx, signInRequest.LoggedInEmail)
+		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -553,8 +552,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			return
 		}
 
-		if user != nil {
-			userId = user.Id
+		if userInTenantNode != nil {
+			userId = mapper.MapDbNodeToUserEntity(userInTenantNode).Id
 		}
 
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{

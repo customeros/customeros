@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 type AuthenticatedUserInTenant struct {
@@ -384,10 +385,12 @@ func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, a
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (e:Email_%s{rawEmail:$email})<-[:HAS]-(u:User_%s)-[:%s]->(a:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant {name:$tenant}) RETURN u`, tenant, tenant, model.AUTHENTICATED_BY.String(), model.HAS_WORKSPACE.String())
+	cypher := fmt.Sprintf(`MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:%s]->(a:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant {name:$tenant})
+		WHERE lower(e.email)=$email OR lower(e.rawEmail)=$email
+		RETURN u`, tenant, tenant, model.AUTHENTICATED_BY.String(), model.HAS_WORKSPACE.String())
 	params := map[string]any{
 		"tenant":     tenant,
-		"email":      email,
+		"email":      strings.ToLower(email),
 		"authUserId": authUserId,
 	}
 	span.LogFields(log.String("cypher", cypher))
