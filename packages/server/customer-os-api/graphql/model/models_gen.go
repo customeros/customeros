@@ -3107,8 +3107,7 @@ func (UserParticipant) IsMeetingParticipant() {}
 
 type UserUpdateInput struct {
 	ID              string  `json:"id"`
-	FirstName       *string `json:"firstName,omitempty"`
-	LastName        *string `json:"lastName,omitempty"`
+	Name            *string `json:"name,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
 

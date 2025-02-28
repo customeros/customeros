@@ -1,6 +1,7 @@
 package neo4j_entity
 
 import (
+	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -73,13 +74,16 @@ func (UserEntity) EntityLabel() string {
 	return model.NodeLabelUser
 }
 
-func (u UserEntity) GetFullName() string {
-	fullName := u.FirstName
-	if u.LastName != "" {
-		fullName += " " + u.LastName
+func (u UserEntity) FullName() string {
+	first := strings.TrimSpace(u.FirstName)
+	last := strings.TrimSpace(u.LastName)
+
+	if first != "" && last != "" {
+		return first + " " + last
+	} else if first != "" {
+		return first
+	} else if last != "" {
+		return last
 	}
-	if fullName == "" {
-		fullName = u.Name
-	}
-	return fullName
+	return ""
 }

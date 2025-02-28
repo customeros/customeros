@@ -144,8 +144,7 @@ input UserInput {
 
 input UserUpdateInput {
     id:                 ID!
-    firstName:          String
-    lastName:           String
+    name:               String
     profilePhotoUrl:    String
 }
 

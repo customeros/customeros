@@ -440,7 +440,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 					}
 					if userDbNode != nil {
 						userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-						userName = userEntity.GetFullName()
+						userName = userEntity.FullName()
 					}
 					message := fmt.Sprintf("Renewal likelihood set to %s", cases.Title(language.English).String(input.RenewalLikelihood.String()))
 					if userName != "" {

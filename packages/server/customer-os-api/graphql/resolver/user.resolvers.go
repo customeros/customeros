@@ -59,9 +59,12 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpda
 	tracing.LogObjectAsJson(span, "request.input", input)
 
 	userData := data_fields.UserFields{
-		FirstName:       input.FirstName,
-		LastName:        input.LastName,
 		ProfilePhotoUrl: input.ProfilePhotoURL,
+	}
+	if input.Name != nil {
+		firstName, lastName := utils.SplitFullName(*input.Name)
+		userData.FirstName = &firstName
+		userData.LastName = &lastName
 	}
 
 	// Validate logged-in user can only update own user details

@@ -272,7 +272,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				}
 				if userDbNode != nil {
 					userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-					userName = userEntity.GetFullName()
+					userName = userEntity.FullName()
 				}
 			}
 
@@ -771,7 +771,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 			}
 			if userDbNode != nil {
 				userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-				userName = userEntity.GetFullName()
+				userName = userEntity.FullName()
 			}
 			contractName := "Unnamed contract"
 			if contractEntity.Name != "" {
