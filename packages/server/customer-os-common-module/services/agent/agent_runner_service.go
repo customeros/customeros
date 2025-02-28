@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -348,7 +349,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		return a.postgresRepositories.AgentExecutionRepository.SaveAsyncState(ctx, params.executionID, currentStep, stateData)
 
 	default:
-		err := errors.New("unexpected capability execution status")
+		err := fmt.Errorf("unexpected capability execution result status {%s}", status)
 		tracing.TraceErr(span, err)
 		return err
 	}

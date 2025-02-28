@@ -2,7 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -383,6 +382,8 @@ func executeCapability[I, O, C any](
 		return enum.CapabilityExecutionPending, nil, nil
 
 	default:
-		return enum.CapabilityExecutionError, nil, errors.New("executeCapability: Unexpected capability execution status")
+		err = fmt.Errorf("unexpected capability execution status {%s}", capabilityExecutionStatus.String())
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, nil, err
 	}
 }
