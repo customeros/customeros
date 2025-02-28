@@ -180,7 +180,11 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	}
 
 	llmTracker.Success = true
-	llmTracker.Response = *result
+
+	if result != nil {
+		llmTracker.Response = *result
+	}
+
 	err = s.opensearch.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
 	if err != nil {
 		tracing.TraceErr(span, err)
