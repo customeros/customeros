@@ -297,6 +297,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErrStr); err != nil {
 			return errors.Wrap(err, "unable to update agent execution record")
 		}
+		return nil
 
 	case enum.CapabilityExecutionRetry:
 		// Save state for retry
@@ -311,6 +312,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 				return errors.Wrap(err, "unable to update agent execution record")
 			}
 		}
+		return nil
 
 	case enum.CapabilityExecutionCompleted:
 		checkpointData := map[string]any{
@@ -322,6 +324,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 			tracing.TraceErr(span, err)
 			return err
 		}
+		return nil
 
 	case enum.CapabilityExecutionStop:
 		checkpointData := map[string]any{
@@ -333,6 +336,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 			tracing.TraceErr(span, err)
 			return err
 		}
+		return nil
 
 	case enum.CapabilityExecutionPending:
 		// Save current step and state for async resume
@@ -348,8 +352,6 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		tracing.TraceErr(span, err)
 		return err
 	}
-
-	return nil
 }
 
 func (a *agentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventName, traceId string) (string, error) {
