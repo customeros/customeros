@@ -543,6 +543,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			Tenant: currentTenant,
 		})
 
+		// TODO replace, get user id linked to AuthUserId
 		user, err := services.CommonServices.UserService.FindUserByEmail(ctx, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -632,6 +633,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		"authUserId":    authUserId,
 		"currentTenant": currentTenant,
 		"defaultTenant": defaultTenant,
+		"userId":        userId,
 	})
 }
 
