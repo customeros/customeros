@@ -135,6 +135,13 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		}
 	}
 
+	// re-fetch invoice to get updated quickbooks invoice id
+	invoice, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionRetry, result, err
+	}
+
 	if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoice.QuickbooksJournalEntryId == "" {
 		err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoice)
 		if err != nil {
@@ -143,11 +150,11 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		}
 	}
 
-	// re-fetch invoice to get updated quickbooks invoice id
+	// re-fetch invoice to get updated quickbooks journal id
 	invoice, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionCompleted, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 
 	if invoice.Status == neo4jenum.InvoiceStatusPaid {
