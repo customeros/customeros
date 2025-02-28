@@ -24,7 +24,7 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 	}
 
 	systemPrompt := `I will provide you with the scraped content of a webpage and a brief description of the company who owns it.  Your job is to analyze the website content and tell me what part of the customer journey the content most closely speaks to.  Your choices are: 
-    Problem Recognition - when buyers first identify business challenges or needs and they're researching to undestand the problem and it's implications.
+    Problem Recognition - when buyers first identify business challenges or needs and they're researching to understand the problem and it's implications.
     Solution Evaluation - when buyers are actively exploring options to solve their problem.
     Decision Preparation - when buyers are preparing to make a purchase decision and are developing business cases and/or addressing implementation concerns.
     Onboarding - when they're looking at technical setup, user training, and getting started guides.
