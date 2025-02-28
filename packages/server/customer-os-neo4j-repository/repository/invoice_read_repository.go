@@ -313,7 +313,7 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 		"lookbackWindow":         lookbackWindow,
 		"limit":                  limit,
 		"statuses": []string{
-			neo4jenum.InvoiceStatusDue.String(), neo4jenum.InvoiceStatusOverdue.String(),
+			neo4jenum.InvoiceStatusDue.String(), neo4jenum.InvoiceStatusOverdue.String(), neo4jenum.InvoiceStatusPaymentProcessing.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))

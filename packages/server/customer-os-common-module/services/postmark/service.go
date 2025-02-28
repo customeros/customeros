@@ -34,6 +34,7 @@ const (
 
 	WorkflowInvoicePaid                  = "invoice-paid"
 	WorkflowInvoicePaymentReceived       = "invoice-payment-received"
+	WorkflowInvoicePaymentPending        = "invoice-payment-pending"
 	WorkflowInvoiceReadyWithPaymentLink  = "invoice-ready"
 	WorkflowInvoiceReadyNoPaymentLink    = "invoice-ready-nolink"
 	WorkflowInvoiceVoided                = "invoice-voided"
@@ -177,6 +178,8 @@ func (s *postmarkService) getFileName(workflowId, fileExtension string) string {
 		fileName = "invoice.paid." + fileExtension
 	case WorkflowInvoicePaymentReceived:
 		fileName = "invoice.payment.received." + fileExtension
+	case WorkflowInvoicePaymentPending:
+		fileName = "invoice.payment.pending." + fileExtension
 	case WorkflowInvoiceReadyWithPaymentLink:
 		fileName = "invoice.ready." + fileExtension
 	case WorkflowInvoiceReadyNoPaymentLink:

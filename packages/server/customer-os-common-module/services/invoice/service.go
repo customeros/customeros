@@ -2453,24 +2453,22 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	var invoiceEntity neo4jentity.InvoiceEntity
 	var contractEntity neo4jentity.ContractEntity
 
 	// load invoice entity
-	invoiceNode, err := s.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, nil, tenant, invoiceId)
+	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
-		return nil
+		tracing.TraceErr(span, err)
+		return err
 	}
-	if invoiceNode != nil {
-		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
-	} else {
-		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
-		return nil
+	if invoiceEntity == nil {
+		err = errors.New("invoiceEntity not found")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	// Do not send email if invoice is dry run or total amount is 0 or invoice is not due or overdue
-	invoiceStatusAllowedForPayNotification := invoiceEntity.IsDue() || invoiceEntity.IsOverdue()
+	// Do not send email if invoice is dry run or total amount is 0 or invoice is not due or overdue or pending processing
+	invoiceStatusAllowedForPayNotification := invoiceEntity.IsDue() || invoiceEntity.IsOverdue() || invoiceEntity.IsPaymentProcessing()
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || !invoiceStatusAllowedForPayNotification {
 		span.LogFields(log.String("result", "skipped pay notification"))
 		return nil
@@ -2508,7 +2506,9 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 
 	// prepare email
 	workflowId := ""
-	if allowPayLinkInEmail && (contractEntity.PayOnline || contractEntity.PayAutomatically) {
+	if invoiceEntity.IsPaymentProcessing() {
+		workflowId = postmark.WorkflowInvoicePaymentPending
+	} else if allowPayLinkInEmail && (contractEntity.PayOnline || contractEntity.PayAutomatically) {
 		workflowId = postmark.WorkflowInvoiceReadyWithPaymentLink
 	} else {
 		workflowId = postmark.WorkflowInvoiceReadyNoPaymentLink
@@ -2548,7 +2548,7 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 		Attachments: []interfaces.PostmarkEmailAttachment{},
 	}
 
-	err = s.appendInvoiceFileToEmailAsAttachment(ctx, tenant, invoiceEntity, &postmarkEmail)
+	err = s.appendInvoiceFileToEmailAsAttachment(ctx, tenant, *invoiceEntity, &postmarkEmail)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendInvoiceFileToEmailAsAttachment")
 		tracing.TraceErr(span, wrappedErr)
@@ -2579,7 +2579,7 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 		return nil
 	}
 
-	s.createPayNotificationInvoiceAction(ctx, tenant, invoiceEntity)
+	s.createPayNotificationInvoiceAction(ctx, tenant, *invoiceEntity)
 
 	// Request was successful
 	err = s.neo4j.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, tenant, invoiceId)
