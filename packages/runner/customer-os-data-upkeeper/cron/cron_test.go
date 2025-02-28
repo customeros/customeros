@@ -70,6 +70,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleIcpCheck:                                              "0 0 */1 * * *",
 				CronScheduleRerunAgent:                                            "0 0 */1 * * *",
 				CronScheduleGlobalOrgScrape:                                       "0 0 */1 * * *",
+				CronScheduleLinkExtractionFromScrapedPage:                         "0 0 */1 * * *",
 				CronScheduleDownloadIconAndLogo:                                   "0 0 */1 * * *",
 				CronScheduleIngestEmailsFromProviders:                             "0 0 */1 * * *",
 			},
