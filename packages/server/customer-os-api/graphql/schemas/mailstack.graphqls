@@ -4,33 +4,15 @@ extend type Query {
     mailstack_CheckUnavailableDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
 
     mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
-    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    mailstack_MailboxesV2: [MailboxV2!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by user
+    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by user
 }
 
 extend type Mutation {
     mailstack_GetPaymentIntent(domains: [String!]!, usernames: [String!]!, amount: Float!): GetPaymentIntent! @hasRole(roles: [ADMIN, USER]) @hasTenant
     mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!, redirectWebsite: String): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_SetUser(mailbox: String!, userId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-#deprecated
 type Mailbox {
-    domain:             String!
-    mailbox:            String!
-    created:            Time!
-    usedInFlows:        Boolean!
-
-    rampUpRate:         Int!
-    rampUpMax:          Int!
-    rampUpCurrent:      Int!
-
-    userId:             ID
-    scheduledEmails:    Int64!
-    currentFlowIds:     [ID!]
-}
-
-type MailboxV2 {
     provider:           MailboxProvider!
     mailbox:            String!
     usedInFlows:        Boolean!

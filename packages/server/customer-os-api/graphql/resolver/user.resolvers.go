@@ -206,7 +206,6 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
-	userIds := make([]string, 0)
 	mailboxes := make([]*model.Mailbox, 0)
 
 	mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, obj.ID)
@@ -217,25 +216,27 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 	}
 
 	for _, mailbox := range mb {
-		graphMailbox := mapper.MapEntityToMailbox(&mailbox)
-		mailboxes = append(mailboxes, graphMailbox)
-
-		if mailbox.UserId != "" {
-			userIds = append(userIds, mailbox.UserId)
+		mb := model.Mailbox{
+			Provider:           model.MailboxProviderMailstack,
+			Mailbox:            mailbox.MailboxUsername,
+			RampUpCurrent:      40,
+			RampUpMax:          40,
+			RampUpRate:         3,
+			NeedsManualRefresh: false,
 		}
-	}
 
-	usersUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, userIds)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get users used in flows")
-		return nil, err
-	}
-
-	for _, mailbox := range mailboxes {
-		if mailbox.UserID != nil && utils.Contains(usersUsedInFlows, *mailbox.UserID) {
-			mailbox.UsedInFlows = true
+		userUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, []string{mailbox.UserId})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to get users used in flows")
+			return nil, err
 		}
+
+		if len(userUsedInFlows) > 0 {
+			mb.UsedInFlows = true
+		}
+
+		mailboxes = append(mailboxes, &mb)
 	}
 
 	return mailboxes, nil

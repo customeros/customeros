@@ -538,6 +538,9 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	} else {
 		currentTenant = signInRequest.Tenant
 		defaultTenant = signInRequest.Tenant
+
+		//TODO set user id
+		//services.CommonServices.UserService.FindUserByEmail()
 	}
 
 	// handle email token
@@ -552,7 +555,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			oauthToken.TenantName = defaultTenant
 			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 			oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-			oauthToken.Type = signInRequest.OAuthTokenType
+			oauthToken.UserId = userId
 
 			oauthToken.AccessToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.AccessToken)
 			if err != nil {
@@ -588,7 +591,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		oauthToken.TenantName = defaultTenant
 		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-		oauthToken.Type = signInRequest.OAuthTokenType
+		oauthToken.UserId = userId
 		oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
 		oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
 		oauthToken.IdToken = signInRequest.OAuthToken.IdToken

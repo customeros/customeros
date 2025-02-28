@@ -10,10 +10,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -59,48 +57,6 @@ func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.
 		graphql.AddErrorf(ctx, "Failed to register buy domains with mailboxes")
 		return &model.Result{Result: false}, nil
 	}
-
-	return &model.Result{Result: true}, nil
-}
-
-// MailstackSetUser is the resolver for the mailstack_SetUser field.
-func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string, userID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackSetUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.mailbox", mailbox)
-	span.LogKV("request.userID", userID)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	mailboxEntity, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailbox)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get mailbox %s", mailbox)
-		graphql.AddErrorf(ctx, "Failed to get mailbox %s", mailbox)
-		return &model.Result{Result: false}, nil
-	}
-
-	if mailboxEntity == nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Mailbox %s not found", mailbox)
-		graphql.AddErrorf(ctx, "Mailbox %s not found", mailbox)
-		return &model.Result{Result: false}, nil
-	}
-
-	oldUserID := mailboxEntity.UserId
-	mailboxEntity.UserId = userID
-
-	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, mailboxEntity)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to merge mailbox %s", mailbox)
-		graphql.AddErrorf(ctx, "Failed to merge mailbox %s", mailbox)
-		return &model.Result{Result: false}, nil
-	}
-
-	r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, oldUserID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
-	r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, userID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
 
 	return &model.Result{Result: true}, nil
 }
@@ -193,52 +149,11 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 
 // MailstackMailboxes is the resolver for the mailstack_Mailboxes field.
 func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackMailboxes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get all mailboxes")
-		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
-		return nil, nil
-	}
-
-	userIds := []string{}
-	response := []*model.Mailbox{}
-	for _, mailbox := range allMailboxes {
-		toMailbox := mapper.MapEntityToMailbox(mailbox)
-		response = append(response, toMailbox)
-		if mailbox.UserId != "" {
-			userIds = append(userIds, mailbox.UserId)
-		}
-	}
-
-	usersUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, userIds)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get users used in flows")
-		return nil, err
-	}
-
-	for _, mailbox := range response {
-		if mailbox.UserID != nil && utils.Contains(usersUsedInFlows, *mailbox.UserID) {
-			mailbox.UsedInFlows = true
-		}
-	}
-
-	return response, nil
-}
-
-// MailstackMailboxesV2 is the resolver for the mailstack_MailboxesV2 field.
-func (r *queryResolver) MailstackMailboxesV2(ctx context.Context) ([]*model.MailboxV2, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackMailboxesV2", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	userId := common.GetUserIdFromContext(ctx)
-	userEmail := common.GetUserEmailFromContext(ctx)
 
 	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, userId)
 	if err != nil {
@@ -248,10 +163,9 @@ func (r *queryResolver) MailstackMailboxesV2(ctx context.Context) ([]*model.Mail
 		return nil, nil
 	}
 
-	userIds := []string{}
-	response := []*model.MailboxV2{}
+	response := []*model.Mailbox{}
 	for _, mailbox := range allMailboxes {
-		response = append(response, &model.MailboxV2{
+		response = append(response, &model.Mailbox{
 			Provider:           model.MailboxProviderMailstack,
 			Mailbox:            mailbox.MailboxUsername,
 			RampUpCurrent:      40,
@@ -259,9 +173,6 @@ func (r *queryResolver) MailstackMailboxesV2(ctx context.Context) ([]*model.Mail
 			RampUpRate:         3,
 			NeedsManualRefresh: false,
 		})
-		if mailbox.UserId != "" {
-			userIds = append(userIds, mailbox.UserId)
-		}
 	}
 
 	oauthTokens, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, common.GetTenantFromContext(ctx))
@@ -273,11 +184,11 @@ func (r *queryResolver) MailstackMailboxesV2(ctx context.Context) ([]*model.Mail
 	}
 
 	for _, oauthToken := range oauthTokens {
-		if oauthToken.EmailAddress != userEmail {
+		if oauthToken.UserId != userId {
 			continue
 		}
 
-		v2 := model.MailboxV2{
+		v2 := model.Mailbox{
 			Mailbox:            oauthToken.EmailAddress,
 			RampUpCurrent:      40,
 			RampUpMax:          40,
