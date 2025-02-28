@@ -985,7 +985,7 @@ func (r *userReadRepository) GetDistinctOrganizationOwners(parentCtx context.Con
 	defer session.Close(ctx)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:OWNS]->(:Organization)
-			RETURN distinct(u) order by u.firstName, u.lastName, u.name`
+			RETURN distinct(u) order by u.firstName, u.lastName`
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher,

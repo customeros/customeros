@@ -943,7 +943,7 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, txWith
 					tracing.TraceErr(span, err)
 					return nil
 				}
-				userName = userEntity.GetFullName()
+				userName = userEntity.FullName()
 			}
 			if common.GetUserIdFromContext(ctx) != "" {
 				message = fmt.Sprintf("%s changed the onboarding status to %s", userName, dataFields.Status.ReadableStringForActionMessage())

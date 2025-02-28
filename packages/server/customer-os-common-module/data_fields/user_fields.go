@@ -1,8 +1,9 @@
 package data_fields
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 )
 
 type UserFields struct {
@@ -17,7 +18,6 @@ type UserFields struct {
 	OnboardingMailstackStepCompleted *bool                 `json:"onboardingMailstackStepCompleted,omitempty"`
 	FirstName                        *string               `json:"firstName,omitempty"`
 	LastName                         *string               `json:"lastName,omitempty"`
-	Name                             *string               `json:"name,omitempty"`
 	Timezone                         *string               `json:"timezone,omitempty"`
 	ProfilePhotoUrl                  *string               `json:"profilePhotoUrl,omitempty"`
 	Internal                         *bool                 `json:"internal,omitempty"`

@@ -203,7 +203,6 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *neo4j_entity.UserEntity {
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
-		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:          neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
