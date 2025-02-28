@@ -410,12 +410,18 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId, invoiceNumber string, invoiceDate time.Time, lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
+func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerId, invoiceNumber string, invoiceDate, dueDate time.Time, invoiceEmail string,
+	lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveInvoice")
 	defer span.Finish()
 	tenant := common.GetTenantFromContext(ctx)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("customerId", customerId), log.String("invoiceNumber", invoiceNumber), log.Object("invoiceDate", invoiceDate))
+	span.LogFields(
+		log.String("quickbooksCustomerId", quickbooksCustomerId),
+		log.String("invoiceNumber", invoiceNumber),
+		log.Object("invoiceDate", invoiceDate),
+		log.Object("dueDate", dueDate),
+		log.String("invoiceEmail", invoiceEmail))
 
 	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
@@ -431,11 +437,15 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId, invoice
 
 	request := map[string]interface{}{
 		"CustomerRef": map[string]interface{}{
-			"value": customerId,
+			"value": quickbooksCustomerId,
 		},
 		"TxnDate":   invoiceDate.Format("2006/01/02"),
+		"DueDate":   dueDate.Format("2006/01/02"),
 		"Line":      lines,
 		"DocNumber": invoiceNumber,
+		"BillEmail": map[string]interface{}{
+			"Address": invoiceEmail,
+		},
 	}
 
 	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request, true)
