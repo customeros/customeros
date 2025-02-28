@@ -92,7 +92,7 @@ func (s *companyResearchService) GenerateCompanyBrief(ctx context.Context, domai
 	}
 
 	// get all webpages
-	webpages, err := s.postgresRepositories.GlobalOrganizationWebpageRepository.GetAllWebpagesByPrimaryDomains(ctx, domains)
+	webpages, err := s.postgresRepositories.ScrapedWebpageRepository.GetAllWebpagesByPrimaryDomains(ctx, domains)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -111,7 +111,7 @@ func (s *companyResearchService) GenerateCompanyBrief(ctx context.Context, domai
 	return report, nil
 }
 
-func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domains []string, webpages []*postgres_entity.GlobalOrganizationWebpages) (*string, error) {
+func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domains []string, webpages []*postgres_entity.ScrapedWebpage) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "companyResearchService.generateCompanyBrief")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -193,7 +193,7 @@ func (s *companyResearchService) buildFinalReport(ctx context.Context, analyses 
 	return report, nil
 }
 
-func (s *companyResearchService) buildChunkPrompt(domain string, webpageChunk []*postgres_entity.GlobalOrganizationWebpages, chunkCount int, globalOrgDetails postgres_entity.GlobalOrganization) (string, string) {
+func (s *companyResearchService) buildChunkPrompt(domain string, webpageChunk []*postgres_entity.ScrapedWebpage, chunkCount int, globalOrgDetails postgres_entity.GlobalOrganization) (string, string) {
 	var systemPrompt strings.Builder
 
 	systemPrompt.WriteString("You are analyzing scraped web content to create a detailed company report. ")
@@ -231,9 +231,9 @@ func (s *companyResearchService) buildChunkPrompt(domain string, webpageChunk []
 	return systemPrompt.String(), prompt.String()
 }
 
-func (s *companyResearchService) buildDomainChunks(webpages []*postgres_entity.GlobalOrganizationWebpages) map[string][][]*postgres_entity.GlobalOrganizationWebpages {
+func (s *companyResearchService) buildDomainChunks(webpages []*postgres_entity.ScrapedWebpage) map[string][][]*postgres_entity.ScrapedWebpage {
 	// Group webpages by domain
-	domainMap := make(map[string][]*postgres_entity.GlobalOrganizationWebpages)
+	domainMap := make(map[string][]*postgres_entity.ScrapedWebpage)
 
 	for _, webpage := range webpages {
 		domain := webpage.PrimaryDomain
@@ -241,10 +241,10 @@ func (s *companyResearchService) buildDomainChunks(webpages []*postgres_entity.G
 	}
 
 	// Create chunks
-	result := make(map[string][][]*postgres_entity.GlobalOrganizationWebpages)
+	result := make(map[string][][]*postgres_entity.ScrapedWebpage)
 
 	for domain, pages := range domainMap {
-		var chunks [][]*postgres_entity.GlobalOrganizationWebpages
+		var chunks [][]*postgres_entity.ScrapedWebpage
 
 		// Split into chunks
 		for i := 0; i < len(pages); i += WebpagesInChunk {

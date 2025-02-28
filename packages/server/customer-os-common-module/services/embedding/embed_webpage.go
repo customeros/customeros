@@ -17,7 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_entity.GlobalOrganizationWebpages) ([]string, error) {
+func (s *embeddingService) EmbedWebpage(ctx context.Context, webpage postgres_entity.ScrapedWebpage) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.EmbedWebpage")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

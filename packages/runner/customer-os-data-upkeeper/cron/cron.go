@@ -131,6 +131,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
 	addJob(cont.Cfg.App.Cron.CronScheduleGlobalOrgScrape, GroupScraper, scrapeGlobalOrganizations, "scrapeGlobalOrganizations")
+	addJob(cont.Cfg.App.Cron.CronScheduleLinkExtractionFromScrapedPage, GroupScraper, extractPageLinks, "extractPageLinks")
 	addJob(cont.Cfg.App.Cron.CronScheduleDownloadIconAndLogo, GroupGlobalOrg, downloadGlobalOrganizationLogo, "downloadGlobalOrganizationLogo")
 
 	// Contract Jobs
@@ -163,6 +164,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleCleanEmails, GroupEmail, cleanEmails, "cleanEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendEmails, GroupSendEmails, sendEmails, "sendEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessSentEmails, GroupProcessEmails, processSentEmails, "processSentEmails")
+
 	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersRealtime, ingestEmailsFromProvidersRealtime, "ingestEmailsFromProvidersRealtime")
 	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersHistory, ingestEmailsFromProvidersHistory, "ingestEmailsFromProvidersHistory")
 	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsSendToAgents, ingestEmailsSendToAgents, "ingestEmailsSendToAgents")
@@ -390,4 +392,8 @@ func checkTenantOnboarding(cont *container.Container) {
 
 func rerunAgent(cont *container.Container) {
 	service.NewAgentService(cont.Cfg, cont.Log, cont.CommonServices).RerunExecutions()
+}
+
+func extractPageLinks(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ExtractWebpageLinks()
 }

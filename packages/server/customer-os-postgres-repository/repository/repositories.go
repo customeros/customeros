@@ -51,7 +51,6 @@ type Repositories struct {
 	FlowNodeRepository                           FlowNodeRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
-	GlobalOrganizationWebpageRepository          GlobalOrganizationWebpageRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
 	InvoiceRepository                            InvoiceRepository
@@ -65,6 +64,7 @@ type Repositories struct {
 	PersonalIntegrationRepository                PersonalIntegrationRepository
 	PostmarkApiKeyRepository                     PostmarkApiKeyRepository
 	RawEmailRepository                           RawEmailRepository
+	ScrapedWebpageRepository                     ScrapedWebpageRepository
 	SlackChannelNotificationRepository           SlackChannelNotificationRepository
 	SlackChannelRepository                       SlackChannelRepository
 	SlackSettingsRepository                      SlackSettingsRepository
@@ -136,7 +136,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowNodeRepository:                           NewFlowNodeRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
-		GlobalOrganizationWebpageRepository:          NewGlobalOrganizationWebpageRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 		InvoiceRepository:                            NewInvoiceRepository(postgresDB.GormDB),
 		IngestEmailMessageRepository:                 NewIngestEmailMessageRepository(postgresDB.GormDB),
@@ -147,6 +146,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		PersonalEmailProviderRepository:              NewPersonalEmailProviderRepository(postgresDB.GormDB),
 		PersonalIntegrationRepository:                NewPersonalIntegrationsRepo(postgresDB.GormDB),
 		PostmarkApiKeyRepository:                     NewPostmarkApiKeyRepo(postgresDB.GormDB),
+		ScrapedWebpageRepository:                     NewScrapedWebpageRepository(postgresDB.GormDB),
 		SlackChannelNotificationRepository:           NewSlackChannelNotificationRepository(postgresDB.GormDB),
 		SlackChannelRepository:                       NewSlackChannelRepository(postgresDB.GormDB),
 		SlackSettingsRepository:                      NewSlackSettingsRepository(postgresDB.GormDB),
@@ -211,7 +211,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.FlowNode{},
 		&postgres_entity.FlowTransitionsRegistry{},
 		&postgres_entity.GlobalOrganization{},
-		&postgres_entity.GlobalOrganizationWebpages{},
 		&postgres_entity.GlobalOrganizationWebsiteToProcess{},
 		&postgres_entity.IngestEmailMessage{},
 		&postgres_entity.InvoiceNumberEntity{},
@@ -224,6 +223,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.PersonalEmailProvider{},
 		&postgres_entity.PersonalIntegration{},
 		&postgres_entity.PostmarkApiKey{},
+		&postgres_entity.ScrapedWebpage{},
 		&postgres_entity.SlackChannel{},
 		&postgres_entity.SlackChannelNotification{},
 		&postgres_entity.SlackSettingsEntity{},

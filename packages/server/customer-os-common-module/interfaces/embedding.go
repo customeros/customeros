@@ -10,7 +10,7 @@ import (
 
 type EmbeddingService interface {
 	Segment(ctx context.Context, input string) (*ContentSegments, error)
-	EmbedWebpage(ctx context.Context, webpage postgres_entity.GlobalOrganizationWebpages) ([]string, error)
+	EmbedWebpage(ctx context.Context, webpage postgres_entity.ScrapedWebpage) ([]string, error)
 	GetEmbedding(ctx context.Context, content string, task enum.EmbeddingTask) ([]float64, error)
 }
 

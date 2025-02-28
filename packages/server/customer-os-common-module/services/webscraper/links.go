@@ -18,7 +18,7 @@ func (s *webscraperService) linksToCrawl(ctx context.Context, content string, wo
 
 	var urls []string
 
-	webpages, err := s.postgresRepositories.GlobalOrganizationWebpageRepository.GetAllWebpagesByPrimaryDomains(ctx, workspaceDomains)
+	webpages, err := s.postgresRepositories.ScrapedWebpageRepository.GetAllWebpagesByPrimaryDomains(ctx, workspaceDomains)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
