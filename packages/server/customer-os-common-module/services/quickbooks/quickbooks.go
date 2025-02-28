@@ -690,10 +690,12 @@ func (s *quickbooksService) QuickbooksConnected(ctx context.Context) (bool, erro
 func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []interfaces.QuickbooksJournalEntryLine) (*interfaces.QuickbooksJournalEntryResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveJournalEntry")
 	defer span.Finish()
-
 	tenant := common.GetTenantFromContext(ctx)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("txnDate", txnDate.Format("2006-01-02")))
+	tracing.LogObjectAsJson(span, "journalLineItems", journalLineItems)
+
+	txnDateStr := txnDate.Format("2006/01/02")
+	span.LogFields(log.String("txnDate", txnDateStr))
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
@@ -708,7 +710,7 @@ func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.T
 
 	// Build the request payload.
 	request := map[string]interface{}{
-		"TxnDate": txnDate.Format("2006-01-02"),
+		"TxnDate": txnDateStr,
 		"Line":    journalLineItems,
 	}
 
