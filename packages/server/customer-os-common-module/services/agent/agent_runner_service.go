@@ -349,7 +349,7 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		return a.postgresRepositories.AgentExecutionRepository.SaveAsyncState(ctx, params.executionID, currentStep, stateData)
 
 	default:
-		err := fmt.Errorf("unexpected capability execution result status {%s}", status)
+		err := fmt.Errorf("unexpected capability execution result status {%s}", status.String())
 		tracing.TraceErr(span, err)
 		return err
 	}
