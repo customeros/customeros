@@ -107,7 +107,7 @@ func (r *scrapedWebpageRepository) GetWebpage(ctx context.Context, url string, l
 }
 
 func (r *scrapedWebpageRepository) GetAllWebpagesByPrimaryDomains(ctx context.Context, primaryDomains []string) ([]*postgres_entity.ScrapedWebpage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetAllWebpagesByPrimaryDomain")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetAllWebpagesByPrimaryDomains")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
