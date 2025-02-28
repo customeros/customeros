@@ -190,7 +190,7 @@ func (r *scrapedWebpageRepository) SetWebpageCategory(ctx context.Context, url s
 }
 
 func (r *scrapedWebpageRepository) GetWebpagesWithoutLinks(ctx context.Context, limit int) ([]*postgres_entity.ScrapedWebpage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetWebpageWithoutLinks")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetWebpagesWithoutLinks")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
