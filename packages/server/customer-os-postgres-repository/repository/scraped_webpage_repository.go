@@ -196,7 +196,7 @@ func (r *scrapedWebpageRepository) GetWebpagesWithoutLinks(ctx context.Context, 
 
 	webpages := make([]*postgres_entity.ScrapedWebpage, 0)
 	result := r.gormDb.WithContext(ctx).
-		Where("array_length(links, 1) IS NULL").
+		Where("array_length(links, 1) IS NULL OR array_length(links, 1) = 0").
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&webpages)
