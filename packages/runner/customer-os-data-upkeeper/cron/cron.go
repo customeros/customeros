@@ -167,7 +167,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersRealtime, ingestEmailsFromProvidersRealtime, "ingestEmailsFromProvidersRealtime")
 	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsFromProvidersHistory, ingestEmailsFromProvidersHistory, "ingestEmailsFromProvidersHistory")
-	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsFromProviders, GroupIngestEmailsSendToAgents, ingestEmailsSendToAgents, "ingestEmailsSendToAgents")
+	addJob(cont.Cfg.App.Cron.CronScheduleIngestEmailsSendToAgents, GroupIngestEmailsSendToAgents, ingestEmailsSendToAgents, "ingestEmailsSendToAgents")
 
 	// Flow Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")

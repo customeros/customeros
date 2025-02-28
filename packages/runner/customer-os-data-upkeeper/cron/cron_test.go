@@ -73,6 +73,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleLinkExtractionFromScrapedPage:                         "0 0 */1 * * *",
 				CronScheduleDownloadIconAndLogo:                                   "0 0 */1 * * *",
 				CronScheduleIngestEmailsFromProviders:                             "0 0 */1 * * *",
+				CronScheduleIngestEmailsSendToAgents:                              "0 0 */1 * * *",
 			},
 		},
 	}
