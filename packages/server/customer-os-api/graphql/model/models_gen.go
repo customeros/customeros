@@ -1774,19 +1774,6 @@ type LogEntryUpdateInput struct {
 }
 
 type Mailbox struct {
-	Domain          string    `json:"domain"`
-	Mailbox         string    `json:"mailbox"`
-	Created         time.Time `json:"created"`
-	UsedInFlows     bool      `json:"usedInFlows"`
-	RampUpRate      int       `json:"rampUpRate"`
-	RampUpMax       int       `json:"rampUpMax"`
-	RampUpCurrent   int       `json:"rampUpCurrent"`
-	UserID          *string   `json:"userId,omitempty"`
-	ScheduledEmails int64     `json:"scheduledEmails"`
-	CurrentFlowIds  []string  `json:"currentFlowIds,omitempty"`
-}
-
-type MailboxV2 struct {
 	Provider           MailboxProvider `json:"provider"`
 	Mailbox            string          `json:"mailbox"`
 	UsedInFlows        bool            `json:"usedInFlows"`
