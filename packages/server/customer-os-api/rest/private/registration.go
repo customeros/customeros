@@ -539,7 +539,28 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		currentTenant = signInRequest.Tenant
 		defaultTenant = signInRequest.Tenant
 
-		userId = common.GetUserIdFromContext(ctx)
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: currentTenant,
+		})
+
+		user, err := services.CommonServices.UserService.FindUserByEmail(ctx, signInRequest.LoggedInEmail)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to find user: %v", err.Error()),
+			})
+			return
+		}
+
+		if user != nil {
+			userId = user.Id
+		}
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    currentTenant,
+			UserEmail: signInRequest.LoggedInEmail,
+			UserId:    userId,
+		})
 	}
 
 	// handle email token
