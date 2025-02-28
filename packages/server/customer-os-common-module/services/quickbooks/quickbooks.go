@@ -850,3 +850,66 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 	}
 	return "", nil
 }
+
+func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksCustomerId string,
+	quickbooksInvoiceId string, quickbooksJournalEntryId string, txnDate time.Time, totalAmount float64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SavePaymentLinkingJournalEntryToInvoice")
+	defer span.Finish()
+	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(
+		log.String("quickbooksCustomerId", quickbooksCustomerId),
+		log.String("quickbooksInvoiceId", quickbooksInvoiceId),
+		log.String("quickbooksJournalEntryId", quickbooksJournalEntryId),
+		log.Float64("totalAmount", totalAmount),
+		log.Object("txnDate", txnDate))
+
+	// Retrieve QuickBooks settings for the tenant.
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
+	}
+	if qbSettings == nil {
+		err = errors.New("QuickBooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Construct the payment payload.
+	paymentData := map[string]interface{}{
+		"TxnDate":  txnDate.Format("2006/01/02"),
+		"TotalAmt": totalAmount,
+		"CustomerRef": map[string]interface{}{
+			"value": quickbooksCustomerId,
+		},
+		"Line": []map[string]interface{}{
+			{
+				"Amount": totalAmount,
+				"LinkedTxn": []map[string]interface{}{
+					{
+						"TxnId":   quickbooksInvoiceId,
+						"TxnType": "Invoice",
+					},
+				},
+			},
+		},
+		"LinkedTxn": []map[string]interface{}{
+			{
+				"TxnId":   quickbooksJournalEntryId,
+				"TxnType": "JournalEntry",
+			},
+		},
+	}
+
+	// Construct the URL for creating the payment.
+	requestUrl := fmt.Sprintf("%s/v3/company/%s/payment", s.qbConfig.Url, qbSettings.RealmId)
+	// Perform the request.
+	_, err = s.performRequest(ctx, qbSettings, requestUrl, "POST", paymentData, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to save payment: %w", err)
+	}
+
+	return nil
+}

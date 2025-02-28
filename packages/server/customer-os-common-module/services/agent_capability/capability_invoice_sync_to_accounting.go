@@ -427,6 +427,12 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		return err
 	}
 
+	err = c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, savedJournalEntry.JournalEntry.Id, invoice.IssuedDate, invoice.Amount)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error saving payment linking journal entry to invoice"))
+		return err
+	}
+
 	return nil
 }
 
