@@ -184,7 +184,6 @@ type QuickbooksEntityRef struct {
 }
 
 type QuickbooksEntity struct {
-	Type      string              `json:"type,omitempty"`
 	EntityRef QuickbooksEntityRef `json:"EntityRef"`
 }
 
