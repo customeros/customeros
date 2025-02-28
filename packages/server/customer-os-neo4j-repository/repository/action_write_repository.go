@@ -3,8 +3,8 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -12,9 +12,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type ActionWriteRepository interface {
@@ -43,10 +44,9 @@ func (r *actionWriteRepository) Create(ctx context.Context, tenant, entityId str
 }
 
 func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string, extraProperties map[string]any) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.CreateWithProperties")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionWriteRepository.CreateWithProperties")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("entityId", entityId),
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)),
@@ -67,7 +67,7 @@ func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant
 								a:Action_%s, 
 								a:TimelineEvent, 
 								a:TimelineEvent_%s`, tenant, tenant)
-	if extraProperties != nil && len(extraProperties) > 0 {
+	if len(extraProperties) > 0 {
 		cypher += ` SET a += $extraProperties `
 	}
 	cypher += ` return a `
@@ -82,7 +82,7 @@ func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant
 		"appSource": appSource,
 		"createdAt": createdAt,
 	}
-	if extraProperties != nil && len(extraProperties) > 0 {
+	if len(extraProperties) > 0 {
 		params["extraProperties"] = extraProperties
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -106,10 +106,9 @@ func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant
 }
 
 func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.MergeByActionType")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionWriteRepository.MergeByActionType")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("entityId", entityId),
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)),
@@ -161,12 +160,15 @@ func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tx *neo4j
 }
 
 func (r *actionWriteRepository) CreateV2(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, actionId, entityId string, entityType model.EntityType, data data_fields.ActionFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.CreateV2")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionWriteRepository.CreateV2")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(
+		log.String("tenant", tenant),
+		log.String("actionId", actionId),
+		log.String("entityId", entityId),
+		log.String("entityType", entityType.String()))
 	tracing.LogObjectAsJson(span, "data", data)
-	span.LogFields(log.String("entityId", entityId), log.String("entityType", entityType.String()))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += fmt.Sprintf(` MERGE (n)<-[:ACTION_ON]-(a:Action {id:$actionId}) 
@@ -180,7 +182,7 @@ func (r *actionWriteRepository) CreateV2(ctx context.Context, tx *neo4j.ManagedT
 								a:Action_%s, 
 								a:TimelineEvent, 
 								a:TimelineEvent_%s`, tenant, tenant)
-	if data.ExtraProperties != nil && len(data.ExtraProperties) > 0 {
+	if len(data.ExtraProperties) > 0 {
 		cypher += ` SET a += $extraProperties `
 	}
 
@@ -199,7 +201,7 @@ func (r *actionWriteRepository) CreateV2(ctx context.Context, tx *neo4j.ManagedT
 	} else {
 		params["type"] = ""
 	}
-	if data.ExtraProperties != nil && len(data.ExtraProperties) > 0 {
+	if len(data.ExtraProperties) > 0 {
 		params["extraProperties"] = data.ExtraProperties
 	}
 	span.LogFields(log.String("cypher", cypher))
