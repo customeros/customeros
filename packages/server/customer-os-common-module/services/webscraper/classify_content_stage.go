@@ -107,7 +107,7 @@ func (s *webscraperService) retryClassifyContentStage(ctx context.Context, answe
 }
 
 func (s *webscraperService) validateCustomerJourneyStage(ctx context.Context, answer string) (enum.CustomerJourneyStage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.validateCustromerJourneyStage")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.validateCustomerJourneyStage")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
