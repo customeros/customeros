@@ -14,8 +14,28 @@ const (
 	WebpageResources    WebpageCategory = "resources"
 	WebpageSuccessStory WebpageCategory = "success story"
 	WebpageOther        WebpageCategory = "other"
+	WebpageUnknown      WebpageCategory = ""
 )
 
 func (s WebpageCategory) String() string {
 	return string(s)
+}
+
+func GetWebpageCategory(s string) WebpageCategory {
+	switch GetWebpageCategory(s) {
+	case
+		WebpageAbout,
+		WebpageAccount,
+		WebpageContact,
+		WebpageHelp,
+		WebpageLegal,
+		WebpagePartner,
+		WebpagePricing,
+		WebpageResources,
+		WebpageSuccessStory,
+		WebpageOther:
+		return WebpageCategory(s)
+	default:
+		return WebpageUnknown
+	}
 }
