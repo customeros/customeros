@@ -169,7 +169,6 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		userFields := data_fields.UserFields{
 			FirstName:       utils.StringPtr(userInput.FirstName),
 			LastName:        utils.StringPtr(userInput.LastName),
-			Name:            utils.StringPtr(userInput.Name),
 			CreatedAt:       userInput.CreatedAt,
 			Internal:        utils.BoolPtr(false),
 			Source:          utils.StringPtr(userInput.ExternalSystem),
@@ -184,6 +183,15 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				ExternalSource:   userInput.ExternalSourceEntity,
 				SyncDate:         &syncDate,
 			},
+		}
+		if userInput.Name != "" {
+			firstName, lastName := utils.SplitFullName(userInput.Name)
+			if utils.IfNotNilString(userFields.FirstName) == "" {
+				userFields.FirstName = &firstName
+			}
+			if utils.IfNotNilString(userFields.LastName) == "" {
+				userFields.LastName = &lastName
+			}
 		}
 		userId, err = s.services.CommonServices.UserService.Save(ctx, nil, inputUserId, userFields)
 		if err != nil {

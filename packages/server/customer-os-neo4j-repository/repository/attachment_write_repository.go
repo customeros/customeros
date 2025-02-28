@@ -3,14 +3,15 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type AttachmentWriteRepository interface {
@@ -33,6 +34,11 @@ func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.Managed
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentWriteRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(
+		log.String("id", id),
+		log.String("fileName", fileName),
+		log.String("mimeType", mimeType),
+		log.Int64("size", size))
 
 	id = utils.NewUUIDIfEmpty(id)
 
@@ -40,7 +46,7 @@ func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.Managed
 		createdAt = utils.NowPtr()
 	}
 
-	query := "MERGE (a:Attachment_%s {id:$id}) ON CREATE SET " +
+	cypher := "MERGE (a:Attachment_%s {id:$id}) ON CREATE SET " +
 		" a:Attachment, " +
 		" a.source=$source, " +
 		" a.createdAt=$createdAt, " +
@@ -53,24 +59,36 @@ func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.Managed
 		" a.appSource=$appSource " +
 		" RETURN a"
 
-	span.LogFields(log.String("query", query))
-
-	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-		map[string]interface{}{
-			"tenant":        tenant,
-			"source":        source,
-			"createdAt":     *createdAt,
-			"id":            id,
-			"cdnUrl":        cdnUrl,
-			"basePath":      basePath,
-			"fileName":      fileName,
-			"mimeType":      mimeType,
-			"size":          size,
-			"sourceOfTruth": sourceOfTruth,
-			"appSource":     appSource,
-		}); err != nil {
-		return nil, err
-	} else {
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	params := map[string]interface{}{
+		"tenant":        tenant,
+		"source":        source,
+		"createdAt":     *createdAt,
+		"id":            id,
+		"cdnUrl":        cdnUrl,
+		"basePath":      basePath,
+		"fileName":      fileName,
+		"mimeType":      mimeType,
+		"size":          size,
+		"sourceOfTruth": sourceOfTruth,
+		"appSource":     appSource,
 	}
+
+	span.LogFields(log.String("cypher", fmt.Sprintf(cypher, tenant)))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, tenant), params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	result, err := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.found", false))
+		return nil, err
+	}
+
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result, nil
 }

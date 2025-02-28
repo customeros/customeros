@@ -3,12 +3,13 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -31,32 +32,33 @@ func NewActionReadRepository(driver *neo4j.DriverWithContext, database string) A
 }
 
 func (r *actionReadRepository) GetFor(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.GetAttachmentsForXX")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetFor")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("entityType", entityType.String()), log.String("entityIds", fmt.Sprintf("%v", entityIds)))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
-	var query = "MATCH (n:%s_%s)<-[:ACTION_ON]-(a:Action_%s)"
-	query += " WHERE n.id IN $entityIds "
-	query += " RETURN a, n.id"
+
+	cypher := fmt.Sprintf("MATCH (n:%s_%s)<-[:ACTION_ON]-(a:Action_%s) WHERE n.id IN $entityIds RETURN a, n.id",
+		entityType.Neo4jLabel(), tenant, tenant)
+
+	params := map[string]any{
+		"tenant":    tenant,
+		"entityIds": entityIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, entityType.Neo4jLabel(), tenant, tenant),
-			map[string]any{
-				"tenant":    tenant,
-				"entityIds": entityIds,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
-	span.LogFields(log.String("query", query))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
@@ -69,8 +71,7 @@ func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetLastAction")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, entityId)
 	span.LogFields(
 		log.String("entityType", entityType.String()),

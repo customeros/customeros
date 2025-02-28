@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
@@ -13,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -40,6 +42,46 @@ func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, inpu
 		graphql.AddErrorf(ctx, "Failed to update onboarding details for user %s", input.ID)
 		return nil, nil
 	}
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userEntity), nil
+}
+
+// UserUpdate is the resolver for the user_Update field.
+func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpdateInput) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	userData := data_fields.UserFields{
+		ProfilePhotoUrl: input.ProfilePhotoURL,
+	}
+	if input.Name != nil {
+		firstName, lastName := utils.SplitFullName(*input.Name)
+		userData.FirstName = &firstName
+		userData.LastName = &lastName
+	}
+
+	// Validate logged-in user can only update own user details
+	if common.GetUserIdFromContext(ctx) != input.ID {
+		err := errors.New("user can only update own user details")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User can only update own user details")
+		return nil, err
+	}
+
+	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, userData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
+		return nil, err
+	}
+
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -248,15 +290,3 @@ func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *userResolver) MailboxesV3(ctx context.Context, obj *model.User) ([]*model.MailboxV2, error) {
-	panic(fmt.Errorf("not implemented: MailboxesV3 - mailboxesV3"))
-}
-*/

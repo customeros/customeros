@@ -398,10 +398,13 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 }
 
 func (s *googleService) ReadEmails(ctx context.Context, batchSize int64, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.ReadEmails")
+	defer span.Finish()
+
 	var results []*postgresEntity.EmailRawData
 
 	gmailService, err := s.GetGmailService(ctx, importState.Username, importState.Tenant)
-	if err != nil {
+	if err != nil || gmailService == nil {
 		logrus.Errorf("failed to create gmail service: %v", err)
 		return nil, "", fmt.Errorf("failed to create gmail service: %v", err)
 	}

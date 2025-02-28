@@ -92,6 +92,23 @@ func (r *mutationResolver) AdminSwitchCurrentWorkspace(ctx context.Context, swit
 	return true, nil
 }
 
+// AdminTenantAddDomainAsWorkspace is the resolver for the admin_tenant_AddDomainAsWorkspace field.
+func (r *mutationResolver) AdminTenantAddDomainAsWorkspace(ctx context.Context, domain string) (bool, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AdminTenantAddDomainAsWorkspace", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	span.LogKV("domain", domain)
+
+	err := r.Services.CommonServices.WorkspaceService.AddDomainAsWorkspace(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	return true, nil
+}
+
 // AdminTenantHardDelete is the resolver for the admin_tenant_hardDelete field.
 func (r *mutationResolver) AdminTenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantHardDelete", graphql.GetOperationContext(ctx))

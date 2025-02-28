@@ -111,7 +111,7 @@ type Capability struct {
 	Name              string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	Type              enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
 	Error             string               `gorm:"column:error;type:varchar(255)" json:"error"`
-	Active            bool                 `gorm:"column:active;type:boolean;default:true" json:"active"`
+	Active            bool                 `gorm:"column:active;type:boolean" json:"active"`
 	CreatedAt         time.Time            `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt         *time.Time           `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	ConfigHandlerImpl `gorm:"embedded"`
@@ -134,7 +134,7 @@ type Listener struct {
 	Name              string                  `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	Type              enum.AgentListenerEvent `gorm:"column:type;type:varchar(50);not null" json:"type"`
 	Error             string                  `gorm:"column:error;type:varchar(255)" json:"error"`
-	Active            bool                    `gorm:"column:active;type:boolean;default:true" json:"active"`
+	Active            bool                    `gorm:"column:active;type:boolean" json:"active"`
 	CreatedAt         time.Time               `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt         *time.Time              `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	ConfigHandlerImpl `gorm:"embedded"`

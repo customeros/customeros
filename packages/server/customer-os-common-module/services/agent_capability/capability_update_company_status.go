@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -10,18 +11,17 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type UpdateCompanyStatusCapability struct {
-	organizationService interfaces.OrganizationService
+	postgres            *postgres_repository.Repositories
 	events              *events.EventsService
+	organizationService interfaces.OrganizationService
 }
 
 type UpdateCompanyStatusInput struct {
@@ -32,10 +32,11 @@ type UpdateCompanyStatusInput struct {
 	IcpFitRationale          []string    `json:"icpFitRationale"`
 }
 
-func NewUpdateCompanyStatusCapability(orgSrv interfaces.OrganizationService, events *events.EventsService) *UpdateCompanyStatusCapability {
+func NewUpdateCompanyStatusCapability(postgres *postgres_repository.Repositories, events *events.EventsService, orgSrv interfaces.OrganizationService) *UpdateCompanyStatusCapability {
 	return &UpdateCompanyStatusCapability{
-		organizationService: orgSrv,
+		postgres:            postgres,
 		events:              events,
+		organizationService: orgSrv,
 	}
 }
 
@@ -133,10 +134,9 @@ func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionCo
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
-	publishErr := c.publishIcpFitEvent(ctx, executionContainer.InputData.IcpFit, executionContainer.AgentExecutionID)
-	if publishErr != nil {
-		tracing.TraceErr(span, publishErr)
-		return enum.CapabilityExecutionError, NoOutput{}, err
+	err = c.postgres.AgentExecutionRepository.GoalAchieved(ctx, executionContainer.AgentExecutionID, true, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to publish ignore email event"))
 	}
 
 	return enum.CapabilityExecutionCompleted, NoOutput{}, nil
@@ -176,25 +176,4 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 		return err
 	}
 	return nil
-}
-
-func (c *UpdateCompanyStatusCapability) publishIcpFitEvent(ctx context.Context, icpFitResult enum.IcpFit, agentExecutionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.publishIcpFitEvent")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	switch icpFitResult {
-	case enum.IcpIsFit:
-		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpFit{
-			AgentExecutionId: agentExecutionID,
-		})
-
-	case enum.IcpNotFit:
-		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpNotAFit{
-			AgentExecutionId: agentExecutionID,
-		})
-
-	default:
-		return errors.New("ICP Fit not set")
-	}
 }

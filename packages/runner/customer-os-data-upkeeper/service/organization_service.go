@@ -104,7 +104,7 @@ func (s *organizationService) RefreshLastTouchpoint() {
 
 func (s *organizationService) UpkeepOrganizations() {
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
+	defer cancel()
 
 	s.updateDerivedNextRenewalDates(ctx)
 	s.linkWithDomain(ctx)

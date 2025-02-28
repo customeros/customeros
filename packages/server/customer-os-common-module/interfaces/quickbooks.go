@@ -179,19 +179,18 @@ type QuickbooksJournalEntryLine struct {
 }
 
 type QuickbooksEntityRef struct {
-	Value string `json:"value"`
-	Name  string `json:"name"`
+	Value string `json:"value,omitempty"`
+	Name  string `json:"name,omitempty"`
 }
 
 type QuickbooksEntity struct {
-	Type      string              `json:"type"`
 	EntityRef QuickbooksEntityRef `json:"EntityRef"`
 }
 
 // JournalEntryLineDetail contains information such as posting type and account reference.
 type QuickbooksJournalEntryLineDetail struct {
 	// PostingType indicates whether the line is a "Debit" or "Credit".
-	PostingType string `json:"PostingType"`
+	PostingType string `json:"PostingType,omitempty"`
 	// AccountRef references the account impacted.
 	AccountRef QuickbooksAccountRef `json:"AccountRef"`
 	Entity     QuickbooksEntity     `json:"Entity"`
@@ -200,7 +199,7 @@ type QuickbooksJournalEntryLineDetail struct {
 // AccountRef represents a reference to an account in QuickBooks.
 type QuickbooksAccountRef struct {
 	// Value is the unique identifier of the account.
-	Value string `json:"value"`
+	Value string `json:"value,omitempty"`
 	// Name is an optional friendly name for the account.
 	Name string `json:"name,omitempty"`
 }

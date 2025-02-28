@@ -371,7 +371,6 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		Description: invoice.Number,
 	}
 	debitJournalLineItem.JournalEntryLineDetail.PostingType = "Debit"
-	debitJournalLineItem.JournalEntryLineDetail.Entity.Type = "Customer"
 	debitJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Debtors"
 	journalLineItems = append(journalLineItems, debitJournalLineItem)
@@ -384,6 +383,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 			Description: invoice.Number,
 		}
 		journalLineItem.JournalEntryLineDetail.PostingType = "Credit"
+		journalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 		journalLineItem.JournalEntryLineDetail.AccountRef.Value = incomeAccount
 		journalLineItems = append(journalLineItems, journalLineItem)
 	}

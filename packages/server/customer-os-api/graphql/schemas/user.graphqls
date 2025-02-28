@@ -7,6 +7,7 @@ extend type Query {
 
 extend type Mutation {
     user_UpdateOnboardingDetails(input: UserOnboardingDetailsInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
+    user_Update(input: UserUpdateInput): User! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 """
@@ -142,22 +143,9 @@ input UserInput {
 }
 
 input UserUpdateInput {
-
-    id: ID!
-    """
-    The first name of the customerOS user.
-    **Required**
-    """
-    firstName: String!
-
-    """
-    The last name of the customerOS user.
-    **Required**
-    """
-    lastName: String!
-    name: String
-    timezone: String
-    profilePhotoUrl: String
+    id:                 ID!
+    name:               String
+    profilePhotoUrl:    String
 }
 
 input UserOnboardingDetailsInput {

@@ -33,6 +33,7 @@ type CommonConfig struct {
 	NovuConfig        commonconf.NovuConfig
 	JinaConfig        commonconf.JinaConfig
 	AwsConfig         commonconf.AwsConfig
+	QuickbooksConfig  commonconf.QuickbooksConfig
 }
 
 type AppConfig struct {
@@ -101,6 +102,7 @@ func Load() *Config {
 			SlackConfig:         cmnCfg.SlackConfig,
 			NovuConfig:          cmnCfg.NovuConfig,
 			JinaConfig:          cmnCfg.JinaConfig,
+			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,

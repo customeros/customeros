@@ -3,11 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -33,6 +34,7 @@ func (r *attachmentReadRepository) GetById(ctx context.Context, tenant, id strin
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentReadRepository.GetById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("id", id))
 
 	cypher := fmt.Sprintf("MATCH (a:Attachment_%s {id:$id}) RETURN a", tenant)
 	params := map[string]any{
@@ -63,8 +65,14 @@ func (r *attachmentReadRepository) GetById(ctx context.Context, tenant, id strin
 func (r *attachmentReadRepository) GetFor(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityRelation *neo4jenum.EntityRelation, ids []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentReadRepository.GetFor")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(
+		log.String("entityType", entityType.String()),
+		log.Int("ids.count", len(ids)))
+	if entityRelation != nil {
+		span.LogFields(log.String("entityRelation", entityRelation.String()))
+	}
+	tracing.LogObjectAsJson(span, "ids", ids)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s)-`, entityType.Neo4jLabel(), tenant)
 
@@ -93,12 +101,12 @@ func (r *attachmentReadRepository) GetFor(ctx context.Context, tenant string, en
 	})
 
 	if err != nil {
+		tracing.TraceErr(span, err)
+		span.LogFields(log.Int("result.count", 0))
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
-	if result == nil {
-		return nil, nil
-	}
-	return result.([]*utils.DbNodeAndId), nil
+	resultArray := result.([]*utils.DbNodeAndId)
+	span.LogFields(log.Int("result.count", len(resultArray)))
+	return resultArray, nil
 }

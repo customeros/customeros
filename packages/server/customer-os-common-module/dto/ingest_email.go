@@ -1,9 +1,9 @@
 package dto
 
-type IcpFit struct {
+type IgnoreEmail struct {
 	AgentExecutionId string `json:"agentExecutionId"`
 }
 
-type IcpNotAFit struct {
+type IngestEmail struct {
 	AgentExecutionId string `json:"agentExecutionId"`
 }

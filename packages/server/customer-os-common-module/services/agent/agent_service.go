@@ -339,6 +339,7 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 		return nil, err
 	}
 
+	tracing.LogObjectAsJson(span, "result", agentCapability)
 	return &agentCapability, nil
 }
 
@@ -367,6 +368,7 @@ func (a *agentService) createDefaultListener(ctx context.Context, listenerEvent 
 		return nil, err
 	}
 
+	tracing.LogObjectAsJson(span, "result", agentListener)
 	return &agentListener, nil
 }
 

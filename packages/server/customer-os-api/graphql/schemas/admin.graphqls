@@ -8,6 +8,8 @@ extend type Mutation {
 
     admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 
+    admin_tenant_AddDomainAsWorkspace(domain: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+
     admin_tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
 

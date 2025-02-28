@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 )
 
 type Pair[T, U any] struct {
@@ -111,11 +111,9 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 func MergeMapToMap(src, dst map[string]any) {
 	if dst == nil {
 		logrus.Error("expecting not nil map")
-	} else if src != nil {
-		for k, v := range src {
-			dst[k] = v
-		}
+		return
 	}
+	maps.Copy(dst, src)
 }
 
 func MergeMaps[K comparable, V any](dst, src map[K]V) map[K]V {
@@ -304,31 +302,6 @@ func FirstNotEmptyString(input ...string) string {
 	return ""
 }
 
-func ExtractJsonFromString(str string) (string, error) {
-	start := strings.IndexByte(str, '{')
-	if start == -1 {
-		return "", errors.New("could not find start of json")
-	}
-
-	end := strings.LastIndexByte(str, '}')
-	if end == -1 {
-		return "", errors.New("could not find end of json")
-	}
-
-	return str[start : end+1], nil
-}
-
-func ExtractAfterColon(s string) string {
-	// Find first index of colon
-	idx := strings.Index(s, ":")
-	if idx == -1 {
-		// No colon found, return original string
-		return s
-	}
-	// Return substring after colon
-	return s[idx+1:]
-}
-
 // Helper to add commas to an integer string
 func addThousandSeparators(value string) string {
 	var newParts []string
@@ -354,10 +327,6 @@ func ToJson(obj any) (string, error) {
 		return "", err
 	}
 	return string(outputJson), nil
-}
-
-func IsEmptyString(s *string) bool {
-	return s == nil || *s == ""
 }
 
 func IsBlank(s string) bool {
@@ -386,19 +355,6 @@ func ExtractName(email string) string {
 
 	name := strings.TrimSpace(email[:atIndex])
 	return name
-}
-
-func EnforceSingleValue(slice []string, value string) {
-	for i := range slice {
-		slice[i] = value
-	}
-}
-
-func BoolToString(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }
 
 // ReplaceSingleQuotes replaces single quotes with double quotes in a JSON-like string

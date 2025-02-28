@@ -3,7 +3,9 @@ package agent_capability
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"strings"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -25,6 +27,7 @@ type ClassifyEmailOutput struct {
 
 type ClassifyEmailCapability struct {
 	postgres    *postgres_repository.Repositories
+	events      *events.EventsService
 	mailService interfaces.MailService
 }
 
@@ -32,9 +35,10 @@ type ClassifyEmailConfig struct {
 	ImportEmails ConfigSingleValue `json:"importEmails"`
 }
 
-func NewClassifyEmailCapability(postgresRepositories *postgres_repository.Repositories, mailService interfaces.MailService) *ClassifyEmailCapability {
+func NewClassifyEmailCapability(postgresRepositories *postgres_repository.Repositories, events *events.EventsService, mailService interfaces.MailService) *ClassifyEmailCapability {
 	return &ClassifyEmailCapability{
 		postgres:    postgresRepositories,
+		events:      events,
 		mailService: mailService,
 	}
 }
@@ -135,6 +139,18 @@ func (c *ClassifyEmailCapability) Execute(ctx context.Context, executionContaine
 		//		tracing.TraceErr(span, errors.Wrap(err, "failed to set deliverable by email for all tenants"))
 		//	}
 		//}
+
+		err = c.postgres.AgentExecutionRepository.GoalAchieved(ctx, executionContainer.AgentExecutionID, false, nil)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set goal achieved"))
+		}
+
+		return enum.CapabilityExecutionStop, ClassifyEmailOutput{}, nil
+	}
+
+	if strings.Contains(strings.ToLower(emailMessageData.Content.Subject), "out of office") ||
+		strings.Contains(strings.ToLower(emailMessageData.Content.Subject), "confidential") ||
+		strings.Contains(strings.ToLower(emailMessageData.Content.Html), "you are receiving this email because you are subscribed to calendar notifications") {
 		return enum.CapabilityExecutionStop, ClassifyEmailOutput{}, nil
 	}
 

@@ -15,7 +15,7 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 		ID:              userEntity.Id,
 		FirstName:       userEntity.FirstName,
 		LastName:        userEntity.LastName,
-		Name:            utils.StringPtrNillable(userEntity.Name),
+		Name:            utils.StringPtr(userEntity.FullName()),
 		Timezone:        utils.StringPtrNillable(userEntity.Timezone),
 		CreatedAt:       userEntity.CreatedAt,
 		UpdatedAt:       userEntity.UpdatedAt,

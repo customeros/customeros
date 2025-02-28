@@ -375,11 +375,14 @@ func executeCapability[I, O, C any](
 	case enum.CapabilityExecutionStop:
 		return enum.CapabilityExecutionStop, nil, nil
 
+	case enum.CapabilityExecutionRetry:
+		return enum.CapabilityExecutionRetry, nil, err
+
 	case enum.CapabilityExecutionPending:
 		// todo  -- need to implement poll until done
 		return enum.CapabilityExecutionPending, nil, nil
 
 	default:
-		return enum.CapabilityExecutionError, nil, errors.New("Unexpected capability execution status")
+		return enum.CapabilityExecutionError, nil, errors.New("executeCapability: Unexpected capability execution status")
 	}
 }
