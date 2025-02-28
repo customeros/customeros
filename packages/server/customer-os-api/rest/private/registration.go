@@ -539,8 +539,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		currentTenant = signInRequest.Tenant
 		defaultTenant = signInRequest.Tenant
 
-		//TODO set user id
-		//services.CommonServices.UserService.FindUserByEmail()
+		userId = common.GetUserIdFromContext(ctx)
 	}
 
 	// handle email token
