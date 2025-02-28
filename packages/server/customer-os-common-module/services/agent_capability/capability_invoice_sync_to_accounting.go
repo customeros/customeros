@@ -221,9 +221,24 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 		}
 
 		if sku.QuickbooksId == "" {
-			err = errors.New(fmt.Sprintf("QuickbooksId not found for sku %s", sku.ID))
-			tracing.TraceErr(span, err)
-			return err
+			// Save sku to quickbooks
+			qbProduct, err := c.quickbooksService.SaveProduct(ctx, "", sku.Name, sku.Archived, sku.Price)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error saving product to quickbooks"))
+				return err
+			}
+			if qbProduct == nil || qbProduct.Product == nil {
+				tracing.LogObjectAsJson(span, "qbProduct", qbProduct)
+				err := errors.New("Quickbooks product could not be saved")
+				tracing.TraceErr(span, err)
+				return err
+			}
+			sku.QuickbooksId = qbProduct.Product.Id
+			_, err = c.postgresRepositories.SkuRepository.Save(ctx, sku)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error saving sku in db"))
+				return err
+			}
 		}
 	}
 
