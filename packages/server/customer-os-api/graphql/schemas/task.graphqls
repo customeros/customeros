@@ -1,0 +1,39 @@
+extend type Query {
+    tasks: [Task!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    task_Save(input: TaskInput!): Task! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input TaskInput {
+    id           : ID
+    name         : String!
+    description  : String
+    context      : String!
+    asigneeId    : ID!
+    ownerId      : ID!
+    status       : TaskStatus!
+    opportunityId: ID
+    dueAt        : Time!
+}
+
+type Task {
+    id           : ID!
+    name         : String!
+    description  : String
+    context      : String!
+    asigneeId    : ID!
+    ownerId      : ID!
+    status       : TaskStatus!
+    opportunityId: ID
+    dueAt        : Time!
+    createdAt    : Time!
+    updatedAt    : Time!
+}
+
+enum TaskStatus {
+    TODO
+    IN_PROGRESS
+    DONE
+}

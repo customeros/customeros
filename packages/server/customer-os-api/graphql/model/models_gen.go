@@ -2790,6 +2790,32 @@ type TagUpdateInput struct {
 	ColorCode *string `json:"colorCode,omitempty"`
 }
 
+type Task struct {
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Description   *string    `json:"description,omitempty"`
+	Context       string     `json:"context"`
+	AsigneeID     string     `json:"asigneeId"`
+	OwnerID       string     `json:"ownerId"`
+	Status        TaskStatus `json:"status"`
+	OpportunityID *string    `json:"opportunityId,omitempty"`
+	DueAt         time.Time  `json:"dueAt"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+}
+
+type TaskInput struct {
+	ID            *string    `json:"id,omitempty"`
+	Name          string     `json:"name"`
+	Description   *string    `json:"description,omitempty"`
+	Context       string     `json:"context"`
+	AsigneeID     string     `json:"asigneeId"`
+	OwnerID       string     `json:"ownerId"`
+	Status        TaskStatus `json:"status"`
+	OpportunityID *string    `json:"opportunityId,omitempty"`
+	DueAt         time.Time  `json:"dueAt"`
+}
+
 type Tax struct {
 	SalesTax bool    `json:"salesTax"`
 	Vat      bool    `json:"vat"`
@@ -5201,6 +5227,49 @@ func (e *ServiceInvoicingStatus) UnmarshalGQL(v any) error {
 }
 
 func (e ServiceInvoicingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TaskStatus string
+
+const (
+	TaskStatusTodo       TaskStatus = "TODO"
+	TaskStatusInProgress TaskStatus = "IN_PROGRESS"
+	TaskStatusDone       TaskStatus = "DONE"
+)
+
+var AllTaskStatus = []TaskStatus{
+	TaskStatusTodo,
+	TaskStatusInProgress,
+	TaskStatusDone,
+}
+
+func (e TaskStatus) IsValid() bool {
+	switch e {
+	case TaskStatusTodo, TaskStatusInProgress, TaskStatusDone:
+		return true
+	}
+	return false
+}
+
+func (e TaskStatus) String() string {
+	return string(e)
+}
+
+func (e *TaskStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TaskStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TaskStatus", str)
+	}
+	return nil
+}
+
+func (e TaskStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
