@@ -143,8 +143,8 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 		}
 
 		osData := map[string]interface{}{
-			"type": "EMAIL",
-			"id":   ingestEmailMessage.Id,
+			"id":             ingestEmailMessage.Id,
+			"organizationId": organizationId,
 			"from": map[string]string{
 				"email":     emailMessageData.Participants.From.Email,
 				"firstName": emailMessageData.Participants.From.FirstName,
@@ -161,7 +161,8 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 			"threadId":   emailMessageData.Identifiers.EmailThreadId,
 		}
 
-		err := c.opensearch.UpsertDocument(ctx, "timeline-"+organizationId, &ingestEmailMessage.Id, osData)
+		indexName := "email-" + ingestEmailMessage.SentAt.Format("2006-01")
+		err := c.opensearch.UpsertDocument(ctx, indexName, &ingestEmailMessage.Id, osData)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to index document"))
 		}
