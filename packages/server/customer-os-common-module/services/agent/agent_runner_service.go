@@ -419,10 +419,11 @@ func (a *agentRunnerService) ResumeExecution(ctx context.Context, executionID st
 	return err
 }
 
-func (a *agentRunnerService) RetryExecution(ctx context.Context, executionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.RetryExecution")
+func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.RerunExecution")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, executionID)
 
 	// Get execution details
 	execution, err := a.postgresRepositories.AgentExecutionRepository.GetById(ctx, executionID)
@@ -435,7 +436,7 @@ func (a *agentRunnerService) RetryExecution(ctx context.Context, executionID str
 		return errors.New("execution is not in retry state")
 	}
 
-	// Check retry timing
+	// Check if not retrying too early
 	if execution.NextRetryAt != nil && execution.NextRetryAt.After(time.Now()) {
 		return errors.New("retry attempt too early")
 	}
@@ -456,8 +457,12 @@ func (a *agentRunnerService) RetryExecution(ctx context.Context, executionID str
 	}
 
 	// Retry execution
-	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params, utils.StringPtr(executionID))
-	return err
+	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params, &executionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }
 
 func (a *agentRunnerService) GetExecutionStatus(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {

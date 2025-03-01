@@ -112,13 +112,13 @@ func (f *agentExecutionRepository) Finish(ctx context.Context, executionID strin
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("executionID", executionID))
 
-	// only running agent executions can be finished
 	err := f.gormDb.
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
-		Where("status = ?", enum.AgentExecutionRunning.String()).
 		Updates(map[string]interface{}{
-			"status": enum.AgentExecutionCompleted.String(),
+			"status":        enum.AgentExecutionCompleted.String(),
+			"error_message": nil,
+			"completed_at":  utils.Now(),
 		}).
 		Error
 	if err != nil {
@@ -134,7 +134,6 @@ func (f *agentExecutionRepository) Fail(ctx context.Context, executionID, errorM
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("executionID", executionID))
 
-	// only running agent executions can be finished
 	err := f.gormDb.
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
