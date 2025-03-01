@@ -51,7 +51,7 @@ func (p *SendInvoiceProducer) Execute() {
 
 	limit := 100
 	minutesFromLastAttempt := 360
-	minutesFromCreation := 90
+	minutesFromCreation := 30
 	lookBackWindowDays := 5
 
 	for {
