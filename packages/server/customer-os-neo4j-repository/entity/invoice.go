@@ -25,6 +25,7 @@ const (
 	InvoicePropertyVoidInvoiceNotificationRequestAt     InvoiceProperty = "techVoidInvoiceNotificationSentAt"
 	InvoicePropertyQuickbooksInvoiceId                  InvoiceProperty = "quickbooksInvoiceId"
 	InvoicePropertyQuickbooksJournalEntryId             InvoiceProperty = "quickbooksJournalEntryId"
+	InvoicePropertyQuickbooksPaymentId                  InvoiceProperty = "quickbooksPaymentId"
 )
 
 type InvoiceEntity struct {
@@ -50,6 +51,7 @@ type InvoiceEntity struct {
 	Note                     string
 	QuickbooksInvoiceId      string
 	QuickbooksJournalEntryId string
+	QuickbooksPaymentId      string
 	PaymentDetails           PaymentDetails
 	OffCycle                 bool
 	Postpaid                 bool

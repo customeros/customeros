@@ -852,7 +852,7 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 }
 
 func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksCustomerId string,
-	quickbooksInvoiceId string, quickbooksJournalEntryId string, txnDate time.Time, totalAmount float64) error {
+	quickbooksInvoiceId string, quickbooksJournalEntryId string, txnDate time.Time, totalAmount float64) (*interfaces.QuickbooksSavePaymentResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SavePaymentLinkingJournalEntryToInvoice")
 	defer span.Finish()
 	tenant := common.GetTenantFromContext(ctx)
@@ -868,12 +868,12 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
+		return nil, fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
 		err = errors.New("QuickBooks settings not found")
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 
 	// Construct the payment payload.
@@ -905,11 +905,24 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 	// Construct the URL for creating the payment.
 	requestUrl := fmt.Sprintf("%s/v3/company/%s/payment", s.qbConfig.Url, qbSettings.RealmId)
 	// Perform the request.
-	_, err = s.performRequest(ctx, qbSettings, requestUrl, "POST", paymentData, true)
+	quickbooksResponse, err := s.performRequest(ctx, qbSettings, requestUrl, "POST", paymentData, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to save payment: %w", err)
+		return nil, fmt.Errorf("failed to save payment: %w", err)
 	}
 
-	return nil
+	// Unmarshal the response into QuickbooksSavePaymentResponse.
+	var qbPaymentResponse interfaces.QuickbooksSavePaymentResponse
+	err = json.Unmarshal(quickbooksResponse, &qbPaymentResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if qbPaymentResponse.Fault != nil {
+		span.LogFields(log.Object("error", qbPaymentResponse.Fault))
+		return nil, fmt.Errorf("error: %s", qbPaymentResponse.Fault.Error[0].Message)
+	}
+
+	return &qbPaymentResponse, nil
 }

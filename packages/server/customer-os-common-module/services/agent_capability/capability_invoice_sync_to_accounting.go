@@ -434,10 +434,17 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		return err
 	}
 
-	err = c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, savedJournalEntry.JournalEntry.Id, invoice.IssuedDate, invoice.Amount)
+	quickbooksPayment, err := c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, savedJournalEntry.JournalEntry.Id, invoice.IssuedDate, invoice.Amount)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error saving payment linking journal entry to invoice"))
 		return err
+	}
+	if quickbooksPayment != nil {
+		err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksPaymentId), quickbooksPayment.Payment.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	return nil
