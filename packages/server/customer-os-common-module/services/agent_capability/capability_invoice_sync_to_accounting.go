@@ -113,23 +113,27 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		return enum.CapabilityExecutionCompleted, result, err
 	}
 
-	invoice, err := c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionCompleted, result, err
 	}
-	if invoice == nil {
+	if invoiceEntity == nil {
 		err = errors.New("invoice not found")
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionCompleted, result, err
 	}
-	if invoice.DryRun {
+	if invoiceEntity.DryRun {
 		span.LogFields(log.String("skip", "Dry run"))
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
+	if invoiceEntity.TotalAmount == 0 {
+		span.LogFields(log.String("skip", "Total amount is 0"))
+		return enum.CapabilityExecutionCompleted, result, nil
+	}
 
-	if invoice.QuickbooksInvoiceId == "" {
-		err = c.syncInvoiceToQuickbooks(ctx, *invoice)
+	if invoiceEntity.QuickbooksInvoiceId == "" {
+		err = c.syncInvoiceToQuickbooks(ctx, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionRetry, result, err
@@ -137,14 +141,14 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 	}
 
 	// re-fetch invoice to get updated quickbooks invoice id
-	invoice, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+	invoiceEntity, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
-	if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoice.QuickbooksJournalEntryId == "" {
-		err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoice)
+	if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoiceEntity.QuickbooksJournalEntryId == "" {
+		err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionRetry, result, err
@@ -152,26 +156,26 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 	}
 
 	// re-fetch invoice to get updated quickbooks journal id
-	invoice, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+	invoiceEntity, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
-	if invoice.Status == neo4jenum.InvoiceStatusPaid {
-		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoice)
+	if invoiceEntity.Status == neo4jenum.InvoiceStatusPaid {
+		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionRetry, result, err
 		}
-	} else if invoice.Status == neo4jenum.InvoiceStatusVoid {
-		err = c.syncVoidInvoiceToQuickbooks(ctx, *invoice)
+	} else if invoiceEntity.Status == neo4jenum.InvoiceStatusVoid {
+		err = c.syncVoidInvoiceToQuickbooks(ctx, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionRetry, result, err
 		}
-		if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoice.QuickbooksJournalEntryId != "" {
-			err = c.quickbooksService.ZeroJournalEntry(ctx, invoice.QuickbooksJournalEntryId)
+		if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoiceEntity.QuickbooksJournalEntryId != "" {
+			err = c.quickbooksService.ZeroJournalEntry(ctx, invoiceEntity.QuickbooksJournalEntryId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return enum.CapabilityExecutionRetry, result, err
