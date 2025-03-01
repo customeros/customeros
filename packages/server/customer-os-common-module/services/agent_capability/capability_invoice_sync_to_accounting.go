@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"net/url"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -395,7 +396,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 	debitJournalLineItem.JournalEntryLineDetail.PostingType = "Debit"
 	debitJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Accounts receivable (A/R)"
-	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, "Accounts receivable (A/R)")
+	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape("Accounts receivable (A/R)"))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
