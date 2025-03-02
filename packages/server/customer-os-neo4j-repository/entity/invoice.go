@@ -26,6 +26,14 @@ const (
 	InvoicePropertyQuickbooksInvoiceId                  InvoiceProperty = "quickbooksInvoiceId"
 	InvoicePropertyQuickbooksJournalEntryId             InvoiceProperty = "quickbooksJournalEntryId"
 	InvoicePropertyQuickbooksPaymentId                  InvoiceProperty = "quickbooksPaymentId"
+	InvoicePropertyProviderBankDetailsAvailable         InvoiceProperty = "providerBankDetailsAvailable"
+	InvoicePropertyProviderBankAccountName              InvoiceProperty = "providerBankAccountName"
+	InvoicePropertyProviderBankAccountNumber            InvoiceProperty = "providerBankAccountNumber"
+	InvoicePropertyProviderBankAccountIBAN              InvoiceProperty = "providerBankAccountIBAN"
+	InvoicePropertyProviderBankAccountBIC               InvoiceProperty = "providerBankAccountBIC"
+	InvoicePropertyProviderBankAccountSortCode          InvoiceProperty = "providerBankAccountSortCode"
+	InvoicePropertyProviderBankAccountRoutingNumber     InvoiceProperty = "providerBankAccountRoutingNumber"
+	InvoicePropertyProviderBankAccountOtherDetails      InvoiceProperty = "providerBankAccountOtherDetails"
 )
 
 type InvoiceEntity struct {
@@ -78,17 +86,25 @@ type InvoiceCustomer struct {
 }
 
 type InvoiceProvider struct {
-	LogoRepositoryFileId string // TODO alexb check if set in generate invoice
-	Name                 string
-	Email                string
-	CC                   []string
-	BCC                  []string
-	AddressLine1         string
-	AddressLine2         string
-	Zip                  string
-	Locality             string
-	Country              string
-	Region               string
+	LogoRepositoryFileId     string
+	Name                     string
+	Email                    string
+	CC                       []string
+	BCC                      []string
+	AddressLine1             string
+	AddressLine2             string
+	Zip                      string
+	Locality                 string
+	Country                  string
+	Region                   string
+	BankDetailsAvailable     bool
+	BankAccountName          string
+	BankAccountNumber        string
+	BankAccountIBAN          string
+	BankAccountBIC           string
+	BankAccountSortCode      string
+	BankAccountRoutingNumber string
+	BankAccountOtherDetails  string
 }
 
 type PaymentDetails struct {

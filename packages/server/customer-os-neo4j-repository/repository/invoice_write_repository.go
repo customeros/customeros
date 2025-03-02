@@ -34,30 +34,38 @@ type InvoiceCreateFields struct {
 }
 
 type InvoiceFillFields struct {
-	Amount                       float64                 `json:"amount"`
-	VAT                          float64                 `json:"vat"`
-	TotalAmount                  float64                 `json:"totalAmount"`
-	InvoiceNumber                string                  `json:"invoiceNumber"`
-	Status                       neo4jenum.InvoiceStatus `json:"status"`
-	CustomerName                 string                  `json:"customerName"`
-	CustomerEmail                string                  `json:"customerEmail"`
-	CustomerAddressLine1         string                  `json:"customerAddressLine1"`
-	CustomerAddressLine2         string                  `json:"customerAddressLine2"`
-	CustomerAddressZip           string                  `json:"customerAddressZip"`
-	CustomerAddressLocality      string                  `json:"customerAddressLocality"`
-	CustomerAddressCountry       string                  `json:"customerAddressCountry"`
-	CustomerAddressRegion        string                  `json:"customerAddressRegion"`
-	ProviderLogoRepositoryFileId string                  `json:"providerLogoRepositoryFileId"`
-	ProviderName                 string                  `json:"providerName"`
-	ProviderEmail                string                  `json:"providerEmail"`
-	ProviderCCEmails             []string                `json:"providerCCEmails"`
-	ProviderBCCEmails            []string                `json:"providerBCCEmails"`
-	ProviderAddressLine1         string                  `json:"providerAddressLine1"`
-	ProviderAddressLine2         string                  `json:"providerAddressLine2"`
-	ProviderAddressZip           string                  `json:"providerAddressZip"`
-	ProviderAddressLocality      string                  `json:"providerAddressLocality"`
-	ProviderAddressCountry       string                  `json:"providerAddressCountry"`
-	ProviderAddressRegion        string                  `json:"providerAddressRegion"`
+	Amount                           float64                 `json:"amount"`
+	VAT                              float64                 `json:"vat"`
+	TotalAmount                      float64                 `json:"totalAmount"`
+	InvoiceNumber                    string                  `json:"invoiceNumber"`
+	Status                           neo4jenum.InvoiceStatus `json:"status"`
+	CustomerName                     string                  `json:"customerName"`
+	CustomerEmail                    string                  `json:"customerEmail"`
+	CustomerAddressLine1             string                  `json:"customerAddressLine1"`
+	CustomerAddressLine2             string                  `json:"customerAddressLine2"`
+	CustomerAddressZip               string                  `json:"customerAddressZip"`
+	CustomerAddressLocality          string                  `json:"customerAddressLocality"`
+	CustomerAddressCountry           string                  `json:"customerAddressCountry"`
+	CustomerAddressRegion            string                  `json:"customerAddressRegion"`
+	ProviderLogoRepositoryFileId     string                  `json:"providerLogoRepositoryFileId"`
+	ProviderName                     string                  `json:"providerName"`
+	ProviderEmail                    string                  `json:"providerEmail"`
+	ProviderCCEmails                 []string                `json:"providerCCEmails"`
+	ProviderBCCEmails                []string                `json:"providerBCCEmails"`
+	ProviderAddressLine1             string                  `json:"providerAddressLine1"`
+	ProviderAddressLine2             string                  `json:"providerAddressLine2"`
+	ProviderAddressZip               string                  `json:"providerAddressZip"`
+	ProviderAddressLocality          string                  `json:"providerAddressLocality"`
+	ProviderAddressCountry           string                  `json:"providerAddressCountry"`
+	ProviderAddressRegion            string                  `json:"providerAddressRegion"`
+	ProviderBankDetailsAvailable     bool                    `json:"providerBankDetailsAvailable"`
+	ProviderBankAccountName          string                  `json:"providerBankAccountName"`
+	ProviderBankAccountNumber        string                  `json:"providerBankAccountNumber"`
+	ProviderBankAccountIBAN          string                  `json:"providerBankAccountIBAN"`
+	ProviderBankAccountBIC           string                  `json:"providerBankAccountBIC"`
+	ProviderBankAccountSortCode      string                  `json:"providerBankAccountSortCode"`
+	ProviderBankAccountRoutingNumber string                  `json:"providerBankAccountRoutingNumber"`
+	ProviderBankAccountOtherDetails  string                  `json:"providerBankAccountOtherDetails"`
 }
 
 type InvoiceUpdateFields struct {
@@ -190,34 +198,50 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.Mana
 								i.providerAddressZip=$providerAddressZip,
 								i.providerAddressLocality=$providerAddressLocality,
 								i.providerAddressCountry=$providerAddressCountry,
-								i.providerAddressRegion=$providerAddressRegion
+								i.providerAddressRegion=$providerAddressRegion,
+								i.providerBankDetailsAvailable=$providerBankDetailsAvailable,
+								i.providerBankAccountName=$providerBankAccountName,
+								i.providerBankAccountNumber=$providerBankAccountNumber,
+								i.providerBankAccountIBAN=$providerBankAccountIBAN,
+								i.providerBankAccountBIC=$providerBankAccountBIC,
+								i.providerBankAccountSortCode=$providerBankAccountSortCode,
+								i.providerBankAccountRoutingNumber=$providerBankAccountRoutingNumber,
+								i.providerBankAccountOtherDetails=$providerBankAccountOtherDetails
 							`, tenant)
 	params := map[string]any{
-		"invoiceId":                    invoiceId,
-		"amount":                       data.Amount,
-		"vat":                          data.VAT,
-		"totalAmount":                  data.TotalAmount,
-		"number":                       data.InvoiceNumber,
-		"status":                       data.Status.String(),
-		"customerName":                 data.CustomerName,
-		"customerEmail":                data.CustomerEmail,
-		"customerAddressLine1":         data.CustomerAddressLine1,
-		"customerAddressLine2":         data.CustomerAddressLine2,
-		"customerAddressZip":           data.CustomerAddressZip,
-		"customerAddressLocality":      data.CustomerAddressLocality,
-		"customerAddressCountry":       data.CustomerAddressCountry,
-		"customerAddressRegion":        data.CustomerAddressRegion,
-		"providerLogoRepositoryFileId": data.ProviderLogoRepositoryFileId,
-		"providerName":                 data.ProviderName,
-		"providerEmail":                data.ProviderEmail,
-		"providerAddressLine1":         data.ProviderAddressLine1,
-		"providerAddressLine2":         data.ProviderAddressLine2,
-		"providerAddressZip":           data.ProviderAddressZip,
-		"providerAddressLocality":      data.ProviderAddressLocality,
-		"providerAddressCountry":       data.ProviderAddressCountry,
-		"providerAddressRegion":        data.ProviderAddressRegion,
-		"providerCCEmails":             data.ProviderCCEmails,
-		"providerBCCEmails":            data.ProviderBCCEmails,
+		"invoiceId":                        invoiceId,
+		"amount":                           data.Amount,
+		"vat":                              data.VAT,
+		"totalAmount":                      data.TotalAmount,
+		"number":                           data.InvoiceNumber,
+		"status":                           data.Status.String(),
+		"customerName":                     data.CustomerName,
+		"customerEmail":                    data.CustomerEmail,
+		"customerAddressLine1":             data.CustomerAddressLine1,
+		"customerAddressLine2":             data.CustomerAddressLine2,
+		"customerAddressZip":               data.CustomerAddressZip,
+		"customerAddressLocality":          data.CustomerAddressLocality,
+		"customerAddressCountry":           data.CustomerAddressCountry,
+		"customerAddressRegion":            data.CustomerAddressRegion,
+		"providerLogoRepositoryFileId":     data.ProviderLogoRepositoryFileId,
+		"providerName":                     data.ProviderName,
+		"providerEmail":                    data.ProviderEmail,
+		"providerAddressLine1":             data.ProviderAddressLine1,
+		"providerAddressLine2":             data.ProviderAddressLine2,
+		"providerAddressZip":               data.ProviderAddressZip,
+		"providerAddressLocality":          data.ProviderAddressLocality,
+		"providerAddressCountry":           data.ProviderAddressCountry,
+		"providerAddressRegion":            data.ProviderAddressRegion,
+		"providerCCEmails":                 data.ProviderCCEmails,
+		"providerBCCEmails":                data.ProviderBCCEmails,
+		"providerBankDetailsAvailable":     data.ProviderBankDetailsAvailable,
+		"providerBankAccountName":          data.ProviderBankAccountName,
+		"providerBankAccountNumber":        data.ProviderBankAccountNumber,
+		"providerBankAccountIBAN":          data.ProviderBankAccountIBAN,
+		"providerBankAccountBIC":           data.ProviderBankAccountBIC,
+		"providerBankAccountSortCode":      data.ProviderBankAccountSortCode,
+		"providerBankAccountRoutingNumber": data.ProviderBankAccountRoutingNumber,
+		"providerBankAccountOtherDetails":  data.ProviderBankAccountOtherDetails,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
