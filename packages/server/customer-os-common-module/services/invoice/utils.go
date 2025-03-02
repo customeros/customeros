@@ -3,13 +3,6 @@ package invoice
 import (
 	"bytes"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -17,6 +10,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 )
 
 func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData map[string]interface{}) error {
@@ -119,6 +120,10 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 		{"line11681-7w4.svg", "line11681-7w4.svg"},
 		{"line21681-3s8.svg", "line21681-3s8.svg"},
 		{"line31681-nvh.svg", "line31681-nvh.svg"},
+		{"fonts/Barlow-Regular.woff2", "fonts/Barlow-Regular.woff2"},
+		{"fonts/Barlow-Medium.woff2", "fonts/Barlow-Medium.woff2"},
+		{"fonts/Barlow-SemiBold.woff2", "fonts/Barlow-SemiBold.woff2"},
+		{"fonts/Barlow-Bold.woff2", "fonts/Barlow-Bold.woff2"},
 	}
 	for _, rf := range resourceFiles {
 		err = addEmbeddedResourceFile(writer, rf.FileName, rf.PartName)
