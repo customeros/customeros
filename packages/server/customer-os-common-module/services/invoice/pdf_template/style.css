@@ -76,7 +76,7 @@
 }
 .Content {
   font-size: 16px;
-  font-family: Inter;
+  font-family: 'IBM Plex Sans';
   font-weight: 400;
   line-height: 1.15;
   text-transform: none;
@@ -85,35 +85,35 @@
 .TextsmSemibold {
   font-size: 14px;
   font-style: normal;
-  font-family: Barlow;
-  font-weight: 600;
+  font-family: 'IBM Plex Sans';
+  font-weight: 500;
   font-stretch: normal;
 }
 .TextsmMedium {
   font-size: 14px;
   font-style: normal;
-  font-family: Barlow;
+  font-family: 'IBM Plex Sans';
   font-weight: 500;
   font-stretch: normal;
 }
 .TextxsRegular {
   font-size: 12px;
   font-style: normal;
-  font-family: Barlow;
+  font-family: 'IBM Plex Sans';
   font-weight: 400;
   font-stretch: normal;
 }
 .Heading {
   font-size: 32px;
-  font-family: Inter;
-  font-weight: 700;
+  font-family: 'IBM Plex Sans';
+  font-weight: 500;
   line-height: 1.15;
   text-transform: none;
   text-decoration: none;
 }
 .InvoiceHeading {
-  font-family: Barlow;
-  font-weight: 700;
+  font-family: 'IBM Plex Sans';
+  font-weight: 500;
   font-size: 30px;
   font-style: normal;
   font-stretch: normal;
@@ -125,14 +125,14 @@
 .DisplaysmMedium {
   font-size: 30px;
   font-style: normal;
-  font-family: Barlow;
+  font-family: 'IBM Plex Sans';
   font-weight: 500;
   font-stretch: normal;
 }
 .TextsmRegular {
   font-size: 14px;
   font-style: normal;
-  font-family: Barlow;
+  font-family: 'IBM Plex Sans';
   font-weight: 400;
   font-stretch: normal;
 }
