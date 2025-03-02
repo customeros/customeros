@@ -120,8 +120,8 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 		{"line11681-7w4.svg", "line11681-7w4.svg"},
 		{"line21681-3s8.svg", "line21681-3s8.svg"},
 		{"line31681-nvh.svg", "line31681-nvh.svg"},
-		{"fonts/IBMPlexSans-Regular.woff2", "fonts/IBMPlexSans-Regular.woff2"},
-		{"fonts/IBMPlexSans-Medium.woff2", "fonts/IBMPlexSans-Medium.woff2"},
+		{"IBMPlexSans-Regular.woff2", "IBMPlexSans-Regular.woff2"},
+		{"IBMPlexSans-Medium.woff2", "IBMPlexSans-Medium.woff2"},
 	}
 	for _, rf := range resourceFiles {
 		err = addEmbeddedResourceFile(writer, rf.FileName, rf.PartName)
