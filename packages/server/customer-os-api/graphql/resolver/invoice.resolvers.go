@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
@@ -219,6 +218,33 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to void invoice %s", id)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
+		return &model.Invoice{Metadata: &model.Metadata{
+			ID: id,
+		}}, nil
+	}
+
+	return mapper.MapEntityToInvoice(invoiceEntity), nil
+}
+
+// InvoiceRegeneratePDF is the resolver for the invoice_RegeneratePdf field.
+func (r *mutationResolver) InvoiceRegeneratePDF(ctx context.Context, id string) (*model.Invoice, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceRegeneratePDF", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	err := r.Services.CommonServices.InvoiceService.RegenerateInvoicePdf(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to regenerate invoice pdf %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
 		}}, nil

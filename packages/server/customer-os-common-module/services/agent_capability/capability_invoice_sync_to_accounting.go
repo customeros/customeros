@@ -116,12 +116,12 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionCompleted, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 	if invoiceEntity == nil {
 		err = errors.New("invoice not found")
 		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionCompleted, result, err
+		return enum.CapabilityExecutionRetry, result, err
 	}
 	if invoiceEntity.DryRun {
 		span.LogFields(log.String("skip", "Dry run"))
@@ -147,11 +147,28 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
-	if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoiceEntity.QuickbooksJournalEntryId == "" {
-		err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoiceEntity)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionRetry, result, err
+	if executionContainer.ConfigData.AccountingMethodAccrual.Value {
+		if invoiceEntity.QuickbooksJournalEntryId == "" {
+			err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoiceEntity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
+
+			// re-fetch invoice to get updated quickbooks invoice id
+			invoiceEntity, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
+		}
+
+		if invoiceEntity.QuickbooksPaymentId == "" {
+			err = c.syncPaymentLinkingJournalEntryToInvoice(ctx, *invoiceEntity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
 		}
 	}
 
@@ -439,7 +456,33 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		return err
 	}
 
-	quickbooksPayment, err := c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, savedJournalEntry.JournalEntry.Id, invoice.IssuedDate, invoice.Amount)
+	return nil
+}
+
+func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvoice(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncPaymentLinkingJournalEntryToInvoice")
+	defer span.Finish()
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if quickbooksSettingsEntity == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	quickbooksPayment, err := c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.QuickbooksJournalEntryId, invoice.IssuedDate, invoice.Amount)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error saving payment linking journal entry to invoice"))
 		return err
