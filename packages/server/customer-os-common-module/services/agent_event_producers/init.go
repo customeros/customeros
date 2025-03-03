@@ -21,6 +21,7 @@ func InitAgentProducers(services *service.CommonServices) *AgentProducers {
 		NewWebSessionProducer: NewNewWebSessionProducer(
 			services.Events,
 			services.PostgresRepositories,
+			services.WebscraperService,
 		),
 		InvoiceProducer: NewInvoiceProducer(
 			services.PostgresRepositories,

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"net/http"
 	"strings"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -192,9 +192,8 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 	tracing.TagComponentRest(span)
 
 	query := postgres_entity.WebSession{
-		Tenant:    trackerData.Tenant,
-		VisitorID: trackerData.VisitorID,
-		IsActive:  true,
+		Tenant:   trackerData.Tenant,
+		IsActive: true,
 	}
 	session, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
 	if err != nil {
@@ -235,7 +234,6 @@ func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trac
 
 	query := postgres_entity.WebSession{
 		Tenant:        trackerData.Tenant,
-		VisitorID:     trackerData.VisitorID,
 		IP:            trackerData.IP,
 		Hostname:      trackerData.Hostname,
 		Referrer:      &trackerData.Referrer,

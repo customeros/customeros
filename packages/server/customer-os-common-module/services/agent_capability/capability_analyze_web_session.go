@@ -93,7 +93,6 @@ func (c *AnalyzeWebSessionCapability) ValidateConfig(postgres_entity.NoConfig) e
 
 type AnalyzeWebSessionInput struct {
 	WebSessionID   string `json:"webSessionId"`
-	VisitorID      string `json:"visitorId"`
 	OrganizationID string `json:"organizationId"`
 	Domain         string `json:"domain"`
 }
@@ -129,7 +128,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	}
 
 	// update session with organization id
-	err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
+	err := c.postgresRepositories.WebSessionRepository.SetOrganizationId(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
@@ -156,17 +155,6 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	// scrape visited webpages & analyze pageview
-	var sessionData []PageVisit
-	for _, page := range session.UniquePageViews {
-		pageVisitData, err := c.processPageVisit(ctx, session.ID, page, *session.Domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
-		}
-		sessionData = append(sessionData, pageVisitData)
-	}
-
 	// analyze session
 	result, err = c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
@@ -181,14 +169,6 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 		return enum.CapabilityExecutionRetry, result, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
-
-	// determine if a new person visit
-	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, executionContainer.InputData.VisitorID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionRetry, result, err
-	}
-	result.IsNewPersonVisit = isNewVisitor
 
 	// build timeline event
 	timelineMessage, err := c.buildTimelineMessage(ctx, executionContainer.InputData.WebSessionID, result)
@@ -499,9 +479,8 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 	}
 
 	query := postgres_entity.WebSession{
-		Tenant:    tenant,
-		VisitorID: visitorId,
-		IsActive:  false,
+		Tenant:   tenant,
+		IsActive: false,
 	}
 
 	results, err := c.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, nil)

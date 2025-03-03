@@ -254,6 +254,12 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		if visit.Referer == "" && event.Referrer != "" {
 			visit.Referer = event.Referer()
 		}
+		if visit.Hostname == "" && event.Hostname != "" {
+			visit.Hostname = event.Hostname
+		}
+		if visit.Pathname == "" && event.Pathname != "" {
+			visit.Pathname = event.Pathname
+		}
 
 		switch event.EventType {
 		case "page_view":
@@ -304,7 +310,11 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 	}
 
 	// save pagevisit to db
-	_, err := s.postgresRepositories
+	_, err = s.postgresRepositories.WebSessionPageVisitRepository.Create(ctx, visit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visitor, err
+	}
 
 	content, err := s.webscraperService.Scrape(ctx, page)
 	if err != nil {

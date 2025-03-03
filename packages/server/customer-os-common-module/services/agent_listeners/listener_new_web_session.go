@@ -6,7 +6,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -102,22 +101,10 @@ func (l *NewWebSessionListener) Handle(ctx context.Context, baseEvent any) error
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.NewWebSession](ctx, event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if data.IPAddress == "" {
-		err := errors.New("IPAddress not set on event")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return l.handleExecution(ctx, data)
+	return l.handleExecution(ctx, event.Event.Id)
 }
 
-func (l *NewWebSessionListener) handleExecution(ctx context.Context, data dto.NewWebSession) error {
+func (l *NewWebSessionListener) handleExecution(ctx context.Context, webSessionId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -127,15 +114,15 @@ func (l *NewWebSessionListener) handleExecution(ctx context.Context, data dto.Ne
 		return nil
 	}
 
+	startParams := struct {
+		WebSessionID string
+	}{
+		WebSessionID: webSessionId,
+	}
+
 	var errs error
 	for _, agent := range activeAgents {
-		// replaced route with generic mapping
-		initialParams, err := utils.StructToMap(data)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
-		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
+		err := l.run(ctx, agent, startParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -143,6 +130,24 @@ func (l *NewWebSessionListener) handleExecution(ctx context.Context, data dto.Ne
 	}
 
 	return errs
+}
+
+func (l *NewWebSessionListener) run(ctx context.Context, agent postgres_entity.Agent, startParams any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionListener.run")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	initialParams, err := utils.StructToMap(startParams)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }
 
 func (l *NewWebSessionListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {

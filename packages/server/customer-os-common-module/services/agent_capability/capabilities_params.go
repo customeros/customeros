@@ -1,10 +1,10 @@
 package agent_capability
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 )
 
 type CapabilityParams struct {

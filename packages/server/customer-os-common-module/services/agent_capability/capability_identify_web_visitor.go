@@ -9,14 +9,12 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type IdentifyWebsiteVisitorCapability struct {
@@ -74,14 +72,8 @@ func (c *IdentifyWebsiteVisitorCapability) DefaultActive() bool {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVisitorInput) error {
-	if data.IPAddress == "" {
-		return errors.New("IP address cannot be empty")
-	}
 	if data.WebSessionID == "" {
 		return errors.New("WebSessionID cannot be empty")
-	}
-	if data.VisitorID == "" {
-		return errors.New("VisitorID cannot be empty")
 	}
 	return nil
 }
@@ -92,14 +84,11 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(postgres_entity.NoConf
 
 type IdentifyWebsiteVisitorInput struct {
 	WebSessionID string `json:"webSessionId"`
-	IPAddress    string `json:"ipAddress"`
-	VisitorID    string `json:"visitorId"`
-	Hostname     string `json:"hostname"`
 }
 
 type IdentifyWebsiteVisitorOutput struct {
 	Domain       string `json:"domain"`
-	LinkedInSlug string `json:"linkedinSlug"`
+	EmailAddress string `json:"emailAddress"`
 }
 
 func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, IdentifyWebsiteVisitorOutput, error) {
@@ -111,6 +100,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 
 	result := IdentifyWebsiteVisitorOutput{}
 
+	// Validate input and config
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
@@ -120,55 +110,236 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	domain, linkedInSlug, err := c.identifyIP(ctx, executionContainer.InputData.IPAddress)
+	// Get web session
+	websession, err := c.getWebSession(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		tracing.LogObjectAsJson(span, "result", result)
 		return enum.CapabilityExecutionError, result, err
+	}
+
+	// Check if identity already set
+	identityStatus, err := c.processExistingIdentity(ctx, websession, executionContainer.AgentExecutionID, &result)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, result, err
+	}
+
+	// Return if identity is already set or if we need to stop execution
+	if identityStatus != nil {
+		return *identityStatus, result, nil
+	}
+
+	// Check if we have identifiable information from other sessions with the same IP
+	identityFromIPStatus, err := c.tryIdentifyFromIPHistory(ctx, websession, executionContainer.AgentExecutionID, &result)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, result, err
+	}
+
+	// Return if we found identity from IP history
+	if identityFromIPStatus != nil {
+		return *identityFromIPStatus, result, nil
+	}
+
+	// Attempt to identify using third-party enrichment services
+	return c.tryIdentifyFromEnrichment(ctx, websession, executionContainer.AgentExecutionID, &result)
+}
+
+// getWebSession retrieves the web session with the given ID
+func (c *IdentifyWebsiteVisitorCapability) getWebSession(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.getWebSession")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	websession, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
+		ID:     sessionID,
+		Tenant: common.GetTenantFromContext(ctx),
+	}, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find web session")
+	}
+	if websession == nil {
+		return nil, errors.New("web session not found")
+	}
+
+	return websession, nil
+}
+
+// processExistingIdentity checks if identity is already set on the web session
+// Returns nil if identity is not set and processing should continue
+// Returns a status if processing should stop
+func (c *IdentifyWebsiteVisitorCapability) processExistingIdentity(
+	ctx context.Context,
+	websession *postgres_entity.WebSession,
+	agentExecutionID string,
+	result *IdentifyWebsiteVisitorOutput,
+) (*enum.CapabilityExecutionStatus, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.processExistingIdentity")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	// Check if identity already set
+	identitySet, primaryDomain, err := c.isIdentitySetOnWebSession(ctx, *websession)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to check if identity is set")
+	}
+
+	// If identity not set, continue with processing
+	if !identitySet {
+		return nil, nil
+	}
+
+	// Check if it's a workspace domain
+	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, primaryDomain)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to check if domain is workspace domain")
+	}
+
+	// If it's a workspace domain, publish event and stop execution
+	if isWorkspaceDomain {
+		err = c.publishWebVisitorNotIdentifiedEvent(ctx, agentExecutionID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to publish web visitor not identified event")
+		}
+
+		status := enum.CapabilityExecutionStop
+		return &status, nil
+	}
+
+	// Identity found and it's not a workspace domain
+	result.Domain = primaryDomain
+	if websession.Email != nil {
+		result.EmailAddress = *websession.Email
+	}
+
+	err = c.publishWebVisitorIdentifiedEvent(ctx, agentExecutionID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to publish web visitor identified event")
+	}
+
+	status := enum.CapabilityExecutionCompleted
+	return &status, nil
+}
+
+// tryIdentifyFromIPHistory attempts to identify a visitor using historical sessions with the same IP
+// Returns nil if identification was not possible and processing should continue
+func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromIPHistory(
+	ctx context.Context,
+	websession *postgres_entity.WebSession,
+	agentExecutionID string,
+	result *IdentifyWebsiteVisitorOutput,
+) (*enum.CapabilityExecutionStatus, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromIPHistory")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	// Find session with same IP that has domain information
+	identifiedSession, err := c.postgresRepositories.WebSessionRepository.FindLatestSessionWithDomainByIP(ctx, websession.IP)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find session with domain by IP")
+	}
+
+	// If no identified session found, continue with processing
+	if identifiedSession == nil || identifiedSession.Domain == nil || *identifiedSession.Domain == "" {
+		return nil, nil
+	}
+
+	// Identified from IP history
+	result.Domain = *identifiedSession.Domain
+	if identifiedSession.Email != nil && *identifiedSession.Email != "" {
+		result.EmailAddress = *identifiedSession.Email
+	}
+
+	err = c.publishWebVisitorIdentifiedEvent(ctx, agentExecutionID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to publish web visitor identified event")
+	}
+
+	status := enum.CapabilityExecutionCompleted
+	return &status, nil
+}
+
+// tryIdentifyFromEnrichment attempts to identify a visitor using third-party enrichment services
+func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
+	ctx context.Context,
+	websession *postgres_entity.WebSession,
+	agentExecutionID string,
+	result *IdentifyWebsiteVisitorOutput,
+) (enum.CapabilityExecutionStatus, IdentifyWebsiteVisitorOutput, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromEnrichment")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	// Try to identify IP via 3rd parties
+	domain, err := c.identifyIP(ctx, websession.IP)
+	if err != nil {
+		return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to identify IP")
 	}
 
 	result.Domain = domain
-	result.LinkedInSlug = linkedInSlug
-	tracing.LogObjectAsJson(span, "result", result)
 
+	// If domain not found, publish event and complete
 	if domain == "" {
-		// domain not found
-		err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+		err = c.publishWebVisitorNotIdentifiedEvent(ctx, agentExecutionID)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return enum.CapabilityExecutionError, result, err
+			return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to publish web visitor not identified event")
 		}
-		return enum.CapabilityExecutionCompleted, result, nil
+		return enum.CapabilityExecutionCompleted, *result, nil
 	}
 
-	_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, executionContainer.InputData.WebSessionID, domain)
+	// Update the web session with identified domain
+	err = c.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, websession.ID, &domain, nil, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		tracing.LogObjectAsJson(span, "result", result)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to set visitor identity")
 	}
 
+	// Check if it's a workspace domain
 	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to check if domain is workspace domain")
 	}
+
 	if isWorkspaceDomain {
-		err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+		err = c.publishWebVisitorNotIdentifiedEvent(ctx, agentExecutionID)
+		if err != nil {
+			return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to publish web visitor not identified event")
+		}
+		return enum.CapabilityExecutionStop, *result, nil
+	}
+
+	// Publish success event
+	err = c.publishWebVisitorIdentifiedEvent(ctx, agentExecutionID)
+	if err != nil {
+		return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to publish web visitor identified event")
+	}
+
+	return enum.CapabilityExecutionCompleted, *result, nil
+}
+
+// isIdentitySetOnWebSession checks if identity information is already set on the web session
+func (c *IdentifyWebsiteVisitorCapability) isIdentitySetOnWebSession(ctx context.Context, websession postgres_entity.WebSession) (bool, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.isIdentitySetOnWebSession")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	if websession.Domain == nil || *websession.Domain == "" {
+		return false, "", nil
+	}
+
+	_, _, primaryDomain := c.domainService.CheckDomainWithMailsherpa(ctx, *websession.Domain)
+
+	// Update session with primary domain if it differs from current domain
+	if primaryDomain != *websession.Domain {
+		err := c.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, websession.ID, &primaryDomain, nil, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
-		return enum.CapabilityExecutionStop, result, nil
 	}
 
-	err = c.publishWebVisitorIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	return enum.CapabilityExecutionCompleted, result, nil
+	return true, primaryDomain, nil
 }
 
+// publishWebVisitorIdentifiedEvent publishes an event indicating a visitor was identified
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorIdentifiedEvent")
 	defer span.Finish()
@@ -179,6 +350,7 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx 
 	})
 }
 
+// publishWebVisitorNotIdentifiedEvent publishes an event indicating a visitor was not identified
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorNotIdentifiedEvent")
 	defer span.Finish()
@@ -189,27 +361,8 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(c
 	})
 }
 
-func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, hostname string, websites []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.acceptHostname")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	accepted := false
-
-	for _, website := range websites {
-		if utils.StripUrlToBasePath(website) == utils.StripUrlToBasePath(hostname) {
-			accepted = true
-		}
-	}
-
-	if !accepted {
-		return coserrors.ErrCapabilityHostnameNotConfigured
-	}
-
-	return nil
-}
-
-func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (primaryDomain, linkedinSlug string, err error) {
+// identifyIP attempts to identify a company domain from an IP address using enrichment services
+func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (primaryDomain string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
 	defer span.Finish()
 	span.LogKV("ipAddress", ipAddress)
@@ -217,18 +370,14 @@ func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAdd
 	snitcherData, err := c.enrichmentService.IPIdentity(ctx, ipAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", "", err
+		return "", errors.Wrap(err, "failed to get IP identity")
 	}
 
 	if snitcherData == nil || snitcherData.Company == nil || snitcherData.Company.Domain == "" {
-		return "", "", nil
+		return "", nil
 	}
 
 	_, _, primaryDomain = c.domainService.CheckDomainWithMailsherpa(ctx, snitcherData.Company.Domain)
 
-	if snitcherData.Company.Profiles != nil && snitcherData.Company.Profiles.LinkedIn != nil {
-		linkedinSlug = snitcherData.Company.Profiles.LinkedIn.Handle
-	}
-
-	return primaryDomain, snitcherData.Company.Profiles.LinkedIn.Handle, nil
+	return primaryDomain, nil
 }
