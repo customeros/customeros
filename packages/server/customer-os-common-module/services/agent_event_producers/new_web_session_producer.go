@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -182,7 +183,7 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 	// process page visits
 	identifiedVisitor := IdentifiedVisitor{}
 	for _, page := range pageViews {
-		visitor, err := s.processPageView(ctx, session.ID, page)
+		visitor, err := s.processPageView(ctx, session.ID, page, endTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			continue
@@ -226,7 +227,7 @@ type IdentifiedVisitor struct {
 	EmailType enum.EmailType
 }
 
-func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, page string) (IdentifiedVisitor, error) {
+func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, page string, endTime time.Time) (IdentifiedVisitor, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "NewWebSessionProducer.processPageView")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
@@ -270,6 +271,10 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 			}
 
 		case "page_exit":
+			if event.Timestamp.IsZero() {
+				event.Timestamp = endTime
+			}
+
 			if visit.ExitTimestamp.IsZero() {
 				visit.ExitTimestamp = event.Timestamp
 			} else if event.Timestamp.After(visit.ExitTimestamp) {
