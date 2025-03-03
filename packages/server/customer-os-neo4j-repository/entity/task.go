@@ -8,12 +8,15 @@ import (
 type TaskProperty string
 
 const (
+	TaskPropertyId          TaskProperty = "id"
 	TaskPropertyName        TaskProperty = "name"
 	TaskPropertyDescription TaskProperty = "description"
 	TaskPropertyStatus      TaskProperty = "status"
 	TaskPropertyDueAt       TaskProperty = "dueAt"
 	TaskPropertyCreatedAt   TaskProperty = "createdAt"
 	TaskPropertyUpdatedAt   TaskProperty = "updatedAt"
+	TaskPropertySource      TaskProperty = "source"
+	TaskPropertyAppSource   TaskProperty = "appSource"
 )
 
 type TaskEntity struct {
