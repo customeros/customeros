@@ -927,12 +927,14 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 	return &qbPaymentResponse, nil
 }
 
-func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksPaymentId, quickbooksJournalEntryId string) error {
+func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksPaymentId, quickbooksCustomerId, quickbooksJournalEntryId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.ZeroPaymentLinkingJournalEntryToInvoice")
 	defer span.Finish()
 	tenant := common.GetTenantFromContext(ctx)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("quickbooksPaymentId", quickbooksPaymentId), log.String("quickbooksJournalEntryId", quickbooksJournalEntryId))
+	span.LogFields(log.String("quickbooksPaymentId", quickbooksPaymentId),
+		log.String("quickbooksCustomerId", quickbooksCustomerId),
+		log.String("quickbooksJournalEntryId", quickbooksJournalEntryId))
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
@@ -950,6 +952,9 @@ func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.
 	paymentData := map[string]interface{}{
 		"Id":       quickbooksPaymentId,
 		"TotalAmt": 0,
+		"CustomerRef": map[string]interface{}{
+			"value": quickbooksCustomerId,
+		},
 		"Line": []map[string]interface{}{
 			{
 				"Amount": 0,
