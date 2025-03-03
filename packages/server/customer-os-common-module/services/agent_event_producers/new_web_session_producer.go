@@ -335,7 +335,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 
 	case scrapedPage.Error != "":
 		if scrapedPage.Category == "" {
-			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page, &scrapedPage.Content)
+			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &scrapedPage.Content)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return visitor, err
@@ -353,7 +353,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 
 	default:
 		if scrapedPage.Category == "" {
-			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page, &scrapedPage.Content)
+			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &scrapedPage.Content)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return visitor, err
@@ -361,7 +361,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		}
 
 		if scrapedPage.ContentStage == "" {
-			_, err = s.webscraperService.ClassifyContentStage(ctx, page, &scrapedPage.Content)
+			_, err = s.webscraperService.ClassifyContentStage(ctx, url, &scrapedPage.Content)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return visitor, err
