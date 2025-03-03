@@ -1239,7 +1239,7 @@ func MapDbNodeToTaskEntity(dbNode *dbtype.Node) *neo4j_entity.TaskEntity {
 		CreatedAt:   utils.GetTimePropOrNow(props, string(neo4j_entity.TaskPropertyCreatedAt)),
 		UpdatedAt:   utils.GetTimePropOrNow(props, string(neo4j_entity.TaskPropertyUpdatedAt)),
 		DueAt:       utils.GetTimePropOrNil(props, string(neo4j_entity.TaskPropertyDueAt)),
-		Name:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyName)),
+		Subject:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertySubject)),
 		Description: utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyDescription)),
 		Status:      commonenum.DecodeTaskStatus(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyStatus))),
 		Source:      neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertySource))),

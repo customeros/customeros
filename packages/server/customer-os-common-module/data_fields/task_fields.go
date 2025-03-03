@@ -7,7 +7,7 @@ import (
 
 // Nil fields wil be skipped from update
 type TaskFields struct {
-	Name            *string          `json:"name,omitempty"`
+	Subject         *string          `json:"subject,omitempty"`
 	Description     *string          `json:"description,omitempty"`
 	Status          *enum.TaskStatus `json:"status,omitempty"`
 	DueAt           *time.Time       `json:"dueAt,omitempty"`

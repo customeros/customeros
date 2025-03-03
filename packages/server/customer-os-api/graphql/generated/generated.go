@@ -1741,9 +1741,9 @@ type ComplexityRoot struct {
 		Description    func(childComplexity int) int
 		DueAt          func(childComplexity int) int
 		ID             func(childComplexity int) int
-		Name           func(childComplexity int) int
 		OpportunityIds func(childComplexity int) int
 		Status         func(childComplexity int) int
+		Subject        func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 	}
 
@@ -2343,7 +2343,6 @@ type UserResolver interface {
 type TaskInputResolver interface {
 	Asignees(ctx context.Context, obj *model.TaskInput, data []string) error
 	AuthorID(ctx context.Context, obj *model.TaskInput, data *string) error
-
 	OpportunityIds(ctx context.Context, obj *model.TaskInput, data []string) error
 }
 
@@ -12633,13 +12632,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Task.ID(childComplexity), true
 
-	case "Task.name":
-		if e.complexity.Task.Name == nil {
-			break
-		}
-
-		return e.complexity.Task.Name(childComplexity), true
-
 	case "Task.opportunityIds":
 		if e.complexity.Task.OpportunityIds == nil {
 			break
@@ -12653,6 +12645,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Task.Status(childComplexity), true
+
+	case "Task.subject":
+		if e.complexity.Task.Subject == nil {
+			break
+		}
+
+		return e.complexity.Task.Subject(childComplexity), true
 
 	case "Task.updatedAt":
 		if e.complexity.Task.UpdatedAt == nil {
@@ -17430,18 +17429,18 @@ extend type Mutation {
 
 input TaskInput {
     id              : ID
-    name            : String
+    subject         : String
     description     : String
+    status          : TaskStatus
     asignees        : [ID!] @goField(forceResolver: true)
     authorId        : ID @goField(forceResolver: true)
-    status          : TaskStatus
     opportunityIds  : [ID!] @goField(forceResolver: true)
     dueAt           : Time
 }
 
 type Task {
     id              : ID!
-    name            : String
+    subject         : String
     description     : String
     asignees        : [ID!]!
     authorId        : ID
@@ -80441,8 +80440,8 @@ func (ec *executionContext) fieldContext_Mutation_task_Save(ctx context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Task_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Task_name(ctx, field)
+			case "subject":
+				return ec.fieldContext_Task_subject(ctx, field)
 			case "description":
 				return ec.fieldContext_Task_description(ctx, field)
 			case "asignees":
@@ -101208,8 +101207,8 @@ func (ec *executionContext) fieldContext_Query_tasks(_ context.Context, field gr
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Task_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Task_name(ctx, field)
+			case "subject":
+				return ec.fieldContext_Task_subject(ctx, field)
 			case "description":
 				return ec.fieldContext_Task_description(ctx, field)
 			case "asignees":
@@ -107206,8 +107205,8 @@ func (ec *executionContext) fieldContext_Task_id(_ context.Context, field graphq
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_name(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Task_name(ctx, field)
+func (ec *executionContext) _Task_subject(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Task_subject(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -107220,7 +107219,7 @@ func (ec *executionContext) _Task_name(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.Subject, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -107234,7 +107233,7 @@ func (ec *executionContext) _Task_name(ctx context.Context, field graphql.Collec
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Task_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Task_subject(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
@@ -119739,7 +119738,7 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "asignees", "authorId", "status", "opportunityIds", "dueAt"}
+	fieldsInOrder := [...]string{"id", "subject", "description", "status", "asignees", "authorId", "opportunityIds", "dueAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -119753,13 +119752,13 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 				return it, err
 			}
 			it.ID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "subject":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subject"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
+			it.Subject = data
 		case "description":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -119767,6 +119766,13 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 				return it, err
 			}
 			it.Description = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOTaskStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
 		case "asignees":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("asignees"))
 			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
@@ -119785,13 +119791,6 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 			if err = ec.resolvers.TaskInput().AuthorID(ctx, &it, data); err != nil {
 				return it, err
 			}
-		case "status":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOTaskStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
 		case "opportunityIds":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityIds"))
 			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
@@ -135958,8 +135957,8 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "name":
-			out.Values[i] = ec._Task_name(ctx, field, obj)
+		case "subject":
+			out.Values[i] = ec._Task_subject(ctx, field, obj)
 		case "description":
 			out.Values[i] = ec._Task_description(ctx, field, obj)
 		case "asignees":

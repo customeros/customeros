@@ -8,7 +8,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TaskWriteRepository interface {
@@ -44,7 +43,7 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 								tsk.updatedAt=datetime(),
 								tsk.source=$source,
 								tsk.appSource=$appSource,
-								tsk.name=$name,
+								tsk.subject=$subject,
 								tsk.description=$description,	
 								tsk.status=$status,	
 								tsk.dueAt=$dueAt
@@ -59,7 +58,7 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 		"taskId":          taskId,
 		"source":          utils.IfNotNilString(data.Source),
 		"appSource":       utils.IfNotNilString(data.AppSource),
-		"name":            utils.IfNotNilString(data.Name),
+		"subject":         utils.IfNotNilString(data.Subject),
 		"description":     utils.IfNotNilString(data.Description),
 		"status":          utils.IfNotNilString(data.Status),
 		"createdByUserId": utils.IfNotNilString(data.CreatedByUserId),
@@ -84,9 +83,9 @@ func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTrans
 		"taskId": taskId,
 	}
 
-	if data.Name != nil {
-		cypher += `, tsk.name = $name`
-		params["name"] = *data.Name
+	if data.Subject != nil {
+		cypher += `, tsk.subject = $subject`
+		params["subject"] = *data.Subject
 	}
 	if data.Description != nil {
 		cypher += `, tsk.description = $description`
@@ -96,9 +95,9 @@ func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTrans
 		cypher += `, i.status = $status`
 		params["status"] = *data.Status
 	}
-	if data.Priority != nil {
-		cypher += `, i.priority = $priority`
-		params["priority"] = *data.Priority
+	if data.DueAt != nil {
+		cypher += `, i.dueAt = $dueAt`
+		params["dueAt"] = utils.TimePtrAsAny(data.DueAt)
 	}
 
 	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)

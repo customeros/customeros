@@ -52,8 +52,7 @@ func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 	//}
 	//
 	//// Return an array with the sample task
-	//return []*model.Task{task}, nil
-	return nil, nil
+	return []*model.Task{}, nil
 }
 
 // Asignees is the resolver for the asignees field.

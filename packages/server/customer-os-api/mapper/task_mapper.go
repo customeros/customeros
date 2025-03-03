@@ -16,7 +16,7 @@ func MapEntityToTask(entity *neo4jentity.TaskEntity) *model.Task {
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
 		DueAt:       entity.DueAt,
-		Name:        &entity.Name,
+		Subject:     &entity.Subject,
 		Description: &entity.Description,
 		Status:      enummapper.MapTaskStatusToModel(entity.Status),
 	}

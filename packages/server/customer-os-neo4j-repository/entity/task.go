@@ -9,7 +9,7 @@ type TaskProperty string
 
 const (
 	TaskPropertyId          TaskProperty = "id"
-	TaskPropertyName        TaskProperty = "name"
+	TaskPropertySubject     TaskProperty = "subject"
 	TaskPropertyDescription TaskProperty = "description"
 	TaskPropertyStatus      TaskProperty = "status"
 	TaskPropertyDueAt       TaskProperty = "dueAt"
@@ -25,7 +25,7 @@ type TaskEntity struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DueAt       *time.Time
-	Name        string
+	Subject     string
 	Description string
 	Status      enum.TaskStatus
 	Source      DataSource

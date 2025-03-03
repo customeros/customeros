@@ -2792,7 +2792,7 @@ type TagUpdateInput struct {
 
 type Task struct {
 	ID             string     `json:"id"`
-	Name           *string    `json:"name,omitempty"`
+	Subject        *string    `json:"subject,omitempty"`
 	Description    *string    `json:"description,omitempty"`
 	Asignees       []string   `json:"asignees"`
 	AuthorID       *string    `json:"authorId,omitempty"`
@@ -2805,11 +2805,11 @@ type Task struct {
 
 type TaskInput struct {
 	ID             *string     `json:"id,omitempty"`
-	Name           *string     `json:"name,omitempty"`
+	Subject        *string     `json:"subject,omitempty"`
 	Description    *string     `json:"description,omitempty"`
+	Status         *TaskStatus `json:"status,omitempty"`
 	Asignees       []string    `json:"asignees,omitempty"`
 	AuthorID       *string     `json:"authorId,omitempty"`
-	Status         *TaskStatus `json:"status,omitempty"`
 	OpportunityIds []string    `json:"opportunityIds,omitempty"`
 	DueAt          *time.Time  `json:"dueAt,omitempty"`
 }
