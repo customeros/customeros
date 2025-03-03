@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
@@ -18,7 +19,7 @@ import (
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 

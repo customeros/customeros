@@ -1228,3 +1228,22 @@ func MapDbNodeToIndustryEntity(dbNode *dbtype.Node) *neo4j_entity.IndustryEntity
 	}
 	return &industry
 }
+
+func MapDbNodeToTaskEntity(dbNode *dbtype.Node) *neo4j_entity.TaskEntity {
+	if dbNode == nil {
+		return &neo4j_entity.TaskEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	issue := neo4j_entity.TaskEntity{
+		Id:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyId)),
+		CreatedAt:   utils.GetTimePropOrNow(props, string(neo4j_entity.TaskPropertyCreatedAt)),
+		UpdatedAt:   utils.GetTimePropOrNow(props, string(neo4j_entity.TaskPropertyUpdatedAt)),
+		DueAt:       utils.GetTimePropOrNil(props, string(neo4j_entity.TaskPropertyDueAt)),
+		Subject:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertySubject)),
+		Description: utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyDescription)),
+		Status:      commonenum.DecodeTaskStatus(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyStatus))),
+		Source:      neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertySource))),
+		AppSource:   utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyAppSource)),
+	}
+	return &issue
+}

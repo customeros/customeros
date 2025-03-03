@@ -25,6 +25,7 @@ const (
 	NodeLabelPageView                  = "PageView"
 	NodeLabelPhoneNumber               = "PhoneNumber"
 	NodeLabelTag                       = "Tag"
+	NodeLabelTask                      = "Task"
 	NodeLabelIssue                     = "Issue"
 	NodeLabelUser                      = "User"
 	NodeLabelAttachment                = "Attachment"

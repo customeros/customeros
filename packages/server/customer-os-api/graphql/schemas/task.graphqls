@@ -7,29 +7,27 @@ extend type Mutation {
 }
 
 input TaskInput {
-    id           : ID
-    name         : String
-    description  : String
-    context      : String
-    asignees     : [ID!]
-    ownerId      : ID
-    status       : TaskStatus
-    opportunityId: ID
-    dueAt        : Time
+    id              : ID
+    subject         : String
+    description     : String
+    status          : TaskStatus
+    asignees        : [ID!] @goField(forceResolver: true)
+    authorId        : ID @goField(forceResolver: true)
+    opportunityIds  : [ID!] @goField(forceResolver: true)
+    dueAt           : Time
 }
 
 type Task {
-    id           : ID!
-    name         : String!
-    description  : String
-    context      : String!
-    asignees     : [ID!]!
-    ownerId      : ID!
-    status       : TaskStatus!
-    opportunityId: ID
-    dueAt        : Time!
-    createdAt    : Time!
-    updatedAt    : Time!
+    id              : ID!
+    subject         : String
+    description     : String
+    asignees        : [ID!]!
+    authorId        : ID
+    status          : TaskStatus!
+    opportunityIds  : [ID!]!
+    dueAt           : Time
+    createdAt       : Time!
+    updatedAt       : Time!
 }
 
 enum TaskStatus {

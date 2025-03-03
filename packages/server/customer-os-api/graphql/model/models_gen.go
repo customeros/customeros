@@ -2791,29 +2791,27 @@ type TagUpdateInput struct {
 }
 
 type Task struct {
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	Description   *string    `json:"description,omitempty"`
-	Context       string     `json:"context"`
-	Asignees      []string   `json:"asignees"`
-	OwnerID       string     `json:"ownerId"`
-	Status        TaskStatus `json:"status"`
-	OpportunityID *string    `json:"opportunityId,omitempty"`
-	DueAt         time.Time  `json:"dueAt"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
+	ID             string     `json:"id"`
+	Subject        *string    `json:"subject,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Asignees       []string   `json:"asignees"`
+	AuthorID       *string    `json:"authorId,omitempty"`
+	Status         TaskStatus `json:"status"`
+	OpportunityIds []string   `json:"opportunityIds"`
+	DueAt          *time.Time `json:"dueAt,omitempty"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
 }
 
 type TaskInput struct {
-	ID            *string     `json:"id,omitempty"`
-	Name          *string     `json:"name,omitempty"`
-	Description   *string     `json:"description,omitempty"`
-	Context       *string     `json:"context,omitempty"`
-	Asignees      []string    `json:"asignees,omitempty"`
-	OwnerID       *string     `json:"ownerId,omitempty"`
-	Status        *TaskStatus `json:"status,omitempty"`
-	OpportunityID *string     `json:"opportunityId,omitempty"`
-	DueAt         *time.Time  `json:"dueAt,omitempty"`
+	ID             *string     `json:"id,omitempty"`
+	Subject        *string     `json:"subject,omitempty"`
+	Description    *string     `json:"description,omitempty"`
+	Status         *TaskStatus `json:"status,omitempty"`
+	Asignees       []string    `json:"asignees,omitempty"`
+	AuthorID       *string     `json:"authorId,omitempty"`
+	OpportunityIds []string    `json:"opportunityIds,omitempty"`
+	DueAt          *time.Time  `json:"dueAt,omitempty"`
 }
 
 type Tax struct {

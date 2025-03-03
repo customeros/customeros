@@ -6,49 +6,71 @@ package resolver
 
 import (
 	"context"
-	"time"
+	"fmt"
 
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 // TaskSave is the resolver for the task_Save field.
 func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) (*model.Task, error) {
-	data := &model.Task{
-		ID:            *input.ID,
-		Name:          *input.Name,
-		Description:   input.Description,
-		Context:       *input.Context,
-		Asignees:      input.Asignees,
-		OwnerID:       *input.OwnerID,
-		Status:        *input.Status,
-		OpportunityID: input.OpportunityID,
-		DueAt:         *input.DueAt,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
+	//data := &model.Task{
+	//	ID:            *input.ID,
+	//	Name:          *input.Name,
+	//	Description:   input.Description,
+	//	Context:       *input.Context,
+	//	Asignees:      input.Asignees,
+	//	OwnerID:       *input.OwnerID,
+	//	Status:        *input.Status,
+	//	OpportunityID: input.OpportunityID,
+	//	DueAt:         *input.DueAt,
+	//	CreatedAt:     time.Now(),
+	//	UpdatedAt:     time.Now(),
+	//}
 
-	return data, nil
+	//return data, nil
+	return nil, nil
 }
 
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
-	description := "Task description number 1"
-	opportunityID := ""
-
-	task := &model.Task{
-		ID:            "1",
-		Name:          "Task 1",
-		Description:   &description,
-		Context:       "Some context for the task",
-		Asignees:      []string{},
-		OwnerID:       "1",
-		Status:        "TODO",
-		OpportunityID: &opportunityID,
-		DueAt:         time.Now(),
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-
-	// Return an array with the sample task
-	return []*model.Task{task}, nil
+	//description := "Task description number 1"
+	//opportunityID := ""
+	//
+	//task := &model.Task{
+	//	ID:            "1",
+	//	Name:          "Task 1",
+	//	Description:   &description,
+	//	Context:       "Some context for the task",
+	//	Asignees:      []string{},
+	//	OwnerID:       "1",
+	//	Status:        "TODO",
+	//	OpportunityID: &opportunityID,
+	//	DueAt:         time.Now(),
+	//	CreatedAt:     time.Now(),
+	//	UpdatedAt:     time.Now(),
+	//}
+	//
+	//// Return an array with the sample task
+	return []*model.Task{}, nil
 }
+
+// Asignees is the resolver for the asignees field.
+func (r *taskInputResolver) Asignees(ctx context.Context, obj *model.TaskInput, data []string) error {
+	panic(fmt.Errorf("not implemented: Asignees - asignees"))
+}
+
+// AuthorID is the resolver for the authorId field.
+func (r *taskInputResolver) AuthorID(ctx context.Context, obj *model.TaskInput, data *string) error {
+	panic(fmt.Errorf("not implemented: AuthorID - authorId"))
+}
+
+// OpportunityIds is the resolver for the opportunityIds field.
+func (r *taskInputResolver) OpportunityIds(ctx context.Context, obj *model.TaskInput, data []string) error {
+	panic(fmt.Errorf("not implemented: OpportunityIds - opportunityIds"))
+}
+
+// TaskInput returns generated.TaskInputResolver implementation.
+func (r *Resolver) TaskInput() generated.TaskInputResolver { return &taskInputResolver{r} }
+
+type taskInputResolver struct{ *Resolver }
