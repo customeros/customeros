@@ -8,6 +8,7 @@ import (
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
@@ -16,6 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -25,15 +27,18 @@ import (
 type NewWebSessionProducer struct {
 	events               *events.EventsService
 	postgresRepositories *postgres_repository.Repositories
+	webscraperService    interfaces.WebscraperService
 }
 
 func NewNewWebSessionProducer(
 	events *events.EventsService,
 	postgresRepositories *postgres_repository.Repositories,
+	webscraperService interfaces.WebscraperService,
 ) *NewWebSessionProducer {
 	return &NewWebSessionProducer{
 		events:               events,
 		postgresRepositories: postgresRepositories,
+		webscraperService:    webscraperService,
 	}
 }
 
@@ -157,7 +162,7 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 
 	// close websession record
 	endTime := session.LastActivity
-	closedSession, err := s.postgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID, endTime)
+	closedSession, err := s.postgresRepositories.WebSessionRepository.SetSessionEnd(ctx, session.ID, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -168,19 +173,45 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 		return err
 	}
 
-	err = s.processUniquePageViews(ctx, session.Tenant, session.ID)
+	pageViews, err := s.processUniquePageViews(ctx, session.Tenant, session.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	event, err := s.createCloseSessionEvent(ctx, *closedSession)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	// process page visits
+	identifiedVisitor := IdentifiedVisitor{}
+	for _, page := range pageViews {
+		visitor, err := s.processPageView(ctx, session.ID, page)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			continue
+		}
+		if identifiedVisitor.Domain == "" && visitor.Domain != "" {
+			identifiedVisitor.Domain = visitor.Domain
+		}
+		if identifiedVisitor.Email == "" && visitor.Email != "" {
+			identifiedVisitor.Email = visitor.Email
+			identifiedVisitor.EmailType = visitor.EmailType
+			identifiedVisitor.Domain = visitor.Domain
+		}
+		if identifiedVisitor.EmailType == enum.EmailPersonal && visitor.EmailType == enum.EmailBusiness {
+			identifiedVisitor.Email = visitor.Email
+			identifiedVisitor.EmailType = visitor.EmailType
+			identifiedVisitor.Domain = visitor.Domain
+		}
 	}
 
-	err = s.events.Publisher.PublishFanoutEvent(ctx, event.WebSessionID, model.WEB_SESSION, event)
+	// update websession with identity
+	if identifiedVisitor.Domain != "" || identifiedVisitor.Email != "" {
+		err := s.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, session.ID, &identifiedVisitor.Domain, &identifiedVisitor.Email, &identifiedVisitor.EmailType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	err = s.events.Publisher.PublishFanoutEvent(ctx, session.ID, model.WEB_SESSION, dto.NewWebSession{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -189,28 +220,124 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 	return nil
 }
 
-func (s *NewWebSessionProducer) createCloseSessionEvent(ctx context.Context, session postgres_entity.WebSession) (dto.NewWebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.createCloseSessionWebhookEvent")
+type IdentifiedVisitor struct {
+	Domain    string
+	Email     string
+	EmailType enum.EmailType
+}
+
+func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, page string) (IdentifiedVisitor, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "NewWebSessionProducer.processPageView")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	if session.ID == "" || session.Tenant == "" || session.IP == "" || session.VisitorID == "" {
-		err := errors.New("cannot build new web session event")
+	visitor := IdentifiedVisitor{}
+
+	// get session events
+	events, err := s.postgresRepositories.WebTrackerEventsRepository.FindEventsForPageVisit(ctx, sessionId, page)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		return dto.NewWebSession{}, err
+		return visitor, err
 	}
 
-	eventData := dto.NewWebSession{
-		WebSessionID: session.ID,
-		IPAddress:    session.IP,
-		VisitorID:    session.VisitorID,
-		Hostname:     session.Hostname,
+	url := page
+	if !strings.HasPrefix(page, "http") {
+		url = fmt.Sprintf("https://%s", page)
 	}
 
-	return eventData, nil
+	visit := postgres_entity.WebSessionPageVisit{
+		SessionID: sessionId,
+		Url:       url,
+	}
+
+	for _, event := range events {
+		if visit.Referer == "" && event.Referrer != "" {
+			visit.Referer = event.Referer()
+		}
+
+		switch event.EventType {
+		case "page_view":
+			if visit.EntryTimestamp.IsZero() {
+				visit.EntryTimestamp = event.Timestamp
+			} else if event.Timestamp.Before(visit.EntryTimestamp) {
+				visit.EntryTimestamp = event.Timestamp
+			}
+
+		case "page_exit":
+			if visit.ExitTimestamp.IsZero() {
+				visit.ExitTimestamp = event.Timestamp
+			} else if event.Timestamp.After(visit.ExitTimestamp) {
+				visit.ExitTimestamp = event.Timestamp
+			}
+
+		case "identify":
+			email, err := event.VisitorEmail()
+			if err != nil {
+				tracing.TraceErr(span, err)
+				continue
+			}
+			if email == "" {
+				continue
+			}
+
+			emailValidate := mailvalidate.ValidateEmailSyntax(email)
+			if emailValidate.Error != "" || emailValidate.IsSystemGenerated {
+				continue
+			}
+
+			switch {
+			case !emailValidate.IsFreeAccount:
+				visitor.Domain = emailValidate.Domain
+				if !emailValidate.IsRoleAccount {
+					visitor.Email = emailValidate.CleanEmail
+					visitor.EmailType = enum.EmailBusiness
+				}
+
+			case emailValidate.IsFreeAccount:
+				if visitor.EmailType != enum.EmailBusiness && !emailValidate.IsRoleAccount {
+					visitor.Email = emailValidate.CleanEmail
+					visitor.EmailType = enum.EmailPersonal
+				}
+			}
+
+		}
+	}
+
+	// save pagevisit to db
+	_, err := s.postgresRepositories
+
+	content, err := s.webscraperService.Scrape(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visitor, err
+	}
+
+	// return early is there is no webscrape content to analyze
+	if content == "" {
+		return visitor, nil
+	}
+
+	_, err = s.webscraperService.ClassifyContentStage(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visitor, err
+	}
+
+	_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visitor, err
+	}
+
+	return visitor, nil
 }
 
-func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tenant, sessionID string) error {
+func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tenant, sessionID string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.getUniquePageViews")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -220,10 +347,10 @@ func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tena
 		Tenant:    tenant,
 	}, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if session == nil {
-		return nil
+		return nil, nil
 	}
 
 	// Use map to track unique pages
@@ -242,13 +369,12 @@ func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tena
 	uniquePages = c.sortUrlsByLength(uniquePages)
 
 	// strore in db
-	_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionPageViews(ctx, sessionID, tenant, uniquePages)
+	_, err = c.postgresRepositories.WebSessionRepository.SetSessionPageViews(ctx, sessionID, tenant, uniquePages)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to update websession with unique page views"))
-		return err
 	}
 
-	return nil
+	return uniquePages, nil
 }
 
 func (c *NewWebSessionProducer) sortUrlsByLength(urls []string) []string {

@@ -1,6 +1,13 @@
 package postgres_entity
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+)
 
 type WebTrackerEvents struct {
 	ID        string    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
@@ -28,4 +35,37 @@ type WebTrackerEvents struct {
 
 func (WebTrackerEvents) TableName() string {
 	return "web_tracker_events"
+}
+
+func (e WebTrackerEvents) VisitorEmail() (string, error) {
+	var data map[string]interface{}
+
+	err := json.Unmarshal([]byte(e.EventData), &data)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshaling JSON: %w", err)
+	}
+
+	email, ok := data["email"].(string)
+	if !ok {
+		return "", fmt.Errorf("email field not found or not a string")
+	}
+
+	return email, nil
+}
+
+func (e WebTrackerEvents) Referer() string {
+	pathname := "/"
+	domain := utils.ExtractDomain(e.Referrer)
+	pageParts := strings.SplitAfter(e.Referrer, domain)
+	if len(pageParts) > 1 {
+		pathname = pageParts[1]
+		if !strings.HasSuffix(pathname, "/") {
+			pathname += "/"
+		}
+	}
+	domain = utils.NormalizeUrlPath(domain)
+	if domain == e.Hostname && pathname == e.Pathname {
+		return ""
+	}
+	return e.Referrer
 }

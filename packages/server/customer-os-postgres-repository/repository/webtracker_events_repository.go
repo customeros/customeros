@@ -2,10 +2,13 @@ package postgres_repository
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -14,6 +17,7 @@ import (
 type WebTrackerEventsRepository interface {
 	Create(ctx context.Context, webWebTrackerData postgres_entity.WebTrackerEvents) (*postgres_entity.WebTrackerEvents, error)
 	FindAll(ctx context.Context, webWebTrackerData postgres_entity.WebTrackerEvents, cacheLookbackInDays *int) ([]postgres_entity.WebTrackerEvents, error)
+	FindEventsForPageVisit(ctx context.Context, sessionId, page string) ([]postgres_entity.WebTrackerEvents, error)
 }
 
 type webTrackerEventsRepository struct {
@@ -59,5 +63,42 @@ func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData
 		return nil, err
 	}
 
+	return results, nil
+}
+
+func (r *webTrackerEventsRepository) FindEventsForPageVisit(ctx context.Context, sessionId, page string) ([]postgres_entity.WebTrackerEvents, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindEventsForSession")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	if sessionId == "" {
+		return nil, errors.New("sessionId cannot be empty")
+	}
+	if page == "" {
+		return nil, errors.New("page cannot be empty")
+	}
+
+	pathname := "/"
+	domain := utils.ExtractDomain(page)
+	pageParts := strings.SplitAfter(page, domain)
+	if len(pageParts) > 1 {
+		pathname = pageParts[1]
+		if !strings.HasSuffix(pathname, "/") {
+			pathname += "/"
+		}
+	}
+	span.LogKV("pathname", pathname)
+
+	var results []postgres_entity.WebTrackerEvents
+	err := r.gormDb.
+		Where("session_id = ?", sessionId).
+		Where("pathname = ?", pathname).
+		Order("timestamp ASC").
+		Find(&results).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 	return results, nil
 }
