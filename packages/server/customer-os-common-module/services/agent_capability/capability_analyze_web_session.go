@@ -305,7 +305,7 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 		tracing.TraceErr(span, err)
 	}
 
-	pageCategory, err := c.webscraperService.ClassifyWebpageCategory(ctx, page)
+	pageCategory, err := c.webscraperService.ClassifyWebpageCategory(ctx, page, &content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visit, err
@@ -317,14 +317,14 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 		return visit, nil
 	}
 
-	contentStage, err := c.webscraperService.ClassifyContentStage(ctx, page)
+	contentStage, err := c.webscraperService.ClassifyContentStage(ctx, page, &content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visit, err
 	}
 	visit.StageSignal = contentStage
 
-	pageTopics, err := c.webscraperService.ClassifyWebpageTopics(ctx, page)
+	pageTopics, err := c.webscraperService.ClassifyWebpageTopics(ctx, page, &content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visit, err

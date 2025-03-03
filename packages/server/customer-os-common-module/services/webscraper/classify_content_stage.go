@@ -2,25 +2,41 @@ package webscraper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string) (enum.CustomerJourneyStage, error) {
+func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string, pageContent *string) (enum.CustomerJourneyStage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.ClassifyContentStage")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	webpage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
+	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
+
+	if pageContent == nil {
+		webpage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		if webpage == nil {
+			err := errors.New("webpage doesn't exist")
+			span.LogKV("url", url)
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		pageContent = &webpage.Content
+		primaryDomain = webpage.PrimaryDomain
 	}
 
 	systemPrompt := `I will provide you with the scraped content of a webpage and a brief description of the company who owns it.  Your job is to analyze the website content and tell me what part of the customer journey the content most closely speaks to.  Your choices are: 
@@ -33,7 +49,7 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
     Please only respond with the stage name, nothing else.  No commentary or preamble.  Ensure the stage you respond with is either Problem Recognition, Solution Evaluation, Decision Preparation, Onboarding, Outcome Attainment, or Sustained Success.
     `
 
-	globalOrg, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, webpage.PrimaryDomain)
+	globalOrg, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -43,9 +59,9 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 
 	prompt.WriteString(fmt.Sprintf("Company name: %s", globalOrg.Name))
 	prompt.WriteString(fmt.Sprintf("Company description: %s", globalOrg.Description))
-	prompt.WriteString(fmt.Sprintf("Webpage url: %s", webpage.Url))
+	prompt.WriteString(fmt.Sprintf("Webpage url: %s", url))
 	prompt.WriteString("--- Webpage content --- ")
-	prompt.WriteString(webpage.Content)
+	prompt.WriteString(*pageContent)
 	promptStr := prompt.String()
 
 	temperature := float32(0.2)
