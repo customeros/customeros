@@ -3,12 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -109,6 +109,7 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)
+		AND coalesce(c.hide, false) = false
 		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
 		AND (NOT "InteractionEvent" in labels(a) or "InteractionEvent" in labels(a) AND NOT a.contentType IN $excludeInteractionEventContentType)
 		AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
@@ -127,6 +128,7 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), 
 		p = (e)-[*1..2]-(a:TimelineEvent) 
 		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
+		AND (c.hide IS NULL OR c.hide = false)
 		AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)
 		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
 		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
@@ -200,6 +202,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" AND (a.status IS NULL OR a.status <> $skipDeleted) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -211,6 +214,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
@@ -266,6 +270,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'ATTENDED_BY', 'CREATED_BY']) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" AND (a.status IS NULL OR a.status <> $skipDeleted) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -276,6 +281,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
@@ -334,6 +340,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx conte
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -354,6 +361,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx conte
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -442,6 +450,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -460,6 +469,7 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (c.hide IS NULL OR c.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+

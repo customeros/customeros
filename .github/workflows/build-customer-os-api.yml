@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-group: ["repository", "rest", "other"]
+        test-group: [neo4j, postgres, other]
     steps:
       - uses: actions/checkout@v4
 
@@ -68,7 +68,6 @@ jobs:
           fi
           echo "$GOBIN" >> $GITHUB_PATH
 
-
       - name: Go Cache
         id: go-cache
         uses: ubicloud/cache@v4
@@ -88,15 +87,24 @@ jobs:
         id: get-packages
         run: |
           # Get all packages except repository, rest, and graph/resolver
-          PACKAGES=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | grep -v "/rest" | grep -v "/graphql/resolver" | paste -sd " " -)
+          PACKAGES=$(go list ./... | grep -v /gen | grep -v /test | grep -v /testify | grep -v "/rest" | grep -v "/repository" | grep -v "/graphql/resolver" | paste -sd " " -)
           echo "packages=${PACKAGES}" >> "$GITHUB_OUTPUT"
 
-      - name: Run Repository Tests
+      - name: Run Tests
+        id: run-tests
         run: |
-          echo "Running tests for Postgres and Neo4j repositories..."
-          gotestsum --junitfile unit-tests.xml -- \
-             -coverprofile=cover.out \
-             ${{ steps.get-packages.outputs.packages }}
+          echo "Running tests for ${{ matrix.test-group }} repositories..."
+          case ${{ matrix.test-group }} in
+            neo4j)
+            gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ../customer-os-neo4j-repository/repository/...
+            ;;
+            postgres)
+            gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ../customer-os-postgres-repository/repository/...
+            ;;
+            other)
+            gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ${{ steps.get-packages.outputs.packages }}
+            ;;
+          esac
 
   #
   #     - name: Get test packages

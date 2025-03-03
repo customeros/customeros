@@ -1597,6 +1597,7 @@ type ComplexityRoot struct {
 		UIOrganizationsSearch              func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
 		User                               func(childComplexity int, id string) int
 		UserByEmail                        func(childComplexity int, email string) int
+		UserCurrent                        func(childComplexity int) int
 		Users                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		Version                            func(childComplexity int) int
 	}
@@ -2310,6 +2311,7 @@ type QueryResolver interface {
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
+	UserCurrent(ctx context.Context) (*model.User, error)
 	TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error)
 }
 type ReminderResolver interface {
@@ -11933,6 +11935,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.UserByEmail(childComplexity, args["email"].(string)), true
 
+	case "Query.user_Current":
+		if e.complexity.Query.UserCurrent == nil {
+			break
+		}
+
+		return e.complexity.Query.UserCurrent(childComplexity), true
+
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
 			break
@@ -13533,9 +13542,7 @@ extend type Mutation {
     admin_removeWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 
     admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
-
     admin_tenant_AddDomainAsWorkspace(domain: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
-
     admin_tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
 
@@ -17700,8 +17707,8 @@ type ActionResponse {
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
-
     user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER]) @hasTenant
+    user_Current: User! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -102092,6 +102099,132 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_user_Current(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_user_Current(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().UserCurrent(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_user_Current(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "test":
+				return ec.fieldContext_User_test(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "mailboxes":
+				return ec.fieldContext_User_mailboxes(ctx, field)
+			case "mailboxesV2":
+				return ec.fieldContext_User_mailboxesV2(ctx, field)
+			case "hasLinkedInToken":
+				return ec.fieldContext_User_hasLinkedInToken(ctx, field)
+			case "onboarding":
+				return ec.fieldContext_User_onboarding(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_tableViewDefs(ctx, field)
 	if err != nil {
@@ -134744,6 +134877,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_user_ByEmail(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "user_Current":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_user_Current(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

@@ -1,8 +1,8 @@
 extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
-
     user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER]) @hasTenant
+    user_Current: User! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
