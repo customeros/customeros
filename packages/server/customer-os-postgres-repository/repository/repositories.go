@@ -83,6 +83,7 @@ type Repositories struct {
 	QuickbooksSettingsRepository                 QuickbooksSettingsRepository
 	WebhooksRepository                           WebhooksRepository
 	WebSessionRepository                         WebSessionRepository
+	WebSessionPageVisitRepository                WebSessionPageVisitRepository
 	WebTrackerEventsRepository                   WebTrackerEventsRepository
 }
 
@@ -164,6 +165,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		QuickbooksSettingsRepository:                 NewQuickbooksSettingsRepository(postgresDB.GormDB),
 		WebhooksRepository:                           NewWebhooksRepository(postgresDB.GormDB),
 		WebSessionRepository:                         NewWebSessionRepository(postgresDB.GormDB),
+		WebSessionPageVisitRepository:                NewWebSessionPageVisitRepository(postgresDB.GormDB),
 		WebTrackerEventsRepository:                   NewWebTrackerEventsRepository(postgresDB.GormDB),
 	}
 
@@ -241,6 +243,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.QuickbooksSettingsEntity{},
 		&postgres_entity.Webhooks{},
 		&postgres_entity.WebSession{},
+		&postgres_entity.WebSessionPageVisit{},
 		&postgres_entity.WebTrackerEvents{},
 	)
 	if err != nil {

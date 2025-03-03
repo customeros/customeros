@@ -21,6 +21,7 @@ type WebSessionRepository interface {
 	FindAllActiveSessions(ctx context.Context, webWebSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error)
 	FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error)
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
+	FindLatestSessionWithDomainByIP(ctx context.Context, ipAddress string) (*postgres_entity.WebSession, error)
 	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
 	SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	SetOrganizationId(ctx context.Context, sessionID, organizationId string) error
@@ -29,15 +30,15 @@ type WebSessionRepository interface {
 	SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error
 }
 
-type webSessionEventsRepository struct {
+type webSessionRepository struct {
 	gormDb *gorm.DB
 }
 
 func NewWebSessionRepository(gormDb *gorm.DB) WebSessionRepository {
-	return &webSessionEventsRepository{gormDb: gormDb}
+	return &webSessionRepository{gormDb: gormDb}
 }
 
-func (r *webSessionEventsRepository) Create(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
+func (r *webSessionRepository) Create(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -53,7 +54,7 @@ func (r *webSessionEventsRepository) Create(ctx context.Context, webSessionData 
 	return &created, nil
 }
 
-func (r *webSessionEventsRepository) FindAllActiveSessions(ctx context.Context, webSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error) {
+func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -88,7 +89,7 @@ func (r *webSessionEventsRepository) FindAllActiveSessions(ctx context.Context, 
 	return results, nil
 }
 
-func (r *webSessionEventsRepository) FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error) {
+func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -114,7 +115,7 @@ func (r *webSessionEventsRepository) FindSession(ctx context.Context, webSession
 	return &result, nil
 }
 
-func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error) {
+func (r *webSessionRepository) FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLastNotification")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -140,7 +141,31 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 	return &result, nil
 }
 
-func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error) {
+func (r *webSessionRepository) FindLatestSessionWithDomainByIP(ctx context.Context, ipAddress string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLatestSessionWithDomainByIP")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	// Build the query with IP and ensure domain is not null
+	query := r.gormDb.Where("ip = ?", ipAddress).
+		Where("domain IS NOT NULL").
+		Where("domain != ''"). // Ensure domain is not empty string
+		Order("last_activity DESC")
+
+	var result postgres_entity.WebSession
+	err := query.First(&result).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (r *webSessionRepository) UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateLastActivity")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -164,7 +189,7 @@ func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, ses
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
+func (r *webSessionRepository) SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionEnd")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -189,7 +214,7 @@ func (r *webSessionEventsRepository) SetSessionEnd(ctx context.Context, sessionI
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) SetOrganizationId(ctx context.Context, sessionID, organizationId string) error {
+func (r *webSessionRepository) SetOrganizationId(ctx context.Context, sessionID, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetOrganizationId")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -209,7 +234,7 @@ func (r *webSessionEventsRepository) SetOrganizationId(ctx context.Context, sess
 	return nil
 }
 
-func (r *webSessionEventsRepository) SetSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
+func (r *webSessionRepository) SetSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionPageViews")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -228,7 +253,7 @@ func (r *webSessionEventsRepository) SetSessionPageViews(ctx context.Context, se
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) SetSlackSentAt(ctx context.Context, sessionID string) error {
+func (r *webSessionRepository) SetSlackSentAt(ctx context.Context, sessionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSlackSentAt")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -248,7 +273,7 @@ func (r *webSessionEventsRepository) SetSlackSentAt(ctx context.Context, session
 	return nil
 }
 
-func (r *webSessionEventsRepository) SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error {
+func (r *webSessionRepository) SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetVisitorIdentity")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

@@ -187,7 +187,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return status, output, err
 	}
 	if status == enum.CapabilityExecutionCompleted {
-		err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithSlackSentAt(ctx, executionContainer.InputData.WebSessionID)
+		err = c.postgresRepositories.WebSessionRepository.SetSlackSentAt(ctx, executionContainer.InputData.WebSessionID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}

@@ -38,7 +38,7 @@ func InitCapabilities(
 ) *AgentCapabilities {
 	var capabilities []interfaces.AgentCapabilityUntyped
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
-	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService))
+	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService, webscraperService))
 	capabilities = append(capabilities, NewApplyTagToCompanyCapability(tagService, events))
 	capabilities = append(capabilities, NewCreateOrganizationCapability(events, organizationService, workspaceService))
 	capabilities = append(capabilities, NewCreateContactCapability(contactService))
