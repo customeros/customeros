@@ -72,6 +72,7 @@ type ResolverRoot interface {
 	ServiceLineItem() ServiceLineItemResolver
 	SlackChannel() SlackChannelResolver
 	User() UserResolver
+	TaskInput() TaskInputResolver
 }
 
 type DirectiveRoot struct {
@@ -1734,17 +1735,16 @@ type ComplexityRoot struct {
 	}
 
 	Task struct {
-		Asignees      func(childComplexity int) int
-		Context       func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Description   func(childComplexity int) int
-		DueAt         func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Name          func(childComplexity int) int
-		OpportunityID func(childComplexity int) int
-		OwnerID       func(childComplexity int) int
-		Status        func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
+		Asignees       func(childComplexity int) int
+		AuthorID       func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Description    func(childComplexity int) int
+		DueAt          func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Name           func(childComplexity int) int
+		OpportunityIds func(childComplexity int) int
+		Status         func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	Tax struct {
@@ -2338,6 +2338,13 @@ type UserResolver interface {
 
 	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
 	Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error)
+}
+
+type TaskInputResolver interface {
+	Asignees(ctx context.Context, obj *model.TaskInput, data []string) error
+	AuthorID(ctx context.Context, obj *model.TaskInput, data *string) error
+
+	OpportunityIds(ctx context.Context, obj *model.TaskInput, data []string) error
 }
 
 type executableSchema struct {
@@ -12591,12 +12598,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Task.Asignees(childComplexity), true
 
-	case "Task.context":
-		if e.complexity.Task.Context == nil {
+	case "Task.authorId":
+		if e.complexity.Task.AuthorID == nil {
 			break
 		}
 
-		return e.complexity.Task.Context(childComplexity), true
+		return e.complexity.Task.AuthorID(childComplexity), true
 
 	case "Task.createdAt":
 		if e.complexity.Task.CreatedAt == nil {
@@ -12633,19 +12640,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Task.Name(childComplexity), true
 
-	case "Task.opportunityId":
-		if e.complexity.Task.OpportunityID == nil {
+	case "Task.opportunityIds":
+		if e.complexity.Task.OpportunityIds == nil {
 			break
 		}
 
-		return e.complexity.Task.OpportunityID(childComplexity), true
-
-	case "Task.ownerId":
-		if e.complexity.Task.OwnerID == nil {
-			break
-		}
-
-		return e.complexity.Task.OwnerID(childComplexity), true
+		return e.complexity.Task.OpportunityIds(childComplexity), true
 
 	case "Task.status":
 		if e.complexity.Task.Status == nil {
@@ -17429,29 +17429,27 @@ extend type Mutation {
 }
 
 input TaskInput {
-    id           : ID
-    name         : String
-    description  : String
-    context      : String
-    asignees     : [ID!]
-    ownerId      : ID
-    status       : TaskStatus
-    opportunityId: ID
-    dueAt        : Time
+    id              : ID
+    name            : String
+    description     : String
+    asignees        : [ID!] @goField(forceResolver: true)
+    authorId        : ID @goField(forceResolver: true)
+    status          : TaskStatus
+    opportunityIds  : [ID!] @goField(forceResolver: true)
+    dueAt           : Time
 }
 
 type Task {
-    id           : ID!
-    name         : String!
-    description  : String
-    context      : String!
-    asignees     : [ID!]!
-    ownerId      : ID!
-    status       : TaskStatus!
-    opportunityId: ID
-    dueAt        : Time!
-    createdAt    : Time!
-    updatedAt    : Time!
+    id              : ID!
+    name            : String
+    description     : String
+    asignees        : [ID!]!
+    authorId        : ID
+    status          : TaskStatus!
+    opportunityIds  : [ID!]!
+    dueAt           : Time
+    createdAt       : Time!
+    updatedAt       : Time!
 }
 
 enum TaskStatus {
@@ -80447,16 +80445,14 @@ func (ec *executionContext) fieldContext_Mutation_task_Save(ctx context.Context,
 				return ec.fieldContext_Task_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Task_description(ctx, field)
-			case "context":
-				return ec.fieldContext_Task_context(ctx, field)
 			case "asignees":
 				return ec.fieldContext_Task_asignees(ctx, field)
-			case "ownerId":
-				return ec.fieldContext_Task_ownerId(ctx, field)
+			case "authorId":
+				return ec.fieldContext_Task_authorId(ctx, field)
 			case "status":
 				return ec.fieldContext_Task_status(ctx, field)
-			case "opportunityId":
-				return ec.fieldContext_Task_opportunityId(ctx, field)
+			case "opportunityIds":
+				return ec.fieldContext_Task_opportunityIds(ctx, field)
 			case "dueAt":
 				return ec.fieldContext_Task_dueAt(ctx, field)
 			case "createdAt":
@@ -101216,16 +101212,14 @@ func (ec *executionContext) fieldContext_Query_tasks(_ context.Context, field gr
 				return ec.fieldContext_Task_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Task_description(ctx, field)
-			case "context":
-				return ec.fieldContext_Task_context(ctx, field)
 			case "asignees":
 				return ec.fieldContext_Task_asignees(ctx, field)
-			case "ownerId":
-				return ec.fieldContext_Task_ownerId(ctx, field)
+			case "authorId":
+				return ec.fieldContext_Task_authorId(ctx, field)
 			case "status":
 				return ec.fieldContext_Task_status(ctx, field)
-			case "opportunityId":
-				return ec.fieldContext_Task_opportunityId(ctx, field)
+			case "opportunityIds":
+				return ec.fieldContext_Task_opportunityIds(ctx, field)
 			case "dueAt":
 				return ec.fieldContext_Task_dueAt(ctx, field)
 			case "createdAt":
@@ -107233,14 +107227,11 @@ func (ec *executionContext) _Task_name(ctx context.Context, field graphql.Collec
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Task_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107297,50 +107288,6 @@ func (ec *executionContext) fieldContext_Task_description(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_context(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Task_context(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Context, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Task_context(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Task",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Task_asignees(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_asignees(ctx, field)
 	if err != nil {
@@ -107385,8 +107332,8 @@ func (ec *executionContext) fieldContext_Task_asignees(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_ownerId(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Task_ownerId(ctx, field)
+func (ec *executionContext) _Task_authorId(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Task_authorId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -107399,24 +107346,21 @@ func (ec *executionContext) _Task_ownerId(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.OwnerID, nil
+		return obj.AuthorID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Task_ownerId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Task_authorId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
@@ -107473,8 +107417,8 @@ func (ec *executionContext) fieldContext_Task_status(_ context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_opportunityId(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Task_opportunityId(ctx, field)
+func (ec *executionContext) _Task_opportunityIds(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Task_opportunityIds(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -107487,21 +107431,24 @@ func (ec *executionContext) _Task_opportunityId(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.OpportunityID, nil
+		return obj.OpportunityIds, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Task_opportunityId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Task_opportunityIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
@@ -107535,14 +107482,11 @@ func (ec *executionContext) _Task_dueAt(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Task_dueAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -119795,7 +119739,7 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "context", "asignees", "ownerId", "status", "opportunityId", "dueAt"}
+	fieldsInOrder := [...]string{"id", "name", "description", "asignees", "authorId", "status", "opportunityIds", "dueAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -119823,27 +119767,24 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 				return it, err
 			}
 			it.Description = data
-		case "context":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("context"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Context = data
 		case "asignees":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("asignees"))
 			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Asignees = data
-		case "ownerId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
+			if err = ec.resolvers.TaskInput().Asignees(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "authorId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authorId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.OwnerID = data
+			if err = ec.resolvers.TaskInput().AuthorID(ctx, &it, data); err != nil {
+				return it, err
+			}
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalOTaskStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskStatus(ctx, v)
@@ -119851,13 +119792,15 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 				return it, err
 			}
 			it.Status = data
-		case "opportunityId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+		case "opportunityIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityIds"))
+			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.OpportunityID = data
+			if err = ec.resolvers.TaskInput().OpportunityIds(ctx, &it, data); err != nil {
+				return it, err
+			}
 		case "dueAt":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -136017,38 +135960,27 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "name":
 			out.Values[i] = ec._Task_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "description":
 			out.Values[i] = ec._Task_description(ctx, field, obj)
-		case "context":
-			out.Values[i] = ec._Task_context(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "asignees":
 			out.Values[i] = ec._Task_asignees(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "ownerId":
-			out.Values[i] = ec._Task_ownerId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+		case "authorId":
+			out.Values[i] = ec._Task_authorId(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._Task_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "opportunityId":
-			out.Values[i] = ec._Task_opportunityId(ctx, field, obj)
-		case "dueAt":
-			out.Values[i] = ec._Task_dueAt(ctx, field, obj)
+		case "opportunityIds":
+			out.Values[i] = ec._Task_opportunityIds(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "dueAt":
+			out.Values[i] = ec._Task_dueAt(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Task_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

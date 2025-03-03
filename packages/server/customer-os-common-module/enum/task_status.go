@@ -3,22 +3,22 @@ package enum
 type TaskStatus string
 
 const (
-	Todo       TaskStatus = "TODO"
-	InProgress TaskStatus = "IN_PROGRESS"
-	Done       TaskStatus = "DONE"
+	TaskStatusTodo       TaskStatus = "TODO"
+	TaskStatusInProgress TaskStatus = "IN_PROGRESS"
+	TaskStatusDone       TaskStatus = "DONE"
 )
 
 var AllTaskStatuses = []TaskStatus{
-	Todo,
-	InProgress,
-	Done,
+	TaskStatusTodo,
+	TaskStatusInProgress,
+	TaskStatusDone,
 }
 
 func DecodeTaskStatus(s string) TaskStatus {
 	if IsValidTaskStatus(s) {
 		return TaskStatus(s)
 	}
-	return Todo // Default to TODO if invalid
+	return TaskStatusTodo // Default to TODO if invalid
 }
 
 func IsValidTaskStatus(s string) bool {
