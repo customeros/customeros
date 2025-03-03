@@ -321,7 +321,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		tracing.TraceErr(span, err)
 	}
 
-	_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page)
+	_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page, &content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visitor, err
@@ -332,13 +332,13 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		return visitor, nil
 	}
 
-	_, err = s.webscraperService.ClassifyContentStage(ctx, page)
+	_, err = s.webscraperService.ClassifyContentStage(ctx, page, &content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visitor, err
 	}
 
-	_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page)
+	_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page, &content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visitor, err
