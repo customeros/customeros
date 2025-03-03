@@ -316,43 +316,110 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		return visitor, err
 	}
 
-	content, err := s.webscraperService.Scrape(ctx, page)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page, &content)
+	// check to see if webpage has been scraped
+	scrapedPage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return visitor, err
 	}
 
-	// return early is there is no webscrape content to analyze
-	if content == "" {
+	// handle all permutations of scraped data
+	switch {
+	case scrapedPage == nil:
+		err := s.scrapeAndClassifyWebpage(ctx, url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return visitor, err
+		}
+		return visitor, nil
+
+	case scrapedPage.Error != "":
+		if scrapedPage.Category == "" {
+			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page, &scrapedPage.Content)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return visitor, err
+			}
+		}
+		return visitor, nil
+
+	case scrapedPage.Content == "":
+		err := s.scrapeAndClassifyWebpage(ctx, url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return visitor, err
+		}
+		return visitor, nil
+
+	default:
+		if scrapedPage.Category == "" {
+			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, page, &scrapedPage.Content)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return visitor, err
+			}
+		}
+
+		if scrapedPage.ContentStage == "" {
+			_, err = s.webscraperService.ClassifyContentStage(ctx, page, &scrapedPage.Content)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return visitor, err
+			}
+		}
+
+		if len(scrapedPage.Topics) == 0 {
+			_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page, &scrapedPage.Content)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return visitor, err
+			}
+		}
 		return visitor, nil
 	}
-
-	_, err = s.webscraperService.ClassifyContentStage(ctx, page, &content)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return visitor, err
-	}
-
-	_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page, &content)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return visitor, err
-	}
-
-	return visitor, nil
 }
 
-func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tenant, sessionID string) ([]string, error) {
+func (s *NewWebSessionProducer) scrapeAndClassifyWebpage(ctx context.Context, url string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.scrapeAndClassifyWebpage")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	content, err := s.webscraperService.Scrape(ctx, url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &content)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if content == "" {
+		return nil
+	}
+
+	_, err = s.webscraperService.ClassifyContentStage(ctx, url, &content)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = s.webscraperService.ClassifyWebpageTopics(ctx, url, &content)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
+}
+
+func (s *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tenant, sessionID string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.getUniquePageViews")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	session, err := c.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, postgres_entity.WebTrackerEvents{
+	session, err := s.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, postgres_entity.WebTrackerEvents{
 		SessionID: sessionID,
 		Tenant:    tenant,
 	}, nil)
@@ -366,7 +433,7 @@ func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tena
 	// Use map to track unique pages
 	uniquePageMap := make(map[string]struct{})
 	for _, page := range session {
-		url := c.extractPageUrl(page)
+		url := s.extractPageUrl(page)
 		uniquePageMap[url] = struct{}{}
 	}
 
@@ -376,10 +443,10 @@ func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tena
 		uniquePages = append(uniquePages, pathname)
 	}
 
-	uniquePages = c.sortUrlsByLength(uniquePages)
+	uniquePages = s.sortUrlsByLength(uniquePages)
 
 	// strore in db
-	_, err = c.postgresRepositories.WebSessionRepository.SetSessionPageViews(ctx, sessionID, tenant, uniquePages)
+	_, err = s.postgresRepositories.WebSessionRepository.SetSessionPageViews(ctx, sessionID, tenant, uniquePages)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to update websession with unique page views"))
 	}
@@ -387,7 +454,7 @@ func (c *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tena
 	return uniquePages, nil
 }
 
-func (c *NewWebSessionProducer) sortUrlsByLength(urls []string) []string {
+func (s *NewWebSessionProducer) sortUrlsByLength(urls []string) []string {
 	sort.Slice(urls, func(i, j int) bool {
 		// If lengths are different, sort by length
 		if len(urls[i]) != len(urls[j]) {
@@ -399,7 +466,7 @@ func (c *NewWebSessionProducer) sortUrlsByLength(urls []string) []string {
 	return urls
 }
 
-func (c *NewWebSessionProducer) extractPageUrl(page postgres_entity.WebTrackerEvents) string {
+func (s *NewWebSessionProducer) extractPageUrl(page postgres_entity.WebTrackerEvents) string {
 	url := utils.StripUrlToBasePath(page.Hostname)
 	if page.Pathname != "" {
 		url = strings.TrimSuffix(fmt.Sprintf("%s/%s",
