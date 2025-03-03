@@ -21,6 +21,7 @@ type QuickbooksService interface {
 	SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []QuickbooksJournalEntryLine) (*QuickbooksJournalEntryResponse, error)
 	ZeroJournalEntry(ctx context.Context, journalEntryId string) error
 	SavePaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksCustomerId string, quickbooksInvoiceId string, quickbooksJournalEntryId string, txnDate time.Time, totalAmount float64) (*QuickbooksSavePaymentResponse, error)
+	ZeroPaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksPaymentId, quickbooksJournalEntryId string) error
 }
 
 type QuickbooksInvoiceLine struct {
