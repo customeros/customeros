@@ -948,10 +948,35 @@ func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.
 		return err
 	}
 
+	// Step 1: Fetch the existing payment to get its SyncToken.
+	getURL := fmt.Sprintf("%s/v3/company/%s/payment/%s", s.qbConfig.Url, qbSettings.RealmId, quickbooksPaymentId)
+	resp, err := s.performRequest(ctx, qbSettings, getURL, "GET", nil, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to fetch existing payment: %w", err)
+	}
+
+	// Unmarshal the GET response into a Quickbooks payment response structure.
+	var qbGetPaymentResp interfaces.QuickbooksGetPaymentResponse
+	err = json.Unmarshal(resp, &qbGetPaymentResp)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to unmarshal payment response: %w", err)
+	}
+
+	// Extract the SyncToken from the fetched payment.
+	syncToken := qbGetPaymentResp.Payment.SyncToken
+	if syncToken == "" {
+		err = errors.New("no SyncToken found in payment record")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	// Construct the payment payload.
 	paymentData := map[string]interface{}{
-		"Id":       quickbooksPaymentId,
-		"TotalAmt": 0,
+		"Id":        quickbooksPaymentId,
+		"SyncToken": syncToken,
+		"TotalAmt":  0,
 		"CustomerRef": map[string]interface{}{
 			"value": quickbooksCustomerId,
 		},
