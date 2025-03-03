@@ -10,9 +10,8 @@ input TaskInput {
     id           : ID
     name         : String
     description  : String
-    context      : String
     asignees     : [ID!]
-    ownerId      : ID
+    authorId     : ID
     status       : TaskStatus
     opportunityId: ID
     dueAt        : Time
@@ -20,14 +19,13 @@ input TaskInput {
 
 type Task {
     id           : ID!
-    name         : String!
+    name         : String
     description  : String
-    context      : String!
     asignees     : [ID!]!
-    ownerId      : ID!
+    authorId     : ID
     status       : TaskStatus!
     opportunityId: ID
-    dueAt        : Time!
+    dueAt        : Time
     createdAt    : Time!
     updatedAt    : Time!
 }
