@@ -161,6 +161,7 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		Model:        enum.AIModelGemini,
 		SystemPrompt: &systemPrompt,
 		Prompt:       &content,
+		OutputFormat: enum.AIOutputJson,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to ask AI"))
