@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"

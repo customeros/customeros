@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
@@ -138,6 +139,22 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 		graphql.AddErrorf(ctx, "User with email %s not identified", email)
 		return nil, err
 	}
+	return mapper.MapEntityToUser(userEntity), nil
+}
+
+// UserCurrent is the resolver for the user_Current field.
+func (r *queryResolver) UserCurrent(ctx context.Context) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UserCurrent", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, common.GetUserIdFromContext(ctx))
+	if err != nil || userEntity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User with id %s not found", common.GetUserIdFromContext(ctx))
+		return nil, err
+	}
+
 	return mapper.MapEntityToUser(userEntity), nil
 }
 
