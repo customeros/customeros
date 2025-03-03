@@ -35,14 +35,12 @@ func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig)
 	}
 
 	if config.Url == "" {
-		logger.Fatalf("opensearch_url not set in env")
-		return nil
+		return &opensearchService{}
 	}
 
 	client, err := opensearch.NewClient(opensearchConfig)
 	if err != nil {
-		logger.Fatalf("error creating opensearch client: %s", err)
-		return nil
+		return &opensearchService{}
 	}
 
 	return &opensearchService{
@@ -54,6 +52,11 @@ func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig)
 func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string, documentId *string, document interface{}) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpensearchService.UpsertDocument")
 	defer span.Finish()
+
+	if c.client == nil {
+		err := fmt.Errorf("opensearch client is nil")
+		tracing.TraceErr(span, err)
+	}
 
 	jsonDoc, err := json.Marshal(document)
 	if err != nil {
@@ -90,6 +93,11 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 	span, ctx := opentracing.StartSpanFromContext(ctx, "opensearchService.hybridSearch")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	if c.client == nil {
+		err := fmt.Errorf("opensearch client is nil")
+		tracing.TraceErr(span, err)
+	}
 
 	// Set default limit if not provided
 	if searchParams.ResultsLimit == nil {
@@ -382,6 +390,11 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("indexName", indexName)
+
+	if c.client == nil {
+		err := fmt.Errorf("opensearch client is nil")
+		tracing.TraceErr(span, err)
+	}
 
 	// Check if index exists
 	existsReq := opensearchapi.IndicesExistsRequest{
