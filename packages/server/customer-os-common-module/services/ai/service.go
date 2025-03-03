@@ -22,12 +22,12 @@ import (
 )
 
 type aiService struct {
-	log             logger.Logger
-	anthropicConfig *config.AnthropicConfig
-	deepseekConfig  *config.DeepseekConfig
-	groqConfig      *config.GroqConfig
-	geminiConfig    *config.GeminiConfig
-	opensearch      interfaces.OpensearchService
+	log               logger.Logger
+	anthropicConfig   *config.AnthropicConfig
+	deepseekConfig    *config.DeepseekConfig
+	groqConfig        *config.GroqConfig
+	geminiConfig      *config.GeminiConfig
+	opensearchService interfaces.OpensearchService
 }
 
 func NewAIService(
@@ -36,15 +36,15 @@ func NewAIService(
 	deepseekConfig *config.DeepseekConfig,
 	groqConfig *config.GroqConfig,
 	geminiConfig *config.GeminiConfig,
-	opensearch interfaces.OpensearchService,
+	opensearchService interfaces.OpensearchService,
 ) interfaces.AIService {
 	return &aiService{
-		log:             log,
-		anthropicConfig: anthropicConfig,
-		deepseekConfig:  deepseekConfig,
-		groqConfig:      groqConfig,
-		geminiConfig:    geminiConfig,
-		opensearch:      opensearch,
+		log:               log,
+		anthropicConfig:   anthropicConfig,
+		deepseekConfig:    deepseekConfig,
+		groqConfig:        groqConfig,
+		geminiConfig:      geminiConfig,
+		opensearchService: opensearchService,
 	}
 }
 
@@ -151,7 +151,7 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
-	err := s.opensearch.LLMObservabilityIndexCheck(ctx, index)
+	err := s.opensearchService.LLMObservabilityIndexCheck(ctx, index)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -159,7 +159,7 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 
 	llmTracker.Success = false
 	llmTracker.ErrorMessage = errorMessage
-	err = s.opensearch.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
+	err = s.opensearchService.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -173,7 +173,7 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
-	err := s.opensearch.LLMObservabilityIndexCheck(ctx, index)
+	err := s.opensearchService.LLMObservabilityIndexCheck(ctx, index)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -185,7 +185,7 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 		llmTracker.Response = *result
 	}
 
-	err = s.opensearch.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
+	err = s.opensearchService.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
