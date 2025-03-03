@@ -431,7 +431,6 @@ func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID str
 		tracing.TraceErr(span, err)
 		return err
 	}
-
 	if execution.Status != enum.AgentExecutionRetrying {
 		return errors.New("execution is not in retry state")
 	}
@@ -452,8 +451,16 @@ func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID str
 
 	// Resume from last known state
 	params := map[string]any{}
-	if execution.StateData != nil {
-		params = execution.StateData["params"].(map[string]any)
+	if execution.StateData == nil {
+		err := errors.New("StateData is empty, cannot retry")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if paramsVal, ok := execution.StateData["params"]; ok {
+		if paramsMap, ok := paramsVal.(map[string]any); ok {
+			params = paramsMap
+		}
 	}
 
 	// Retry execution
