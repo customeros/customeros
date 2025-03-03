@@ -80,7 +80,7 @@ func BuildSortMultipleEntities(sortBy []*commonModel.SortBy, mapping []SortMulti
 				aliases = append(aliases, v.EntityAlias)
 			}
 
-			// generating cypher frangment like below
+			// generating cypher fragment like below
 			// WITH c, i ORDER BY i.status DESC
 			// WITH c, i WITH c, i , CASE WHEN c.endedAt IS NULL THEN date('2100-01-01') ELSE c.endedAt END AS endedAt_FOR_SORTING ORDER BY endedAt_FOR_SORTING
 			fragment := transformedSorting.SortingCypherFragmentWithDefaultIfNil(strings.Join(aliases, ", "), mappingFound.EntityAlias, defaultIfNil)
