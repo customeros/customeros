@@ -206,3 +206,12 @@ type QuickbooksAccountRef struct {
 	// Name is an optional friendly name for the account.
 	Name string `json:"name,omitempty"`
 }
+
+type Payment struct {
+	Id        string `json:"Id"`
+	SyncToken string `json:"SyncToken"`
+}
+
+type QuickbooksGetPaymentResponse struct {
+	Payment Payment `json:"Payment"`
+}
