@@ -199,15 +199,8 @@ func InitCommonServices(
 		}
 	}
 
-	var opensearchImpl interfaces.OpensearchService
-	if cfg.Infrastructure.OpensearchConfig.Url != "" {
-		opensearchImpl = opensearch.NewOpensearchService(log, &cfg.Infrastructure.OpensearchConfig)
-	}
-	if opensearchImpl == nil {
-		log.Warn("opensearch service is nil")
-	}
-
 	// Simple - Services that depend only on base services
+	opensearchImpl := opensearch.NewOpensearchService(log, &cfg.Infrastructure.OpensearchConfig)
 	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig, &cfg.External.GroqConfig, &cfg.External.GeminiConfig, opensearchImpl)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)

@@ -34,6 +34,7 @@ type CommonConfig struct {
 	JinaConfig        commonconf.JinaConfig
 	AwsConfig         commonconf.AwsConfig
 	QuickbooksConfig  commonconf.QuickbooksConfig
+	OpensearchConfig  commonconf.OpensearchConfig
 }
 
 type AppConfig struct {
@@ -93,6 +94,7 @@ func Load() *Config {
 			Neo4jConfig:         cmnCfg.Neo4j,
 			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
 			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
+			OpensearchConfig:    cmnCfg.OpensearchConfig,
 		},
 		External: commonconf.ExternalServicesConfig{
 			EnrowConfig:         cmnCfg.Enrow,
