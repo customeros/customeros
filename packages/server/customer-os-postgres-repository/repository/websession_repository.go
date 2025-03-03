@@ -3,14 +3,14 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/opentracing/opentracing-go/log"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/lib/pq"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -21,14 +21,12 @@ type WebSessionRepository interface {
 	FindAllActiveSessions(ctx context.Context, webWebSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error)
 	FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error)
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
-	FindAllSessionsForSupportAnalysis(ctx context.Context) ([]postgres_entity.WebSession, error)
 	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
-	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
-	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
-	UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error
-	UpdateSessionWithSlackSentAt(ctx context.Context, sessionID string) error
-	UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
-	UpdateSupportSignals(ctx context.Context, sessionID, tenant string, supportSignal int8) (*postgres_entity.WebSession, error)
+	SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
+	SetOrganizationId(ctx context.Context, sessionID, organizationId string) error
+	SetSlackSentAt(ctx context.Context, sessionID string) error
+	SetSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
+	SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error
 }
 
 type webSessionEventsRepository struct {
@@ -70,9 +68,6 @@ func (r *webSessionEventsRepository) FindAllActiveSessions(ctx context.Context, 
 	if webSessionData.Domain != nil {
 		query = query.Where("domain = ?", *webSessionData.Domain)
 	}
-	if webSessionData.VisitorID != "" {
-		query = query.Where("visitor_id = ?", webSessionData.VisitorID)
-	}
 
 	// Explicitly add the is_active condition
 	query = query.Where("is_active = ?", webSessionData.IsActive)
@@ -86,35 +81,6 @@ func (r *webSessionEventsRepository) FindAllActiveSessions(ctx context.Context, 
 	// Order and execute
 	var results []postgres_entity.WebSession
 	err := query.Order("created_at DESC").Find(&results).Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return results, nil
-}
-
-func (r *webSessionEventsRepository) FindAllSessionsForSupportAnalysis(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindAllSessionsForIntentAnalysis")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("tenant not set on context")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	var results []postgres_entity.WebSession
-	err := r.gormDb.Model(&postgres_entity.WebSession{}).
-		Where("tenant = ?", tenant).
-		Where("support_signals = ?", postgres_entity.SupportNotAnalyzed).
-		Where("is_active = ?", false).
-		Where("organization_id IS NOT NULL AND organization_id != ''").
-		Where("unique_page_views IS NOT NULL AND array_length(unique_page_views, 1) > 0").
-		Order("created_at DESC").
-		Find(&results).
-		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -198,8 +164,8 @@ func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, ses
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionEnd")
+func (r *webSessionEventsRepository) SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionEnd")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagEntity(span, sessionID)
@@ -223,28 +189,8 @@ func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessi
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithDomain")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagEntity(span, sessionID)
-
-	var updatedSession postgres_entity.WebSession
-	err := r.gormDb.Model(&postgres_entity.WebSession{}).
-		Where("id = ?", sessionID).
-		Update("domain", &domain).
-		First(&updatedSession).
-		Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return &updatedSession, nil
-}
-
-func (r *webSessionEventsRepository) UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithOrganization")
+func (r *webSessionEventsRepository) SetOrganizationId(ctx context.Context, sessionID, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetOrganizationId")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagEntity(span, sessionID)
@@ -263,8 +209,8 @@ func (r *webSessionEventsRepository) UpdateSessionWithOrganization(ctx context.C
 	return nil
 }
 
-func (r *webSessionEventsRepository) UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionPageViews")
+func (r *webSessionEventsRepository) SetSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionPageViews")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -282,34 +228,8 @@ func (r *webSessionEventsRepository) UpdateSessionPageViews(ctx context.Context,
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) UpdateSupportSignals(ctx context.Context, sessionID, tenant string, supportSignal int8) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionPageViews")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagEntity(span, sessionID)
-
-	if supportSignal != postgres_entity.SupportNeedDetected {
-		err := errors.New("invalid supportSignal value")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	var updatedSession postgres_entity.WebSession
-	err := r.gormDb.Model(&postgres_entity.WebSession{}).
-		Where("id = ? AND tenant = ?", sessionID, tenant).
-		Update("support_signals", supportSignal).
-		First(&updatedSession).
-		Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return &updatedSession, nil
-}
-
-func (r *webSessionEventsRepository) UpdateSessionWithSlackSentAt(ctx context.Context, sessionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithSlackSentAt")
+func (r *webSessionEventsRepository) SetSlackSentAt(ctx context.Context, sessionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSlackSentAt")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagEntity(span, sessionID)
@@ -323,6 +243,42 @@ func (r *webSessionEventsRepository) UpdateSessionWithSlackSentAt(ctx context.Co
 		// Log the error with tracing and return it
 		tracing.TraceErr(span, result.Error)
 		return result.Error
+	}
+
+	return nil
+}
+
+func (r *webSessionEventsRepository) SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetVisitorIdentity")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	// Start building the query
+	query := r.gormDb.Model(&postgres_entity.WebSession{}).
+		Where("id = ?", sessionID)
+
+	// Build a map of fields to update, only including non-nil values
+	updates := map[string]interface{}{}
+
+	if domain != nil && *domain != "" {
+		updates["domain"] = *domain
+	}
+
+	if email != nil && *email != "" {
+		updates["email"] = *email
+	}
+
+	if emailType != nil && *emailType != "" {
+		updates["email_type"] = *emailType
+	}
+
+	// If we have fields to update, execute the update
+	if len(updates) > 0 {
+		err := query.Updates(updates).Error
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	return nil

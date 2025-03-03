@@ -18,6 +18,7 @@ type ScrapedWebpage struct {
 	Topics        pq.StringArray            `gorm:"column:topics;type:text[]" json:"topics"`
 	CreatedAt     time.Time                 `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt     time.Time                 `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
+	Error         string                    `gorm:"column:error;type:varchar(255)" json:"error"`
 }
 
 func (ScrapedWebpage) TableName() string {

@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"golang.org/x/net/publicsuffix"
 	"net/url"
 	"strings"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 var domainExceptions = []string{

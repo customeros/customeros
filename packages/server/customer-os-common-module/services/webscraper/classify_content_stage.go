@@ -75,6 +75,11 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 		}
 	}
 
+	err = s.postgresRepositories.ScrapedWebpageRepository.SetContentStage(ctx, url, stage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return stage, nil
 }
 

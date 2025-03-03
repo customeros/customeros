@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -25,17 +27,20 @@ type AnalyzeWebSessionCapability struct {
 	events               *events.EventsService
 	postgresRepositories *postgres_repository.Repositories
 	actionService        interfaces.ActionService
+	webscraperService    interfaces.WebscraperService
 }
 
 func NewAnalyzeWebSessionCapability(
 	events *events.EventsService,
 	postgresRepositories *postgres_repository.Repositories,
 	actionService interfaces.ActionService,
+	webscraperService interfaces.WebscraperService,
 ) *AnalyzeWebSessionCapability {
 	return &AnalyzeWebSessionCapability{
 		events:               events,
 		postgresRepositories: postgresRepositories,
 		actionService:        actionService,
+		webscraperService:    webscraperService,
 	}
 }
 
@@ -49,7 +54,7 @@ func (c *AnalyzeWebSessionCapability) Type() enum.AgentCapability {
 }
 
 func (c *AnalyzeWebSessionCapability) Name() string {
-	return "Analyze behaviour for intent signals"
+	return "Analyze behavior for intent signals"
 }
 
 func (c *AnalyzeWebSessionCapability) NewInput() AnalyzeWebSessionInput {
@@ -130,6 +135,38 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 		return enum.CapabilityExecutionError, result, err
 	}
 
+	// get session details
+	session, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
+		ID: executionContainer.InputData.WebSessionID,
+	}, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, result, err
+	}
+	if session == nil {
+		err := errors.New("cannot identify session")
+		span.LogKV("sessionId", executionContainer.InputData.WebSessionID)
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, result, err
+	}
+	if len(session.UniquePageViews) == 0 {
+		err := errors.New("no page views to analyze")
+		span.LogKV("sessionId", executionContainer.InputData.WebSessionID)
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionError, result, err
+	}
+
+	// scrape visited webpages & analyze pageview
+	var sessionData []PageVisit
+	for _, page := range session.UniquePageViews {
+		pageVisitData, err := c.processPageVisit(ctx, session.ID, page, *session.Domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			continue
+		}
+		sessionData = append(sessionData, pageVisitData)
+	}
+
 	// analyze session
 	result, err = c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
@@ -169,6 +206,152 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 
 	tracing.LogObjectAsJson(span, "result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
+}
+
+type Session struct {
+	PageVisits []PageVisit `json:"pageVisits"`
+}
+
+type PageVisit struct {
+	SessionID    string                    `json:"sessionId"`
+	IPAddress    string                    `json:"ipAddress"`
+	Url          string                    `json:"url"`
+	StageSignal  enum.CustomerJourneyStage `json:"stageSignal"`
+	PageCategory enum.WebpageCategory      `json:"pageCategory"`
+	Topics       []string                  `json:"topics"`
+
+	EntryTimestamp time.Time `json:"entryTimestamp"`
+	ExitTimestamp  time.Time `json:"exitTimestamp"`
+	ClickCount     int64     `json:"clickCount"`
+	Referer        string    `json:"referer"`
+	SecondsOnPage  int64     `json:"secondsOnPage"`
+
+	VisitorEmail     string `json:"visitorEmail"`
+	VisitorEmailType string `json:"visitorEmailType"`
+	VisitorDomain    string `json:"visitorDomain"`
+}
+
+const (
+	BusinessEmail = "business"
+	PersonalEmail = "personal"
+)
+
+func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sessisonId, page, domain string) (PageVisit, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.processPageVisit")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	url := page
+	if !strings.HasPrefix(page, "http") {
+		url = fmt.Sprintf("https://%s", page)
+	}
+
+	visit := PageVisit{
+		SessionID:     sessisonId,
+		Url:           url,
+		VisitorDomain: domain,
+	}
+
+	// get session events
+	events, err := c.postgresRepositories.WebTrackerEventsRepository.FindEventsForPageVisit(ctx, sessisonId, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visit, err
+	}
+
+	for _, event := range events {
+		if visit.IPAddress == "" {
+			visit.IPAddress = event.IP
+		}
+
+		if visit.Referer == "" && event.Referrer != "" {
+			visit.Referer = event.Referer()
+		}
+
+		switch event.EventType {
+		case "page_view":
+			if visit.EntryTimestamp.IsZero() {
+				visit.EntryTimestamp = event.Timestamp
+			} else if event.Timestamp.Before(visit.EntryTimestamp) {
+				visit.EntryTimestamp = event.Timestamp
+			}
+
+		case "page_exit":
+			if visit.ExitTimestamp.IsZero() {
+				visit.ExitTimestamp = event.Timestamp
+			} else if event.Timestamp.After(visit.ExitTimestamp) {
+				visit.ExitTimestamp = event.Timestamp
+			}
+
+		case "click":
+			visit.ClickCount++
+
+		case "identify":
+			email, err := event.VisitorEmail()
+			if err != nil {
+				tracing.TraceErr(span, err)
+				continue
+			}
+			emailValidate := mailvalidate.ValidateEmailSyntax(email)
+			if emailValidate.Error != "" || emailValidate.IsSystemGenerated {
+				continue
+			}
+
+			switch {
+			case !emailValidate.IsFreeAccount:
+				visit.VisitorDomain = emailValidate.Domain
+				if !emailValidate.IsRoleAccount {
+					visit.VisitorEmail = emailValidate.CleanEmail
+					visit.VisitorEmailType = BusinessEmail
+				}
+
+			case emailValidate.IsFreeAccount:
+				if visit.VisitorEmailType != BusinessEmail && !emailValidate.IsRoleAccount {
+					visit.VisitorEmail = emailValidate.CleanEmail
+					visit.VisitorEmailType = PersonalEmail
+				}
+			}
+
+		}
+	}
+
+	if !visit.EntryTimestamp.IsZero() && !visit.ExitTimestamp.IsZero() {
+		duration := visit.ExitTimestamp.Sub(visit.EntryTimestamp)
+		visit.SecondsOnPage = int64(duration.Seconds())
+	}
+
+	content, err := c.webscraperService.Scrape(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	pageCategory, err := c.webscraperService.ClassifyWebpageCategory(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visit, err
+	}
+	visit.PageCategory = pageCategory
+
+	// return early is there is no webscrape content to analyze
+	if content == "" {
+		return visit, nil
+	}
+
+	contentStage, err := c.webscraperService.ClassifyContentStage(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visit, err
+	}
+	visit.StageSignal = contentStage
+
+	pageTopics, err := c.webscraperService.ClassifyWebpageTopics(ctx, page)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return visit, err
+	}
+	visit.Topics = pageTopics
+
+	return visit, nil
 }
 
 func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {

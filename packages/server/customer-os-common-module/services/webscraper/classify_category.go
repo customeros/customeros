@@ -72,5 +72,47 @@ Please only respond with exactly one of the categories above.  No comments or pr
 		return "", nil
 	}
 
-	return enum.GetWebpageCategory(*answer), nil
+	category := enum.GetWebpageCategory(*answer)
+	if category == enum.WebpageUnknown {
+		category, err = s.retryClassifyWebpageCategory(ctx, answer)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", nil
+		}
+	}
+
+	err = s.postgresRepositories.ScrapedWebpageRepository.SetWebpageCategory(ctx, url, category)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return category, nil
+}
+
+func (s *webscraperService) retryClassifyWebpageCategory(ctx context.Context, answer *string) (enum.WebpageCategory, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.retryClassifyWebpageCategory")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	systemPrompt := `Lets try this again.  I'm going to give you an answer you gave me previously and your job is to clean it up so that you only respond with one of the following strings, nothing else:  about, account, contact, help, legal, partner, pricing, product, resources, success story, or other.`
+
+	temperature := float32(0.1)
+	maxOutputTokens := int32(25)
+	output, err := s.aiService.AskAI(ctx, interfaces.AskAIRequest{
+		Model:            enum.AIModelLlama8B,
+		SystemPrompt:     &systemPrompt,
+		Prompt:           answer,
+		ModelTemperature: &temperature,
+		MaxOutputTokens:  &maxOutputTokens,
+		OutputFormat:     enum.AIOutputText,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if output == nil {
+		return "", nil
+	}
+
+	return enum.GetWebpageCategory(*output), nil
 }

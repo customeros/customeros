@@ -70,7 +70,18 @@ func (s *webscraperService) ClassifyWebpageTopics(ctx context.Context, url strin
 		return nil, nil
 	}
 
-	return s.parseTopics(*answer)
+	topics, err := s.parseTopics(*answer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.postgresRepositories.ScrapedWebpageRepository.SetWebpageTopics(ctx, url, topics)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return topics, nil
 }
 
 func (s *webscraperService) parseTopics(answer string) ([]string, error) {

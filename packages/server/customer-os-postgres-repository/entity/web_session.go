@@ -3,37 +3,32 @@ package postgres_entity
 import (
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/lib/pq"
 )
 
-const (
-	SupportNotAnalyzed    int8 = 0
-	SupportNeedDetected   int8 = 1
-	NoSupportNeedDetected int8 = 2
-)
-
 type WebSession struct {
-	ID                    string         `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
-	Tenant                string         `gorm:"column:tenant;type:varchar(255);index:idx_tenant" json:"tenant"`
-	VisitorID             string         `gorm:"column:visitor_id;type:varchar(255);NOT NULL;index:idx_visitor_id" json:"visitorId"`
-	IP                    string         `gorm:"column:ip;type:varchar(255);" json:"ip"`
-	Hostname              string         `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
-	Domain                *string        `gorm:"column:domain;type:varchar(255);index:idx_domain" json:"domain"`
-	OrganizationId        *string        `gorm:"column:organization_id;varchar(255);index:idx_organization_id" json:"organizationId"`
-	Referrer              *string        `gorm:"column:referrer;type:text;" json:"referrer"`
-	QueryParams           *string        `gorm:"column:query_params;type:text;" json:"queryParams"`
-	UniquePageViews       pq.StringArray `gorm:"column:unique_page_views;type:text[];" json:"uniquePageViews"`
-	StartTime             time.Time      `gorm:"column:start_time;type:timestamp;" json:"startTime"`
-	LastEventType         string         `gorm:"column:last_event_type;type:varchar(255);" json:"lastEventType"`
-	LastActivity          time.Time      `gorm:"column:last_activity;type:timestamp;" json:"lastActivity"`
-	EndTime               *time.Time     `gorm:"column:end_time;type:timestamp;" json:"endTime"`
-	IsActive              bool           `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
-	DetectedExit          bool           `gorm:"column:detected_exit;type:boolean;default:false" json:"detectedExit"`
-	PublishedEvent        bool           `gorm:"column:published_event;type:boolean;default:false" json:"publishedEvent"`
-	SentSlackNotification *time.Time     `gorm:"column:sent_slack_notification;type:timestamp;" json:"sentSlackNotification"`
-	SupportSignals        int8           `gorm:"column:support_signals;type:smallint;default:0" json:"supportSignals"`
-	CreatedAt             time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
-	UpdatedAt             *time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	ID                    string          `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
+	Tenant                string          `gorm:"column:tenant;type:varchar(255);index:idx_tenant" json:"tenant"`
+	IP                    string          `gorm:"column:ip;type:varchar(255);" json:"ip"`
+	Hostname              string          `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
+	Domain                *string         `gorm:"column:domain;type:varchar(255);index:idx_domain" json:"domain"`
+	OrganizationId        *string         `gorm:"column:organization_id;varchar(255);index:idx_organization_id" json:"organizationId"`
+	Email                 *string         `gorm:"column:email;varchar(255);index:idx_email" json:"email"`
+	EmailType             *enum.EmailType `gorm:"column:email_type;varchar(255)" json:"emailType"`
+	Referrer              *string         `gorm:"column:referrer;type:text;" json:"referrer"`
+	QueryParams           *string         `gorm:"column:query_params;type:text;" json:"queryParams"`
+	UniquePageViews       pq.StringArray  `gorm:"column:unique_page_views;type:text[];" json:"uniquePageViews"`
+	StartTime             time.Time       `gorm:"column:start_time;type:timestamp;" json:"startTime"`
+	LastEventType         string          `gorm:"column:last_event_type;type:varchar(255);" json:"lastEventType"`
+	LastActivity          time.Time       `gorm:"column:last_activity;type:timestamp;" json:"lastActivity"`
+	EndTime               *time.Time      `gorm:"column:end_time;type:timestamp;" json:"endTime"`
+	IsActive              bool            `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
+	DetectedExit          bool            `gorm:"column:detected_exit;type:boolean;default:false" json:"detectedExit"`
+	PublishedEvent        bool            `gorm:"column:published_event;type:boolean;default:false" json:"publishedEvent"`
+	SentSlackNotification *time.Time      `gorm:"column:sent_slack_notification;type:timestamp;" json:"sentSlackNotification"`
+	CreatedAt             time.Time       `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt             *time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 }
 
 func (WebSession) TableName() string {

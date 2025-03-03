@@ -88,21 +88,48 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 		}
 	}
 
+	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
+
 	if strings.Contains(contents, "403 Forbidden") {
-		return "", ErrUnprocessable
+		_, err := s.postgresRepositories.ScrapedWebpageRepository.Save(ctx, postgres_entity.ScrapedWebpage{
+			PrimaryDomain: primaryDomain,
+			Url:           url,
+			Error:         ErrUnprocessable.Error(),
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		return "", nil
 	}
 
 	if strings.Contains(contents, "Robot Challenge") {
-		return "", ErrUnprocessable
+		_, err := s.postgresRepositories.ScrapedWebpageRepository.Save(ctx, postgres_entity.ScrapedWebpage{
+			PrimaryDomain: primaryDomain,
+			Url:           url,
+			Error:         ErrUnprocessable.Error(),
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		return "", nil
 	}
 
 	if contents == "" {
+		_, err := s.postgresRepositories.ScrapedWebpageRepository.Save(ctx, postgres_entity.ScrapedWebpage{
+			PrimaryDomain: primaryDomain,
+			Url:           url,
+			Error:         "no content",
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 		return "", nil
 	}
 
 	content, links := s.ProcessWebContent(ctx, contents)
-
-	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
 
 	_, err = s.postgresRepositories.ScrapedWebpageRepository.Save(ctx, postgres_entity.ScrapedWebpage{
 		PrimaryDomain: primaryDomain,
