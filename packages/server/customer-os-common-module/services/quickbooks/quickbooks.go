@@ -926,3 +926,51 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 
 	return &qbPaymentResponse, nil
 }
+
+func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksPaymentId, quickbooksJournalEntryId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.ZeroPaymentLinkingJournalEntryToInvoice")
+	defer span.Finish()
+	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("quickbooksPaymentId", quickbooksPaymentId), log.String("quickbooksJournalEntryId", quickbooksJournalEntryId))
+
+	// Retrieve QuickBooks settings for the tenant.
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
+	}
+	if qbSettings == nil {
+		err = errors.New("QuickBooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Construct the payment payload.
+	paymentData := map[string]interface{}{
+		"Id":       quickbooksPaymentId,
+		"TotalAmt": 0,
+		"Line": []map[string]interface{}{
+			{
+				"Amount": 0,
+				"LinkedTxn": []map[string]interface{}{
+					{
+						"TxnId":   quickbooksJournalEntryId,
+						"TxnType": "JournalEntry",
+					},
+				},
+			},
+		},
+	}
+
+	// Construct the URL for creating the payment.
+	requestUrl := fmt.Sprintf("%s/v3/company/%s/payment", s.qbConfig.Url, qbSettings.RealmId)
+	// Perform the request.
+	_, err = s.performRequest(ctx, qbSettings, requestUrl, "POST", paymentData, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to save payment: %w", err)
+	}
+
+	return nil
+}
