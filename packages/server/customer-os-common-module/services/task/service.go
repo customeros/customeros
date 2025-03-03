@@ -2,6 +2,8 @@ package task
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -91,7 +93,37 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 	tracing.TagEntity(span, taskId)
 
 	// validate assignees
+	if taskFields.AssigneeUserIds != nil {
+		for _, assigneeId := range *taskFields.AssigneeUserIds {
+			// check if user exists
+			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, assigneeId, model.NodeLabelUser)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if !exists {
+				err = errors.Errorf("asignee user %s not found", assigneeId)
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+	}
 	// validate opportunities
+	if taskFields.OpportunityIds != nil {
+		for _, opportunityId := range *taskFields.OpportunityIds {
+			// check if opportunity exists
+			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, opportunityId, model.NodeLabelOpportunity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if !exists {
+				err = errors.Errorf("opportunity %s not found", opportunityId)
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
@@ -107,33 +139,42 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 				return nil, err
 			}
 		}
-		//
-		//	txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-		//		// send events
-		//		if createFlow {
-		//			if utils.IfNotNilString(issueFields.ReportedByOrganizationId) != "" {
-		//				err := s.org.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
-		//				if err != nil {
-		//					tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
-		//				}
-		//			}
-		//			err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
-		//			if err != nil {
-		//				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
-		//			}
-		//			s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
-		//		} else {
-		//			err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
-		//			if err != nil {
-		//				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
-		//			}
-		//			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		//				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
-		//			}
-		//		}
-		//		return nil
-		//	})
-		//
+
+		if taskFields.OpportunityIds != nil {
+			err := s.neo4j.TaskWriteRepository.SetOpportunities(ctx, txWithPostCommit.Tx, tenant, taskId, *taskFields.OpportunityIds)
+			if err != nil {
+				s.log.Errorf("Error while setting task opportunities %s: %s", taskId, err.Error())
+				return nil, err
+			}
+		}
+		if taskFields.AssigneeUserIds != nil {
+			err := s.neo4j.TaskWriteRepository.SetUserAssignees(ctx, txWithPostCommit.Tx, tenant, taskId, *taskFields.AssigneeUserIds)
+			if err != nil {
+				s.log.Errorf("Error while setting task user assignees %s: %s", taskId, err.Error())
+				return nil, err
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send events
+			if createFlow {
+				err := s.events.Publisher.PublishFanoutEvent(ctx, taskId, model.TASK, dto.CreateTask{taskFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateTask"))
+				}
+				s.events.Publisher.PublishNotification(ctx, tenant, taskId, model.TASK, utils.NewEventCompletedDetails().WithCreate())
+			} else {
+				err := s.events.Publisher.PublishFanoutEvent(ctx, taskId, model.TASK, dto.UpdateTask{taskFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTask"))
+				}
+				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+					s.events.Publisher.PublishNotification(ctx, tenant, taskId, model.TASK, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+			return nil
+		})
+
 		return nil, nil
 	})
 	if err != nil {

@@ -11,8 +11,8 @@ type TaskFields struct {
 	Description     *string          `json:"description,omitempty"`
 	Status          *enum.TaskStatus `json:"status,omitempty"`
 	DueAt           *time.Time       `json:"dueAt,omitempty"`
-	Opportunities   *[]string        `json:"opportunities,omitempty"`
-	Assignees       *[]string        `json:"assignees,omitempty"`
+	OpportunityIds  *[]string        `json:"opportunityIds,omitempty"`
+	AssigneeUserIds *[]string        `json:"assigneeUserIds,omitempty"`
 	AppSource       *string          `json:"appSource,omitempty"`
 	Source          *string          `json:"source,omitempty"`
 	CreatedByUserId *string          `json:"reportedBy,omitempty"`
