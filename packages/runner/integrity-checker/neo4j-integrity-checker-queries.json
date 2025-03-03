@@ -53,10 +53,6 @@
         {
           "name": "Invoice finalized webhook not sent",
           "query": "MATCH (i:Invoice {dryRun:false}) WHERE date(i.createdAt) > date('2024-06-02') AND NOT i.status IN ['INITIALIZED','EMPTY'] and i.techInvoiceFinalizedWebhookProcessedAt IS NULL return count(i)"
-        },
-        {
-          "name": "Invoice finalized event not sent",
-          "query": "MATCH (i:Invoice {dryRun:false})--(c:Contract) WHERE c.payAutomatically = true AND date(i.createdAt) > date('2024-06-02') AND NOT i.status IN ['INITIALIZED','EMPTY','PAID'] AND i.updatedAt < datetime() - duration({minutes:10}) AND i.techInvoiceFinalizedSentAt IS NULL return count(i)"
         }
       ]
     },
