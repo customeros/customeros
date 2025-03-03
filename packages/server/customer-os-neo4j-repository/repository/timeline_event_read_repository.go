@@ -109,7 +109,7 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)
-		AND (c.hide IS NULL OR c.hide = false)
+		AND coalesce(c.hide, false) = false
 		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
 		AND (NOT "InteractionEvent" in labels(a) or "InteractionEvent" in labels(a) AND NOT a.contentType IN $excludeInteractionEventContentType)
 		AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
