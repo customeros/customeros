@@ -2,6 +2,7 @@ package webscraper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -21,6 +22,11 @@ func (s *webscraperService) ClassifyWebpageCategory(ctx context.Context, url str
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
+	}
+	if webpage == nil {
+		err := errors.New("webpage doesn't exist")
+		span.LogKV("url", url)
+		tracing.TraceErr(span, err)
 	}
 
 	systemPrompt := `I will provide you with the url of a webpage and its scraped content (if available), along with a brief description of the company who owns it. Your job is to analyze the website url and content (if available) and return the category that most accurately describe the page. Valid categories are: 

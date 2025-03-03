@@ -103,6 +103,8 @@ func (r *scrapedWebpageRepository) GetWebpage(ctx context.Context, url string, l
 		return nil, err
 	}
 
+	tracing.LogObjectAsJson(span, "webpage", record)
+
 	return &record, nil
 }
 
