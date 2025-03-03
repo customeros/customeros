@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/task"
 	"log"
 	"reflect"
 
@@ -139,6 +140,7 @@ type CommonServices struct {
 	SlackService               interfaces.SlackService
 	SocialService              interfaces.SocialService
 	TagService                 interfaces.TagService
+	TaskService                interfaces.TaskService
 	TenantService              interfaces.TenantService
 	TenantSettingsService      interfaces.TenantSettingsService
 	UserService                interfaces.UserService
@@ -268,6 +270,7 @@ func InitCommonServices(
 	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
+	tasksImpl := task.NewTaskService(log, neo4jRepositories, eventsImpl, userImpl, opportunityImpl)
 
 	// Resolve circular dependencies
 	authenticationImpl.SetUserService(userImpl)
@@ -381,6 +384,7 @@ func InitCommonServices(
 		SlackService:               slackImpl,
 		SocialService:              socialImpl,
 		TagService:                 tagImpl,
+		TaskService:                tasksImpl,
 		TenantService:              tenantImpl,
 		TenantSettingsService:      tenantSettingsImpl,
 		UserService:                userImpl,

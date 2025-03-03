@@ -1,0 +1,14 @@
+package interfaces
+
+import (
+	"context"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+)
+
+type TaskService interface {
+	IsInitialized() bool
+
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, taskFields data_fields.TaskFields) (string, error)
+}

@@ -8,18 +8,18 @@ extend type Mutation {
 
 input TaskInput {
     id              : ID
-    name            : String
+    subject         : String
     description     : String
+    status          : TaskStatus
     asignees        : [ID!] @goField(forceResolver: true)
     authorId        : ID @goField(forceResolver: true)
-    status          : TaskStatus
     opportunityIds  : [ID!] @goField(forceResolver: true)
     dueAt           : Time
 }
 
 type Task {
     id              : ID!
-    name            : String
+    subject         : String
     description     : String
     asignees        : [ID!]!
     authorId        : ID
