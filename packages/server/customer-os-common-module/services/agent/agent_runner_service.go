@@ -460,6 +460,10 @@ func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID str
 	if paramsVal, ok := execution.StateData["params"]; ok {
 		if paramsMap, ok := paramsVal.(map[string]any); ok {
 			params = paramsMap
+		} else {
+			err := errors.New("paramsMap is invalid")
+			tracing.TraceErr(span, err)
+			return err
 		}
 	}
 
