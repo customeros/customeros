@@ -123,20 +123,6 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/runner/sync-gmail"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/sync-gmail"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
     directory: "/packages/runner/sync-slack"
     schedule:
       interval: "daily"
