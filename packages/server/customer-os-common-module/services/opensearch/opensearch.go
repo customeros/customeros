@@ -56,6 +56,7 @@ func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string
 	if c.client == nil {
 		err := fmt.Errorf("opensearch client is nil")
 		tracing.TraceErr(span, err)
+		return err
 	}
 
 	jsonDoc, err := json.Marshal(document)
@@ -97,6 +98,7 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 	if c.client == nil {
 		err := fmt.Errorf("opensearch client is nil")
 		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	// Set default limit if not provided
@@ -394,6 +396,7 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 	if c.client == nil {
 		err := fmt.Errorf("opensearch client is nil")
 		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// Check if index exists
