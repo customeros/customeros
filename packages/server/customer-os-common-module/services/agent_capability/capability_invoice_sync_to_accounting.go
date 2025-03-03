@@ -198,7 +198,12 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 				return enum.CapabilityExecutionRetry, result, err
 			}
 			if invoiceEntity.QuickbooksPaymentId != "" {
-				err = c.quickbooksService.ZeroPaymentLinkingJournalEntryToInvoice(ctx, invoiceEntity.QuickbooksPaymentId, invoiceEntity.QuickbooksJournalEntryId)
+				contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoiceEntity.Id)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return enum.CapabilityExecutionRetry, result, err
+				}
+				err = c.quickbooksService.ZeroPaymentLinkingJournalEntryToInvoice(ctx, invoiceEntity.QuickbooksPaymentId, contractEntity.QuickbooksCustomerId, invoiceEntity.QuickbooksJournalEntryId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return enum.CapabilityExecutionRetry, result, err
