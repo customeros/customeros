@@ -3,6 +3,7 @@ package table_view
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/opentracing/opentracing-go/log"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -86,6 +87,12 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) [
 		return []postgres_entity.TableViewDefinition{}
 	}
 
+	tasksTableViewDefinition, err := DefaultTableViewDefinitionTasks(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgres_entity.TableViewDefinition{}
+	}
+
 	var defaultViewDefinitions []postgres_entity.TableViewDefinition
 	defaultViewDefinitions = append(defaultViewDefinitions, upcomingInvoicesTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, pastInvoicesTableViewDefinition)
@@ -98,7 +105,7 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) [
 	defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesRecordsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, flowsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, flowContactsTableViewDefinition)
-
+	defaultViewDefinitions = append(defaultViewDefinitions, tasksTableViewDefinition)
 	if !hasSharedPresets {
 		defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
 	}
@@ -419,6 +426,30 @@ func DefaultTableViewDefinitionFlowContactsV2(span opentracing.Span, flowId stri
 	}, nil
 }
 
+func DefaultTableViewDefinitionTasks(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+	columns := DefaultColumns(postgres_entity.TableIDTypeTasks)
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgres_entity.TableViewDefinition{}, err
+	}
+
+	return postgres_entity.TableViewDefinition{
+		TableType:      string(postgres_entity.TableViewTypeTasks),
+		TableId:        string(postgres_entity.TableIDTypeTasks),
+		Name:           "Tasks",
+		ColumnsJson:    string(jsonData),
+		Order:          10,
+		Icon:           "ClipboardCheck",
+		Filters:        ``,
+		DefaultFilters: ``,
+		Sorting:        ``,
+		IsPreset:       true,
+		IsShared:       true,
+	}, nil
+}
+
 func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns {
 	switch tableId {
 	case postgres_entity.TableIDTypeCustomers:
@@ -653,6 +684,16 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeContactsCity), Width: 100, Visible: true, Name: "City", Filter: ""},
 				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: false, Name: "Updated at", Filter: ""},
 				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeContactsCreatedAt), Width: 100, Visible: false, Name: "Created at", Filter: ""},
+			},
+		}
+	case postgres_entity.TableIDTypeTasks:
+		return postgres_entity.Columns{
+			Columns: []postgres_entity.ColumnView{
+				{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeTasksSubject), Width: 100, Visible: true, Name: "Task", Filter: ""},
+				{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeTasksAssignees), Width: 100, Visible: true, Name: "Assignee", Filter: ""},
+				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeTasksStatus), Width: 100, Visible: true, Name: "Status", Filter: ""},
+				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeTasksDueDate), Width: 100, Visible: true, Name: "Due in", Filter: ""},
+				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeTasksCreatedAt), Width: 100, Visible: true, Name: "Created", Filter: ""},
 			},
 		}
 	}

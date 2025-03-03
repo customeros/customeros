@@ -17920,6 +17920,7 @@ enum TableViewType {
     OPPORTUNITIES
     CONTRACTS
     FLOW
+    TASKS
 }
 
 enum TableIdType {
@@ -17935,6 +17936,7 @@ enum TableIdType {
     CONTRACTS
     FLOW_ACTIONS
     FLOW_CONTACTS
+    TASKS
 }
 
 enum ColumnViewType {
@@ -18041,6 +18043,16 @@ enum ColumnViewType {
     FLOW_STATUS
     FLOW_ACTION_NAME
     FLOW_ACTION_STATUS
+
+    TASKS_SUBJECT
+    TASKS_DESCRIPTION
+    TASKS_STATUS
+    TASKS_ASSIGNEES
+    TASKS_AUTHOR
+    TASKS_DUE_DATE
+    TASKS_OPPORTUNITIES
+    TASKS_CREATED_AT
+    TASKS_UPDATED_AT
 }
 
 input TableViewDefUpdateInput {
