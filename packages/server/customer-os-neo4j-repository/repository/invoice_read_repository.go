@@ -102,6 +102,13 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 	span.LogFields(log.Object("filterParams", filterParams))
 	span.LogFields(log.Object("sorting", sorting))
 
+	sortFragment := utils.IfNotNilString(sorting)
+	if sortFragment == "" {
+		sortFragment = "ORDER BY i.number ASC"
+	} else {
+		sortFragment += ", i.number ASC"
+	}
+
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
@@ -141,7 +148,7 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 				 WITH c, i 
 				 %s 
 				 RETURN i
-				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypher, *sorting)
+				 SKIP $skip LIMIT $limit`, tenant, tenant, tenant, filterCypher, sortFragment)
 
 		span.LogFields(log.String("cypher", cypher))
 		tracing.LogObjectAsJson(span, "queryParams", queryParams)

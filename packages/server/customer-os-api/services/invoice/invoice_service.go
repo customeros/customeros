@@ -146,10 +146,6 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 			},
 		}
 	}
-	sortBy = append(sortBy, &model2.SortBy{
-		By:        "INVOICE_NUMBER",
-		Direction: model2.SortingDirectionAsc,
-	})
 
 	cypherSort, err := api_sort.BuildSortMultipleEntities(sortBy, []api_sort.SortMultipleEntitiesDefinition{
 		{
