@@ -2,17 +2,13 @@ package task
 
 import (
 	"context"
-
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -84,7 +80,7 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		span.LogKV("flow", "update")
 		taskId = *id
 
-		// validate issue exists
+		// validate task exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, taskId, model.NodeLabelTask)
 		if err != nil || !exists {
 			err = errors.New("task not found")
@@ -99,45 +95,45 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
-			err := s.neo4j.TaskWriteRepository.Create(ctx, txWithPostCommit.Tx, tenant, taskid, issueFields)
+			err := s.neo4j.TaskWriteRepository.Create(ctx, txWithPostCommit.Tx, tenant, taskId, taskFields)
 			if err != nil {
-				s.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
+				s.log.Errorf("Error while saving task %s: %s", taskId, err.Error())
 				return nil, err
 			}
 		} else {
-			err := s.neo4j.IssueWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, issueId, issueFields)
+			err := s.neo4j.TaskWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, taskId, taskFields)
 			if err != nil {
-				s.log.Errorf("Error while updating issue %s: %s", issueId, err.Error())
+				s.log.Errorf("Error while updating task %s: %s", taskId, err.Error())
 				return nil, err
 			}
 		}
-
-		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			// send events
-			if createFlow {
-				if utils.IfNotNilString(issueFields.ReportedByOrganizationId) != "" {
-					err := s.org.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
-					}
-				}
-				err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
-				}
-				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
-			} else {
-				err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
-				}
-				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
-				}
-			}
-			return nil
-		})
-
+		//
+		//	txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+		//		// send events
+		//		if createFlow {
+		//			if utils.IfNotNilString(issueFields.ReportedByOrganizationId) != "" {
+		//				err := s.org.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
+		//				if err != nil {
+		//					tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
+		//				}
+		//			}
+		//			err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
+		//			if err != nil {
+		//				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
+		//			}
+		//			s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
+		//		} else {
+		//			err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
+		//			if err != nil {
+		//				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
+		//			}
+		//			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+		//				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+		//			}
+		//		}
+		//		return nil
+		//	})
+		//
 		return nil, nil
 	})
 	if err != nil {
@@ -145,11 +141,5 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		return "", err
 	}
 
-	if createFlow {
-		span.LogFields(log.Bool("response.issueCreated", true))
-	} else {
-		span.LogFields(log.Bool("response.issueUpdated", true))
-	}
-
-	return issueId, nil
+	return taskId, nil
 }

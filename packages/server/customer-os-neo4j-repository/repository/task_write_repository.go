@@ -92,11 +92,11 @@ func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTrans
 		params["description"] = *data.Description
 	}
 	if data.Status != nil {
-		cypher += `, i.status = $status`
+		cypher += `, tsk.status = $status`
 		params["status"] = *data.Status
 	}
 	if data.DueAt != nil {
-		cypher += `, i.dueAt = $dueAt`
+		cypher += `, tsk.dueAt = $dueAt`
 		params["dueAt"] = utils.TimePtrAsAny(data.DueAt)
 	}
 
