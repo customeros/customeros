@@ -102,7 +102,7 @@ func (r *invoiceReadRepository) GetPaginatedInvoices(ctx context.Context, tenant
 	span.LogFields(log.Object("filterParams", filterParams))
 	span.LogFields(log.Object("sorting", sorting))
 
-	sortFragment := utils.IfNotNilString(sorting)
+	sortFragment := string(*sorting)
 	if sortFragment == "" {
 		sortFragment = "ORDER BY i.number ASC"
 	} else {
