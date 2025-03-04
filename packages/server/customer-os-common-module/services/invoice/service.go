@@ -2445,8 +2445,8 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	return fileDTO.ID, nil
 }
 
-func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoiceId string, allowPayLinkInEmail bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendPayInvoiceNotification")
+func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId string, allowPayLinkInEmail bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendInvoiceNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, invoiceId)
@@ -2459,8 +2459,6 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
-
-	var contractEntity neo4jentity.ContractEntity
 
 	// load invoice entity
 	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
@@ -2487,6 +2485,7 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 	}
 
 	// load contract entity
+	var contractEntity neo4jentity.ContractEntity
 	contractNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
