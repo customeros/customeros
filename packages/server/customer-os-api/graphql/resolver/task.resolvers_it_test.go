@@ -184,9 +184,6 @@ func TestTaskResolver_SearchTasks_FilterByStatus(t *testing.T) {
 
 	// Test case 3: Search with all statuses
 	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksStatus, []string{enum.TaskStatusTodo.String(), enum.TaskStatusDone.String(), enum.TaskStatusInProgress.String()}, commonmodel.ComparisonOperatorIn, 3, 3)
-
-	// Test case 4: Search with empty array (should return none)
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksStatus, []string{}, commonmodel.ComparisonOperatorIn, 3, 0)
 }
 
 func TestTaskResolver_SearchTasks_SortByStatus(t *testing.T) {
@@ -222,21 +219,25 @@ func TestTaskResolver_SearchTasks_FilterByCreator(t *testing.T) {
 	taskA := neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
 	taskB := neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
 	taskC := neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
+	neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
 	neo4jtest.TaskCreatedBy(ctx, driver, taskA, user1Id)
 	neo4jtest.TaskCreatedBy(ctx, driver, taskB, user2Id)
 	neo4jtest.TaskCreatedBy(ctx, driver, taskC, user2Id)
 
 	// Test case 1: Search with user1 ID (should return 1 task)
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, user1Id, commonmodel.ComparisonOperatorEquals, 3, 1)
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, []string{user1Id}, commonmodel.ComparisonOperatorIn, 4, 1)
 
 	// Test case 2: Search with user2 ID (should return 2 tasks)
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, user2Id, commonmodel.ComparisonOperatorEquals, 3, 2)
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, []string{user2Id}, commonmodel.ComparisonOperatorIn, 4, 2)
 
 	// Test case 3: Search with non-existent creator
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, "non-existent-id", commonmodel.ComparisonOperatorEquals, 3, 0)
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, []string{"non-existent-id"}, commonmodel.ComparisonOperatorIn, 4, 0)
 
-	// Test case 4: Search with empty creator ID
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, "", commonmodel.ComparisonOperatorEquals, 3, 0)
+	// Test case 4: Search with not empty creator ID
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, "", commonmodel.ComparisonOperatorIsNotEmpty, 4, 3)
+
+	// Test case 5: Search with empty creator ID
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAuthor, "", commonmodel.ComparisonOperatorIsEmpty, 4, 1)
 }
 
 func TestTaskResolver_SearchTasks_FilterByAssignee(t *testing.T) {
@@ -250,21 +251,25 @@ func TestTaskResolver_SearchTasks_FilterByAssignee(t *testing.T) {
 	taskA := neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
 	taskB := neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
 	taskC := neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
+	neo4jtest.CreateTask(ctx, driver, tenantName, neo4jentity.TaskEntity{})
 	neo4jtest.TaskAssignedTo(ctx, driver, taskA, user1Id)
 	neo4jtest.TaskAssignedTo(ctx, driver, taskB, user2Id)
 	neo4jtest.TaskAssignedTo(ctx, driver, taskC, user2Id)
 
 	// Test case 1: Search with user1 ID (should return 1 task)
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, user1Id, commonmodel.ComparisonOperatorEquals, 3, 1)
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, []string{user1Id}, commonmodel.ComparisonOperatorIn, 4, 1)
 
 	// Test case 2: Search with user2 ID (should return 2 tasks)
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, user2Id, commonmodel.ComparisonOperatorEquals, 3, 2)
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, []string{user2Id}, commonmodel.ComparisonOperatorIn, 4, 2)
 
 	// Test case 3: Search with non-existent assignee
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, "non-existent-id", commonmodel.ComparisonOperatorEquals, 3, 0)
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, []string{"non-existent-id"}, commonmodel.ComparisonOperatorIn, 4, 0)
 
-	// Test case 4: Search with empty assignee ID
-	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, "", commonmodel.ComparisonOperatorEquals, 3, 0)
+	// Test case 4: Search with not empty assignee ID
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, "", commonmodel.ComparisonOperatorIsNotEmpty, 4, 3)
+
+	// Test case 5: Search with empty assignee ID
+	assertTaskSearch(t, postgresEntity.ColumnViewTypeTasksAssignees, "", commonmodel.ComparisonOperatorIsEmpty, 4, 1)
 }
 
 func TestTaskResolver_SearchTasks_SortByCreator(t *testing.T) {

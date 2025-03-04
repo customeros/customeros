@@ -318,8 +318,10 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 			if sort.By == TasksStatus {
 				if sort.Direction == model.SortingDirectionAsc {
 					aliases += `CASE WHEN trim(tsk.status) <> '' and not tsk.status is null THEN toLower(trim(tsk.status)) ELSE '' END as SORT_BY `
+					sort.Direction = model.SortingDirectionDesc
 				} else {
 					aliases += `CASE WHEN trim(tsk.status) <> '' and not tsk.status is null THEN toLower(trim(tsk.status)) ELSE '𠀀' END as SORT_BY `
+					sort.Direction = model.SortingDirectionAsc
 				}
 			}
 			if sort.By == TasksAssignees {
