@@ -17185,8 +17185,8 @@ type ServiceLineItem implements MetadataInterface {
     metadata:           Metadata!
     billingCycle:       BilledType!
     comments:           String!
-    skuId:              ID  #todo make it mandatory
-    sku:                Sku @goField(forceResolver: true) #todo make it mandatory
+    skuId:              ID
+    sku:                Sku @goField(forceResolver: true)
     description:        String
     parentId:           ID!
     price:              Float!
@@ -17203,7 +17203,7 @@ type ServiceLineItem implements MetadataInterface {
 
 input ServiceLineItemInput {
     contractId:         ID!
-    skuId:              ID #todo make this mandatory after FE changes
+    skuId:              ID
     description:        String
     billingCycle:       BilledType
     price:              Float
@@ -17217,7 +17217,7 @@ input ServiceLineItemInput {
 input ServiceLineItemUpdateInput {
     id:                         ID
     description:                String
-    skuId:                      ID #todo make this mandatory after FE changes
+    skuId:                      ID
     """
     Deprecated: billing cycle is not updatable.
     """
