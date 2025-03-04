@@ -713,6 +713,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
@@ -750,6 +751,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		err = s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
