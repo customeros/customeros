@@ -17,9 +17,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	model1 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
@@ -72,7 +72,7 @@ func (r *queryResolver) Tasks(ctx context.Context, ids []string) ([]*model.Task,
 }
 
 // TasksSearch is the resolver for the tasks_search field.
-func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.TaskSearchResult, error) {
+func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonmodel.SortBy) (*model.TaskSearchResult, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TasksSearch", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -105,15 +105,15 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 		defer wg.Done()
 		tracing.SetDefaultResolverSpanTags(innerCtx, span)
 
-		taskSearchResponse, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.SearchTasks(innerCtx, tenant, *limit, where, sort)
-		if err != nil {
-			tracing.TraceErr(innerSpan, err)
-			setError(err)
-			return
-		}
-
-		resp.TotalElements = taskSearchResponse.Count
-		resp.Tasks = taskSearchResponse.Strings
+		//taskSearchResponse, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.SearchTasks(innerCtx, tenant, *limit, where, sort)
+		//if err != nil {
+		//	tracing.TraceErr(innerSpan, err)
+		//	setError(err)
+		//	return
+		//}
+		//
+		//resp.TotalElements = taskSearchResponse.Count
+		//resp.Tasks = taskSearchResponse.Strings
 	}(response)
 
 	wg.Add(1)
