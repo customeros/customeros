@@ -80,17 +80,12 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		Source:      utils.StringPtr(serviceLineItemDetails.Source.String()),
 		NewVersion:  utils.BoolPtr(false),
 	}
-	// TODO: remove once tenants adapted their APIs
-	if serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce {
-		sliDataFields.Description = nil
-	}
 
-	if serviceLineItemDetails.SliBilledType == neo4jenum.BilledTypeOnce && serviceLineItemDetails.SkuId == "" {
-		err := fmt.Errorf("sku id is required for one time contract line item")
+	if serviceLineItemDetails.SkuId == "" {
+		err := fmt.Errorf("sku id is required for all service line items")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-	// TODO add similar validation for other billed types
 
 	sliDataFields.BilledType = utils.ToPtr(serviceLineItemDetails.SliBilledType)
 
@@ -237,11 +232,6 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 		NewVersion:  utils.BoolPtr(true),
 	}
 
-	// TODO: remove once tenants adapted their APIs
-	if baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
-		sliDataFields.Description = nil
-	}
-
 	sliId, err := s.sli.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -276,11 +266,6 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
-	}
-
-	// TODO: remove once tenants adapted their APIs
-	if baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
-		serviceLineItemDetails.SliDescription = nil
 	}
 
 	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection

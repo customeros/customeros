@@ -386,7 +386,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 		for _, line := range nextInvoice.Lines {
 			invoiceLine := model.InvoiceLineSimulate{
 				Key:         line.Id,
-				Description: line.Name,
+				Description: line.Description,
 				Price:       line.Price,
 				Quantity:    line.Quantity,
 				Total:       line.TotalAmount,

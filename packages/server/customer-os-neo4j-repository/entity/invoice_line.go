@@ -11,7 +11,6 @@ type InvoiceLineEntity struct {
 	UpdatedAt               time.Time
 	SkuId                   string
 	SkuName                 string
-	Name                    string // deprecated, TODO: remove, in graphql use SkuName / Description
 	Description             string
 	Price                   float64
 	Quantity                int64

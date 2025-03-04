@@ -856,6 +856,7 @@ type ComplexityRoot struct {
 		Quantity         func(childComplexity int) int
 		Sku              func(childComplexity int) int
 		SkuID            func(childComplexity int) int
+		SkuName          func(childComplexity int) int
 		Subtotal         func(childComplexity int) int
 		TaxDue           func(childComplexity int) int
 		Total            func(childComplexity int) int
@@ -6285,6 +6286,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvoiceLine.SkuID(childComplexity), true
+
+	case "InvoiceLine.skuName":
+		if e.complexity.InvoiceLine.SkuName == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.SkuName(childComplexity), true
 
 	case "InvoiceLine.subtotal":
 		if e.complexity.InvoiceLine.Subtotal == nil {
@@ -15832,7 +15840,8 @@ type InvoiceLine implements MetadataInterface {
     metadata:           Metadata!
     skuId:              ID
     sku:                Sku @goField(forceResolver: true)
-    description:        String @deprecated(reason: "use sku instead")
+    skuName:            String!
+    description:        String!
     price:              Float!
     quantity:           Int64!
     subtotal:           Float!
@@ -17185,8 +17194,8 @@ type ServiceLineItem implements MetadataInterface {
     metadata:           Metadata!
     billingCycle:       BilledType!
     comments:           String!
-    skuId:              ID  #todo make it mandatory
-    sku:                Sku @goField(forceResolver: true) #todo make it mandatory
+    skuId:              ID
+    sku:                Sku @goField(forceResolver: true)
     description:        String
     parentId:           ID!
     price:              Float!
@@ -17203,7 +17212,7 @@ type ServiceLineItem implements MetadataInterface {
 
 input ServiceLineItemInput {
     contractId:         ID!
-    skuId:              ID #todo make this mandatory after FE changes
+    skuId:              ID
     description:        String
     billingCycle:       BilledType
     price:              Float
@@ -17217,7 +17226,7 @@ input ServiceLineItemInput {
 input ServiceLineItemUpdateInput {
     id:                         ID
     description:                String
-    skuId:                      ID #todo make this mandatory after FE changes
+    skuId:                      ID
     """
     Deprecated: billing cycle is not updatable.
     """
@@ -53601,6 +53610,8 @@ func (ec *executionContext) fieldContext_Invoice_invoiceLineItems(_ context.Cont
 				return ec.fieldContext_InvoiceLine_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_InvoiceLine_sku(ctx, field)
+			case "skuName":
+				return ec.fieldContext_InvoiceLine_skuName(ctx, field)
 			case "description":
 				return ec.fieldContext_InvoiceLine_description(ctx, field)
 			case "price":
@@ -54611,6 +54622,50 @@ func (ec *executionContext) fieldContext_InvoiceLine_sku(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _InvoiceLine_skuName(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_skuName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SkuName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_skuName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoiceLine_description(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoiceLine_description(ctx, field)
 	if err != nil {
@@ -54632,11 +54687,14 @@ func (ec *executionContext) _InvoiceLine_description(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceLine_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -127510,8 +127568,16 @@ func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionS
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "skuName":
+			out.Values[i] = ec._InvoiceLine_skuName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "description":
 			out.Values[i] = ec._InvoiceLine_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "price":
 			out.Values[i] = ec._InvoiceLine_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

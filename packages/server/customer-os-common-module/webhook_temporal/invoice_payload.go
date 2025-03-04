@@ -71,7 +71,7 @@ func PopulateInvoicePayload(invoice *neo4jentity.InvoiceEntity, org *neo4jentity
 
 	for _, il := range ils {
 		invoiceLineItems = append(invoiceLineItems, InvoiceLineItem{
-			Description: utils.StringFirstNonEmpty(il.SkuName, il.Name),
+			Description: utils.StringFirstNonEmpty(il.SkuName, il.Description),
 			MetadataID:  il.Id,
 		})
 	}

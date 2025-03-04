@@ -393,7 +393,6 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 				CreatedAt:               utils.Now(),
 				SkuId:                   item.SkuId,
 				SkuName:                 item.SkuName,
-				Name:                    utils.FirstNotEmptyString(item.SkuName, item.Name),
 				Description:             item.Description,
 				Price:                   item.Price,
 				Quantity:                item.Quantity,
@@ -1075,7 +1074,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 			ServiceLineItemParentId: line.ServiceLineItemParentId,
 			SkuId:                   line.SkuId,
 			SkuName:                 line.SkuName,
-			Name:                    utils.FirstNotEmptyString(line.SkuName, line.Name),
+			Description:             line.Description,
 			Price:                   line.Price,
 			Quantity:                line.Quantity,
 			Amount:                  line.Amount,
@@ -1161,8 +1160,8 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 			Id:                      line.ServiceLineItemId,
 			ServiceLineItemParentId: line.ServiceLineItemParentId,
 			SkuId:                   line.SkuId,
-			SkuName:                 utils.FirstNotEmptyString(line.SkuName, line.Name),
-			Name:                    line.Name,
+			SkuName:                 line.SkuName,
+			Description:             line.Description,
 			Price:                   line.Price,
 			Quantity:                line.Quantity,
 			Amount:                  line.Amount,
@@ -1360,12 +1359,7 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			amount += calculatedSLIAmount
 			vat += calculatedSLIVat
 
-			sliName, err := s.sli.GetServiceLineItemName(ctx, sliEntity.ID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
 			invoiceLine := neo4jentity.InvoiceLineEntity{
-				Name:                    sliName,
 				Description:             sliEntity.Description,
 				Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
 				Quantity:                sliEntity.Quantity,
@@ -1532,7 +1526,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		amount += finalSLIAmount
 		vat += calculatedSLIVat
 		invoiceLine := neo4jentity.InvoiceLineEntity{
-			Name:                    sliEntityToInvoice.Description,
+			Description:             sliEntityToInvoice.Description,
 			Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycleInMonths), 2),
 			Quantity:                sliEntityToInvoice.Quantity,
 			Amount:                  finalSLIAmount,
@@ -1551,7 +1545,6 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 			if sku != nil {
 				invoiceLine.SkuId = sku.ID
 				invoiceLine.SkuName = sku.Name
-				invoiceLine.Name = sku.Name
 			}
 		}
 		invoiceLine.BilledType = sliEntityToInvoice.Billed
@@ -2332,13 +2325,13 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 
 	for _, invoiceLine := range invoiceLineEntities {
 		invoiceLineItem := map[string]string{
-			"Name":      utils.FirstNotEmptyString(invoiceLine.SkuName, invoiceLine.Name),
+			"Name":      utils.FirstNotEmptyString(invoiceLine.SkuName, invoiceLine.Description),
 			"Quantity":  fmt.Sprintf("%d", invoiceLine.Quantity),
 			"UnitPrice": invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Price, 2),
 			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Amount, 2),
 			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Vat, 2),
 		}
-		if invoiceLine.Description != "" {
+		if invoiceLine.Description != "" && invoiceLine.SkuName != "" {
 			invoiceLineItem["InvoiceLineDescription"] = invoiceLine.Description
 		}
 		sliDbNode, _ := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, tenant, invoiceLine.ServiceLineItemId)
