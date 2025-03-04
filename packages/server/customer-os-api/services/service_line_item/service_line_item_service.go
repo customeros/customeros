@@ -82,7 +82,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	}
 
 	if serviceLineItemDetails.SkuId == "" {
-		err := fmt.Errorf("sku id is required for one time contract line item")
+		err := fmt.Errorf("sku id is required for all service line items")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
