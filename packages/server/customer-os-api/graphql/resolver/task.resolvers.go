@@ -19,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
@@ -98,6 +98,9 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 
 	response := &model.TaskSearchResult{}
 
+	// Convert GraphQL Filter to commonmodel Filter
+	commonWhere := mapper.MapFilterToCommonModel(where)
+
 	wg.Add(1)
 	go func(resp *model.TaskSearchResult) {
 		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.TasksSearch.SearchTasks")
@@ -105,15 +108,15 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 		defer wg.Done()
 		tracing.SetDefaultResolverSpanTags(innerCtx, span)
 
-		//taskSearchResponse, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.SearchTasks(innerCtx, tenant, *limit, where, sort)
-		//if err != nil {
-		//	tracing.TraceErr(innerSpan, err)
-		//	setError(err)
-		//	return
-		//}
-		//
-		//resp.TotalElements = taskSearchResponse.Count
-		//resp.Tasks = taskSearchResponse.Strings
+		taskSearchResponse, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.SearchTasks(innerCtx, tenant, *limit, commonWhere, sort)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		resp.TotalElements = taskSearchResponse.Count
+		resp.Tasks = taskSearchResponse.Strings
 	}(response)
 
 	wg.Add(1)

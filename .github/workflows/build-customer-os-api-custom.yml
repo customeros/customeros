@@ -64,7 +64,7 @@ jobs:
         run: |
           mkdir -p "$GOBIN"
           if [ ! -f "$GOBIN/gotestsum" ]; then
-            go install gotest.tools/gotestsum@latest
+            CGO_ENABLED=0 go install gotest.tools/gotestsum@latest
           fi
           echo "$GOBIN" >> $GITHUB_PATH
 
@@ -150,7 +150,7 @@ jobs:
         run: |
           mkdir -p "$GOBIN"
           if [ ! -f "$GOBIN/gotestsum" ]; then
-            go install gotest.tools/gotestsum@latest
+            CGO_ENABLED=0 go install gotest.tools/gotestsum@latest
           fi
           echo "$GOBIN" >> $GITHUB_PATH
 

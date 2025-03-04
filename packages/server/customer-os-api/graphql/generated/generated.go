@@ -11838,12 +11838,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Tasks(childComplexity, args["ids"].([]string)), true
 
-	case "Query.tasks_search":
+	case "Query.tasks_Search":
 		if e.complexity.Query.TasksSearch == nil {
 			break
 		}
 
-		args, err := ec.field_Query_tasks_search_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_tasks_Search_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -17476,7 +17476,7 @@ input TagIdOrNameInput {
 }`, BuiltIn: false},
 	{Name: "../schemas/task.graphqls", Input: `extend type Query {
     tasks(ids: [ID!]): [Task!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    tasks_search(limit: Int, where: Filter, sort: SortBy): TaskSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tasks_Search(limit: Int, where: Filter, sort: SortBy): TaskSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -27272,6 +27272,80 @@ func (ec *executionContext) field_Query_tags_ByEntityType_argsEntityType(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_tasks_Search_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_tasks_Search_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := ec.field_Query_tasks_Search_argsWhere(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg1
+	arg2, err := ec.field_Query_tasks_Search_argsSort(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sort"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Query_tasks_Search_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["limit"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_tasks_Search_argsWhere(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.Filter, error) {
+	if _, ok := rawArgs["where"]; !ok {
+		var zeroVal *model.Filter
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+	if tmp, ok := rawArgs["where"]; ok {
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+	}
+
+	var zeroVal *model.Filter
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_tasks_Search_argsSort(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model1.SortBy, error) {
+	if _, ok := rawArgs["sort"]; !ok {
+		var zeroVal *model1.SortBy
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+	if tmp, ok := rawArgs["sort"]; ok {
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+	}
+
+	var zeroVal *model1.SortBy
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_tasks_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -27297,80 +27371,6 @@ func (ec *executionContext) field_Query_tasks_argsIds(
 	}
 
 	var zeroVal []string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_tasks_search_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_tasks_search_argsLimit(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["limit"] = arg0
-	arg1, err := ec.field_Query_tasks_search_argsWhere(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["where"] = arg1
-	arg2, err := ec.field_Query_tasks_search_argsSort(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["sort"] = arg2
-	return args, nil
-}
-func (ec *executionContext) field_Query_tasks_search_argsLimit(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int, error) {
-	if _, ok := rawArgs["limit"]; !ok {
-		var zeroVal *int
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-	if tmp, ok := rawArgs["limit"]; ok {
-		return ec.unmarshalOInt2ᚖint(ctx, tmp)
-	}
-
-	var zeroVal *int
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_tasks_search_argsWhere(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*model.Filter, error) {
-	if _, ok := rawArgs["where"]; !ok {
-		var zeroVal *model.Filter
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
-	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
-	}
-
-	var zeroVal *model.Filter
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_tasks_search_argsSort(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*model1.SortBy, error) {
-	if _, ok := rawArgs["sort"]; !ok {
-		var zeroVal *model1.SortBy
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
-	}
-
-	var zeroVal *model1.SortBy
 	return zeroVal, nil
 }
 
@@ -101467,8 +101467,8 @@ func (ec *executionContext) fieldContext_Query_tasks(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_tasks_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_tasks_search(ctx, field)
+func (ec *executionContext) _Query_tasks_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tasks_Search(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -101532,7 +101532,7 @@ func (ec *executionContext) _Query_tasks_search(ctx context.Context, field graph
 	return ec.marshalNTaskSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskSearchResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_tasks_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_tasks_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -101557,7 +101557,7 @@ func (ec *executionContext) fieldContext_Query_tasks_search(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tasks_search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_tasks_Search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -135092,7 +135092,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "tasks_search":
+		case "tasks_Search":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -135101,7 +135101,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tasks_search(ctx, field)
+				res = ec._Query_tasks_Search(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
