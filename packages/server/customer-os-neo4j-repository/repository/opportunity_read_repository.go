@@ -3,11 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -25,6 +25,7 @@ type OpportunityReadRepository interface {
 	GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetForTasks(ctx context.Context, tenant string, taskIds []string) ([]*utils.DbNodeAndId, error)
 	GetPaginatedOpportunitiesLinkedToAnOrganization(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
 
@@ -36,8 +37,7 @@ type opportunityReadRepository struct {
 func (r *opportunityReadRepository) GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contractId", contractId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity)
@@ -85,8 +85,7 @@ func (r *opportunityReadRepository) prepareReadSession(ctx context.Context) neo4
 func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetOpportunityById")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$id}) WHERE op:Opportunity_%s RETURN op`, tenant)
@@ -114,8 +113,7 @@ func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tx *
 func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunityForContract")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contractId", contractId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
@@ -151,8 +149,7 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx c
 func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string, includeDraftContracts bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 	span.LogFields(log.Bool("includeDraftContracts", includeDraftContracts))
 
@@ -190,7 +187,7 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization
 func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetRenewalOpportunitiesForClosingAsLost")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
@@ -238,8 +235,7 @@ func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx 
 func (r *opportunityReadRepository) GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForContracts")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 			WHERE c.id IN $contractIds
@@ -269,8 +265,7 @@ func (r *opportunityReadRepository) GetForContracts(ctx context.Context, tenant 
 func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForOrganizations")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 			WHERE org.id IN $orgIds
@@ -298,11 +293,42 @@ func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, ten
 	return result.([]*utils.DbNodeAndId), err
 }
 
+func (r *opportunityReadRepository) GetForTasks(ctx context.Context, tenant string, taskIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForTasks")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)-[:LINKED_TO]->(op:Opportunity)
+			WHERE tsk.id IN $taskIds
+			RETURN op, tsk.id ORDER BY op.createdAt DESC`
+	params := map[string]any{
+		"tenant":  tenant,
+		"taskIds": taskIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
+}
+
 func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganization(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetPaginatedOpportunitiesLinkedToAnOrganization")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 

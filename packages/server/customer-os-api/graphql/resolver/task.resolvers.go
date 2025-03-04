@@ -114,7 +114,22 @@ func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, 
 
 // OpportunityIds is the resolver for the opportunityIds field.
 func (r *taskResolver) OpportunityIds(ctx context.Context, obj *model.Task) ([]string, error) {
-	panic(fmt.Errorf("not implemented: OpportunityIds - opportunityIds"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForTask(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get users for task %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get users for task %s", obj.ID)
+		return nil, nil
+	}
+	var output []string
+	if opportunityEntities != nil {
+		for _, opportunityEntity := range *opportunityEntities {
+			output = append(output, opportunityEntity.Id)
+		}
+	}
+	return output, nil
 }
 
 // Task returns generated.TaskResolver implementation.
