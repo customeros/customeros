@@ -121,7 +121,7 @@ func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionCo
 		}
 	}
 
-	err = c.invoiceService.SendPayInvoiceNotification(ctx, executionContainer.InputData.InvoiceID, paymentEnabled)
+	err = c.invoiceService.SendInvoiceNotification(ctx, executionContainer.InputData.InvoiceID, paymentEnabled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionCompleted, result, err // failed send invoice email is not a blocker, since a new attempt will be made automatically by cron
