@@ -9,7 +9,7 @@ query TasksSearch($limit: Int!, $filterName: String!, $filterValue: Any!, $filte
       ]
     }
   ) {
-    ids
+    tasks
     totalElements
     totalAvailable
   }

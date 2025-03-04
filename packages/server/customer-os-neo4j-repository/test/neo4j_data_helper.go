@@ -1497,10 +1497,18 @@ func CreateTask(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 		"id":          taskId,
 		"subject":     taskEntity.Subject,
 		"description": taskEntity.Description,
-		"status":      taskEntity.Status,
+		"status":      taskEntity.Status.String(),
 		"dueAt":       taskEntity.DueAt,
 		"createdAt":   taskEntity.CreatedAt,
 		"updatedAt":   taskEntity.UpdatedAt,
 	})
 	return taskId
+}
+
+func TaskCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, taskId, userId string) {
+	LinkNodes(ctx, driver, taskId, userId, "CREATED_BY")
+}
+
+func TaskAssignedTo(ctx context.Context, driver *neo4j.DriverWithContext, taskId, userId string) {
+	LinkNodes(ctx, driver, taskId, userId, "ASSIGNED_TO")
 }

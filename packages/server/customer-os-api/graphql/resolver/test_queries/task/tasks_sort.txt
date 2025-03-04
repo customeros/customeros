@@ -3,7 +3,7 @@ query TasksSort($limit: Int!, $sortByField: String!, $sortByDirection: SortingDi
     limit: $limit
     sort: { by: $sortByField, direction: $sortByDirection }
   ) {
-    ids
+    tasks
     totalElements
     totalAvailable
   }
