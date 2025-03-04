@@ -2794,7 +2794,7 @@ type Task struct {
 	ID             string     `json:"id"`
 	Subject        *string    `json:"subject,omitempty"`
 	Description    *string    `json:"description,omitempty"`
-	Asignees       []string   `json:"asignees"`
+	Assignees      []string   `json:"assignees"`
 	AuthorID       *string    `json:"authorId,omitempty"`
 	Status         TaskStatus `json:"status"`
 	OpportunityIds []string   `json:"opportunityIds"`
@@ -2808,7 +2808,7 @@ type TaskInput struct {
 	Subject        *string     `json:"subject,omitempty"`
 	Description    *string     `json:"description,omitempty"`
 	Status         *TaskStatus `json:"status,omitempty"`
-	Asignees       []string    `json:"asignees,omitempty"`
+	Assignees      []string    `json:"assignees,omitempty"`
 	OpportunityIds []string    `json:"opportunityIds,omitempty"`
 	DueAt          *time.Time  `json:"dueAt,omitempty"`
 }

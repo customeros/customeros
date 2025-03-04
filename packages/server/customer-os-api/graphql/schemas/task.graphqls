@@ -11,7 +11,7 @@ input TaskInput {
     subject         : String
     description     : String
     status          : TaskStatus
-    asignees        : [ID!]
+    assignees        : [ID!]
     opportunityIds  : [ID!]
     dueAt           : Time
 }
@@ -20,7 +20,7 @@ type Task {
     id              : ID!
     subject         : String
     description     : String
-    asignees        : [ID!]! @goField(forceResolver: true)
+    assignees       : [ID!]! @goField(forceResolver: true)
     authorId        : ID @goField(forceResolver: true)
     status          : TaskStatus!
     opportunityIds  : [ID!]! @goField(forceResolver: true)

@@ -7,17 +7,17 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
@@ -31,7 +31,7 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 		Description:     input.Description,
 		DueAt:           input.DueAt,
 		OpportunityIds:  &input.OpportunityIds,
-		AssigneeUserIds: &input.Asignees,
+		AssigneeUserIds: &input.Assignees,
 	}
 	if input.Status != nil {
 		dataFields.Status = utils.ToPtr(enummapper.MapTaskStatusFromModel(*input.Status))
@@ -76,23 +76,40 @@ func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 	return []*model.Task{}, nil
 }
 
-// Asignees is the resolver for the asignees field.
-func (r *taskResolver) Asignees(ctx context.Context, obj *model.Task) ([]string, error) {
-	panic(fmt.Errorf("not implemented: Asignees - asignees"))
+// Assignees is the resolver for the assignees field.
+func (r *taskResolver) Assignees(ctx context.Context, obj *model.Task) ([]string, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntities, err := dataloader.For(ctx).GetUsersAssigneesForTask(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get users for task %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get users for task %s", obj.ID)
+		return nil, nil
+	}
+	var output []string
+	if userEntities != nil {
+		for _, userEntity := range *userEntities {
+			output = append(output, userEntity.Id)
+		}
+	}
+	return output, nil
 }
 
 // AuthorID is the resolver for the authorId field.
 func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	organizationEntity, err := dataloader.For(ctx).GetOrganizationForContract(ctx, obj.Metadata.ID)
+	userEntity, err := dataloader.For(ctx).GetUserCreatorForTask(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("error fetching organization for contract %s: %s", obj.Metadata.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching organization for contract %s", obj.Metadata.ID)
+		graphql.AddErrorf(ctx, "Failed to get author")
 		return nil, nil
 	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	if userEntity == nil {
+		return nil, nil
+	}
+	return utils.StringPtr(userEntity.Id), nil
 }
 
 // OpportunityIds is the resolver for the opportunityIds field.

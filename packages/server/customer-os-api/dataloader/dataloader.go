@@ -46,6 +46,7 @@ type Loaders struct {
 	PhoneNumbersForContact                      *dataloader.Loader
 	UsersConnectedForContact                    *dataloader.Loader
 	UsersForEmail                               *dataloader.Loader
+	UsersForTask                                *dataloader.Loader
 	UsersForPhoneNumber                         *dataloader.Loader
 	UserOwnerForOrganization                    *dataloader.Loader
 	UserOwnerForOpportunity                     *dataloader.Loader
@@ -54,6 +55,7 @@ type Loaders struct {
 	UserCreatorForContract                      *dataloader.Loader
 	UserAuthorForLogEntry                       *dataloader.Loader
 	UserAuthorForComment                        *dataloader.Loader
+	UserCreatorForTask                          *dataloader.Loader
 	UserForFlowSender                           *dataloader.Loader
 	User                                        *dataloader.Loader
 	ContactsForEmail                            *dataloader.Loader
@@ -363,12 +365,14 @@ func NewDataLoader(services *cosapi_services.Services) *Loaders {
 		ReplyToInteractionEventForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventBatcher.getReplyToInteractionEventsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersConnectedForContact:                    dataloader.NewBatchedLoader(userBatcher.getUsersConnectedForContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForEmail:                               dataloader.NewBatchedLoader(userBatcher.getUsersForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UsersForTask:                                dataloader.NewBatchedLoader(userBatcher.getUsersForTasks, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPhoneNumber:                         dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserOwnerForOrganization:                    dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserOwnerForOpportunity:                     dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserCreatorForOpportunity:                   dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserCreatorForServiceLineItem:               dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForServiceLineItems, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserCreatorForContract:                      dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserCreatorForTask:                          dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForTasks, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForLogEntry:                       dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForComment:                        dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserForFlowSender:                           dataloader.NewBatchedLoader(userBatcher.getUserForFlowSenders, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

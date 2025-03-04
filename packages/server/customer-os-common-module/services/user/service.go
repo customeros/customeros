@@ -347,6 +347,44 @@ func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Conte
 	return &userEntities, nil
 }
 
+func (s *userService) GetUserCreatorsForTasks(ctx context.Context, taskIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserCreatorsForTasks")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+
+	users, err := s.neo4j.UserReadRepository.GetAllCreatorsForTasks(ctx, common.GetTenantFromContext(ctx), taskIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserAssigneesForTasks(ctx context.Context, taskIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserCreatorsForTasks")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+
+	users, err := s.neo4j.UserReadRepository.GetAllAssigneesForTasks(ctx, common.GetTenantFromContext(ctx), taskIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
 func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.UserEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersWithMailboxes")
 	defer span.Finish()
