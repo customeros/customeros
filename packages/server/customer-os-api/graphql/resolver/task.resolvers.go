@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"sync"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
@@ -14,9 +15,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
@@ -53,12 +56,12 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 }
 
 // Tasks is the resolver for the tasks field.
-func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
+func (r *queryResolver) Tasks(ctx context.Context, ids []string) ([]*model.Task, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tasks", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	taskEntities, err := r.Services.CommonServices.TaskService.GetAll(ctx)
+	taskEntities, err := r.Services.CommonServices.TaskService.GetAllByIds(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get tasks")
@@ -66,6 +69,80 @@ func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 	}
 
 	return mapper.MapEntitiesToTasks(taskEntities), nil
+}
+
+// TasksSearch is the resolver for the tasks_search field.
+func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonmodel.SortBy) (*model.TaskSearchResult, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TasksSearch", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	if limit == nil {
+		i := 1000
+		limit = &i
+	}
+
+	var wg sync.WaitGroup
+	var firstErr error
+	var mu sync.Mutex
+
+	setError := func(err error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if firstErr == nil {
+			firstErr = err
+		}
+	}
+
+	response := &model.TaskSearchResult{}
+
+	wg.Add(1)
+	go func(resp *model.TaskSearchResult) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.TasksSearch.SearchTasks")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, span)
+
+		//taskSearchResponse, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.SearchTasks(innerCtx, tenant, *limit, where, sort)
+		//if err != nil {
+		//	tracing.TraceErr(innerSpan, err)
+		//	setError(err)
+		//	return
+		//}
+		//
+		//resp.TotalElements = taskSearchResponse.Count
+		//resp.Tasks = taskSearchResponse.Strings
+	}(response)
+
+	wg.Add(1)
+	go func(resp *model.TaskSearchResult) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.TasksSearch.TotalAvailable")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		totalAvailable, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.CountByTenant(innerCtx, tenant)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		resp.TotalAvailable = totalAvailable
+	}(response)
+
+	wg.Wait()
+
+	if firstErr != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		r.log.Errorf("Failed to get tasks: %v", firstErr)
+		graphql.AddErrorf(ctx, "Failed to get tasks: %v", firstErr)
+		return nil, nil
+	}
+
+	return response, nil
 }
 
 // Assignees is the resolver for the assignees field.

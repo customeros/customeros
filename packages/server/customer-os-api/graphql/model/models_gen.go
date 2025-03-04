@@ -2814,6 +2814,12 @@ type TaskInput struct {
 	DueAt          *time.Time  `json:"dueAt,omitempty"`
 }
 
+type TaskSearchResult struct {
+	Tasks          []string `json:"tasks"`
+	TotalElements  int64    `json:"totalElements"`
+	TotalAvailable int64    `json:"totalAvailable"`
+}
+
 type Tax struct {
 	SalesTax bool    `json:"salesTax"`
 	Vat      bool    `json:"vat"`
