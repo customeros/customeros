@@ -446,7 +446,7 @@ func DefaultTableViewDefinitionTasks(span opentracing.Span) (postgres_entity.Tab
 		DefaultFilters: ``,
 		Sorting:        ``,
 		IsPreset:       true,
-		IsShared:       true,
+		IsShared:       false,
 	}, nil
 }
 
