@@ -301,6 +301,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	contactsFound, contactsForTargetOrganizationsFound := false, false
 	opportunitiesFound, opportunitiesRecordsFound, contractsFound := false, false, false
 	flowSequencesFound, flowContactsFound := false, false
+	tasksFound := false
 
 	for _, def := range tableViewDefinitions {
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) && !def.IsShared {
@@ -350,6 +351,10 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypeUpcomingInvoices) && !def.IsShared {
 			span.LogKV("upcomingInvoicesTableId", def.ID)
 			upcomingInvoiceFound = true
+		}
+		if def.TableType == string(postgresEntity.TableViewTypeTasks) && def.TableId == string(postgresEntity.TableIDTypeTasks) {
+			span.LogKV("tasksTableId", def.ID)
+			tasksFound = true
 		}
 	}
 
@@ -478,6 +483,17 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		tvDef, err := table_view.DefaultTableViewDefinitionUpcomingInvoices(span)
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for upcoming invoices"))
+		} else {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !tasksFound {
+		tvDef, err := table_view.DefaultTableViewDefinitionTasks(span)
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for tasks"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant

@@ -48,6 +48,7 @@ const (
 	TableViewTypeOpportunities TableViewType = "OPPORTUNITIES"
 	TableViewTypeContracts     TableViewType = "CONTRACTS"
 	TableViewTypeFlow          TableViewType = "FLOW"
+	TableViewTypeTasks         TableViewType = "TASKS"
 )
 
 type TableIdType string
@@ -65,6 +66,7 @@ const (
 	TableIDTypeContracts                      TableIdType = "CONTRACTS"
 	TableIDTypeFlowActions                    TableIdType = "FLOW_ACTIONS"
 	TableIDTypeFlowContacts                   TableIdType = "FLOW_CONTACTS"
+	TableIDTypeTasks                          TableIdType = "TASKS"
 )
 
 type ColumnViewType string
@@ -169,4 +171,13 @@ const (
 	ColumnViewTypeFlowStatus                         ColumnViewType = "FLOW_STATUS"
 	ColumnViewTypeFlowActionName                     ColumnViewType = "FLOW_ACTION_NAME"
 	ColumnViewTypeFlowActionStatus                   ColumnViewType = "FLOW_ACTION_STATUS"
+	ColumnViewTypeTasksSubject                       ColumnViewType = "TASKS_SUBJECT"
+	ColumnViewTypeTasksAssignees                     ColumnViewType = "TASKS_ASSIGNEES"
+	ColumnViewTypeTasksDescription                   ColumnViewType = "TASKS_DESCRIPTION"
+	ColumnViewTypeTasksDueDate                       ColumnViewType = "TASKS_DUE_DATE"
+	ColumnViewTypeTasksStatus                        ColumnViewType = "TASKS_STATUS"
+	ColumnViewTypeTasksAuthor                        ColumnViewType = "TASKS_AUTHOR"
+	ColumnViewTypeTasksCreatedAt                     ColumnViewType = "TASKS_CREATED_AT"
+	ColumnViewTypeTasksUpdatedAt                     ColumnViewType = "TASKS_UPDATED_AT"
+	ColumnViewTypeTasksOpportunities                 ColumnViewType = "TASKS_OPPORTUNITIES"
 )
