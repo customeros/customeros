@@ -204,7 +204,9 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 			if filter.Filter.Property == TasksAuthor {
 				createInOrEmptyStringFilter(filter, userAuthorFilter, "id")
 			}
-
+			if filter.Filter.Property == TasksDueDate {
+				createTimeFilter(filter, taskFilter, string(neo4jentity.TaskPropertyDueAt))
+			}
 		}
 
 		if len(taskFilter.Filters) > 0 {
@@ -280,37 +282,44 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 		if sort != nil {
 			if sort.By == TasksSubject {
 				if sort.Direction == model.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(tsk.subject) <> \"\" and not tsk.subject is null THEN toLower(trim(tsk.subject)) ELSE '𠀀' END as SORT_BY "
+					aliases += `CASE WHEN trim(tsk.subject) <> '' and not tsk.subject is null THEN toLower(trim(tsk.subject)) ELSE '𠀀' END as SORT_BY `
 				} else {
-					aliases += "CASE WHEN trim(tsk.subject) <> \"\" and not tsk.subject is null THEN toLower(trim(tsk.subject)) ELSE '' END as SORT_BY "
+					aliases += `CASE WHEN trim(tsk.subject) <> '' and not tsk.subject is null THEN toLower(trim(tsk.subject)) ELSE '' END as SORT_BY `
 				}
 			}
 			if sort.By == TasksDescription {
 				if sort.Direction == model.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(tsk.description) <> \"\" and not tsk.description is null THEN toLower(trim(tsk.description)) ELSE '𠀀' END as SORT_BY "
+					aliases += `CASE WHEN trim(tsk.description) <> '' and not tsk.description is null THEN toLower(trim(tsk.description)) ELSE '𠀀' END as SORT_BY `
 				} else {
-					aliases += "CASE WHEN trim(tsk.description) <> \"\" and not tsk.description is null THEN toLower(trim(tsk.description)) ELSE '' END as SORT_BY "
+					aliases += `CASE WHEN trim(tsk.description) <> '' and not tsk.description is null THEN toLower(trim(tsk.description)) ELSE '' END as SORT_BY `
 				}
 			}
 			if sort.By == TasksDueDate {
 				if sort.Direction == model.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(tsk.dueAt) <> \"\" and not tsk.dueAt is null THEN toLower(trim(tsk.dueAt)) ELSE '𠀀' END as SORT_BY "
+					aliases += `CASE WHEN tsk.dueAt IS NOT NULL THEN tsk.dueAt ELSE datetime({year:2100}) END as SORT_BY `
 				} else {
-					aliases += "CASE WHEN trim(tsk.dueAt) <> \"\" and not tsk.dueAt is null THEN toLower(trim(tsk.dueAt)) ELSE '' END as SORT_BY "
+					aliases += `CASE WHEN tsk.dueAt IS NOT NULL THEN tsk.dueAt ELSE datetime({year:1900}) END as SORT_BY `
 				}
 			}
 			if sort.By == TasksCreatedAt {
 				if sort.Direction == model.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(tsk.createdAt) <> \"\" and not tsk.createdAt is null THEN toLower(trim(tsk.createdAt)) ELSE '𠀀' END as SORT_BY "
+					aliases += `CASE WHEN tsk.createdAt IS NOT NULL THEN tsk.createdAt ELSE datetime({year:2100}) END as SORT_BY `
 				} else {
-					aliases += "CASE WHEN trim(tsk.createdAt) <> \"\" and not tsk.createdAt is null THEN toLower(trim(tsk.createdAt)) ELSE '' END as SORT_BY "
+					aliases += `CASE WHEN tsk.createdAt IS NOT NULL THEN tsk.createdAt ELSE datetime({year:1900}) END as SORT_BY `
+				}
+			}
+			if sort.By == TasksUpdatedAt {
+				if sort.Direction == model.SortingDirectionAsc {
+					aliases += `CASE WHEN tsk.updatedAt IS NOT NULL THEN tsk.updatedAt ELSE datetime({year:2100}) END as SORT_BY `
+				} else {
+					aliases += `CASE WHEN tsk.updatedAt IS NOT NULL THEN tsk.updatedAt ELSE datetime({year:1900}) END as SORT_BY `
 				}
 			}
 			if sort.By == TasksStatus {
 				if sort.Direction == model.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(tsk.status) <> \"\" and not tsk.status is null THEN toLower(trim(tsk.status)) ELSE '𠀀' END as SORT_BY "
+					aliases += `CASE WHEN trim(tsk.status) <> '' and not tsk.status is null THEN toLower(trim(tsk.status)) ELSE '' END as SORT_BY `
 				} else {
-					aliases += "CASE WHEN trim(tsk.status) <> \"\" and not tsk.status is null THEN toLower(trim(tsk.status)) ELSE '' END as SORT_BY "
+					aliases += `CASE WHEN trim(tsk.status) <> '' and not tsk.status is null THEN toLower(trim(tsk.status)) ELSE '𠀀' END as SORT_BY `
 				}
 			}
 			if sort.By == TasksAssignees {
@@ -439,5 +448,23 @@ func createInOrEmptyStringFilter(filter *model.Filter, cypherFilter *utils.Cyphe
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.ArrayStr, model.ComparisonOperatorIn))
 	} else if filter.Filter.Operation == model.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, filter.Filter.Value.ArrayStr, model.ComparisonOperatorNotIn))
+	}
+}
+
+func createTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, neo4jProperty string) {
+	if filter.Filter.Operation == model.ComparisonOperatorBetween && filter.Filter.Value.ArrayTime != nil && len(*filter.Filter.Value.ArrayTime) == 2 {
+		times := *filter.Filter.Value.ArrayTime
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[0], model.ComparisonOperatorGte))
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, times[1], model.ComparisonOperatorLte))
+	} else if filter.Filter.Operation == model.ComparisonOperatorIsEmpty {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, nil, model.ComparisonOperatorIsEmpty))
+	} else if filter.Filter.Operation == model.ComparisonOperatorGte && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, model.ComparisonOperatorGte))
+	} else if filter.Filter.Operation == model.ComparisonOperatorGt && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, model.ComparisonOperatorGt))
+	} else if filter.Filter.Operation == model.ComparisonOperatorLte && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, model.ComparisonOperatorLte))
+	} else if filter.Filter.Operation == model.ComparisonOperatorLt && filter.Filter.Value.Time != nil {
+		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, model.ComparisonOperatorLt))
 	}
 }
