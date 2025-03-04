@@ -86,7 +86,8 @@ type InvoiceLine implements MetadataInterface {
     metadata:           Metadata!
     skuId:              ID
     sku:                Sku @goField(forceResolver: true)
-    description:        String @deprecated(reason: "use sku instead")
+    skuName:            String!
+    description:        String!
     price:              Float!
     quantity:           Int64!
     subtotal:           Float!

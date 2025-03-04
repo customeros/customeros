@@ -57,7 +57,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	})
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenantName, invoiceId, neo4jentity.InvoiceLineEntity{
 		CreatedAt:   timeNow,
-		Name:        "SLI 1",
+		Description: "SLI 1",
 		Price:       100,
 		Quantity:    1,
 		Amount:      100,
