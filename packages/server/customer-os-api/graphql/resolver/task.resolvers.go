@@ -8,27 +8,38 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 // TaskSave is the resolver for the task_Save field.
 func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) (*model.Task, error) {
-	//data := &model.Task{
-	//	ID:            *input.ID,
-	//	Name:          *input.Name,
-	//	Description:   input.Description,
-	//	Context:       *input.Context,
-	//	Asignees:      input.Asignees,
-	//	OwnerID:       *input.OwnerID,
-	//	Status:        *input.Status,
-	//	OpportunityID: input.OpportunityID,
-	//	DueAt:         *input.DueAt,
-	//	CreatedAt:     time.Now(),
-	//	UpdatedAt:     time.Now(),
-	//}
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TaskSave", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	//return data, nil
+	dataFields := data_fields.TaskFields{
+		Subject:         input.Subject,
+		Description:     input.Description,
+		DueAt:           input.DueAt,
+		OpportunityIds:  &input.OpportunityIds,
+		AssigneeUserIds: &input.Asignees,
+	}
+	if input.Status != nil {
+		dataFields.Status = utils.ToPtr(enummapper.MapTaskStatusFromModel(*input.Status))
+	}
+	_, err := r.Services.CommonServices.TaskService.Save(ctx, nil, input.ID, dataFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to save task")
+		return nil, err
+	}
+
 	return nil, nil
 }
 
@@ -56,21 +67,21 @@ func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
 }
 
 // Asignees is the resolver for the asignees field.
-func (r *taskInputResolver) Asignees(ctx context.Context, obj *model.TaskInput, data []string) error {
+func (r *taskResolver) Asignees(ctx context.Context, obj *model.Task) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Asignees - asignees"))
 }
 
 // AuthorID is the resolver for the authorId field.
-func (r *taskInputResolver) AuthorID(ctx context.Context, obj *model.TaskInput, data *string) error {
+func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, error) {
 	panic(fmt.Errorf("not implemented: AuthorID - authorId"))
 }
 
 // OpportunityIds is the resolver for the opportunityIds field.
-func (r *taskInputResolver) OpportunityIds(ctx context.Context, obj *model.TaskInput, data []string) error {
+func (r *taskResolver) OpportunityIds(ctx context.Context, obj *model.Task) ([]string, error) {
 	panic(fmt.Errorf("not implemented: OpportunityIds - opportunityIds"))
 }
 
-// TaskInput returns generated.TaskInputResolver implementation.
-func (r *Resolver) TaskInput() generated.TaskInputResolver { return &taskInputResolver{r} }
+// Task returns generated.TaskResolver implementation.
+func (r *Resolver) Task() generated.TaskResolver { return &taskResolver{r} }
 
-type taskInputResolver struct{ *Resolver }
+type taskResolver struct{ *Resolver }

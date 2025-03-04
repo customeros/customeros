@@ -2809,7 +2809,6 @@ type TaskInput struct {
 	Description    *string     `json:"description,omitempty"`
 	Status         *TaskStatus `json:"status,omitempty"`
 	Asignees       []string    `json:"asignees,omitempty"`
-	AuthorID       *string     `json:"authorId,omitempty"`
 	OpportunityIds []string    `json:"opportunityIds,omitempty"`
 	DueAt          *time.Time  `json:"dueAt,omitempty"`
 }

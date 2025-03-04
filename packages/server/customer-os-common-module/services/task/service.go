@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -71,6 +72,9 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		}
 		if utils.IfNotNilString(taskFields.CreatedByUserId) == "" {
 			taskFields.CreatedByUserId = utils.StringPtr(common.GetUserIdFromContext(ctx))
+		}
+		if taskFields.Status == nil {
+			taskFields.Status = utils.ToPtr(enum.TaskStatusTodo)
 		}
 
 		taskId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelTask)
