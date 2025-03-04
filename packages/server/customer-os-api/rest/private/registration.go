@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -712,6 +713,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
@@ -725,16 +727,21 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			case common_enum.WorkspaceProviderAzure.String():
 				revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 			}
+			span.LogFields(tracingLog.String("revocationURL", revocationURL))
 
 			if revocationURL != "" {
 				resp, err := http.Get(revocationURL)
 				if err != nil {
+					tracing.TraceErr(span, err)
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
 
 				if resp.StatusCode != http.StatusOK {
 					// Revocation failed
+					body, _ := io.ReadAll(resp.Body)
+					span.LogFields(tracingLog.String("response.body", string(body)))
+					tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
@@ -743,6 +750,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		err = s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
