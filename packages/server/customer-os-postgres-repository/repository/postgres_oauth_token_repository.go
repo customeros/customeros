@@ -53,8 +53,7 @@ func (repo oAuthTokenRepository) GetAll(ctx context.Context) ([]postgres_entity.
 func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant string) ([]postgres_entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByTenant")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entities []postgres_entity.OAuthTokenEntity
 
@@ -67,6 +66,7 @@ func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant string)
 		return nil, err
 	}
 
+	span.LogFields(log.Int("result.count", len(entities)))
 	return entities, nil
 }
 
@@ -133,7 +133,8 @@ func (repo oAuthTokenRepository) GetByPlayerId(ctx context.Context, tenant, prov
 func (repo oAuthTokenRepository) Save(ctx context.Context, oAuthToken postgres_entity.OAuthTokenEntity) (*postgres_entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "oAuthToken", oAuthToken)
 
 	result := repo.db.Save(&oAuthToken)
 	if result.Error != nil {

@@ -154,6 +154,7 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	userId := common.GetUserIdFromContext(ctx)
+	span.LogKV("request.userId", userId)
 
 	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, userId)
 	if err != nil {
@@ -163,7 +164,7 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 		return nil, nil
 	}
 
-	response := []*model.Mailbox{}
+	var response []*model.Mailbox
 	for _, mailbox := range allMailboxes {
 		response = append(response, &model.Mailbox{
 			Provider:           model.MailboxProviderMailstack,
