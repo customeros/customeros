@@ -543,7 +543,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			Tenant: currentTenant,
 		})
 
-		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
+		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, currentTenant, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{

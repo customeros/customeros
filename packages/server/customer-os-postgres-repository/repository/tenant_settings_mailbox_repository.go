@@ -174,6 +174,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByUserId(ctx context.Context, us
 		return nil, err
 	}
 
+	span.LogFields(tracingLog.Int("result.count", len(result)))
 	return result, nil
 }
 
