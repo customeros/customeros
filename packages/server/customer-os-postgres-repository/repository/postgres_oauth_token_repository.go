@@ -79,7 +79,7 @@ func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provide
 	var oAuthTokenEntity postgres_entity.OAuthTokenEntity
 
 	err := repo.db.
-		Where("provider = ?", provider).
+		Where("LOWER(provider) = LOWER(?)", provider).
 		Where("tenant_name = ?", tenant).
 		Where("email_address = ?", email).
 		First(&oAuthTokenEntity).Error
