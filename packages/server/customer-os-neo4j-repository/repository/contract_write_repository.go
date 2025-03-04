@@ -3,6 +3,8 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -11,7 +13,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type ContractWriteRepository interface {
@@ -556,12 +557,11 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 func (r *contractWriteRepository) SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SetLtv")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
-				SET ct.ltv=$ltv`
+				SET ct.ltv=$ltv, ct.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,

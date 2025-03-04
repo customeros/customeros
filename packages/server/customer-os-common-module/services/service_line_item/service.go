@@ -257,10 +257,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.contract.RecalculateContractLtv(ctx, contractEntity.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
 
 			userName := ""
 			if common.GetUserIdFromContext(ctx) == "" {
@@ -754,10 +750,6 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.contract.RecalculateContractLtv(ctx, contractEntity.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
 
 			sliName, err := s.GetServiceLineItemName(ctx, serviceLineItemId)
 			if err != nil {
@@ -866,10 +858,6 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-			err = s.contract.RecalculateContractLtv(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
