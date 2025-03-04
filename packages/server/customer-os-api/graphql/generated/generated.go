@@ -1586,7 +1586,8 @@ type ComplexityRoot struct {
 		TableViewDefs                      func(childComplexity int) int
 		Tags                               func(childComplexity int) int
 		TagsByEntityType                   func(childComplexity int, entityType model.EntityType) int
-		Tasks                              func(childComplexity int) int
+		Tasks                              func(childComplexity int, ids []string) int
+		TasksSearch                        func(childComplexity int, limit *int, where *model.Filter, sort *model1.SortBy) int
 		Tenant                             func(childComplexity int) int
 		TenantBillingProfile               func(childComplexity int, id string) int
 		TenantBillingProfiles              func(childComplexity int) int
@@ -1746,6 +1747,12 @@ type ComplexityRoot struct {
 		Status         func(childComplexity int) int
 		Subject        func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
+	}
+
+	TaskSearchResult struct {
+		Tasks          func(childComplexity int) int
+		TotalAvailable func(childComplexity int) int
+		TotalElements  func(childComplexity int) int
 	}
 
 	Tax struct {
@@ -2302,7 +2309,8 @@ type QueryResolver interface {
 	SlackChannels(ctx context.Context, pagination *model.Pagination) (*model.SlackChannelPage, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	TagsByEntityType(ctx context.Context, entityType model.EntityType) ([]*model.Tag, error)
-	Tasks(ctx context.Context) ([]*model.Task, error)
+	Tasks(ctx context.Context, ids []string) ([]*model.Task, error)
+	TasksSearch(ctx context.Context, limit *int, where *model.Filter, sort *model1.SortBy) (*model.TaskSearchResult, error)
 	Tenant(ctx context.Context) (string, error)
 	TenantBillingProfiles(ctx context.Context) ([]*model.TenantBillingProfile, error)
 	TenantBillingProfile(ctx context.Context, id string) (*model.TenantBillingProfile, error)
@@ -11823,7 +11831,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Tasks(childComplexity), true
+		args, err := ec.field_Query_tasks_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Tasks(childComplexity, args["ids"].([]string)), true
+
+	case "Query.tasks_search":
+		if e.complexity.Query.TasksSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_tasks_search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TasksSearch(childComplexity, args["limit"].(*int), args["where"].(*model.Filter), args["sort"].(*model1.SortBy)), true
 
 	case "Query.tenant":
 		if e.complexity.Query.Tenant == nil {
@@ -12667,6 +12692,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Task.UpdatedAt(childComplexity), true
+
+	case "TaskSearchResult.tasks":
+		if e.complexity.TaskSearchResult.Tasks == nil {
+			break
+		}
+
+		return e.complexity.TaskSearchResult.Tasks(childComplexity), true
+
+	case "TaskSearchResult.totalAvailable":
+		if e.complexity.TaskSearchResult.TotalAvailable == nil {
+			break
+		}
+
+		return e.complexity.TaskSearchResult.TotalAvailable(childComplexity), true
+
+	case "TaskSearchResult.totalElements":
+		if e.complexity.TaskSearchResult.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.TaskSearchResult.TotalElements(childComplexity), true
 
 	case "Tax.salesTax":
 		if e.complexity.Tax.SalesTax == nil {
@@ -17429,7 +17475,8 @@ input TagIdOrNameInput {
     entityType: EntityType
 }`, BuiltIn: false},
 	{Name: "../schemas/task.graphqls", Input: `extend type Query {
-    tasks: [Task!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tasks(ids: [ID!]): [Task!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tasks_search(limit: Int, where: Filter, sort: SortBy): TaskSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -17441,7 +17488,7 @@ input TaskInput {
     subject         : String
     description     : String
     status          : TaskStatus
-    assignees        : [ID!]
+    assignees       : [ID!]
     opportunityIds  : [ID!]
     dueAt           : Time
 }
@@ -17463,6 +17510,12 @@ enum TaskStatus {
     TODO
     IN_PROGRESS
     DONE
+}
+
+type TaskSearchResult{
+    tasks:          [ID!]!
+    totalElements:  Int64! # length of the id array
+    totalAvailable: Int64! # everyting in db
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant.graphqls", Input: `extend type Query {
     tenant: String!
@@ -27216,6 +27269,108 @@ func (ec *executionContext) field_Query_tags_ByEntityType_argsEntityType(
 	}
 
 	var zeroVal model.EntityType
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_tasks_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_tasks_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_tasks_argsIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["ids"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_tasks_search_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_tasks_search_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := ec.field_Query_tasks_search_argsWhere(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg1
+	arg2, err := ec.field_Query_tasks_search_argsSort(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sort"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Query_tasks_search_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["limit"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_tasks_search_argsWhere(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.Filter, error) {
+	if _, ok := rawArgs["where"]; !ok {
+		var zeroVal *model.Filter
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+	if tmp, ok := rawArgs["where"]; ok {
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+	}
+
+	var zeroVal *model.Filter
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_tasks_search_argsSort(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model1.SortBy, error) {
+	if _, ok := rawArgs["sort"]; !ok {
+		var zeroVal *model1.SortBy
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+	if tmp, ok := rawArgs["sort"]; ok {
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+	}
+
+	var zeroVal *model1.SortBy
 	return zeroVal, nil
 }
 
@@ -101216,7 +101371,7 @@ func (ec *executionContext) _Query_tasks(ctx context.Context, field graphql.Coll
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Tasks(rctx)
+			return ec.resolvers.Query().Tasks(rctx, fc.Args["ids"].([]string))
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
@@ -101266,7 +101421,7 @@ func (ec *executionContext) _Query_tasks(ctx context.Context, field graphql.Coll
 	return ec.marshalNTask2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_tasks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_tasks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -101297,6 +101452,114 @@ func (ec *executionContext) fieldContext_Query_tasks(_ context.Context, field gr
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_tasks_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_tasks_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tasks_search(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().TasksSearch(rctx, fc.Args["limit"].(*int), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model1.SortBy))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.TaskSearchResult
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.TaskSearchResult
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.TaskSearchResult
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TaskSearchResult); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TaskSearchResult`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TaskSearchResult)
+	fc.Result = res
+	return ec.marshalNTaskSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskSearchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_tasks_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "tasks":
+				return ec.fieldContext_TaskSearchResult_tasks(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_TaskSearchResult_totalElements(ctx, field)
+			case "totalAvailable":
+				return ec.fieldContext_TaskSearchResult_totalAvailable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TaskSearchResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_tasks_search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -107653,6 +107916,138 @@ func (ec *executionContext) fieldContext_Task_updatedAt(_ context.Context, field
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaskSearchResult_tasks(ctx context.Context, field graphql.CollectedField, obj *model.TaskSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TaskSearchResult_tasks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tasks, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TaskSearchResult_tasks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaskSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaskSearchResult_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.TaskSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TaskSearchResult_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TaskSearchResult_totalElements(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaskSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaskSearchResult_totalAvailable(ctx context.Context, field graphql.CollectedField, obj *model.TaskSearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TaskSearchResult_totalAvailable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalAvailable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TaskSearchResult_totalAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaskSearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -134697,6 +135092,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "tasks_search":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tasks_search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "tenant":
 			field := field
 
@@ -136146,6 +136563,55 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Task_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var taskSearchResultImplementors = []string{"TaskSearchResult"}
+
+func (ec *executionContext) _TaskSearchResult(ctx context.Context, sel ast.SelectionSet, obj *model.TaskSearchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taskSearchResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaskSearchResult")
+		case "tasks":
+			out.Values[i] = ec._TaskSearchResult_tasks(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalElements":
+			out.Values[i] = ec._TaskSearchResult_totalElements(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAvailable":
+			out.Values[i] = ec._TaskSearchResult_totalAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -142515,6 +142981,20 @@ func (ec *executionContext) marshalNTask2ᚖgithubᚗcomᚋcustomerosᚋcustomer
 func (ec *executionContext) unmarshalNTaskInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskInput(ctx context.Context, v any) (model.TaskInput, error) {
 	res, err := ec.unmarshalInputTaskInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTaskSearchResult2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskSearchResult(ctx context.Context, sel ast.SelectionSet, v model.TaskSearchResult) graphql.Marshaler {
+	return ec._TaskSearchResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTaskSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.TaskSearchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TaskSearchResult(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTaskStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaskStatus(ctx context.Context, v any) (model.TaskStatus, error) {

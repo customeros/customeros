@@ -1,5 +1,6 @@
 extend type Query {
-    tasks: [Task!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tasks(ids: [ID!]): [Task!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tasks_Search(limit: Int, where: Filter, sort: SortBy): TaskSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -11,7 +12,7 @@ input TaskInput {
     subject         : String
     description     : String
     status          : TaskStatus
-    assignees        : [ID!]
+    assignees       : [ID!]
     opportunityIds  : [ID!]
     dueAt           : Time
 }
@@ -33,4 +34,10 @@ enum TaskStatus {
     TODO
     IN_PROGRESS
     DONE
+}
+
+type TaskSearchResult{
+    tasks:          [ID!]!
+    totalElements:  Int64! # length of the id array
+    totalAvailable: Int64! # everyting in db
 }
