@@ -365,7 +365,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 
 		aliases := ""
-		orderBy := ""
 		if sort != nil {
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 				if sort.Direction == commonmodel.SortingDirectionAsc {
@@ -545,17 +544,12 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 
 		// Always add organization ID sorting at the end
-		if orderBy != "" {
-			orderBy += ", "
-		}
-		orderBy += "o.id ASC"
-
 		selectQuery += ` WITH o`
 		if aliases != "" {
 			selectQuery += `, ` + aliases
 		}
 		if sort != nil && aliases != "" {
-			selectQuery += " ORDER BY SORT_BY " + string(sort.Direction)
+			selectQuery += " ORDER BY SORT_BY " + string(sort.Direction) + " , o.id ASC "
 		} else {
 			selectQuery += " ORDER BY o.id ASC"
 		}
@@ -1422,7 +1416,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 	cypherSort := utils.CypherSort{}
 	if sort != nil && len(aliases) > 0 {
-		selectQuery += " ORDER BY SORT_BY " + string(sort.Direction) + ", c.id ASC"
+		selectQuery += " ORDER BY SORT_BY " + string(sort.Direction) + ", c.id ASC "
 	} else {
 		cypherSort.NewSortRule("UPDATED_AT", string(commonmodel.SortingDirectionDesc), false, reflect.TypeOf(neo4jentity.ContactEntity{}))
 		selectQuery += string(cypherSort.SortingCypherFragment("c"))

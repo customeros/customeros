@@ -102,7 +102,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, "Link", *invoice.PaymentLink)
 
 	require.Equal(t, 1, len(invoice.InvoiceLineItems))
-	require.Equal(t, "SLI 1", *invoice.InvoiceLineItems[0].Description)
+	require.Equal(t, "SLI 1", invoice.InvoiceLineItems[0].Description)
 	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Price)
 	require.Equal(t, int64(1), invoice.InvoiceLineItems[0].Quantity)
 	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Subtotal)

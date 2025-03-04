@@ -1,0 +1,16 @@
+query TasksSearch($limit: Int!, $filterName: String!, $filterValue: Any!, $filterOperation: ComparisonOperator!) {
+  tasks_Search(
+    limit: $limit
+    where: {
+      AND: [
+        {
+          filter: { property: $filterName, value: $filterValue, operation: $filterOperation }
+        }
+      ]
+    }
+  ) {
+    ids
+    totalElements
+    totalAvailable
+  }
+}

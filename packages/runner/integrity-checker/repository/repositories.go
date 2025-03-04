@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/config"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type Dbs struct {

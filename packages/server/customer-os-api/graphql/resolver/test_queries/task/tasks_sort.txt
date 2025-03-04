@@ -1,0 +1,10 @@
+query TasksSort($limit: Int!, $sortByField: String!, $sortByDirection: SortingDirection!) {
+  tasks_Search(
+    limit: $limit
+    sort: { by: $sortByField, direction: $sortByDirection }
+  ) {
+    ids
+    totalElements
+    totalAvailable
+  }
+}

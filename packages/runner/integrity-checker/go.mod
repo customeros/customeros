@@ -12,8 +12,8 @@ require (
 	github.com/aws/aws-sdk-go v1.55.3
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
-	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250304155944-2c902e5beea3
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250227194933-9a5af3715301
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
 	github.com/opentracing/opentracing-go v1.2.0

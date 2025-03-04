@@ -1475,3 +1475,32 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 		"endedAt":        utils.TimePtrAsAny(jobRole.EndedAt),
 	})
 }
+
+func CreateTask(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, taskEntity neo4j_entity.TaskEntity) string {
+	taskId := utils.NewUUIDIfEmpty(taskEntity.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+				MERGE (tsk:Task {id:$id})
+				ON CREATE SET 
+					tsk:Task_%s,
+					tsk.subject=$subject,
+					tsk.description=$description,
+					tsk.status=$status,
+					tsk.dueAt=$dueAt,
+					tsk.createdAt=$createdAt,
+					tsk.updatedAt=$updatedAt
+				WITH tsk, t
+				MERGE (tsk)-[:TASK_BELONGS_TO_TENANT]->(t)
+				RETURN tsk.id`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"id":          taskId,
+		"subject":     taskEntity.Subject,
+		"description": taskEntity.Description,
+		"status":      taskEntity.Status,
+		"dueAt":       taskEntity.DueAt,
+		"createdAt":   taskEntity.CreatedAt,
+		"updatedAt":   taskEntity.UpdatedAt,
+	})
+	return taskId
+}
