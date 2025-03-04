@@ -123,6 +123,25 @@ func (s *opportunityService) GetOpportunitiesForOrganizations(ctx context.Contex
 	return &opportunityEntities, nil
 }
 
+func (s *opportunityService) GetOpportunitiesForTasks(ctx context.Context, taskIds []string) (*neo4jentity.OpportunityEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForTasks")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+
+	opportunities, err := s.neo4j.OpportunityReadRepository.GetForTasks(ctx, common.GetTenantFromContext(ctx), taskIds)
+	if err != nil {
+		return nil, err
+	}
+	opportunityEntities := make(neo4jentity.OpportunityEntities, 0, len(opportunities))
+	for _, v := range opportunities {
+		opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(v.Node)
+		opportunityEntity.DataloaderKey = v.LinkedNodeId
+		opportunityEntities = append(opportunityEntities, *opportunityEntity)
+	}
+	return &opportunityEntities, nil
+}
+
 func (s *opportunityService) GetPaginatedOrganizationOpportunities(ctx context.Context, tenant string, page int, limit int) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetPaginatedOrganizationOpportunities")
 	defer span.Finish()

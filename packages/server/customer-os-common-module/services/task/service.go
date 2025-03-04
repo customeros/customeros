@@ -2,7 +2,11 @@ package task
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -70,6 +74,9 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		if utils.IfNotNilString(taskFields.CreatedByUserId) == "" {
 			taskFields.CreatedByUserId = utils.StringPtr(common.GetUserIdFromContext(ctx))
 		}
+		if taskFields.Status == nil {
+			taskFields.Status = utils.ToPtr(enum.TaskStatusTodo)
+		}
 
 		taskId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelTask)
 		if err != nil {
@@ -91,7 +98,37 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 	tracing.TagEntity(span, taskId)
 
 	// validate assignees
+	if taskFields.AssigneeUserIds != nil {
+		for _, assigneeId := range *taskFields.AssigneeUserIds {
+			// check if user exists
+			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, assigneeId, model.NodeLabelUser)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if !exists {
+				err = errors.Errorf("asignee user %s not found", assigneeId)
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+	}
 	// validate opportunities
+	if taskFields.OpportunityIds != nil {
+		for _, opportunityId := range *taskFields.OpportunityIds {
+			// check if opportunity exists
+			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, opportunityId, model.NodeLabelOpportunity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if !exists {
+				err = errors.Errorf("opportunity %s not found", opportunityId)
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
@@ -107,33 +144,42 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 				return nil, err
 			}
 		}
-		//
-		//	txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-		//		// send events
-		//		if createFlow {
-		//			if utils.IfNotNilString(issueFields.ReportedByOrganizationId) != "" {
-		//				err := s.org.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
-		//				if err != nil {
-		//					tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
-		//				}
-		//			}
-		//			err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
-		//			if err != nil {
-		//				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
-		//			}
-		//			s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
-		//		} else {
-		//			err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
-		//			if err != nil {
-		//				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
-		//			}
-		//			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		//				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
-		//			}
-		//		}
-		//		return nil
-		//	})
-		//
+
+		if taskFields.OpportunityIds != nil {
+			err := s.neo4j.TaskWriteRepository.SetOpportunities(ctx, txWithPostCommit.Tx, tenant, taskId, *taskFields.OpportunityIds)
+			if err != nil {
+				s.log.Errorf("Error while setting task opportunities %s: %s", taskId, err.Error())
+				return nil, err
+			}
+		}
+		if taskFields.AssigneeUserIds != nil {
+			err := s.neo4j.TaskWriteRepository.SetUserAssignees(ctx, txWithPostCommit.Tx, tenant, taskId, *taskFields.AssigneeUserIds)
+			if err != nil {
+				s.log.Errorf("Error while setting task user assignees %s: %s", taskId, err.Error())
+				return nil, err
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send events
+			if createFlow {
+				err := s.events.Publisher.PublishFanoutEvent(ctx, taskId, model.TASK, dto.CreateTask{taskFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateTask"))
+				}
+				s.events.Publisher.PublishNotification(ctx, tenant, taskId, model.TASK, utils.NewEventCompletedDetails().WithCreate())
+			} else {
+				err := s.events.Publisher.PublishFanoutEvent(ctx, taskId, model.TASK, dto.UpdateTask{taskFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTask"))
+				}
+				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+					s.events.Publisher.PublishNotification(ctx, tenant, taskId, model.TASK, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+			return nil
+		})
+
 		return nil, nil
 	})
 	if err != nil {
@@ -142,4 +188,39 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 	}
 
 	return taskId, nil
+}
+
+func (s *taskService) GetById(ctx context.Context, id string) (*neo4jentity.TaskEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, id)
+
+	dbNode, err := s.neo4j.TaskReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return neo4jmapper.MapDbNodeToTaskEntity(dbNode), nil
+}
+
+func (s *taskService) GetAll(ctx context.Context) (*neo4jentity.TaskEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	dbNodes, err := s.neo4j.TaskReadRepository.GetAll(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var taskEntities neo4jentity.TaskEntities
+	for _, dbNodePtr := range dbNodes {
+		taskEntities = append(taskEntities, *neo4jmapper.MapDbNodeToTaskEntity(dbNodePtr))
+	}
+	return &taskEntities, nil
 }

@@ -13,6 +13,8 @@ import (
 type TaskWriteRepository interface {
 	Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error
+	SetOpportunities(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, opportunityIds []string) error
+	SetUserAssignees(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, userIds []string) error
 }
 
 type taskWriteRepository struct {
@@ -30,8 +32,7 @@ func NewTaskWriteRepository(driver *neo4j.DriverWithContext, database string) Ta
 func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, taskId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -60,7 +61,7 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 		"appSource":       utils.IfNotNilString(data.AppSource),
 		"subject":         utils.IfNotNilString(data.Subject),
 		"description":     utils.IfNotNilString(data.Description),
-		"status":          utils.IfNotNilString(data.Status),
+		"status":          data.Status.String(),
 		"createdByUserId": utils.IfNotNilString(data.CreatedByUserId),
 		"dueAt":           utils.TimePtrAsAny(data.DueAt),
 	}
@@ -71,8 +72,7 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, taskId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -98,6 +98,59 @@ func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTrans
 	if data.DueAt != nil {
 		cypher += `, tsk.dueAt = $dueAt`
 		params["dueAt"] = utils.TimePtrAsAny(data.DueAt)
+	}
+
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+}
+
+func (r *taskWriteRepository) SetOpportunities(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, opportunityIds []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.SetOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagEntity(span, taskId)
+	tracing.LogObjectAsJson(span, "opportunityIds", opportunityIds)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
+				OPTIONAL MATCH (tsk)-[r:LINKED_TO]->(o:Opportunity)
+				WHERE NOT o.id IN $opportunityIds
+				DELETE r
+				WITH tsk
+				MATCH (o:Opportunity_%s)
+				WHERE o.id IN $opportunityIds
+				MERGE (tsk)-[:LINKED_TO]->(o)
+				`, tenant)
+	params := map[string]any{
+		"tenant":         tenant,
+		"taskId":         taskId,
+		"opportunityIds": opportunityIds,
+	}
+
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+}
+
+func (r *taskWriteRepository) SetUserAssignees(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, userIds []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.SetUserAssignees")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagEntity(span, taskId)
+	tracing.LogObjectAsJson(span, "userIds", userIds)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
+				OPTIONAL MATCH (tsk)-[r:ASSIGNED_TO]->(u:User)
+				WHERE NOT u.id IN $userIds
+				DELETE r
+				WITH tsk
+				MATCH (u:User_%s)
+				WHERE u.id IN $userIds AND 
+					coalesce(u.internal, false) = false AND 
+					coalesce(u.bot, false) = false AND 
+					coalesce(u.test, false) = false
+				MERGE (tsk)-[:ASSIGNED_TO]->(u)
+				`, tenant)
+	params := map[string]any{
+		"tenant":  tenant,
+		"taskId":  taskId,
+		"userIds": userIds,
 	}
 
 	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)

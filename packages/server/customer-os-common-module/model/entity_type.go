@@ -38,6 +38,7 @@ const (
 	SERVICE_LINE_ITEM        EntityType = "SERVICE_LINE_ITEM"
 	SOCIAL                   EntityType = "SOCIAL"
 	TAG                      EntityType = "TAG"
+	TASK                     EntityType = "TASK"
 	TENANT                   EntityType = "TENANT"
 	TENANT_SETTINGS          EntityType = "TENANT_SETTINGS"
 	USER                     EntityType = "USER"
@@ -116,6 +117,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelLocation
 	case TAG:
 		return NodeLabelTag
+	case TASK:
+		return NodeLabelTask
 	case JOB_ROLE:
 		return NodeLabelJobRole
 	}

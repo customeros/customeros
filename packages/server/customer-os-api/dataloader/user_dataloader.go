@@ -2,10 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -24,6 +24,16 @@ func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*neo4je
 
 func (i *Loaders) GetUsersConnectedForContact(ctx context.Context, contactId string) (*neo4jentity.UserEntities, error) {
 	thunk := i.UsersConnectedForContact.Load(ctx, dataloader.StringKey(contactId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(neo4jentity.UserEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetUsersAssigneesForTask(ctx context.Context, taskId string) (*neo4jentity.UserEntities, error) {
+	thunk := i.UsersForTask.Load(ctx, dataloader.StringKey(taskId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -150,6 +160,18 @@ func (i *Loaders) GetUserAuthorForComment(ctx context.Context, logEntryId string
 	return result.(*neo4jentity.UserEntity), nil
 }
 
+func (i *Loaders) GetUserCreatorForTask(ctx context.Context, taskId string) (*neo4jentity.UserEntity, error) {
+	thunk := i.UserCreatorForTask.Load(ctx, dataloader.StringKey(taskId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*neo4jentity.UserEntity), nil
+}
+
 func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersConnectedForContact")
 	defer span.Finish()
@@ -244,6 +266,55 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *userBatcher) getUsersForTasks(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForTasks")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	userEntitiesPtr, err := b.userCommonService.GetUserAssigneesForTasks(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntitiesByTaskId := make(map[string]neo4jentity.UserEntities)
+	for _, val := range *userEntitiesPtr {
+		if list, ok := userEntitiesByTaskId[val.DataloaderKey]; ok {
+			userEntitiesByTaskId[val.DataloaderKey] = append(list, val)
+		} else {
+			userEntitiesByTaskId[val.DataloaderKey] = neo4jentity.UserEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for taskId, record := range userEntitiesByTaskId {
+		if ix, ok := keyOrder[taskId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, taskId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: neo4jentity.UserEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("result.count", len(results)))
 
 	return results
 }
@@ -500,7 +571,7 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	userEntities, err := b.userCommonService.GetUserCreatorsForOpportunities(ctx, ids)
+	userEntities, err := b.userCommonService.GetUserCreatorsForContracts(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -510,18 +581,18 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByOpportunityId := make(map[string]neo4jentity.UserEntity)
+	userEntityByContractId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
-		userEntityByOpportunityId[val.DataloaderKey] = val
+		userEntityByContractId[val.DataloaderKey] = val
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for opportunityID, _ := range userEntityByOpportunityId {
-		if ix, ok := keyOrder[opportunityID]; ok {
-			val := userEntityByOpportunityId[opportunityID]
+	for contractId, _ := range userEntityByContractId {
+		if ix, ok := keyOrder[contractId]; ok {
+			val := userEntityByContractId[contractId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
-			delete(keyOrder, opportunityID)
+			delete(keyOrder, contractId)
 		}
 	}
 	for _, ix := range keyOrder {
@@ -534,6 +605,55 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *userBatcher) getUserCreatorsForTasks(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserCreatorsForTasks")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	userEntities, err := b.userCommonService.GetUserCreatorsForTasks(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByTaskId := make(map[string]neo4jentity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByTaskId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for taskId, _ := range userEntityByTaskId {
+		if ix, ok := keyOrder[taskId]; ok {
+			val := userEntityByTaskId[taskId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, taskId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("result.count", len(results)))
 
 	return results
 }

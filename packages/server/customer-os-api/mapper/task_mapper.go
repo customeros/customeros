@@ -22,10 +22,10 @@ func MapEntityToTask(entity *neo4jentity.TaskEntity) *model.Task {
 	}
 }
 
-func MapEntitiesToTasks(entities []*neo4jentity.TaskEntity) []*model.Task {
+func MapEntitiesToTasks(entities *neo4jentity.TaskEntities) []*model.Task {
 	var issues []*model.Task
-	for _, issueEntity := range entities {
-		issues = append(issues, MapEntityToTask(issueEntity))
+	for _, issueEntity := range *entities {
+		issues = append(issues, MapEntityToTask(&issueEntity))
 	}
 	return issues
 }

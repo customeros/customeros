@@ -6,71 +6,124 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
 func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) (*model.Task, error) {
-	//data := &model.Task{
-	//	ID:            *input.ID,
-	//	Name:          *input.Name,
-	//	Description:   input.Description,
-	//	Context:       *input.Context,
-	//	Asignees:      input.Asignees,
-	//	OwnerID:       *input.OwnerID,
-	//	Status:        *input.Status,
-	//	OpportunityID: input.OpportunityID,
-	//	DueAt:         *input.DueAt,
-	//	CreatedAt:     time.Now(),
-	//	UpdatedAt:     time.Now(),
-	//}
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TaskSave", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	//return data, nil
-	return nil, nil
+	dataFields := data_fields.TaskFields{
+		Subject:         input.Subject,
+		Description:     input.Description,
+		DueAt:           input.DueAt,
+		OpportunityIds:  &input.OpportunityIds,
+		AssigneeUserIds: &input.Assignees,
+	}
+	if input.Status != nil {
+		dataFields.Status = utils.ToPtr(enummapper.MapTaskStatusFromModel(*input.Status))
+	}
+	taskId, err := r.Services.CommonServices.TaskService.Save(ctx, nil, input.ID, dataFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to save task")
+		return nil, err
+	}
+
+	taskEntity, err := r.Services.CommonServices.TaskService.GetById(ctx, taskId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get task")
+		return nil, err
+	}
+
+	return mapper.MapEntityToTask(taskEntity), nil
 }
 
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
-	//description := "Task description number 1"
-	//opportunityID := ""
-	//
-	//task := &model.Task{
-	//	ID:            "1",
-	//	Name:          "Task 1",
-	//	Description:   &description,
-	//	Context:       "Some context for the task",
-	//	Asignees:      []string{},
-	//	OwnerID:       "1",
-	//	Status:        "TODO",
-	//	OpportunityID: &opportunityID,
-	//	DueAt:         time.Now(),
-	//	CreatedAt:     time.Now(),
-	//	UpdatedAt:     time.Now(),
-	//}
-	//
-	//// Return an array with the sample task
-	return []*model.Task{}, nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tasks", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	taskEntities, err := r.Services.CommonServices.TaskService.GetAll(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get tasks")
+		return nil, err
+	}
+
+	return mapper.MapEntitiesToTasks(taskEntities), nil
 }
 
-// Asignees is the resolver for the asignees field.
-func (r *taskInputResolver) Asignees(ctx context.Context, obj *model.TaskInput, data []string) error {
-	panic(fmt.Errorf("not implemented: Asignees - asignees"))
+// Assignees is the resolver for the assignees field.
+func (r *taskResolver) Assignees(ctx context.Context, obj *model.Task) ([]string, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntities, err := dataloader.For(ctx).GetUsersAssigneesForTask(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get users for task %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get users for task %s", obj.ID)
+		return nil, nil
+	}
+	var output []string
+	if userEntities != nil {
+		for _, userEntity := range *userEntities {
+			output = append(output, userEntity.Id)
+		}
+	}
+	return output, nil
 }
 
 // AuthorID is the resolver for the authorId field.
-func (r *taskInputResolver) AuthorID(ctx context.Context, obj *model.TaskInput, data *string) error {
-	panic(fmt.Errorf("not implemented: AuthorID - authorId"))
+func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntity, err := dataloader.For(ctx).GetUserCreatorForTask(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get author")
+		return nil, nil
+	}
+	if userEntity == nil {
+		return nil, nil
+	}
+	return utils.StringPtr(userEntity.Id), nil
 }
 
 // OpportunityIds is the resolver for the opportunityIds field.
-func (r *taskInputResolver) OpportunityIds(ctx context.Context, obj *model.TaskInput, data []string) error {
-	panic(fmt.Errorf("not implemented: OpportunityIds - opportunityIds"))
+func (r *taskResolver) OpportunityIds(ctx context.Context, obj *model.Task) ([]string, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForTask(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get users for task %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get users for task %s", obj.ID)
+		return nil, nil
+	}
+	var output []string
+	if opportunityEntities != nil {
+		for _, opportunityEntity := range *opportunityEntities {
+			output = append(output, opportunityEntity.Id)
+		}
+	}
+	return output, nil
 }
 
-// TaskInput returns generated.TaskInputResolver implementation.
-func (r *Resolver) TaskInput() generated.TaskInputResolver { return &taskInputResolver{r} }
+// Task returns generated.TaskResolver implementation.
+func (r *Resolver) Task() generated.TaskResolver { return &taskResolver{r} }
 
-type taskInputResolver struct{ *Resolver }
+type taskResolver struct{ *Resolver }
