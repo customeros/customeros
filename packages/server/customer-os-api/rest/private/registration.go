@@ -685,9 +685,7 @@ func initializeUserInTenant(ctx context.Context, services *cosapi_services.Servi
 
 func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := common_utils.GetLongLivedContext(context.Background())
-		defer cancel()
-		span, ctx := opentracing.StartSpanFromContext(c, "Registration.Revoke")
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "Registration.Revoke")
 		defer span.Finish()
 
 		var revokeRequest RevokeRequest
