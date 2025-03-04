@@ -725,7 +725,11 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			var headers map[string]string
 			switch workspaceProvider {
 			case common_enum.WorkspaceProviderGoogle.String():
+				// Revoke both access token and refresh token
 				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.AccessToken)
+				headers = map[string]string{
+					"Content-Type": "application/x-www-form-urlencoded",
+				}
 			case common_enum.WorkspaceProviderAzure.String():
 				revocationURL = "https://graph.microsoft.com/v1.0/me/revokeSignInSessions"
 				headers = map[string]string{
@@ -753,14 +757,42 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
+				defer resp.Body.Close()
 
-				if resp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				span.LogFields(tracingLog.String("response.body", string(body)))
+
+				if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 					// Revocation failed
-					body, _ := io.ReadAll(resp.Body)
-					span.LogFields(tracingLog.String("response.body", string(body)))
 					tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
+				}
+
+				// For Google, also revoke the refresh token
+				if workspaceProvider == common_enum.WorkspaceProviderGoogle.String() {
+					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+					req, err = http.NewRequest("POST", revocationURL, nil)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						c.JSON(http.StatusInternalServerError, gin.H{})
+						return
+					}
+
+					for key, value := range headers {
+						req.Header.Add(key, value)
+					}
+
+					resp, err = client.Do(req)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						c.JSON(http.StatusInternalServerError, gin.H{})
+						return
+					}
+					defer resp.Body.Close()
+
+					body, _ = io.ReadAll(resp.Body)
+					span.LogFields(tracingLog.String("refresh_token_response.body", string(body)))
 				}
 			}
 		}
@@ -880,7 +912,7 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 
 	existingUser := mapper.MapDbNodeToUserEntity(userNode)
 
-	if existingUser.Roles != nil && len(existingUser.Roles) > 0 {
+	if len(existingUser.Roles) > 0 {
 		for _, role := range existingUser.Roles {
 			if role == "USER" {
 				userRoleFound = true
