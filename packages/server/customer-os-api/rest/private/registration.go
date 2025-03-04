@@ -627,7 +627,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		}
 	} else if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
 	} else {
-		tracing.TraceErr(span, fmt.Errorf("Unsupported provider: %s", signInRequest.Provider))
+		tracing.TraceErr(span, fmt.Errorf("unsupported provider: %s", signInRequest.Provider))
 	}
 
 	ginContext.JSON(http.StatusOK, gin.H{
@@ -725,8 +725,14 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			var headers map[string]string
 			switch workspaceProvider {
 			case common_enum.WorkspaceProviderGoogle.String():
-				// Revoke both access token and refresh token
-				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.AccessToken)
+				// Decrypt the access token before revoking
+				decryptedAccessToken, err := postgres_entity.DecryptToken(s.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, oauthToken.AccessToken)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					c.JSON(http.StatusInternalServerError, gin.H{})
+					return
+				}
+				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", decryptedAccessToken)
 				headers = map[string]string{
 					"Content-Type": "application/x-www-form-urlencoded",
 				}
@@ -771,7 +777,14 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 				// For Google, also revoke the refresh token
 				if workspaceProvider == common_enum.WorkspaceProviderGoogle.String() {
-					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+					// Decrypt the refresh token before revoking
+					decryptedRefreshToken, err := postgres_entity.DecryptToken(s.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, oauthToken.RefreshToken)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						c.JSON(http.StatusInternalServerError, gin.H{})
+						return
+					}
+					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", decryptedRefreshToken)
 					req, err = http.NewRequest("POST", revocationURL, nil)
 					if err != nil {
 						tracing.TraceErr(span, err)
