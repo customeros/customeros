@@ -73,8 +73,7 @@ func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant string)
 func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provider, email string) (*postgres_entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByEmail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("tenant", tenant), log.String("provider", provider), log.String("email", email))
 
 	var oAuthTokenEntity postgres_entity.OAuthTokenEntity
