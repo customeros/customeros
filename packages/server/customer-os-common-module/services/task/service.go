@@ -204,3 +204,23 @@ func (s *taskService) GetById(ctx context.Context, id string) (*neo4jentity.Task
 
 	return neo4jmapper.MapDbNodeToTaskEntity(dbNode), nil
 }
+
+func (s *taskService) GetAll(ctx context.Context) (*neo4jentity.TaskEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	dbNodes, err := s.neo4j.TaskReadRepository.GetAll(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var taskEntities neo4jentity.TaskEntities
+	for _, dbNodePtr := range dbNodes {
+		taskEntities = append(taskEntities, *neo4jmapper.MapDbNodeToTaskEntity(dbNodePtr))
+	}
+	return &taskEntities, nil
+}

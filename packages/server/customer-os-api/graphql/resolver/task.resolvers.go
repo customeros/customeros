@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
@@ -17,7 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
@@ -55,25 +53,18 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context) ([]*model.Task, error) {
-	//description := "Task description number 1"
-	//opportunityID := ""
-	//
-	//task := &model.Task{
-	//	ID:            "1",
-	//	Name:          "Task 1",
-	//	Description:   &description,
-	//	Context:       "Some context for the task",
-	//	Asignees:      []string{},
-	//	OwnerID:       "1",
-	//	Status:        "TODO",
-	//	OpportunityID: &opportunityID,
-	//	DueAt:         time.Now(),
-	//	CreatedAt:     time.Now(),
-	//	UpdatedAt:     time.Now(),
-	//}
-	//
-	//// Return an array with the sample task
-	return []*model.Task{}, nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tasks", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	taskEntities, err := r.Services.CommonServices.TaskService.GetAll(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get tasks")
+		return nil, err
+	}
+
+	return mapper.MapEntitiesToTasks(taskEntities), nil
 }
 
 // Assignees is the resolver for the assignees field.

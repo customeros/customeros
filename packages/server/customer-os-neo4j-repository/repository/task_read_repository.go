@@ -12,6 +12,7 @@ import (
 
 type TaskReadRepository interface {
 	GetById(ctx context.Context, tenant, taskId string) (*dbtype.Node, error)
+	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 }
 
 type taskReadRepository struct {
@@ -57,4 +58,33 @@ func (r *taskReadRepository) GetById(ctx context.Context, tenant, taskId string)
 		return nil, err
 	}
 	return dbRecord.(*dbtype.Node), err
+}
+
+func (r *taskReadRepository) GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
+				RETURN tsk ORDER BY tsk.createdAt DESC`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(dbRecords.([]*dbtype.Node))))
+	return dbRecords.([]*dbtype.Node), err
 }
