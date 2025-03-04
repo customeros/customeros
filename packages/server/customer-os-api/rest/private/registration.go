@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -721,16 +722,32 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		if oauthToken != nil && oauthToken.RefreshToken != "" {
 			// Handle revocation based on provider
 			var revocationURL string
+			var headers map[string]string
 			switch workspaceProvider {
 			case common_enum.WorkspaceProviderGoogle.String():
-				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.AccessToken)
 			case common_enum.WorkspaceProviderAzure.String():
-				revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
+				revocationURL = "https://graph.microsoft.com/v1.0/me/revokeSignInSessions"
+				headers = map[string]string{
+					"Authorization": fmt.Sprintf("Bearer %s", oauthToken.AccessToken),
+				}
 			}
 			span.LogFields(tracingLog.String("revocationURL", revocationURL))
 
 			if revocationURL != "" {
-				resp, err := http.Get(revocationURL)
+				req, err := http.NewRequest("POST", revocationURL, nil)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					c.JSON(http.StatusInternalServerError, gin.H{})
+					return
+				}
+
+				for key, value := range headers {
+					req.Header.Add(key, value)
+				}
+
+				client := &http.Client{}
+				resp, err := client.Do(req)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					c.JSON(http.StatusInternalServerError, gin.H{})
@@ -995,7 +1012,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	//    <div class="header">Hey, welcome to CustomerOS!</div>
 	//    <div class="content">
 	//        <p>Thanks for trying us out.</p>
-	//        <p>To be honest, our self-service onboarding kinda sucks right now as we’re still building it out. I’d love to get you setup and using the tool, would you be open to spending 10 mins with me to help you get things configured?</p>
+	//        <p>To be honest, our self-service onboarding kinda sucks right now as we're still building it out. I'd love to get you setup and using the tool, would you be open to spending 10 mins with me to help you get things configured?</p>
 	//        <p>Please grab any slot on my <a href="https://app.customeros.ai/organization/cal.com/mbrown/20min" target="_blank">calendar.</a></p>
 	//    </div>
 	//    <div class="signature">
