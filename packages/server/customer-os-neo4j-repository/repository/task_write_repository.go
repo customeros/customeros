@@ -61,7 +61,7 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 		"appSource":       utils.IfNotNilString(data.AppSource),
 		"subject":         utils.IfNotNilString(data.Subject),
 		"description":     utils.IfNotNilString(data.Description),
-		"status":          utils.IfNotNilString(data.Status),
+		"status":          data.Status.String(),
 		"createdByUserId": utils.IfNotNilString(data.CreatedByUserId),
 		"dueAt":           utils.TimePtrAsAny(data.DueAt),
 	}
