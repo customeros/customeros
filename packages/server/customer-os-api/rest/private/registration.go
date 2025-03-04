@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -725,16 +726,22 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			case common_enum.WorkspaceProviderAzure.String():
 				revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 			}
+			span.LogFields(tracingLog.String("revocationURL", revocationURL))
 
 			if revocationURL != "" {
 				resp, err := http.Get(revocationURL)
 				if err != nil {
+					tracing.TraceErr(span, err)
+					body, _ := io.ReadAll(resp.Body)
+					span.LogFields(tracingLog.String("response.body", string(body)))
+
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
 
 				if resp.StatusCode != http.StatusOK {
 					// Revocation failed
+					tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
