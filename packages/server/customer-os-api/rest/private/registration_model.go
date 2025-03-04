@@ -32,7 +32,7 @@ type UpdateUserRequest struct {
 }
 
 type RevokeRequest struct {
-	Tenant   string `json:"tenant"`
-	Provider string `json:"provider"`
-	Email    string `json:"email"`
+	Tenant          string `json:"tenant"`
+	MailboxProvider string `json:"provider"`
+	Email           string `json:"email"`
 }

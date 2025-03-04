@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
 	"log"
 	"net/http"
@@ -698,7 +699,18 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 		log.Printf("parsed json: %v", revokeRequest)
 
-		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+		workspaceProvider := ""
+		if revokeRequest.MailboxProvider == model.MailboxProviderGoogle.String() {
+			workspaceProvider = common_enum.WorkspaceProviderGoogle.String()
+		} else if revokeRequest.MailboxProvider == model.MailboxProviderMicrosoft.String() {
+			workspaceProvider = common_enum.WorkspaceProviderAzure.String()
+		}
+
+		if workspaceProvider == "" {
+			c.JSON(http.StatusBadRequest, gin.H{})
+		}
+
+		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
@@ -707,7 +719,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		if oauthToken != nil && oauthToken.RefreshToken != "" {
 			// Handle revocation based on provider
 			var revocationURL string
-			switch revokeRequest.Provider {
+			switch workspaceProvider {
 			case common_enum.WorkspaceProviderGoogle.String():
 				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
 			case common_enum.WorkspaceProviderAzure.String():
@@ -729,7 +741,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			}
 		}
 
-		err = s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+		err = s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
