@@ -687,6 +687,8 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := common_utils.GetLongLivedContext(context.Background())
 		defer cancel()
+		span, ctx := opentracing.StartSpanFromContext(c, "Registration.Revoke")
+		defer span.Finish()
 
 		var revokeRequest RevokeRequest
 		if err := c.BindJSON(&revokeRequest); err != nil {
@@ -698,7 +700,11 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 		log.Printf("parsed json: %v", revokeRequest)
 
-		oauthToken, _ := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
 
 		if oauthToken != nil && oauthToken.RefreshToken != "" {
 			// Handle revocation based on provider
@@ -725,7 +731,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			}
 		}
 
-		err := s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+		err = s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return

@@ -329,18 +329,22 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 	span.LogFields(log.String("email", email))
 	span.LogFields(log.String("tenant", tenant))
 
+	cypher := fmt.Sprintf(`
+			MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant {name: $tenant})
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC LIMIT 1`, tenant, tenant)
+	params := map[string]interface{}{
+		"email":  email,
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant {name: $tenant})
-			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC LIMIT 1`, tenant, tenant),
-			map[string]interface{}{
-				"email":  email,
-				"tenant": tenant,
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -350,6 +354,7 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(records.([]*neo4j.Record))))
 	if len(records.([]*neo4j.Record)) > 0 {
 		tenant := records.([]*neo4j.Record)[0].Values[0].(string)
 		authenticatedUserId := records.([]*neo4j.Record)[0].Values[1].(string)
