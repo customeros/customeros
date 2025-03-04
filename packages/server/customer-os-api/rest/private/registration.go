@@ -733,15 +733,14 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				resp, err := http.Get(revocationURL)
 				if err != nil {
 					tracing.TraceErr(span, err)
-					body, _ := io.ReadAll(resp.Body)
-					span.LogFields(tracingLog.String("response.body", string(body)))
-
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
 
 				if resp.StatusCode != http.StatusOK {
 					// Revocation failed
+					body, _ := io.ReadAll(resp.Body)
+					span.LogFields(tracingLog.String("response.body", string(body)))
 					tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
