@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
-	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
+	"github.com/dgrijalva/jwt-go"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -557,6 +558,12 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 				}
+			}
+
+			err = s.contractService.RecalculateContractLtv(ctx, contractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
 			}
 
 			return nil
@@ -1679,6 +1686,20 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
 						s.log.Errorf("Error from events processing: %s", err.Error())
+					}
+
+					// get contract for invoice to recalculate LTV
+					contractDbNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceId)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return err
+					}
+					contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+					err = s.contractService.RecalculateContractLtv(ctx, contractEntity.Id)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Error while updating contract %s ltv: %s", contractEntity.Id, err.Error())
 					}
 				} else if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusPaid {
 					err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{

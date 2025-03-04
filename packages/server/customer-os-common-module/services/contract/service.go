@@ -3,9 +3,9 @@ package contract
 import (
 	"context"
 	"fmt"
-	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"math"
 	"time"
+
+	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -197,13 +197,13 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// send events
 			if createFlow {
-				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{dataFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{ContractSaveFields: dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContract"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{ContractSaveFields: dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
 				}
@@ -400,10 +400,6 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
-	}
-	err = s.RecalculateContractLtv(ctx, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
 	}
 	return nil
 }
@@ -881,6 +877,11 @@ func (s *contractService) createActionForStatusChange(ctx context.Context, tenan
 		actionStatusMetadata.Comment = contractName + " is now out of contract"
 	}
 	metadata, err := utils.ToJson(actionStatusMetadata)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
+		return
+	}
 	_, err = s.neo4j.ActionWriteRepository.Create(ctx, tenant, contractId, model.CONTRACT, enum.ActionContractStatusUpdated, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -1018,11 +1019,6 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, contractId 
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
 		}
-		err = s.RecalculateContractLtv(ctx, contractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
-		}
 
 		contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 		if err != nil {
@@ -1067,6 +1063,13 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
+	// Get all invoices for the contract
+	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetAllForContracts(ctx, tenant, []string{contractId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -1074,107 +1077,56 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
+	// Calculate total LTV from actual invoices
 	ltv := 0.0
-	recalculateContractLtv := true
-	if !(contractEntity.ContractStatus == neo4jenum.ContractStatusLive ||
-		contractEntity.ContractStatus == neo4jenum.ContractStatusOutOfContract ||
-		contractEntity.ContractStatus == neo4jenum.ContractStatusEnded) {
-		span.LogFields(log.String("result", fmt.Sprintf("contract status %s is not eligible for LTV calculation", contractEntity.ContractStatus)))
-		recalculateContractLtv = false
-	}
+	for _, invoiceDbNode := range invoiceDbNodes {
+		invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceDbNode.Node)
 
-	if recalculateContractLtv {
-		sliDbNodes, err := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, tenant, contractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		var sliEntities []*neo4jentity.ServiceLineItemEntity
-		for _, sliDbNode := range sliDbNodes {
-			sliEntities = append(sliEntities, neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode))
+		// Skip dry run invoices and voided invoices
+		if invoiceEntity.DryRun || invoiceEntity.Status == neo4jenum.InvoiceStatusVoid {
+			continue
 		}
 
-		// Calculate LTV
-
-		// Step 1 calculate one times
-		for _, sliEntity := range sliEntities {
-			if sliEntity.IsOneTime() {
-				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price
-				ltv += sliLtv
-				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
-			}
-		}
-
-		defaultEndDate := utils.Today()
-		if contractEntity.IsEnded() && contractEntity.EndedAt != nil {
-			defaultEndDate = *contractEntity.EndedAt
-		}
-		// Step 2 calculate recurring
-		for _, sliEntity := range sliEntities {
-			if sliEntity.IsRecurrent() {
-				endDate := defaultEndDate
-				if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(defaultEndDate) {
-					endDate = *sliEntity.EndedAt
-				}
-				duration := calculateDuration(sliEntity.StartedAt, endDate, sliEntity.Billed)
-				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price * duration
-				ltv += sliLtv
-				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
-			}
-		}
+		// Add invoice amount to total LTV
+		ltv += invoiceEntity.Amount
 	}
 
 	truncatedLtv := utils.TruncateFloat64(ltv, 2)
-	err = s.neo4j.ContractWriteRepository.SetLtv(ctx, tenant, contractId, truncatedLtv)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
-		return err
-	}
 
-	// get organization for contract
-	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
-		return nil
-	}
-	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-	// request organization ltv refresh
-	if organizationEntity.ID != "" {
-		err = s.organization.UpdateDerivedData(ctx, organizationEntity.ID)
+	if contractEntity.Ltv != truncatedLtv {
+		err = s.neo4j.ContractWriteRepository.SetLtv(ctx, tenant, contractId, truncatedLtv)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
+			return err
 		}
+
+		// get organization for contract
+		organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
+			return nil
+		}
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+		// request organization ltv refresh
+		if organizationEntity.ID != "" {
+			err = s.organization.UpdateDerivedData(ctx, organizationEntity.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error while updating organization %s ltv: %s", organizationEntity.ID, err.Error())
+			}
+		}
+
+		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{Ltv: &truncatedLtv})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
+		}
+
+		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
-
-	s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
-
 	return nil
-}
-
-func calculateDuration(startedAt, endedAt time.Time, billed neo4jenum.BilledType) float64 {
-	if startedAt.After(endedAt) {
-		return float64(0)
-	}
-	durationDays := math.Abs(float64(daysBetween(startedAt, endedAt)))
-
-	switch billed {
-	case neo4jenum.BilledTypeMonthly:
-		return durationDays / 30
-	case neo4jenum.BilledTypeQuarterly:
-		return durationDays / 90
-	case neo4jenum.BilledTypeAnnually:
-		return durationDays / 365
-	default:
-		return 0
-	}
-}
-
-func daysBetween(start, end time.Time) int {
-	duration := end.Sub(start)
-	return int(duration.Hours() / 24)
 }
 
 func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.ContractEntities, error) {

@@ -804,11 +804,6 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 		}
 	}
 
-	err = s.contract.RecalculateContractLtv(ctx, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
 	// Add action in timeline
 	status := "Renewed"
 	metadata, err := utils.ToJson(contract.ActionStatusMetadata{

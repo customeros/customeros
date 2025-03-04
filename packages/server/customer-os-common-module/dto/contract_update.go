@@ -6,4 +6,5 @@ import (
 
 type UpdateContract struct {
 	data_fields.ContractSaveFields
+	Ltv *float64 `json:"ltv,omitempty"`
 }
