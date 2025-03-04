@@ -352,7 +352,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			span.LogKV("upcomingInvoicesTableId", def.ID)
 			upcomingInvoiceFound = true
 		}
-		if def.TableType == string(postgresEntity.TableViewTypeTasks) && def.TableId == string(postgresEntity.TableIDTypeTasks) {
+		if def.TableType == string(postgresEntity.TableViewTypeTasks) && def.TableId == string(postgresEntity.TableIDTypeTasks) && !def.IsShared {
 			span.LogKV("tasksTableId", def.ID)
 			tasksFound = true
 		}
