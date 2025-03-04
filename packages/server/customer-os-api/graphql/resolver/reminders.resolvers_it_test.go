@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -52,7 +52,7 @@ func TestQueryResolver_RemindersForOrg(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
-	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Name: "TEST USER", FirstName: "TEST", LastName: "USER"})
+	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
 	reminderId := neo4jtest.CreateReminder(ctx, driver, tenantName, userId, organizationId, now, neo4jentity.ReminderEntity{
 		Content:   "TEST CONTENT",
 		DueDate:   now,

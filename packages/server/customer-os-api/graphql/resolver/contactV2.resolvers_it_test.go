@@ -961,9 +961,9 @@ func TestQueryResolver_UIContactsSearch_FilterLinkedinUserConnected(t *testing.T
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u1", Name: "A"})
-	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u2", Name: "B"})
-	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u3", Name: "C"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u1", FirstName: "A"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u2", FirstName: "B"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u3", FirstName: "C"})
 
 	//contact 1 connected to both users
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
@@ -1010,8 +1010,8 @@ func TestQueryResolver_UIContactsSearch_SortByLinkedinUserConnected(t *testing.T
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u1", Name: "A"})
-	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u2", Name: "B"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u1", FirstName: "A"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u2", FirstName: "B"})
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
 	neo4jtest.LinkNodes(ctx, driver, "c1", "u1", "CONNECTED_WITH")
