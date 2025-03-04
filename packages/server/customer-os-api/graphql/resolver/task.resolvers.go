@@ -7,6 +7,9 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
@@ -33,14 +36,21 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 	if input.Status != nil {
 		dataFields.Status = utils.ToPtr(enummapper.MapTaskStatusFromModel(*input.Status))
 	}
-	_, err := r.Services.CommonServices.TaskService.Save(ctx, nil, input.ID, dataFields)
+	taskId, err := r.Services.CommonServices.TaskService.Save(ctx, nil, input.ID, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to save task")
 		return nil, err
 	}
 
-	return nil, nil
+	taskEntity, err := r.Services.CommonServices.TaskService.GetById(ctx, taskId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get task")
+		return nil, err
+	}
+
+	return mapper.MapEntityToTask(taskEntity), nil
 }
 
 // Tasks is the resolver for the tasks field.
@@ -73,7 +83,16 @@ func (r *taskResolver) Asignees(ctx context.Context, obj *model.Task) ([]string,
 
 // AuthorID is the resolver for the authorId field.
 func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, error) {
-	panic(fmt.Errorf("not implemented: AuthorID - authorId"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	organizationEntity, err := dataloader.For(ctx).GetOrganizationForContract(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching organization for contract %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching organization for contract %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // OpportunityIds is the resolver for the opportunityIds field.

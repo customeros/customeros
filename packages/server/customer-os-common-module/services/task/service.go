@@ -6,6 +6,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -187,4 +188,19 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 	}
 
 	return taskId, nil
+}
+
+func (s *taskService) GetById(ctx context.Context, id string) (*neo4jentity.TaskEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, id)
+
+	dbNode, err := s.neo4j.TaskReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return neo4jmapper.MapDbNodeToTaskEntity(dbNode), nil
 }
