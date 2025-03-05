@@ -768,11 +768,23 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				body, _ := io.ReadAll(resp.Body)
 				span.LogFields(tracingLog.String("response.body", string(body)))
 
-				if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-					// Revocation failed
-					tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
-					c.JSON(http.StatusInternalServerError, gin.H{})
-					return
+				// For Google, if token is already revoked (invalid_token error), we can proceed
+				if workspaceProvider == common_enum.WorkspaceProviderGoogle.String() {
+					var errorResponse struct {
+						Error            string `json:"error"`
+						ErrorDescription string `json:"error_description"`
+					}
+					if err := json.Unmarshal(body, &errorResponse); err == nil {
+						if errorResponse.Error == "invalid_token" {
+							// Token is already revoked, we can proceed
+							span.LogFields(tracingLog.String("token_status", "already_revoked"))
+						} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+							// Other errors should be treated as failures
+							tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
+							c.JSON(http.StatusInternalServerError, gin.H{})
+							return
+						}
+					}
 				}
 
 				// For Google, also revoke the refresh token
@@ -806,6 +818,23 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 					body, _ = io.ReadAll(resp.Body)
 					span.LogFields(tracingLog.String("refresh_token_response.body", string(body)))
+
+					// Handle already revoked refresh token case
+					var errorResponse struct {
+						Error            string `json:"error"`
+						ErrorDescription string `json:"error_description"`
+					}
+					if err := json.Unmarshal(body, &errorResponse); err == nil {
+						if errorResponse.Error == "invalid_token" {
+							// Refresh token is already revoked, we can proceed
+							span.LogFields(tracingLog.String("refresh_token_status", "already_revoked"))
+						} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+							// Other errors should be treated as failures
+							tracing.TraceErr(span, fmt.Errorf("refresh token revocation failed, status code: %d", resp.StatusCode))
+							c.JSON(http.StatusInternalServerError, gin.H{})
+							return
+						}
+					}
 				}
 			}
 		}
