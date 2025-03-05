@@ -17,7 +17,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -147,22 +146,6 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 
 	// Step 2: Use AI to enrich the location
 	prompt := fmt.Sprintf(s.cfg.LocationEnrichmentPrompt, address)
-	promptLog := postgresEntity.AiPromptLog{
-		CreatedAt:      utils.Now(),
-		AppSource:      common.GetAppSourceFromContext(ctx),
-		Provider:       constants.Anthropic,
-		Model:          enum.AIModelAnthropicHaiku.String(),
-		PromptType:     constants.PromptTypeExtractLocationValue,
-		Tenant:         &tenant,
-		PromptTemplate: &s.cfg.LocationEnrichmentPrompt,
-		Prompt:         prompt,
-	}
-	promptStoreLogId, err := s.postgres.AiPromptLogRepository.Store(promptLog)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error storing prompt log: %v", err)
-	}
-
 	aiResult, err := s.ai.AskAI(ctx, interfaces.AskAIRequest{
 		Model:  enum.AIModelAnthropicHaiku,
 		Prompt: &prompt,
@@ -170,20 +153,10 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get AI response"))
 		s.log.Errorf("Error invoking AI: %s", err.Error())
-		storeErr := s.postgres.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
-		if storeErr != nil {
-			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with error"))
-			s.log.Errorf("Error updating prompt log with error: %v", storeErr)
-		}
 		return nil, err
 	}
 	if aiResult == nil {
 		return nil, nil
-	}
-	storeErr := s.postgres.AiPromptLogRepository.UpdateResponse(promptStoreLogId, *aiResult)
-	if storeErr != nil {
-		tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
-		s.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
 	}
 
 	var location data_fields.LocationFields
@@ -195,9 +168,8 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 
 	// Step 3: Store the mapping
 	locationMapping = &postgresEntity.AiLocationMapping{
-		Input:         address,
-		ResponseJson:  *aiResult,
-		AiPromptLogId: promptStoreLogId,
+		Input:        address,
+		ResponseJson: *aiResult,
 	}
 	err = s.postgres.AiLocationMappingRepository.AddLocationMapping(ctx, *locationMapping)
 	if err != nil {
