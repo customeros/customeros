@@ -16,13 +16,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type opensearchService struct {
-	tracingClient *opensearch.Client
-	eventsClient  *opensearch.Client
-	aiClient      *opensearch.Client
+	eventsClient *opensearch.Client
+	aiClient     *opensearch.Client
 }
 
 const (
@@ -37,9 +35,8 @@ func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig)
 	}
 
 	return &opensearchService{
-		tracingClient: createOpensearchClient(logger, config.TracingUrl, config.TracingUsername, config.TracingPassword),
-		eventsClient:  createOpensearchClient(logger, config.EventsUrl, config.EventsUsername, config.EventsPassword),
-		aiClient:      createOpensearchClient(logger, config.AIUrl, config.AIUsername, config.AIPassword),
+		eventsClient: createOpensearchClient(logger, config.EventsUrl, config.EventsUsername, config.EventsPassword),
+		aiClient:     createOpensearchClient(logger, config.AIUrl, config.AIUsername, config.AIPassword),
 	}
 }
 
@@ -60,18 +57,9 @@ func createOpensearchClient(logger logger.Logger, url, username, password string
 	return client
 }
 
-func (s *opensearchService) IsInitialized() bool {
-	return utils.IsInitialized(s)
-}
-
 // add all supported indexes here
 func (c *opensearchService) getClientForIndex(indexName string) (*opensearch.Client, error) {
 	switch {
-	case strings.HasPrefix(indexName, "trace-") ||
-		strings.HasPrefix(indexName, "tracing-") ||
-		strings.HasPrefix(indexName, "jaeger-"):
-		return c.tracingClient, nil
-
 	case strings.HasPrefix(indexName, "events-") ||
 		strings.HasPrefix(indexName, "llm-"):
 		return c.eventsClient, nil

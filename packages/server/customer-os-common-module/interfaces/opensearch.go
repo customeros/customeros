@@ -7,7 +7,6 @@ type OpensearchService interface {
 	LLMObservabilityIndexCheck(ctx context.Context, indexName string) error
 	UpsertDocument(ctx context.Context, indexName string, documentId *string, document interface{}) error
 	HybridSearch(ctx context.Context, searchParams HybridSearchRequest) ([]HybridSearchResult, error)
-	IsInitialized() bool
 }
 
 type HybridSearchRequest struct {
