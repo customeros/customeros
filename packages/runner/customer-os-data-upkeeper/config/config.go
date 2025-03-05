@@ -19,6 +19,8 @@ type CommonConfig struct {
 	RabbitMQConfig    commonconf.RabbitMQConfig
 	ScrubbyIo         commonconf.ScrubbyIoConfig
 	Anthropic         commonconf.AnthropicConfig
+	Groq              commonconf.GroqConfig
+	Gemini            commonconf.GeminiConfig
 	CustomerOsApi     commonconf.CustomerOsApiConfig
 	BetterContact     commonconf.BetterContactConfig
 	Postgres          commonconf.PostgresConfig
@@ -101,6 +103,8 @@ func Load() *Config {
 			EnrowConfig:         cmnCfg.Enrow,
 			ScrubbyIoConfig:     cmnCfg.ScrubbyIo,
 			AnthropicConfig:     cmnCfg.Anthropic,
+			GroqConfig:          cmnCfg.Groq,
+			GeminiConfig:        cmnCfg.Gemini,
 			BetterContactConfig: cmnCfg.BetterContact,
 			SlackConfig:         cmnCfg.SlackConfig,
 			NovuConfig:          cmnCfg.NovuConfig,
