@@ -68,7 +68,6 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
 	if agent == nil {
 		err := errors.New("agent not found")
 		tracing.TraceErr(span, err)

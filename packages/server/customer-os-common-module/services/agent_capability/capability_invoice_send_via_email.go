@@ -155,6 +155,11 @@ func (c *SendInvoiceViaEmailCapability) isPaymentCapabilityEnabled(ctx context.C
 		tracing.TraceErr(span, err)
 		return false, err
 	}
+	if agent == nil {
+		err := errors.New("agent not found")
+		tracing.TraceErr(span, err)
+		return false, err
+	}
 
 	// check capability
 	for _, capability := range agent.Capabilities {

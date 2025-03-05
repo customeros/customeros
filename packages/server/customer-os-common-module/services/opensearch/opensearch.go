@@ -330,7 +330,7 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
 }
 
 func (c *opensearchService) LLMObservabilityIndexCheck(ctx context.Context, indexName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensearchService.LLMObservabilityIndexCheck")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
