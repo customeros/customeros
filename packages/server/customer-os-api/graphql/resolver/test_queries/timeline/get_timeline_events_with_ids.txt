@@ -12,7 +12,6 @@ query GetTimelineEvents($ids: [ID!]!) {
       orderInSession
       sessionId
       source
-      sourceOfTruth
       appSource
     }
     ... on Issue {
@@ -22,7 +21,6 @@ query GetTimelineEvents($ids: [ID!]!) {
       priority
       description
       source
-      sourceOfTruth
       appSource
     }
     ... on Note {

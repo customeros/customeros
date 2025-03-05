@@ -8,18 +8,17 @@ import (
 
 type InteractionSessionEntity struct {
 	DataLoaderKey
-	Id            string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Identifier    string
-	Name          string
-	Status        commonenum.InteractionSessionStatus
-	Type          commonenum.InteractionSessionType
-	Channel       commonenum.InteractionSessionChannel
-	ChannelData   string
-	AppSource     string
-	Source        DataSource
-	SourceOfTruth DataSource
+	Id          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Identifier  string
+	Name        string
+	Status      commonenum.InteractionSessionStatus
+	Type        commonenum.InteractionSessionType
+	Channel     commonenum.InteractionSessionChannel
+	ChannelData string
+	AppSource   string
+	Source      DataSource
 }
 
 type InteractionSessionEntities []InteractionSessionEntity

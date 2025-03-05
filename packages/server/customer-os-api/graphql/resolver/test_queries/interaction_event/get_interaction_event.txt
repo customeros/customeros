@@ -22,7 +22,6 @@ query GetInteractionEvent($eventId: ID!){
        type
        channel
        source
-       sourceOfTruth
        appSource
     }
     issue {
@@ -99,7 +98,6 @@ query GetInteractionEvent($eventId: ID!){
         }
     }
     source
-    sourceOfTruth
     appSource
 
   }

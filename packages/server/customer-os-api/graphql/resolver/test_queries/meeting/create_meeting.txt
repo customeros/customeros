@@ -77,12 +77,10 @@ meeting_Create(
             createdAt
             updatedAt
             appSource
-            sourceOfTruth
        }
        createdAt
        updatedAt
        appSource
-       sourceOfTruth
        externalSystem {
                type
                syncDate

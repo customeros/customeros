@@ -13,12 +13,11 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 	}
 	return &model.Flow{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      model.DataSourceOpenline,
+			AppSource:   "",
 		},
 		Name:           entity.Name,
 		Nodes:          entity.Nodes,
@@ -51,12 +50,11 @@ func MapEntityToFlowParticipant(entity *neo4jentity.FlowParticipantEntity) *mode
 	}
 	return &model.FlowParticipant{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      model.DataSourceOpenline,
+			AppSource:   "",
 		},
 		Status:             entity.Status,
 		RequirementsUnmeet: entity.RequirementsUnmeet,
@@ -79,12 +77,11 @@ func MapEntityToFlowSender(entity *neo4jentity.FlowSenderEntity) *model.FlowSend
 	}
 	return &model.FlowSender{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      model.DataSourceOpenline,
+			AppSource:   "",
 		},
 	}
 }
@@ -103,12 +100,11 @@ func MapEntityToFlowAction(entity *neo4jentity.FlowActionEntity) *model.FlowActi
 	}
 	return &model.FlowAction{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      model.DataSourceOpenline,
+			AppSource:   "",
 		},
 		Action: entity.Data.Action,
 	}
@@ -128,12 +124,11 @@ func MapEntityToFlowActionExecution(entity *neo4jentity.FlowActionExecutionEntit
 	}
 	return &model.FlowActionExecution{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      model.DataSourceOpenline,
+			AppSource:   "",
 		},
 		Status:      entity.Status,
 		ScheduledAt: &entity.ScheduledAt,

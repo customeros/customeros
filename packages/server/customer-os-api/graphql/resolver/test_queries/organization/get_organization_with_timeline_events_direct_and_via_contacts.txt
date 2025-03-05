@@ -14,7 +14,6 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
               orderInSession
               sessionId
               source
-              sourceOfTruth
               appSource
             }
             ... on Issue {
@@ -26,7 +25,6 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
               priority
               description
               source
-              sourceOfTruth
               appSource
               tags {
                 metadata {

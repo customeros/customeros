@@ -14,7 +14,6 @@ query GetOrganization($organizationId: ID!) {
       renewalCycle
       status
       source
-      sourceOfTruth
       appSource
       contractUrl
       organizationLegalName

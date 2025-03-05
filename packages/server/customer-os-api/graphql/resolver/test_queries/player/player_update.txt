@@ -10,7 +10,6 @@ mutation UpdatePlayer($identityId: String, $playerId: ID!, $appSource: String) {
     authId
     provider
     source
-    sourceOfTruth
     appSource
     users {
       user {

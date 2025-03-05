@@ -6,7 +6,6 @@ query GetMeeting($meetingId: ID!){
        startedAt
        endedAt
        source
-       sourceOfTruth
        events {
          id
          createdAt
@@ -15,7 +14,6 @@ query GetMeeting($meetingId: ID!){
          contentType
          channel
          source
-         sourceOfTruth
          appSource
          repliesTo {
            id

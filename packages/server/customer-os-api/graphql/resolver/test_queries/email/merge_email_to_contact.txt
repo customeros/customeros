@@ -13,7 +13,6 @@ mutation MergeEmailToContact($contactId: ID!){
         label
         primary
         source
-        sourceOfTruth
         appSource
         createdAt
         updatedAt

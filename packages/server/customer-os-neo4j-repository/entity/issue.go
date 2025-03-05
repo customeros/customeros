@@ -7,16 +7,15 @@ import (
 
 type IssueEntity struct {
 	DataLoaderKey
-	Id            string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Subject       string
-	Status        string
-	Priority      string
-	Description   string
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Id          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Subject     string
+	Status      string
+	Priority    string
+	Description string
+	Source      DataSource
+	AppSource   string
 }
 
 type IssueEntities []IssueEntity

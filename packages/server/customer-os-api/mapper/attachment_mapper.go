@@ -20,9 +20,8 @@ func MapEntityToAttachment(entity *neo4j_entity.AttachmentEntity) *model.Attachm
 		FileName:  entity.FileName,
 		Size:      entity.Size,
 
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		Source:    MapDataSourceToModel(entity.Source),
+		AppSource: entity.AppSource,
 	}
 }
 

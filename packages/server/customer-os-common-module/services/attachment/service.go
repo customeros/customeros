@@ -91,7 +91,7 @@ func (s *attachmentService) createAttachmentInDBTxWork(c context.Context, newAtt
 
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		dbNode, err := s.neo4j.AttachmentWriteRepository.Create(ctx, tx, tenant, newAttachment.Id, newAttachment.CdnUrl, newAttachment.BasePath, newAttachment.FileName, newAttachment.MimeType, newAttachment.Size, newAttachment.CreatedAt, newAttachment.Source, newAttachment.SourceOfTruth, newAttachment.AppSource)
+		dbNode, err := s.neo4j.AttachmentWriteRepository.Create(ctx, tx, tenant, newAttachment.Id, newAttachment.CdnUrl, newAttachment.BasePath, newAttachment.FileName, newAttachment.MimeType, newAttachment.Size, newAttachment.CreatedAt, newAttachment.Source, newAttachment.AppSource)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

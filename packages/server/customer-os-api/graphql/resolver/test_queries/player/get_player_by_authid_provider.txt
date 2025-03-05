@@ -5,7 +5,6 @@ query GetPersonByAuthIdProvider($authId: String!, $provider: String!) {
     authId
     provider
     source
-    sourceOfTruth
     appSource
     users {
       user {

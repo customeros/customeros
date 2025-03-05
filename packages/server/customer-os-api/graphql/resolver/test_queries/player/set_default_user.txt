@@ -5,7 +5,6 @@ mutation SetDefaultUser($playerId: ID!, $userId: ID!) {
     authId
     provider
     source
-    sourceOfTruth
     appSource
     users {
       user {

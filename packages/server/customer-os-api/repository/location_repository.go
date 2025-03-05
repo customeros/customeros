@@ -3,14 +3,14 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -104,30 +104,29 @@ func (r *locationRepository) Update(ctx context.Context, tenant string, location
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant":        tenant,
-				"now":           utils.Now(),
-				"id":            locationEntity.Id,
-				"name":          locationEntity.Name,
-				"rawAddress":    locationEntity.RawAddress,
-				"sourceOfTruth": locationEntity.SourceOfTruth,
-				"country":       locationEntity.Country,
-				"region":        locationEntity.Region,
-				"locality":      locationEntity.Locality,
-				"address":       locationEntity.Address,
-				"address2":      locationEntity.Address2,
-				"zip":           locationEntity.Zip,
-				"addressType":   locationEntity.AddressType,
-				"houseNumber":   locationEntity.HouseNumber,
-				"postalCode":    locationEntity.PostalCode,
-				"plusFour":      locationEntity.PlusFour,
-				"commercial":    locationEntity.Commercial,
-				"predirection":  locationEntity.Predirection,
-				"district":      locationEntity.District,
-				"street":        locationEntity.Street,
-				"latitude":      locationEntity.Latitude,
-				"longitude":     locationEntity.Longitude,
-				"timeZone":      locationEntity.TimeZone,
-				"utcOffset":     locationEntity.UtcOffset,
+				"tenant":       tenant,
+				"now":          utils.Now(),
+				"id":           locationEntity.Id,
+				"name":         locationEntity.Name,
+				"rawAddress":   locationEntity.RawAddress,
+				"country":      locationEntity.Country,
+				"region":       locationEntity.Region,
+				"locality":     locationEntity.Locality,
+				"address":      locationEntity.Address,
+				"address2":     locationEntity.Address2,
+				"zip":          locationEntity.Zip,
+				"addressType":  locationEntity.AddressType,
+				"houseNumber":  locationEntity.HouseNumber,
+				"postalCode":   locationEntity.PostalCode,
+				"plusFour":     locationEntity.PlusFour,
+				"commercial":   locationEntity.Commercial,
+				"predirection": locationEntity.Predirection,
+				"district":     locationEntity.District,
+				"street":       locationEntity.Street,
+				"latitude":     locationEntity.Latitude,
+				"longitude":    locationEntity.Longitude,
+				"timeZone":     locationEntity.TimeZone,
+				"utcOffset":    locationEntity.UtcOffset,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {

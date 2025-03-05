@@ -25,9 +25,8 @@ type AttachmentEntity struct {
 	PublicUrl          string
 	PublicUrlExpiresAt *time.Time
 
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Source    DataSource
+	AppSource string
 }
 
 type AttachmentEntities []AttachmentEntity

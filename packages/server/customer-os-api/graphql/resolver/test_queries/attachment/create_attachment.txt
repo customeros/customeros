@@ -18,7 +18,6 @@ attachment_Create(
       mimeType
       size
       source
-      sourceOfTruth
       appSource
     }
 }

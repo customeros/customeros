@@ -18,7 +18,6 @@ func MapEntityToInteractionEvent(entity *neo4jentity.InteractionEventEntity) *mo
 		ChannelData:     &entity.ChannelData,
 		EventType:       &entity.EventType,
 		Source:          MapDataSourceToModel(entity.Source),
-		SourceOfTruth:   MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:       entity.AppSource,
 	}
 }

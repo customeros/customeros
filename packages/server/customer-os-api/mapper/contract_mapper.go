@@ -14,13 +14,12 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 	}
 	contract := model.Contract{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        MapDataSourceToModel(entity.Source),
-			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-			AppSource:     entity.AppSource,
-			Version:       entity.AggregateVersion,
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      MapDataSourceToModel(entity.Source),
+			AppSource:   entity.AppSource,
+			Version:     entity.AggregateVersion,
 		},
 		BillingDetails: &model.BillingDetails{
 			BillingCycleInMonths:   utils.ToPtr(entity.BillingCycleInMonths),
@@ -64,7 +63,6 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		CreatedAt:             entity.CreatedAt,
 		UpdatedAt:             entity.UpdatedAt,
 		Source:                MapDataSourceToModel(entity.Source),
-		SourceOfTruth:         MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:             entity.AppSource,
 		Status:                MapContractStatusToModel(entity.ContractStatus),
 		ServiceStartedAt:      entity.ServiceStartedAt,

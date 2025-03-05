@@ -24,7 +24,6 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 
 	entity := mapper.MapAttachmentInputToEntity(&input)
 	entity.Source = neo4jentity.DataSourceOpenline
-	entity.SourceOfTruth = neo4jentity.DataSourceOpenline
 
 	attachmentCreated, err := r.Services.CommonServices.AttachmentService.Create(ctx, entity)
 

@@ -29,7 +29,6 @@ func MapEntityToMeeting(entity *neo4jentity.MeetingEntity) *model.Meeting {
 		AgendaContentType:  entity.AgendaContentType,
 		AppSource:          entity.AppSource,
 		Source:             MapDataSourceToModel(entity.Source),
-		SourceOfTruth:      MapDataSourceToModel(entity.SourceOfTruth),
 	}
 	if entity.Status != nil {
 		meeting.Status = MapMeetingStatusToModel(*entity.Status)
@@ -55,7 +54,6 @@ func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *neo4jentity.Meeti
 		Agenda:             model.Agenda,
 		AgendaContentType:  model.AgendaContentType,
 		Source:             neo4jentity.DataSourceOpenline,
-		SourceOfTruth:      neo4jentity.DataSourceOpenline,
 	}
 
 	if model.Status != nil {
@@ -91,7 +89,6 @@ func MapMeetingToEntity(model *model.MeetingInput) *neo4jentity.MeetingEntity {
 		Agenda:             model.Agenda,
 		AgendaContentType:  model.AgendaContentType,
 		Source:             neo4jentity.DataSourceOpenline,
-		SourceOfTruth:      neo4jentity.DataSourceOpenline,
 	}
 	if model.Status != nil {
 		status := MapMeetingStatusFromModel(*model.Status)

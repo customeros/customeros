@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/client"
-	"github.com/google/uuid"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -47,7 +47,6 @@ import (
 //			EndedAt       string `json:"endedAt"`
 //			AppSource     string `json:"appSource"`
 //			Source        string `json:"source"`
-//			SourceOfTruth string `json:"sourceOfTruth"`
 //			Note          []struct {
 //				ID string `json:"id"`
 //			}
@@ -103,7 +102,6 @@ import (
 //			EndedAt       string `json:"endedAt"`
 //			Recoding      string `json:"recording"`
 //			Source        string `json:"source"`
-//			SourceOfTruth string `json:"sourceOfTruth"`
 //			Events        []struct {
 //				ID          string `json:"id"`
 //				ContentType string `json:"contentType"`
@@ -123,7 +121,6 @@ import (
 //	require.Equal(t, meetingGet.Meeting.StartedAt, meetingGet.Meeting.StartedAt)
 //	require.Equal(t, meetingGet.Meeting.EndedAt, meetingGet.Meeting.EndedAt)
 //	require.Equal(t, meetingGet.Meeting.Source, meetingGet.Meeting.Source)
-//	require.Equal(t, meetingGet.Meeting.SourceOfTruth, meetingGet.Meeting.SourceOfTruth)
 //	require.Equal(t, 1, len(meetingGet.Meeting.Events))
 //	require.Equal(t, interactionEventId1, meetingGet.Meeting.Events[0].ID)
 //	require.Equal(t, "application/json", meetingGet.Meeting.Events[0].ContentType)
@@ -147,7 +144,6 @@ import (
 //			EndedAt            string `json:"endedAt"`
 //			Recording          string `json:"recording"`
 //			Source             string `json:"source"`
-//			SourceOfTruth      string `json:"sourceOfTruth"`
 //			Status             string `json:"status"`
 //		}
 //	}
@@ -163,7 +159,6 @@ import (
 //	require.Equal(t, "test-agenda-updated", meeting.Meeting_Update.Agenda)
 //	require.Equal(t, "text/plain", meeting.Meeting_Update.AgendaContentType)
 //	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
-//	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
 //	require.Equal(t, "CANCELED", meeting.Meeting_Update.Status)
 //
 //	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))

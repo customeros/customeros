@@ -17,7 +17,6 @@ func MapEntityToPageView(entity *entity.PageViewEntity) *model.PageView {
 		OrderInSession: entity.OrderInSession,
 		EngagedTime:    entity.EngagedTime,
 		Source:         MapDataSourceToModel(entity.Source),
-		SourceOfTruth:  MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:      entity.AppSource,
 	}
 }

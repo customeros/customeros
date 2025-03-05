@@ -910,9 +910,8 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 	span.LogFields(log.String("request.contactID", contactID))
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonmodel.CONTACT, contactID, entity.SourceFields{
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     constants.AppSourceCustomerOsApi,
+		Source:    neo4jentity.DataSourceOpenline,
+		AppSource: constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

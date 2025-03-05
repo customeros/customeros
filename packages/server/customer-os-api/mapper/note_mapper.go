@@ -14,11 +14,10 @@ func MapNoteInputToEntity(input *model.NoteInput) *entity.NoteEntity {
 		return nil
 	}
 	noteEntity := entity.NoteEntity{
-		Content:       utils.IfNotNilString(input.Content),
-		ContentType:   utils.IfNotNilString(input.ContentType),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		Content:     utils.IfNotNilString(input.Content),
+		ContentType: utils.IfNotNilString(input.ContentType),
+		Source:      neo4jentity.DataSourceOpenline,
+		AppSource:   utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &noteEntity
 }
@@ -28,24 +27,22 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 		return nil
 	}
 	noteEntity := entity.NoteEntity{
-		Id:            input.ID,
-		Content:       utils.IfNotNilString(input.Content),
-		ContentType:   utils.IfNotNilString(input.ContentType),
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		Id:          input.ID,
+		Content:     utils.IfNotNilString(input.Content),
+		ContentType: utils.IfNotNilString(input.ContentType),
 	}
 	return &noteEntity
 }
 
 func MapEntityToNote(entity *entity.NoteEntity) *model.Note {
 	note := model.Note{
-		ID:            entity.Id,
-		Content:       utils.StringPtr(entity.Content),
-		ContentType:   utils.StringPtr(entity.ContentType),
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:          entity.Id,
+		Content:     utils.StringPtr(entity.Content),
+		ContentType: utils.StringPtr(entity.ContentType),
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		Source:      MapDataSourceToModel(entity.Source),
+		AppSource:   entity.AppSource,
 	}
 	return &note
 }

@@ -34,7 +34,6 @@ type OpportunityEntity struct {
 	NextSteps         string
 	Comments          string
 	Source            DataSource
-	SourceOfTruth     DataSource
 	AppSource         string
 	OwnerUserId       string
 	RenewalDetails    RenewalDetails

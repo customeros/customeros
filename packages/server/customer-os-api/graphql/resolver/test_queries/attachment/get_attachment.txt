@@ -7,7 +7,6 @@ query GetAttachment($attachmentId: ID!) {
     mimeType
     size
     source
-    sourceOfTruth
     appSource
   }
 }

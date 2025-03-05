@@ -2,11 +2,11 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -94,7 +94,6 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.Manage
 		paramsUpdate := map[string]any{
 			"tenant":        tenant,
 			"opportunityId": opportunityId,
-			"sourceOfTruth": data.Source,
 		}
 
 		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId}) 

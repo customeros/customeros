@@ -14,12 +14,11 @@ func MapEntityToBankAccount(entity *neo4jentity.BankAccountEntity) *model.BankAc
 	}
 	return &model.BankAccount{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        MapDataSourceToModel(entity.Source),
-			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-			AppSource:     entity.AppSource,
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      MapDataSourceToModel(entity.Source),
+			AppSource:   entity.AppSource,
 		},
 		BankName:            utils.StringPtr(entity.BankName),
 		BankTransferEnabled: entity.BankTransferEnabled,

@@ -9,15 +9,14 @@ import (
 
 func MapEntityToLogEntry(entity *neo4jentity.LogEntryEntity) *model.LogEntry {
 	logEntry := model.LogEntry{
-		ID:            entity.Id,
-		Content:       utils.StringPtr(entity.Content),
-		ContentType:   utils.StringPtr(entity.ContentType),
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		StartedAt:     entity.StartedAt,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:          entity.Id,
+		Content:     utils.StringPtr(entity.Content),
+		ContentType: utils.StringPtr(entity.ContentType),
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		StartedAt:   entity.StartedAt,
+		Source:      MapDataSourceToModel(entity.Source),
+		AppSource:   entity.AppSource,
 	}
 	return &logEntry
 }

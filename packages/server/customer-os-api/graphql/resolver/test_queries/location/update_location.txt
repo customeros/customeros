@@ -26,7 +26,6 @@ mutation UpdateLocation($locationId: ID!) {
   ) {
     id
     updatedAt
-    sourceOfTruth
     name
     rawAddress
     country

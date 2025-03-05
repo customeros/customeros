@@ -3,13 +3,13 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -99,7 +99,6 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 		"interactionEventId": interactionEventId,
 		"createdAt":          utils.NowIfZero(data.CreatedAt),
 		"source":             data.Source,
-		"sourceOfTruth":      data.Source,
 		"appSource":          data.AppSource,
 		"content":            data.Content,
 		"contentType":        data.ContentType,
@@ -132,15 +131,14 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent:InteractionEvent_%s {id:$interactionEventId})
 		 	SET	
-				i.content= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.content is null OR i.content = '' THEN $content ELSE i.content END,
-				i.contentType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.contentType is null OR i.contentType = '' THEN $contentType ELSE i.contentType END,
-				i.channel= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channel is null OR i.channel = '' THEN $channel ELSE i.channel END,
-				i.channelData= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,	
-				i.identifier= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
-				i.eventType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
-				i.hide= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
-				i.updatedAt = datetime(),
-				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END`, tenant)
+				i.content= CASE WHEN $overwrite=true OR i.content is null OR i.content = '' THEN $content ELSE i.content END,
+				i.contentType= CASE WHEN $overwrite=true OR i.contentType is null OR i.contentType = '' THEN $contentType ELSE i.contentType END,
+				i.channel= CASE WHEN $overwrite=true OR i.channel is null OR i.channel = '' THEN $channel ELSE i.channel END,
+				i.channelData= CASE WHEN  $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,	
+				i.identifier= CASE WHEN  $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
+				i.eventType= CASE WHEN  $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
+				i.hide= CASE WHEN  $overwrite=true THEN $hide ELSE i.hide END,
+				i.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,
@@ -152,7 +150,6 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 		"identifier":         data.Identifier,
 		"eventType":          data.EventType,
 		"hide":               data.Hide,
-		"sourceOfTruth":      data.Source,
 		"overwrite":          data.Source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))

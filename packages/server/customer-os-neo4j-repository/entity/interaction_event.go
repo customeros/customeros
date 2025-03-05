@@ -22,7 +22,6 @@ type InteractionEventEntity struct {
 	EventType                    string
 	Hide                         bool
 	Source                       DataSource
-	SourceOfTruth                DataSource
 	AppSource                    string
 }
 
