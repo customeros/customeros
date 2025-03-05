@@ -36,8 +36,7 @@ type InvoiceReadRepository interface {
 	GetInvoicesForScheduled(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetExpiredPaymentProcessingInvoices(ctx context.Context, paymentProcessingMaxDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
-	//Deprecated ,replaced with autopayment agent capability
-	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetReadyInvoicesForFinalizedWebhook(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
 }
 
 type invoiceReadRepository struct {
@@ -837,28 +836,22 @@ func (r *invoiceReadRepository) GetExpiredPaymentProcessingInvoices(ctx context.
 	return result.([]*utils.DbNodeAndTenant), err
 }
 
-func (r *invoiceReadRepository) GetReadyInvoicesForFinalizedEvent(ctx context.Context, minutesFromLastUpdate int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetReadyInvoicesForFinalizedEvent")
+func (r *invoiceReadRepository) GetReadyInvoicesForFinalizedWebhook(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetReadyInvoicesForFinalizedWebhook")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Object("referenceTime", referenceTime))
 
 	cypher := `MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
 				i.dryRun = false AND
-				i.status IN $acceptedStatuses AND
-				i.techInvoiceFinalizedSentAt IS NULL AND
-				i.techInvoiceFinalizedWebhookProcessedAt IS NOT NULL AND
-				i.updatedAt + duration({minutes: $minutesFromLastUpdate}) < $referenceTime
+				i.amount > 0 AND
+				i.techInvoiceFinalizedWebhookProcessedAt IS NULL AND
+				i.updatedAt + duration({minutes: $minutesFromLastUpdate}) < datetime() AND
+				i.createdAt > datetime('2025-01-01')
 			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
-		"minutesFromLastUpdate": minutesFromLastUpdate,
-		"referenceTime":         referenceTime,
+		"minutesFromLastUpdate": 15,
 		"limit":                 limit,
-		"acceptedStatuses": []string{
-			neo4jenum.InvoiceStatusDue.String(),
-			neo4jenum.InvoiceStatusOverdue.String(),
-		},
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

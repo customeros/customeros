@@ -40,6 +40,7 @@ type Config struct {
 	CronScheduleSendPayInvoiceNotification string `env:"CRON_SCHEDULE_SEND_PAY_INVOICE_NOTIFICATION" envDefault:"0 */30 * * * *"`
 	// Defaults to each 8 hours
 	CronScheduleCleanupInvoices string `env:"CRON_SCHEDULE_CLEANUP_INVOICES" envDefault:"0 40 */8 * * *"`
+	CronScheduleUpkeepInvoices  string `env:"CRON_SCHEDULE_UPKEEP_INVOICES" envDefault:"0 20 */8 * * *"`
 	// Defaults to each 30 mins
 	CronScheduleAdjustInvoiceStatus string `env:"CRON_SCHEDULE_ADJUST_INVOICE_STATUS" envDefault:"0 */30 * * * *"`
 	// Defaults to 9:15am

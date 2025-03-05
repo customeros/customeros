@@ -35,6 +35,7 @@ type CommonConfig struct {
 	AwsConfig         commonconf.AwsConfig
 	QuickbooksConfig  commonconf.QuickbooksConfig
 	OpensearchConfig  commonconf.OpensearchConfig
+	TemporalConfig    commonconf.TemporalConfig
 }
 
 type AppConfig struct {
@@ -105,6 +106,7 @@ func Load() *Config {
 			NovuConfig:          cmnCfg.NovuConfig,
 			JinaConfig:          cmnCfg.JinaConfig,
 			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
+			TemporalConfig:      cmnCfg.TemporalConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,

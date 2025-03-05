@@ -142,6 +142,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateNextPreviewInvoice, GroupInvoice, generateNextPreviewInvoices, "generateNextPreviewInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleCleanupInvoices, GroupInvoice, cleanupInvoices, "cleanupInvoices")
+	addJob(cont.Cfg.App.Cron.CronScheduleUpkeepInvoices, GroupInvoice, upkeepInvoices, "upkeepInvoices")
 	addJob(cont.Cfg.App.Cron.CronScheduleAdjustInvoiceStatus, GroupInvoice, adjustInvoiceStatus, "adjustInvoiceStatus")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendPayInvoiceNotification, GroupInvoice, sendPayInvoiceNotifications, "sendPayInvoiceNotifications")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendRemindInvoiceNotification, GroupInvoice, sendRemindInvoiceNotifications, "sendRemindInvoiceNotifications")
@@ -240,6 +241,10 @@ func generateNextPreviewInvoices(cont *container.Container) {
 
 func cleanupInvoices(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).CleanupInvoices()
+}
+
+func upkeepInvoices(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).UpkeepInvoices()
 }
 
 func adjustInvoiceStatus(cont *container.Container) {

@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -36,6 +37,7 @@ type GeneratePaymentLinkEventBody struct {
 
 type InvoiceService interface {
 	CleanupInvoices()
+	UpkeepInvoices()
 	GenerateNextPreviewInvoices()
 	AdjustInvoiceStatus()
 
@@ -339,6 +341,71 @@ func (s *invoiceService) CleanupInvoices() {
 				s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
 			}
 		}
+	}
+}
+
+func (s *invoiceService) UpkeepInvoices() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.UpkeepInvoices")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 1
+
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetReadyInvoicesForFinalizedWebhook(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting invoices: %s", err.Error())
+		return
+	}
+
+	// no invoices found
+	if len(records) == 0 {
+		return
+	}
+
+	// process records
+	for _, record := range records {
+		func(record *utils.DbNodeAndTenant) {
+			recordSpan, recordCtx := tracing.StartTracerSpan(ctx, "InvoiceService.UpkeepInvoices.Record")
+			defer recordSpan.Finish()
+			tracing.TagTenant(recordSpan, record.Tenant)
+
+			invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+			tenant := record.Tenant
+			recordCtx = common.WithCustomContext(recordCtx, &common.CustomContext{
+				Tenant:    tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			// get contract for invoice
+			contractEntity, err := s.commonServices.ContractService.GetContractForInvoice(recordCtx, invoiceEntity.Id)
+			if err != nil {
+				tracing.TraceErr(recordSpan, err)
+				return
+			}
+			// get invoice lines
+			invoiceLines, err := s.commonServices.InvoiceService.GetInvoiceLinesForInvoices(recordCtx, []string{invoiceEntity.Id})
+			if err != nil {
+				tracing.TraceErr(recordSpan, err)
+				return
+			}
+
+			// Convert *InvoiceLineEntities to []*InvoiceLineEntity
+			var invoiceLinesArray []*neo4jentity.InvoiceLineEntity
+			if invoiceLines != nil {
+				for i := range *invoiceLines {
+					invoiceLinesArray = append(invoiceLinesArray, &(*invoiceLines)[i])
+				}
+			}
+
+			err = s.commonServices.InvoiceService.DispatchInvoiceFinalizedEvent(recordCtx, invoiceEntity, contractEntity, invoiceLinesArray, nil)
+			if err != nil {
+				tracing.TraceErr(recordSpan, err)
+			}
+		}(record)
 	}
 }
 
