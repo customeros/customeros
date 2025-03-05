@@ -149,6 +149,7 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackError")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "llm", llmTracker)
 
 	if llmTracker == nil || llmTracker.RequestID == "" {
 		err := errors.New("llm observability container cannot be nil")
@@ -180,6 +181,7 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackSuccess")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "llm", llmTracker)
 
 	if llmTracker == nil {
 		err := errors.New("llm observability container cannot be nil")
@@ -244,6 +246,7 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGemini")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.geminiConfig.ApiKey == "" {
 		err := errors.New("Gemini API key not set")
@@ -304,6 +307,7 @@ func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIReq
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askDeepseek")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.deepseekConfig.ApiKey == "" {
 		err := errors.New("Deepseek API key not set")
@@ -333,6 +337,7 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAnthropic")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.anthropicConfig.ApiKey == "" || s.anthropicConfig.ApiPath == "" {
 		err := errors.New("Anthropic API key or path not set")
@@ -356,6 +361,7 @@ func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGroq")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.groqConfig.ApiKey == "" || s.groqConfig.Url == "" {
 		err := errors.New("Groq API key or URL not set")
