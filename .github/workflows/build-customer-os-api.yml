@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-group: [neo4j, postgres, other]
+        test-group: [neo4j, postgres, rest, other]
     steps:
       - uses: actions/checkout@v4
 
