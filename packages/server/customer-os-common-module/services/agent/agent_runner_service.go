@@ -361,9 +361,7 @@ func (a *agentRunnerService) createAgentExecutionRecord(ctx context.Context, age
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("agentID", agentID, "triggerEventType", triggerEventName, "traceId", traceId)
 
-	agent, err := a.postgresRepositories.AgentRepository.Find(ctx, postgres_entity.Agent{
-		ID: agentID,
-	})
+	agent, err := a.postgresRepositories.AgentRepository.GetById(ctx, agentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -400,9 +398,7 @@ func (a *agentRunnerService) ResumeExecution(ctx context.Context, executionID st
 	}
 
 	// Get agent details
-	agent, err := a.postgresRepositories.AgentRepository.Find(ctx, postgres_entity.Agent{
-		ID: *execution.AgentID,
-	})
+	agent, err := a.postgresRepositories.AgentRepository.GetById(ctx, *execution.AgentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -441,12 +437,28 @@ func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID str
 	}
 
 	// Get agent details
-	agent, err := a.postgresRepositories.AgentRepository.Find(ctx, postgres_entity.Agent{
-		ID: *execution.AgentID,
-	})
+	agent, err := a.postgresRepositories.AgentRepository.GetById(ctx, *execution.AgentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+	// if agent was removed stop retrying
+	if agent == nil {
+		err = a.postgresRepositories.AgentExecutionRepository.Fail(ctx, executionID, "Stop retrying, agent not found")
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to stop retrying"))
+			return err
+		}
+		return nil
+	}
+	// if agent is not active re-schedule retry
+	if !agent.IsActive {
+		err = a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, errors.New(utils.IfNotNilString(execution.ErrorMessage)), execution.StateData)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to schedule retry"))
+			return err
+		}
+		return nil
 	}
 
 	// Resume from last known state

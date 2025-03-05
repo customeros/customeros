@@ -231,6 +231,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 
 	// if no webhook is configured, return early
 	if h.cfg.SlackConfig.DataAlertsRegisteredWebhook == "" {
+		tracing.TraceErr(span, errors.New("no slack webhook configured"))
 		return nil
 	}
 

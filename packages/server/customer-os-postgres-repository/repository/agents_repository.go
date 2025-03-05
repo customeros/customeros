@@ -17,7 +17,6 @@ import (
 
 type AgentRepository interface {
 	Create(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
-	Find(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
 	GetById(ctx context.Context, id string) (*postgres_entity.Agent, error)
 	GetAll(ctx context.Context) ([]*postgres_entity.Agent, error)
 	GetAllAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
@@ -331,32 +330,6 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx conte
 	}
 	span.LogFields(log.Int("result.count", len(records)))
 	return records, nil
-}
-
-func (f *agentsRepository) Find(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.Find")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	var result postgres_entity.Agent
-	err := f.gormDb.
-		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
-			return db.Order("position ASC")
-		}).
-		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
-			return db.Order("position ASC")
-		}).
-		Where(&agent).
-		Where("is_active = true").
-		First(&result).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return &result, nil
 }
 
 func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error) {
