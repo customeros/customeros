@@ -361,7 +361,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				if err != nil {
 					return nil, err
 				}
-
 			}
 
 			span.LogKV("authId", authId)
@@ -404,6 +403,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					} else {
 						isNewTenant = true
 					}
+				} else {
+					isNewTenant = true
 				}
 
 				if isNewTenant {
@@ -427,10 +428,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					currentTenant = tenantEntity.Name
 					defaultTenant = tenantEntity.Name
 
-					ctx = common.WithCustomContext(ctx, &common.CustomContext{
-						Tenant: currentTenant,
-					})
-
 					if !isPersonalEmail {
 						_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
 							Name:     domain,
@@ -441,6 +438,10 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						}
 					}
 				}
+
+				ctx = common.WithCustomContext(ctx, &common.CustomContext{
+					Tenant: currentTenant,
+				})
 
 				err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
 				if err != nil {
