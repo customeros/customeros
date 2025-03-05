@@ -263,8 +263,17 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 	defer client.Close()
 
 	model := client.GenerativeModel(request.Model.String())
-	model.SetTemperature(*request.ModelTemperature)
-	model.SetMaxOutputTokens(*request.MaxOutputTokens)
+	if request.ModelTemperature == nil {
+		model.SetTemperature(DefaultTemperature)
+	} else {
+		model.SetTemperature(*request.ModelTemperature)
+	}
+
+	if request.MaxOutputTokens == nil {
+		model.SetMaxOutputTokens(MaxTokens)
+	} else {
+		model.SetMaxOutputTokens(*request.MaxOutputTokens)
+	}
 
 	switch request.OutputFormat {
 	case enum.AIOutputText:
