@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -74,7 +74,6 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 			"endedAt":            utils.IfNotNilTimeWithDefault(entity.EndedAt, utils.Now()),
 			"appSource":          entity.AppSource,
 			"source":             entity.Source,
-			"sourceOfTruth":      entity.SourceOfTruth,
 			"status":             entity.Status,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
