@@ -59,7 +59,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 	var err error
 
 	if request.Prompt == nil {
-		err := errors.New("Prompt cannot be empty")
+		err = errors.New("prompt cannot be empty")
 		tracing.TraceErr(span, err)
 		s.trackError(ctx, llmTracker, err.Error())
 		return nil, err

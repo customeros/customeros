@@ -366,7 +366,6 @@ func (a *agentRunnerService) createAgentExecutionRecord(ctx context.Context, age
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-
 	if agent == nil {
 		err := errors.New("agent not found")
 		tracing.TraceErr(span, err)
@@ -403,15 +402,46 @@ func (a *agentRunnerService) ResumeExecution(ctx context.Context, executionID st
 		tracing.TraceErr(span, err)
 		return err
 	}
+	if agent == nil {
+		err = a.postgresRepositories.AgentExecutionRepository.Fail(ctx, executionID, "Agent removed")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return nil
+	}
+	if !agent.IsActive {
+		err = a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, errors.New(utils.IfNotNilString(execution.ErrorMessage)), execution.StateData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
 
 	// Resume from stored state
 	params := map[string]any{}
-	if execution.StateData != nil {
-		params = execution.StateData["params"].(map[string]any)
+	if execution.StateData == nil {
+		err := errors.New("StateData is empty, cannot retry")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if paramsVal, ok := execution.StateData["params"]; ok {
+		if paramsMap, ok := paramsVal.(map[string]any); ok {
+			params = paramsMap
+		} else {
+			err := errors.New("paramsMap is invalid")
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	// Resume execution
 	_, err = a.Run(ctx, *agent, execution.TriggerEvent, params, utils.StringPtr(executionID))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 	return err
 }
 
@@ -461,7 +491,7 @@ func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID str
 		return nil
 	}
 
-	// Resume from last known state
+	// Retry from last known state
 	params := map[string]any{}
 	if execution.StateData == nil {
 		err := errors.New("StateData is empty, cannot retry")
