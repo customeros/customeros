@@ -428,6 +428,10 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					currentTenant = tenantEntity.Name
 					defaultTenant = tenantEntity.Name
 
+					ctx = common.WithCustomContext(ctx, &common.CustomContext{
+						Tenant: currentTenant,
+					})
+
 					if !isPersonalEmail {
 						_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
 							Name:     domain,
