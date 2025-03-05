@@ -1,12 +1,13 @@
 package config
 
 import (
+	"log"
+
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
-	"log"
 )
 
 type Config struct {
@@ -47,6 +48,7 @@ type CommonConfig struct {
 	Temporal         commonconf.TemporalConfig
 	JinaConfig       commonconf.JinaConfig
 	GeminiConfig     commonconf.GeminiConfig
+	Groq             commonconf.GroqConfig
 }
 
 func Load() *Config {
@@ -97,6 +99,7 @@ func Load() *Config {
 			TemporalConfig:       cmnCfg.Temporal,
 			JinaConfig:           cmnCfg.JinaConfig,
 			GeminiConfig:         cmnCfg.GeminiConfig,
+			GroqConfig:           cmnCfg.Groq,
 		},
 	}
 
