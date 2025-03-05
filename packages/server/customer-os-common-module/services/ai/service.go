@@ -150,6 +150,15 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	if llmTracker == nil || llmTracker.RequestID == "" {
+		err := errors.New("llm observability container cannot be nil")
+		tracing.TraceErr(span, err)
+		return
+	}
+	if llmTracker.RequestID == "" {
+		llmTracker.RequestID = utils.GenerateNanoIdWithPrefix("llm", 16)
+	}
+
 	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
 	err := s.opensearchService.LLMObservabilityIndexCheck(ctx, index)
 	if err != nil {
@@ -171,6 +180,15 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackSuccess")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	if llmTracker == nil {
+		err := errors.New("llm observability container cannot be nil")
+		tracing.TraceErr(span, err)
+		return
+	}
+	if llmTracker.RequestID == "" {
+		llmTracker.RequestID = utils.GenerateNanoIdWithPrefix("llm", 16)
+	}
 
 	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
 	err := s.opensearchService.LLMObservabilityIndexCheck(ctx, index)
