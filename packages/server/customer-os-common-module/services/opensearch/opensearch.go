@@ -16,6 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type opensearchService struct {
@@ -57,6 +58,10 @@ func createOpensearchClient(logger logger.Logger, url, username, password string
 		return nil
 	}
 	return client
+}
+
+func (s *opensearchService) IsInitialized() bool {
+	return utils.IsInitialized(s)
 }
 
 // add all supported indexes here
