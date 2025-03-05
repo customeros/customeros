@@ -444,7 +444,7 @@ func DefaultTableViewDefinitionTasks(span opentracing.Span) (postgres_entity.Tab
 		Icon:           "ClipboardCheck",
 		Filters:        ``,
 		DefaultFilters: ``,
-		Sorting:        ``,
+		Sorting:        `{"id": "TASKS_UPDATED_AT", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
 	}, nil
