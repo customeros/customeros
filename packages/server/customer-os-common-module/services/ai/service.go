@@ -151,6 +151,12 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "llm", llmTracker)
 
+	if s.opensearchService == nil {
+		err := errors.New("Opensearch service is not initialized")
+		tracing.TraceErr(span, err)
+		return
+	}
+
 	if llmTracker == nil || llmTracker.RequestID == "" {
 		err := errors.New("llm observability container cannot be nil")
 		tracing.TraceErr(span, err)
@@ -182,6 +188,12 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "llm", llmTracker)
+
+	if s.opensearchService == nil {
+		err := errors.New("Opensearch service is not initialized")
+		tracing.TraceErr(span, err)
+		return
+	}
 
 	if llmTracker == nil {
 		err := errors.New("llm observability container cannot be nil")

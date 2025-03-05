@@ -32,14 +32,14 @@ const (
 )
 
 func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig) interfaces.OpensearchService {
-	if config == nil || (config.Tracing == nil && config.Events == nil && config.AI == nil) {
-		return nil
+	if config == nil {
+		return &opensearchService{}
 	}
 
 	return &opensearchService{
-		tracingClient: createOpensearchClient(logger, config.Tracing.Url, config.Tracing.Username, config.Tracing.Password),
-		eventsClient:  createOpensearchClient(logger, config.Events.Url, config.Events.Username, config.Events.Password),
-		aiClient:      createOpensearchClient(logger, config.AI.Url, config.AI.Username, config.AI.Password),
+		tracingClient: createOpensearchClient(logger, config.TracingUrl, config.TracingUsername, config.TracingPassword),
+		eventsClient:  createOpensearchClient(logger, config.EventsUrl, config.EventsUsername, config.EventsPassword),
+		aiClient:      createOpensearchClient(logger, config.AIUrl, config.AIUsername, config.AIPassword),
 	}
 }
 
@@ -89,6 +89,12 @@ func (c *opensearchService) getClientForIndex(indexName string) (*opensearch.Cli
 func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string, documentId *string, document interface{}) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpensearchService.UpsertDocument")
 	defer span.Finish()
+
+	if c == nil {
+		err := errors.New("Opensearch service is not initialized")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	client, err := c.getClientForIndex(indexName)
 	if err != nil {
@@ -433,6 +439,12 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("indexName", indexName)
+
+	if c == nil {
+		err := errors.New("Opensearch service is not initialized")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	client, err := c.getClientForIndex(indexName)
 	if err != nil {
