@@ -76,8 +76,8 @@ func (c *opensearchService) getClientForIndex(indexName string) (*opensearch.Cli
 		strings.HasPrefix(indexName, "llm-"):
 		return c.eventsClient, nil
 
-	case strings.HasPrefix(indexName, "webpages-") ||
-		strings.HasPrefix(indexName, "emails-"):
+	case strings.HasPrefix(indexName, "webpage-") ||
+		strings.HasPrefix(indexName, "email-"):
 		return c.aiClient, nil
 
 	default:
