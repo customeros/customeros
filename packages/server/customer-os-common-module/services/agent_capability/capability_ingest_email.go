@@ -2,17 +2,17 @@ package agent_capability
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -104,6 +104,10 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 	ingestEmailMessage, err := c.postgres.IngestEmailMessageRepository.GetEmail(ctx, executionContainer.InputData.EntityId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get email"))
+		return enum.CapabilityExecutionError, NoOutput{}, err
+	}
+	if ingestEmailMessage == nil {
+		tracing.TraceErr(span, errors.Wrap(err, "email is nil"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
