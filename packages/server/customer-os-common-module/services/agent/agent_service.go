@@ -255,7 +255,7 @@ func (r *agentService) GetAgentInfo(ctx context.Context) (*map[enum.AgentType]in
 }
 
 func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID string, agentType enum.AgentType) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentService.GetNorthStarMetricById")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetNorthStarMetricById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -302,6 +302,7 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 			}
 		}
 		output = strings.Replace(output, "{amount}", humanize.CommafWithDigits(amount, 2), 1)
+		span.LogKV("output", output)
 		return output, nil
 	default:
 		goalAchievedCount, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedCountLast30Days(ctx, agentID)
@@ -309,7 +310,9 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-		return strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1), nil
+		output := strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1)
+		span.LogKV("output", output)
+		return output, nil
 	}
 }
 
