@@ -10,6 +10,7 @@ import (
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -18,33 +19,64 @@ import (
 )
 
 type opensearchService struct {
-	client *opensearch.Client
+	tracingClient *opensearch.Client
+	eventsClient  *opensearch.Client
+	aiClient      *opensearch.Client
 }
 
 const (
-	SEARCH_LIMIT           = 20
+	CONTEXT_SEARCH_LIMIT   = 20
 	SEMANTIC_SEARCH_WEIGHT = 70
 	KEYWORD_SEARCH_WEIGHT  = 30
 )
 
 func NewOpensearchService(logger logger.Logger, config *config.OpensearchConfig) interfaces.OpensearchService {
-	opensearchConfig := opensearch.Config{
-		Addresses: []string{config.Url},
-		Username:  config.Username,
-		Password:  config.Password,
-	}
-
-	if config.Url == "" {
-		return &opensearchService{}
-	}
-
-	client, err := opensearch.NewClient(opensearchConfig)
-	if err != nil {
-		return &opensearchService{}
+	if config == nil || (config.Tracing == nil && config.Events == nil && config.AI == nil) {
+		return nil
 	}
 
 	return &opensearchService{
-		client: client,
+		tracingClient: createOpensearchClient(logger, config.Tracing.Url, config.Tracing.Username, config.Tracing.Password),
+		eventsClient:  createOpensearchClient(logger, config.Events.Url, config.Events.Username, config.Events.Password),
+		aiClient:      createOpensearchClient(logger, config.AI.Url, config.AI.Username, config.AI.Password),
+	}
+}
+
+func createOpensearchClient(logger logger.Logger, url, username, password string) *opensearch.Client {
+	if url == "" || username == "" || password == "" {
+		return nil
+	}
+
+	client, err := opensearch.NewClient(opensearch.Config{
+		Addresses: []string{url},
+		Username:  username,
+		Password:  password,
+	})
+	if err != nil {
+		logger.Error("Failed to create client", "error", err)
+		return nil
+	}
+	return client
+}
+
+// add all supported indexes here
+func (c *opensearchService) getClientForIndex(indexName string) (*opensearch.Client, error) {
+	switch {
+	case strings.HasPrefix(indexName, "trace-") ||
+		strings.HasPrefix(indexName, "tracing-") ||
+		strings.HasPrefix(indexName, "jaeger-"):
+		return c.tracingClient, nil
+
+	case strings.HasPrefix(indexName, "events-") ||
+		strings.HasPrefix(indexName, "llm-"):
+		return c.eventsClient, nil
+
+	case strings.HasPrefix(indexName, "webpages-") ||
+		strings.HasPrefix(indexName, "emails-"):
+		return c.aiClient, nil
+
+	default:
+		return nil, errors.New("opensearch indexName unsupported")
 	}
 }
 
@@ -53,9 +85,13 @@ func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpensearchService.UpsertDocument")
 	defer span.Finish()
 
-	if c.client == nil {
+	client, err := c.getClientForIndex(indexName)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to select opensearch client"))
+		return err
+	}
+	if client == nil {
 		err := fmt.Errorf("opensearch client is nil")
-		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -74,7 +110,7 @@ func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string
 		req.DocumentID = *documentId
 	}
 
-	res, err := req.Do(ctx, c.client)
+	res, err := req.Do(ctx, client)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -95,7 +131,7 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	if c.client == nil {
+	if c.aiClient == nil {
 		err := fmt.Errorf("opensearch client is nil")
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -103,7 +139,7 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 
 	// Set default limit if not provided
 	if searchParams.ResultsLimit == nil {
-		limit := SEARCH_LIMIT
+		limit := CONTEXT_SEARCH_LIMIT
 		searchParams.ResultsLimit = &limit
 	}
 	if searchParams.KeywordWeight == nil {
@@ -209,7 +245,7 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 		Body:  strings.NewReader(string(jsonBody)),
 	}
 
-	res, err := req.Do(ctx, c.client)
+	res, err := req.Do(ctx, c.aiClient)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("error executing search: %w", err)
@@ -393,9 +429,13 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("indexName", indexName)
 
-	if c.client == nil {
+	client, err := c.getClientForIndex(indexName)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to select opensearch client"))
+		return err
+	}
+	if client == nil {
 		err := fmt.Errorf("opensearch client is nil")
-		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -403,7 +443,7 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 	existsReq := opensearchapi.IndicesExistsRequest{
 		Index: []string{indexName},
 	}
-	existsRes, err := existsReq.Do(ctx, c.client)
+	existsRes, err := existsReq.Do(ctx, client)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return fmt.Errorf("error checking if index exists: %w", err)
@@ -427,7 +467,7 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 			Index: indexName,
 			Body:  strings.NewReader(mapping),
 		}
-		createRes, err := createReq.Do(ctx, c.client)
+		createRes, err := createReq.Do(ctx, client)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return fmt.Errorf("error creating index: %w", err)
