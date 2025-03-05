@@ -38,6 +38,7 @@ type InvoiceService interface {
 	AutopayInvoice(ctx context.Context, invoiceId string) error
 	GenerateNewPaymentLink(ctx context.Context, invoiceId string) error
 	RegenerateInvoicePdf(ctx context.Context, invoiceId string) error
+	DispatchInvoiceFinalizedEvent(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, contractEntity *neo4jentity.ContractEntity, invoiceLineEntities []*neo4jentity.InvoiceLineEntity, tx *neo4j.ManagedTransaction) error
 
 	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD
 	FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error)

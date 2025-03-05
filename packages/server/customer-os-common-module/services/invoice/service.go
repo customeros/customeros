@@ -461,16 +461,10 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		// Step 11 - invoice webhooks
 		if invoiceEntityAfterFill.InvoiceInternalFields.InvoiceFinalizedWebhookProcessedAt == nil {
 			// dispatch invoice finalized event
-			err = s.dispatchInvoiceFinalizedEvent(ctx, tenant, invoiceEntityAfterFill, contractEntity, invoiceLineEntities)
+			err = s.DispatchInvoiceFinalizedEvent(ctx, invoiceEntityAfterFill, contractEntity, invoiceLineEntities, txWithPostCommit.Tx)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "dispatchInvoiceFinalizedEvent"))
 				s.log.Errorf("Error while dispatching invoice finalized event for invoice %s: %s", invoiceEntityAfterFill.Id, err.Error())
-				// TODO: must implement retry mechanism for dispatching invoice finalized event
-			}
-			err = s.neo4j.CommonWriteRepository.UpdateTimePropertyInTx(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelInvoice, invoiceId, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error setting invoice finalized webhook processed"))
-				s.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
 			}
 		}
 
@@ -2237,21 +2231,35 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 	return nil
 }
 
-func (s *invoiceService) dispatchInvoiceFinalizedEvent(ctx context.Context, tenant string,
+func (s *invoiceService) DispatchInvoiceFinalizedEvent(ctx context.Context,
 	invoiceEntity *neo4jentity.InvoiceEntity,
 	contractEntity *neo4jentity.ContractEntity,
-	invoiceLineEntities []*neo4jentity.InvoiceLineEntity) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceService.dispatchInvoiceFinalizedEvent")
+	invoiceLineEntities []*neo4jentity.InvoiceLineEntity,
+	tx *neo4j.ManagedTransaction) error {
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceService.DispatchInvoiceFinalizedEvent")
 	defer span.Finish()
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, invoiceEntity.Id)
+
+	if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedWebhookProcessedAt != nil {
+		span.LogFields(log.String("result", "invoice finalized webhook already processed"))
+		return nil
+	}
+
+	err := s.neo4j.CommonWriteRepository.UpdateTimePropertyInTx(ctx, tx, common.GetTenantFromContext(ctx), model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting invoice finalized webhook processed"))
+		s.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
+		return err
+	}
 
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
 		return nil
 	}
 
 	// get organization linked to invoice to build payload for webhook
-	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceEntity.Id)
+	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, common.GetTenantFromContext(ctx), invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoiceEntity.Id, err.Error())
@@ -2266,7 +2274,7 @@ func (s *invoiceService) dispatchInvoiceFinalizedEvent(ctx context.Context, tena
 	// dispatch the event
 	err = webhook.DispatchWebhook(
 		ctx,
-		tenant,
+		common.GetTenantFromContext(ctx),
 		webhook.WebhookEventInvoiceFinalized,
 		webhookPayload,
 		s.postgresRepositories,

@@ -37,6 +37,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleGetCurrencyRatesECB:                                   "0 0 */1 * * *",
 				CronScheduleLinkUnthreadIssues:                                    "0 0 */1 * * *",
 				CronScheduleCleanupInvoices:                                       "0 0 */1 * * *",
+				CronScheduleUpkeepInvoices:                                        "0 0 */1 * * *",
 				CronScheduleAdjustInvoiceStatus:                                   "0 0 */1 * * *",
 				CronScheduleUpkeepContacts:                                        "0 0 */1 * * *",
 				CronScheduleAskForWorkEmailOnBetterContact:                        "0 0 */1 * * *",
