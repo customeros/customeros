@@ -15,7 +15,6 @@ type Repositories struct {
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
 	AiLocationMappingRepository                  AiLocationMappingRepository
-	AiPromptLogRepository                        AiPromptLogRepository
 	ApiBillableEventRepository                   ApiBillableEventRepository
 	AppKeyRepository                             AppKeyRepository
 	BrowserAutomationRunRepository               BrowserAutomationRunRepository
@@ -101,7 +100,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
 		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
 		AiLocationMappingRepository:                  NewAiLocationMappingRepository(postgresDB.GormDB),
-		AiPromptLogRepository:                        NewAiPromptLogRepository(postgresDB.GormDB),
 		ApiBillableEventRepository:                   NewApiBillableEventRepository(postgresDB.GormDB),
 		AppKeyRepository:                             NewAppKeyRepo(postgresDB.GormDB),
 		BrowserAutomationRunRepository:               NewBrowserAutomationRunRepository(postgresDB.GormDB),
@@ -181,7 +179,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.Capability{},
 		&postgres_entity.Listener{},
 		&postgres_entity.AiLocationMapping{},
-		&postgres_entity.AiPromptLog{},
 		&postgres_entity.ApiBillableEvent{},
 		&postgres_entity.CacheEmailEnrow{},
 		&postgres_entity.CacheEmailScrubby{},

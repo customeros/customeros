@@ -5,15 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/machinebox/graphql"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/runner/customer-os-dedup/config"
-	"github.com/customeros/customeros/packages/runner/customer-os-dedup/constants"
 	"github.com/customeros/customeros/packages/runner/customer-os-dedup/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-dedup/repository"
 	"github.com/customeros/customeros/packages/runner/customer-os-dedup/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/machinebox/graphql"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -415,34 +413,11 @@ func (s *organizationService) invokeAIForNamesCheck(ctx context.Context, str, te
 		span.LogFields(log.String("usedAI", "anthropic"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.Anthropic.PromptSuggestNames, str)
 
-		promptLog := postgresEntity.AiPromptLog{
-			CreatedAt:      utils.Now(),
-			AppSource:      constants.AppSourceCustomerOsDedup,
-			Provider:       constants.Anthropic,
-			Model:          "claude-2",
-			PromptType:     constants.PromptType_FindDuplicates,
-			Tenant:         &tenant,
-			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptSuggestNames,
-			Prompt:         prompt,
-		}
-		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
-
 		response, err := s.invokeAnthropic(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke Anthropic: %v", err.Error())
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
-			}
 			return "", err
-		} else {
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
-			}
 		}
 		jsonResponse := s.extractJsonValueFromAIResponse(response)
 		s.log.Infof("Got suggested org pairs from Anthropic: %s", jsonResponse)
@@ -451,34 +426,11 @@ func (s *organizationService) invokeAIForNamesCheck(ctx context.Context, str, te
 		span.LogFields(log.String("usedAI", "openai"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.OpenAI.PromptSuggestNames, str)
 
-		promptLog := postgresEntity.AiPromptLog{
-			CreatedAt:      utils.Now(),
-			AppSource:      constants.AppSourceCustomerOsDedup,
-			Provider:       constants.OpenAI,
-			Model:          "gpt-3.5-turbo",
-			PromptType:     constants.PromptType_FindDuplicates,
-			Tenant:         &tenant,
-			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptSuggestNames,
-			Prompt:         prompt,
-		}
-		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
-
 		response, err := s.invokeOpenAI(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke OpenAI: %v", err.Error())
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
-			}
 			return "", err
-		} else {
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with response: %v", storeErr)
-			}
 		}
 		jsonResponse := s.extractJsonValueFromAIResponse(response)
 		s.log.Infof("Got suggested org pairs from OpenAI: %s", jsonResponse)
@@ -495,34 +447,11 @@ func (s *organizationService) invokeAIForOrgsCompare(ctx context.Context, tenant
 		span.LogFields(log.String("usedAI", "anthropic"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.Anthropic.PromptCompareOrgs, id1, details1, id2, details2)
 
-		promptLog := postgresEntity.AiPromptLog{
-			CreatedAt:      utils.Now(),
-			AppSource:      constants.AppSourceCustomerOsDedup,
-			Provider:       constants.Anthropic,
-			Model:          "claude-2",
-			PromptType:     constants.PromptType_CompareOrganizationDetails,
-			Tenant:         &tenant,
-			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptCompareOrgs,
-			Prompt:         prompt,
-		}
-		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
-
 		response, err := s.invokeAnthropic(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke Anthropic: %v", err.Error())
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
-			}
 			return "", err
-		} else {
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with response: %v", storeErr)
-			}
 		}
 		jsonResponse := s.extractJsonValueFromAIResponse(response)
 		s.log.Infof("Got response for possible duplicate from Anthropic: %s", jsonResponse)
@@ -531,34 +460,12 @@ func (s *organizationService) invokeAIForOrgsCompare(ctx context.Context, tenant
 		span.LogFields(log.String("usedAI", "openai"))
 		prompt := fmt.Sprintf(s.cfg.Organizations.OpenAI.PromptCompareOrgs, id1, details1, id2, details2)
 
-		promptLog := postgresEntity.AiPromptLog{
-			CreatedAt:      utils.Now(),
-			AppSource:      constants.AppSourceCustomerOsDedup,
-			Provider:       constants.OpenAI,
-			Model:          "gpt-3.5-turbo",
-			PromptType:     constants.PromptType_CompareOrganizationDetails,
-			Tenant:         &tenant,
-			PromptTemplate: &s.cfg.Organizations.Anthropic.PromptCompareOrgs,
-			Prompt:         prompt,
-		}
-		promptStoreLogId, err := s.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
-
 		response, err := s.invokeOpenAI(ctx, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Failed to invoke OpenAI: %v", err.Error())
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with error: %v", storeErr)
-			}
 			return "", err
 		} else {
-			storeErr := s.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, response)
-			if storeErr != nil {
-				tracing.TraceErr(span, storeErr)
-				s.log.Errorf("Error updating prompt log with response: %v", storeErr)
-			}
 		}
 		jsonResponse := s.extractJsonValueFromAIResponse(response)
 		s.log.Infof("Got response for possible duplicate from OpenAI: %s", jsonResponse)
