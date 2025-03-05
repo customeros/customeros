@@ -7,14 +7,13 @@ import (
 
 type NoteEntity struct {
 	DataLoaderKey
-	Id            string
-	Content       string
-	ContentType   string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Id          string
+	Content     string
+	ContentType string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Source      DataSource
+	AppSource   string
 }
 
 func (NoteEntity) IsTimelineEvent() {

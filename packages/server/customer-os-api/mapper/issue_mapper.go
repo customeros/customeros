@@ -12,17 +12,16 @@ func MapEntityToIssue(entity *neo4jentity.IssueEntity) *model.Issue {
 		return nil
 	}
 	return &model.Issue{
-		ID:            entity.Id,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		Subject:       utils.StringPtr(entity.Subject),
-		Status:        entity.Status,
-		IssueStatus:   entity.Status,
-		Priority:      utils.StringPtr(entity.Priority),
-		Description:   utils.StringPtr(entity.Description),
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:          entity.Id,
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		Subject:     utils.StringPtr(entity.Subject),
+		Status:      entity.Status,
+		IssueStatus: entity.Status,
+		Priority:    utils.StringPtr(entity.Priority),
+		Description: utils.StringPtr(entity.Description),
+		Source:      MapDataSourceToModel(entity.Source),
+		AppSource:   entity.AppSource,
 	}
 }
 

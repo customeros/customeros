@@ -31,12 +31,11 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 	channel := "EMAIL"
 	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", channel, now)
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
-		Id:            "",
-		MimeType:      "text/plain",
-		FileName:      "readme.txt",
-		Source:        "",
-		SourceOfTruth: "",
-		AppSource:     "",
+		Id:        "",
+		MimeType:  "text/plain",
+		FileName:  "readme.txt",
+		Source:    "",
+		AppSource: "",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/add_attachment_to_interaction_event"),
@@ -103,7 +102,6 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
 	require.NotNil(t, timelineEvent1["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
 	require.Equal(t, 1, len(timelineEvent1["actions"].([]interface{})))
 
 	require.Equal(t, interactionEventId4_WithoutSession, timelineEvent1["repliesTo"].(map[string]interface{})["id"].(string))
@@ -116,7 +114,6 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	require.Equal(t, "ACTIVE", timelineEvent1["interactionSession"].(map[string]interface{})["status"].(string))
 	require.Equal(t, "EMAIL", timelineEvent1["interactionSession"].(map[string]interface{})["channel"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["interactionSession"].(map[string]interface{})["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent1["interactionSession"].(map[string]interface{})["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent1["interactionSession"].(map[string]interface{})["appSource"].(string))
 	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["createdAt"].(string))
 	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["updatedAt"].(string))
@@ -139,7 +136,6 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	require.Equal(t, "EMAIL", timelineEvent4["channel"].(string))
 	require.NotNil(t, timelineEvent4["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent4["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent4["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent4["appSource"].(string))
 }
 
@@ -243,7 +239,6 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
 	require.NotNil(t, timelineEvent1["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent1["appSource"].(string))
 	require.Equal(t, interactionSession1, timelineEvent1["interactionSession"].(map[string]interface{})["id"].(string))
 	require.Equal(t, "session1", timelineEvent1["interactionSession"].(map[string]interface{})["name"].(string))
@@ -251,7 +246,6 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "ACTIVE", timelineEvent1["interactionSession"].(map[string]interface{})["status"].(string))
 	require.Equal(t, "EMAIL", timelineEvent1["interactionSession"].(map[string]interface{})["channel"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["interactionSession"].(map[string]interface{})["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent1["interactionSession"].(map[string]interface{})["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent1["interactionSession"].(map[string]interface{})["appSource"].(string))
 	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["createdAt"].(string))
 	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["updatedAt"].(string))
@@ -265,7 +259,6 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "EMAIL", timelineEvent2["channel"].(string))
 	require.NotNil(t, timelineEvent2["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent2["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent2["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent2["appSource"].(string))
 	require.Equal(t, interactionSession2, timelineEvent2["interactionSession"].(map[string]interface{})["id"].(string))
 	require.Equal(t, "session2", timelineEvent2["interactionSession"].(map[string]interface{})["name"].(string))
@@ -273,7 +266,6 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "INACTIVE", timelineEvent2["interactionSession"].(map[string]interface{})["status"].(string))
 	require.Equal(t, "EMAIL", timelineEvent2["interactionSession"].(map[string]interface{})["channel"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent2["interactionSession"].(map[string]interface{})["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent2["interactionSession"].(map[string]interface{})["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent2["interactionSession"].(map[string]interface{})["appSource"].(string))
 	require.NotNil(t, timelineEvent2["interactionSession"].(map[string]interface{})["createdAt"].(string))
 	require.NotNil(t, timelineEvent2["interactionSession"].(map[string]interface{})["updatedAt"].(string))
@@ -286,7 +278,6 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "EMAIL", timelineEvent3["channel"].(string))
 	require.NotNil(t, timelineEvent3["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent3["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent3["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent3["appSource"].(string))
 	require.Equal(t, interactionSession2, timelineEvent3["interactionSession"].(map[string]interface{})["id"].(string))
 
@@ -297,7 +288,6 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "EMAIL", timelineEvent3["channel"].(string))
 	require.NotNil(t, timelineEvent4["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent4["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent4["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent4["appSource"].(string))
 	require.Nil(t, timelineEvent4["interactionSession"])
 }

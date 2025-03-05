@@ -15,7 +15,7 @@ import (
 )
 
 type AttachmentWriteRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
 }
 
 type attachmentWriteRepository struct {
@@ -30,7 +30,7 @@ func NewAttachmentWriteRepository(driver *neo4j.DriverWithContext, database stri
 	}
 }
 
-func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source, sourceOfTruth neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
+func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentWriteRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -55,22 +55,20 @@ func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.Managed
 		" a.fileName=$fileName, " +
 		" a.mimeType=$mimeType, " +
 		" a.size=$size, " +
-		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
 		" RETURN a"
 
 	params := map[string]interface{}{
-		"tenant":        tenant,
-		"source":        source,
-		"createdAt":     *createdAt,
-		"id":            id,
-		"cdnUrl":        cdnUrl,
-		"basePath":      basePath,
-		"fileName":      fileName,
-		"mimeType":      mimeType,
-		"size":          size,
-		"sourceOfTruth": sourceOfTruth,
-		"appSource":     appSource,
+		"tenant":    tenant,
+		"source":    source,
+		"createdAt": *createdAt,
+		"id":        id,
+		"cdnUrl":    cdnUrl,
+		"basePath":  basePath,
+		"fileName":  fileName,
+		"mimeType":  mimeType,
+		"size":      size,
+		"appSource": appSource,
 	}
 
 	span.LogFields(log.String("cypher", fmt.Sprintf(cypher, tenant)))

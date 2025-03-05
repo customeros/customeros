@@ -9,14 +9,13 @@ import (
 
 func MapEntityToComment(entity *neo4jentity.CommentEntity) *model.Comment {
 	comment := model.Comment{
-		ID:            entity.Id,
-		Content:       utils.StringPtr(entity.Content),
-		ContentType:   utils.StringPtr(entity.ContentType),
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:          entity.Id,
+		Content:     utils.StringPtr(entity.Content),
+		ContentType: utils.StringPtr(entity.ContentType),
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		Source:      MapDataSourceToModel(entity.Source),
+		AppSource:   entity.AppSource,
 	}
 	return &comment
 }

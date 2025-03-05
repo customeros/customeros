@@ -59,7 +59,6 @@ type LocationEntity struct {
 	Longitude     *float64
 	TimeZone      string
 	UtcOffset     *float64
-	SourceOfTruth DataSource
 	Source        DataSource
 	AppSource     string
 }

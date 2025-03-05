@@ -9,6 +9,5 @@ mutation UpdateNote($noteId: ID!) {
       content
       contentType
       updatedAt
-      sourceOfTruth
     }
 }

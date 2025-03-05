@@ -12,18 +12,17 @@ func MapEntityToInteractionSession(entity *neo4jentity.InteractionSessionEntity)
 		return nil
 	}
 	return &model.InteractionSession{
-		ID:            entity.Id,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		Identifier:    entity.Identifier,
-		Name:          entity.Name,
-		Status:        entity.Status.String(),
-		Type:          utils.StringPtr(entity.Type.String()),
-		Channel:       utils.StringPtr(entity.Channel.String()),
-		ChannelData:   &entity.ChannelData,
-		AppSource:     entity.AppSource,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		ID:          entity.Id,
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
+		Identifier:  entity.Identifier,
+		Name:        entity.Name,
+		Status:      entity.Status.String(),
+		Type:        utils.StringPtr(entity.Type.String()),
+		Channel:     utils.StringPtr(entity.Channel.String()),
+		ChannelData: &entity.ChannelData,
+		AppSource:   entity.AppSource,
+		Source:      MapDataSourceToModel(entity.Source),
 	}
 }
 

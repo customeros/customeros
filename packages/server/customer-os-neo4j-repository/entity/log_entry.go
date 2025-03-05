@@ -7,15 +7,14 @@ import (
 
 type LogEntryEntity struct {
 	DataLoaderKey
-	Id            string
-	Content       string
-	ContentType   string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	StartedAt     time.Time
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Id          string
+	Content     string
+	ContentType string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	StartedAt   time.Time
+	Source      DataSource
+	AppSource   string
 }
 
 type LogEntryEntities []LogEntryEntity

@@ -65,9 +65,8 @@ type InvoiceEntity struct {
 	Postpaid                 bool
 	Preview                  bool `neo4jDb:"property:preview;lookupName:PREVIEW;supportCaseSensitive:false"`
 
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Source    DataSource
+	AppSource string
 
 	InvoiceInternalFields InvoiceInternalFields
 

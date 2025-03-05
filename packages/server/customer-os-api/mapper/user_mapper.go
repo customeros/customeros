@@ -20,7 +20,6 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 		CreatedAt:       userEntity.CreatedAt,
 		UpdatedAt:       userEntity.UpdatedAt,
 		Source:          MapDataSourceToModel(userEntity.Source),
-		SourceOfTruth:   MapDataSourceToModel(userEntity.SourceOfTruth),
 		Roles:           MapRolesToModel(userEntity.Roles),
 		AppSource:       userEntity.AppSource,
 		Internal:        userEntity.Internal,

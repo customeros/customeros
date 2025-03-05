@@ -19,7 +19,6 @@ type InvoiceLineEntity struct {
 	Vat                     float64
 	TotalAmount             float64
 	Source                  DataSource
-	SourceOfTruth           DataSource
 	AppSource               string
 	ServiceLineItemId       string
 	ServiceLineItemParentId string

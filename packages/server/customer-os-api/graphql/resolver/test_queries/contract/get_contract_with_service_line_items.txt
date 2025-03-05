@@ -43,7 +43,6 @@ query GetContract($contractId: ID!) {
         created
         lastUpdated
         source
-        sourceOfTruth
         appSource
       }
       description

@@ -12,7 +12,6 @@ type PhoneNumberEntity struct {
 	Validated      *bool
 	RawPhoneNumber string
 	Source         DataSource
-	SourceOfTruth  DataSource
 	AppSource      string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

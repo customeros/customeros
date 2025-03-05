@@ -18,13 +18,12 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 	}
 	invoice := model.Invoice{
 		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        MapDataSourceToModel(entity.Source),
-			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-			AppSource:     entity.AppSource,
-			Version:       entity.AggregateVersion,
+			ID:          entity.Id,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      MapDataSourceToModel(entity.Source),
+			AppSource:   entity.AppSource,
+			Version:     entity.AggregateVersion,
 		},
 		DryRun:               entity.DryRun,
 		Postpaid:             entity.Postpaid,

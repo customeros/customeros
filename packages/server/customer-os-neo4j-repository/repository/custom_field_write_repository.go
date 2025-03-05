@@ -3,11 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -57,7 +57,6 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 		ON CREATE SET
 		    org.updatedAt = datetime(),
 			cf.source=$source,
-			cf.sourceOfTruth=$sourceOfTruth,
 			cf.appSource=$appSource,
 			cf.createdAt=$createdAt,
 			cf.updatedAt=datetime(),
@@ -76,7 +75,6 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 		"organizationId": organizationId,
 		"customFieldId":  data.CustomFieldId,
 		"source":         data.SourceFields.Source,
-		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
 		"appSource":      data.SourceFields.AppSource,
 		"createdAt":      data.CreatedAt,
 		"name":           data.CustomFieldName,

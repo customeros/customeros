@@ -22,7 +22,6 @@ meeting_Update(
        startedAt
        endedAt
        source
-       sourceOfTruth
        appSource
        status
    }

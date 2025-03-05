@@ -37,7 +37,6 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 
 	require.Equal(t, locationId, updatedLocation.ID)
 	test.AssertRecentTime(t, updatedLocation.UpdatedAt)
-	require.Equal(t, model.DataSourceOpenline, updatedLocation.SourceOfTruth)
 	require.Equal(t, "name", *updatedLocation.Name)
 	require.Equal(t, "rawAddress", *updatedLocation.RawAddress)
 	require.Equal(t, "country", *updatedLocation.Country)

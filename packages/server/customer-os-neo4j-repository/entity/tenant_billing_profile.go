@@ -24,7 +24,6 @@ type TenantBillingProfileEntity struct {
 	CanPayWithPigeon       bool
 	CanPayWithBankTransfer bool
 	Source                 DataSource
-	SourceOfTruth          DataSource
 	AppSource              string
 	Check                  bool
 }

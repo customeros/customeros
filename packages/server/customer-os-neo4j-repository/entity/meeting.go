@@ -20,7 +20,6 @@ type MeetingEntity struct {
 	Agenda             *string
 	AgendaContentType  *string
 	Source             DataSource
-	SourceOfTruth      DataSource
 	Recording          *string
 	Status             *enum.MeetingStatus
 }

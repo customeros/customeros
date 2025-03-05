@@ -30,7 +30,6 @@ type ContractEntity struct {
 	EndedAt                         *time.Time `neo4jDb:"property:endedAt;lookupName:ENDED_AT;supportCaseSensitive:false"` // DateTime
 	ContractStatus                  enum.ContractStatus
 	Source                          DataSource
-	SourceOfTruth                   DataSource
 	AppSource                       string
 	ContractUrl                     string
 	InvoicingStartDate              *time.Time // Date only

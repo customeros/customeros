@@ -10,7 +10,6 @@ type BankAccountEntity struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	Source              DataSource
-	SourceOfTruth       DataSource
 	AppSource           string
 	BankName            string
 	BankTransferEnabled bool

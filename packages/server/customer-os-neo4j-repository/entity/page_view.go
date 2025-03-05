@@ -18,7 +18,6 @@ type PageViewEntity struct {
 	StartedAt      time.Time
 	EndedAt        time.Time
 	Source         DataSource
-	SourceOfTruth  DataSource
 	AppSource      string
 }
 

@@ -138,29 +138,26 @@ func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, works
 
 func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
 	return CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        "openline",
-		SourceOfTruth: "openline",
+		FirstName: "first",
+		LastName:  "last",
+		Source:    "openline",
 	})
 }
 
 func CreateDefaultUserAlpha(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
 	return CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
-		FirstName:     "alpha",
-		LastName:      "alpha",
-		Source:        "openline",
-		SourceOfTruth: "openline",
+		FirstName: "alpha",
+		LastName:  "alpha",
+		Source:    "openline",
 	})
 }
 
 func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
 	return CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
-		Id:            userId,
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        "openline",
-		SourceOfTruth: "openline",
+		Id:        userId,
+		FirstName: "first",
+		LastName:  "last",
+		Source:    "openline",
 	})
 }
 
@@ -189,7 +186,6 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 				u.createdAt=$createdAt,
 				u.updatedAt=$updatedAt,
 				u.source=$source,
-				u.sourceOfTruth=$sourceOfTruth,
 				u.appSource=$appSource`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -198,7 +194,6 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 		"firstName":       user.FirstName,
 		"lastName":        user.LastName,
 		"source":          user.Source,
-		"sourceOfTruth":   user.SourceOfTruth,
 		"appSource":       user.AppSource,
 		"roles":           user.Roles,
 		"internal":        user.Internal,
@@ -487,7 +482,6 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					i.longitude=$longitude,    
 					i.timeZone=$timeZone,    
 					i.utcOffset=$utcOffset,    
-					i.sourceOfTruth=$sourceOfTruth,
 					i.source=$source,
 					i.appSource=$appSource`, tenant)
 
@@ -518,7 +512,6 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"longitude":     location.Longitude,
 		"timeZone":      location.TimeZone,
 		"utcOffset":     location.UtcOffset,
-		"sourceOfTruth": location.SourceOfTruth,
 		"source":        location.Source,
 		"appSource":     location.AppSource,
 	})
@@ -534,7 +527,6 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					i.validated=$validated,
 					i.rawPhoneNumber=$rawPhoneNumber,
 					i.source=$source,
-					i.sourceOfTruth=$sourceOfTruth,
 					i.appSource=$appSource,
 					i.createdAt=$createdAt,
 					i.updatedAt=$updatedAt`, tenant)
@@ -546,7 +538,6 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"validated":      phoneNumber.Validated,
 		"rawPhoneNumber": phoneNumber.RawPhoneNumber,
 		"source":         phoneNumber.Source,
-		"sourceOfTruth":  phoneNumber.SourceOfTruth,
 		"appSource":      phoneNumber.AppSource,
 		"createdAt":      phoneNumber.CreatedAt,
 		"updatedAt":      phoneNumber.UpdatedAt,
@@ -561,7 +552,6 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 				SET 
 					c:Contract_%s,
 					c.source=$source,
-					c.sourceOfTruth=$sourceOfTruth,
 					c.appSource=$appSource,
 					c.createdAt=$createdAt,
 					c.updatedAt=$updatedAt,
@@ -603,7 +593,6 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"organizationId":         organizationId,
 		"tenant":                 tenant,
 		"source":                 contract.Source,
-		"sourceOfTruth":          contract.SourceOfTruth,
 		"appSource":              contract.AppSource,
 		"createdAt":              contract.CreatedAt,
 		"updatedAt":              contract.UpdatedAt,
@@ -668,7 +657,6 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
                     op:Opportunity_%s,
 					op.name=$name,
 					op.source=$source,
-					op.sourceOfTruth=$sourceOfTruth,
 					op.appSource=$appSource,
 					op.amount=$amount,
 					op.maxAmount=$maxAmount,
@@ -700,7 +688,6 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"tenant":                 tenant,
 		"name":                   opportunity.Name,
 		"source":                 opportunity.Source,
-		"sourceOfTruth":          opportunity.SourceOfTruth,
 		"appSource":              opportunity.AppSource,
 		"amount":                 opportunity.Amount,
 		"maxAmount":              opportunity.MaxAmount,
@@ -922,7 +909,6 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 			ON CREATE SET 
 				i:Invoice_%s,
 				i.source=$source,
-				i.sourceOfTruth=$sourceOfTruth,
 				i.appSource=$appSource,
 				i.createdAt=$createdAt,
 				i.updatedAt=$updatedAt,
@@ -954,7 +940,6 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 		"contractId":           contractId,
 		"tenant":               tenant,
 		"source":               invoice.Source,
-		"sourceOfTruth":        invoice.SourceOfTruth,
 		"appSource":            invoice.AppSource,
 		"createdAt":            invoice.CreatedAt,
 		"updatedAt":            invoice.UpdatedAt,
@@ -990,7 +975,6 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 				ON CREATE SET  
 					il:InvoiceLine_%s,
 					il.source=$source,
-					il.sourceOfTruth=$sourceOfTruth,
 					il.appSource=$appSource,
 					il.createdAt=$createdAt,
 					il.updatedAt=$updatedAt,
@@ -1006,23 +990,22 @@ func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, ten
 				`, tenant)
 
 	params := map[string]any{
-		"id":            invoiceLineId,
-		"invoiceId":     invoiceId,
-		"tenant":        tenant,
-		"source":        invoiceLine.Source,
-		"sourceOfTruth": invoiceLine.SourceOfTruth,
-		"appSource":     invoiceLine.AppSource,
-		"createdAt":     invoiceLine.CreatedAt,
-		"updatedAt":     invoiceLine.UpdatedAt,
-		"skuId":         invoiceLine.SkuId,
-		"skuName":       invoiceLine.SkuName,
-		"description":   invoiceLine.Description,
-		"price":         invoiceLine.Price,
-		"quantity":      invoiceLine.Quantity,
-		"amount":        invoiceLine.Amount,
-		"vat":           invoiceLine.Vat,
-		"totalAmount":   invoiceLine.TotalAmount,
-		"billedType":    invoiceLine.BilledType.String(),
+		"id":          invoiceLineId,
+		"invoiceId":   invoiceId,
+		"tenant":      tenant,
+		"source":      invoiceLine.Source,
+		"appSource":   invoiceLine.AppSource,
+		"createdAt":   invoiceLine.CreatedAt,
+		"updatedAt":   invoiceLine.UpdatedAt,
+		"skuId":       invoiceLine.SkuId,
+		"skuName":     invoiceLine.SkuName,
+		"description": invoiceLine.Description,
+		"price":       invoiceLine.Price,
+		"quantity":    invoiceLine.Quantity,
+		"amount":      invoiceLine.Amount,
+		"vat":         invoiceLine.Vat,
+		"totalAmount": invoiceLine.TotalAmount,
+		"billedType":  invoiceLine.BilledType.String(),
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, params)
@@ -1394,21 +1377,19 @@ func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverW
 		"	ie.contentType=$contentType, " +
 		"	ie.source=$source, " +
 		"   ie.hide=$hide, " +
-		"	ie.sourceOfTruth=$sourceOfTruth, " +
 		"	ie.appSource=$appSource," +
 		"	ie:InteractionEvent_%s, ie:TimelineEvent, ie:TimelineEvent_%s," +
 		"   ie.identifier=$identifier"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":            interactionEventId.String(),
-		"content":       ie.Content,
-		"contentType":   ie.ContentType,
-		"channel":       ie.Channel.String(),
-		"createdAt":     ie.CreatedAt,
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
-		"identifier":    ie.Identifier,
-		"hide":          ie.Hide,
+		"id":          interactionEventId.String(),
+		"content":     ie.Content,
+		"contentType": ie.ContentType,
+		"channel":     ie.Channel.String(),
+		"createdAt":   ie.CreatedAt,
+		"source":      "openline",
+		"appSource":   "test",
+		"identifier":  ie.Identifier,
+		"hide":        ie.Hide,
 	})
 	return interactionEventId.String()
 }
@@ -1425,7 +1406,6 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 		"	is.channel=$channel, " +
 		"	is.status=$status, " +
 		"	is.source=$source, " +
-		"	is.sourceOfTruth=$sourceOfTruth, " +
 		"	is.appSource=$appSource," +
 		"   is.identifier=$identifier, " +
 		"	is:InteractionSession_%s"
@@ -1439,17 +1419,16 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 		resolvedQuery = fmt.Sprintf(query, tenant)
 	}
 	ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
-		"id":            interactionSessionId.String(),
-		"name":          name,
-		"type":          sessionType,
-		"channel":       channel,
-		"status":        status,
-		"createdAt":     createdAt,
-		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
-		"identifier":    identifier,
+		"id":         interactionSessionId.String(),
+		"name":       name,
+		"type":       sessionType,
+		"channel":    channel,
+		"status":     status,
+		"createdAt":  createdAt,
+		"updatedAt":  createdAt.Add(time.Duration(10) * time.Minute),
+		"source":     "openline",
+		"appSource":  "test",
+		"identifier": identifier,
 	})
 	return interactionSessionId.String()
 }

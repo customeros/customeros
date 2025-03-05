@@ -23,12 +23,11 @@ func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4j_entity.AttachmentEntity{
-		Id:            "",
-		MimeType:      "text/plain",
-		FileName:      "readme.txt",
-		Source:        "",
-		SourceOfTruth: "",
-		AppSource:     "",
+		Id:        "",
+		MimeType:  "text/plain",
+		FileName:  "readme.txt",
+		Source:    "",
+		AppSource: "",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("note/add_attachment_to_note"),
@@ -56,12 +55,11 @@ func TestMutationResolver_RemoveAttachmentFromNote(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4j_entity.AttachmentEntity{
-		Id:            "",
-		MimeType:      "text/plain",
-		FileName:      "readme.txt",
-		Source:        "",
-		SourceOfTruth: "",
-		AppSource:     "",
+		Id:        "",
+		MimeType:  "text/plain",
+		FileName:  "readme.txt",
+		Source:    "",
+		AppSource: "",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("note/add_attachment_to_note"),
@@ -121,7 +119,6 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 	require.NotNil(t, updatedNote.UpdatedAt)
 	require.Equal(t, "updated content", *updatedNote.Content)
 	require.Equal(t, "text/markdown", *updatedNote.ContentType)
-	require.Equal(t, model.DataSourceOpenline, updatedNote.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))

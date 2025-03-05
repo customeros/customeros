@@ -3,11 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -175,30 +175,29 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 			l.timeZone = $timeZone,
 			l.utcOffset = $utcOffset`, tenant)
 	params := map[string]any{
-		"id":            locationId,
-		"tenant":        tenant,
-		"sourceOfTruth": data.Source,
-		"rawAddress":    data.RawAddress,
-		"name":          data.Name,
-		"latitude":      data.AddressDetails.Latitude,
-		"longitude":     data.AddressDetails.Longitude,
-		"country":       data.AddressDetails.Country,
-		"region":        data.AddressDetails.Region,
-		"district":      data.AddressDetails.District,
-		"locality":      data.AddressDetails.Locality,
-		"street":        data.AddressDetails.Street,
-		"address":       data.AddressDetails.Address,
-		"address2":      data.AddressDetails.Address2,
-		"zip":           data.AddressDetails.Zip,
-		"addressType":   data.AddressDetails.AddressType,
-		"houseNumber":   data.AddressDetails.HouseNumber,
-		"postalCode":    data.AddressDetails.PostalCode,
-		"plusFour":      data.AddressDetails.PlusFour,
-		"commercial":    data.AddressDetails.Commercial,
-		"predirection":  data.AddressDetails.Predirection,
-		"timeZone":      data.AddressDetails.TimeZone,
-		"utcOffset":     data.AddressDetails.UtcOffset,
-		"overwrite":     data.Source == constants.SourceOpenline,
+		"id":           locationId,
+		"tenant":       tenant,
+		"rawAddress":   data.RawAddress,
+		"name":         data.Name,
+		"latitude":     data.AddressDetails.Latitude,
+		"longitude":    data.AddressDetails.Longitude,
+		"country":      data.AddressDetails.Country,
+		"region":       data.AddressDetails.Region,
+		"district":     data.AddressDetails.District,
+		"locality":     data.AddressDetails.Locality,
+		"street":       data.AddressDetails.Street,
+		"address":      data.AddressDetails.Address,
+		"address2":     data.AddressDetails.Address2,
+		"zip":          data.AddressDetails.Zip,
+		"addressType":  data.AddressDetails.AddressType,
+		"houseNumber":  data.AddressDetails.HouseNumber,
+		"postalCode":   data.AddressDetails.PostalCode,
+		"plusFour":     data.AddressDetails.PlusFour,
+		"commercial":   data.AddressDetails.Commercial,
+		"predirection": data.AddressDetails.Predirection,
+		"timeZone":     data.AddressDetails.TimeZone,
+		"utcOffset":    data.AddressDetails.UtcOffset,
+		"overwrite":    data.Source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

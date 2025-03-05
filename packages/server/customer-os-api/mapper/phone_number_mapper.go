@@ -16,7 +16,6 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *neo4jentity.Pho
 		Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:        utils.IfNotNilBool(input.Primary),
 		Source:         neo4jentity.DataSourceOpenline,
-		SourceOfTruth:  neo4jentity.DataSourceOpenline,
 	}
 	return &phoneNumberEntity
 }

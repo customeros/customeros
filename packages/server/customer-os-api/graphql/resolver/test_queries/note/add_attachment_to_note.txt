@@ -6,7 +6,6 @@ mutation AddAttachmentToNote($noteId: ID!, $attachmentId: ID!) {
       content
       contentType
       updatedAt
-      sourceOfTruth
       includes {
         id
         fileName
