@@ -5,11 +5,14 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/worker"
 
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
+	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -63,6 +66,15 @@ func main() {
 	}
 	cntnr.AgentProducers = agent_producers.InitAgentProducers(cntnr.CommonServices)
 
+	// Initialize waitGroup for goroutines
+	var waitGroup sync.WaitGroup
+
+	// Run Temporal worker
+	if cfg.Common.External.TemporalConfig.RunWorker {
+		waitGroup.Add(1)
+		go runTemporalWorker(cfg, appLogger, &waitGroup)
+	}
+
 	crons := localcron.StartCron(cntnr)
 
 	if err = run(appLogger, crons,
@@ -71,6 +83,9 @@ func main() {
 		}); err != nil {
 		appLogger.Fatal(err)
 	}
+
+	// Wait for all goroutines to complete
+	waitGroup.Wait()
 
 	// Flush logs and exit
 	appLogger.Sync()
@@ -114,4 +129,14 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 		return closer
 	}
 	return nil
+}
+
+func runTemporalWorker(cfg *config.Config, logger logger.Logger, waitGroup *sync.WaitGroup) {
+	// Start it in the background
+	go func() {
+		if err := worker.RunWebhookWorker(cfg.Common.External.TemporalConfig.HostPort, cfg.Common.External.TemporalConfig.Namespace); err != nil {
+			logger.Error(err)
+		}
+		waitGroup.Done()
+	}()
 }
