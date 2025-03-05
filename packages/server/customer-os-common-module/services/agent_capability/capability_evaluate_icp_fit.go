@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -200,8 +202,8 @@ func (c *EvaluateICPFitCapability) buildPrompts(ctx context.Context, executionCo
 
 	homepage, err := c.webscraperService.Scrape(ctx, company.PrimaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", "", err
+		span.LogKV("scapeResults", "none")
+		homepage = ""
 	}
 
 	systemPrompt := `You are a world class company analyst. Your objective is to determine whether the company I provide you fits our ideal customer profile or not. I will provide you with three datasets: 1. a description of our ideal customer, 2. criteria that automatically disqualifies companies, and 3. all the context I have about the company, including their name, location, and several descriptions taken from their website and linkedin pages.
@@ -222,20 +224,34 @@ Important:
 - Follow the JSON format exactly.
 - Pay special attention to location criteria in your decision making.`
 
-	content := fmt.Sprintf(`
-        ICP Qualificaton Criteria: %s
-        ICP Disqualification Criteria: %s
-        Company Name: %s
-        Company Domain: %s
-        Year Founded: %s
-        Employee Count: %d
-        Location: %s, %s, %s
-        Industry Name: %s
-		Company Homepage: %s
-        `, executionContainer.ConfigData.QualificationCriteria.Value, executionContainer.ConfigData.DisqualificationCriteria.Value,
-		company.CompanyName, company.PrimaryDomain, company.YearCompanyFounded, company.EmployeeCount,
-		company.CompanyCity, company.CompanyRegion, company.CompanyCountryA2,
-		company.IndustryNAICSName, homepage)
+	var contentBuilder strings.Builder
+
+	contentBuilder.WriteString("\n        ICP Qualificaton Criteria: ")
+	contentBuilder.WriteString(executionContainer.ConfigData.QualificationCriteria.Value)
+	contentBuilder.WriteString("\n        ICP Disqualification Criteria: ")
+	contentBuilder.WriteString(executionContainer.ConfigData.DisqualificationCriteria.Value)
+	contentBuilder.WriteString("\n        Company Name: ")
+	contentBuilder.WriteString(company.CompanyName)
+	contentBuilder.WriteString("\n        Company Domain: ")
+	contentBuilder.WriteString(company.PrimaryDomain)
+	contentBuilder.WriteString("\n        Year Founded: ")
+	contentBuilder.WriteString(company.YearCompanyFounded)
+	contentBuilder.WriteString("\n        Employee Count: ")
+	contentBuilder.WriteString(strconv.Itoa(int(company.EmployeeCount)))
+	contentBuilder.WriteString("\n        Location: ")
+	contentBuilder.WriteString(company.CompanyCity)
+	contentBuilder.WriteString(", ")
+	contentBuilder.WriteString(company.CompanyRegion)
+	contentBuilder.WriteString(", ")
+	contentBuilder.WriteString(company.CompanyCountryA2)
+	contentBuilder.WriteString("\n        Industry Name: ")
+	contentBuilder.WriteString(company.IndustryNAICSName)
+	if homepage != "" {
+		contentBuilder.WriteString("\n\t\tCompany Homepage: ")
+		contentBuilder.WriteString(homepage)
+	}
+
+	content := contentBuilder.String()
 
 	return systemPrompt, content, nil
 }
