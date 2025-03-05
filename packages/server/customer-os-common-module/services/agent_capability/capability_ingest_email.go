@@ -107,7 +107,7 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if ingestEmailMessage == nil {
-		tracing.TraceErr(span, errors.Wrap(err, "email is nil"))
+		tracing.TraceErr(span, errors.New("email is nil"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
