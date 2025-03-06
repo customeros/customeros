@@ -15,6 +15,7 @@ type IngestEmailMessageRepository interface {
 	UpdateState(ctx context.Context, id string, state postgres_entity.IngestEmailMessageState) error
 
 	CountForUsername(ctx context.Context, tenant, username, provider string) (int64, error)
+	GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*postgres_entity.IngestEmailMessage, error)
 	EmailExistsByMessageId(ctx context.Context, tenant, username, provider, messageId string) (bool, error)
 	GetEmail(ctx context.Context, id string) (*postgres_entity.IngestEmailMessage, error)
 	GetDistinctUsersForPendingMessages(ctx context.Context) ([]postgres_entity.IngestEmailMessage, error)
@@ -85,6 +86,25 @@ func (repo *ingestEmailMessageRepositoryImpl) CountForUsername(ctx context.Conte
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return 0, err
+	}
+
+	return result, nil
+}
+
+func (repo *ingestEmailMessageRepositoryImpl) GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*postgres_entity.IngestEmailMessage, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.GetByMessageId")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	var result *postgres_entity.IngestEmailMessage
+	err := repo.gormDb.Where("provider = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).First(&result).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return result, nil
