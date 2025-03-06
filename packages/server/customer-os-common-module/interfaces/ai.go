@@ -3,11 +3,16 @@ package interfaces
 import (
 	"context"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
 type AIService interface {
 	AskAI(ctx context.Context, request AskAIRequest) (*string, error)
+	AskAIForString(ctx context.Context, request AskAIRequest) (*string, error)
+	AskAIForWebpageCategory(ctx context.Context, request AskAIRequest) (enum.WebpageCategory, error)
+	AskAIForContentStage(ctx context.Context, request AskAIRequest) (enum.CustomerJourneyStage, error)
+	AskAIForWebpageTopics(ctx context.Context, request AskAIRequest) ([]data_fields.Topic, error)
 }
 
 type AskAIRequest struct {
