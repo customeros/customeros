@@ -77,7 +77,7 @@ func (r *globalContactRepository) GetByLinkedInIdentifier(ctx context.Context, l
 
 	var contact postgres_entity.GlobalContact
 	result := r.addSortingClauses(
-		r.db.WithContext(ctx).Where("linkedin_identifier = ?", linkedInIdentifier),
+		r.db.WithContext(ctx).Where("linked_in_identifier = ?", linkedInIdentifier),
 	).First(&contact)
 
 	if result.Error != nil {
@@ -102,7 +102,7 @@ func (r *globalContactRepository) GetByLinkedInIdentifierAndDomain(ctx context.C
 
 	var contact postgres_entity.GlobalContact
 	result := r.addSortingClauses(
-		r.db.WithContext(ctx).Where("linkedin_identifier = ? AND primary_domain = ?", linkedInIdentifier, primaryDomain),
+		r.db.WithContext(ctx).Where("linked_in_identifier = ? AND primary_domain = ?", linkedInIdentifier, primaryDomain),
 	).First(&contact)
 
 	if result.Error != nil {
@@ -219,7 +219,7 @@ func (r *globalContactRepository) GetContactsToFetchPhoto(ctx context.Context, l
 	result := r.db.WithContext(ctx).
 		Where("download_status = ? OR download_status IS NULL", enum.DownloadNotStarted.String()).
 		Where("profile_photo_external_url IS NOT NULL AND profile_photo_external_url != ''").
-		Where("((linkedin_url IS NOT NULL AND linkedin_url != '') OR (work_email IS NOT NULL AND work_email != '') OR (personal_email IS NOT NULL AND personal_email != ''))").
+		Where("((linked_in_identifier IS NOT NULL AND linked_in_identifier != '') OR (work_email IS NOT NULL AND work_email != '') OR (personal_email IS NOT NULL AND personal_email != ''))").
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&contacts)
