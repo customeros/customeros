@@ -6,6 +6,6 @@ import (
 
 type NewLead struct{}
 
-func (e NewLead) Name() enum.AgentListenerEvent {
+func (e NewLead) ListenerEvent() enum.AgentListenerEvent {
 	return enum.EventNewLead
 }
