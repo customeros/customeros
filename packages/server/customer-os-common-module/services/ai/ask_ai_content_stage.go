@@ -23,7 +23,8 @@ func (s *aiService) AskAIForContentStage(ctx context.Context, request interfaces
 		return "", err
 	}
 
-	// Always use text output for enums
+	// defaults
+	request.RequestType = enum.AIRequestContentStage
 	request.OutputFormat = enum.AIOutputText
 
 	// Get the output validator

@@ -54,3 +54,16 @@ const (
 func (a AIOutputFormat) String() string {
 	return string(a)
 }
+
+type AIRequestType string
+
+const (
+	AIRequestGeneric         AIRequestType = "generic"
+	AIRequestWebpageCategory AIRequestType = "webpage_category"
+	AIRequestContentStage    AIRequestType = "content_journey_stage"
+	AIRequestWebpageTopics   AIRequestType = "webpage_topics"
+)
+
+func (a AIRequestType) String() string {
+	return string(a)
+}

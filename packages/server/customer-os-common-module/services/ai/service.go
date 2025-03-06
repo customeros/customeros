@@ -321,6 +321,7 @@ func (s *aiService) newObservabilityContainer(ctx context.Context, span opentrac
 
 	return &dto.LLMObservability{
 		RequestID:    utils.GenerateNanoIdWithPrefix("llm", 16),
+		RequestType:  request.RequestType.String(),
 		Timestamp:    utils.Now(),
 		UserID:       common.GetUserIdFromContext(ctx),
 		Tenant:       common.GetTenantFromContext(ctx),

@@ -27,7 +27,8 @@ func (s *aiService) AskAIForWebpageTopics(ctx context.Context, request interface
 	// Create output validator
 	validator := data_fields.NewTopicsResponseValidator()
 
-	// Always use JSON output format
+	// defaults
+	request.RequestType = enum.AIRequestWebpageTopics
 	request.OutputFormat = enum.AIOutputJson
 
 	// Enhance the system prompt with the expected schema if needed

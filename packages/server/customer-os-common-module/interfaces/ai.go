@@ -16,6 +16,7 @@ type AIService interface {
 }
 
 type AskAIRequest struct {
+	RequestType      enum.AIRequestType
 	Model            enum.AIModel
 	SystemPrompt     *string
 	Prompt           *string

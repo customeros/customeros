@@ -8,8 +8,8 @@ import (
 func TestDefaultBackoffConfig(t *testing.T) {
 	config := DefaultBackoffConfig()
 
-	if config.InitialDelay != 100*time.Millisecond {
-		t.Errorf("InitialDelay = %v; want %v", config.InitialDelay, 100*time.Millisecond)
+	if config.InitialDelay != 50*time.Millisecond {
+		t.Errorf("InitialDelay = %v; want %v", config.InitialDelay, 50*time.Millisecond)
 	}
 	if config.MaxDelay != 5*time.Second {
 		t.Errorf("MaxDelay = %v; want %v", config.MaxDelay, 5*time.Second)
