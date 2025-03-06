@@ -23,7 +23,8 @@ func (s *aiService) AskAIForWebpageCategory(ctx context.Context, request interfa
 		return "", err
 	}
 
-	// Always use text output for enums
+	// defaults
+	request.RequestType = enum.AIRequestWebpageCategory
 	request.OutputFormat = enum.AIOutputText
 
 	// Get the answer validator

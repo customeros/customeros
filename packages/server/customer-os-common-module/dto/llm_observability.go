@@ -4,10 +4,11 @@ import "time"
 
 type LLMObservability struct {
 	// Basic request metadata
-	RequestID string    `json:"request_id"`
-	Timestamp time.Time `json:"timestamp"`
-	UserID    string    `json:"user_id,omitempty"`
-	Tenant    string    `json:"tenant,omitempty"`
+	RequestID   string    `json:"request_id"`
+	RequestType string    `json:"request_type"`
+	Timestamp   time.Time `json:"timestamp"`
+	UserID      string    `json:"user_id,omitempty"`
+	Tenant      string    `json:"tenant,omitempty"`
 
 	// Model information
 	Model       string  `json:"model"`

@@ -7,6 +7,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -23,6 +24,10 @@ func (s *aiService) AskAIForString(ctx context.Context, request interfaces.AskAI
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
+	// defaults
+	request.RequestType = enum.AIRequestGeneric
+	request.OutputFormat = enum.AIOutputText
 
 	var lastError error
 	var answer *string
