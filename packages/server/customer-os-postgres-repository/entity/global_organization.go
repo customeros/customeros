@@ -30,7 +30,7 @@ type GlobalOrganization struct {
 	EmployeeCount           int64               `gorm:"column:employee_count" json:"employeeCount"`
 	City                    string              `gorm:"column:city;type:varchar(255)" json:"city"`
 	Region                  string              `gorm:"column:region;type:varchar(255)" json:"region"`
-	CountryA2               string              `gorm:"column:country_a2;type:varchar(255)" json:"countryA2"`
+	CountryA2               string              `gorm:"column:country_a2;type:varchar(2)" json:"countryA2"`
 	DescriptionSetAt        *time.Time          `gorm:"column:description_set_at;type:timestamp" json:"descriptionSetAt"`
 	DescriptionRequestedAt  *time.Time          `gorm:"column:description_requested_at;type:timestamp" json:"descriptionRequestedAt"`
 	DescriptionRequestCount int                 `gorm:"column:description_request_count" json:"descriptionRequestCount"`

@@ -5,23 +5,11 @@ const (
 	AppSourceSyncEmail     = "sync-email"
 	AppSourceUpkeeper      = "customer-os-data-upkeeper"
 
-	ComponentResolver        = "resolver"
-	ComponentRest            = "rest"
-	ComponentService         = "service"
-	ComponentListener        = "listener"
-	ComponentNeo4jRepository = "neo4jRepository"
-	// Deprecated: Use tracing package instead
-	ComponentPostgresRepository = "postgresRepository"
-
-	PromptType_EmailSummary         = "EmailSummary"
-	PromptType_EmailActionItems     = "EmailActionItems"
-	PromptType_MapIndustry          = "MapIndustryToList"
-	PromptType_ExtractIndustryValue = "ExtractIndustryValueFromAiResponse"
-	PromptTypeExtractLocationValue  = "ExtractLocationValue"
-
-	Anthropic = "anthropic"
-	OpenAI    = "openai"
+	ComponentResolver = "resolver"
+	ComponentListener = "listener"
 
 	UrlCustomerOsApi                 = "https://customeros.ai"
 	FileStoreFileDownloadUrlTemplate = UrlCustomerOsApi + "/files/v1/files/%s/download"
+
+	S3ImagesCDN = "https://customer-os-images.b-cdn.net/"
 )

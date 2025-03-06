@@ -9,7 +9,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/forPelevin/gomoji"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -24,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -107,12 +107,21 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 	dataFields.PrimaryDomain = utils.StringPtr(globalOrganization.PrimaryDomain)
 	dataFields.Description = utils.StringPtr(globalOrganization.Description)
 	dataFields.Website = utils.StringPtr(globalOrganization.Website)
-	dataFields.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
-	dataFields.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
 	dataFields.LinkedInUrl = utils.StringPtr(globalOrganization.LinkedInUrl)
 	dataFields.LinkedInAlias = utils.StringPtr(globalOrganization.LinkedInAlias)
 	dataFields.Domains = utils.StringToSlice(globalOrganization.OtherDomains)
 	dataFields.IndustryCode = utils.StringPtrNillable(globalOrganization.IndustryNaicsCode)
+
+	if globalOrganization.LogoPath != "" {
+		dataFields.LogoUrl = utils.StringPtr(constants.S3ImagesCDN + globalOrganization.LogoPath)
+	} else if globalOrganization.LogoUrl != "" {
+		dataFields.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
+	}
+	if globalOrganization.IconPath != "" {
+		dataFields.IconUrl = utils.StringPtr(constants.S3ImagesCDN + globalOrganization.IconPath)
+	} else if globalOrganization.IconUrl != "" {
+		dataFields.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
+	}
 
 	if globalOrganization.YearFounded > 0 {
 		dataFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
