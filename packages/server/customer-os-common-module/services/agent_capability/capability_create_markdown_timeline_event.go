@@ -81,8 +81,7 @@ func (c *CreateMarkdownTimelineEventCapability) ValidateInput(input CreateMarkdo
 func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateMarkdownTimelineEventInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateMarkdownTimelineEventOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateMarkdownTimelineEventCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 

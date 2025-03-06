@@ -94,8 +94,7 @@ type IdentifyWebsiteVisitorOutput struct {
 func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, IdentifyWebsiteVisitorOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := IdentifyWebsiteVisitorOutput{}
@@ -149,7 +148,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 func (c *IdentifyWebsiteVisitorCapability) getWebSession(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.getWebSession")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	websession, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
 		ID:     sessionID,
@@ -176,7 +175,7 @@ func (c *IdentifyWebsiteVisitorCapability) processExistingIdentity(
 ) (*enum.CapabilityExecutionStatus, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.processExistingIdentity")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	// Check if identity already set
 	identitySet, primaryDomain, err := c.isIdentitySetOnWebSession(ctx, *websession)
@@ -231,7 +230,7 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromIPHistory(
 ) (*enum.CapabilityExecutionStatus, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromIPHistory")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	// Find session with same IP that has domain information
 	identifiedSession, err := c.postgresRepositories.WebSessionRepository.FindLatestSessionWithDomainByIP(ctx, websession.IP)
@@ -268,7 +267,7 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
 ) (enum.CapabilityExecutionStatus, IdentifyWebsiteVisitorOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromEnrichment")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	// Try to identify IP via 3rd parties
 	domain, err := c.identifyIP(ctx, websession.IP)
@@ -320,7 +319,7 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
 func (c *IdentifyWebsiteVisitorCapability) isIdentitySetOnWebSession(ctx context.Context, websession postgres_entity.WebSession) (bool, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.isIdentitySetOnWebSession")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	if websession.Domain == nil || *websession.Domain == "" {
 		return false, "", nil
@@ -343,7 +342,7 @@ func (c *IdentifyWebsiteVisitorCapability) isIdentitySetOnWebSession(ctx context
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorIdentifiedEvent")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorIdentified{
 		AgentExecutionId: agentExecutionID,
@@ -354,7 +353,7 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx 
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorNotIdentifiedEvent")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{
 		AgentExecutionId: agentExecutionID,

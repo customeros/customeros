@@ -11,7 +11,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -99,8 +98,7 @@ type AddMeetingNotesToCompanyOutput struct {
 func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AddMeetingNotesToCompanyInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, AddMeetingNotesToCompanyOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
@@ -135,7 +133,7 @@ func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, execut
 func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx context.Context, email, timelineEvent string, input AddMeetingNotesToCompanyInput, created []string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.processMeetingParticipant")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	// get org by email
 	var (
@@ -181,7 +179,7 @@ func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx conte
 func (c *AddMeetingNotesToCompanyCapability) createMarkdownTimelineEvent(ctx context.Context, input AddMeetingNotesToCompanyInput) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.createMarkdownTimelineEvent")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	var b strings.Builder
 

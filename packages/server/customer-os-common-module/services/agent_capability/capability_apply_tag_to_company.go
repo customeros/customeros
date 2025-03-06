@@ -83,8 +83,7 @@ func (c *ApplyTagToCompanyCapability) ValidateInput(input ApplyTagToCompanyInput
 func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagToCompanyInput, ApplyTagToCompanyConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	result := NoOutput{}
 
@@ -117,7 +116,7 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 func (c *ApplyTagToCompanyCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.applyTag")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	// check if tag exists
 	tagEntity, err := c.tagService.GetTagByEntityTypeAndName(ctx, entityType, tagName)

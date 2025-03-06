@@ -111,8 +111,7 @@ type AnalyzeWebSessionOutput struct {
 func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AnalyzeWebSessionInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
@@ -219,7 +218,7 @@ const (
 func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sessisonId, page, domain string) (PageVisit, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.processPageVisit")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	url := page
 	if !strings.HasPrefix(page, "http") {
@@ -337,7 +336,7 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.writeSessionToTimeline")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	actionType := enum.ActionGeneric
 	metadata := "web_session"
@@ -360,7 +359,7 @@ func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context
 func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.sessionAnalytics")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	session, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
 		ID:     sessionID,
@@ -407,7 +406,7 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 func (c *AnalyzeWebSessionCapability) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.calculateSessionDuration")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	if session.EndTime == nil || session.EndTime.IsZero() {
 		err := errors.New("Session EndTime not set")
@@ -431,7 +430,7 @@ func (c *AnalyzeWebSessionCapability) calculateSessionDuration(ctx context.Conte
 func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, domain string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewCompanyVisit")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -466,7 +465,7 @@ func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, dom
 func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, visitorId string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewWebsiteVisitor")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -498,7 +497,7 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, sessionID string, analysis AnalyzeWebSessionOutput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.buildTimelineMessage")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	// Build base message
 	var baseMessage string
