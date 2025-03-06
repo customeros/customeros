@@ -26,6 +26,8 @@ type EnrichDetailsScrapInRepository interface {
 	GetById(ctx context.Context, id uint64) (*postgres_entity.EnrichDetailsScrapIn, error)
 	GetToSyncIntoGlobalOrganizations(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsScrapIn, error)
 	MarkSyncedToGlobalOrganizations(ctx context.Context, id uint64) error
+	GetToSyncIntoGlobalContacts(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsScrapIn, error)
+	MarkSyncedToGlobalContacts(ctx context.Context, id uint64) error
 }
 
 func NewEnrichDetailsScrapInRepository(gormDb *gorm.DB) EnrichDetailsScrapInRepository {
@@ -196,6 +198,41 @@ func (r enrichDetailsScrapInRepository) MarkSyncedToGlobalOrganizations(ctx cont
 	tracing.TagComponentPostgresRepository(span)
 
 	err := r.db.Model(&postgres_entity.EnrichDetailsScrapIn{}).Where("id = ?", id).Update("synced_to_global_orgs", true).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r enrichDetailsScrapInRepository) GetToSyncIntoGlobalContacts(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsScrapIn, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetToSyncIntoGlobalContacts")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var data []*postgres_entity.EnrichDetailsScrapIn
+
+	// get records that has SyncedToGlobalContacts = false or NULL, flow = ScrapInFlowPersonSearch or ScrapInFlowPersonProfile, and PersonFound = true
+	err := r.db.
+		Where("(synced_to_global_contacts IS NULL OR synced_to_global_contacts = ?) AND (flow = ? OR flow = ?) AND person_found = ?", false, postgres_entity.ScrapInFlowPersonSearch, postgres_entity.ScrapInFlowPersonProfile, true).
+		Order("created_at asc").
+		Limit(limit).
+		Find(&data).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(data)))
+
+	return data, nil
+}
+
+func (r enrichDetailsScrapInRepository) MarkSyncedToGlobalContacts(ctx context.Context, id uint64) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.MarkSyncedToGlobalContacts")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	err := r.db.Model(&postgres_entity.EnrichDetailsScrapIn{}).Where("id = ?", id).Update("synced_to_global_contacts", true).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

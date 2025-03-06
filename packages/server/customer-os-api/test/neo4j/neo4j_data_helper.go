@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -101,19 +101,17 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		" a.mimeType=$mimeType, " +
 		" a.cdnUrl=$cdnUrl, " +
 		" a.basePath=$basePath, " +
-		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
 		" RETURN a"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":        tenant,
-		"id":            attachment.Id,
-		"fileName":      attachment.FileName,
-		"mimeType":      attachment.MimeType,
-		"cdnUrl":        attachment.CdnUrl,
-		"basePath":      attachment.BasePath,
-		"sourceOfTruth": attachment.SourceOfTruth,
-		"source":        attachment.Source,
-		"appSource":     attachment.AppSource,
+		"tenant":    tenant,
+		"id":        attachment.Id,
+		"fileName":  attachment.FileName,
+		"mimeType":  attachment.MimeType,
+		"cdnUrl":    attachment.CdnUrl,
+		"basePath":  attachment.BasePath,
+		"source":    attachment.Source,
+		"appSource": attachment.AppSource,
 	})
 	return attachment.Id
 }
@@ -219,21 +217,19 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 				i.priority=$priority,
 				i.source=$source,
 				i.appSource=$appSource,
-				i.sourceOfTruth=$sourceOfTruth,
 				i:TimelineEvent,
 				i:Issue_%s,
 				i:TimelineEvent_%s`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":            issueId.String(),
-		"tenant":        tenant,
-		"subject":       issue.Subject,
-		"createdAt":     issue.CreatedAt,
-		"description":   issue.Description,
-		"status":        issue.Status,
-		"priority":      issue.Priority,
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
+		"id":          issueId.String(),
+		"tenant":      tenant,
+		"subject":     issue.Subject,
+		"createdAt":   issue.CreatedAt,
+		"description": issue.Description,
+		"status":      issue.Status,
+		"priority":    issue.Priority,
+		"source":      "openline",
+		"appSource":   "test",
 	})
 	return issueId.String()
 }
@@ -477,7 +473,6 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 				a.orderInSession=$orderInSession,
 				a.engagedTime=$engagedTime,
 				a.source=$source,	
-				a.sourceOfTruth=$sourceOfTruth,	
 				a.appSource=$appSource`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":      contactId,
@@ -492,7 +487,6 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 		"orderInSession": pageViewEntity.OrderInSession,
 		"engagedTime":    pageViewEntity.EngagedTime,
 		"source":         "openline",
-		"sourceOfTruth":  "openline",
 		"appSource":      "test",
 	})
 	return actionId.String()
@@ -682,17 +676,15 @@ func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithCon
 		" a.createdAt=$createdAt, " +
 		" a.content=$content, " +
 		" a.source=$source, " +
-		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource ")
 
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"linkedWithId":  linkedWithId,
-		"actionItemId":  actionItemId.String(),
-		"content":       content,
-		"createdAt":     createdAt,
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
+		"linkedWithId": linkedWithId,
+		"actionItemId": actionItemId.String(),
+		"content":      content,
+		"createdAt":    createdAt,
+		"source":       "openline",
+		"appSource":    "test",
 	})
 	return actionItemId.String()
 }
@@ -710,19 +702,17 @@ func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 		"				m.end=$updatedAt, " +
 		"				m.appSource=$appSource, " +
 		"				m.source=$source, " +
-		"				m.sourceOfTruth=$sourceOfTruth, " +
 		"				m:TimelineEvent, " +
 		"				m:TimelineEvent_%s " +
 		" RETURN m"
 
 	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":            meetingId.String(),
-		"name":          name,
-		"createdAt":     createdAt,
-		"updatedAt":     createdAt,
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
+		"id":        meetingId.String(),
+		"name":      name,
+		"createdAt": createdAt,
+		"updatedAt": createdAt,
+		"source":    "openline",
+		"appSource": "test",
 	})
 	return meetingId.String()
 }

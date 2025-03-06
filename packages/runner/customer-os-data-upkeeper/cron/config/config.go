@@ -20,6 +20,9 @@ type Config struct {
 	CronScheduleLinkExtractionFromScrapedPage  string `env:"CRON_SCHEDULE_LINK_EXTRACTION_FROM_SCRAPED_PAGE" envDefault:"20 */2 * * * *"`
 	CronScheduleDownloadIconAndLogo            string `env:"CRON_SCHEDULE_DOWNLOAD_ICON_AND_LOGO" envDefault:"20 */2 * * * *"`
 
+	// Global Contacts
+	CronScheduleSyncDataToGlobalContacts string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_CONTACTS" envDefault:"0 */1 * * * *"`
+
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
 	CronScheduleAskForWorkEmailOnBetterContact            string `env:"CRON_SCHEDULE_ASK_FOR_WORK_EMAIL_ON_BETTER_CONTACT" envDefault:"30 */2 * * * *"`

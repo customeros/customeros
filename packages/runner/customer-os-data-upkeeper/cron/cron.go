@@ -20,6 +20,7 @@ const (
 
 	// Contact related groups
 	GroupContact         = "contact"
+	GroupGlobalContact   = "globalContact"
 	GroupContactEnrich   = "contactEnrich"
 	GroupContactBetter   = "contactEnrichWithBettercontact"
 	GroupLinkedInAsk     = "askForLinkedInConnections"
@@ -156,6 +157,8 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessLinkedInConnections, GroupLinkedInProcess, processLinkedInConnections, "processLinkedInConnections")
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
+
+	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalContacts, GroupGlobalContact, syncDataToGlobalContacts, "syncDataToGlobalContacts")
 
 	// Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
@@ -401,4 +404,8 @@ func rerunAgent(cont *container.Container) {
 
 func extractPageLinks(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ExtractWebpageLinks()
+}
+
+func syncDataToGlobalContacts(cont *container.Container) {
+	service.NewGlobalContactService(cont.Cfg, cont.Log, cont.CommonServices).SyncDataIntoGlobalContacts()
 }
