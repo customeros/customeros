@@ -149,13 +149,14 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 		}
 
 		contact := &postgresentity.GlobalContact{
-			FirstName:          strings.TrimSpace(person.FirstName),
-			LastName:           strings.TrimSpace(person.LastName),
-			LinkedInIdentifier: person.LinkedInIdentifier,
-			JobTitle:           currentPosition.Title,
-			JobStartedAt:       currentPosition.StartedOn,
-			JobEndedAt:         currentPosition.EndedOn,
-			PrimaryDomain:      primaryDomain,
+			FirstName:               strings.TrimSpace(person.FirstName),
+			LastName:                strings.TrimSpace(person.LastName),
+			LinkedInIdentifier:      person.LinkedInIdentifier,
+			JobTitle:                currentPosition.Title,
+			JobStartedAt:            currentPosition.StartedOn,
+			JobEndedAt:              currentPosition.EndedOn,
+			PrimaryDomain:           primaryDomain,
+			ProfilePhotoExternalUrl: person.PhotoUrl,
 		}
 
 		// Try to find existing contact by LinkedIn identifier and primary domain
