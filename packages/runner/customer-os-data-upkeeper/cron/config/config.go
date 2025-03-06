@@ -21,7 +21,8 @@ type Config struct {
 	CronScheduleDownloadIconAndLogo            string `env:"CRON_SCHEDULE_DOWNLOAD_ICON_AND_LOGO" envDefault:"20 */2 * * * *"`
 
 	// Global Contacts
-	CronScheduleSyncDataToGlobalContacts string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_CONTACTS" envDefault:"0 */1 * * * *"`
+	CronScheduleSyncDataToGlobalContacts    string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_CONTACTS" envDefault:"0 */1 * * * *"`
+	CronScheduleDownloadContactProfilePhoto string `env:"CRON_SCHEDULE_DOWNLOAD_CONTACT_PROFILE_PHOTO" envDefault:"15 */2 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`

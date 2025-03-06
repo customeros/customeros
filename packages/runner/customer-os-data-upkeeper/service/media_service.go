@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -10,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
@@ -17,6 +21,7 @@ import (
 
 type MediaService interface {
 	FetchAndStoreCompanyLogos()
+	FetchAndStoreContactProfilePhotos()
 }
 
 type mediaService struct {
@@ -34,6 +39,25 @@ func NewMediaService(log logger.Logger, commonServices *service.CommonServices) 
 const (
 	BUCKET = "customer-os-images"
 )
+
+func (s *mediaService) getContactHashPath(contact *postgresentity.GlobalContact) string {
+	var identifier string
+	if contact.LinkedInIdentifier != "" {
+		identifier = contact.LinkedInIdentifier
+	} else if contact.WorkEmail != "" {
+		identifier = contact.WorkEmail
+	} else if contact.PersonalEmail != "" {
+		identifier = contact.PersonalEmail
+	} else {
+		return "" // No valid identifier found
+	}
+
+	// Create SHA-256 hash of the identifier
+	hash := sha256.Sum256([]byte(identifier))
+	// Convert to hex string
+	hashStr := hex.EncodeToString(hash[:])
+	return fmt.Sprintf("contacts/%s", hashStr)
+}
 
 func (s *mediaService) FetchAndStoreCompanyLogos() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -69,6 +93,39 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 	}
 }
 
+func (s *mediaService) FetchAndStoreContactProfilePhotos() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "MediaService.FetchAndStoreContactProfilePhotos")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 10
+
+	// get contacts
+	contacts, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToFetchPhoto(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	for _, contact := range contacts {
+		// download profile photo
+		if contact.ProfilePhotoExternalUrl != "" {
+			hashPath := s.getContactHashPath(contact)
+			if hashPath == "" {
+				// error, this contact has no valid identifier
+				err = errors.New("no valid identifier for contact")
+				tracing.TraceErr(span, err)
+				continue
+			}
+			photoPath := fmt.Sprintf("%s/%s", hashPath, "profile")
+			s.downloadContactPhoto(ctx, contact.ID, contact.ProfilePhotoExternalUrl, photoPath)
+		}
+	}
+}
+
 func (s *mediaService) downloadImage(ctx context.Context, globalOrgId uint64, imageUrl, imagePath, imageType string) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadImage")
 	defer span.Finish()
@@ -93,6 +150,34 @@ func (s *mediaService) downloadImage(ctx context.Context, globalOrgId uint64, im
 		} else {
 			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, globalOrgId, imagePath)
 		}
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
+			return false
+		}
+	}
+	return true
+}
+
+func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId uint64, imageUrl, imagePath string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadContactPhoto")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+	span.LogFields(log.String("imageUrl", imageUrl), log.String("imagePath", imagePath), log.Uint64("globalContactId", globalContactId))
+
+	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
+	if err != nil {
+		if !errors.Is(err, coserrors.ErrResourceNotFound) {
+			tracing.TraceErr(span, err)
+		}
+		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetDownloadStatus(ctx, globalContactId, enum.DownloadError)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+		}
+		return false
+	}
+
+	if imagePath != "" {
+		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetProfilePhoto(ctx, globalContactId, imagePath)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
 			return false
