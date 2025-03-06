@@ -39,6 +39,7 @@ type GlobalOrganizationRepository interface {
 	SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error
 	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
+	GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*postgres_entity.GlobalOrganization, error)
 }
 
 type globalOrganizationRepository struct {
@@ -248,24 +249,24 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
 		tracingLog.Int("limit", limit),
 		tracingLog.Int("maxAttempts", maxAttempts))
 
-	// Condition to flag “suspicious” or missing name
+	// Condition to flag "suspicious" or missing name
 	// 1) Name is NULL or empty
 	// 2) Name is all-caps (letters/numbers/spaces)
 	// 3) Name has excessive punctuation (example threshold: >2 punctuation chars)
 	// 4) Name looks like a domain
-	// 5) Name is a known placeholder (“none”, “n/a”, “na”, “unknown”, “null”, etc.)
+	// 5) Name is a known placeholder ("none", "n/a", "na", "unknown", "null", etc.)
 	// 6) Name is all lowercase (letters/numbers/spaces)
-	// 7) Name has a known suffix (“ ltd”, “ inc”, “ gmbh”, “ s.a”, “ plc”, “ pty”, “ corp”, “ co”, “ sa”)
+	// 7) Name has a known suffix (" ltd", " inc", " gmbh", " s.a", " plc", " pty", " corp", " co", " sa")
 	// 8) Name has a punctuation character
 	suspiciousNameCondition := `
         (
             name IS NULL
             OR name = ''
-            OR name ~ '^[A-Z0-9\\s]+$'
-            OR length(regexp_replace(name, '[a-zA-Z0-9\\s]', '', 'g')) > 2
-            OR name ~ '^[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+$'
+            OR name ~ '^[A-Z0-9\s]+$'
+            OR length(regexp_replace(name, '[a-zA-Z0-9\s]', '', 'g')) > 2
+            OR name ~ '^[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+$'
             OR lower(name) IN ('none','n/a','na','unknown','null')
-			OR name ~ '^[a-z0-9\\s]+$'
+			OR name ~ '^[a-z0-9\s]+$'
 			OR lower(name) ~ '( ltd| inc| gmbh| plc| pty| corp| co| llc| llp| ag| bv| as| ab| nv| se| sl| sc| cv| sa| sarl| spa| srl| srls| snc| sas)'
 			OR name ~ '.*[.,;:!?].*'
         )
@@ -515,4 +516,24 @@ func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id
 	}
 
 	return nil
+}
+
+func (r *globalOrganizationRepository) GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*postgres_entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetByLinkedInUrl")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.String("linkedInUrl", linkedInUrl))
+
+	organization := &postgres_entity.GlobalOrganization{}
+	result := r.db.WithContext(ctx).Where("linkedin = ?", linkedInUrl).First(organization)
+	if result.Error != nil {
+		span.LogFields(tracingLog.Bool("found", false))
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Bool("found", true))
+	return organization, nil
 }

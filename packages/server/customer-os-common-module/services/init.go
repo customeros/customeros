@@ -38,6 +38,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/files"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/flow"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/flow_execution"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/global_contacts"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/google"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/industry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/interaction_event"
@@ -111,6 +112,7 @@ type CommonServices struct {
 	FileService                interfaces.FileService
 	FlowExecutionService       interfaces.FlowExecutionService
 	FlowService                interfaces.FlowService
+	GlobalContactService       interfaces.GlobalContactService
 	GoogleService              interfaces.GoogleService
 	IndustryService            interfaces.IndustryService
 	InteractionEventService    interfaces.InteractionEventService
@@ -231,6 +233,7 @@ func InitCommonServices(
 	webscrapeImpl := webscraper.NewWebscraperService(&cfg.External.JinaConfig, postgresRepositories, aiImpl)
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories, eventsImpl)
+	globalContactImpl := globalcontacts.NewGlobalContactService(log, postgresRepositories)
 
 	// Services that only depend on Simple
 	companyResearchImpl := company_research.NewCompanyResearchService(postgresRepositories, aiImpl, webscrapeImpl, workspaceImpl)
@@ -348,6 +351,7 @@ func InitCommonServices(
 		FileService:                fileImpl,
 		FlowService:                flowImpl,
 		FlowExecutionService:       flowExecutionImpl,
+		GlobalContactService:       globalContactImpl,
 		GoogleService:              googleImpl,
 		IndustryService:            industryImpl,
 		InteractionEventService:    interactionEventImpl,

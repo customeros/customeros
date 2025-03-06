@@ -49,6 +49,7 @@ type Repositories struct {
 	FlowExecutionRepository                      FlowExecutionRepository
 	FlowNodeRepository                           FlowNodeRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
+	GlobalContactRepository                      GlobalContactRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
@@ -134,6 +135,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowExecutionRepository:                      NewFlowExecutionRepository(postgresDB.GormDB),
 		FlowNodeRepository:                           NewFlowNodeRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
+		GlobalContactRepository:                      NewGlobalContactRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 		InvoiceRepository:                            NewInvoiceRepository(postgresDB.GormDB),
@@ -177,6 +179,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.Agent{},
 		&postgres_entity.AgentPlay{},
 		&postgres_entity.Capability{},
+		&postgres_entity.GlobalContact{},
 		&postgres_entity.Listener{},
 		&postgres_entity.AiLocationMapping{},
 		&postgres_entity.ApiBillableEvent{},

@@ -12,21 +12,22 @@ const (
 )
 
 type EnrichDetailsScrapIn struct {
-	ID                 uint64      `gorm:"primary_key;autoIncrement:true" json:"id"`
-	Flow               ScrapInFlow `gorm:"column:flow;type:varchar(255);NOT NULL" json:"flow"`
-	Param1             string      `gorm:"column:param1;type:varchar(1000);" json:"param1"`
-	Param2             string      `gorm:"column:param2;type:varchar(1000);" json:"param2"`
-	Param3             string      `gorm:"column:param3;type:varchar(1000);" json:"param3"`
-	Param4             string      `gorm:"column:param4;type:varchar(1000);" json:"param4"`
-	Param5             string      `gorm:"column:param5;type:varchar(1000);" json:"param5"`
-	AllParamsJson      string      `gorm:"column:all_params_json;type:text;DEFAULT:'';NOT NULL" json:"allParams"`
-	Data               string      `gorm:"column:data;type:text;DEFAULT:'';NOT NULL" json:"data"`
-	CreatedAt          time.Time   `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
-	UpdatedAt          time.Time   `gorm:"column:updated_at;type:timestamp;;DEFAULT:current_timestamp" json:"updatedAt"`
-	Success            bool        `gorm:"column:success;type:boolean;DEFAULT:false" json:"success"`
-	PersonFound        bool        `gorm:"column:person_found;type:boolean;DEFAULT:false" json:"personFound"`
-	CompanyFound       bool        `gorm:"column:company_found;type:boolean;DEFAULT:false" json:"companyFound"`
-	SyncedToGlobalOrgs bool        `gorm:"column:synced_to_global_orgs;type:boolean;DEFAULT:false" json:"syncedToGlobalOrgs"`
+	ID                     uint64      `gorm:"primary_key;autoIncrement:true" json:"id"`
+	Flow                   ScrapInFlow `gorm:"column:flow;type:varchar(255);NOT NULL" json:"flow"`
+	Param1                 string      `gorm:"column:param1;type:varchar(1000);" json:"param1"`
+	Param2                 string      `gorm:"column:param2;type:varchar(1000);" json:"param2"`
+	Param3                 string      `gorm:"column:param3;type:varchar(1000);" json:"param3"`
+	Param4                 string      `gorm:"column:param4;type:varchar(1000);" json:"param4"`
+	Param5                 string      `gorm:"column:param5;type:varchar(1000);" json:"param5"`
+	AllParamsJson          string      `gorm:"column:all_params_json;type:text;DEFAULT:'';NOT NULL" json:"allParams"`
+	Data                   string      `gorm:"column:data;type:text;DEFAULT:'';NOT NULL" json:"data"`
+	CreatedAt              time.Time   `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
+	UpdatedAt              time.Time   `gorm:"column:updated_at;type:timestamp;;DEFAULT:current_timestamp" json:"updatedAt"`
+	Success                bool        `gorm:"column:success;type:boolean;DEFAULT:false" json:"success"`
+	PersonFound            bool        `gorm:"column:person_found;type:boolean;DEFAULT:false" json:"personFound"`
+	CompanyFound           bool        `gorm:"column:company_found;type:boolean;DEFAULT:false" json:"companyFound"`
+	SyncedToGlobalOrgs     bool        `gorm:"column:synced_to_global_orgs;type:boolean;DEFAULT:false" json:"syncedToGlobalOrgs"`
+	SyncedToGlobalContacts bool        `gorm:"column:synced_to_global_contacts;type:boolean;DEFAULT:false" json:"syncedToGlobalContacts"`
 }
 
 func (EnrichDetailsScrapIn) TableName() string {
@@ -44,6 +45,14 @@ type ScrapInResponseBody struct {
 	Company       *ScrapinCompanyDetails `json:"company,omitempty"`
 }
 
+type ScrapinPositionHistory struct {
+	Title       string     `json:"title"`
+	StartedOn   *time.Time `json:"startedOn"`
+	EndedOn     *time.Time `json:"endedOn"`
+	LinkedInUrl string     `json:"linkedInUrl"`
+	LinkedInId  string     `json:"linkedInId"`
+}
+
 type ScrapinPersonDetails struct {
 	PublicIdentifier   string `json:"publicIdentifier"`
 	LinkedInIdentifier string `json:"linkedInIdentifier"`
@@ -58,8 +67,9 @@ type ScrapinPersonDetails struct {
 		Month int `json:"month"`
 		Year  int `json:"year"`
 	} `json:"creationDate"`
-	FollowerCount int `json:"followerCount"`
-	Positions     struct {
+	FollowerCount   int                      `json:"followerCount"`
+	PositionHistory []ScrapinPositionHistory `json:"positionHistory"`
+	Positions       struct {
 		PositionsCount  int `json:"positionsCount"`
 		PositionHistory []struct {
 			Title        string `json:"title"`
