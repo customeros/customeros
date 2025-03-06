@@ -495,7 +495,7 @@ func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest
 	}
 
 	if response == "" {
-		err = s.NewRetryableError("Empty response from Anthropic", nil)
+		err = s.NewRetryableError("Empty response from Groq", nil)
 		return nil, err
 	}
 
