@@ -8,7 +8,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -133,8 +132,7 @@ func (c *GenerateInvoiceCapability) ValidateInput(input GenerateInvoiceInput) er
 func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GenerateInvoiceInput, GenerateInvoiceConfig]) (enum.CapabilityExecutionStatus, GenerateInvoiceOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GenerateInvoiceCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := GenerateInvoiceOutput{}

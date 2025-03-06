@@ -11,7 +11,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -132,8 +131,7 @@ type ICPAnswer struct {
 func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (enum.CapabilityExecutionStatus, EvaluateICPFitOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := EvaluateICPFitOutput{
@@ -196,7 +194,7 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 func (c *EvaluateICPFitCapability) buildPrompts(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.buildPrompts")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	company := executionContainer.InputData
 
@@ -259,7 +257,7 @@ Important:
 func (c *EvaluateICPFitCapability) parseAnswer(ctx context.Context, answer string) (*ICPAnswer, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.parseAnswer")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	var result ICPAnswer
 	err := json.Unmarshal([]byte(answer), &result)

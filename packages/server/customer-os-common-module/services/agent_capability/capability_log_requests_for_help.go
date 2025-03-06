@@ -9,7 +9,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -79,8 +78,7 @@ type LogRequestsForHelpInput struct {
 func (c *LogRequestsForHelpCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[LogRequestsForHelpInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogRequestsForHelpCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
@@ -115,7 +113,7 @@ func (c *LogRequestsForHelpCapability) Execute(ctx context.Context, executionCon
 func (c *LogRequestsForHelpCapability) createMarkdownTimelineEvent(ctx context.Context, input LogRequestsForHelpInput) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogRequestsForHelpCapability.createMarkdownTimelineEvent")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	var b strings.Builder
 

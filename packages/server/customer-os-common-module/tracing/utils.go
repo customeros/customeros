@@ -42,6 +42,7 @@ const (
 	SpanTagComponentCronJob            = "cronJob"
 	SpanTagComponentService            = "service"
 	SpanTagComponentListener           = "listener"
+	SpanTagComponentAgentCapability    = "agentCapability"
 )
 
 func GraphQlTracingEnhancer(ctx context.Context) func(c *gin.Context) {
@@ -203,6 +204,11 @@ func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.
 	TagComponentPostgresRepository(span)
 }
 
+func SetDefaultAgentCapabilitySpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	TagComponentAgentCapability(span)
+}
+
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	if span == nil || err == nil || coserrors.SkipTracing(err) {
 		return
@@ -250,6 +256,10 @@ func TagComponentPostgresRepository(span opentracing.Span) {
 
 func TagComponentNeo4jRepository(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentNeo4jRepository)
+}
+
+func TagComponentAgentCapability(span opentracing.Span) {
+	span.SetTag(SpanTagComponent, SpanTagComponentAgentCapability)
 }
 
 func TagTenant(span opentracing.Span, tenant string) {

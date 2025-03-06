@@ -6,7 +6,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -65,8 +64,7 @@ func (c *SelectOptimalSendingMailboxCapability) ValidateInput(input SelectOptima
 func (c *SelectOptimalSendingMailboxCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SelectOptimalSendingMailboxInput, SelectOptimalSendingMailboxConfig]) (enum.CapabilityExecutionStatus, SelectOptimalSendingMailboxOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SelectOptimalSendingMailboxCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
 	result := SelectOptimalSendingMailboxOutput{}
 

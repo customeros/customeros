@@ -8,7 +8,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -88,8 +87,7 @@ func (c *IngestEmailCapability) ValidateInput(input IngestEmailInput) error {
 func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IngestEmailInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {

@@ -10,7 +10,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -100,8 +99,7 @@ func (c *GatherCompanyIntelligenceCapability) ValidateInput(input GatherCompanyI
 func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GatherCompanyIntilligenceInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, GatherCompanyIntelligenceOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GatherCompanyIntelligenceCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := GatherCompanyIntelligenceOutput{}

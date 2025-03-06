@@ -10,7 +10,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -78,8 +77,7 @@ type SendInvoiceViaEmailOutput struct{}
 func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendInvoiceViaEmailInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendInvoiceViaEmailOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceViaEmailCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
 	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 

@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -9,7 +10,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -95,8 +95,7 @@ func (c *UpdateCompanyStatusCapability) ValidateInput(input UpdateCompanyStatusI
 func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[UpdateCompanyStatusInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.Execute")
 	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
@@ -143,9 +142,10 @@ func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionCo
 }
 
 func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organizationID string, reasons []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.processICPFit")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.processICPFit")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	tracing.TagEntity(span, organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
 		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
@@ -161,9 +161,10 @@ func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organ
 }
 
 func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, organizationID string, reasons []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.processICPFit")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.processICPNotAFit")
 	defer span.Finish()
-	tracing.TagComponentService(span)
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	tracing.TagEntity(span, organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
 		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipNotAFit),
