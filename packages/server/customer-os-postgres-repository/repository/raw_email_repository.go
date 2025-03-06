@@ -10,7 +10,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 
@@ -23,11 +22,12 @@ type RawEmailRepository interface {
 	GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*postgres_entity.RawEmail, error)
 	EmailExistsByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (bool, error)
 	Store(ctx context.Context, externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state postgres_entity.EmailImportState) error
-	GetEmailsIdsForSync(externalSystem, tenantName string) ([]postgres_entity.RawEmail, error)
-	GetEmailsIdsForUserForSync(tenantName, userEmailAddress string) ([]postgres_entity.RawEmail, error)
-	GetEmailForProcess(id uuid.UUID) (*postgres_entity.RawEmail, error)
-	GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*postgres_entity.RawEmail, error)
-	UpdateRawEmailTable(id uuid.UUID, dbUpdateRecord postgres_entity.UpdateRawEmailTable) error
+	GetEmailsIdsForSync(ctx context.Context, externalSystem, tenantName string) ([]postgres_entity.RawEmail, error)
+	GetEmailsIdsForUserForSync(ctx context.Context, tenantName, userSource string) ([]postgres_entity.RawEmail, error)
+	GetEmailForProcess(ctx context.Context, id uuid.UUID) (*postgres_entity.RawEmail, error)
+	GetEmailForSyncByMessageId(ctx context.Context, tenant, usernameSource, messageId string) (*postgres_entity.RawEmail, error)
+	UpdateRawEmailTable(ctx context.Context, id uuid.UUID, dbUpdateRecord postgres_entity.UpdateRawEmailTable) error
+	MarkEmailAsSentToEventStore(ctx context.Context, id uuid.UUID) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -129,51 +129,71 @@ func (repo *rawEmailRepositoryImpl) Store(ctx context.Context, externalSystem, t
 	return nil
 }
 
-func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantName string) ([]postgres_entity.RawEmail, error) {
+func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(ctx context.Context, externalSystem, tenantName string) ([]postgres_entity.RawEmail, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.GetEmailsIdsForSync")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	result := []postgres_entity.RawEmail{}
 	err := repo.gormDb.Order("sent_at desc").Select([]string{"id"}).Limit(25).Find(&result, "external_system = ? AND tenant = ? AND status = 'PENDING'", externalSystem, tenantName).Error
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(tenantName, userSource string) ([]postgres_entity.RawEmail, error) {
+func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(ctx context.Context, tenantName, userSource string) ([]postgres_entity.RawEmail, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.GetEmailsIdsForUserForSync")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	result := []postgres_entity.RawEmail{}
 	err := repo.gormDb.Order("sent_at desc").Select([]string{"id", "external_system"}).Limit(100).Find(&result, "tenant = ? AND username = ? AND status = 'PENDING'", tenantName, userSource).Error
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmails: %s; %s", tenantName, userSource)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) GetEmailForProcess(id uuid.UUID) (*postgres_entity.RawEmail, error) {
+func (repo *rawEmailRepositoryImpl) GetEmailForProcess(ctx context.Context, id uuid.UUID) (*postgres_entity.RawEmail, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.GetEmailForProcess")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	result := postgres_entity.RawEmail{}
 	err := repo.gormDb.First(&result, id).Error
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmail: %s", id)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return &result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*postgres_entity.RawEmail, error) {
+func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(ctx context.Context, tenant, usernameSource, messageId string) (*postgres_entity.RawEmail, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.GetEmailForSyncByMessageId")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	var result postgres_entity.RawEmail
 	err := repo.gormDb.Where("tenant = ? AND username = ? AND message_id = ?", tenant, usernameSource, messageId).Find(&result).Error
 	if err != nil {
-		logrus.Errorf("GetEmailForSyncByMessageId - failed: %s; %s; %s", tenant, usernameSource, messageId)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return &result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) UpdateRawEmailTable(id uuid.UUID, dbUpdateRecord postgres_entity.UpdateRawEmailTable) error {
+func (repo *rawEmailRepositoryImpl) UpdateRawEmailTable(ctx context.Context, id uuid.UUID, dbUpdateRecord postgres_entity.UpdateRawEmailTable) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.UpdateRawEmailTable")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	tx := repo.gormDb.Model(&postgres_entity.RawEmail{}).Where("id = ?", id)
 
 	tx.Update("status", dbUpdateRecord.EmailProcessingStatus)
@@ -189,7 +209,21 @@ func (repo *rawEmailRepositoryImpl) UpdateRawEmailTable(id uuid.UUID, dbUpdateRe
 
 	err := tx.Error
 	if err != nil {
-		logrus.Errorf("Failed marking email as sent to event store: %v", id)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (repo *rawEmailRepositoryImpl) MarkEmailAsSentToEventStore(ctx context.Context, id uuid.UUID) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RawEmailRepository.MarkEmailAsSentToEventStore")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	err := repo.gormDb.Model(&postgres_entity.RawEmail{}).Where("id = ?", id).Update("status", "SENT").Error
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
