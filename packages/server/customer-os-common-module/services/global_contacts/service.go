@@ -133,6 +133,9 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 	if new.LinkedInIdentifier != "" {
 		existing.LinkedInIdentifier = new.LinkedInIdentifier
 	}
+	if new.ProfilePhotoExternalUrl != "" {
+		existing.ProfilePhotoExternalUrl = new.ProfilePhotoExternalUrl
+	}
 }
 
 func (s *globalContactService) SaveContact(ctx context.Context, contact *postgres_entity.GlobalContact) error {

@@ -101,8 +101,8 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 
 	person := data.Person
 
-	// Find all positions without end date
-	var currentPositions []struct {
+	// Process all positions
+	var positions []struct {
 		Title       string
 		StartedOn   *time.Time
 		EndedOn     *time.Time
@@ -111,36 +111,40 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 	}
 
 	for _, position := range person.Positions.PositionHistory {
-		// Check if position has no end date
-		if position.StartEndDate.End == nil {
-			var currentPosition struct {
-				Title       string
-				StartedOn   *time.Time
-				EndedOn     *time.Time
-				LinkedInUrl string
-				LinkedInId  string
-			}
-
-			// Convert start date
-			if position.StartEndDate.Start != nil {
-				startDate := utils.FirstTimeOfMonth(position.StartEndDate.Start.Year, position.StartEndDate.Start.Month)
-				currentPosition.StartedOn = &startDate
-			}
-			currentPosition.Title = position.Title
-			currentPosition.LinkedInUrl = position.LinkedInUrl
-			currentPosition.LinkedInId = position.LinkedInId
-
-			currentPositions = append(currentPositions, currentPosition)
+		var currentPosition struct {
+			Title       string
+			StartedOn   *time.Time
+			EndedOn     *time.Time
+			LinkedInUrl string
+			LinkedInId  string
 		}
+
+		// Convert start date
+		if position.StartEndDate.Start != nil {
+			startDate := utils.FirstTimeOfMonth(position.StartEndDate.Start.Year, position.StartEndDate.Start.Month)
+			currentPosition.StartedOn = &startDate
+		}
+
+		// Convert end date
+		if position.StartEndDate.End != nil {
+			endDate := utils.FirstTimeOfMonth(position.StartEndDate.End.Year, position.StartEndDate.End.Month)
+			currentPosition.EndedOn = &endDate
+		}
+
+		currentPosition.Title = position.Title
+		currentPosition.LinkedInUrl = position.LinkedInUrl
+		currentPosition.LinkedInId = position.LinkedInId
+
+		positions = append(positions, currentPosition)
 	}
 
-	// Only proceed if we have current positions
-	if len(currentPositions) == 0 {
+	// Only proceed if we have positions
+	if len(positions) == 0 {
 		return nil
 	}
 
-	// Process each current position
-	for _, currentPosition := range currentPositions {
+	// Process each position
+	for _, currentPosition := range positions {
 		// Find primary domain from global organizations
 		primaryDomain, err := s.findPrimaryDomainFromGlobalOrg(ctx, currentPosition.LinkedInUrl, currentPosition.LinkedInId)
 		if err != nil {
@@ -148,14 +152,22 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 			return err
 		}
 
+		// Skip positions where we can't find a primary domain
+		if primaryDomain == "" {
+			s.log.Debugf("Skipping position with title '%s' - no primary domain found for LinkedIn URL: %s, LinkedIn ID: %s",
+				currentPosition.Title, currentPosition.LinkedInUrl, currentPosition.LinkedInId)
+			continue
+		}
+
 		contact := &postgresentity.GlobalContact{
-			FirstName:          strings.TrimSpace(person.FirstName),
-			LastName:           strings.TrimSpace(person.LastName),
-			LinkedInIdentifier: person.LinkedInIdentifier,
-			JobTitle:           currentPosition.Title,
-			JobStartedAt:       currentPosition.StartedOn,
-			JobEndedAt:         currentPosition.EndedOn,
-			PrimaryDomain:      primaryDomain,
+			FirstName:               strings.TrimSpace(person.FirstName),
+			LastName:                strings.TrimSpace(person.LastName),
+			LinkedInIdentifier:      person.LinkedInIdentifier,
+			JobTitle:                currentPosition.Title,
+			JobStartedAt:            currentPosition.StartedOn,
+			JobEndedAt:              currentPosition.EndedOn,
+			PrimaryDomain:           primaryDomain,
+			ProfilePhotoExternalUrl: person.PhotoUrl,
 		}
 
 		// Try to find existing contact by LinkedIn identifier and primary domain
