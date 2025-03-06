@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/opentracing/opentracing-go"
@@ -48,33 +49,111 @@ func NewAIService(
 	}
 }
 
+const MaxAttempts = 3
+
 func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAI")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "requestParams", request)
+
+	// Validate the request and set default values
+	err := s.validateAIRequest(ctx, &request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var lastError error
+	var answer *string
+
+	for attempt := 0; attempt < *request.Retries; attempt++ {
+		// If this isn't the first attempt and we have an error from a previous attempt
+		if attempt > 0 && lastError != nil && answer != nil {
+			// Create an error prompt that includes feedback from the previous attempt
+			errorPrompt := fmt.Sprintf(`
+                I previously asked you to do the following: %s
+                You gave me an unexpected response of %s
+                This resulted in this error: %s
+                I'll give you the data again. Please re-evaluate your reply, and ensure your response is valid.`,
+				utils.IfNotNilString(request.SystemPrompt),
+				*answer,
+				lastError.Error())
+			request.SystemPrompt = &errorPrompt
+		}
+
+		answer, err = s.askAIWithRetry(ctx, request)
+
+		// If successful, return the answer
+		if err == nil && answer != nil {
+			return answer, nil
+		}
+
+		// Store the last error for potential use in the next retry
+		lastError = err
+
+		// If the error is not retryable, stop trying
+		if err != nil && !s.IsRetryable(err) {
+			return nil, err
+		}
+
+		// Add a delay before the next retry (except for the last attempt)
+		if attempt < *request.Retries-1 {
+			backoff := utils.BackOffExponentialDelay(attempt)
+			time.Sleep(backoff)
+		}
+	}
+
+	// If we've exhausted all retries, return the last error
+	if lastError != nil {
+		return nil, fmt.Errorf("askAI failed after %d attempts: %w", *request.Retries, lastError)
+	}
+
+	// This handles the case where we didn't get an error but also didn't get a valid answer
+	return nil, fmt.Errorf("askAI failed after %d attempts with no specific error and invalid response", *request.Retries)
+}
+
+func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.AskAIRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.validateAIRequest")
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "requestParams", request)
+
+	if request.Prompt == nil {
+		return errors.New("prompt cannot be empty")
+	}
+
+	if request.OutputFormat != enum.AIOutputJson && request.OutputFormat != enum.AIOutputText {
+		return errors.New("invalid output format")
+	}
+
+	// Set default values for unspecified fields
+	if request.ModelTemperature == nil {
+		temp := float32(DefaultTemperature)
+		request.ModelTemperature = &temp
+	}
+
+	if request.MaxOutputTokens == nil {
+		maxTokens := int32(MaxTokens)
+		request.MaxOutputTokens = &maxTokens
+	}
+
+	if request.Retries == nil {
+		maxRetries := MaxAttempts
+		request.Retries = &maxRetries
+	}
+
+	return nil
+}
+
+func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAIWithRetry")
+	defer span.Finish()
 
 	llmTracker := s.newObservabilityContainer(ctx, span, request)
 
 	var result *string
 	var err error
 
-	if request.Prompt == nil {
-		err = errors.New("prompt cannot be empty")
-		tracing.TraceErr(span, err)
-		s.trackError(ctx, llmTracker, err.Error())
-		return nil, err
-	}
-
-	if request.ModelTemperature == nil {
-		temp := float32(DefaultTemperature)
-		request.ModelTemperature = &temp
-	}
 	llmTracker.Temperature = *request.ModelTemperature
-
-	if request.MaxOutputTokens == nil {
-		maxTokens := int32(MaxTokens)
-		request.MaxOutputTokens = &maxTokens
-	}
 
 	switch request.Model {
 	case
@@ -84,7 +163,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askAnthropic(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.trackError(ctx, llmTracker, err.Error())
+			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
 
@@ -92,7 +171,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askDeepseek(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.trackError(ctx, llmTracker, err.Error())
+			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
 
@@ -107,7 +186,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askGroq(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.trackError(ctx, llmTracker, err.Error())
+			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
 
@@ -117,20 +196,18 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 		result, err = s.askGemini(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.trackError(ctx, llmTracker, err.Error())
+			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
 
 	default:
-		err := errors.New("Unsupported model")
-		s.trackError(ctx, llmTracker, err.Error())
+		err := s.NewErrorNoRetry("Unsupported model", nil)
 		return nil, err
 	}
 
-	span.LogKV("result", utils.IfNotNilString(result))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.trackError(ctx, llmTracker, err.Error())
+		s.trackError(ctx, llmTracker, err)
 		return nil, err
 	}
 
@@ -145,7 +222,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 	return result, nil
 }
 
-func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservability, errorMessage string) {
+func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservability, aiError error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackError")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -174,7 +251,7 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	}
 
 	llmTracker.Success = false
-	llmTracker.ErrorMessage = errorMessage
+	llmTracker.ErrorMessage = aiError.Error()
 	err = s.opensearchService.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -261,14 +338,14 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.geminiConfig.ApiKey == "" {
-		err := errors.New("Gemini API key not set")
+		err := s.NewErrorNoRetry("Gemini API key not set", nil)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return nil, err
 	}
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(s.geminiConfig.ApiKey))
 	if err != nil {
+		err := s.NewErrorNoRetry("cannot initiate Gemini client", err)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -293,7 +370,8 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 	case enum.AIOutputJson:
 		model.ResponseMIMEType = "application/json"
 	default:
-		return nil, errors.New("unsupported output type")
+		err := s.NewErrorNoRetry("Unsupported model output type", nil)
+		return nil, err
 	}
 
 	if request.SystemPrompt != nil {
@@ -307,6 +385,7 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 
 	resp, err := session.SendMessage(ctx, genai.Text(*request.Prompt))
 	if err != nil {
+		err = s.NewRetryableError("Could not ask Gemini", err)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -321,6 +400,11 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 	}
 
 	respStr := responseBuilder.String()
+	if respStr == "" {
+		err := s.NewRetryableError("Answer from Gemini was empty", nil)
+		return nil, err
+	}
+
 	return &respStr, nil
 }
 
@@ -331,14 +415,14 @@ func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIReq
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.deepseekConfig.ApiKey == "" {
-		err := errors.New("Deepseek API key not set")
+		err := s.NewErrorNoRetry("Deepseek API key not set", nil)
 		tracing.TraceErr(span, err)
 		s.log.Error(err)
 		return nil, err
 	}
 
 	if s.deepseekConfig.Url == "" {
-		err := errors.New("Deepseek Url not set")
+		err := s.NewErrorNoRetry("Deepseek URL not set", nil)
 		tracing.TraceErr(span, err)
 		s.log.Error(err)
 		return nil, err
@@ -347,7 +431,13 @@ func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIReq
 	client := NewDeepseekClient(s.deepseekConfig)
 	response, err := client.AskDeepseek(ctx, request)
 	if err != nil {
+		err = s.NewErrorNoRetry("Unable to initiate Deepseek client", err)
 		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if response == nil {
+		err = s.NewRetryableError("Empty response from Deepseek", nil)
 		return nil, err
 	}
 
@@ -361,9 +451,8 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.anthropicConfig.ApiKey == "" || s.anthropicConfig.ApiPath == "" {
-		err := errors.New("Anthropic API key or path not set")
+		err := s.NewErrorNoRetry("Anthropic API key or path not set", nil)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return nil, err
 	}
 
@@ -371,7 +460,13 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 	client := NewAnthropicClient(s.anthropicConfig)
 	response, err := client.Invoke(ctx, request)
 	if err != nil {
+		err = s.NewErrorNoRetry("Unable to initiate Anthropic client", err)
 		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if response == "" {
+		err = s.NewRetryableError("Empty response from Anthropic", nil)
 		return nil, err
 	}
 
@@ -385,9 +480,8 @@ func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if s.groqConfig.ApiKey == "" || s.groqConfig.Url == "" {
-		err := errors.New("Groq API key or URL not set")
+		err := s.NewErrorNoRetry("Groq API Key or URL not set", nil)
 		tracing.TraceErr(span, err)
-		s.log.Error(err)
 		return nil, err
 	}
 
@@ -395,7 +489,13 @@ func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest
 	client := NewGroqClient(s.groqConfig)
 	response, err := client.Invoke(ctx, request)
 	if err != nil {
+		err = s.NewErrorNoRetry("Unable to initiate Groq client", err)
 		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if response == "" {
+		err = s.NewRetryableError("Empty response from Anthropic", nil)
 		return nil, err
 	}
 

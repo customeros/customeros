@@ -15,7 +15,7 @@ type BackoffConfig struct {
 
 func DefaultBackoffConfig() BackoffConfig {
 	return BackoffConfig{
-		InitialDelay: 50 * time.Millisecond,
+		InitialDelay: 100 * time.Millisecond,
 		MaxDelay:     5 * time.Second,
 		Factor:       2.0,
 		Jitter:       0.1,

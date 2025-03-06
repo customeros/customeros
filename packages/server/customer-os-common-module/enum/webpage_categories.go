@@ -31,6 +31,7 @@ func GetWebpageCategory(s string) WebpageCategory {
 		WebpageLegal,
 		WebpagePartner,
 		WebpagePricing,
+		WebpageProduct,
 		WebpageResources,
 		WebpageSuccessStory,
 		WebpageOther:
