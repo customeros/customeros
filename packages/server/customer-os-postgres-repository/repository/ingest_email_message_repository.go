@@ -88,7 +88,7 @@ func (repo *ingestEmailMessageRepositoryImpl) GetDistinctUsersForPendingMessages
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
-	results := []postgres_entity.IngestEmailMessage{}
+	var results []postgres_entity.IngestEmailMessage
 
 	err := repo.gormDb.Select("DISTINCT tenant, username").Where("state = ?", postgres_entity.IngestEmailMessageStatePending).Find(&results).Error
 	if err != nil {

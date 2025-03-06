@@ -6,7 +6,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -80,15 +79,14 @@ func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
 }
 
 func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.handle")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.handleExecution")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	activeAgents := l.lookupActiveAgents(ctx)
 	if len(activeAgents) == 0 {
-		err := errors.New("No agent types configured for company stage lead listener")
-		tracing.TraceErr(span, err)
-		return err
+		span.LogKV("result", "No active agents found")
+		return nil
 	}
 
 	message := struct {

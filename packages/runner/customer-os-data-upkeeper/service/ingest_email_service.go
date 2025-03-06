@@ -141,7 +141,7 @@ func (s *ingestEmailService) SendIngestedEmailsToAgents() {
 	}
 
 	if len(distinctUsersForImport) == 0 {
-		span.LogKV("message", "no distinct users for import with pending messages")
+		span.LogKV("result", "no distinct users for import with pending messages")
 		return
 	}
 
@@ -151,6 +151,26 @@ func (s *ingestEmailService) SendIngestedEmailsToAgents() {
 	for _, dt := range distinctUsersForImport {
 		go func(distinctUser postgresEntity.IngestEmailMessage) {
 			defer wg.Done()
+			localCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant: distinctUser.Tenant,
+			})
+
+			// Check if agent is enabled to process message
+			agentListener, err := s.commonServices.AgentService.GetListener(dto.NewEmail{}.ListenerEvent())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			agentTypes := agentListener.ExecutingAgents()
+			agents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(localCtx, agentTypes)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			if len(agents) == 0 {
+				span.LogKV("message", "no active agents found for tenant: %s", distinctUser.Tenant)
+				return
+			}
 
 			ingestEmailMessages, err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.GetEmailsForUserForSync(ctx, distinctUser.Tenant, distinctUser.Username)
 			if err != nil {
@@ -159,10 +179,6 @@ func (s *ingestEmailService) SendIngestedEmailsToAgents() {
 			}
 
 			for _, ingestEmailMessage := range ingestEmailMessages {
-				localCtx := common.WithCustomContext(ctx, &common.CustomContext{
-					Tenant: distinctUser.Tenant,
-				})
-
 				err = s.commonServices.Events.Publisher.PublishFanoutEvent(localCtx, ingestEmailMessage.Id, model.INGEST_EMAIL_MESSAGE, dto.NewEmail{})
 				if err != nil {
 					tracing.TraceErr(span, err)

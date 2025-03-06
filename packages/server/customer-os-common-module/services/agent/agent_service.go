@@ -559,3 +559,7 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 
 	return createdRecord.ID, nil
 }
+
+func (a *agentService) GetListener(listenerEvent enum.AgentListenerEvent) (interfaces.AgentListenerUntyped, error) {
+	return a.agentListeners.GetListener(listenerEvent)
+}

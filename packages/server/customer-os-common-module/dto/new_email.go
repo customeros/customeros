@@ -6,6 +6,6 @@ import (
 
 type NewEmail struct{}
 
-func (e NewEmail) Name() enum.AgentListenerEvent {
+func (e NewEmail) ListenerEvent() enum.AgentListenerEvent {
 	return enum.EventNewEmail
 }
