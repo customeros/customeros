@@ -45,9 +45,7 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
     Decision Preparation - when buyers are preparing to make a purchase decision and are developing business cases and/or addressing implementation concerns.
     Onboarding - when they're looking at technical setup, user training, and getting started guides.
     Outcome Attainment - when customers are looking at best practices for maximizing early results and reading case studies showcasing similar wins.
-    Sustained Success - when they're looking at advanced guides, integrations with other systems, and other business transformation content.
-    Please only respond with the stage name, nothing else.  No commentary or preamble.  Ensure the stage you respond with is either Problem Recognition, Solution Evaluation, Decision Preparation, Onboarding, Outcome Attainment, or Sustained Success.
-    `
+    Sustained Success - when they're looking at advanced guides, integrations with other systems, and other business transformation content.`
 
 	globalOrg, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
@@ -66,7 +64,7 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 
 	temperature := float32(0.2)
 	maxOutputTokens := int32(25)
-	answer, err := s.aiService.AskAI(ctx, interfaces.AskAIRequest{
+	stage, err := s.aiService.AskAIForContentStage(ctx, interfaces.AskAIRequest{
 		Model:            enum.AIModelLlama8B,
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &promptStr,
@@ -78,17 +76,8 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-	if answer == nil {
+	if stage == "" {
 		return "", nil
-	}
-
-	stage, err := s.validateCustomerJourneyStage(ctx, *answer)
-	if err != nil {
-		stage, err = s.retryClassifyContentStage(ctx, answer)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return "", err
-		}
 	}
 
 	err = s.postgresRepositories.ScrapedWebpageRepository.SetContentStage(ctx, url, stage)
@@ -97,40 +86,4 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 	}
 
 	return stage, nil
-}
-
-func (s *webscraperService) retryClassifyContentStage(ctx context.Context, answer *string) (enum.CustomerJourneyStage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.retryClassifyContentStage")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	systemPrompt := `Lets try this again.  I'm going to give you an answer you gave me previously and your job is to clean it up so that you only respond with one of the following strings, nothing else:  Problem Recognition, Solution Evaluation, Decision Preparation, Onboarding, Outcome Attainment, or Sustained Success.`
-
-	temperature := float32(0.1)
-	maxOutputTokens := int32(25)
-	answer, err := s.aiService.AskAI(ctx, interfaces.AskAIRequest{
-		Model:            enum.AIModelLlama8B,
-		SystemPrompt:     &systemPrompt,
-		Prompt:           answer,
-		ModelTemperature: &temperature,
-		MaxOutputTokens:  &maxOutputTokens,
-		OutputFormat:     enum.AIOutputText,
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if answer == nil {
-		return "", nil
-	}
-
-	return s.validateCustomerJourneyStage(ctx, *answer)
-}
-
-func (s *webscraperService) validateCustomerJourneyStage(ctx context.Context, answer string) (enum.CustomerJourneyStage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.validateCustomerJourneyStage")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	return enum.GetCustomerJourneyStage(answer)
 }

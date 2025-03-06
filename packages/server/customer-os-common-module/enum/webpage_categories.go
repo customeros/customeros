@@ -1,5 +1,10 @@
 package enum
 
+import (
+	"fmt"
+	"strings"
+)
+
 type WebpageCategory string
 
 const (
@@ -39,4 +44,61 @@ func GetWebpageCategory(s string) WebpageCategory {
 	default:
 		return WebpageUnknown
 	}
+}
+
+// WebpageCategoryValidator implements the EnumValidator interface for WebpageCategory
+type WebpageCategoryValidator struct{}
+
+func GetWebpageCategoryValidator() *WebpageCategoryValidator {
+	return &WebpageCategoryValidator{}
+}
+
+func (v *WebpageCategoryValidator) IsValid(value string) bool {
+	cleanValue := strings.TrimSpace(strings.ToLower(value))
+
+	switch WebpageCategory(cleanValue) {
+	case
+		WebpageAbout,
+		WebpageAccount,
+		WebpageContact,
+		WebpageHelp,
+		WebpageLegal,
+		WebpagePartner,
+		WebpagePricing,
+		WebpageProduct,
+		WebpageResources,
+		WebpageSuccessStory,
+		WebpageOther:
+
+		return true
+	default:
+		return false
+	}
+}
+
+func (v *WebpageCategoryValidator) ValidValues() []string {
+	return []string{
+		string(WebpageAbout),
+		string(WebpageAccount),
+		string(WebpageContact),
+		string(WebpageHelp),
+		string(WebpageLegal),
+		string(WebpagePartner),
+		string(WebpagePricing),
+		string(WebpageProduct),
+		string(WebpageResources),
+		string(WebpageSuccessStory),
+		string(WebpageOther),
+	}
+}
+
+func (v *WebpageCategoryValidator) ParseCategory(value string) (WebpageCategory, error) {
+	cleanValue := strings.TrimSpace(strings.ToLower(value))
+	category := WebpageCategory(cleanValue)
+
+	if !v.IsValid(cleanValue) {
+		return WebpageUnknown, fmt.Errorf("invalid webpage category: %s", value)
+	}
+
+	return category, nil
 }
