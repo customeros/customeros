@@ -67,6 +67,7 @@ var jobLocks = struct {
 		GroupOrganization:                      {},
 		GroupGlobalOrg:                         {},
 		GroupContact:                           {},
+		GroupGlobalContact:                     {},
 		GroupContactBetter:                     {},
 		GroupLinkedInAsk:                       {},
 		GroupLinkedInProcess:                   {},
@@ -159,7 +160,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
 
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalContacts, GroupGlobalContact, syncDataToGlobalContacts, "syncDataToGlobalContacts")
-
+	addJob(cont.Cfg.App.Cron.CronScheduleDownloadContactProfilePhoto, GroupGlobalContact, downloadContactProfilePhoto, "downloadContactProfilePhoto")
 	// Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
@@ -392,6 +393,10 @@ func scrapeGlobalOrganizations(cont *container.Container) {
 
 func downloadGlobalOrganizationLogo(cont *container.Container) {
 	service.NewMediaService(cont.Log, cont.CommonServices).FetchAndStoreCompanyLogos()
+}
+
+func downloadContactProfilePhoto(cont *container.Container) {
+	service.NewMediaService(cont.Log, cont.CommonServices).FetchAndStoreContactProfilePhotos()
 }
 
 func checkTenantOnboarding(cont *container.Container) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -20,6 +21,9 @@ type GlobalContactRepository interface {
 	GetByWorkEmailAndDomain(ctx context.Context, workEmail string, primaryDomain string) (*postgres_entity.GlobalContact, error)
 	GetByPersonalEmail(ctx context.Context, personalEmail string) (*postgres_entity.GlobalContact, error)
 	GetByPersonalEmailAndDomain(ctx context.Context, personalEmail string, primaryDomain string) (*postgres_entity.GlobalContact, error)
+	GetContactsToFetchPhoto(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error)
+	SetProfilePhoto(ctx context.Context, id uint64, photoPath string) error
+	SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error
 }
 
 type globalContactRepository struct {
@@ -204,4 +208,73 @@ func (r *globalContactRepository) GetByPersonalEmailAndDomain(ctx context.Contex
 	}
 
 	return &contact, nil
+}
+
+func (r *globalContactRepository) GetContactsToFetchPhoto(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetContactsToFetchPhoto")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	contacts := make([]*postgres_entity.GlobalContact, 0)
+	result := r.db.WithContext(ctx).
+		Where("download_status = ? OR download_status IS NULL", enum.DownloadNotStarted.String()).
+		Where("profile_photo_external_url IS NOT NULL AND profile_photo_external_url != ''").
+		Where("((linkedin_url IS NOT NULL AND linkedin_url != '') OR (work_email IS NOT NULL AND work_email != '') OR (personal_email IS NOT NULL AND personal_email != ''))").
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&contacts)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(contacts)))
+	return contacts, nil
+}
+
+func (r *globalContactRepository) SetProfilePhoto(ctx context.Context, id uint64, photoPath string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.SetProfilePhoto")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"profile_photo_path": photoPath,
+		})
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := errors.New("no contact found with provided ID")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *globalContactRepository) SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.SetDownloadStatus")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("status", status.String()))
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
+		Where("id = ?", id).
+		UpdateColumn("download_status", status.String())
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := errors.New("no contact found with provided ID")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
