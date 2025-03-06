@@ -9,7 +9,7 @@ type AIError struct {
 }
 
 func (e *AIError) Error() string {
-	if e.Error != nil {
+	if e.Cause != nil {
 		return fmt.Sprintf("%s: %v", e.Message, e.Cause, e.Retry)
 	}
 	return fmt.Sprintf("%s", e.Message)
