@@ -2,7 +2,6 @@ package repository
 
 import (
 	"github.com/google/uuid"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -16,7 +15,6 @@ type RawEmailRepository interface {
 	GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
 	GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error)
-	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -81,20 +79,4 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(tenant, usernameS
 	}
 
 	return &result, nil
-}
-
-func (repo *rawEmailRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState postgresentity.RawState, reason, error *string) error {
-	tx := repo.gormDb.Model(&entity.RawEmail{}).Where("id = ?", id)
-
-	tx.Update("status", sentToEventStoreState)
-	tx.Update("reason", reason)
-	tx.Update("error", error)
-
-	err := tx.Error
-	if err != nil {
-		logrus.Errorf("Failed marking email as sent to event store: %v", id)
-		return err
-	}
-
-	return nil
 }

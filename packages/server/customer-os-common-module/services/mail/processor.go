@@ -33,7 +33,7 @@ func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant,
 	defer span.Finish()
 	span.LogKV("userEmailAddress", userEmailAddress)
 
-	rawEmailsIdsForProcess, err := s.postgres.RawEmailRepository.GetEmailsIdsForUserForSync(tenant, userEmailAddress)
+	rawEmailsIdsForProcess, err := s.postgres.RawEmailRepository.GetEmailsIdsForUserForSync(ctx, tenant, userEmailAddress)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get emails for sync"))
 		return
@@ -74,7 +74,7 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 	defer span.Finish()
 	span.LogFields(log.String("rawEmailId", rawEmailId.String()))
 
-	rawEmail, err := s.postgres.RawEmailRepository.GetEmailForProcess(rawEmailId)
+	rawEmail, err := s.postgres.RawEmailRepository.GetEmailForProcess(ctx, rawEmailId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get email for process"))
 		db.EmailProcessingStatus = postgresentity.ERROR
@@ -173,7 +173,7 @@ func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usern
 		log.String("userSource", usernameSource),
 		log.String("messageId", messageId))
 
-	rawEmail, err := s.postgres.RawEmailRepository.GetEmailForSyncByMessageId(tenant, usernameSource, messageId)
+	rawEmail, err := s.postgres.RawEmailRepository.GetEmailForSyncByMessageId(ctx, tenant, usernameSource, messageId)
 	if err != nil {
 		err = fmt.Errorf("failed to get emails for sync: %v", err)
 		tracing.TraceErr(span, err)
@@ -199,7 +199,7 @@ func (s *mailService) processRawEmails(ctx context.Context, tenant string, rawEm
 	for _, rawEmail := range rawEmails {
 		dbUpdateRecord := s.ProcessEmail(ctx, tenant, rawEmail.ID)
 
-		err := s.postgres.RawEmailRepository.UpdateRawEmailTable(rawEmail.ID, dbUpdateRecord)
+		err := s.postgres.RawEmailRepository.UpdateRawEmailTable(ctx, rawEmail.ID, dbUpdateRecord)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to mark raw email as processed in postgres"))
 		}

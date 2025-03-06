@@ -5,7 +5,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -31,7 +30,7 @@ func (repo *tenantSettingsEmailExclusionRepositoryImpl) GetExclusionList(ctx con
 	err := repo.gormDb.Find(&result).Limit(5000).Error
 
 	if err != nil {
-		logrus.Errorf("error while getting personal email provider list: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
