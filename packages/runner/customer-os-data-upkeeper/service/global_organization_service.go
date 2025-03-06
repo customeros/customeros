@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"net/http"
 	"strings"
 	"sync"
@@ -893,23 +894,23 @@ func (s *globalOrganizationService) enrichName() {
 		systemPrompt := `
 You are a world-class naming assistant. The user will provide:
 	•	A current/partial company name
-	•	The company’s primary domain
-	•	The company’s website
+	•	The company's primary domain
+	•	The company's website
 
 Your task:
 	1.	Identify the standard recognized company name.
-	2.	If the business is more commonly recognized by a brand name (e.g., “Apple” instead of “Apple Inc.”), return that simpler, branded name.
-	3.	If you find a longer official name that’s different from the brand, remove suffixes like “Inc,” “Ltd,” “LLC,” “Corp,” etc., but keep the rest of the formal name.
-    4. 	If you cannot identify a single valid name, return "N/A"
+	2.	If the business is more commonly recognized by a brand name (e.g., "Apple" instead of "Apple Inc."), return that simpler, branded name.
+	3.	If you find a longer official name that's different from the brand, remove suffixes like "Inc,", "Ltd,", "LLC,", "Corp,", etc., but keep the rest of the formal name.
+    4.	If you cannot identify a single valid name, return "N/A"
 	5.	Only output the name itself or "N/A" with no explanations, disclaimers, or additional text.
 	6.  Output in english.
 	7.  If the recognized or brand name is spelled in uppercase (e.g., "SBCHC"), keep it in uppercase. Do not convert it to title case or alter its original casing.
 
 Important Samples:
-	•	If input suggests “Verizon Communications Inc.,” return “Verizon”
-	•	If input suggests “Apple Inc,” return “Apple”
-	•	If brand differs from legal name (e.g., “Nestlé S.A.” vs. “Nescafé”), return the official company name “Nestle”
-	•	If unsure, return “N/A”
+	•	If input suggests "Verizon Communications Inc.,", return "Verizon"
+	•	If input suggests "Apple Inc,", return "Apple"
+	•	If brand differs from legal name (e.g., "Nestlé S.A." vs. "Nescafé"), return the official company name "Nestle"
+	•	If unsure, return "N/A"
 
 Provide the final name or N/A as your entire response.
 `
@@ -980,14 +981,14 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 
 	// process records
 	for _, record := range records {
-		func(record *postgresentity.GlobalOrganization) {
+		func(globalOrganization *postgresentity.GlobalOrganization) {
 			recordSpan, recordCtx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
 			defer recordSpan.Finish()
-			recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
-			tracing.TagEntity(recordSpan, record.PrimaryDomain)
+			recordSpan.LogFields(log.Uint64("record.id", globalOrganization.ID), log.String("record.primaryDomain", globalOrganization.PrimaryDomain))
+			tracing.TagEntity(recordSpan, globalOrganization.PrimaryDomain)
 
 			// mark record as processed initially to not process same record again, even if error occurs
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, globalOrganization.ID)
 			if err != nil {
 				tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
 				s.log.Errorf("Error marking record as processed: %s", err.Error())
@@ -995,7 +996,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 			}
 
 			// Find organizations by domain across all tenants
-			tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, record.PrimaryDomain)
+			tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, globalOrganization.PrimaryDomain)
 			if err != nil {
 				tracing.TraceErr(recordSpan, errors.Wrap(err, "error getting organizations by domain"))
 				s.log.Errorf("Error getting organizations by domain: %s", err.Error())
@@ -1010,31 +1011,41 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 					})
 					innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
 					defer innerSpan.Finish()
-					innerSpan.LogKV("industryNaicsCode", record.IndustryNaicsCode, "description", record.Description, "name", record.Name)
+					tracing.TagTenant(innerSpan, tenantOrg.Tenant)
+					tracing.TagEntity(innerSpan, tenantOrg.OrganizationId)
+					innerSpan.LogKV("industryNaicsCode", globalOrganization.IndustryNaicsCode, "description", globalOrganization.Description, "name", globalOrganization.Name)
 
-					if record.IndustryNaicsCode == "" && record.Description == "" {
+					if globalOrganization.IndustryNaicsCode == "" && globalOrganization.Description == "" {
 						innerSpan.LogFields(log.String("message", "skipping record as industry and description are empty"))
-						innerSpan.Finish()
 						return
 					}
 
 					// sync organization
 					dataFields := data_fields.OrganizationFields{}
-					if record.IndustryNaicsCode != "" {
-						dataFields.IndustryCode = utils.StringPtr(record.IndustryNaicsCode)
+					if globalOrganization.IndustryNaicsCode != "" {
+						dataFields.IndustryCode = utils.StringPtr(globalOrganization.IndustryNaicsCode)
 					}
-					if record.Description != "" {
-						dataFields.Description = utils.StringPtr(record.Description)
+					if globalOrganization.Description != "" {
+						dataFields.Description = utils.StringPtr(globalOrganization.Description)
 					}
-					if record.Name != "" {
-						dataFields.Name = utils.StringPtr(record.Name)
+					if globalOrganization.Name != "" {
+						dataFields.Name = utils.StringPtr(globalOrganization.Name)
+					}
+					if globalOrganization.LogoPath != "" {
+						dataFields.LogoUrl = utils.StringPtr(commonconstants.S3ImagesCDN + globalOrganization.LogoPath)
+					} else if globalOrganization.LogoUrl != "" {
+						dataFields.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
+					}
+					if globalOrganization.IconPath != "" {
+						dataFields.IconUrl = utils.StringPtr(commonconstants.S3ImagesCDN + globalOrganization.IconPath)
+					} else if globalOrganization.IconUrl != "" {
+						dataFields.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
 					}
 					_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrg.OrganizationId), dataFields)
 					if err != nil {
 						tracing.TraceErr(innerSpan, errors.Wrap(err, "error syncing organization"))
 						s.log.Errorf("Error syncing organization: %s", err.Error())
 					}
-					return
 				}(tenantOrg)
 			}
 		}(record)
