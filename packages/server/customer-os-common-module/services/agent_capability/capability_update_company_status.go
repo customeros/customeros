@@ -161,7 +161,7 @@ func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organ
 }
 
 func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, organizationID string, reasons []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.processICPFit")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.processICPNotAFit")
 	defer span.Finish()
 	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	tracing.TagEntity(span, organizationID)

@@ -259,7 +259,7 @@ func TagComponentNeo4jRepository(span opentracing.Span) {
 }
 
 func TagComponentAgentCapability(span opentracing.Span) {
-	span.SetTag(SpanTagComponent, SpanTagComponentNeo4jRepository)
+	span.SetTag(SpanTagComponent, SpanTagComponentAgentCapability)
 }
 
 func TagTenant(span opentracing.Span, tenant string) {
