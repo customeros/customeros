@@ -84,14 +84,12 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 	defer span.Finish()
 
 	asyncTablesWithTenantNameColumn := []string{
-		postgres_entity.GoogleServiceAccountKey{}.TableName(),
 		postgres_entity.OAuthTokenEntity{}.TableName(),
 	}
 
 	asyncTablesWithTenantColumn := []string{
-		postgres_entity.RawEmail{}.TableName(),
-		postgres_entity.UserEmailImportState{}.TableName(),
-		postgres_entity.UserEmailImportStateHistory{}.TableName(),
+		postgres_entity.IngestEmailMessage{}.TableName(),
+		postgres_entity.IngestEmailImportState{}.TableName(),
 	}
 
 	tableNamesWithTenantNameColumn := []string{

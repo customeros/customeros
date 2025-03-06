@@ -2,9 +2,9 @@ package neo4j_repository
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -38,7 +38,7 @@ func (r *stateReadRepository) GetStatesByCountryId(ctx context.Context, countryI
 			"countryId": countryId,
 		}
 
-		queryResult, err := tx.Run(ctx, "MATCH (s:State)-[:BELONGS_TO_COUNTRY]->(c:Country { id: $countryId }) RETURN s", params)
+		queryResult, err := tx.Run(ctx, "MATCH (s:Period)-[:BELONGS_TO_COUNTRY]->(c:Country { id: $countryId }) RETURN s", params)
 		if err != nil {
 			return nil, err
 		}

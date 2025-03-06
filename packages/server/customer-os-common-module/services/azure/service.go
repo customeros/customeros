@@ -60,7 +60,7 @@ func NewAzureService(cfg *config.AzureOAuthConfig, postgres *postgres_repository
 	}
 }
 
-func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgres_entity.UserEmailImportState) ([]*postgres_entity.EmailRawData, string, error) {
+func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgres_entity.IngestEmailImportState) ([]*postgres_entity.EmailRawData, string, error) {
 	span, ctx := s.initializeTracing(ctx, "AzureService.ReadEmailsFromAzureAd")
 	defer span.Finish()
 
@@ -261,7 +261,7 @@ func (s *azureService) sendDraft(ctx context.Context, span opentracing.Span, dra
 }
 
 func (s *azureService) getValidToken(ctx context.Context, span opentracing.Span, tenant, email string) (string, error) {
-	token, err := s.postgres.OAuthTokenRepository.GetByEmail(ctx, tenant, enum.WorkspaceProviderAzure.String(), email)
+	token, err := s.postgres.OAuthTokenRepository.GetByEmail(ctx, tenant, enum.SourceOutlook.String(), email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting oauth token"))
 		return "", fmt.Errorf("get token error: %w", err)

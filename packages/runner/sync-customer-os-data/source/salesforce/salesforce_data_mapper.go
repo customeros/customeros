@@ -377,7 +377,7 @@ func mapContactFromLead(inputJson string) (string, error) {
 		City        string `json:"City,omitempty"`
 		Country     string `json:"Country,omitempty"`
 		Street      string `json:"Street,omitempty"`
-		State       string `json:"State,omitempty"`
+		State       string `json:"Period,omitempty"`
 		PostalCode  string `json:"PostalCode,omitempty"`
 	}
 

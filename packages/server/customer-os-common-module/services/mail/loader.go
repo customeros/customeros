@@ -3,7 +3,6 @@ package mail
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"slices"
 	"sort"
@@ -12,54 +11,11 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/emersion/go-message/mail"
-	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
-
-// deprecated
-func (l *mailService) LoadEmail(ctx context.Context, rawEmail *postgres_entity.RawEmail) (interfaces.EmailMessageData, error) {
-	span, ctx := l.initializeTracing(ctx, "MailService.LoadEmail")
-	defer span.Finish()
-	span.LogFields(tracingLog.Object("rawEmail", rawEmail))
-
-	email := interfaces.EmailMessageData{}
-
-	emailData, err := l.getRawEmailData(rawEmail, span)
-	if err != nil {
-		err = fmt.Errorf("failed to get raw email data: %v", err)
-		tracing.TraceErr(span, err)
-		return email, err
-	}
-
-	email.Headers = l.parseHeaders(emailData.Headers)
-
-	email.Identifiers.ProviderMessageId = emailData.ProviderMessageId
-	email.Identifiers.EmailThreadId = emailData.ThreadId
-	email.Identifiers.References = extractLines(emailData.Reference)
-	email.Identifiers.ExternalSystem = rawEmail.ExternalSystem
-
-	email.Content.SentDate = emailData.Sent
-	email.Content.Subject = emailData.Subject
-	email.Content.Html = emailData.Html
-	email.Content.Text = emailData.Text
-
-	email.Participants.From = l.parseEmailAndName(emailData.From)
-	email.Participants.To = l.parseParticipants(emailData.To)
-	email.Participants.Cc = l.parseParticipants(emailData.Cc)
-	email.Participants.Bcc = l.parseParticipants(emailData.Bcc)
-	email.Participants.ReplyTo = []interfaces.EmailParticipant{l.parseEmailAndName(email.Headers.ReplyTo)}
-	l.getAllEmails(&email.Participants)
-
-	span.LogKV("result.From", email.Participants.From)
-	span.LogKV("result.To", email.Participants.To)
-	span.LogKV("result.Cc", email.Participants.Cc)
-	span.LogKV("result.Bcc", email.Participants.Bcc)
-
-	return email, nil
-}
 
 func (l *mailService) LoadIngestEmailMessage(ctx context.Context, ingestEmailMessage *postgres_entity.IngestEmailMessage) (interfaces.EmailMessageData, error) {
 	span, ctx := l.initializeTracing(ctx, "MailService.LoadIngestEmailMessage")
@@ -100,18 +56,6 @@ func (l *mailService) LoadIngestEmailMessage(ctx context.Context, ingestEmailMes
 	span.LogKV("result.Bcc", email.Participants.Bcc)
 
 	return email, nil
-}
-
-func (l *mailService) getRawEmailData(rawEmail *postgres_entity.RawEmail, span opentracing.Span) (interfaces.EmailRawData, error) {
-	rawEmailData := interfaces.EmailRawData{}
-	err := json.Unmarshal([]byte(rawEmail.Data), &rawEmailData)
-	if err != nil {
-		err = fmt.Errorf("Unmarshal Raw Email Data Failed: %v", err)
-		tracing.TraceErr(span, err)
-		return rawEmailData, err
-	}
-
-	return rawEmailData, nil
 }
 
 func (l *mailService) getAllEmails(contacts *interfaces.EmailParticipants) {

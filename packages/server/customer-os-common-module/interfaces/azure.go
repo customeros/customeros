@@ -7,6 +7,6 @@ import (
 )
 
 type AzureService interface {
-	ReadEmailsFromAzureAd(ctx context.Context, importState *postgres_entity.UserEmailImportState) ([]*postgres_entity.EmailRawData, string, error)
+	ReadEmailsFromAzureAd(ctx context.Context, importState *postgres_entity.IngestEmailImportState) ([]*postgres_entity.EmailRawData, string, error)
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
 }

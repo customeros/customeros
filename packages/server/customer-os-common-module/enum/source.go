@@ -17,7 +17,6 @@ const (
 	SourceClose          Source = "close"
 	SourceCustomerOS     Source = "customer-os"
 	SourceFathom         Source = "fathom"
-	SourceGCal           Source = "gcal"
 	SourceGmail          Source = "gmail"
 	SourceGrain          Source = "grain"
 	SourceHubspot        Source = "hubspot"
@@ -47,7 +46,6 @@ var AllSources = []Source{
 	SourceClose,
 	SourceCustomerOS,
 	SourceFathom,
-	SourceGCal,
 	SourceGmail,
 	SourceGrain,
 	SourceHubspot,

@@ -145,12 +145,6 @@ func (s *tenantService) Merge(ctx context.Context, tx neo4j.ManagedTransaction, 
 		return nil, err
 	}
 
-	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceGCal.String(), enum.SourceGCal.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
 	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, &tx, tenantEntity.Name, enum.SourceGrain.String(), enum.SourceGrain.String())
 	if err != nil {
 		tracing.TraceErr(span, err)

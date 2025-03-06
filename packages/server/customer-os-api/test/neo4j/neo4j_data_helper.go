@@ -22,7 +22,7 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_location_terms IF EXISTS")
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_location_terms IF NOT EXISTS FOR (n:State) ON EACH [n.name, n.code] " +
+	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_location_terms IF NOT EXISTS FOR (n:Period) ON EACH [n.name, n.code] " +
 		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }")
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
@@ -821,7 +821,7 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 
 // Deprecated
 func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name, code string) {
-	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:State { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
+	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:Period { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"countryCodeA3": countryCodeA3,
 		"name":          name,
