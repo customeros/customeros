@@ -45,14 +45,6 @@ type ScrapInResponseBody struct {
 	Company       *ScrapinCompanyDetails `json:"company,omitempty"`
 }
 
-type ScrapinPositionHistory struct {
-	Title       string     `json:"title"`
-	StartedOn   *time.Time `json:"startedOn"`
-	EndedOn     *time.Time `json:"endedOn"`
-	LinkedInUrl string     `json:"linkedInUrl"`
-	LinkedInId  string     `json:"linkedInId"`
-}
-
 type ScrapinPersonDetails struct {
 	PublicIdentifier   string `json:"publicIdentifier"`
 	LinkedInIdentifier string `json:"linkedInIdentifier"`
@@ -67,9 +59,8 @@ type ScrapinPersonDetails struct {
 		Month int `json:"month"`
 		Year  int `json:"year"`
 	} `json:"creationDate"`
-	FollowerCount   int                      `json:"followerCount"`
-	PositionHistory []ScrapinPositionHistory `json:"positionHistory"`
-	Positions       struct {
+	FollowerCount int `json:"followerCount"`
+	Positions     struct {
 		PositionsCount  int `json:"positionsCount"`
 		PositionHistory []struct {
 			Title        string `json:"title"`

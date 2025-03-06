@@ -21,18 +21,16 @@ type GlobalContactService interface {
 }
 
 type globalContactService struct {
-	cfg             *config.Config
-	log             logger.Logger
-	commonServices  *commonService.CommonServices
-	scrapinDataChan chan *postgresentity.ScrapInResponseBody
+	cfg            *config.Config
+	log            logger.Logger
+	commonServices *commonService.CommonServices
 }
 
 func NewGlobalContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) GlobalContactService {
 	return &globalContactService{
-		cfg:             cfg,
-		log:             log,
-		commonServices:  commonServices,
-		scrapinDataChan: make(chan *postgresentity.ScrapInResponseBody, 100), // Buffer size of 100
+		cfg:            cfg,
+		log:            log,
+		commonServices: commonServices,
 	}
 }
 
