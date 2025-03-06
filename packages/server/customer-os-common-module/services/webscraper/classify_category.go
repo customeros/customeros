@@ -95,6 +95,7 @@ Please only respond with exactly one of the categories above.  No comments or pr
 			tracing.TraceErr(span, err)
 			return "", nil
 		}
+		span.LogKV("category", category)
 	}
 
 	err = s.postgresRepositories.ScrapedWebpageRepository.SetWebpageCategory(ctx, url, category)

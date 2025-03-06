@@ -17,4 +17,5 @@ type AskAIRequest struct {
 	ModelTemperature *float32
 	MaxOutputTokens  *int32
 	OutputFormat     enum.AIOutputFormat
+	Retries          *int
 }
