@@ -24,7 +24,7 @@ type AgentExecutionRepository interface {
 	Pending(ctx context.Context, executionID string) error
 	Finish(ctx context.Context, executionID string) error
 	Completed(ctx context.Context, executionID string, goalAchieved *bool) (*postgres_entity.AgentExecution, error)
-	ScheduleRetry(ctx context.Context, executionID string, err error, stateData map[string]any) error
+	ScheduleRetry(ctx context.Context, executionID string, err error, stateData map[string]any) (*time.Time, error)
 	SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error
 	CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error
 	GoalAchieved(ctx context.Context, executionID string, goalAchieved bool, impactedId *string) error
@@ -226,7 +226,7 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 	return &agentExecution, nil
 }
 
-func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error, stateData map[string]any) error {
+func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error, stateData map[string]any) (*time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.ScheduleRetry")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -242,7 +242,7 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 	execution := &postgres_entity.AgentExecution{}
 	result := f.gormDb.First(execution, "id = ?", executionID)
 	if result.Error != nil {
-		return result.Error
+		return nil, result.Error
 	}
 
 	// Increment retry count and set next retry time if it's not the first scheduling
@@ -271,7 +271,8 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		execution.Status = enum.AgentExecutionRetrying
 	}
 
-	return f.gormDb.Save(execution).Error
+	err := f.gormDb.Save(execution).Error
+	return execution.NextRetryAt, err
 }
 
 func (f *agentExecutionRepository) SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error {

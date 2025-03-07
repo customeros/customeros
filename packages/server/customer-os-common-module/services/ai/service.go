@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
 	"google.golang.org/api/option"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -303,22 +302,6 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 }
 
 func (s *aiService) newObservabilityContainer(ctx context.Context, span opentracing.Span, request interfaces.AskAIRequest) *dto.LLMObservability {
-	var traceID string
-
-	// For Jaeger specifically
-	if jaegerSpan, ok := span.(*jaeger.Span); ok {
-		spanContext := jaegerSpan.Context().(jaeger.SpanContext)
-		traceID = spanContext.TraceID().String()
-	} else {
-		// Fallback for other tracers - get carrier with all span context info
-		carrier := opentracing.TextMapCarrier{}
-		err := opentracing.GlobalTracer().Inject(span.Context(), opentracing.TextMap, carrier)
-		if err == nil {
-			// Many tracers use these standard field names
-			traceID = carrier["uber-trace-id"]
-		}
-	}
-
 	return &dto.LLMObservability{
 		RequestID:    utils.GenerateNanoIdWithPrefix("llm", 16),
 		RequestType:  request.RequestType.String(),
@@ -326,7 +309,7 @@ func (s *aiService) newObservabilityContainer(ctx context.Context, span opentrac
 		UserID:       common.GetUserIdFromContext(ctx),
 		Tenant:       common.GetTenantFromContext(ctx),
 		Model:        request.Model.String(),
-		TraceID:      traceID,
+		TraceID:      utils.GetTraceIDFromSpan(span),
 		SystemPrompt: utils.IfNotNilString(request.SystemPrompt),
 		Prompt:       utils.IfNotNilString(request.Prompt),
 	}

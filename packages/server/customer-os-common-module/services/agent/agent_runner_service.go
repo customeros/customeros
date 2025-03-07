@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
@@ -20,6 +21,7 @@ import (
 
 type agentRunnerService struct {
 	postgresRepositories       *postgres_repository.Repositories
+	opensearchService          interfaces.OpensearchService
 	agentCapabilitiesService   *agent_capability.AgentCapabilities
 	agentService               interfaces.AgentService
 	capabilityExecutionService interfaces.AgentCapabilityExecutionService
@@ -27,6 +29,7 @@ type agentRunnerService struct {
 
 func NewAgentRunnerService(
 	postgresRepositories *postgres_repository.Repositories,
+	opensearchService interfaces.OpensearchService,
 	agentCapabilities *agent_capability.AgentCapabilities,
 	agentService interfaces.AgentService,
 	capabilityExecution interfaces.AgentCapabilityExecutionService,
@@ -43,6 +46,7 @@ func NewAgentRunnerService(
 
 	return &agentRunnerService{
 		postgresRepositories:       postgresRepositories,
+		opensearchService:          opensearchService,
 		agentCapabilitiesService:   agentCapabilities,
 		agentService:               agentService,
 		capabilityExecutionService: capabilityExecution,
@@ -161,7 +165,12 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
 
 	for _, capabilityTypeStr := range *&play.Capabilities {
-		status, err := a.executeCapability(ctx, capabilityParams{
+
+		// build observability metrics
+		observability := a.newObservabilityContainer(ctx, params)
+		observability.Capability = capabilityTypeStr
+
+		status, err := a.executeCapability(ctx, observability, capabilityParams{
 			executionID:       params.executionID,
 			capabilityTypeStr: capabilityTypeStr,
 			agent:             params.agent,
@@ -172,6 +181,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 		if err != nil {
 			return err
 		}
+
 		if status == enum.CapabilityExecutionStop {
 			break
 		}
@@ -183,7 +193,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	return a.postgresRepositories.AgentExecutionRepository.Finish(ctx, params.executionID)
 }
 
-func (a *agentRunnerService) executeCapability(ctx context.Context, params capabilityParams) (enum.CapabilityExecutionStatus, error) {
+func (a *agentRunnerService) executeCapability(ctx context.Context, metrics *dto.AgentExecutionObservability, params capabilityParams) (enum.CapabilityExecutionStatus, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.executeCapability")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -191,6 +201,8 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, params capab
 	execution, err := a.getExecution(ctx, params.executionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		metrics.ErrorMessage = err.Error()
+		metrics.Success = false
 		return enum.CapabilityExecutionError, err
 	}
 
@@ -207,15 +219,21 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, params capab
 	capability, err := a.getCapability(ctx, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		metrics.ErrorMessage = err.Error()
+		metrics.Success = false
 		return enum.CapabilityExecutionError, err
 	}
 	if capability == nil {
 		err = errors.New("capability not found")
 		tracing.TraceErr(span, err)
+		metrics.ErrorMessage = err.Error()
+		metrics.Success = false
 		return enum.CapabilityExecutionError, err
 	}
 	if !capability.Active {
 		span.LogFields(log.String("result", "capability not active"))
+		metrics.ErrorMessage = "capability not active"
+		metrics.Success = false
 		return enum.CapabilityExecutionCompleted, nil
 	}
 
@@ -226,7 +244,8 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, params capab
 		UntypedExecutors: params.untypedExecutors,
 	}
 	status, output, execErr := a.capabilityExecutionService.Execute(ctx, executionContainer)
-	if err = a.handleExecutionResult(ctx, params, status, output, execErr); err != nil {
+	err = a.handleExecutionResult(ctx, metrics, params, status, output, execErr)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return status, err
 	}
@@ -282,7 +301,14 @@ func (a *agentRunnerService) getCapability(ctx context.Context, params capabilit
 	return capability, nil
 }
 
-func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params capabilityParams, status enum.CapabilityExecutionStatus, output map[string]any, execErr error) error {
+func (a *agentRunnerService) handleExecutionResult(
+	ctx context.Context,
+	metrics *dto.AgentExecutionObservability,
+	params capabilityParams,
+	status enum.CapabilityExecutionStatus,
+	output map[string]any,
+	execErr error,
+) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.handleExecutionResult")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -291,21 +317,28 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 	execErrStr := ""
 	if execErr != nil {
 		execErrStr = execErr.Error()
+		metrics.ErrorMessage = execErrStr
 	}
 
 	switch status {
 	case enum.CapabilityExecutionError:
+		metrics.Success = false
+		metrics.Retry = false
 		if err := a.postgresRepositories.AgentExecutionRepository.Fail(ctx, params.executionID, execErrStr); err != nil {
 			return errors.Wrap(err, "unable to update agent execution record")
 		}
 		return nil
 
 	case enum.CapabilityExecutionRetry:
+		metrics.Success = false
+		metrics.Retry = true
+
 		// Save state for retry
 		stateData := map[string]any{
 			"params": params.allParams,
 		}
-		retryErr := a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, params.executionID, execErr, stateData)
+		retryAt, retryErr := a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, params.executionID, execErr, stateData)
+		metrics.RetryAt = retryAt
 		if retryErr != nil {
 			tracing.TraceErr(span, retryErr)
 			// If retry scheduling fails, mark as failed
@@ -316,6 +349,9 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		return nil
 
 	case enum.CapabilityExecutionCompleted:
+		metrics.Success = true
+		metrics.CompletedAt = utils.Now()
+		metrics.OutputData = output
 		checkpointData := map[string]any{
 			"status":       status.String(),
 			"output":       output,
@@ -328,6 +364,9 @@ func (a *agentRunnerService) handleExecutionResult(ctx context.Context, params c
 		return nil
 
 	case enum.CapabilityExecutionStop:
+		metrics.Success = true
+		metrics.CompletedAt = utils.Now()
+		metrics.OutputData = output
 		checkpointData := map[string]any{
 			"status":     status.String(),
 			"output":     output,
@@ -411,7 +450,7 @@ func (a *agentRunnerService) ResumeExecution(ctx context.Context, executionID st
 		return nil
 	}
 	if !agent.IsActive {
-		err = a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, errors.New(utils.IfNotNilString(execution.ErrorMessage)), execution.StateData)
+		_, err = a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, errors.New(utils.IfNotNilString(execution.ErrorMessage)), execution.StateData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -483,7 +522,7 @@ func (a *agentRunnerService) RerunExecution(ctx context.Context, executionID str
 	}
 	// if agent is not active re-schedule retry
 	if !agent.IsActive {
-		err = a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, errors.New(utils.IfNotNilString(execution.ErrorMessage)), execution.StateData)
+		_, err = a.postgresRepositories.AgentExecutionRepository.ScheduleRetry(ctx, executionID, errors.New(utils.IfNotNilString(execution.ErrorMessage)), execution.StateData)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to schedule retry"))
 			return err
@@ -530,4 +569,39 @@ func (a *agentRunnerService) GetExecutionStatus(ctx context.Context, executionID
 	}
 
 	return execution, nil
+}
+
+func (a *agentRunnerService) newObservabilityContainer(ctx context.Context, executionParams executionParams) *dto.AgentExecutionObservability {
+	return &dto.AgentExecutionObservability{
+		CapabilityExecutionID: utils.GenerateNanoIdWithPrefix("cap", 16),
+		ExecutionID:           executionParams.executionID,
+		AgentID:               executionParams.agent.ID,
+		AgentType:             executionParams.agent.Type.String(),
+		AgentScope:            executionParams.agent.Scope.String(),
+		Tenant:                executionParams.agent.Tenant,
+		UserID:                executionParams.agent.Owner,
+		TriggerEvent:          executionParams.triggerEvent.String(),
+		StartedAt:             utils.Now(),
+		InputData:             executionParams.initialParams,
+		TraceID:               utils.GetTraceIDFromSpan(executionParams.span),
+	}
+}
+
+func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metrics *dto.AgentExecutionObservability) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRunnerService.pushObservabilityMetrics")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	index := fmt.Sprintf("agent-%s", utils.CurrentMonth())
+	err := a.opensearchService.AgentExecutionObservabilityIndexCheck(ctx, index)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	err = a.opensearchService.UpsertDocument(ctx, index, &metrics.CapabilityExecutionID, metrics)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
 }
