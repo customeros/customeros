@@ -61,6 +61,7 @@ const (
 	AIRequestGeneric         AIRequestType = "generic"
 	AIRequestCompanyName     AIRequestType = "company_name"
 	AIRequestContentStage    AIRequestType = "content_journey_stage"
+	AIRequestIndustryCode    AIRequestType = "industry_code"
 	AIRequestWebpageCategory AIRequestType = "webpage_category"
 	AIRequestWebpageTopics   AIRequestType = "webpage_topics"
 )

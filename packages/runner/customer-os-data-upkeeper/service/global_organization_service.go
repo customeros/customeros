@@ -680,62 +680,52 @@ func (s *globalOrganizationService) enrichIndustry() {
 			continue
 		}
 
-		// prepare Anthropic prompt
-		var descLines []string
-		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
-		for i, d := range descriptions {
-			if strings.TrimSpace(d) != "" {
-				descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
-			}
+		url := "https://" + record.PrimaryDomain
+		scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			continue
 		}
 
 		// Construct the prompt
-		systemPrompt := `
-        You are a NAICS industry classification expert. 
-        Return only the single most specific and appropriate NAICS code (digits only, e.g. "541511") for the company based on the provided domain, name, and description. 
-        No additional text or commentary.
+		systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from thier homepage (if available).
+        Your job is to classify the NAICS industry code the company belongs to based on the data provided.
+        Return only the single most specific and appropriate NAICS code (digits only, e.g. "541511") for the company. 
 
         Important details:
         - Use the latest NAICS codes available.
         - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
-        - Do not output any text besides the NAICS code itself.
         `
 
-		prompt := map[string]string{
-			"domain":      record.PrimaryDomain,
-			"name":        record.Name,
-			"description": strings.Join(descLines, "\n"),
+		var p strings.Builder
+		p.WriteString(fmt.Sprintf("Company name: %s", record.Name))
+		p.WriteString(fmt.Sprintf("Website: %s", url))
+		p.WriteString(fmt.Sprintf("Company description: %s", record.Description))
+		if scrapedPage != "" {
+			p.WriteString("---Homepage content---")
+			p.WriteString(scrapedPage)
 		}
-		// Convert the map to a JSON string
-		jsonBytes, err := json.Marshal(prompt)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marshalling prompt"))
-			continue
-		}
-		promptString := string(jsonBytes)
+		prompt := p.String()
 
 		temperature := float32(0.1)
 		// ask AI for NAICS code
-		aiOutput, err := s.commonServices.AIService.AskAI(ctx, interfaces.AskAIRequest{
+		aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
 			Model:            enum.AIModelAnthropicHaiku,
 			SystemPrompt:     &systemPrompt,
-			Prompt:           &promptString,
+			Prompt:           &prompt,
 			ModelTemperature: &temperature,
-			OutputFormat:     enum.AIOutputText,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
 			continue
 		}
-		code := utils.IfNotNilString(aiOutput)
-		span.LogFields(log.String("result.code", code))
 
-		if code == "" {
+		if aiOutput.Confidence < 0.5 {
 			continue
 		}
 
 		// get industry for organization
-		industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, code)
+		industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
 			s.log.Errorf("Error getting industry by code: %s", err.Error())
