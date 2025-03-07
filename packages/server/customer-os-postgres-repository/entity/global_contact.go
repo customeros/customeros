@@ -25,9 +25,10 @@ type GlobalContact struct {
 	PhoneNumber             string              `gorm:"column:phone_number;type:varchar(50)" json:"phone_number,omitempty"`
 
 	// Enrichment fields
-	BetterContactRequestedAt *time.Time `gorm:"column:bettercontact_requested_at;type:timestamp" json:"betterContactRequestedAt"`
-	BetterContactSetAt       *time.Time `gorm:"column:bettercontact_set_at;type:timestamp" json:"betterContactSetAt"`
-	BetterContactRequestId   string     `gorm:"column:bettercontact_request_id;type:varchar(100)" json:"betterContactRequestId,omitempty"`
+	BetterContactRequestedAt     *time.Time `gorm:"column:bettercontact_requested_at;type:timestamp" json:"betterContactRequestedAt"`
+	BetterContactSetAt           *time.Time `gorm:"column:bettercontact_set_at;type:timestamp" json:"betterContactSetAt"`
+	BetterContactRequestId       string     `gorm:"column:bettercontact_request_id;type:varchar(100)" json:"betterContactRequestId,omitempty"`
+	BetterContactCheckResponseAt *time.Time `gorm:"column:bettercontact_check_response_at;type:timestamp" json:"betterContactCheckResponseAt"`
 
 	// Location       string   `gorm:"type:varchar(255)" json:"location,omitempty"`
 	// Country        string   `gorm:"type:varchar(2)" json:"country,omitempty"`

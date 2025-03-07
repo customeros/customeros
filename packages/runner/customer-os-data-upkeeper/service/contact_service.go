@@ -51,7 +51,6 @@ type FindWorkEmailResponse struct {
 
 type ContactService interface {
 	UpkeepContacts()
-	AskForWorkEmailOnBetterContact()
 	EnrichWithWorkEmailFromBetterContact()
 	CheckBetterContactRequestsWithoutResponse()
 	EnrichContacts()
@@ -404,13 +403,6 @@ func (s *contactService) setPrimaryJobRole(ctx context.Context) {
 	}
 }
 
-func (s *contactService) AskForWorkEmailOnBetterContact() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	s.findEmailsWithBetterContact(ctx)
-}
-
 func (s *contactService) CheckBetterContactRequestsWithoutResponse() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
@@ -757,72 +749,6 @@ func (s *contactService) processLinkOrphanContactToOrganizationBasedOnLinkedin(c
 				tracing.TraceErr(span, err)
 			}
 		}
-	}
-}
-
-func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.findEmailsWithBetterContact")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	// TODO re-enable job based on additional settings if needed.
-	// add billable event for better contact response
-	return
-
-	// Better contact is limited to 60 requests per minute
-	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
-	limit := 50
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		minutesFromLastContactUpdate := 2
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToFindWorkEmailWithBetterContact(ctx, minutesFromLastContactUpdate, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		for _, record := range records {
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-			_, betterContactRequestID, _, err := s.commonServices.EnrichmentService.FindWorkEmail(innerCtx, record.LinkedInUrl, record.ContactFirstName, record.ContactLastName, record.OrganizationName, record.OrganizationDomain, false)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				span.LogFields(log.Object("record", record))
-			} else {
-				// mark contact with enrich requested
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), betterContactRequestID)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
-		return
 	}
 }
 

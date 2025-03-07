@@ -151,7 +151,6 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Contact Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpkeepContacts, GroupContact, upkeepContacts, "upkeepContacts")
-	addJob(cont.Cfg.App.Cron.CronScheduleAskForWorkEmailOnBetterContact, GroupContactBetter, askForWorkEmailOnBetterContactJob, "askForWorkEmailOnBetterContact")
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, GroupContactBetter, enrichWithWorkEmailFromBetterContactJob, "enrichWithWorkEmailFromBetterContact")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, GroupContactBetter, checkBetterContactRequestsWithoutResponseJob, "checkBetterContactRequestsWithoutResponse")
 	addJob(cont.Cfg.App.Cron.CronScheduleAskForLinkedInConnections, GroupLinkedInAsk, askForLinkedInConnections, "askForLinkedInConnections")
@@ -269,10 +268,6 @@ func sendRemindInvoiceNotifications(cont *container.Container) {
 // Contact Jobs
 func upkeepContacts(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).UpkeepContacts()
-}
-
-func askForWorkEmailOnBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).AskForWorkEmailOnBetterContact()
 }
 
 func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
