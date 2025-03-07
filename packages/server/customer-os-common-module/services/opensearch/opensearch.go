@@ -61,6 +61,7 @@ func createOpensearchClient(logger logger.Logger, url, username, password string
 func (c *opensearchService) getClientForIndex(indexName string) (*opensearch.Client, error) {
 	switch {
 	case strings.HasPrefix(indexName, "events-") ||
+		strings.HasPrefix(indexName, "agent-") ||
 		strings.HasPrefix(indexName, "llm-"):
 		return c.eventsClient, nil
 
@@ -419,6 +420,55 @@ func (c *opensearchService) LLMObservabilityIndexCheck(ctx context.Context, inde
       }
     }`
 
+	return c.ensureIndexExists(ctx, indexName, mapping)
+}
+
+func (c *opensearchService) AgentExecutionObservabilityIndexCheck(ctx context.Context, indexName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensearchService.AgentExecutionObservabilityIndexCheck")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	mapping := `{
+      "mappings": {
+        "properties": {
+          "execution_id": { "type": "keyword" },
+          "agent_id": { "type": "keyword" },
+          "agent_type": { "type": "keyword" },
+          "agent_scope": { "type": "keyword" },
+          "tenant": { "type": "keyword" },
+          "user_id": { "type": "keyword" },
+          "capability": { "type": "keyword" },
+          "trigger_event": { "type": "keyword" },
+          "input_data": { 
+            "type": "object",
+            "enabled": true 
+          },
+          "output_data": { 
+            "type": "object",
+            "enabled": true 
+          },
+          "attempt": { "type": "integer" },
+          "started_at": { "type": "date" },
+          "completed_at": { "type": "date" },
+          "success": { "type": "boolean" },
+          "error_message": { 
+            "type": "text",
+            "fields": {
+              "keyword": { "type": "keyword", "ignore_above": 256 }
+            }
+          },
+          "retry": { "type": "boolean" },
+          "retry_at": { "type": "date" },
+          "trace_id": { "type": "keyword" }
+        }
+      },
+      "settings": {
+        "index": {
+          "number_of_shards": 3,
+          "number_of_replicas": 1,
+          "refresh_interval": "10s"
+        }
+      }
+    }`
 	return c.ensureIndexExists(ctx, indexName, mapping)
 }
 

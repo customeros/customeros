@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/task"
 	"log"
 	"reflect"
 
@@ -70,6 +69,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/slack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/social"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/tags"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/task"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/tenant"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/tenant_settings"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/user"
@@ -309,7 +309,7 @@ func InitCommonServices(
 	// initialize agents
 	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl, capabilityImpl, tenantSettingsImpl, invoiceImpl, currencyImpl)
 	capabilityExecutionImpl := agent_capability.NewAgentCapabilityExecutionService()
-	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl, capabilityExecutionImpl)
+	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, opensearchImpl, capabilityImpl, agentImpl, capabilityExecutionImpl)
 
 	// initialize agent listeners
 	agentListenerImpl := agent_listeners.InitAgentListeners(log, postgresRepositories, agentRunnerImpl)
