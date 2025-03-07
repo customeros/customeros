@@ -58,12 +58,13 @@ func (a AIOutputFormat) String() string {
 type AIRequestType string
 
 const (
-	AIRequestGeneric         AIRequestType = "generic"
-	AIRequestCompanyName     AIRequestType = "company_name"
-	AIRequestContentStage    AIRequestType = "content_journey_stage"
-	AIRequestIndustryCode    AIRequestType = "industry_code"
-	AIRequestWebpageCategory AIRequestType = "webpage_category"
-	AIRequestWebpageTopics   AIRequestType = "webpage_topics"
+	AIRequestGeneric            AIRequestType = "generic"
+	AIRequestCompanyDescription AIRequestType = "company_description"
+	AIRequestCompanyName        AIRequestType = "company_name"
+	AIRequestContentStage       AIRequestType = "content_journey_stage"
+	AIRequestIndustryCode       AIRequestType = "industry_code"
+	AIRequestWebpageCategory    AIRequestType = "webpage_category"
+	AIRequestWebpageTopics      AIRequestType = "webpage_topics"
 )
 
 func (a AIRequestType) String() string {
