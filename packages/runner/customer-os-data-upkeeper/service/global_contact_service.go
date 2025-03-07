@@ -170,34 +170,10 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 			ProfilePhotoExternalUrl: person.PhotoUrl,
 		}
 
-		// Try to find existing contact by LinkedIn identifier and primary domain
-		existingContact, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetByLinkedInIdentifier(ctx, contact.LinkedInIdentifier)
+		err = s.commonServices.GlobalContactService.SaveContact(ctx, contact)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting contact by LinkedIn identifier"))
+			tracing.TraceErr(span, errors.Wrap(err, "error saving global contact"))
 			return err
-		}
-
-		if existingContact != nil {
-			// Update existing contact
-			existingContact.FirstName = contact.FirstName
-			existingContact.LastName = contact.LastName
-			existingContact.JobTitle = contact.JobTitle
-			existingContact.JobStartedAt = contact.JobStartedAt
-			existingContact.JobEndedAt = contact.JobEndedAt
-			existingContact.PrimaryDomain = contact.PrimaryDomain
-
-			_, err = s.commonServices.PostgresRepositories.GlobalContactRepository.Update(ctx, existingContact)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error updating global contact"))
-				return err
-			}
-		} else {
-			// Create new contact
-			_, err = s.commonServices.PostgresRepositories.GlobalContactRepository.Create(ctx, contact)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error creating global contact"))
-				return err
-			}
 		}
 	}
 
