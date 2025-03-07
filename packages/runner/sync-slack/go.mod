@@ -18,7 +18,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
