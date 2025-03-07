@@ -55,10 +55,10 @@ func (s *webscraperService) ClassifyContentStage(ctx context.Context, url string
 
 	var prompt strings.Builder
 
-	prompt.WriteString(fmt.Sprintf("Company name: %s", globalOrg.Name))
-	prompt.WriteString(fmt.Sprintf("Company description: %s", globalOrg.Description))
-	prompt.WriteString(fmt.Sprintf("Webpage url: %s", url))
-	prompt.WriteString("--- Webpage content --- ")
+	prompt.WriteString(fmt.Sprintf("Company name: %s\n", globalOrg.Name))
+	prompt.WriteString(fmt.Sprintf("Company description: %s\n", globalOrg.Description))
+	prompt.WriteString(fmt.Sprintf("Webpage url: %s\n", url))
+	prompt.WriteString("--- Webpage content --- \n")
 	prompt.WriteString(*pageContent)
 	promptStr := prompt.String()
 

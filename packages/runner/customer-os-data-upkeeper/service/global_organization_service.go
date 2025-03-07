@@ -698,11 +698,11 @@ func (s *globalOrganizationService) enrichIndustry() {
         `
 
 		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name: %s", record.Name))
-		p.WriteString(fmt.Sprintf("Website: %s", url))
-		p.WriteString(fmt.Sprintf("Company description: %s", record.Description))
+		p.WriteString(fmt.Sprintf("Company name: %s\n", record.Name))
+		p.WriteString(fmt.Sprintf("Website: %s\n", url))
+		p.WriteString(fmt.Sprintf("Company description: %s\n", record.Description))
 		if scrapedPage != "" {
-			p.WriteString("---Homepage content---")
+			p.WriteString("---Homepage content---\n")
 			p.WriteString(scrapedPage)
 		}
 		prompt := p.String()
@@ -807,13 +807,13 @@ func (s *globalOrganizationService) enrichDescription() {
         No marketing speak or jargon.`
 
 		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name: %s", record.Name))
-		p.WriteString(fmt.Sprintf("Company website: %s", url))
+		p.WriteString(fmt.Sprintf("Company name: %s\n", record.Name))
+		p.WriteString(fmt.Sprintf("Company website: %s\n", url))
 		for _, desc := range descLines {
 			p.WriteString(desc)
 		}
 		if pageContent != "" {
-			p.WriteString("---Scraped homepage content---")
+			p.WriteString("---Scraped homepage content---\n")
 			p.WriteString(pageContent)
 		}
 		prompt := p.String()
@@ -885,24 +885,24 @@ func (s *globalOrganizationService) enrichName() {
 		pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
 
 		var sp strings.Builder
-		sp.WriteString("I am going to provide you with metadata about a company, which will include:")
-		sp.WriteString("•	A current/partial company name")
-		sp.WriteString("•	The company's website")
-		sp.WriteString("•	Scraped page content from the company's website (if available)")
-		sp.WriteString("Your task is to identify and return the commonly recognized company name in English, along with a confidence score between 0 and 1.")
-		sp.WriteString("The confidence score should reflect how certain you are that the name your return accurately reflects the commonly recognized company name in English, with a score of 1 indicating absolute confidence.")
-		sp.WriteString("SPECIAL INSTRUCTIONS:")
-		sp.WriteString("If the business is more commonly recognized by a brand name e.g., Apple instead of Apple Inc., return that simpler, branded name.")
-		sp.WriteString("Remove all suffixes like Inc, Ltd, LLC, Corp, etc")
-		sp.WriteString("Return the name in title case EXCEPT when the recognized brand name is spelled in uppercase e.g. UPS or HSBC, or the commonly recognized brand starts with a lower case e.g. ebay")
+		sp.WriteString("I am going to provide you with metadata about a company, which will include:\n")
+		sp.WriteString("•	A current/partial company name\n")
+		sp.WriteString("•	The company's website\n")
+		sp.WriteString("•	Scraped page content from the company's website (if available)\n")
+		sp.WriteString("Your task is to identify and return the commonly recognized company name in English, along with a confidence score between 0 and 1.\n")
+		sp.WriteString("The confidence score should reflect how certain you are that the name your return accurately reflects the commonly recognized company name in English, with a score of 1 indicating absolute confidence.\n")
+		sp.WriteString("SPECIAL INSTRUCTIONS:\n")
+		sp.WriteString("If the business is more commonly recognized by a brand name e.g., Apple instead of Apple Inc., return that simpler, branded name.\n")
+		sp.WriteString("Remove all suffixes like Inc, Ltd, LLC, Corp, etc\n")
+		sp.WriteString("Return the name in title case EXCEPT when the recognized brand name is spelled in uppercase e.g. UPS or HSBC, or the commonly recognized brand starts with a lower case e.g. ebay\n")
 
 		systemPrompt := sp.String()
 
 		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name as we currently have it: %s", record.Name))
-		p.WriteString(fmt.Sprintf("Webpage url: %s", url))
+		p.WriteString(fmt.Sprintf("Company name as we currently have it: %s\n", record.Name))
+		p.WriteString(fmt.Sprintf("Webpage url: %s\n", url))
 		if pageContent != "" {
-			p.WriteString("--- Webpage content --- ")
+			p.WriteString("--- Webpage content --- \n")
 			p.WriteString(pageContent)
 		}
 		prompt := p.String()
