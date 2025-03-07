@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 
 type GlobalContactService interface {
 	SyncDataIntoGlobalContacts()
+	EnrichGlobalOrganizationWithBettercontact()
 }
 
 type globalContactService struct {
@@ -208,5 +210,109 @@ func (s *globalContactService) SyncDataIntoGlobalContacts() {
 			s.log.Errorf("Error processing record: %s", err.Error())
 			continue
 		}
+	}
+}
+
+func (s *globalContactService) EnrichGlobalOrganizationWithBettercontact() {
+	s.sendRequestToBetterContact()
+	s.processBetterContactResponses()
+}
+
+func (s *globalContactService) sendRequestToBetterContact() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	// Better contact is limited to 60 requests per minute
+	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
+	limit := 50
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact")
+	defer span.Finish()
+
+	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToFindWorkEmailWithBetterContact(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	for _, record := range records {
+		func(globalContact *postgresentity.GlobalContact) {
+			innerSpan, innerCtx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact.Record")
+			defer innerSpan.Finish()
+
+			linkedInUrl := "https://linkedin.com/in/" + globalContact.LinkedInIdentifier
+			// get global organization by primary domain
+			globalOrg, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(innerCtx, globalContact.PrimaryDomain)
+			if err != nil {
+				tracing.TraceErr(innerSpan, err)
+			}
+			companyName := ""
+			if globalOrg != nil {
+				companyName = globalOrg.Name
+			}
+
+			_, betterContactRequestId, _, err := s.commonServices.EnrichmentService.FindWorkEmail(innerCtx, linkedInUrl, globalContact.FirstName, globalContact.LastName, companyName, globalContact.PrimaryDomain, false)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				span.LogFields(log.Object("record", record))
+			} else {
+				// mark contact with enrich requested
+				err = s.commonServices.PostgresRepositories.GlobalContactRepository.MarkBetterContactRequested(innerCtx, globalContact.ID, betterContactRequestId)
+				if err != nil {
+					tracing.TraceErr(innerSpan, err)
+				}
+			}
+		}(record)
+	}
+}
+
+func (s *globalContactService) processBetterContactResponses() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.processBetterContactResponses")
+	defer span.Finish()
+
+	limit := 100
+
+	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToProcessBetterContactResponses(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	for _, record := range records {
+		func(globalContact *postgresentity.GlobalContact) {
+			innerSpan, innerCtx := tracing.StartTracerSpan(ctx, "GlobalContactService.processBetterContactResponses.Record")
+			defer innerSpan.Finish()
+
+			// get better contact response
+			betterContactResponse, err := s.commonServices.EnrichmentService.GetBetterContactResponse(innerCtx, globalContact.BetterContactRequestId)
+			if err != nil {
+				tracing.TraceErr(innerSpan, err)
+				span.LogFields(log.Object("record", record))
+			}
+
+			if betterContactResponse == nil {
+				return
+			}
+
+			// update contact with work email
+			globalContact.WorkEmail = betterContactResponse.Email
+			_, err = s.commonServices.PostgresRepositories.GlobalContactRepository.Update(innerCtx, globalContact)
+			if err != nil {
+				tracing.TraceErr(innerSpan, err)
+			}
+		}(record)
 	}
 }
