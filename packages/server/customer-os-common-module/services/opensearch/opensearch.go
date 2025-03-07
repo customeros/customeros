@@ -430,7 +430,7 @@ func (c *opensearchService) AgentExecutionObservabilityIndexCheck(ctx context.Co
 	mapping := `{
       "mappings": {
         "properties": {
-          "execution_id": { "type": "keyword" },
+          "agent_execution_id": { "type": "keyword" },
           "agent_id": { "type": "keyword" },
           "agent_type": { "type": "keyword" },
           "agent_scope": { "type": "keyword" },
