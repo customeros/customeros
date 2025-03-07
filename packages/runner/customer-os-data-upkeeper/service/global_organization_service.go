@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/biter777/countries"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -890,65 +890,50 @@ func (s *globalOrganizationService) enrichName() {
 			continue
 		}
 
-		// prepare Anthropic prompt
-		systemPrompt := `
-You are a world-class naming assistant. The user will provide:
-	•	A current/partial company name
-	•	The company's primary domain
-	•	The company's website
+		url := "https://" + record.PrimaryDomain
+		pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
 
-Your task:
-	1.	Identify the standard recognized company name.
-	2.	If the business is more commonly recognized by a brand name (e.g., "Apple" instead of "Apple Inc."), return that simpler, branded name.
-	3.	If you find a longer official name that's different from the brand, remove suffixes like "Inc,", "Ltd,", "LLC,", "Corp,", etc., but keep the rest of the formal name.
-    4.	If you cannot identify a single valid name, return "N/A"
-	5.	Only output the name itself or "N/A" with no explanations, disclaimers, or additional text.
-	6.  Output in english.
-	7.  If the recognized or brand name is spelled in uppercase (e.g., "SBCHC"), keep it in uppercase. Do not convert it to title case or alter its original casing.
+		var sp strings.Builder
+		sp.WriteString("I am going to provide you with metadata about a company, which will include:")
+		sp.WriteString("•	A current/partial company name")
+		sp.WriteString("•	The company's website")
+		sp.WriteString("•	Scraped page content from the company's website (if available)")
+		sp.WriteString("Your task is to identify and return the commonly recognized company name in English, along with a confidence score between 0 and 1.")
+		sp.WriteString("The confidence score should reflect how certain you are that the name your return accurately reflects the commonly recognized company name in English, with a score of 1 indicating absolute confidence.")
+		sp.WriteString("SPECIAL INSTRUCTIONS:")
+		sp.WriteString("If the business is more commonly recognized by a brand name e.g., Apple instead of Apple Inc., return that simpler, branded name.")
+		sp.WriteString("Remove all suffixes like Inc, Ltd, LLC, Corp, etc")
+		sp.WriteString("Return the name in title case EXCEPT when the recognized brand name is spelled in uppercase e.g. UPS or HSBC, or the commonly recognized brand starts with a lower case e.g. ebay")
 
-Important Samples:
-	•	If input suggests "Verizon Communications Inc.,", return "Verizon"
-	•	If input suggests "Apple Inc,", return "Apple"
-	•	If brand differs from legal name (e.g., "Nestlé S.A." vs. "Nescafé"), return the official company name "Nestle"
-	•	If unsure, return "N/A"
+		systemPrompt := sp.String()
 
-Provide the final name or N/A as your entire response.
-`
-
-		prompt := map[string]interface{}{
-			"name":    record.Name,
-			"domain":  record.PrimaryDomain,
-			"website": record.Website,
+		var p strings.Builder
+		p.WriteString(fmt.Sprintf("Company name as we currently have it: %s", record.Name))
+		p.WriteString(fmt.Sprintf("Webpage url: %s", url))
+		if pageContent != "" {
+			p.WriteString("--- Webpage content --- ")
+			p.WriteString(pageContent)
 		}
-		// Convert the map to a JSON string
-		jsonBytes, err := json.Marshal(prompt)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marshalling prompt"))
-			continue
-		}
-		promptString := string(jsonBytes)
+		prompt := p.String()
 
 		// ask AI for concise description
 		temperature := float32(0.1)
-		aiOutput, err := s.commonServices.AIService.AskAI(ctx, interfaces.AskAIRequest{
-			Model:            enum.AIModelAnthropicHaiku,
+		aiOutput, err := s.commonServices.AIService.AskAIForCompanyName(ctx, interfaces.AskAIRequest{
+			Model:            enum.AIModelLlama8B,
 			SystemPrompt:     &systemPrompt,
-			Prompt:           &promptString,
+			Prompt:           &prompt,
 			ModelTemperature: &temperature,
-			OutputFormat:     enum.AIOutputText,
 		})
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
 		}
-		aiName := utils.IfNotNilString(aiOutput)
-		recordSpan.LogFields(log.String("result.name", aiName))
 
-		if aiName == "" || aiName == "N/A" {
+		if aiOutput.Confidence < 0.5 {
 			continue
 		}
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetName(recordCtx, record.ID, aiName)
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetName(recordCtx, record.ID, aiOutput.Name)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting name"))
 			continue

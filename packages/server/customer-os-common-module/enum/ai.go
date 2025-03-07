@@ -59,8 +59,9 @@ type AIRequestType string
 
 const (
 	AIRequestGeneric         AIRequestType = "generic"
-	AIRequestWebpageCategory AIRequestType = "webpage_category"
+	AIRequestCompanyName     AIRequestType = "company_name"
 	AIRequestContentStage    AIRequestType = "content_journey_stage"
+	AIRequestWebpageCategory AIRequestType = "webpage_category"
 	AIRequestWebpageTopics   AIRequestType = "webpage_topics"
 )
 
