@@ -801,7 +801,7 @@ func (s *globalOrganizationService) enrichDescription() {
 		}
 
 		// Construct the prompt
-		systemPrompt := `I am going to provide you metadata about a company, including the conpany name, website url, various descriptions from social media, and scraped content from their homepage (if available).  Your job is to write a clear, direct decription of the company that explains who they serve and their revenue model.  
+		systemPrompt := `I am going to provide you metadata about a company, including the company name, website url, various descriptions from social media, and scraped content from their homepage (if available).  Your job is to write a clear, direct description of the company that explains who they serve and their revenue model.  
 
         Please return a single paragraph (max 300 characters), in American English.
         No marketing speak or jargon.`
