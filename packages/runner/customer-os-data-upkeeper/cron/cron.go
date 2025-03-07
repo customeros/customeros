@@ -151,7 +151,6 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Contact Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpkeepContacts, GroupContact, upkeepContacts, "upkeepContacts")
-	addJob(cont.Cfg.App.Cron.CronScheduleAskForWorkEmailOnBetterContact, GroupContactBetter, askForWorkEmailOnBetterContactJob, "askForWorkEmailOnBetterContact")
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, GroupContactBetter, enrichWithWorkEmailFromBetterContactJob, "enrichWithWorkEmailFromBetterContact")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, GroupContactBetter, checkBetterContactRequestsWithoutResponseJob, "checkBetterContactRequestsWithoutResponse")
 	addJob(cont.Cfg.App.Cron.CronScheduleAskForLinkedInConnections, GroupLinkedInAsk, askForLinkedInConnections, "askForLinkedInConnections")
@@ -159,8 +158,11 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
 
+	// Global Contact Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalContacts, GroupGlobalContact, syncDataToGlobalContacts, "syncDataToGlobalContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleDownloadContactProfilePhoto, GroupGlobalContact, downloadContactProfilePhoto, "downloadContactProfilePhoto")
+	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalContactWithBettercontact, GroupGlobalContact, enrichGlobalOrganizationWithBettercontact, "enrichGlobalOrganizationWithBettercontact")
+
 	// Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
@@ -266,10 +268,6 @@ func sendRemindInvoiceNotifications(cont *container.Container) {
 // Contact Jobs
 func upkeepContacts(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).UpkeepContacts()
-}
-
-func askForWorkEmailOnBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).AskForWorkEmailOnBetterContact()
 }
 
 func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
@@ -413,4 +411,8 @@ func extractPageLinks(cont *container.Container) {
 
 func syncDataToGlobalContacts(cont *container.Container) {
 	service.NewGlobalContactService(cont.Cfg, cont.Log, cont.CommonServices).SyncDataIntoGlobalContacts()
+}
+
+func enrichGlobalOrganizationWithBettercontact(cont *container.Container) {
+	service.NewGlobalContactService(cont.Cfg, cont.Log, cont.CommonServices).EnrichGlobalOrganizationWithBettercontact()
 }

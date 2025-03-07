@@ -2,6 +2,8 @@ package globalcontacts
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -170,6 +172,29 @@ func (s *globalContactService) SaveContact(ctx context.Context, contact *postgre
 			tracing.TraceErr(span, errors.Wrap(err, "error creating global contact"))
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (s *globalContactService) SetWorkEmail(ctx context.Context, id uint64, workEmail string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.SetWorkEmail")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+	tracing.TagEntity(span, strconv.FormatUint(id, 10))
+
+	contact, err := s.postgres.GlobalContactRepository.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting contact by id"))
+		return err
+	}
+
+	contact.WorkEmail = workEmail
+
+	_, err = s.postgres.GlobalContactRepository.Update(ctx, contact)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error updating global contact"))
+		return err
 	}
 
 	return nil

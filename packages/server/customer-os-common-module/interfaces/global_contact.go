@@ -8,4 +8,5 @@ import (
 
 type GlobalContactService interface {
 	SaveContact(ctx context.Context, contact *postgres_entity.GlobalContact) error
+	SetWorkEmail(ctx context.Context, id uint64, workEmail string) error
 }

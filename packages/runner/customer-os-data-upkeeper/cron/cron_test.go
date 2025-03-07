@@ -40,7 +40,6 @@ func TestStartCron(t *testing.T) {
 				CronScheduleUpkeepInvoices:                                        "0 0 */1 * * *",
 				CronScheduleAdjustInvoiceStatus:                                   "0 0 */1 * * *",
 				CronScheduleUpkeepContacts:                                        "0 0 */1 * * *",
-				CronScheduleAskForWorkEmailOnBetterContact:                        "0 0 */1 * * *",
 				CronScheduleEnrichWithWorkEmailFromBetterContact:                  "0 0 */1 * * *",
 				CronScheduleCheckBetterContactRequestsWithoutResponse:             "0 0 */1 * * *",
 				CronScheduleEnrichContacts:                                        "0 0 */1 * * *",
@@ -77,6 +76,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleDownloadIconAndLogo:                                   "0 0 */1 * * *",
 				CronScheduleIngestEmailsFromProviders:                             "0 0 */1 * * *",
 				CronScheduleIngestEmailsSendToAgents:                              "0 0 */1 * * *",
+				CronScheduleEnrichGlobalContactWithBettercontact:                  "0 0 */1 * * *",
 			},
 		},
 	}

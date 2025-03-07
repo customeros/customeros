@@ -21,17 +21,17 @@ type Config struct {
 	CronScheduleDownloadIconAndLogo            string `env:"CRON_SCHEDULE_DOWNLOAD_ICON_AND_LOGO" envDefault:"20 */2 * * * *"`
 
 	// Global Contacts
-	CronScheduleSyncDataToGlobalContacts    string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_CONTACTS" envDefault:"0 */1 * * * *"`
-	CronScheduleDownloadContactProfilePhoto string `env:"CRON_SCHEDULE_DOWNLOAD_CONTACT_PROFILE_PHOTO" envDefault:"15 */2 * * * *"`
+	CronScheduleSyncDataToGlobalContacts             string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_CONTACTS" envDefault:"0 */1 * * * *"`
+	CronScheduleDownloadContactProfilePhoto          string `env:"CRON_SCHEDULE_DOWNLOAD_CONTACT_PROFILE_PHOTO" envDefault:"15 */2 * * * *"`
+	CronScheduleEnrichGlobalContactWithBettercontact string `env:"CRON_SCHEDULE_ENRICH_GLOBAL_CONTACT_WITH_BETTERCONTACT" envDefault:"30 */2 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
-	CronScheduleAskForWorkEmailOnBetterContact            string `env:"CRON_SCHEDULE_ASK_FOR_WORK_EMAIL_ON_BETTER_CONTACT" envDefault:"30 */2 * * * *"`
 	CronScheduleEnrichWithWorkEmailFromBetterContact      string `env:"CRON_SCHEDULE_ENRICH_WITH_WORK_EMAIL_FROM_BETTER_CONTACT" envDefault:"0 */1 * * * *"`
-	CronScheduleCheckBetterContactRequestsWithoutResponse string `env:"CRON_SCHEDULE_CHECK_BETTER_CONTACT_REQUESTS_WITHOUT_RESPONSE" envDefault:"40 */5 * * * *"`
 	CronScheduleEnrichContacts                            string `env:"CRON_SCHEDULE_ENRICH_CONTACTS" envDefault:"0 */2 * * * *"`
 	CronScheduleAskForLinkedInConnections                 string `env:"CRON_SCHEDULE_ASK_FOR_LINKEDIN_CONNECTIONS" envDefault:"*/5 * * * * *"`
 	CronScheduleProcessLinkedInConnections                string `env:"CRON_SCHEDULE_PROCESS_LINKEDIN_CONNECTIONS" envDefault:"*/5 * * * * *"`
+	CronScheduleCheckBetterContactRequestsWithoutResponse string `env:"CRON_SCHEDULE_CHECK_BETTER_CONTACT_REQUESTS_WITHOUT_RESPONSE" envDefault:"40 */5 * * * *"`
 
 	// Invoices
 	// Defaults to 8:15am
