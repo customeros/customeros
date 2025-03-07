@@ -167,10 +167,10 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	for _, capabilityTypeStr := range *&play.Capabilities {
 
 		// build observability metrics
-		observability := a.newObservabilityContainer(ctx, params)
-		observability.Capability = capabilityTypeStr
+		metrics := a.newObservabilityContainer(ctx, params)
+		metrics.Capability = capabilityTypeStr
 
-		status, err := a.executeCapability(ctx, observability, capabilityParams{
+		status, err := a.executeCapability(ctx, metrics, capabilityParams{
 			executionID:       params.executionID,
 			capabilityTypeStr: capabilityTypeStr,
 			agent:             params.agent,
@@ -178,10 +178,11 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 			untypedExecutors:  untypedExecutors,
 			span:              params.span,
 		})
+		a.pushObservabilityMetrics(ctx, metrics)
+
 		if err != nil {
 			return err
 		}
-
 		if status == enum.CapabilityExecutionStop {
 			break
 		}
