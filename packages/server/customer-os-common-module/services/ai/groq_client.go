@@ -53,8 +53,6 @@ func (c *GroqClient) Invoke(ctx context.Context, request interfaces.AskAIRequest
 func (c *GroqClient) buildRequest(request interfaces.AskAIRequest) GroqRequest {
 	var outputFormat string
 	switch request.OutputFormat {
-	case enum.AIOutputText:
-		outputFormat = "text"
 	case enum.AIOutputJson:
 		outputFormat = "json_object"
 	default:
@@ -99,14 +97,21 @@ func (c *GroqClient) buildRequest(request interfaces.AskAIRequest) GroqRequest {
 }
 
 func (c *GroqClient) createHttpRequest(ctx context.Context, reqBody GroqRequest) (*http.Request, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.createHttpRequest")
+	defer span.Finish()
+
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request: %w", err)
+		err := fmt.Errorf("error marshaling request: %w", err)
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", c.apiUrl, bytes.NewReader(jsonBody))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
+		err := fmt.Errorf("error creating request: %w", err)
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	req.Header.Set(ContentTypeHeader, "application/json")
@@ -115,57 +120,87 @@ func (c *GroqClient) createHttpRequest(ctx context.Context, reqBody GroqRequest)
 	return req, nil
 }
 
-func (c *GroqClient) processResponse(resp *http.Response) (string, error) {
+func (c *GroqClient) processResponse(ctx context.Context, resp *http.Response) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.processResponse")
+	defer span.Finish()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error reading response body: %w", err)
+		err := fmt.Errorf("error reading response body: %w", err)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	if resp.StatusCode == http.StatusOK {
-		return c.handleSuccessResponse(body)
+		return c.handleSuccessResponse(ctx, body)
 	}
 
-	return "", c.handleErrorResponse(resp.StatusCode, body)
+	return "", c.handleErrorResponse(ctx, resp.StatusCode, body)
 }
 
-func (c *GroqClient) handleSuccessResponse(body []byte) (string, error) {
+func (c *GroqClient) handleSuccessResponse(ctx context.Context, body []byte) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.handleSuccessResponse")
+	defer span.Finish()
+
 	var data GroqResponse
 	if err := json.Unmarshal(body, &data); err != nil {
-		return "", fmt.Errorf("error decoding response: %w", err)
+		err := fmt.Errorf("error decoding response: %w", err)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	if len(data.Choices) < 1 {
-		return "", fmt.Errorf("empty or invalid response from API")
+		err := fmt.Errorf("empty or invalid response from API")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	resp := data.Choices[0].Message.Content
 
 	if resp == nil || resp == "" {
-		return "", fmt.Errorf("empty or invalid response from API")
+		err := fmt.Errorf("empty or invalid response from API")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	response, ok := resp.(string)
 	if !ok {
-		return "", fmt.Errorf("empty or invalid response from API")
+		err := fmt.Errorf("empty or invalid response from API")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	return response, nil
 }
 
-func (c *GroqClient) handleErrorResponse(statusCode int, body []byte) error {
+func (c *GroqClient) handleErrorResponse(ctx context.Context, statusCode int, body []byte) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.handleErrorResponse")
+	defer span.Finish()
+
 	var errorResponse ErrorResponse
 	if err := json.Unmarshal(body, &errorResponse); err != nil {
-		return fmt.Errorf("API request failed with status %d: %s", statusCode, string(body))
+		err := fmt.Errorf("API request failed with status %d: %s", statusCode, string(body))
+		tracing.TraceErr(span, err)
+		return err
 	}
 	return fmt.Errorf("%s: %s", errorResponse.Error.Type, errorResponse.Error.Message)
 }
 
 func (c *GroqClient) executeWithRetry(ctx context.Context, reqBody GroqRequest) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.executeWithRetry")
+	defer span.Finish()
+
 	var lastErr error
 
 	for attempt := 1; attempt <= MaxRetries; attempt++ {
+		_, jsonErr := json.MarshalIndent(reqBody, "", "  ")
+		if jsonErr != nil {
+			err := fmt.Errorf("Failed to marshal request for logging: %v", jsonErr)
+			tracing.TraceErr(span, err)
+		}
 		req, err := c.createHttpRequest(ctx, reqBody)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return "", err
 		}
 
@@ -173,6 +208,7 @@ func (c *GroqClient) executeWithRetry(ctx context.Context, reqBody GroqRequest) 
 		if err != nil {
 			lastErr = fmt.Errorf("error executing request: %w", err)
 			if attempt == MaxRetries {
+				tracing.TraceErr(span, err)
 				return "", lastErr
 			}
 			c.handleRetry(attempt, err)
@@ -180,8 +216,9 @@ func (c *GroqClient) executeWithRetry(ctx context.Context, reqBody GroqRequest) 
 		}
 		defer resp.Body.Close()
 
-		response, err := c.processResponse(resp)
+		response, err := c.processResponse(ctx, resp)
 		if err == nil {
+			tracing.TraceErr(span, err)
 			return response, nil
 		}
 
@@ -193,7 +230,6 @@ func (c *GroqClient) executeWithRetry(ctx context.Context, reqBody GroqRequest) 
 		c.handleRetry(attempt, err)
 	}
 
-	logrus.Errorf("Failed after %d attempts: %v", MaxRetries, lastErr)
 	return "", lastErr
 }
 

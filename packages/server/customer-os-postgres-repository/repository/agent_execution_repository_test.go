@@ -2,12 +2,14 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/pkg/errors"
 	"testing"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/pkg/errors"
+
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 func TestAgentExecutionRepository_CreateAndGet(t *testing.T) {
@@ -228,7 +230,8 @@ func TestAgentExecutionRepository_ScheduleRetry_FirstTime(t *testing.T) {
 
 	retryErr := errors.New("temporary failure")
 	stateData := map[string]any{"attempt": 1}
-	if err := repositories.AgentExecutionRepository.ScheduleRetry(ctx, saved.ID, retryErr, stateData); err != nil {
+	_, err = repositories.AgentExecutionRepository.ScheduleRetry(ctx, saved.ID, retryErr, stateData)
+	if err != nil {
 		t.Fatalf("ScheduleRetry failed: %v", err)
 	}
 
@@ -267,7 +270,8 @@ func TestAgentExecutionRepository_ScheduleRetry(t *testing.T) {
 
 	retryErr := errors.New("temporary failure")
 	stateData := map[string]any{"attempt": 1}
-	if err := repositories.AgentExecutionRepository.ScheduleRetry(ctx, saved.ID, retryErr, stateData); err != nil {
+	_, err = repositories.AgentExecutionRepository.ScheduleRetry(ctx, saved.ID, retryErr, stateData)
+	if err != nil {
 		t.Fatalf("ScheduleRetry failed: %v", err)
 	}
 
