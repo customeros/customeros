@@ -2,6 +2,7 @@ package globalcontacts
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -134,6 +135,10 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 		existing.LinkedInIdentifier = new.LinkedInIdentifier
 	}
 	if new.ProfilePhotoExternalUrl != "" {
+		// if new URL is different then existing one and download status is error, reset download status
+		if existing.ProfilePhotoExternalUrl != new.ProfilePhotoExternalUrl && existing.DownloadStatus == enum.DownloadError {
+			existing.DownloadStatus = enum.DownloadNotStarted
+		}
 		existing.ProfilePhotoExternalUrl = new.ProfilePhotoExternalUrl
 	}
 }
