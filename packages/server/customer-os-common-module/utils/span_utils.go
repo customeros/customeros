@@ -6,6 +6,9 @@ import (
 )
 
 func GetTraceIDFromSpan(span opentracing.Span) string {
+	if span == nil {
+		return ""
+	}
 	// For Jaeger specifically
 	if jaegerSpan, ok := span.(*jaeger.Span); ok {
 		spanContext := jaegerSpan.Context().(jaeger.SpanContext)
