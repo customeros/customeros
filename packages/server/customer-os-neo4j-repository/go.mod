@@ -14,7 +14,7 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/docker/docker v28.0.1+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
