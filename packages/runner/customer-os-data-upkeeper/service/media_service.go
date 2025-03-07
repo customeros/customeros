@@ -134,7 +134,7 @@ func (s *mediaService) downloadImage(ctx context.Context, globalOrgId uint64, im
 
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
-		if !errors.Is(err, coserrors.ErrResourceNotFound) {
+		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			tracing.TraceErr(span, err)
 		}
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, globalOrgId, enum.DownloadError)
@@ -166,7 +166,7 @@ func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId
 
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
-		if !errors.Is(err, coserrors.ErrResourceNotFound) {
+		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			tracing.TraceErr(span, err)
 		}
 		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetDownloadStatus(ctx, globalContactId, enum.DownloadError)
