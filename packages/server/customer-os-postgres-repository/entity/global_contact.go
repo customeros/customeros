@@ -22,6 +22,24 @@ type GlobalContact struct {
 	ProfilePhotoExternalUrl string              `gorm:"type:varchar(1000)" json:"profile_photo_external_url,omitempty"`
 	ProfilePhotoPath        string              `gorm:"column:profile_photo_path;type:varchar(2000)" json:"profilePhotoPath"`
 	DownloadStatus          enum.DownloadStatus `gorm:"column:download_status;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatus"`
+	PhoneNumber             string              `gorm:"column:phone_number;type:varchar(50)" json:"phone_number,omitempty"`
+
+	// Enrichment fields
+	BetterContactRequestedAt *time.Time `gorm:"column:bettercontact_requested_at;type:timestamp" json:"betterContactRequestedAt"`
+	BetterContactSetAt       *time.Time `gorm:"column:bettercontact_set_at;type:timestamp" json:"betterContactSetAt"`
+	BetterContactRequestId   string     `gorm:"column:bettercontact_request_id;type:varchar(100)" json:"betterContactRequestId,omitempty"`
+
+	// Location       string   `gorm:"type:varchar(255)" json:"location,omitempty"`
+	// Country        string   `gorm:"type:varchar(2)" json:"country,omitempty"`
+	// Bio            string   `gorm:"type:text" json:"bio,omitempty"`
+	// Skills         []string `gorm:"type:text[]" json:"skills,omitempty"`
+	// Education      []string `gorm:"type:text[]" json:"education,omitempty"`
+	// Languages      []string `gorm:"type:text[]" json:"languages,omitempty"`
+	// Interests      []string `gorm:"type:text[]" json:"interests,omitempty"`
+	// Certifications []string `gorm:"type:text[]" json:"certifications,omitempty"`
+	// Publications   []string `gorm:"type:text[]" json:"publications,omitempty"`
+	// Awards         []string `gorm:"type:text[]" json:"awards,omitempty"`
+	// VolunteerWork  []string `gorm:"type:text[]" json:"volunteer_work,omitempty"`
 }
 
 // TableName specifies the table name for the GlobalContact entity

@@ -159,8 +159,10 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
 
+	// Global Contact Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalContacts, GroupGlobalContact, syncDataToGlobalContacts, "syncDataToGlobalContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleDownloadContactProfilePhoto, GroupGlobalContact, downloadContactProfilePhoto, "downloadContactProfilePhoto")
+
 	// Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
