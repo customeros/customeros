@@ -575,7 +575,7 @@ func (a *agentRunnerService) GetExecutionStatus(ctx context.Context, executionID
 
 func (a *agentRunnerService) newObservabilityContainer(ctx context.Context, executionParams executionParams) *dto.AgentExecutionObservability {
 	return &dto.AgentExecutionObservability{
-		CapabilityExecutionID: utils.GenerateNanoIdWithPrefix("cap", 16),
+		CapabilityExecutionID: utils.GenerateNanoIdWithPrefix("ace", 16),
 		ExecutionID:           executionParams.executionID,
 		AgentID:               executionParams.agent.ID,
 		AgentType:             executionParams.agent.Type.String(),
