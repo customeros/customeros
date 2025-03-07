@@ -579,7 +579,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			if oauthToken == nil {
 				oauthToken = &postgres_entity.OAuthTokenEntity{}
 			}
-			oauthToken.Provider = signInRequest.Provider
+			oauthToken.Provider = common_enum.SourceGmail.String()
 			oauthToken.TenantName = defaultTenant
 			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 			oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
@@ -615,7 +615,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		if oauthToken == nil {
 			oauthToken = &postgres_entity.OAuthTokenEntity{}
 		}
-		oauthToken.Provider = signInRequest.Provider
+		oauthToken.Provider = common_enum.SourceOutlook.String()
 		oauthToken.TenantName = defaultTenant
 		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail

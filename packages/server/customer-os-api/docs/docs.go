@@ -1952,7 +1952,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "region": {
-                    "description": "State or region\nrequired: false\nexample: California",
+                    "description": "Period or region\nrequired: false\nexample: California",
                     "type": "string"
                 }
             }
@@ -2200,7 +2200,7 @@ const docTemplate = `{
                     "example": "United States"
                 },
                 "region": {
-                    "description": "State or region\nrequired: false",
+                    "description": "Period or region\nrequired: false",
                     "type": "string",
                     "example": "California"
                 },

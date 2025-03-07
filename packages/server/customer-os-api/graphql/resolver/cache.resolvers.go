@@ -12,8 +12,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 // Version is the resolver for the version field.
@@ -53,26 +51,8 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	}
 
 	if userEmail != "" {
-		privateKey, err := r.Services.Repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		serviceEmail, err := r.Services.Repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
 		response.ActiveEmailTokens = []*model.GlobalCacheEmailToken{}
 		response.InactiveEmailTokens = []*model.GlobalCacheEmailToken{}
-
-		if privateKey != "" && serviceEmail != "" {
-			response.ActiveEmailTokens = append(response.ActiveEmailTokens, &model.GlobalCacheEmailToken{
-				Email:    userEmail,
-				Provider: commonenum.WorkspaceProviderGoogle.String(),
-			})
-		}
 
 		oauthTokenList, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, tenantName)
 		if err != nil {

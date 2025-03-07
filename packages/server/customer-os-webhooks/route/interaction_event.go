@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"io"
 	"net/http"
 	"regexp"
@@ -206,7 +207,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		span.LogFields(tracingLog.Bool("mailbox.found", true))
 		span.LogFields(tracingLog.String("mailbox.username", username))
 
-		emailExists, err := services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(ctx, externalSystem, tenantByName, username, messageId)
+		emailExists, err := services.CommonServices.PostgresRepositories.IngestEmailMessageRepository.EmailExistsByMessageId(ctx, tenantByName, username, externalSystem, messageId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error checking email exists: %s", err.Error())
@@ -217,29 +218,54 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		if !emailExists {
 			emailRawData, err := mapPostmarkToEmailRawData(tenantByName, postmarkEmailWebhookData)
 
-			jsonContent, err := JSONMarshal(emailRawData)
-			if err != nil {
-				span.LogFields(tracingLog.Object("emailRawData", emailRawData))
-				tracing.TraceErr(span, err)
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-				return
-			}
-
-			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(ctx, externalSystem, tenantByName, username, emailRawData.ProviderMessageId, messageId, string(jsonContent), emailRawData.Sent, postgres_entity.REAL_TIME)
+			headersString, err := JSONMarshal(emailRawData.Headers)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 				return
 			}
 
-			storedRawEmail, err := services.CommonServices.PostgresRepositories.RawEmailRepository.GetByMessageId(ctx, externalSystem, tenantByName, username, messageId)
+			ingestEmailMessage := postgres_entity.IngestEmailMessage{
+				Tenant:   tenantByName,
+				Username: username,
+				Provider: enum.SourceMailstack.String(),
+				State:    postgres_entity.IngestEmailMessageStatePending,
+
+				Subject:     emailRawData.Subject,
+				TextContent: emailRawData.Text,
+				HtmlContent: emailRawData.Html,
+
+				SentAt: emailRawData.Sent,
+
+				From: emailRawData.From,
+				To:   emailRawData.To,
+				Cc:   emailRawData.Cc,
+				Bcc:  emailRawData.Bcc,
+
+				MessageId:          emailRawData.MessageId,
+				ProviderMessageId:  emailRawData.ProviderMessageId,
+				ProviderThreadId:   emailRawData.ThreadId,
+				ProviderInReplyTo:  emailRawData.InReplyTo,
+				ProviderReferences: emailRawData.Reference,
+
+				Headers: string(headersString),
+			}
+
+			err = services.CommonServices.PostgresRepositories.IngestEmailMessageRepository.Store(ctx, tenantByName, username, externalSystem, messageId, &ingestEmailMessage)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 				return
 			}
 
-			loadedEmail, err := services.CommonServices.MailService.LoadEmail(ctx, storedRawEmail)
+			storedRawEmail, err := services.CommonServices.PostgresRepositories.IngestEmailMessageRepository.GetByMessageId(ctx, externalSystem, tenantByName, username, messageId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+				return
+			}
+
+			loadedEmail, err := services.CommonServices.MailService.LoadIngestEmailMessage(ctx, storedRawEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})

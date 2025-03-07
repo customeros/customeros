@@ -27,7 +27,8 @@ type IngestEmailMessage struct {
 	HtmlContent string `gorm:"type:text"`
 
 	//Values taken from providers
-	ProviderMessageId  string `gorm:"size:255;not null;index:idx_ingest_raw_email"`
+	MessageId          string `gorm:"size:255;not null;index:idx_ingest_raw_email"`
+	ProviderMessageId  string `gorm:"size:255;not null;"`
 	ProviderThreadId   string `gorm:"size:255;not null;"`
 	ProviderInReplyTo  string `gorm:"type:text"`
 	ProviderReferences string `gorm:"type:text"`
@@ -48,3 +49,20 @@ const (
 	IngestEmailMessageStateIngested    IngestEmailMessageState = "INGESTED"
 	IngestEmailMessageStateFiltered    IngestEmailMessageState = "FILTERED"
 )
+
+type EmailRawData struct {
+	ProviderMessageId string            `json:"ProviderMessageId"`
+	MessageId         string            `json:"MessageId"`
+	Sent              time.Time         `json:"Sent"`
+	Subject           string            `json:"Subject"`
+	From              string            `json:"From"`
+	To                string            `json:"To"`
+	Cc                string            `json:"Cc"`
+	Bcc               string            `json:"Bcc"`
+	Html              string            `json:"Html"`
+	Text              string            `json:"Text"`
+	ThreadId          string            `json:"ThreadId"`
+	InReplyTo         string            `json:"InReplyTo"`
+	Reference         string            `json:"Reference"`
+	Headers           map[string]string `json:"Headers"`
+}

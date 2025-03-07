@@ -52,9 +52,9 @@ type Repositories struct {
 	GlobalContactRepository                      GlobalContactRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
-	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
 	InvoiceRepository                            InvoiceRepository
 	IngestEmailMessageRepository                 IngestEmailMessageRepository
+	IngestEmailImportStateRepository             IngestEmailImportStateRepository
 	MailStackDomainRepository                    MailStackDomainRepository
 	MailstackBuyRequestRepository                MailstackBuyRequestRepository
 	MagicLinkRepository                          MagicLinkRepository
@@ -63,7 +63,6 @@ type Repositories struct {
 	PersonalEmailProviderRepository              PersonalEmailProviderRepository
 	PersonalIntegrationRepository                PersonalIntegrationRepository
 	PostmarkApiKeyRepository                     PostmarkApiKeyRepository
-	RawEmailRepository                           RawEmailRepository
 	ScrapedWebpageRepository                     ScrapedWebpageRepository
 	SlackChannelNotificationRepository           SlackChannelNotificationRepository
 	SlackChannelRepository                       SlackChannelRepository
@@ -78,7 +77,6 @@ type Repositories struct {
 	TenantSettingsRepository                     TenantSettingsRepository
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
 	TenantWebhookRepository                      TenantWebhookRepository
-	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
 	QuickbooksSettingsRepository                 QuickbooksSettingsRepository
 	WebhooksRepository                           WebhooksRepository
@@ -92,10 +90,9 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		Db:      postgresDB.GormDB,
 		AsyncDb: postgresDB.AsyncGormDB,
 
-		OAuthTokenRepository:               NewOAuthTokenRepository(postgresDB.AsyncGormDB),
-		RawEmailRepository:                 NewRawEmailRepository(postgresDB.AsyncGormDB),
-		GoogleServiceAccountKeyRepository:  NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
-		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(postgresDB.AsyncGormDB),
+		OAuthTokenRepository:             NewOAuthTokenRepository(postgresDB.AsyncGormDB),
+		IngestEmailMessageRepository:     NewIngestEmailMessageRepository(postgresDB.AsyncGormDB),
+		IngestEmailImportStateRepository: NewIngestEmailImportStateRepository(postgresDB.AsyncGormDB),
 
 		AgentRepository:                              NewAgentRepository(postgresDB.GormDB),
 		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
@@ -139,7 +136,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 		InvoiceRepository:                            NewInvoiceRepository(postgresDB.GormDB),
-		IngestEmailMessageRepository:                 NewIngestEmailMessageRepository(postgresDB.GormDB),
 		MailStackDomainRepository:                    NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:                NewMailstackBuyRequestRepository(postgresDB.GormDB),
 		MagicLinkRepository:                          NewMagicLinkRepository(postgresDB.GormDB),
@@ -214,7 +210,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.FlowTransitionsRegistry{},
 		&postgres_entity.GlobalOrganization{},
 		&postgres_entity.GlobalOrganizationWebsiteToProcess{},
-		&postgres_entity.IngestEmailMessage{},
 		&postgres_entity.InvoiceNumberEntity{},
 		&postgres_entity.MailStackDomain{},
 		&postgres_entity.MailstackBuyRequest{},
@@ -251,11 +246,9 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 	}
 
 	err = postgresDB.AsyncGormDB.AutoMigrate(
-		&postgres_entity.GoogleServiceAccountKey{},
+		&postgres_entity.IngestEmailMessage{},
 		&postgres_entity.OAuthTokenEntity{},
-		&postgres_entity.RawEmail{},
-		&postgres_entity.UserEmailImportState{},
-		&postgres_entity.UserEmailImportStateHistory{},
+		&postgres_entity.IngestEmailImportState{},
 	)
 	if err != nil {
 		panic(err)

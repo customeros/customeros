@@ -130,7 +130,7 @@ type EnrichOrganizationLocation struct {
 	// example: San Francisco
 	City string `json:"city,omitempty"`
 
-	// State or region
+	// Period or region
 	// required: false
 	// example: California
 	Region string `json:"region,omitempty"`

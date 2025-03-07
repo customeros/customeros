@@ -2,7 +2,6 @@ package integrations
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -11,7 +10,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -93,7 +91,7 @@ func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *Post
 	}
 
 	messageId := emailData.GetHeaderValue("Message-Id")
-	emailExistsInDb, err := h.services.Repositories.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(
+	emailExistsInDb, err := h.services.Repositories.PostgresRepositories.IngestEmailMessageRepository.EmailExistsByMessageId(
 		ctx, EXTERNAL_SYSTEM, tenant, username, messageId,
 	)
 	if err != nil {
@@ -105,20 +103,47 @@ func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *Post
 		return nil
 	}
 
-	dbEmailEntity := emailData.ToRawDbObject()
-	jsonEmailEntity, err := json.Marshal(dbEmailEntity)
-	if err != nil {
-		return fmt.Errorf("Unable to produce JSON email object for db: %v", err)
-	}
+	//TODO implement when we switch to this instead of webhooks app
 
-	dbErr := h.services.Repositories.PostgresRepositories.RawEmailRepository.Store(
-		ctx, EXTERNAL_SYSTEM, tenant, username, dbEmailEntity.ProviderMessageId, messageId, string(jsonEmailEntity), dbEmailEntity.Sent, postgres_entity.REAL_TIME,
-	)
-	if dbErr != nil {
-		span.LogFields(tracingLog.Object("raw_email", jsonEmailEntity))
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("Error writing email to db: %v", err)
-	}
+	//dbEmailEntity := emailData.ToRawDbObject()
+	//jsonEmailEntity, err := json.Marshal(dbEmailEntity)
+	//if err != nil {
+	//	return fmt.Errorf("Unable to produce JSON email object for db: %v", err)
+	//}
+
+	//ingestEmailMessage := postgres_entity.IngestEmailMessage{
+	//	Tenant:   tenant,
+	//	Username: username,
+	//	Provider: enum.SourceMailstack.String(),
+	//	State:    postgres_entity.IngestEmailMessageStatePending,
+	//
+	//	Subject:     emailRawData.Subject,
+	//	TextContent: emailRawData.Text,
+	//	HtmlContent: emailRawData.Html,
+	//
+	//	SentAt: emailRawData.Sent,
+	//
+	//	From: emailRawData.From,
+	//	To:   emailRawData.To,
+	//	Cc:   emailRawData.Cc,
+	//	Bcc:  emailRawData.Bcc,
+	//
+	//	ProviderMessageId:  emailRawData.ProviderMessageId,
+	//	ProviderThreadId:   emailRawData.ThreadId,
+	//	ProviderInReplyTo:  emailRawData.InReplyTo,
+	//	ProviderReferences: emailRawData.Reference,
+	//
+	//	Headers: string(headersString),
+	//}
+	//
+	//dbErr := h.services.Repositories.PostgresRepositories.IngestEmailMessageRepository.Store(
+	//	ctx, EXTERNAL_SYSTEM, tenant, username, dbEmailEntity.ProviderMessageId, messageId, string(jsonEmailEntity), dbEmailEntity.Sent, postgres_entity.REAL_TIME,
+	//)
+	//if dbErr != nil {
+	//	span.LogFields(tracingLog.Object("raw_email", jsonEmailEntity))
+	//	tracing.TraceErr(span, err)
+	//	return fmt.Errorf("Error writing email to db: %v", err)
+	//}
 
 	// Check to see if email is a reply to a flow.  If so, mark as complete.
 	// This should be handled in the email processor common service, not here.

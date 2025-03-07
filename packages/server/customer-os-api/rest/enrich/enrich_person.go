@@ -177,7 +177,7 @@ type EnrichPersonLocation struct {
 	// required: false
 	City string `json:"city" example:"San Francisco"`
 
-	// State or region
+	// Period or region
 	// required: false
 	Region string `json:"region" example:"California"`
 

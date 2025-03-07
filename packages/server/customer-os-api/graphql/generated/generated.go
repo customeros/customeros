@@ -12406,28 +12406,28 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Social.UpdatedAt(childComplexity), true
 
-	case "State.code":
+	case "Period.code":
 		if e.complexity.State.Code == nil {
 			break
 		}
 
 		return e.complexity.State.Code(childComplexity), true
 
-	case "State.country":
+	case "Period.country":
 		if e.complexity.State.Country == nil {
 			break
 		}
 
 		return e.complexity.State.Country(childComplexity), true
 
-	case "State.id":
+	case "Period.id":
 		if e.complexity.State.ID == nil {
 			break
 		}
 
 		return e.complexity.State.ID(childComplexity), true
 
-	case "State.name":
+	case "Period.name":
 		if e.complexity.State.Name == nil {
 			break
 		}
@@ -17426,7 +17426,7 @@ input SocialUpdateInput {
     FATHOM
     GRAIN
 }`, BuiltIn: false},
-	{Name: "../schemas/state.graphqls", Input: `type State {
+	{Name: "../schemas/state.graphqls", Input: `type Period {
     id: ID!
     country: Country!
     name: String!
@@ -105996,7 +105996,7 @@ func (ec *executionContext) _State_id(ctx context.Context, field graphql.Collect
 
 func (ec *executionContext) fieldContext_State_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "State",
+		Object:     "Period",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -106040,7 +106040,7 @@ func (ec *executionContext) _State_country(ctx context.Context, field graphql.Co
 
 func (ec *executionContext) fieldContext_State_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "State",
+		Object:     "Period",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -106096,7 +106096,7 @@ func (ec *executionContext) _State_name(ctx context.Context, field graphql.Colle
 
 func (ec *executionContext) fieldContext_State_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "State",
+		Object:     "Period",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -106140,7 +106140,7 @@ func (ec *executionContext) _State_code(ctx context.Context, field graphql.Colle
 
 func (ec *executionContext) fieldContext_State_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "State",
+		Object:     "Period",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -136155,7 +136155,7 @@ func (ec *executionContext) _Social(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var stateImplementors = []string{"State"}
+var stateImplementors = []string{"Period"}
 
 func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, obj *model.State) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, stateImplementors)
@@ -136165,7 +136165,7 @@ func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, ob
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("State")
+			out.Values[i] = graphql.MarshalString("Period")
 		case "id":
 			out.Values[i] = ec._State_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

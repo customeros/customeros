@@ -19,11 +19,11 @@ func (country StateEntity) ToString() string {
 }
 
 func (country StateEntity) StateEntity() []string {
-	return []string{"State"}
+	return []string{"Period"}
 }
 
 func (StateEntity) Labels() []string {
 	return []string{
-		"State",
+		"Period",
 	}
 }
