@@ -98,6 +98,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		triggerEvent:  triggerEvent,
 		executionID:   executionID,
 		initialParams: initialParams,
+		span:          span,
 	})
 }
 
