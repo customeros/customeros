@@ -237,5 +237,20 @@ func (s *webscraperService) checkCache(ctx context.Context, url string, cacheTTL
 		return "", nil
 	}
 
+	if len(record.Links) == 0 {
+		content, links := s.ProcessWebContent(ctx, record.Content)
+
+		record, err = s.postgresRepositories.ScrapedWebpageRepository.Save(ctx, postgres_entity.ScrapedWebpage{
+			PrimaryDomain: record.PrimaryDomain,
+			Url:           url,
+			Content:       content,
+			Links:         links,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+
 	return record.Content, nil
 }
