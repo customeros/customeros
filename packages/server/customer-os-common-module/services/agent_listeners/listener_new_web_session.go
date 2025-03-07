@@ -101,7 +101,7 @@ func (l *NewWebSessionListener) Handle(ctx context.Context, baseEvent any) error
 		return err
 	}
 
-	return l.handleExecution(ctx, event.Event.Id)
+	return l.handleExecution(ctx, event.Event.EntityId)
 }
 
 func (l *NewWebSessionListener) handleExecution(ctx context.Context, webSessionId string) error {
