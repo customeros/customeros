@@ -224,7 +224,7 @@ func (s *globalContactService) sendRequestToBetterContact() {
 
 	// Better contact is limited to 60 requests per minute
 	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
-	limit := 1
+	limit := 40
 
 	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact")
 	defer span.Finish()
@@ -280,7 +280,7 @@ func (s *globalContactService) processBetterContactResponses() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 1
+	limit := 250
 
 	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToSetWorkEmailFromBetterContactResponse(ctx, limit)
 	if err != nil {
