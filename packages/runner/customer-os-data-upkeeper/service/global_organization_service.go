@@ -688,7 +688,7 @@ func (s *globalOrganizationService) enrichIndustry() {
 		}
 
 		// Construct the prompt
-		systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from thier homepage (if available).
+		systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from their homepage (if available).
         Your job is to classify the NAICS industry code the company belongs to based on the data provided.
         Return only the single most specific and appropriate NAICS code (digits only, e.g. "541511") for the company. 
 
@@ -785,6 +785,12 @@ func (s *globalOrganizationService) enrichDescription() {
 			continue
 		}
 
+		url := "https://" + record.PrimaryDomain
+		pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+
 		// prepare Anthropic prompt
 		var descLines []string
 		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
@@ -795,46 +801,41 @@ func (s *globalOrganizationService) enrichDescription() {
 		}
 
 		// Construct the prompt
-		systemPrompt := `
-        You are a company analyst who writes clear, direct business descriptions. 
-        Return a single paragraph (max 300 characters), in American English, explaining who the company serves and their revenue model. 
-        No marketing speak or jargon. 
-        Return "N/A" if insufficient information.`
+		systemPrompt := `I am going to provide you metadata about a company, including the conpany name, website url, various descriptions from social media, and scraped content from their homepage (if available).  Your job is to write a clear, direct decription of the company that explains who they serve and their revenue model.  
 
-		prompt := map[string]interface{}{
-			"name":   record.Name,
-			"domain": record.PrimaryDomain,
-			"data":   strings.Join(descLines, "\n"),
+        Please return a single paragraph (max 300 characters), in American English.
+        No marketing speak or jargon.`
+
+		var p strings.Builder
+		p.WriteString(fmt.Sprintf("Company name: %s", record.Name))
+		p.WriteString(fmt.Sprintf("Company website: %s", url))
+		for _, desc := range descLines {
+			p.WriteString(desc)
 		}
-		// Convert the map to a JSON string
-		jsonBytes, err := json.Marshal(prompt)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marshalling prompt"))
-			continue
+		if pageContent != "" {
+			p.WriteString("---Scraped homepage content---")
+			p.WriteString(pageContent)
 		}
-		promptString := string(jsonBytes)
+		prompt := p.String()
 
 		// ask AI for concise description
 		temperature := float32(1.0)
-		aiOutput, err := s.commonServices.AIService.AskAI(ctx, interfaces.AskAIRequest{
+		aiOutput, err := s.commonServices.AIService.AskAIForCompanyDescription(ctx, interfaces.AskAIRequest{
 			Model:            enum.AIModelAnthropicHaiku,
 			SystemPrompt:     &systemPrompt,
-			Prompt:           &promptString,
+			Prompt:           &prompt,
 			ModelTemperature: &temperature,
-			OutputFormat:     enum.AIOutputText,
 		})
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
 		}
-		aiDescrition := utils.IfNotNilString(aiOutput)
-		recordSpan.LogFields(log.String("result.description", aiDescrition))
 
-		if aiDescrition == "" || aiDescrition == "N/A" {
-			aiDescrition = utils.FirstNotEmptyString(record.Description, record.SourceDescription3, record.SourceDescription1, record.SourceDescription4, record.SourceDescription2)
+		if aiOutput.Description == "" {
+			aiOutput.Description = utils.FirstNotEmptyString(record.Description, record.SourceDescription3, record.SourceDescription1, record.SourceDescription4, record.SourceDescription2)
 		}
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(recordCtx, record.ID, aiDescrition)
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(recordCtx, record.ID, aiOutput.Description)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting description"))
 			continue
