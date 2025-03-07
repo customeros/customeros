@@ -40,7 +40,7 @@ func NewMediaService(postgres *postgres_repository.Repositories) interfaces.Medi
 // DownloadImageToS3 downloads an image from a URL directly to an S3 bucket
 // using the existing S3Client implementation
 func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "media.DownloadImageToS3")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.DownloadImageToS3")
 	defer span.Finish()
 	span.LogFields(
 		tracingLog.String("url", imageURL),
@@ -85,10 +85,14 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 
 	// Check if request was successful
 	if resp.StatusCode != http.StatusOK {
+		span.LogFields(tracingLog.Int("response.statusCode", resp.StatusCode))
 		switch {
 		case resp.StatusCode == http.StatusNotFound:
 			return "", coserrors.ErrResourceNotFound
+		case resp.StatusCode == http.StatusForbidden:
+			return "", coserrors.ErrResourceForbidden
 		default:
+			err := errors.New("failed to download image")
 			tracing.TraceErr(span, err)
 			return "", err
 		}

@@ -16,6 +16,7 @@ var (
 	ErrConnectionTimeout   = errors.New("Connection timeout")
 	ErrOperationNotAllowed = errors.New("Operation not allowed")
 	ErrResourceNotFound    = errors.New("Resource not found")
+	ErrResourceForbidden   = errors.New("Resource forbidden")
 
 	// domain errors
 	ErrDomainUnavailable         = errors.New("domain unavailable")
