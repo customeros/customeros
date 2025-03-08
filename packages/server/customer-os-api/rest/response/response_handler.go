@@ -129,7 +129,8 @@ func (h *Response) AbortAndHandleError(c *gin.Context, statusCode int, message *
 		response["message"] = *message
 	}
 
-	c.JSON(500, response)
+	c.Abort() // Abort the request chain before sending response
+	c.JSON(statusCode, response)
 }
 
 // method for partial success responses
