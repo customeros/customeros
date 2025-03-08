@@ -1,4 +1,4 @@
-package crust_data
+package enrichment
 
 import (
 	"bytes"
@@ -7,15 +7,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
+
+const CacheCrustDataTTL = 90 * 24 * time.Hour
 
 // CrustDataFilter represents a single filter in the Crust Data API request
 type CrustDataFilter struct {
@@ -51,10 +56,10 @@ func NewCrustDataService(log logger.Logger,
 	}
 }
 
-func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain string, jobTitles []string) (*CrustDataResponse, error) {
+func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain string, jobTitles []string) (*interfaces.CrustDataResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataService.SearchPeople")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(span)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("companyDomain", companyDomain))
 	tracing.LogObjectAsJson(span, "jobTitles", jobTitles)
 
@@ -67,21 +72,66 @@ func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain strin
 
 	var profiles []interfaces.CrustDataProfile
 
-	// call crust data to get people
-	response, err := s.callCrustData(ctx, companyDomain, jobTitle, 1)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Error(err)
-		return nil, err
+	for _, jobTitle := range jobTitles {
+		// Check cache if record exists by companyDomain and jobTitle and ttl, call cache crust data repository
+		cachedRecords, err := s.postgres.CacheCrustDataRepository.GetByCompanyAndTitle(ctx, companyDomain, jobTitle, CacheCrustDataTTL)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Error(err)
+			return nil, err
+		}
+		if len(cachedRecords) > 0 {
+			for _, cachedRecord := range cachedRecords {
+				var crustDataResponse interfaces.CrustDataResponse
+				if err := json.Unmarshal([]byte(cachedRecord.Response), &crustDataResponse); err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Error(err)
+					return nil, err
+				}
+				profiles = append(profiles, crustDataResponse.Profiles...)
+			}
+		} else {
+			// call crust data api
+			response, err := s.callCrustDataFilterByCompanyAndJobTitle(ctx, companyDomain, jobTitle, 1)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Error(err)
+				return nil, err
+			}
+			if response != "" {
+				var crustDataResponse interfaces.CrustDataResponse
+				if err := json.Unmarshal([]byte(response), &crustDataResponse); err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Error(err)
+					return nil, err
+				}
+				profiles = append(profiles, crustDataResponse.Profiles...)
+				// save to cache
+				_, err = s.postgres.CacheCrustDataRepository.Create(ctx, postgres_entity.CacheCrustData{
+					RequestCompanyDomain: companyDomain,
+					RequestJobTitle:      jobTitle,
+					Response:             response,
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Error(err)
+					return nil, err
+				}
+			}
+		}
 	}
 
-	return response, nil
+	response := interfaces.CrustDataResponse{
+		Profiles: profiles,
+	}
+
+	return &response, nil
 }
 
 func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.Context, companyDomain string, jobTitle string, page int) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataService.callCrustDataFilterByCompanyAndJobTitle")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(span)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(
 		log.String("companyDomain", companyDomain),
 		log.String("jobTitle", jobTitle),

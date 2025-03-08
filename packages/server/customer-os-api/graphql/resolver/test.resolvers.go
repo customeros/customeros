@@ -6,12 +6,23 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 // TestMutation is the resolver for the testMutation field.
 func (r *mutationResolver) TestMutation(ctx context.Context, input model.TestInput) (bool, error) {
-	panic(fmt.Errorf("not implemented: TestMutation - testMutation"))
+	var jobTitles []string
+	if input.ListParam != nil {
+		for _, title := range input.ListParam {
+			jobTitles = append(jobTitles, utils.IfNotNilString(title))
+		}
+	}
+	response, err := r.Services.CommonServices.CrustDataService.SearchPeople(ctx, utils.IfNotNilString(input.StringParam), jobTitles)
+	if err != nil {
+		return false, err
+	}
+	println(response)
+
+	return true, nil
 }
