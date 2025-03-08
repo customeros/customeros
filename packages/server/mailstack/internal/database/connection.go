@@ -2,26 +2,28 @@ package database
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/customeros/customeros/packages/server/mailstack/config"
 )
 
-type Config struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
-}
+func NewConnection(config *config.MailstackDatabaseConfig) (*gorm.DB, error) {
+	validateConfig(config)
 
-func NewConnection(config Config) (*gorm.DB, error) {
+	portInt, err := strconv.Atoi(config.Port)
+	if err != nil {
+		return nil, fmt.Errorf("invalid port number: %w", err)
+	}
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
+		config.Host, portInt, config.User, config.Password, config.DBName, config.SSLMode,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -47,4 +49,24 @@ func NewConnection(config Config) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	return db, nil
+}
+
+func validateConfig(config *config.MailstackDatabaseConfig) {
+	switch {
+	case config == nil:
+		log.Fatalf("Database config is nil")
+	case config.Host == "":
+		log.Fatalf("Database host config is empty")
+	case config.Port == "":
+		log.Fatalf("Database port config is empty")
+	case config.User == "":
+		log.Fatalf("Database user config is empty")
+	case config.Password == "":
+		log.Fatalf("Database password config is empty")
+	case config.DBName == "":
+		log.Fatalf("Database name config is empty")
+	case config.SSLMode == "":
+		log.Fatalf("Database SSLMode config is empty")
+	}
+	return
 }

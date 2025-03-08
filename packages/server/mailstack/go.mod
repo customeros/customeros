@@ -3,7 +3,9 @@ module github.com/customeros/customeros/packages/server/mailstack
 go 1.23.6
 
 require (
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/emersion/go-imap v1.2.1
+	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )

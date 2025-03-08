@@ -25,7 +25,7 @@ type IMAPService struct {
 	statusMutex  sync.RWMutex
 }
 
-func NewIMAPService() *IMAPService {
+func NewIMAPService() interfaces.IMAPService {
 	return &IMAPService{
 		clients:  make(map[string]*client.Client),
 		configs:  make(map[string]interfaces.MailboxConfig),
@@ -56,19 +56,58 @@ func (s *IMAPService) Start(ctx context.Context) error {
 }
 
 func (s *IMAPService) Stop() error {
+	log.Println("IMAPService: Stop called, cancelling context...")
+
+	// Cancel main context to signal all goroutines
 	if s.cancel != nil {
 		s.cancel()
 	}
 
-	// Close all connections
+	// Create a timeout context for shutdown operations
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	// Close all connections with timeout
 	s.clientsMutex.Lock()
-	for id, client := range s.clients {
-		client.Logout()
+	clients := make(map[string]*client.Client)
+	for id, c := range s.clients {
+		clients[id] = c
 		delete(s.clients, id)
 	}
 	s.clientsMutex.Unlock()
 
-	s.wg.Wait()
+	// Logout clients with timeout
+	for id, c := range clients {
+		log.Printf("IMAPService: Logging out client %s...", id)
+
+		// Create a goroutine to handle logout
+		go func(client *client.Client, clientID string) {
+			err := client.Logout()
+			if err != nil {
+				log.Printf("Error logging out %s: %v", clientID, err)
+			}
+		}(c, id)
+	}
+
+	// Wait for goroutines to finish or timeout
+	log.Println("IMAPService: Waiting for goroutines to finish (max 5 seconds)...")
+
+	// Use a channel to signal completion of waitgroup
+	done := make(chan struct{})
+	go func() {
+		s.wg.Wait()
+		close(done)
+	}()
+
+	// Wait for either waitgroup completion or timeout
+	select {
+	case <-done:
+		log.Println("IMAPService: All goroutines finished gracefully")
+	case <-shutdownCtx.Done():
+		log.Println("IMAPService: Timed out waiting for goroutines, forcing exit")
+	}
+
+	log.Println("IMAPService: Stop completed")
 	return nil
 }
 
@@ -281,6 +320,7 @@ func (s *IMAPService) monitorFolder(mailboxID string, c *client.Client, folderNa
 				log.Printf("[%s][%s] Processing recent message: %d", mailboxID, folderName, msg.SeqNum)
 				if s.eventHandler != nil {
 					s.eventHandler(interfaces.MailEvent{
+						Source:    "imap",
 						MailboxID: mailboxID,
 						Folder:    folderName,
 						MessageID: msg.SeqNum,
@@ -334,6 +374,7 @@ func (s *IMAPService) monitorFolder(mailboxID string, c *client.Client, folderNa
 				log.Printf("[%s][%s] Processing unseen message: %d", mailboxID, folderName, msg.SeqNum)
 				if s.eventHandler != nil {
 					s.eventHandler(interfaces.MailEvent{
+						Source:    "imap",
 						MailboxID: mailboxID,
 						Folder:    folderName,
 						MessageID: msg.SeqNum,
@@ -552,6 +593,7 @@ func (s *IMAPService) fetchNewMessages(mailboxID string, c *client.Client, folde
 		if s.eventHandler != nil {
 			log.Printf("[%s][%s] Triggering event handler for message %d", mailboxID, folderName, msg.SeqNum)
 			s.eventHandler(interfaces.MailEvent{
+				Source:    "imap",
 				MailboxID: mailboxID,
 				Folder:    folderName,
 				MessageID: msg.SeqNum,
@@ -596,6 +638,7 @@ func (s *IMAPService) fetchNewMessagesByUID(mailboxID string, c *client.Client, 
 	for msg := range messages {
 		if s.eventHandler != nil {
 			s.eventHandler(interfaces.MailEvent{
+				Source:    "imap",
 				MailboxID: mailboxID,
 				Folder:    folderName,
 				MessageID: msg.SeqNum,

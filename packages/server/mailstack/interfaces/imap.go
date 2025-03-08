@@ -2,7 +2,7 @@ package interfaces
 
 import "context"
 
-type MailboxService interface {
+type IMAPService interface {
 	Start(ctx context.Context) error
 	Stop() error
 	AddMailbox(config MailboxConfig) error
@@ -10,8 +10,8 @@ type MailboxService interface {
 	Status() map[string]MailboxStatus
 	SetEventHandler(handler func(event MailEvent))
 	// DB calls
-	GetLastSeenUID(mailboxID, folderName string) (uint32, error)
-	UpdateLastSeenUID(mailboxID, folderName string, uid uint32) error
+	// GetLastSeenUID(mailboxID, folderName string) (uint32, error)
+	// UpdateLastSeenUID(mailboxID, folderName string, uid uint32) error
 }
 
 type MailboxConfig struct {
@@ -37,6 +37,7 @@ type FolderStats struct {
 }
 
 type MailEvent struct {
+	Source    string
 	MailboxID string
 	Folder    string
 	MessageID uint32
