@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/forPelevin/gomoji"
@@ -16,6 +17,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+)
+
+const (
+	BetterContactTTL = 90 * 24 * time.Hour
 )
 
 type BetterContactResponseBody struct {
@@ -77,7 +82,7 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 
 	var existingBetterContactData *postgres_entity.EnrichDetailsBetterContact
 
-	detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetBy(ctx, linkedInUrl, firstName, lastName, companyName, companyDomain, enrichPhoneNumber)
+	detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetBy(ctx, linkedInUrl, firstName, lastName, companyName, companyDomain, enrichPhoneNumber, BetterContactTTL)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
 		return "", "", nil, err
