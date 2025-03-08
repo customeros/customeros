@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -11,6 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/mailstack/internal/database"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/repository"
 	"github.com/customeros/customeros/packages/server/mailstack/services/imap"
 	"github.com/customeros/customeros/packages/server/mailstack/services/mailbox"
 )
@@ -24,10 +26,32 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Create IMAP service
-	imapService := imap.NewIMAPService()
+	// Setup the database
+	dbConfig := database.Config{
+		Host:     "localhost",
+		Port:     5432,
+		User:     "mailstack_user",
+		Password: "your_secure_password",
+		DBName:   "mailstack",
+		SSLMode:  "disable", // Use "require" in production
+	}
 
-	// Create mail service
+	db, err := database.NewConnection(dbConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Auto-migrate the db schema
+	if err := db.AutoMigrate(&models.Mailbox{}, &models.MessageState{}); err != nil {
+		log.Fatalf("Failed to migrate database schema: %v", err)
+	}
+
+	// Create repositories
+	mailboxRepo := repository.NewMailboxRepository(db)
+	messageStateRepo := repository.NewMessageStateRepository(db)
+
+	// Create Services
+	imapService := imap.NewIMAPService()
 	mailService := mailbox.NewMailService(imapService)
 
 	// Set up HTTP server

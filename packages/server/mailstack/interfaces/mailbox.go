@@ -9,6 +9,9 @@ type MailboxService interface {
 	RemoveMailbox(mailboxID string) error
 	Status() map[string]MailboxStatus
 	SetEventHandler(handler func(event MailEvent))
+	// DB calls
+	GetLastSeenUID(mailboxID, folderName string) (uint32, error)
+	UpdateLastSeenUID(mailboxID, folderName string, uid uint32) error
 }
 
 type MailboxConfig struct {

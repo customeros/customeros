@@ -33,6 +33,11 @@ func NewIMAPService() *IMAPService {
 	}
 }
 
+const (
+	DEFAULT_IMAP_LOGOUT    = 25 // minutes
+	DEFAULT_POLLING_PERIOD = 20 // minutes
+)
+
 func (s *IMAPService) SetEventHandler(handler func(interfaces.MailEvent)) {
 	s.eventHandler = handler
 }
@@ -231,65 +236,61 @@ func (s *IMAPService) monitorFolder(mailboxID string, c *client.Client, folderNa
 	// Update folder stats
 	s.updateFolderStats(mailboxID, folderName, mbox)
 
-	// Keep track of the highest message sequence number we've seen
-	lastSeqNum := mbox.Messages
+	// Get the last seen UID from persistent storage
+	lastSeenUID, err := s.tracker.GetLastSeenUID(mailboxID, folderName)
+	if err != nil {
+		log.Printf("Warning: Could not get last seen UID: %v, starting from current state", err)
+		lastSeenUID = 0
+	}
+
+	// If this is a new folder or we don't have history, use current state
+	if lastSeenUID == 0 {
+		// Store the current highest UID
+		if mbox.UidNext > 1 {
+			lastSeenUID = mbox.UidNext - 1
+			err = s.tracker.UpdateLastSeenUID(mailboxID, folderName, lastSeenUID)
+			if err != nil {
+				log.Printf("Warning: Failed to update last seen UID: %v", err)
+			}
+		}
+	} else {
+		// Fetch any messages that arrived while we were disconnected
+		if mbox.UidNext > lastSeenUID+1 {
+			s.fetchNewMessagesByUID(mailboxID, c, folderName, lastSeenUID+1, mbox.UidNext-1)
+		}
+	}
 
 	// Set up updates channel
 	updates := make(chan client.Update, 100)
 	c.Updates = updates
 
-	// Start IDLE
-	idleChan := make(chan error, 1)
-	idleCmd, err := c.IdleWithFallback(idleChan, s.ctx)
-	if err != nil {
-		c.Updates = nil
-		return fmt.Errorf("failed to start IDLE on folder %s: %w", folderName, err)
+	// Create a stop channel that will be closed when we need to stop IDLE
+	stop := make(chan struct{})
+
+	// Start a goroutine to handle context cancellation
+	go func() {
+		<-s.ctx.Done()
+		close(stop)
+	}()
+
+	// Start IDLE with proper timeout handling
+	err = c.Idle(stop, &client.IdleOptions{
+		LogoutTimeout: DEFAULT_IMAP_LOGOUT,
+		PollInterval:  DEFAULT_POLLING_PERIOD,
+	})
+
+	// If we get here, either there was an error or the context was canceled
+	c.Updates = nil
+
+	if err != nil && s.ctx.Err() == nil {
+		// There was an error and it wasn't due to context cancellation
+		return fmt.Errorf("IDLE error: %w", err)
 	}
 
-	// Process updates
-	for {
-		select {
-		case update := <-updates:
-			switch u := update.(type) {
-			case *client.MailboxUpdate:
-				// If we have new messages
-				if u.Mailbox.Messages > lastSeqNum {
-					// Fetch new messages
-					err := s.fetchNewMessages(mailboxID, c, folderName, lastSeqNum+1, u.Mailbox.Messages)
-					if err != nil {
-						log.Printf("Error fetching new messages: %v", err)
-					}
-					lastSeqNum = u.Mailbox.Messages
-				}
-
-				// Update folder stats
-				s.updateFolderStats(mailboxID, folderName, u.Mailbox)
-			}
-
-		case err := <-idleChan:
-			if err != nil {
-				log.Printf("IDLE command error for mailbox %s, folder %s: %v", mailboxID, folderName, err)
-				c.Updates = nil
-				return err
-			}
-
-			// Restart IDLE
-			idleCmd, err = c.IdleWithFallback(idleChan, s.ctx)
-			if err != nil {
-				c.Updates = nil
-				return fmt.Errorf("failed to restart IDLE: %w", err)
-			}
-
-		case <-s.ctx.Done():
-			// Cancel IDLE command
-			idleCmd.Done()
-			c.Updates = nil
-			return nil
-		}
-	}
+	return nil
 }
 
-func (s *IMAPService) updateFolderStats(mailboxID, folderName string, mbox *interfaces.MailboxStatus) {
+func (s *IMAPService) updateFolderStats(mailboxID, folderName string, mbox *imap.MailboxStatus) {
 	s.statusMutex.Lock()
 	defer s.statusMutex.Unlock()
 
@@ -326,23 +327,25 @@ func (s *IMAPService) updateFolderStats(mailboxID, folderName string, mbox *inte
 	s.statuses[mailboxID] = status
 }
 
-func (s *IMAPService) fetchNewMessages(mailboxID string, c *client.Client, folderName string, from, to uint32) error {
-	if from > to {
+func (s *IMAPService) fetchNewMessagesByUID(mailboxID string, c *client.Client, folderName string, fromUID, toUID uint32) error {
+	if fromUID > toUID {
 		return nil
 	}
 
 	seqSet := new(imap.SeqSet)
-	seqSet.AddRange(from, to)
+	seqSet.AddRange(fromUID, toUID)
 
 	// Items to fetch
-	items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchBodyStructure, "BODY.PEEK[]"}
+	items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchBodyStructure, "BODY.PEEK[]", imap.FetchUid}
 
 	messages := make(chan *imap.Message, 10)
 	done := make(chan error, 1)
 
 	go func() {
-		done <- c.Fetch(seqSet, items, messages)
+		done <- c.UidFetch(seqSet, items, messages)
 	}()
+
+	var highestUID uint32 = 0
 
 	for msg := range messages {
 		if s.eventHandler != nil {
@@ -353,6 +356,18 @@ func (s *IMAPService) fetchNewMessages(mailboxID string, c *client.Client, folde
 				EventType: "new",
 				Message:   msg,
 			})
+		}
+
+		if msg.Uid > highestUID {
+			highestUID = msg.Uid
+		}
+	}
+
+	// Update the last seen UID
+	if highestUID > 0 {
+		err := s.tracker.UpdateLastSeenUID(mailboxID, folderName, highestUID)
+		if err != nil {
+			log.Printf("Warning: Failed to update last seen UID: %v", err)
 		}
 	}
 
