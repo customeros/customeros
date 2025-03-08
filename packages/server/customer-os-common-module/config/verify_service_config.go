@@ -40,3 +40,9 @@ type EnrowConfig struct {
 	CallbackUrl           string `env:"ENROW_CALLBACK_URL"`
 	EnrowCallbackApiKey   string `env:"ENROW_CALLBACK_API_KEY"`
 }
+
+type CrustDataConfig struct {
+	Enabled bool   `env:"CRUST_DATA_ENABLED" envDefault:"true"`
+	ApiUrl  string `env:"CRUST_DATA_API_URL" envDefault:"https://api.crustdata.com"`
+	ApiKey  string `env:"CRUST_DATA_API_KEY"`
+}

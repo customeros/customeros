@@ -12,7 +12,7 @@ type GlobalOrganization struct {
 	PrimaryDomain           string              `gorm:"column:primary_domain;type:varchar(255);NOT NULL;index:idx_global_organization_primary_domain,unique" json:"primaryDomain"`
 	OtherDomains            string              `gorm:"column:other_domains;type:text" json:"otherDomains"`
 	CreatedAt               time.Time           `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
-	UpdatedAt               time.Time           `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
+	UpdatedAt               time.Time           `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp,autoUpdateTime" json:"updatedAt"`
 	Description             string              `gorm:"column:description;type:text" json:"description"`
 	IconUrl                 string              `gorm:"column:icon_url;type:varchar(2000)" json:"iconUrl"`
 	LogoUrl                 string              `gorm:"column:logo_url;type:varchar(2000)" json:"logoUrl"`
