@@ -1104,7 +1104,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	}
 
 	// Call events platform to find work email
-	_, betterComtactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmail(ctx, linkedInUrl, contactEntity.FirstName, contactEntity.LastName, orgName, utils.IfNotNilString(domain), false)
+	_, betterContactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmail(ctx, linkedInUrl, contactEntity.FirstName, contactEntity.LastName, orgName, utils.IfNotNilString(domain), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)
@@ -1127,7 +1127,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		}
 	} else {
 		// mark contact as requested data from better contact
-		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), betterComtactRequestID)
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), betterContactRequestID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -1144,7 +1144,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			tracing.TraceErr(span, err)
 		}
 		if utils.BoolDefaultIfNil(findMobileNumber, false) {
-			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId), betterComtactRequestID)
+			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId), betterContactRequestID)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -1225,7 +1225,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	if emailLinked {
 		_, err = r.Services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound,
 			postgresrepository.BillableEventDetails{
-				ExternalID:    betterComtactRequestID,
+				ExternalID:    betterContactRequestID,
 				ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, contactEntity.FirstName, contactEntity.LastName),
 			})
 		if err != nil {
@@ -1235,7 +1235,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	if phoneLinked {
 		_, err = r.Services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonPhoneFound,
 			postgresrepository.BillableEventDetails{
-				ExternalID:    betterComtactRequestID,
+				ExternalID:    betterContactRequestID,
 				ReferenceData: fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, contactEntity.FirstName, contactEntity.LastName),
 			})
 		if err != nil {

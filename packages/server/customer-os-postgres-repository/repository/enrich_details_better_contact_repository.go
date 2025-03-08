@@ -19,10 +19,10 @@ type enrichDetailsBetterContactRepository struct {
 type EnrichDetailsBetterContactRepository interface {
 	RegisterRequest(ctx context.Context, data postgres_entity.EnrichDetailsBetterContact) (*postgres_entity.EnrichDetailsBetterContact, error)
 	AddResponse(ctx context.Context, requestId, response string) error
-	GetByLinkedInUrl(ctx context.Context, linkedInUrl string, enrichPhoneNumber bool) (*postgres_entity.EnrichDetailsBetterContact, error)
+	GetByLinkedInUrl(ctx context.Context, linkedInUrl string, enrichPhoneNumber bool) (*postgres_entity.EnrichDetailsBetterContact, error) // Deprecated
 	GetById(ctx context.Context, id string) (*postgres_entity.EnrichDetailsBetterContact, error)
 	GetByRequestId(ctx context.Context, requestId string) (*postgres_entity.EnrichDetailsBetterContact, error)
-	GetBy(ctx context.Context, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) ([]*postgres_entity.EnrichDetailsBetterContact, error)
+	GetBy(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) ([]*postgres_entity.EnrichDetailsBetterContact, error)
 	GetWithoutResponses(ctx context.Context) ([]*postgres_entity.EnrichDetailsBetterContact, error)
 }
 
@@ -127,19 +127,21 @@ func (r enrichDetailsBetterContactRepository) GetByRequestId(ctx context.Context
 	return postgres_entity, err
 }
 
-func (r enrichDetailsBetterContactRepository) GetBy(ctx context.Context, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) ([]*postgres_entity.EnrichDetailsBetterContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetLatestByRequestId")
+func (r enrichDetailsBetterContactRepository) GetBy(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) ([]*postgres_entity.EnrichDetailsBetterContact, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetBy")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(
+		tracingLog.String("linkedInUrl", linkedInUrl),
 		tracingLog.String("firstName", firstName),
 		tracingLog.String("lastName", lastName),
 		tracingLog.String("companyName", companyName),
 		tracingLog.String("companyDomain", companyDomain),
 		tracingLog.Bool("enrichPhoneNumber", enrichPhoneNumber))
 
-	var postgres_entity []*postgres_entity.EnrichDetailsBetterContact
+	var betterContactEntity []*postgres_entity.EnrichDetailsBetterContact
 	tx := r.gormDb.
+		Where("contact_linkedin_url = ?", linkedInUrl).
 		Where("contact_first_name = ?", firstName).
 		Where("contact_last_name = ?", lastName).
 		Where("company_name = ?", companyName).
@@ -147,13 +149,13 @@ func (r enrichDetailsBetterContactRepository) GetBy(ctx context.Context, firstNa
 	if enrichPhoneNumber {
 		tx = tx.Where("enrich_phone_number = ?", enrichPhoneNumber)
 	}
-	err := tx.Find(&postgres_entity).Error
+	err := tx.Find(&betterContactEntity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 
-	return postgres_entity, err
+	return betterContactEntity, err
 }
 
 func (r enrichDetailsBetterContactRepository) GetWithoutResponses(ctx context.Context) ([]*postgres_entity.EnrichDetailsBetterContact, error) {

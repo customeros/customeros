@@ -77,26 +77,14 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 
 	var existingBetterContactData *postgres_entity.EnrichDetailsBetterContact
 
-	if linkedInUrl != "" {
-		betterContactByLinkedInUrl, err := s.postgres.EnrichDetailsBetterContactRepository.GetByLinkedInUrl(ctx, linkedInUrl, enrichPhoneNumber)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
-			return "", "", nil, err
-		}
+	detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetBy(ctx, linkedInUrl, firstName, lastName, companyName, companyDomain, enrichPhoneNumber)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
+		return "", "", nil, err
+	}
 
-		if betterContactByLinkedInUrl != nil {
-			existingBetterContactData = betterContactByLinkedInUrl
-		}
-	} else {
-		detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetBy(ctx, firstName, lastName, companyName, companyDomain, enrichPhoneNumber)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
-			return "", "", nil, err
-		}
-
-		if detailsBetterContactList != nil && len(detailsBetterContactList) > 0 {
-			existingBetterContactData = detailsBetterContactList[0]
-		}
+	if detailsBetterContactList != nil && len(detailsBetterContactList) > 0 {
+		existingBetterContactData = detailsBetterContactList[0]
 	}
 
 	if existingBetterContactData != nil {
