@@ -5,10 +5,10 @@ import (
 )
 
 type EnrichDetailsBetterContact struct {
-	ID                 string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID                 string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	RequestID          string    `gorm:"column:request_id;type:varchar(255);NOT NULL" json:"requestId"`
 	CreatedAt          time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
-	UpdatedAt          time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	ContactFirstName   string    `gorm:"column:contact_first_name;type:varchar(255);" json:"contactFirstName"`
 	ContactLastName    string    `gorm:"column:contact_last_name;type:varchar(255);" json:"contactLastName"`
 	ContactLinkedInUrl string    `gorm:"column:contact_linkedin_url;type:varchar(255);" json:"contactLinkedInUrl"`
