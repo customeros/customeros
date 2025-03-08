@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	BetterContactTTL = 90 * 24 * time.Hour
+	BetterContactTTL = 180 * 24 * time.Hour
 )
 
 type BetterContactResponseBody struct {
@@ -82,7 +82,7 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 
 	var existingBetterContactData *postgres_entity.EnrichDetailsBetterContact
 
-	detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetBy(ctx, linkedInUrl, firstName, lastName, companyName, companyDomain, enrichPhoneNumber, BetterContactTTL)
+	detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetByRequestParams(ctx, linkedInUrl, firstName, lastName, companyName, companyDomain, enrichPhoneNumber, BetterContactTTL)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
 		return "", "", nil, err
