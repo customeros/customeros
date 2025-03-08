@@ -1,0 +1,9 @@
+extend type Mutation {
+    testMutation(input: TestInput!): Boolean!
+}
+
+input TestInput {
+    stringParam:    String
+    intParam:       Int
+    listParam:      [String]
+}

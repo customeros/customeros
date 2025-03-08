@@ -2998,6 +2998,12 @@ type TenantSettingsOpportunityStageConfigurationInput struct {
 	LikelihoodRate *int64  `json:"likelihoodRate,omitempty"`
 }
 
+type TestInput struct {
+	StringParam *string   `json:"stringParam,omitempty"`
+	IntParam    *int      `json:"intParam,omitempty"`
+	ListParam   []*string `json:"listParam,omitempty"`
+}
+
 type TimeRange struct {
 	// The start time of the time range.
 	// **Required.**

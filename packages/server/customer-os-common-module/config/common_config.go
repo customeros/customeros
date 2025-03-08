@@ -57,4 +57,5 @@ type ExternalServicesConfig struct {
 	TemporalConfig       TemporalConfig
 	TrueInboxConfig      TrueInboxConfig
 	QuickbooksConfig     QuickbooksConfig
+	CrustDataConfig      CrustDataConfig
 }
