@@ -3,18 +3,19 @@ package repository
 import (
 	"gorm.io/gorm"
 
+	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
 	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
 )
 
-type MessageStateRepository struct {
+type messageStateRepository struct {
 	db *gorm.DB
 }
 
-func NewMessageStateRepository(db *gorm.DB) *MessageStateRepository {
-	return &MessageStateRepository{db: db}
+func NewMessageStateRepository(db *gorm.DB) interfaces.MessageStateRepository {
+	return &messageStateRepository{db: db}
 }
 
-func (r *MessageStateRepository) GetLastSeenUID(mailboxID, folderName string) (uint32, error) {
+func (r *messageStateRepository) GetLastSeenUID(mailboxID, folderName string) (uint32, error) {
 	var state models.MessageState
 	err := r.db.First(&state, "mailbox_id = ? AND folder_name = ?", mailboxID, folderName).Error
 	if err != nil {
@@ -27,7 +28,7 @@ func (r *MessageStateRepository) GetLastSeenUID(mailboxID, folderName string) (u
 	return state.LastSeenUID, nil
 }
 
-func (r *MessageStateRepository) UpdateLastSeenUID(mailboxID, folderName string, uid uint32) error {
+func (r *messageStateRepository) UpdateLastSeenUID(mailboxID, folderName string, uid uint32) error {
 	return r.db.Exec(
 		`INSERT INTO message_states (mailbox_id, folder_name, last_seen_uid, last_checked_at) 
 		VALUES (?, ?, ?, NOW()) 

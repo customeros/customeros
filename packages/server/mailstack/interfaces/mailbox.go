@@ -17,7 +17,7 @@ type MailboxService interface {
 type MailboxConfig struct {
 	ID       string
 	Server   string
-	Port     string
+	Port     int
 	Username string
 	Password string
 	Folders  []string

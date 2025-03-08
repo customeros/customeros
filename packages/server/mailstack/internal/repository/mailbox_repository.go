@@ -7,15 +7,15 @@ import (
 	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
 )
 
-type MailboxRepository struct {
+type mailboxRepository struct {
 	db *gorm.DB
 }
 
-func NewMailboxRepository(db *gorm.DB) *MailboxRepository {
-	return &MailboxRepository{db: db}
+func NewMailboxRepository(db *gorm.DB) interfaces.MailboxRepository {
+	return &mailboxRepository{db: db}
 }
 
-func (r *MailboxRepository) GetMailboxes() ([]interfaces.MailboxConfig, error) {
+func (r *mailboxRepository) GetMailboxes() ([]interfaces.MailboxConfig, error) {
 	var mailboxes []models.Mailbox
 	err := r.db.Find(&mailboxes).Error
 	if err != nil {
@@ -38,7 +38,7 @@ func (r *MailboxRepository) GetMailboxes() ([]interfaces.MailboxConfig, error) {
 	return result, nil
 }
 
-func (r *MailboxRepository) GetMailbox(id string) (interfaces.MailboxConfig, error) {
+func (r *mailboxRepository) GetMailbox(id string) (interfaces.MailboxConfig, error) {
 	var mailbox models.Mailbox
 	err := r.db.First(&mailbox, "id = ?", id).Error
 	if err != nil {
@@ -56,7 +56,7 @@ func (r *MailboxRepository) GetMailbox(id string) (interfaces.MailboxConfig, err
 	}, nil
 }
 
-func (r *MailboxRepository) SaveMailbox(config interfaces.MailboxConfig) error {
+func (r *mailboxRepository) SaveMailbox(config interfaces.MailboxConfig) error {
 	mailbox := models.Mailbox{
 		ID:       config.ID,
 		Server:   config.Server,
@@ -70,6 +70,6 @@ func (r *MailboxRepository) SaveMailbox(config interfaces.MailboxConfig) error {
 	return r.db.Save(&mailbox).Error
 }
 
-func (r *MailboxRepository) DeleteMailbox(id string) error {
+func (r *mailboxRepository) DeleteMailbox(id string) error {
 	return r.db.Delete(&models.Mailbox{}, "id = ?", id).Error
 }

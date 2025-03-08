@@ -227,42 +227,153 @@ func (s *IMAPService) monitorMailbox(mailboxID string, config interfaces.Mailbox
 }
 
 func (s *IMAPService) monitorFolder(mailboxID string, c *client.Client, folderName string) error {
+	log.Printf("[%s][%s] Starting to monitor folder", mailboxID, folderName)
+
 	// Select the mailbox (folder)
 	mbox, err := c.Select(folderName, false)
 	if err != nil {
+		log.Printf("[%s][%s] Error selecting folder: %v", mailboxID, folderName, err)
 		return fmt.Errorf("failed to select folder %s: %w", folderName, err)
+	}
+
+	log.Printf("[%s][%s] Selected folder - Messages: %d, Recent: %d, Unseen: %d",
+		mailboxID, folderName, mbox.Messages, mbox.Recent, mbox.Unseen)
+
+	// Check server capabilities
+	caps, err := c.Capability()
+	if err != nil {
+		log.Printf("[%s][%s] Error getting capabilities: %v", mailboxID, folderName, err)
+	} else {
+		log.Printf("[%s][%s] Server capabilities: %v", mailboxID, folderName, caps)
 	}
 
 	// Update folder stats
 	s.updateFolderStats(mailboxID, folderName, mbox)
 
-	// Get the last seen UID from persistent storage
-	lastSeenUID, err := s.tracker.GetLastSeenUID(mailboxID, folderName)
-	if err != nil {
-		log.Printf("Warning: Could not get last seen UID: %v, starting from current state", err)
-		lastSeenUID = 0
-	}
+	// Check for recent messages at startup
+	if mbox.Recent > 0 {
+		log.Printf("[%s][%s] Found %d recent messages, fetching them", mailboxID, folderName, mbox.Recent)
 
-	// If this is a new folder or we don't have history, use current state
-	if lastSeenUID == 0 {
-		// Store the current highest UID
-		if mbox.UidNext > 1 {
-			lastSeenUID = mbox.UidNext - 1
-			err = s.tracker.UpdateLastSeenUID(mailboxID, folderName, lastSeenUID)
+		// Fetch all recent messages
+		criteria := imap.NewSearchCriteria()
+		criteria.WithFlags = []string{imap.RecentFlag}
+
+		uids, err := c.Search(criteria)
+		if err != nil {
+			log.Printf("[%s][%s] Error searching for recent messages: %v", mailboxID, folderName, err)
+		} else if len(uids) > 0 {
+			log.Printf("[%s][%s] Found %d UIDs with recent flag", mailboxID, folderName, len(uids))
+
+			seqSet := new(imap.SeqSet)
+			for _, uid := range uids {
+				seqSet.AddNum(uid)
+			}
+
+			messages := make(chan *imap.Message, 10)
+			done := make(chan error, 1)
+			items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchBodyStructure, "BODY.PEEK[]", imap.FetchUid}
+
+			go func() {
+				done <- c.Fetch(seqSet, items, messages)
+			}()
+
+			for msg := range messages {
+				log.Printf("[%s][%s] Processing recent message: %d", mailboxID, folderName, msg.SeqNum)
+				if s.eventHandler != nil {
+					s.eventHandler(interfaces.MailEvent{
+						MailboxID: mailboxID,
+						Folder:    folderName,
+						MessageID: msg.SeqNum,
+						EventType: "new",
+						Message:   msg,
+					})
+				}
+			}
+
+			err = <-done
 			if err != nil {
-				log.Printf("Warning: Failed to update last seen UID: %v", err)
+				log.Printf("[%s][%s] Error fetching recent messages: %v", mailboxID, folderName, err)
 			}
 		}
+	}
+
+	// Check for unseen messages as well
+	criteria := imap.NewSearchCriteria()
+	criteria.WithoutFlags = []string{imap.SeenFlag}
+
+	uids, err := c.Search(criteria)
+	if err != nil {
+		log.Printf("[%s][%s] Error searching for unseen messages: %v", mailboxID, folderName, err)
 	} else {
-		// Fetch any messages that arrived while we were disconnected
-		if mbox.UidNext > lastSeenUID+1 {
-			s.fetchNewMessagesByUID(mailboxID, c, folderName, lastSeenUID+1, mbox.UidNext-1)
+		log.Printf("[%s][%s] Found %d unseen messages", mailboxID, folderName, len(uids))
+
+		if len(uids) > 0 {
+			// Get the latest few unseen messages
+			maxUnseen := 5 // Limit to avoid processing too many messages at startup
+			if len(uids) < maxUnseen {
+				maxUnseen = len(uids)
+			}
+
+			// Take the most recent N unseen messages
+			recentUids := uids[len(uids)-maxUnseen:]
+
+			seqSet := new(imap.SeqSet)
+			for _, uid := range recentUids {
+				seqSet.AddNum(uid)
+			}
+
+			messages := make(chan *imap.Message, 10)
+			done := make(chan error, 1)
+			items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchBodyStructure, "BODY.PEEK[]", imap.FetchUid}
+
+			go func() {
+				done <- c.Fetch(seqSet, items, messages)
+			}()
+
+			for msg := range messages {
+				log.Printf("[%s][%s] Processing unseen message: %d", mailboxID, folderName, msg.SeqNum)
+				if s.eventHandler != nil {
+					s.eventHandler(interfaces.MailEvent{
+						MailboxID: mailboxID,
+						Folder:    folderName,
+						MessageID: msg.SeqNum,
+						EventType: "new",
+						Message:   msg,
+					})
+				}
+			}
+
+			err = <-done
+			if err != nil {
+				log.Printf("[%s][%s] Error fetching unseen messages: %v", mailboxID, folderName, err)
+			}
 		}
 	}
+
+	// Remember initial message count
+	initialCount := mbox.Messages
+	log.Printf("[%s][%s] Initial message count: %d", mailboxID, folderName, initialCount)
 
 	// Set up updates channel
 	updates := make(chan client.Update, 100)
 	c.Updates = updates
+	log.Printf("[%s][%s] Set up updates channel", mailboxID, folderName)
+
+	// Test the updates channel
+	log.Printf("[%s][%s] Testing updates channel...", mailboxID, folderName)
+	select {
+	case update := <-updates:
+		log.Printf("[%s][%s] Got an immediate update on the channel: %T", mailboxID, folderName, update)
+	default:
+		log.Printf("[%s][%s] No immediate updates available", mailboxID, folderName)
+	}
+
+	// Check IDLE support
+	supported, err := c.Support("IDLE")
+	if err != nil {
+		log.Printf("[%s][%s] Error checking IDLE support: %v", mailboxID, folderName, err)
+	}
+	log.Printf("[%s][%s] IDLE support: %v", mailboxID, folderName, supported)
 
 	// Create a stop channel that will be closed when we need to stop IDLE
 	stop := make(chan struct{})
@@ -270,23 +381,110 @@ func (s *IMAPService) monitorFolder(mailboxID string, c *client.Client, folderNa
 	// Start a goroutine to handle context cancellation
 	go func() {
 		<-s.ctx.Done()
+		log.Printf("[%s][%s] Context cancelled, stopping IDLE", mailboxID, folderName)
 		close(stop)
 	}()
 
+	// Start a goroutine to send NOOPs periodically
+	go func() {
+		noopTicker := time.NewTicker(30 * time.Second)
+		defer noopTicker.Stop()
+
+		for {
+			select {
+			case <-noopTicker.C:
+				err := c.Noop()
+				if err != nil {
+					log.Printf("[%s][%s] Error during NOOP: %v", mailboxID, folderName, err)
+					return
+				}
+				log.Printf("[%s][%s] Sent NOOP command", mailboxID, folderName)
+			case <-s.ctx.Done():
+				return
+			}
+		}
+	}()
+
+	// Process updates while IDLE is running
+	updateProcessor := make(chan struct{})
+	go func() {
+		defer close(updateProcessor)
+
+		for {
+			select {
+			case update, ok := <-updates:
+				if !ok {
+					log.Printf("[%s][%s] Updates channel closed", mailboxID, folderName)
+					return
+				}
+
+				log.Printf("[%s][%s] Received update: %T", mailboxID, folderName, update)
+
+				switch u := update.(type) {
+				case *client.MailboxUpdate:
+					log.Printf("[%s][%s] Mailbox update - Messages: %d (was: %d)",
+						mailboxID, folderName, u.Mailbox.Messages, initialCount)
+
+					// If we have new messages
+					if u.Mailbox.Messages > initialCount {
+						newMessages := u.Mailbox.Messages - initialCount
+						log.Printf("[%s][%s] 📥 Detected %d new message(s)", mailboxID, folderName, newMessages)
+
+						// Fetch new messages
+						err := s.fetchNewMessages(mailboxID, c, folderName, initialCount+1, u.Mailbox.Messages)
+						if err != nil {
+							log.Printf("[%s][%s] Error fetching new messages: %v", mailboxID, folderName, err)
+						}
+						initialCount = u.Mailbox.Messages
+					}
+
+					// Update folder stats
+					s.updateFolderStats(mailboxID, folderName, u.Mailbox)
+
+				case *client.ExpungeUpdate:
+					log.Printf("[%s][%s] Message expunged: %d", mailboxID, folderName, u.SeqNum)
+					if u.SeqNum <= initialCount {
+						initialCount--
+					}
+
+				case *client.MessageUpdate:
+					log.Printf("[%s][%s] Message updated: %v", mailboxID, folderName, u.Message)
+					// Instead of u.SeqNum, we should use u.Message.SeqNum if available
+					if u.Message != nil {
+						log.Printf("[%s][%s] Message updated, SeqNum: %d", mailboxID, folderName, u.Message.SeqNum)
+					}
+
+				default:
+					log.Printf("[%s][%s] Received update of unknown type: %T", mailboxID, folderName, update)
+				}
+
+			case <-s.ctx.Done():
+				log.Printf("[%s][%s] Context cancelled in update processor", mailboxID, folderName)
+				return
+			}
+		}
+	}()
+
 	// Start IDLE with proper timeout handling
+	log.Printf("[%s][%s] Starting IDLE command", mailboxID, folderName)
 	err = c.Idle(stop, &client.IdleOptions{
-		LogoutTimeout: DEFAULT_IMAP_LOGOUT,
-		PollInterval:  DEFAULT_POLLING_PERIOD,
+		LogoutTimeout: time.Duration(DEFAULT_IMAP_LOGOUT) * time.Minute,
+		PollInterval:  time.Duration(DEFAULT_POLLING_PERIOD) * time.Minute,
 	})
+
+	// Wait for update processor to finish
+	<-updateProcessor
 
 	// If we get here, either there was an error or the context was canceled
 	c.Updates = nil
 
 	if err != nil && s.ctx.Err() == nil {
 		// There was an error and it wasn't due to context cancellation
+		log.Printf("[%s][%s] IDLE error: %v", mailboxID, folderName, err)
 		return fmt.Errorf("IDLE error: %w", err)
 	}
 
+	log.Printf("[%s][%s] Stopped monitoring folder", mailboxID, folderName)
 	return nil
 }
 
@@ -327,6 +525,54 @@ func (s *IMAPService) updateFolderStats(mailboxID, folderName string, mbox *imap
 	s.statuses[mailboxID] = status
 }
 
+func (s *IMAPService) fetchNewMessages(mailboxID string, c *client.Client, folderName string, from, to uint32) error {
+	if from > to {
+		return nil
+	}
+
+	log.Printf("[%s][%s] Fetching messages from sequence %d to %d", mailboxID, folderName, from, to)
+
+	seqSet := new(imap.SeqSet)
+	seqSet.AddRange(from, to)
+
+	// Items to fetch
+	items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchBodyStructure, "BODY.PEEK[]", imap.FetchUid}
+
+	messages := make(chan *imap.Message, 10)
+	done := make(chan error, 1)
+
+	go func() {
+		done <- c.Fetch(seqSet, items, messages)
+	}()
+
+	for msg := range messages {
+		log.Printf("[%s][%s] Received message: UID=%d, Seq=%d, Subject=%s",
+			mailboxID, folderName, msg.Uid, msg.SeqNum, msg.Envelope.Subject)
+
+		if s.eventHandler != nil {
+			log.Printf("[%s][%s] Triggering event handler for message %d", mailboxID, folderName, msg.SeqNum)
+			s.eventHandler(interfaces.MailEvent{
+				MailboxID: mailboxID,
+				Folder:    folderName,
+				MessageID: msg.SeqNum,
+				EventType: "new",
+				Message:   msg,
+			})
+		} else {
+			log.Printf("[%s][%s] Warning: No event handler registered", mailboxID, folderName)
+		}
+	}
+
+	err := <-done
+	if err != nil {
+		log.Printf("[%s][%s] Error fetching messages: %v", mailboxID, folderName, err)
+		return err
+	}
+
+	log.Printf("[%s][%s] Successfully fetched messages", mailboxID, folderName)
+	return nil
+}
+
 func (s *IMAPService) fetchNewMessagesByUID(mailboxID string, c *client.Client, folderName string, fromUID, toUID uint32) error {
 	if fromUID > toUID {
 		return nil
@@ -364,12 +610,12 @@ func (s *IMAPService) fetchNewMessagesByUID(mailboxID string, c *client.Client, 
 	}
 
 	// Update the last seen UID
-	if highestUID > 0 {
-		err := s.tracker.UpdateLastSeenUID(mailboxID, folderName, highestUID)
-		if err != nil {
-			log.Printf("Warning: Failed to update last seen UID: %v", err)
-		}
-	}
+	// if highestUID > 0 {
+	// 	err := s.tracker.UpdateLastSeenUID(mailboxID, folderName, highestUID)
+	// 	if err != nil {
+	// 		log.Printf("Warning: Failed to update last seen UID: %v", err)
+	// 	}
+	// }
 
 	return <-done
 }
