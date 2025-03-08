@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
+	"github.com/customeros/customeros/packages/server/mailstack/api"
 	"github.com/customeros/customeros/packages/server/mailstack/config"
 	"github.com/customeros/customeros/packages/server/mailstack/internal"
 	"github.com/customeros/customeros/packages/server/mailstack/internal/database"
@@ -19,6 +21,10 @@ import (
 )
 
 func main() {
+	// Configure logging to include timestamps and file information
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.Println("MailStack starting up...")
+
 	// Initialize configuration
 	cfg, err := config.InitConfig()
 	if err != nil {
@@ -28,19 +34,21 @@ func main() {
 		log.Fatal("config is empty")
 	}
 
-	// Configure logging to include timestamps and file information
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	log.Println("MailStack starting up...")
-
 	// Set up context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Setup the database
 	db, err := database.InitDatabase(cfg.MailstackDatabaseConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
 
-	_ = repository.InitRepositories(db)
-	services := services.InitServices()
+	// Initialize repositories
+	repos := repository.InitRepositories(db)
+
+	// Initialize services
+	svcs := services.InitServices()
 
 	// Set up webhook handler for email events
 	webhookURL := "https://webhook.site/9efaff8f-b23e-4874-9750-e0089cc092ab"
@@ -48,39 +56,31 @@ func main() {
 
 	// Register webhook handler
 	log.Println("Registering event handler...")
-	services.IMAPService.SetEventHandler(emailProcessor.ProcessMailEvent)
+	svcs.IMAPService.SetEventHandler(emailProcessor.ProcessMailEvent)
 
 	// Setup mailboxes
-	err = internal.InitMailboxes(services)
-	if err != nil {
+	if err := internal.InitMailboxes(svcs); err != nil {
 		log.Printf("Failed to initialize mailboxes: %v", err)
 	}
 
 	// Start the IMAP service
 	log.Println("Starting IMAP service...")
-	if err := services.IMAPService.Start(ctx); err != nil {
+	if err := svcs.IMAPService.Start(ctx); err != nil {
 		log.Fatalf("❌ Failed to start IMAP service: %v", err)
 	}
 	log.Println("✅ IMAP service started successfully")
 
-	// Set up HTTP server for status checking
-	mux := http.NewServeMux()
-	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Status request received from %s", r.RemoteAddr)
-		status := services.IMAPService.Status()
-		w.Header().Set("Content-Type", "application/json")
+	// Initialize Gin in release mode for production
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
 
-		// Pretty print the status for logging
-		statusJSON, _ := json.MarshalIndent(status, "", "  ")
-		log.Printf("Current mailbox status: \n%s", string(statusJSON))
+	// Setup API routes
+	api.RegisterRoutes(router, svcs, repos)
 
-		// Send normal response
-		json.NewEncoder(w).Encode(status)
-	})
-
+	// Create HTTP server with Gin handler
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: router,
 	}
 
 	// Start HTTP server in a goroutine
@@ -100,7 +100,6 @@ func main() {
 
 	// Wait for termination signal
 	<-stop
-	// In your main function, update the shutdown process
 	log.Println("Shutting down...")
 
 	// Create a context with timeout for shutdown
@@ -119,12 +118,12 @@ func main() {
 	log.Println("Stopping IMAP service...")
 	stopDone := make(chan struct{})
 	go func() {
-		if err := services.IMAPService.Stop(); err != nil {
+		defer close(stopDone)
+		if err := svcs.IMAPService.Stop(); err != nil {
 			log.Printf("❌ IMAP service shutdown error: %v", err)
 		} else {
 			log.Println("✅ IMAP service stopped successfully")
 		}
-		close(stopDone)
 	}()
 
 	// Wait for IMAP service to stop with timeout
