@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type AgentExecutionObservability struct {
-	SkipPublishingObserbility bool
+	SkipPublishingObservability bool
 
 	// Basic request metadata
 	CapabilityExecutionID string `json:"capability_execution_id"`

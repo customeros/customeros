@@ -165,7 +165,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	utils.MergeMapToMap(params.initialParams, allParams)
 	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
 
-	for _, capabilityTypeStr := range *&play.Capabilities {
+	for _, capabilityTypeStr := range play.Capabilities {
 		// build observability metrics
 		metrics := a.newObservabilityContainer(params)
 		metrics.Capability = capabilityTypeStr
@@ -178,9 +178,11 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 			untypedExecutors:  untypedExecutors,
 			span:              params.span,
 		})
-		if !metrics.SkipPublishingObserbility {
+		if !metrics.SkipPublishingObservability {
 			metrics.Status = status.String()
-			a.pushObservabilityMetrics(ctx, metrics)
+			if err := a.pushObservabilityMetrics(ctx, metrics); err != nil {
+				tracing.TraceErr(span, fmt.Errorf("failed to push metrics: %w", err))
+			}
 		}
 
 		if err != nil {
@@ -215,7 +217,7 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, metrics *dto
 	if execution.Checkpoints != nil {
 		if checkpoint, exists := execution.Checkpoints[params.capabilityTypeStr]; exists {
 			if resultMap, ok := checkpoint.(map[string]any); ok {
-				metrics.SkipPublishingObserbility = true
+				metrics.SkipPublishingObservability = true
 				utils.MergeMapToMap(resultMap, params.allParams)
 				return enum.CapabilityExecutionCompleted, nil
 			}
@@ -593,7 +595,7 @@ func (a *agentRunnerService) newObservabilityContainer(executionParams execution
 	}
 }
 
-func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metrics *dto.AgentExecutionObservability) {
+func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metrics *dto.AgentExecutionObservability) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.pushObservabilityMetrics")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -602,12 +604,14 @@ func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metri
 	err := a.opensearchService.AgentExecutionObservabilityIndexCheck(ctx, index)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return
+		return err
 	}
 
 	err = a.opensearchService.UpsertDocument(ctx, index, &metrics.CapabilityExecutionID, metrics)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return
+		return err
 	}
+
+	return nil
 }
