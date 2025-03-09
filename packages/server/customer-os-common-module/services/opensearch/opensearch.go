@@ -438,6 +438,7 @@ func (c *opensearchService) AgentExecutionObservabilityIndexCheck(ctx context.Co
           "user_id": { "type": "keyword" },
           "capability": { "type": "keyword" },
           "trigger_event": { "type": "keyword" },
+          "status": { "type": "keyword" },
           "input_data": { 
             "type": "object",
             "enabled": true 
