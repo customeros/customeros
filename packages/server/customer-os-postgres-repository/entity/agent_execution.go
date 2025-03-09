@@ -23,7 +23,7 @@ type AgentExecution struct {
 	ImpactedId   *string                   `gorm:"column:impacted_id;type:varchar(255)" json:"impactedId"`
 
 	// Retry related fields
-	RetryCount  int        `gorm:"column:retry_count;type:int;default:0" json:"retryCount"`
+	RetryCount  int        `gorm:"column:retry_count;type:int;default:0" json:"retryCount"` // Number of completed retries
 	MaxRetries  int        `gorm:"column:max_retries;type:int;default:12" json:"maxRetries"`
 	NextRetryAt *time.Time `gorm:"column:next_retry_at" json:"nextRetryAt"`
 

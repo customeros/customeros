@@ -21,7 +21,7 @@ type AgentExecutionObservability struct {
 	OutputData any `json:"output_data"`
 
 	// Status information
-	Status       string     `json:"status"`
+	Status       string     `json:"status,omitempty"`
 	Attempt      int        `json:"attempt,omitempty"`
 	StartedAt    time.Time  `json:"started_at"`
 	CompletedAt  *time.Time `json:"completed_at,omitempty"`

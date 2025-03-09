@@ -213,11 +213,17 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, metrics *dto
 		return enum.CapabilityExecutionError, err
 	}
 
+	if execution.NextRetryAt != nil { // the execution is a retry
+		metrics.Attempt = execution.RetryCount + 2 // retry count at this stage is not including the current attempt, and the first attempt is 1, so we add 2
+	} else {
+		metrics.Attempt = 1
+	}
+
 	// Check if this capability was already completed
 	if execution.Checkpoints != nil {
 		if checkpoint, exists := execution.Checkpoints[params.capabilityTypeStr]; exists {
 			if resultMap, ok := checkpoint.(map[string]any); ok {
-				metrics.SkipPublishingObservability = true
+				metrics.SkipPublishingObservability = true // skip publishing observability for already executed capabilities
 				utils.MergeMapToMap(resultMap, params.allParams)
 				return enum.CapabilityExecutionCompleted, nil
 			}
