@@ -250,7 +250,7 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		execution.RetryCount++
 	}
 	execution.StateData = stateData
-	if execution.RetryCount > execution.MaxRetries {
+	if execution.RetryCount != 0 && execution.RetryCount >= execution.MaxRetries {
 		execution.Status = enum.AgentExecutionError
 		if inputError != nil {
 			execution.ErrorMessage = utils.StringPtr(inputError.Error())

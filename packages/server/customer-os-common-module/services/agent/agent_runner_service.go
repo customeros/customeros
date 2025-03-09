@@ -165,7 +165,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	utils.MergeMapToMap(params.initialParams, allParams)
 	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
 
-	for _, capabilityTypeStr := range *&play.Capabilities {
+	for _, capabilityTypeStr := range play.Capabilities {
 		// build observability metrics
 		metrics := a.newObservabilityContainer(params)
 		metrics.Capability = capabilityTypeStr
@@ -178,15 +178,21 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 			untypedExecutors:  untypedExecutors,
 			span:              params.span,
 		})
-		a.pushObservabilityMetrics(ctx, metrics)
+		if !metrics.SkipPublishingObservability {
+			metrics.Status = status.String()
+			if err := a.pushObservabilityMetrics(ctx, metrics); err != nil {
+				tracing.TraceErr(span, fmt.Errorf("failed to push metrics: %w", err))
+			}
+		}
 
 		if err != nil {
 			return err
 		}
 		if status == enum.CapabilityExecutionStop {
 			break
-		}
-		if status != enum.CapabilityExecutionCompleted {
+		} else if status == enum.CapabilityExecutionSkip {
+			continue
+		} else if status != enum.CapabilityExecutionCompleted {
 			return nil
 		}
 	}
@@ -207,10 +213,17 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, metrics *dto
 		return enum.CapabilityExecutionError, err
 	}
 
+	if execution.NextRetryAt != nil { // the execution is a retry
+		metrics.Attempt = execution.RetryCount + 2 // retry count at this stage is not including the current attempt, and the first attempt is 1, so we add 2
+	} else {
+		metrics.Attempt = 1
+	}
+
 	// Check if this capability was already completed
 	if execution.Checkpoints != nil {
 		if checkpoint, exists := execution.Checkpoints[params.capabilityTypeStr]; exists {
 			if resultMap, ok := checkpoint.(map[string]any); ok {
+				metrics.SkipPublishingObservability = true // skip publishing observability for already executed capabilities
 				utils.MergeMapToMap(resultMap, params.allParams)
 				return enum.CapabilityExecutionCompleted, nil
 			}
@@ -233,9 +246,7 @@ func (a *agentRunnerService) executeCapability(ctx context.Context, metrics *dto
 	}
 	if !capability.Active {
 		span.LogFields(log.String("result", "capability not active"))
-		metrics.ErrorMessage = "capability not active"
-		metrics.Success = false
-		return enum.CapabilityExecutionCompleted, nil
+		return enum.CapabilityExecutionSkip, nil
 	}
 
 	executionContainer := interfaces.ExecutionContainer{
@@ -322,6 +333,8 @@ func (a *agentRunnerService) handleExecutionResult(
 	}
 
 	switch status {
+	case enum.CapabilityExecutionSkip:
+		return nil
 	case enum.CapabilityExecutionError:
 		metrics.Success = false
 		metrics.Retry = false
@@ -351,7 +364,7 @@ func (a *agentRunnerService) handleExecutionResult(
 
 	case enum.CapabilityExecutionCompleted:
 		metrics.Success = true
-		metrics.CompletedAt = utils.Now()
+		metrics.CompletedAt = utils.NowPtr()
 		metrics.OutputData = output
 		checkpointData := map[string]any{
 			"status":       status.String(),
@@ -366,7 +379,7 @@ func (a *agentRunnerService) handleExecutionResult(
 
 	case enum.CapabilityExecutionStop:
 		metrics.Success = true
-		metrics.CompletedAt = utils.Now()
+		metrics.CompletedAt = utils.NowPtr()
 		metrics.OutputData = output
 		checkpointData := map[string]any{
 			"status":     status.String(),
@@ -588,7 +601,7 @@ func (a *agentRunnerService) newObservabilityContainer(executionParams execution
 	}
 }
 
-func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metrics *dto.AgentExecutionObservability) {
+func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metrics *dto.AgentExecutionObservability) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.pushObservabilityMetrics")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -597,12 +610,14 @@ func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metri
 	err := a.opensearchService.AgentExecutionObservabilityIndexCheck(ctx, index)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return
+		return err
 	}
 
 	err = a.opensearchService.UpsertDocument(ctx, index, &metrics.CapabilityExecutionID, metrics)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return
+		return err
 	}
+
+	return nil
 }

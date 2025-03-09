@@ -3,6 +3,8 @@ package dto
 import "time"
 
 type AgentExecutionObservability struct {
+	SkipPublishingObservability bool
+
 	// Basic request metadata
 	CapabilityExecutionID string `json:"capability_execution_id"`
 	ExecutionID           string `json:"agent_execution_id"`
@@ -19,9 +21,10 @@ type AgentExecutionObservability struct {
 	OutputData any `json:"output_data"`
 
 	// Status information
+	Status       string     `json:"status,omitempty"`
 	Attempt      int        `json:"attempt,omitempty"`
 	StartedAt    time.Time  `json:"started_at"`
-	CompletedAt  time.Time  `json:"completed_at,omitempty"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"`
 	Success      bool       `json:"success"`
 	ErrorMessage string     `json:"error_message,omitempty"`
 	Retry        bool       `json:"retry"`
