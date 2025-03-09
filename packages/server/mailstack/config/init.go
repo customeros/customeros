@@ -10,12 +10,14 @@ import (
 type Config struct {
 	AppConfig               *AppConfig
 	MailstackDatabaseConfig *MailstackDatabaseConfig
+	OpenlineDatabaseConfig  *OpenlineDatabaseConfig
 }
 
 func InitConfig() (*Config, error) {
 	config := &Config{
 		AppConfig:               &AppConfig{},
 		MailstackDatabaseConfig: &MailstackDatabaseConfig{},
+		OpenlineDatabaseConfig:  &OpenlineDatabaseConfig{},
 	}
 
 	err := godotenv.Load()

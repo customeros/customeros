@@ -1,5 +1,4 @@
-// api/handlers.go
-package api
+package handlers
 
 import (
 	"net/http"
@@ -8,21 +7,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
 )
-
-// HealthCheck provides a simple health check endpoint
-func HealthCheck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "ok",
-	})
-}
-
-// Status returns the current status of all mailboxes
-func Status(imapService interfaces.IMAPService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		status := imapService.Status()
-		c.JSON(http.StatusOK, status)
-	}
-}
 
 // ListMailboxes returns all configured mailboxes
 func ListMailboxes(imapService interfaces.IMAPService) gin.HandlerFunc {
@@ -34,15 +18,23 @@ func ListMailboxes(imapService interfaces.IMAPService) gin.HandlerFunc {
 }
 
 // AddMailbox adds a new mailbox configuration
-func AddMailbox(imapService interfaces.IMAPService) gin.HandlerFunc {
+func AddMailbox(imapService interfaces.IMAPService, mailboxRepository interfaces.MailboxRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var config interfaces.MailboxConfig
-		if err := c.ShouldBindJSON(&config); err != nil {
+		err := c.ShouldBindJSON(&config)
+		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		if err := imapService.AddMailbox(config); err != nil {
+		err = mailboxRepository.SaveMailbox(config)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		err = imapService.AddMailbox(config)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

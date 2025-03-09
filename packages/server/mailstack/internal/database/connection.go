@@ -9,21 +9,32 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	"github.com/customeros/customeros/packages/server/mailstack/config"
 )
 
-func NewConnection(config *config.MailstackDatabaseConfig) (*gorm.DB, error) {
-	validateConfig(config)
+type DatabaseConfig struct {
+	Host            string
+	Port            string
+	User            string
+	DBName          string
+	Password        string
+	MaxConn         int
+	MaxIdleConn     int
+	ConnMaxLifetime int
+	LogLevel        string
+	SSLMode         string
+}
 
-	portInt, err := strconv.Atoi(config.Port)
+func NewConnection(dbConfig *DatabaseConfig) (*gorm.DB, error) {
+	validateConfig(dbConfig)
+
+	portInt, err := strconv.Atoi(dbConfig.Port)
 	if err != nil {
 		return nil, fmt.Errorf("invalid port number: %w", err)
 	}
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, portInt, config.User, config.Password, config.DBName, config.SSLMode,
+		dbConfig.Host, portInt, dbConfig.User, dbConfig.Password, dbConfig.DBName, dbConfig.SSLMode,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -51,7 +62,7 @@ func NewConnection(config *config.MailstackDatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func validateConfig(config *config.MailstackDatabaseConfig) {
+func validateConfig(config *DatabaseConfig) {
 	switch {
 	case config == nil:
 		log.Fatalf("Database config is nil")

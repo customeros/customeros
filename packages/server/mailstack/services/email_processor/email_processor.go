@@ -1,4 +1,4 @@
-package processor
+package email_processor
 
 import (
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"

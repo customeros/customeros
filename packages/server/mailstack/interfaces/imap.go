@@ -1,6 +1,10 @@
 package interfaces
 
-import "context"
+import (
+	"context"
+
+	"github.com/lib/pq"
+)
 
 type IMAPService interface {
 	Start(ctx context.Context) error
@@ -20,7 +24,7 @@ type MailboxConfig struct {
 	Port     int
 	Username string
 	Password string
-	Folders  []string
+	Folders  pq.StringArray
 	TLS      bool
 }
 

@@ -252,7 +252,7 @@ func (s *IMAPService) monitorMailbox(mailboxID string, config interfaces.Mailbox
 
 			// Monitor folders
 			for _, folder := range config.Folders {
-				if err := s.monitorFolder(mailboxID, c, folder); err != nil {
+				if err := s.monitorFolder(mailboxID, c, string(folder)); err != nil {
 					log.Printf("Error monitoring folder %s: %v", folder, err)
 				}
 			}
