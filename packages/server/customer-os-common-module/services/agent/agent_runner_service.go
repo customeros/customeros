@@ -157,7 +157,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 
 	play, err := a.postgresRepositories.AgentRegistryRepository.FindPlay(ctx, params.agent.Type, params.triggerEvent)
 	if err != nil {
-		tracing.TraceErr(params.span, err)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -166,9 +166,8 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
 
 	for _, capabilityTypeStr := range *&play.Capabilities {
-
 		// build observability metrics
-		metrics := a.newObservabilityContainer(ctx, params)
+		metrics := a.newObservabilityContainer(params)
 		metrics.Capability = capabilityTypeStr
 
 		status, err := a.executeCapability(ctx, metrics, capabilityParams{
@@ -573,7 +572,7 @@ func (a *agentRunnerService) GetExecutionStatus(ctx context.Context, executionID
 	return execution, nil
 }
 
-func (a *agentRunnerService) newObservabilityContainer(ctx context.Context, executionParams executionParams) *dto.AgentExecutionObservability {
+func (a *agentRunnerService) newObservabilityContainer(executionParams executionParams) *dto.AgentExecutionObservability {
 	return &dto.AgentExecutionObservability{
 		CapabilityExecutionID: utils.GenerateNanoIdWithPrefix("ace", 16),
 		ExecutionID:           executionParams.executionID,
@@ -590,7 +589,7 @@ func (a *agentRunnerService) newObservabilityContainer(ctx context.Context, exec
 }
 
 func (a *agentRunnerService) pushObservabilityMetrics(ctx context.Context, metrics *dto.AgentExecutionObservability) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRunnerService.pushObservabilityMetrics")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.pushObservabilityMetrics")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

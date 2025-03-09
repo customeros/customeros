@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/opentracing/opentracing-go/log"
+	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -43,7 +43,7 @@ func NewAgentRegistryRepository(gormDb *gorm.DB) AgentRegistryRepository {
 func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var agents []postgres_entity.AgentRegistry
 	err := r.gormDb.WithContext(ctx).
@@ -61,9 +61,10 @@ func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]postgres_entit
 func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.AgentType, triggerEvent enum.AgentListenerEvent) (*postgres_entity.AgentPlay, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindPlay")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("agentType", agentType.String()), log.String("triggerEvent", triggerEvent.String()))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(
+		log.String("agentType", agentType.String()),
+		log.String("triggerEvent", triggerEvent.String()))
 
 	var play postgres_entity.AgentPlay
 	err := r.gormDb.WithContext(ctx).
@@ -80,13 +81,14 @@ func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.A
 	}
 
 	span.LogFields(log.Bool("result.found", true))
+	span.LogFields(log.String("play.capabilities", strings.Join(play.Capabilities, ",")))
 	return &play, nil
 }
 
 func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindByType")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("agentType", agentType.String()))
 
 	var agent postgres_entity.AgentRegistry
@@ -109,7 +111,7 @@ func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum
 func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_entity.AgentRegistry, plays []postgres_entity.AgentPlay) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.gormDb.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Check for existing agent with same type
@@ -152,7 +154,7 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_ent
 func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_entity.AgentRegistry, plays []postgres_entity.AgentPlay) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if agent.ID == "" {
 		return nil, ErrAgentIDMissing

@@ -152,6 +152,12 @@ func (s *organizationService) GetPrimaryDomainByOrgID(ctx context.Context, organ
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetPrimaryDomainByOrgID")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	// Validate input
+	if organizationId == "" {
+		return "", errors.New("organizationId is required")
+	}
 
 	domains, err := s.domain.GetAllDomainsForOrganizations(ctx, []string{organizationId})
 	if err != nil {
@@ -159,14 +165,20 @@ func (s *organizationService) GetPrimaryDomainByOrgID(ctx context.Context, organ
 		return "", err
 	}
 	if domains == nil || len(*domains) == 0 {
+		span.LogFields(log.String("result", ""))
 		return "", nil
 	}
 
 	for _, domain := range *domains {
-		if domain.PrimaryDomain != "" {
+		if domain.IsPrimary != nil && *domain.IsPrimary {
+			span.LogFields(log.String("result", domain.Domain))
+			return domain.Domain, nil
+		} else if domain.PrimaryDomain != "" {
+			span.LogFields(log.String("result", domain.PrimaryDomain))
 			return domain.PrimaryDomain, nil
 		}
 	}
+	span.LogFields(log.String("result", ""))
 	return "", nil
 }
 
