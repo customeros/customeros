@@ -119,6 +119,10 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
 	}
+	if primaryDomain == "" {
+		err = errors.New("organization is missing primary domain")
+		return enum.CapabilityExecutionError, result, err
+	}
 	company, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -126,7 +130,7 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 	}
 	if company == nil {
 		span.LogFields(log.String("result", "Company not set in global orgs"))
-		return enum.CapabilityExecutionRetry, result, nil
+		return enum.CapabilityExecutionRetry, result, errors.New("company not set in global orgs")
 	}
 
 	result.CompanyName = company.Name
