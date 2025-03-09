@@ -1,9 +1,12 @@
 package private
 
 import (
+	"net/http"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
-	"net/http"
+
+	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -53,21 +56,40 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 		tracing.SetDefaultServiceSpanTags(ctx, span)
 
 		var request map[string]interface{}
-
 		if err := c.BindJSON(&request); err != nil {
 			tracing.TraceErr(span, err)
-			c.AbortWithStatus(500) // todo
+			message := "Invalid request format"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
+			return
+		}
+
+		// Validate required fields
+		if err := h.validateIntegrationRequest(request); err != nil {
+			tracing.TraceErr(span, err)
+			message := err.Error()
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.SaveIntegrationData(ctx, request)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			tracing.TraceErr(span, err)
+			message := err.Error()
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
 		h.responseHandler.HandleSuccess(c, h.mapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
 	}
+}
+
+// validateIntegrationRequest validates the integration request data
+func (h *PrivateIntegrationHandler) validateIntegrationRequest(request map[string]interface{}) error {
+	if len(request) == 0 {
+		return fmt.Errorf("empty request data")
+	}
+
+	return nil
 }
 
 func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
@@ -80,13 +102,16 @@ func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 
 		identifier := c.Param("identifier")
 		if identifier == "" {
-			c.JSON(500, gin.H{"error": "integration identifier is empty"})
+			message := "Integration identifier is required"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		data, activeServices, err := h.services.TenantSettingsService.ClearIntegrationData(ctx, identifier)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			tracing.TraceErr(span, err)
+			message := "Failed to delete integration"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
