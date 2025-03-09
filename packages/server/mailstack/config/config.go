@@ -1,8 +1,12 @@
 package config
 
+import "github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+
 type AppConfig struct {
 	APIPort           string `env:"PORT,required" envDefault:"12222"`
+	RabbitMQURL       string `env:"RABBITMQ_URL"`
 	TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+	Logger            *logger.Config
 }
 
 type MailstackDatabaseConfig struct {
@@ -29,4 +33,11 @@ type OpenlineDatabaseConfig struct {
 	ConnMaxLifetime int    `env:"OPENLINE_POSTGRES_DB_CONN_MAX_LIFETIME"`
 	LogLevel        string `env:"OPENLINE_POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	SSLMode         string `env:"OPENLINE_POSTGRES_SSL_MODE"`
+}
+
+type R2StorageConfig struct {
+	AccountID             string `env:"CLOUDFLARE_R2_ACCOUNT_ID,required"`
+	AccessKeyID           string `env:"CLOUDFLARE_R2_ACCESS_KEY_ID,required"`
+	AccessKeySecret       string `env:"CLOUDFLARE_R2_ACCESS_KEY_SECRET,required"`
+	EmailAttachmentBucket string `env:"BUCKET_NAME_EMAIL_ATTACHMENT" envDefault:"email_attachments"`
 }

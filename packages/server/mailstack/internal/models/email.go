@@ -1,8 +1,6 @@
 package models
 
 import (
-	"database/sql/driver"
-	"encoding/json"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -63,58 +61,4 @@ func (e *Email) BeforeCreate(tx *gorm.DB) error {
 	}
 	e.CreatedAt = utils.Now()
 	return nil
-}
-
-// EmailAttachment represents an attachment to an email
-type EmailAttachment struct {
-	ID          string `gorm:"type:varchar(50);primaryKey"`
-	EmailID     string `gorm:"type:varchar(50);index;not null"`
-	Filename    string `gorm:"type:varchar(500)"`
-	ContentType string `gorm:"type:varchar(255)"`
-	ContentID   string `gorm:"type:varchar(255)"` // For inline attachments
-	Size        int    `gorm:"default:0"`
-	IsInline    bool   `gorm:"default:false"`
-
-	// Storage options
-	StorageKey string `gorm:"type:varchar(1000)"` // If stored in S3/blob storage
-
-	// Standard timestamps
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-// TableName overrides the table name for EmailAttachment
-func (EmailAttachment) TableName() string {
-	return "email_attachments"
-}
-
-func (e *EmailAttachment) BeforeCreate(tx *gorm.DB) error {
-	if e.ID == "" {
-		e.ID = utils.GenerateNanoIdWithPrefix("atch", 21)
-	}
-	e.CreatedAt = utils.Now()
-	return nil
-}
-
-// JSONMap represents a JSON object that can be stored in PostgreSQL
-type JSONMap map[string]interface{}
-
-// Value implements the driver.Valuer interface for JSONMap
-func (j JSONMap) Value() (driver.Value, error) {
-	return json.Marshal(j)
-}
-
-// Scan implements the sql.Scanner interface for JSONMap
-func (j *JSONMap) Scan(value interface{}) error {
-	if value == nil {
-		*j = make(JSONMap)
-		return nil
-	}
-
-	bytes, ok := value.([]byte)
-	if !ok {
-		return nil
-	}
-
-	return json.Unmarshal(bytes, j)
 }

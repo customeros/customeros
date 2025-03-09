@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	go_imap "github.com/emersion/go-imap"
 	"github.com/jhillyerd/enmime"
 
@@ -18,13 +17,13 @@ import (
 
 // IMAPHandler processes events from IMAP sources
 type IMAPHandler struct {
-	webhookURL string
+	eventService *events.EventsService
 }
 
 // NewIMAPHandler creates a new IMAP email handler
-func NewIMAPHandler(webhookURL string) *IMAPHandler {
+func NewIMAPHandler(eventService *events.EventsService) *IMAPHandler {
 	return &IMAPHandler{
-		webhookURL: webhookURL,
+		eventService: eventService,
 	}
 }
 
@@ -198,7 +197,7 @@ func (h *IMAPHandler) processIMAPMessage(mailboxID, folder string, msg *go_imap.
 	}
 
 	// Send to webhook
-	h.sendToWebhook(emailData)
+	h.eventService.Publisher.PublishFanoutEvent()
 }
 
 // Helper function to format addresses for JSON
@@ -307,43 +306,4 @@ func extractAttachments(bs *go_imap.BodyStructure) []map[string]interface{} {
 	}
 
 	return attachments
-}
-
-// sendToWebhook sends the email data to the configured webhook
-func (h *IMAPHandler) sendToWebhook(emailData map[string]interface{}) {
-	log.Printf("🌐 Sending to webhook: %s", h.webhookURL)
-
-	// Convert to JSON
-	data, err := json.Marshal(emailData)
-	if err != nil {
-		log.Printf("❌ Error marshaling data: %v", err)
-		return
-	}
-
-	// Create request
-	req, err := http.NewRequest("POST", h.webhookURL, bytes.NewBuffer(data))
-	if err != nil {
-		log.Printf("❌ Error creating request: %v", err)
-		return
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send request
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("❌ Error sending to webhook: %v", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Check response
-	if resp.StatusCode >= 400 {
-		log.Printf("❌ Webhook error: %s", resp.Status)
-		return
-	}
-
-	log.Printf("✅ Successfully sent webhook notification")
 }

@@ -1,6 +1,8 @@
 package email_processor
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
 	"github.com/customeros/customeros/packages/server/mailstack/services/email_processor/handlers"
 )
@@ -10,9 +12,9 @@ type Processor struct {
 	// Add other handlers as needed
 }
 
-func NewProcessor(webhookURL string) *Processor {
+func NewProcessor(eventService *events.EventsService) *Processor {
 	return &Processor{
-		imapHandler: handlers.NewIMAPHandler(webhookURL),
+		imapHandler: handlers.NewIMAPHandler(eventService),
 	}
 }
 

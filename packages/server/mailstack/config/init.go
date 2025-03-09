@@ -4,20 +4,25 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
 	AppConfig               *AppConfig
+	Logger                  *logger.Config
 	MailstackDatabaseConfig *MailstackDatabaseConfig
 	OpenlineDatabaseConfig  *OpenlineDatabaseConfig
+	R2StorageConfig         *R2StorageConfig
 }
 
 func InitConfig() (*Config, error) {
 	config := &Config{
 		AppConfig:               &AppConfig{},
+		Logger:                  &logger.Config{},
 		MailstackDatabaseConfig: &MailstackDatabaseConfig{},
 		OpenlineDatabaseConfig:  &OpenlineDatabaseConfig{},
+		R2StorageConfig:         &R2StorageConfig{},
 	}
 
 	err := godotenv.Load()

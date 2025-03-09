@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/mailstack/api"
@@ -29,8 +30,6 @@ type Server struct {
 	repositories   *repository.Repositories
 	emailProcessor *email_processor.Processor
 }
-
-const NEW_EMAIL_WEBHOOK = "https://webhook.site/9efaff8f-b23e-4874-9750-e0089cc092ab"
 
 func NewServer() (*Server, error) {
 	cfg, err := config.InitConfig()
@@ -75,14 +74,20 @@ func NewServer() (*Server, error) {
 		return nil, err
 	}
 
+	// Initialize logger
+	logger := logger.NewAppLogger(cfg.Logger)
+
 	// Initialize repositories
-	repos := repository.InitRepositories(mailstackDB, openlineDB)
+	repos := repository.InitRepositories(mailstackDB, openlineDB, cfg.R2StorageConfig)
 
 	// Initialize services
-	svcs := services.InitServices()
+	svcs, err := services.InitServices(cfg.AppConfig.RabbitMQURL, logger)
+	if err != nil {
+		return nil, err
+	}
 
 	// Set up webhook handler for email events
-	emailProcessor := email_processor.NewProcessor(NEW_EMAIL_WEBHOOK)
+	emailProcessor := email_processor.NewProcessor(svcs.EventsService)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
