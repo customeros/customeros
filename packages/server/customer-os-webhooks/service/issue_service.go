@@ -41,7 +41,7 @@ func NewIssueService(log logger.Logger, repositories *repository.Repositories, s
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.IssueSyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.IssueSyncConcurrency,
 	}
 }
 

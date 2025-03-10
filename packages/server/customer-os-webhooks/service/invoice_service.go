@@ -40,7 +40,7 @@ func NewInvoiceService(log logger.Logger, repositories *repository.Repositories,
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.InvoiceSyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.InvoiceSyncConcurrency,
 	}
 }
 

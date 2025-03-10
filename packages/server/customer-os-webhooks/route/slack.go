@@ -6,12 +6,12 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
@@ -22,7 +22,7 @@ import (
 func AddSlackRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/slack/channels",
 		tracing.TracingEnhancer(ctx, "/sync/slack/channels"),
-		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.PostgresRepository.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
+		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncSlackChannelsHandler(services, log))
 }
 

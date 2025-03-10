@@ -42,7 +42,7 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, se
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.UserSyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.UserSyncConcurrency,
 	}
 }
 

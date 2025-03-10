@@ -39,7 +39,7 @@ func NewCommentService(log logger.Logger, repositories *repository.Repositories,
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.CommentSyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.CommentSyncConcurrency,
 	}
 }
 
