@@ -3,6 +3,7 @@ package mail
 import (
 	"context"
 	"fmt"
+
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
@@ -31,7 +32,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 		return "", nil
 	}
 
-	//if email and contact exists, return the org
+	// if email and contact exists, return the org
 	emailId, err := s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, nil, tenant, email)
 	if err != nil {
 		err = errors.Wrap(err, "failed to get email id for email")
@@ -61,7 +62,6 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 	}
 
 	output, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		var organizationNode *neo4j.Node
 		var organizationId string
 

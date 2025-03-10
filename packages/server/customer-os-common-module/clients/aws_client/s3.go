@@ -17,6 +17,7 @@ type S3Client interface {
 	Download(ctx context.Context, bucket, key string) (string, error)
 	ListFiles(ctx context.Context, bucket string) ([]string, error)
 	ChangeRegion(ctx context.Context, region string)
+	Delete(ctx context.Context, bucket, key string) error
 }
 
 type s3Client struct {
@@ -98,4 +99,17 @@ func (s *s3Client) ChangeRegion(ctx context.Context, region string) {
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	s.Config.Region = aws.String(region)
+}
+
+func (s *s3Client) Delete(ctx context.Context, bucket, key string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "s3Client.Delete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	svc := s3.New(s.Session)
+	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	return err
 }
