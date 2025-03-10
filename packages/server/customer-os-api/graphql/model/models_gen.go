@@ -2812,6 +2812,9 @@ type TaskInput struct {
 	Assignees      []string    `json:"assignees,omitempty"`
 	OpportunityIds []string    `json:"opportunityIds,omitempty"`
 	DueAt          *time.Time  `json:"dueAt,omitempty"`
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	AuthorID       *string     `json:"authorId,omitempty"`
 }
 
 type TaskSearchResult struct {
@@ -2996,6 +2999,12 @@ type TenantSettingsOpportunityStageConfigurationInput struct {
 	Label          *string `json:"label,omitempty"`
 	Visible        *bool   `json:"visible,omitempty"`
 	LikelihoodRate *int64  `json:"likelihoodRate,omitempty"`
+}
+
+type TestInput struct {
+	StringParam *string   `json:"stringParam,omitempty"`
+	IntParam    *int      `json:"intParam,omitempty"`
+	ListParam   []*string `json:"listParam,omitempty"`
 }
 
 type TimeRange struct {

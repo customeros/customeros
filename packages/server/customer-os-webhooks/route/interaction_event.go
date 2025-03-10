@@ -52,13 +52,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		appKey, err := services.CommonServices.PostgresRepositories.AppKeyRepository.FindByKey(ctx, string(security.CUSTOMER_OS_WEBHOOKS), apiKey)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{})
-			return
-		}
-
-		if appKey == nil {
+		if cfg.App.AppKey != apiKey {
 			c.JSON(http.StatusUnauthorized, gin.H{})
 			return
 		}

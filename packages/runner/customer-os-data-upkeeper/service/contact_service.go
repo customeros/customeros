@@ -968,7 +968,7 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		return
 	}
 
-	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx)
+	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx, 50)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return

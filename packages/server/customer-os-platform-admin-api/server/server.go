@@ -58,7 +58,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer postgresDb.Close()
 
 	postgresRepositories := postgresRepository.InitRepositories(postgresDb)
-	postgresRepositories.Migration(postgresDb)
+	_ = postgresRepositories.AutoMigrate(postgresDb)
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Common.Infrastructure.Neo4jConfig)

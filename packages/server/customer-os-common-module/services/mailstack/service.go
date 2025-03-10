@@ -170,6 +170,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 					Password:              utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
 					WebmailEnabled:        true,
 					ForwardingTo:          []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))},
+					LinkedUserEmail:       common.GetUserEmailFromContext(ctx),
 				})
 				if err != nil {
 					return err

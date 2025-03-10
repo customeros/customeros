@@ -74,6 +74,19 @@ func GetUserEmailFromContext(ctx context.Context) string {
 	return GetContext(ctx).UserEmail
 }
 
+func IsImpersonatedUserInContext(ctx context.Context) bool {
+	roles := GetRolesFromContext(ctx)
+	if len(roles) == 0 {
+		return false
+	}
+	for _, role := range roles {
+		if role == "IMPERSONATED" {
+			return true
+		}
+	}
+	return false
+}
+
 func SetAppSourceInContext(ctx context.Context, appSource string) context.Context {
 	customContext := GetContext(ctx)
 	customContext.AppSource = appSource

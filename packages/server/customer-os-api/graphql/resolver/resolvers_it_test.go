@@ -89,7 +89,10 @@ func createPostgresTables(db *gorm.DB) {
 		AsyncGormDB: db,
 	}
 
-	postgresRepository.InitRepositories(&postgresDB).Migration(&postgresDB)
+	err := postgresRepository.InitRepositories(&postgresDB).AutoMigrate(&postgresDB)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func tearDownTestCase(ctx context.Context) func(tb testing.TB) {

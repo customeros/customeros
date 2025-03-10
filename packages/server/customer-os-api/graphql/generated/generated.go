@@ -1242,6 +1242,7 @@ type ComplexityRoot struct {
 		TenantUpdateBillingProfile                 func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
 		TenantUpdateSettings                       func(childComplexity int, input *model.TenantSettingsInput) int
 		TenantUpdateSettingsOpportunityStage       func(childComplexity int, input model.TenantSettingsOpportunityStageConfigurationInput) int
+		TestMutation                               func(childComplexity int, input model.TestInput) int
 		UserUpdate                                 func(childComplexity int, input *model.UserUpdateInput) int
 		UserUpdateOnboardingDetails                func(childComplexity int, input model.UserOnboardingDetailsInput) int
 	}
@@ -2173,6 +2174,7 @@ type MutationResolver interface {
 	TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error)
 	TenantUpdateSettings(ctx context.Context, input *model.TenantSettingsInput) (*model.TenantSettings, error)
 	TenantUpdateSettingsOpportunityStage(ctx context.Context, input model.TenantSettingsOpportunityStageConfigurationInput) (*model.ActionResponse, error)
+	TestMutation(ctx context.Context, input model.TestInput) (bool, error)
 	UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error)
 	UserUpdate(ctx context.Context, input *model.UserUpdateInput) (*model.User, error)
 	TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error)
@@ -9469,6 +9471,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.TenantUpdateSettingsOpportunityStage(childComplexity, args["input"].(model.TenantSettingsOpportunityStageConfigurationInput)), true
 
+	case "Mutation.testMutation":
+		if e.complexity.Mutation.TestMutation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_testMutation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TestMutation(childComplexity, args["input"].(model.TestInput)), true
+
 	case "Mutation.user_Update":
 		if e.complexity.Mutation.UserUpdate == nil {
 			break
@@ -12406,28 +12420,28 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Social.UpdatedAt(childComplexity), true
 
-	case "Period.code":
+	case "State.code":
 		if e.complexity.State.Code == nil {
 			break
 		}
 
 		return e.complexity.State.Code(childComplexity), true
 
-	case "Period.country":
+	case "State.country":
 		if e.complexity.State.Country == nil {
 			break
 		}
 
 		return e.complexity.State.Country(childComplexity), true
 
-	case "Period.id":
+	case "State.id":
 		if e.complexity.State.ID == nil {
 			break
 		}
 
 		return e.complexity.State.ID(childComplexity), true
 
-	case "Period.name":
+	case "State.name":
 		if e.complexity.State.Name == nil {
 			break
 		}
@@ -13439,6 +13453,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTenantInput,
 		ec.unmarshalInputTenantSettingsInput,
 		ec.unmarshalInputTenantSettingsOpportunityStageConfigurationInput,
+		ec.unmarshalInputTestInput,
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
 		ec.unmarshalInputUserOnboardingDetailsInput,
@@ -17426,7 +17441,7 @@ input SocialUpdateInput {
     FATHOM
     GRAIN
 }`, BuiltIn: false},
-	{Name: "../schemas/state.graphqls", Input: `type Period {
+	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!
     country: Country!
     name: String!
@@ -17491,6 +17506,9 @@ input TaskInput {
     assignees       : [ID!]
     opportunityIds  : [ID!]
     dueAt           : Time
+    createdAt       : Time # ignored by backend
+    updatedAt       : Time # ignored by backend
+    authorId        : String # ignored by backend
 }
 
 type Task {
@@ -17734,6 +17752,15 @@ type TenantBillableInfo {
     whitelistedContacts: Int64!
     greylistedOrganizations: Int64!
     greylistedContacts: Int64!
+}`, BuiltIn: false},
+	{Name: "../schemas/test.graphqls", Input: `extend type Mutation {
+    testMutation(input: TestInput!): Boolean!
+}
+
+input TestInput {
+    stringParam:    String
+    intParam:       Int
+    listParam:      [String]
 }`, BuiltIn: false},
 	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry | MarkdownEvent
 
@@ -25162,6 +25189,34 @@ func (ec *executionContext) field_Mutation_tenant_UpdateSettings_argsInput(
 	}
 
 	var zeroVal *model.TenantSettingsInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_testMutation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_testMutation_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_testMutation_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.TestInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.TestInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNTestInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTestInput(ctx, tmp)
+	}
+
+	var zeroVal model.TestInput
 	return zeroVal, nil
 }
 
@@ -81192,6 +81247,61 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettingsOpportuni
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_testMutation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_testMutation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TestMutation(rctx, fc.Args["input"].(model.TestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_testMutation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_testMutation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_user_UpdateOnboardingDetails(ctx, field)
 	if err != nil {
@@ -105996,7 +106106,7 @@ func (ec *executionContext) _State_id(ctx context.Context, field graphql.Collect
 
 func (ec *executionContext) fieldContext_State_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Period",
+		Object:     "State",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -106040,7 +106150,7 @@ func (ec *executionContext) _State_country(ctx context.Context, field graphql.Co
 
 func (ec *executionContext) fieldContext_State_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Period",
+		Object:     "State",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -106096,7 +106206,7 @@ func (ec *executionContext) _State_name(ctx context.Context, field graphql.Colle
 
 func (ec *executionContext) fieldContext_State_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Period",
+		Object:     "State",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -106140,7 +106250,7 @@ func (ec *executionContext) _State_code(ctx context.Context, field graphql.Colle
 
 func (ec *executionContext) fieldContext_State_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Period",
+		Object:     "State",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -120202,7 +120312,7 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "subject", "description", "status", "assignees", "opportunityIds", "dueAt"}
+	fieldsInOrder := [...]string{"id", "subject", "description", "status", "assignees", "opportunityIds", "dueAt", "createdAt", "updatedAt", "authorId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -120258,6 +120368,27 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 				return it, err
 			}
 			it.DueAt = data
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "authorId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("authorId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AuthorID = data
 		}
 	}
 
@@ -120798,6 +120929,47 @@ func (ec *executionContext) unmarshalInputTenantSettingsOpportunityStageConfigur
 				return it, err
 			}
 			it.LikelihoodRate = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTestInput(ctx context.Context, obj any) (model.TestInput, error) {
+	var it model.TestInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"stringParam", "intParam", "listParam"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "stringParam":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stringParam"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StringParam = data
+		case "intParam":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("intParam"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IntParam = data
+		case "listParam":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listParam"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ListParam = data
 		}
 	}
 
@@ -131044,6 +131216,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "testMutation":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_testMutation(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "user_UpdateOnboardingDetails":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_UpdateOnboardingDetails(ctx, field)
@@ -136155,7 +136334,7 @@ func (ec *executionContext) _Social(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var stateImplementors = []string{"Period"}
+var stateImplementors = []string{"State"}
 
 func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, obj *model.State) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, stateImplementors)
@@ -136165,7 +136344,7 @@ func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, ob
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Period")
+			out.Values[i] = graphql.MarshalString("State")
 		case "id":
 			out.Values[i] = ec._State_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -143226,6 +143405,11 @@ func (ec *executionContext) unmarshalNTenantSettingsOpportunityStageConfiguratio
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNTestInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTestInput(ctx context.Context, v any) (model.TestInput, error) {
+	res, err := ec.unmarshalInputTestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
 	res, err := graphql.UnmarshalTime(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -145177,6 +145361,38 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 		if e == graphql.Null {
 			return graphql.Null
 		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v any) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
 	}
 
 	return ret

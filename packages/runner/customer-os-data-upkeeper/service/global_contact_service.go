@@ -162,14 +162,16 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 		}
 
 		contact := &postgresentity.GlobalContact{
-			FirstName:               strings.TrimSpace(person.FirstName),
-			LastName:                strings.TrimSpace(person.LastName),
+			FirstName:               utils.CleanName(person.FirstName),
+			LastName:                utils.CleanName(person.LastName),
 			LinkedInIdentifier:      person.LinkedInIdentifier,
+			LinkedInAlias:           person.PublicIdentifier,
 			JobTitle:                currentPosition.Title,
 			JobStartedAt:            currentPosition.StartedOn,
 			JobEndedAt:              currentPosition.EndedOn,
 			PrimaryDomain:           primaryDomain,
 			ProfilePhotoExternalUrl: person.PhotoUrl,
+			DataFetchedAt:           &record.CreatedAt,
 		}
 
 		err = s.commonServices.GlobalContactService.SaveContact(ctx, contact)
@@ -190,7 +192,7 @@ func (s *globalContactService) SyncDataIntoGlobalContacts() {
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	limit := 50
+	limit := 500
 
 	records, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetToSyncIntoGlobalContacts(ctx, limit)
 	if err != nil {

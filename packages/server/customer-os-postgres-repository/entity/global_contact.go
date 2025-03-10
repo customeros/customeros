@@ -13,6 +13,7 @@ type GlobalContact struct {
 	FirstName               string              `gorm:"type:varchar(255)" json:"first_name"`
 	LastName                string              `gorm:"type:varchar(255)" json:"last_name"`
 	LinkedInIdentifier      string              `gorm:"type:varchar(255);index:idx_linkedin_identifier" json:"linkedin_identifier"`
+	LinkedInAlias           string              `gorm:"type:varchar(255);index:idx_linkedin_alias" json:"linkedin_alias"`
 	WorkEmail               string              `gorm:"type:varchar(255);index:idx_work_email" json:"work_email,omitempty"`
 	PersonalEmail           string              `gorm:"type:varchar(255);index:idx_personal_email" json:"personal_email,omitempty"`
 	JobTitle                string              `gorm:"type:varchar(255)" json:"job_title"`
@@ -23,24 +24,13 @@ type GlobalContact struct {
 	ProfilePhotoPath        string              `gorm:"column:profile_photo_path;type:varchar(2000)" json:"profilePhotoPath"`
 	DownloadStatus          enum.DownloadStatus `gorm:"column:download_status;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatus"`
 	PhoneNumber             string              `gorm:"column:phone_number;type:varchar(50)" json:"phone_number,omitempty"`
+	DataFetchedAt           *time.Time          `gorm:"column:data_fetched_at;type:timestamp" json:"dataFetchedAt,omitempty"`
 
 	// Enrichment fields
 	BetterContactRequestedAt     *time.Time `gorm:"column:bettercontact_requested_at;type:timestamp" json:"betterContactRequestedAt"`
 	BetterContactSetAt           *time.Time `gorm:"column:bettercontact_set_at;type:timestamp" json:"betterContactSetAt"`
 	BetterContactRequestId       string     `gorm:"column:bettercontact_request_id;type:varchar(100)" json:"betterContactRequestId,omitempty"`
 	BetterContactCheckResponseAt *time.Time `gorm:"column:bettercontact_check_response_at;type:timestamp" json:"betterContactCheckResponseAt"`
-
-	// Location       string   `gorm:"type:varchar(255)" json:"location,omitempty"`
-	// Country        string   `gorm:"type:varchar(2)" json:"country,omitempty"`
-	// Bio            string   `gorm:"type:text" json:"bio,omitempty"`
-	// Skills         []string `gorm:"type:text[]" json:"skills,omitempty"`
-	// Education      []string `gorm:"type:text[]" json:"education,omitempty"`
-	// Languages      []string `gorm:"type:text[]" json:"languages,omitempty"`
-	// Interests      []string `gorm:"type:text[]" json:"interests,omitempty"`
-	// Certifications []string `gorm:"type:text[]" json:"certifications,omitempty"`
-	// Publications   []string `gorm:"type:text[]" json:"publications,omitempty"`
-	// Awards         []string `gorm:"type:text[]" json:"awards,omitempty"`
-	// VolunteerWork  []string `gorm:"type:text[]" json:"volunteer_work,omitempty"`
 }
 
 // TableName specifies the table name for the GlobalContact entity

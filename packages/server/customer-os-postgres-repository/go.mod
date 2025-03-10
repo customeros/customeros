@@ -7,8 +7,10 @@ toolchain go1.23.1
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1

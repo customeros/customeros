@@ -15,6 +15,9 @@ input TaskInput {
     assignees       : [ID!]
     opportunityIds  : [ID!]
     dueAt           : Time
+    createdAt       : Time # ignored by backend
+    updatedAt       : Time # ignored by backend
+    authorId        : String # ignored by backend
 }
 
 type Task {

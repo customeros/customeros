@@ -11,23 +11,23 @@ type Repositories struct {
 	Db      *gorm.DB
 	AsyncDb *gorm.DB
 
-	AgentRepository                              AgentRepository
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
+	AgentRepository                              AgentRepository
 	AiLocationMappingRepository                  AiLocationMappingRepository
 	ApiBillableEventRepository                   ApiBillableEventRepository
-	AppKeyRepository                             AppKeyRepository
 	BrowserAutomationRunRepository               BrowserAutomationRunRepository
 	BrowserAutomationRunResultRepository         BrowserAutomationRunResultRepository
 	BrowserConfigRepository                      BrowserConfigRepository
+	CacheCrustDataRepository                     CacheCrustDataRepository
 	CacheEmailEnrowRepository                    CacheEmailEnrowRepository
 	CacheEmailScrubbyRepository                  CacheEmailScrubbyRepository
 	CacheEmailTrueinboxRepository                CacheEmailTrueinboxRepository
 	CacheEmailValidationDomainRepository         CacheEmailValidationDomainRepository
 	CacheEmailValidationRepository               CacheEmailValidationRepository
+	CacheIPIdentifyRepository                    CacheIPIdentifyRepository
 	CacheIpDataRepository                        CacheIpDataRepository
 	CacheIpHunterRepository                      CacheIpHunterRepository
-	CacheIPIdentifyRepository                    CacheIPIdentifyRepository
 	CommonRepository                             CommonRepository
 	CosApiEnrichPersonTempResultRepository       CosApiEnrichPersonTempResultRepository
 	CurrencyRateRepository                       CurrencyRateRepository
@@ -44,31 +44,32 @@ type Repositories struct {
 	EnrichDetailsScrapInRepository               EnrichDetailsScrapInRepository
 	EnrichDetailsTrackingRepository              EnrichDetailsTrackingRepository
 	ExternalAppKeysRepository                    ExternalAppKeysRepository
-	FlowsRepository                              FlowsRepository
 	FlowEdgeRepository                           FlowEdgeRepository
 	FlowExecutionRepository                      FlowExecutionRepository
 	FlowNodeRepository                           FlowNodeRepository
+	FlowsRepository                              FlowsRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
 	GlobalContactRepository                      GlobalContactRepository
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
-	InvoiceRepository                            InvoiceRepository
-	IngestEmailMessageRepository                 IngestEmailMessageRepository
 	IngestEmailImportStateRepository             IngestEmailImportStateRepository
+	IngestEmailMessageRepository                 IngestEmailMessageRepository
+	InvoiceRepository                            InvoiceRepository
+	MagicLinkRepository                          MagicLinkRepository
 	MailStackDomainRepository                    MailStackDomainRepository
 	MailstackBuyRequestRepository                MailstackBuyRequestRepository
-	MagicLinkRepository                          MagicLinkRepository
 	OAuthTokenRepository                         OAuthTokenRepository
 	OranizationWebsiteHostingPlatformRepository  OrganizationWebsiteHostingPlatformRepository
 	PersonalEmailProviderRepository              PersonalEmailProviderRepository
 	PersonalIntegrationRepository                PersonalIntegrationRepository
 	PostmarkApiKeyRepository                     PostmarkApiKeyRepository
+	QuickbooksSettingsRepository                 QuickbooksSettingsRepository
 	ScrapedWebpageRepository                     ScrapedWebpageRepository
+	SkuRepository                                SkuRepository
 	SlackChannelNotificationRepository           SlackChannelNotificationRepository
 	SlackChannelRepository                       SlackChannelRepository
 	SlackSettingsRepository                      SlackSettingsRepository
 	StatsApiCallsRepository                      StatsApiCallsRepository
-	SkuRepository                                SkuRepository
 	TableViewDefinitionRepository                TableViewDefinitionRepository
 	TenantRepository                             TenantRepository
 	TenantSettingsEmailExclusionRepository       TenantSettingsEmailExclusionRepository
@@ -78,10 +79,9 @@ type Repositories struct {
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
 	TenantWebhookRepository                      TenantWebhookRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
-	QuickbooksSettingsRepository                 QuickbooksSettingsRepository
 	WebhooksRepository                           WebhooksRepository
-	WebSessionRepository                         WebSessionRepository
 	WebSessionPageVisitRepository                WebSessionPageVisitRepository
+	WebSessionRepository                         WebSessionRepository
 	WebTrackerEventsRepository                   WebTrackerEventsRepository
 }
 
@@ -99,10 +99,10 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
 		AiLocationMappingRepository:                  NewAiLocationMappingRepository(postgresDB.GormDB),
 		ApiBillableEventRepository:                   NewApiBillableEventRepository(postgresDB.GormDB),
-		AppKeyRepository:                             NewAppKeyRepo(postgresDB.GormDB),
 		BrowserAutomationRunRepository:               NewBrowserAutomationRunRepository(postgresDB.GormDB),
 		BrowserAutomationRunResultRepository:         NewBrowserAutomationRunResultRepository(postgresDB.GormDB),
 		BrowserConfigRepository:                      NewBrowserConfigRepository(postgresDB.GormDB),
+		CacheCrustDataRepository:                     NewCacheCrustDataRepository(postgresDB.GormDB),
 		CacheEmailEnrowRepository:                    NewCacheEmailEnrowRepository(postgresDB.GormDB),
 		CacheEmailScrubbyRepository:                  NewCacheEmailScrubbyRepository(postgresDB.GormDB),
 		CacheEmailTrueinboxRepository:                NewCacheEmailTrueinboxRepository(postgresDB.GormDB),
@@ -168,30 +168,29 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	return repositories
 }
 
-func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
+func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 	err := postgresDB.GormDB.AutoMigrate(
-		&postgres_entity.AgentRegistry{},
-		&postgres_entity.AgentExecution{},
 		&postgres_entity.Agent{},
+		&postgres_entity.AgentExecution{},
 		&postgres_entity.AgentPlay{},
-		&postgres_entity.Capability{},
-		&postgres_entity.GlobalContact{},
-		&postgres_entity.Listener{},
+		&postgres_entity.AgentRegistry{},
 		&postgres_entity.AiLocationMapping{},
 		&postgres_entity.ApiBillableEvent{},
+		&postgres_entity.CacheCrustData{},
 		&postgres_entity.CacheEmailEnrow{},
 		&postgres_entity.CacheEmailScrubby{},
 		&postgres_entity.CacheEmailTrueinbox{},
 		&postgres_entity.CacheEmailValidation{},
 		&postgres_entity.CacheEmailValidationDomain{},
+		&postgres_entity.CacheIPIdentify{},
 		&postgres_entity.CacheIpData{},
 		&postgres_entity.CacheIpHunter{},
-		&postgres_entity.CacheIPIdentify{},
+		&postgres_entity.Capability{},
 		&postgres_entity.CosApiEnrichPersonTempResult{},
 		&postgres_entity.CurrencyRate{},
 		&postgres_entity.CustomerOsIds{},
-		&postgres_entity.DomainPrimaryException{},
 		&postgres_entity.DMARCMonitoring{},
+		&postgres_entity.DomainPrimaryException{},
 		&postgres_entity.EmailLookup{},
 		&postgres_entity.EmailMessage{},
 		&postgres_entity.EmailTracking{},
@@ -203,29 +202,32 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.EnrichDetailsScrapIn{},
 		&postgres_entity.EnrichDetailsTracking{},
 		&postgres_entity.ExternalAppKeys{},
-		&postgres_entity.Flows{},
 		&postgres_entity.FlowEdge{},
 		&postgres_entity.FlowExecution{},
 		&postgres_entity.FlowNode{},
+		&postgres_entity.Flows{},
 		&postgres_entity.FlowTransitionsRegistry{},
+		&postgres_entity.GlobalContact{},
 		&postgres_entity.GlobalOrganization{},
 		&postgres_entity.GlobalOrganizationWebsiteToProcess{},
 		&postgres_entity.InvoiceNumberEntity{},
+		&postgres_entity.Listener{},
+		&postgres_entity.MagicLink{},
 		&postgres_entity.MailStackDomain{},
 		&postgres_entity.MailstackBuyRequest{},
 		&postgres_entity.MailstackBuyRequestDomain{},
 		&postgres_entity.MailstackReputationEntity{},
-		&postgres_entity.MagicLink{},
 		&postgres_entity.OrganizationWebsiteHostingPlatform{},
 		&postgres_entity.PersonalEmailProvider{},
 		&postgres_entity.PersonalIntegration{},
 		&postgres_entity.PostmarkApiKey{},
+		&postgres_entity.QuickbooksSettingsEntity{},
 		&postgres_entity.ScrapedWebpage{},
+		&postgres_entity.SkuEntity{},
 		&postgres_entity.SlackChannel{},
 		&postgres_entity.SlackChannelNotification{},
 		&postgres_entity.SlackSettingsEntity{},
 		&postgres_entity.StatsApiCalls{},
-		&postgres_entity.SkuEntity{},
 		&postgres_entity.TableViewDefinition{},
 		&postgres_entity.Tenant{},
 		&postgres_entity.TenantSettings{},
@@ -235,14 +237,13 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.TenantWebhook{},
 		&postgres_entity.TenantWebhookApiKey{},
 		&postgres_entity.UserWorkingSchedule{},
-		&postgres_entity.QuickbooksSettingsEntity{},
 		&postgres_entity.Webhooks{},
 		&postgres_entity.WebSession{},
 		&postgres_entity.WebSessionPageVisit{},
 		&postgres_entity.WebTrackerEvents{},
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = postgresDB.AsyncGormDB.AutoMigrate(
@@ -251,6 +252,8 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.IngestEmailImportState{},
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }

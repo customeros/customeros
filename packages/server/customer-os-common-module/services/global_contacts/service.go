@@ -136,12 +136,18 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 	if new.LinkedInIdentifier != "" {
 		existing.LinkedInIdentifier = new.LinkedInIdentifier
 	}
+	if new.LinkedInAlias != "" {
+		existing.LinkedInAlias = new.LinkedInAlias
+	}
 	if new.ProfilePhotoExternalUrl != "" {
 		// if new URL is different then existing one and download status is error, reset download status
 		if existing.ProfilePhotoExternalUrl != new.ProfilePhotoExternalUrl && existing.DownloadStatus == enum.DownloadError {
 			existing.DownloadStatus = enum.DownloadNotStarted
 		}
 		existing.ProfilePhotoExternalUrl = new.ProfilePhotoExternalUrl
+	}
+	if new.DataFetchedAt != nil {
+		existing.DataFetchedAt = new.DataFetchedAt
 	}
 }
 

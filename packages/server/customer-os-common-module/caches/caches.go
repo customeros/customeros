@@ -28,7 +28,6 @@ const (
 )
 
 type Cache struct {
-	apiKeyCache                                *freecache.Cache
 	tenantApiKeyCache                          *freecache.Cache
 	tenantCache                                *freecache.Cache
 	userDetailCache                            *freecache.Cache
@@ -39,7 +38,6 @@ type Cache struct {
 
 func NewCommonCache() *Cache {
 	return &Cache{
-		apiKeyCache:       freecache.NewCache(cache1MB),
 		tenantApiKeyCache: freecache.NewCache(cache1MB),
 		tenantCache:       freecache.NewCache(cache1MB),
 		userDetailCache:   freecache.NewCache(cache20MB),
@@ -47,24 +45,6 @@ func NewCommonCache() *Cache {
 		emailExclusionCache:                        freecache.NewCache(cache10MB),
 		personalEmailProviderCache:                 freecache.NewCache(cache10MB),
 	}
-}
-
-// SetApiKey adds an API key to the cache
-func (c *Cache) SetApiKey(app, apiKey string) {
-	keyBytes := []byte(app)
-	valueBytes := []byte(apiKey)
-
-	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
-}
-
-// CheckApiKey checks if an API key is in the cache
-func (c *Cache) CheckApiKey(app, apiKey string) bool {
-	keyBytes := []byte(app)
-	valueBytes, err := c.apiKeyCache.Get(keyBytes)
-	if err != nil {
-		return false
-	}
-	return string(valueBytes) == apiKey
 }
 
 // CheckTenantApiKey checks if a tenant API key exists in the cache

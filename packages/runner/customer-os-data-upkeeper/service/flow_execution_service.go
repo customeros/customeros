@@ -56,11 +56,11 @@ func (s *flowExecutionService) RampUpMailboxes() {
 	span.LogFields(log.Int("mailboxes.count", len(mailboxes)))
 
 	for _, mailbox := range mailboxes {
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant: mailbox.Tenant,
 		})
 
-		err := s.rampUpMailbox(ctx, mailbox)
+		err := s.rampUpMailbox(innerCtx, mailbox)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -70,7 +70,7 @@ func (s *flowExecutionService) RampUpMailboxes() {
 func (s *flowExecutionService) rampUpMailbox(ctx context.Context, mailbox *postgres_entity.TenantSettingsMailbox) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.rampUpMailbox")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagComponentCronJob(span)
 
 	for {
 		if mailbox.RampUpCurrent >= mailbox.RampUpMax {

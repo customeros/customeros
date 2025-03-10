@@ -35,10 +35,11 @@ var (
 	ErrCannotIdentifyUser = errors.New("Cannot identify CustomerOS user")
 
 	// Capability errors
-	ErrCapabilityDomainMissing         = errors.New("Missing domain")
-	ErrCapabilityContactMissing        = errors.New("Missing contact email")
-	ErrMeetingContentMissing           = errors.New("Missing meeting content")
-	ErrCapabilityHostnameNotConfigured = errors.New("Hostname not configured")
+	ErrCapabilityDomainMissing                       = errors.New("Missing domain")
+	ErrCapabilityContactMissing                      = errors.New("Missing contact email")
+	ErrMeetingContentMissing                         = errors.New("Missing meeting content")
+	ErrCapabilityHostnameNotConfigured               = errors.New("Hostname not configured")
+	ErrCapabilityMissingPrimaryDomainForOrganization = errors.New("Missing primary domain for organization")
 )
 
 func SkipTracing(err error) bool {
@@ -54,6 +55,7 @@ func SkipTracing(err error) bool {
 		ErrCapabilityContactMissing,
 		ErrMeetingContentMissing,
 		ErrCapabilityHostnameNotConfigured,
+		ErrCapabilityMissingPrimaryDomainForOrganization,
 	}
 
 	for _, e := range errs {

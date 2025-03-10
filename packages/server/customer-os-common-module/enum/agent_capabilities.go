@@ -11,6 +11,7 @@ const (
 	CapabilityExecutionError     CapabilityExecutionStatus = "ERROR"
 	CapabilityExecutionPending   CapabilityExecutionStatus = "PENDING"
 	CapabilityExecutionCompleted CapabilityExecutionStatus = "COMPLETED"
+	CapabilityExecutionSkip      CapabilityExecutionStatus = "SKIP"
 	CapabilityExecutionStop      CapabilityExecutionStatus = "STOP"
 )
 
@@ -25,6 +26,7 @@ func GetCapabilityExecutionStatus(s string) (CapabilityExecutionStatus, error) {
 		CapabilityExecutionError,
 		CapabilityExecutionPending,
 		CapabilityExecutionStop,
+		CapabilityExecutionSkip,
 		CapabilityExecutionCompleted:
 		return CapabilityExecutionStatus(s), nil
 

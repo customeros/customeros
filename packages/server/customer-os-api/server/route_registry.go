@@ -56,8 +56,7 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 		middlewares = append(middlewares,
 			security.ApiKeyCheckerHTTP(
 				config.services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository,
-				config.services.Repositories.PostgresRepositories.AppKeyRepository,
-				security.PLATFORM_ADMIN_API,
+				config.services.Cfg.App.AppKey,
 				security.WithCache(config.cache),
 			),
 			security.TenantUserContextEnhancer(
@@ -69,8 +68,7 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 		middlewares = append(middlewares,
 			security.ApiKeyCheckerHTTP(
 				config.services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository,
-				config.services.Repositories.PostgresRepositories.AppKeyRepository,
-				security.CUSTOMER_OS_API,
+				config.services.Cfg.App.AppKey,
 				security.WithCache(config.cache),
 			),
 			enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),

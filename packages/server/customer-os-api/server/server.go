@@ -164,7 +164,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	// graphql routes
 	r.POST("/query",
 		tracing.GraphQlTracingEnhancer(ctx),
-		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(serviceContainer.Cache)),
+		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Cfg.App.AppKey, security.WithCache(serviceContainer.Cache)),
 		tenantUserContextEnhancerMiddleware(serviceContainer.Repositories.Neo4jRepositories, security.WithCache(serviceContainer.Cache)),
 		server.graphqlHandler(serviceContainer))
 
@@ -200,8 +200,8 @@ func (server *server) Run(parentCtx context.Context) error {
 }
 
 // Define a custom middleware adapter for ApiKeyCheckerHTTP.
-func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKeyRepo postgresRepository.AppKeyRepository, app security.App, opts ...security.CommonServiceOption) func(c *gin.Context) {
-	apiKeyChecker := security.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKeyRepo, app, opts...)
+func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKey string, opts ...security.CommonServiceOption) func(c *gin.Context) {
+	apiKeyChecker := security.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKey, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {
 			c.Next() // Skip ApiKeyCheckerHTTP and continue to the next handler.

@@ -13,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 )
@@ -106,7 +107,7 @@ func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, do
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogKV("request.domain", domains)
 
-	unaivalableDomains := []string{}
+	var unaivalableDomains []string
 	for _, domain := range domains {
 		isAvailable, isPremium, err := r.Services.CommonServices.NamecheapService.CheckDomainAvailability(ctx, domain)
 		if err != nil {
@@ -130,7 +131,7 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	usernames := []string{}
+	var usernames []string
 
 	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
 	if err != nil {
@@ -155,8 +156,16 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 
 	userId := common.GetUserIdFromContext(ctx)
 	span.LogKV("request.userId", userId)
+	isImpersonated := common.IsImpersonatedUserInContext(ctx)
 
-	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, userId)
+	var allMailboxes []*postgres_entity.TenantSettingsMailbox
+	var err error
+
+	if isImpersonated {
+		allMailboxes, err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
+	} else {
+		allMailboxes, err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, userId)
+	}
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get all mailboxes")

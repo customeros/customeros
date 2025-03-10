@@ -44,7 +44,7 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.ContactSyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.ContactSyncConcurrency,
 	}
 }
 

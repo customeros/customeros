@@ -103,6 +103,7 @@ type CommonServices struct {
 	ContractService            interfaces.ContractService
 	CurrencyService            interfaces.CurrencyService
 	CustomFieldTemplateService interfaces.CustomFieldTemplateService
+	CrustDataService           interfaces.CrustDataService
 	DomainService              interfaces.DomainService
 	EmailingService            interfaces.EmailingService
 	EmailService               interfaces.EmailService
@@ -234,6 +235,7 @@ func InitCommonServices(
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories, eventsImpl)
 	globalContactImpl := globalcontacts.NewGlobalContactService(log, postgresRepositories)
+	crustDataImpl := enrichment.NewCrustDataService(log, &cfg.External.CrustDataConfig, postgresRepositories)
 
 	// Services that only depend on Simple
 	companyResearchImpl := company_research.NewCompanyResearchService(postgresRepositories, aiImpl, webscrapeImpl, workspaceImpl)
@@ -340,6 +342,7 @@ func InitCommonServices(
 		CompanyResearch:            companyResearchImpl,
 		ContactService:             contactImpl,
 		ContractService:            contractImpl,
+		CrustDataService:           crustDataImpl,
 		CurrencyService:            currencyImpl,
 		CustomFieldTemplateService: customFieldTemplateImpl,
 		DomainService:              domainImpl,
