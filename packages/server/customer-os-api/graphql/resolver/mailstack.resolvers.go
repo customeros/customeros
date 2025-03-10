@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -14,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 )
