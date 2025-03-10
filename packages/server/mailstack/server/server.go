@@ -127,10 +127,6 @@ func (s *Server) waitForShutdown() error {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	if s.tracerCloser != nil {
-		s.tracerCloser.Close()
-	}
-
 	// Wait for termination signal
 	<-stop
 	log.Println("Shutting down...")
@@ -141,6 +137,10 @@ func (s *Server) waitForShutdown() error {
 
 	// Shut down HTTP server
 	log.Println("Shutting down HTTP server...")
+	if s.tracerCloser != nil {
+		s.tracerCloser.Close()
+	}
+
 	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Printf("❌ HTTP server shutdown error: %v", err)
 	} else {
