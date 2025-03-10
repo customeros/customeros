@@ -2814,6 +2814,7 @@ type TaskInput struct {
 	DueAt          *time.Time  `json:"dueAt,omitempty"`
 	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
 	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	AuthorID       *string     `json:"authorId,omitempty"`
 }
 
 type TaskSearchResult struct {
