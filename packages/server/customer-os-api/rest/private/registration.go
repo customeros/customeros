@@ -961,13 +961,13 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 
 	if len(existingUser.Roles) > 0 {
 		for _, role := range existingUser.Roles {
-			if role == "USER" {
+			if role == common_enum.UserRoleUser.String() {
 				userRoleFound = true
 			}
-			if role == "OWNER" {
+			if role == common_enum.UserRoleOwner.String() {
 				ownerRoleFound = true
 			}
-			if role == "IMPERSONATED" {
+			if role == common_enum.UserRoleImpersonated.String() {
 				impersonatedRoleFound = true
 			}
 		}
@@ -975,14 +975,14 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 
 	if !impersonatedRoleFound {
 		if !userRoleFound {
-			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, "USER")
+			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, common_enum.UserRoleUser.String())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}
 		}
 		if !ownerRoleFound {
-			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, "OWNER")
+			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, common_enum.UserRoleOwner.String())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err

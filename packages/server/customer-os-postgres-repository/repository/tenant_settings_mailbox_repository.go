@@ -2,6 +2,7 @@ package postgres_repository
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -21,8 +22,8 @@ type TenantSettingsMailboxRepository interface {
 	GetForRampUp(ctx context.Context) ([]*postgres_entity.TenantSettingsMailbox, error)
 	GetById(ctx context.Context, id string) (*postgres_entity.TenantSettingsMailbox, error)
 	GetByMailbox(ctx context.Context, mailbox string) (*postgres_entity.TenantSettingsMailbox, error)
-	GetAllByDomain(ctx context.Context, domain string) ([]postgres_entity.TenantSettingsMailbox, error)
-	GetAllByUserId(ctx context.Context, userId string) ([]postgres_entity.TenantSettingsMailbox, error)
+	GetAllByDomain(ctx context.Context, domain string) ([]*postgres_entity.TenantSettingsMailbox, error)
+	GetAllByUserId(ctx context.Context, userId string) ([]*postgres_entity.TenantSettingsMailbox, error)
 
 	Merge(ctx context.Context, tx *gorm.DB, mailbox *postgres_entity.TenantSettingsMailbox) error
 }
@@ -131,7 +132,7 @@ func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, mail
 	return &result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, domain string) ([]postgres_entity.TenantSettingsMailbox, error) {
+func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, domain string) ([]*postgres_entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByDomain")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
@@ -140,7 +141,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, do
 
 	span.LogKV("domain", domain)
 
-	var result []postgres_entity.TenantSettingsMailbox
+	var result []*postgres_entity.TenantSettingsMailbox
 	err := r.gormDb.WithContext(ctx).
 		Where("tenant = ? and domain = ?", tenant, domain).
 		Find(&result).
@@ -154,7 +155,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, do
 	return result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) GetAllByUserId(ctx context.Context, userId string) ([]postgres_entity.TenantSettingsMailbox, error) {
+func (r *tenantSettingsMailboxRepository) GetAllByUserId(ctx context.Context, userId string) ([]*postgres_entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByUserId")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
@@ -163,7 +164,7 @@ func (r *tenantSettingsMailboxRepository) GetAllByUserId(ctx context.Context, us
 
 	span.LogKV("userId", userId)
 
-	var result []postgres_entity.TenantSettingsMailbox
+	var result []*postgres_entity.TenantSettingsMailbox
 	err := r.gormDb.WithContext(ctx).
 		Where("tenant = ? and user_id = ?", tenant, userId).
 		Find(&result).
@@ -182,10 +183,9 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tx *gorm.DB
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "mailbox", input)
 
 	tenant := common.GetTenantFromContext(ctx)
-
-	span.LogFields(tracingLog.Object("mailbox", input))
 
 	// Check if the mailbox already exists
 	var mailbox postgres_entity.TenantSettingsMailbox
