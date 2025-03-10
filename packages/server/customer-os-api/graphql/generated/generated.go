@@ -17506,6 +17506,8 @@ input TaskInput {
     assignees       : [ID!]
     opportunityIds  : [ID!]
     dueAt           : Time
+    createdAt       : Time # ignored by backend
+    updatedAt       : Time # ignored by backend
 }
 
 type Task {
@@ -120309,7 +120311,7 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "subject", "description", "status", "assignees", "opportunityIds", "dueAt"}
+	fieldsInOrder := [...]string{"id", "subject", "description", "status", "assignees", "opportunityIds", "dueAt", "createdAt", "updatedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -120365,6 +120367,20 @@ func (ec *executionContext) unmarshalInputTaskInput(ctx context.Context, obj any
 				return it, err
 			}
 			it.DueAt = data
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
 		}
 	}
 

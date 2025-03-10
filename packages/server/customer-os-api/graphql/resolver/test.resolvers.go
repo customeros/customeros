@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
