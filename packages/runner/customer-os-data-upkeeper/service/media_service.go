@@ -168,6 +168,19 @@ func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			tracing.TraceErr(span, err)
+		} else {
+			// clear global contact profile photo external url
+			globalContact, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetById(ctx, globalContactId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			if globalContact != nil {
+				globalContact.ProfilePhotoExternalUrl = ""
+				_, err = s.commonServices.PostgresRepositories.GlobalContactRepository.Update(ctx, globalContact)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to update global contact"))
+				}
+			}
 		}
 		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetDownloadStatus(ctx, globalContactId, enum.DownloadError)
 		if err != nil {
@@ -181,6 +194,10 @@ func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
 			return false
+		}
+		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetDownloadStatus(ctx, globalContactId, enum.DownloadCompleted)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
 		}
 	}
 	return true
