@@ -28,6 +28,7 @@ type CommonConfig struct {
 }
 
 type App struct {
+	AppKey            string `env:"APP_KEY" validate:"required"`
 	ApiPort           string `env:"PORT" envDefault:"10004" validate:"required"`
 	MetricsPort       string `env:"PORT_METRICS" envDefault:"10004" validate:"required"`
 	ConcurrencyConfig ConcurrencyConfig

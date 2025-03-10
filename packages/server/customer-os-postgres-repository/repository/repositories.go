@@ -16,7 +16,6 @@ type Repositories struct {
 	AgentRepository                              AgentRepository
 	AiLocationMappingRepository                  AiLocationMappingRepository
 	ApiBillableEventRepository                   ApiBillableEventRepository
-	AppKeyRepository                             AppKeyRepository
 	BrowserAutomationRunRepository               BrowserAutomationRunRepository
 	BrowserAutomationRunResultRepository         BrowserAutomationRunResultRepository
 	BrowserConfigRepository                      BrowserConfigRepository
@@ -100,7 +99,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
 		AiLocationMappingRepository:                  NewAiLocationMappingRepository(postgresDB.GormDB),
 		ApiBillableEventRepository:                   NewApiBillableEventRepository(postgresDB.GormDB),
-		AppKeyRepository:                             NewAppKeyRepo(postgresDB.GormDB),
 		BrowserAutomationRunRepository:               NewBrowserAutomationRunRepository(postgresDB.GormDB),
 		BrowserAutomationRunResultRepository:         NewBrowserAutomationRunResultRepository(postgresDB.GormDB),
 		BrowserConfigRepository:                      NewBrowserConfigRepository(postgresDB.GormDB),

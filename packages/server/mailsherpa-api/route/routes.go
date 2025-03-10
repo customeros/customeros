@@ -1,13 +1,13 @@
 package route
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/config"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/logger"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/model"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/service"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -27,7 +27,7 @@ func healthCheckHandler(c *gin.Context) {
 func validateEmail(ctx context.Context, r *gin.Engine, services *service.Services, cfg *config.Config, l logger.Logger) {
 	r.POST("/validateEmail",
 		tracing.TracingEnhancer(ctx, "POST /validateEmail"),
-		security.ApiKeyCheckerHTTP(services.PostgresRepositories.TenantWebhookApiKeyRepository, services.PostgresRepositories.AppKeyRepository, security.MAILSHEPRA_API, security.WithCache(services.Cache)),
+		security.ApiKeyCheckerHTTP(services.PostgresRepositories.TenantWebhookApiKeyRepository, cfg.AppKey, security.WithCache(services.Cache)),
 		func(c *gin.Context) {
 			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ValidateEmailV2")
 			defer span.Finish()

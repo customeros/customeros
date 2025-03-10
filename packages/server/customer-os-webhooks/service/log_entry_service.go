@@ -39,7 +39,7 @@ func NewLogEntryService(log logger.Logger, repositories *repository.Repositories
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.LogEntrySyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.LogEntrySyncConcurrency,
 	}
 }
 

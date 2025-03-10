@@ -12,7 +12,7 @@ import (
 )
 
 type Services struct {
-	cfg *config.Config
+	Cfg *config.Config
 
 	CommonServices     *commonService.CommonServices
 	Neo4jRepository    *neo4jrepository.Repositories
@@ -49,7 +49,7 @@ func InitServices(log logger.Logger,
 		SyncStatusService:         NewSyncStatusService(log, repositories),
 		InteractionSessionService: NewInteractionSessionService(log, repositories),
 	}
-	services.cfg = cfg
+	services.Cfg = cfg
 	services.ExternalSystemService = NewExternalSystemService(log, repositories, cache, &services)
 	services.UserService = NewUserService(log, repositories, &services)
 	services.OrganizationService = NewOrganizationService(log, repositories, &services, cache)

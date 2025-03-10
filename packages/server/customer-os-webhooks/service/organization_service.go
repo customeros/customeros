@@ -51,7 +51,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 		log:          log,
 		repositories: repositories,
 		services:     services,
-		maxWorkers:   services.cfg.App.ConcurrencyConfig.OrganizationSyncConcurrency,
+		maxWorkers:   services.Cfg.App.ConcurrencyConfig.OrganizationSyncConcurrency,
 		cache:        cache,
 	}
 }

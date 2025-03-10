@@ -28,11 +28,11 @@ import (
 func AddContactRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/contacts",
 		tracing.TracingEnhancer(ctx, "/sync/contacts"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncContactsHandler(services, log))
 	route.POST("/sync/contact",
 		tracing.TracingEnhancer(ctx, "/sync/contact"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncContactHandler(services, log))
 	route.POST("/sync/better-contact",
 		tracing.TracingEnhancer(ctx, "/sync/better-contact"),
