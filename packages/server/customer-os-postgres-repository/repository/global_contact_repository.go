@@ -249,14 +249,14 @@ func (r *globalContactRepository) GetContactsToFetchPhoto(ctx context.Context, l
 		Where("download_status = ? OR download_status IS NULL", enum.DownloadNotStarted.String()).
 		Where("profile_photo_external_url IS NOT NULL AND profile_photo_external_url != ''").
 		Where("((linked_in_identifier IS NOT NULL AND linked_in_identifier != '') OR (work_email IS NOT NULL AND work_email != '') OR (personal_email IS NOT NULL AND personal_email != ''))").
-		Order("created_at ASC").
+		Order("created_at DESC").
 		Limit(limit).
 		Find(&contacts)
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
-	span.LogFields(tracingLog.Int("found", len(contacts)))
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
 	return contacts, nil
 }
 
@@ -327,7 +327,7 @@ func (r *globalContactRepository) GetContactsToFindWorkEmailWithBetterContact(ct
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
-	span.LogFields(tracingLog.Int("found", len(contacts)))
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
 	return contacts, nil
 }
 
