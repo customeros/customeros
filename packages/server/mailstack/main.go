@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -63,11 +62,6 @@ func main() {
 		server, err := server.NewServer(cfg, mailstackDB)
 		if err != nil {
 			log.Fatalf("Server setup failed: %v", err)
-		}
-
-		err = server.Initialize(context.Background())
-		if err != nil {
-			log.Fatalf("Server initialization failed: %v", err)
 		}
 
 		err = server.Run()

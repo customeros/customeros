@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,7 +21,26 @@ func (s *IMAPService) setupIdleMonitoring(ctx context.Context, c *client.Client,
 	span.SetTag("folder.name", folderName)
 	span.SetTag("initial_count", initialCount)
 
-	// Check IDLE support
+	// Use sync.Once to prevent multiple channel closes
+	var stopOnce sync.Once
+	stop := make(chan struct{}, 1)
+
+	// Safe channel closer
+	safeClose := func() {
+		stopOnce.Do(func() {
+			close(stop)
+		})
+	}
+	defer safeClose()
+
+	// Recover from potential panics
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[%s][%s] Recovered from panic: %v", mailboxID, folderName, r)
+		}
+	}()
+
+	// Check IDLE support (existing code)
 	supportSpan := opentracing.StartSpan(
 		"IMAPService.checkIdleSupport",
 		opentracing.ChildOf(span.Context()),
@@ -34,25 +54,14 @@ func (s *IMAPService) setupIdleMonitoring(ctx context.Context, c *client.Client,
 	supportSpan.SetTag("idle_supported", supported)
 	supportSpan.Finish()
 
-	log.Printf("[%s][%s] IDLE support: %v", mailboxID, folderName, supported)
-
-	if !supported {
-		log.Printf("[%s][%s] Warning: Server does not support IDLE, falling back to polling", mailboxID, folderName)
-		// We'll continue anyway, the client will use polling as a fallback
-	}
-
-	// Set up updates channel
+	// Updates channel with buffer
 	updates := make(chan client.Update, 100)
 	c.Updates = updates
-
-	// Create a stop channel that will be closed when we need to stop IDLE
-	stop := make(chan struct{})
 
 	// Set up monitoring goroutines
 	errChan := s.setupIdleGoroutines(ctx, c, mailboxID, folderName, updates, initialCount, stop)
 
-	// Start IDLE with proper timeout handling
-	log.Printf("[%s][%s] Starting IDLE command", mailboxID, folderName)
+	// IDLE command
 	idleSpan := opentracing.StartSpan(
 		"IMAPService.idleCommand",
 		opentracing.ChildOf(span.Context()),
@@ -60,9 +69,7 @@ func (s *IMAPService) setupIdleMonitoring(ctx context.Context, c *client.Client,
 	idleSpan.SetTag("mailbox.id", mailboxID)
 	idleSpan.SetTag("folder.name", folderName)
 
-	// Set client timeout for IDLE
-	c.Timeout = 0 // No timeout for IDLE, the client library handles this internally
-
+	c.Timeout = 0
 	idleErr := c.Idle(stop, &client.IdleOptions{
 		LogoutTimeout: DEFAULT_IMAP_LOGOUT,
 		PollInterval:  DEFAULT_POLLING_PERIOD,
@@ -75,28 +82,21 @@ func (s *IMAPService) setupIdleMonitoring(ctx context.Context, c *client.Client,
 	}
 	idleSpan.Finish()
 
-	// Signal the monitoring goroutines to stop
-	close(stop)
+	// Signal stop
+	safeClose()
 
-	// Wait for monitoring goroutines to finish or timeout
+	// Wait for monitoring goroutines
 	select {
 	case err := <-errChan:
 		if err != nil {
 			log.Printf("[%s][%s] Monitoring error: %v", mailboxID, folderName, err)
+			return err
 		}
 	case <-time.After(5 * time.Second):
 		log.Printf("[%s][%s] Timed out waiting for monitoring to finish", mailboxID, folderName)
 	}
 
-	// Clean up
 	c.Updates = nil
-
-	// Return any IDLE error
-	if idleErr != nil && ctx.Err() == nil {
-		log.Printf("[%s][%s] IDLE error: %v", mailboxID, folderName, idleErr)
-		return fmt.Errorf("IDLE error: %w", idleErr)
-	}
-
 	log.Printf("[%s][%s] Stopped monitoring folder", mailboxID, folderName)
 	return nil
 }

@@ -128,11 +128,13 @@ func (s *IMAPService) AddMailbox(ctx context.Context, config *models.Mailbox) er
 	s.clientsMutex.Lock()
 	defer s.clientsMutex.Unlock()
 
+	// check for existing mailbox
 	_, exists := s.configs[config.ID]
 	if exists {
 		return fmt.Errorf("mailbox with ID %s already exists", config.ID)
 	}
 
+	// add mailbox to configs
 	s.configs[config.ID] = config
 	s.updateStatus(config.ID, interfaces.MailboxStatus{
 		Connected: false,
@@ -212,118 +214,103 @@ func (s *IMAPService) monitorMailbox(ctx context.Context, mailboxID string, conf
 	maxBackoff := time.Minute * 5
 
 	for {
+		// Check if the context is cancelled before each iteration
 		select {
-		case <-s.ctx.Done():
+		case <-ctx.Done():
+			span.SetTag("exit_reason", "context_cancelled")
 			return
 		default:
+		}
+
+		// Create a new context for each connection attempt with timeout
+		connectCtx, connectCancel := context.WithTimeout(ctx, time.Minute*2)
+
+		// Wrap the connection logic in a function for better error handling
+		err := func() error {
 			// Create a child span for connection attempt
 			connectSpan := opentracing.StartSpan(
 				"IMAPService.connectMailbox",
 				opentracing.ChildOf(span.Context()),
 			)
+			defer connectSpan.Finish()
 			connectSpan.SetTag("mailbox.id", mailboxID)
 
 			// Try to connect
-			c, err := s.connectMailbox(ctx, config)
+			c, err := s.connectMailbox(connectCtx, config)
 			if err != nil {
-				err := fmt.Errorf("Error connecting to mailbox %s: %v", mailboxID, err)
-				tracing.TraceErr(connectSpan, err)
+				errMsg := fmt.Errorf("error connecting to mailbox %s: %w", mailboxID, err)
+				tracing.TraceErr(connectSpan, errMsg)
 				connectSpan.SetTag("error", true)
-				connectSpan.Finish()
-
-				s.updateStatusError(mailboxID, err)
-
-				// Backoff before retrying
-				backoffSpan := opentracing.StartSpan(
-					"IMAPService.connectionBackoff",
-					opentracing.ChildOf(span.Context()),
-				)
-				backoffSpan.SetTag("mailbox.id", mailboxID)
-				backoffSpan.SetTag("backoff.duration_ms", backoff.Milliseconds())
-
-				select {
-				case <-time.After(backoff):
-					backoff = min(backoff*2, maxBackoff)
-				case <-s.ctx.Done():
-					backoffSpan.Finish()
-					return
-				}
-
-				backoffSpan.Finish()
-				continue
+				s.updateStatusError(mailboxID, errMsg)
+				return errMsg
 			}
 
 			connectSpan.SetTag("success", true)
-			connectSpan.Finish()
-
-			// Reset backoff on successful connection
-			backoff = time.Second
 
 			// Store client
-			clientSpan := opentracing.StartSpan(
-				"IMAPService.storeClient",
-				opentracing.ChildOf(span.Context()),
-			)
-
 			s.clientsMutex.Lock()
 			s.clients[mailboxID] = c
 			s.clientsMutex.Unlock()
 
-			clientSpan.Finish()
-
 			// Update status
-			statusSpan := opentracing.StartSpan(
-				"IMAPService.updateStatus",
-				opentracing.ChildOf(span.Context()),
-			)
-
 			s.updateStatus(mailboxID, interfaces.MailboxStatus{
 				Connected: true,
 				Folders:   make(map[string]interfaces.FolderStats),
 			})
 
-			statusSpan.Finish()
-
 			// Monitor folders
-			foldersSpan := opentracing.StartSpan(
-				"IMAPService.monitorFolders",
-				opentracing.ChildOf(span.Context()),
-			)
-			foldersSpan.SetTag("mailbox.id", mailboxID)
-			foldersSpan.SetTag("folders.count", len(config.Folders))
-
+			var folderErrors []error
 			for _, folder := range config.Folders {
-				folderSpan := opentracing.StartSpan(
-					"IMAPService.monitorFolder",
-					opentracing.ChildOf(foldersSpan.Context()),
-				)
-				folderSpan.SetTag("mailbox.id", mailboxID)
-				folderSpan.SetTag("folder.name", folder)
+				folderCtx, folderCancel := context.WithTimeout(connectCtx, time.Minute*5)
+				err := s.monitorFolder(folderCtx, mailboxID, c, string(folder))
+				folderCancel()
 
-				err := s.monitorFolder(ctx, mailboxID, c, string(folder))
 				if err != nil {
-					err = fmt.Errorf("Error monitoring folder %s: %v", folder, err)
-					tracing.TraceErr(folderSpan, err)
-					folderSpan.SetTag("error", true)
+					folderErr := fmt.Errorf("error monitoring folder %s: %w", folder, err)
+					folderErrors = append(folderErrors, folderErr)
 				}
-
-				folderSpan.Finish()
 			}
 
-			foldersSpan.Finish()
+			// If any folder monitoring failed, return the first error
+			if len(folderErrors) > 0 {
+				return folderErrors[0]
+			}
 
-			// If we're here, the connection was lost
-			disconnectSpan := opentracing.StartSpan(
-				"IMAPService.disconnectClient",
+			return nil
+		}()
+
+		// Cancel the connection context
+		connectCancel()
+
+		// Handle connection/monitoring errors
+		if err != nil {
+			// Backoff before retrying
+			backoffSpan := opentracing.StartSpan(
+				"IMAPService.connectionBackoff",
 				opentracing.ChildOf(span.Context()),
 			)
-			disconnectSpan.SetTag("mailbox.id", mailboxID)
+			backoffSpan.SetTag("mailbox.id", mailboxID)
+			backoffSpan.SetTag("backoff.duration_ms", backoff.Milliseconds())
 
+			select {
+			case <-time.After(backoff):
+				backoff = min(backoff*2, maxBackoff)
+			case <-ctx.Done():
+				backoffSpan.Finish()
+				return
+			}
+
+			backoffSpan.Finish()
+
+			// Remove client if it exists
 			s.clientsMutex.Lock()
 			delete(s.clients, mailboxID)
 			s.clientsMutex.Unlock()
 
-			disconnectSpan.Finish()
+			continue
 		}
+
+		// Reset backoff on successful connection
+		backoff = time.Second
 	}
 }

@@ -35,6 +35,7 @@ type Server struct {
 func NewServer(cfg *config.Config, mailstackDB *gorm.DB) (*Server, error) {
 	// Initialize logger
 	logger := logger.NewAppLogger(cfg.Logger)
+	logger.InitLogger()
 
 	// Initialize tracing
 	tracer, closer, err := tracing.NewJaegerTracer(cfg.Tracing, logger)

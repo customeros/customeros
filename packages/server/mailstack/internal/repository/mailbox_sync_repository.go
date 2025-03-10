@@ -64,10 +64,6 @@ func (r *mailboxSyncRepository) SaveSyncState(ctx context.Context, state *models
 
 	// If no record was updated, create a new one
 	if result.RowsAffected == 0 {
-		// Set ID if not already set
-		if state.ID == "" {
-			state.ID = fmt.Sprintf("%s-%s", state.MailboxID, state.FolderName)
-		}
 		result = r.db.WithContext(ctx).Create(state)
 	}
 

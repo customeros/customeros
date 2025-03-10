@@ -13,6 +13,19 @@ import (
 
 // RegisterRoutes sets up all API endpoints
 func RegisterRoutes(ctx context.Context, r *gin.Engine, s *services.Services, repos *repository.Repositories, apikey string) {
+	if s == nil {
+		panic("Services cannot be nil")
+	}
+	if s.IMAPService == nil {
+		panic("IMAPService cannot be nil")
+	}
+	if repos == nil {
+		panic("Repositories cannot be nil")
+	}
+	if repos.MailboxRepository == nil {
+		panic("MailboxRepository cannot be nil")
+	}
+
 	// Health check and status endpoints
 	r.GET("/health", handlers.HealthCheck)
 	r.GET("/status", handlers.Status(s.IMAPService))
