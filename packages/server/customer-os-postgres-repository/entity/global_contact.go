@@ -13,6 +13,7 @@ type GlobalContact struct {
 	FirstName               string              `gorm:"type:varchar(255)" json:"first_name"`
 	LastName                string              `gorm:"type:varchar(255)" json:"last_name"`
 	LinkedInIdentifier      string              `gorm:"type:varchar(255);index:idx_linkedin_identifier" json:"linkedin_identifier"`
+	LinkedInAlias           string              `gorm:"type:varchar(255);index:idx_linkedin_alias" json:"linkedin_alias"`
 	WorkEmail               string              `gorm:"type:varchar(255);index:idx_work_email" json:"work_email,omitempty"`
 	PersonalEmail           string              `gorm:"type:varchar(255);index:idx_personal_email" json:"personal_email,omitempty"`
 	JobTitle                string              `gorm:"type:varchar(255)" json:"job_title"`
