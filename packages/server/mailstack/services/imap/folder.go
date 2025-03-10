@@ -481,7 +481,6 @@ func (s *IMAPService) fetchAndProcessMessages(
 		return err
 	}
 
-	log.Printf("[%s][%s] Processed %d messages", mailboxID, folderName, messageCount)
 	span.SetTag("messages.processed", messageCount)
 
 	// Update last synced UID if this was a UID fetch

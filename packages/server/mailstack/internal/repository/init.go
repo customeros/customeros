@@ -14,7 +14,6 @@ type Repositories struct {
 	EmailAttachmentRepository interfaces.EmailAttachmentRepository
 	MailboxRepository         interfaces.MailboxRepository
 	MailboxSyncRepository     interfaces.MailboxSyncRepository
-	MessageStateRepository    interfaces.MessageStateRepository
 }
 
 func InitRepositories(mailstackDB *gorm.DB, r2Config *config.R2StorageConfig) *Repositories {
@@ -31,7 +30,6 @@ func InitRepositories(mailstackDB *gorm.DB, r2Config *config.R2StorageConfig) *R
 		EmailAttachmentRepository: NewEmailAttachmentRepository(mailstackDB, emailAttachmentStorage),
 		MailboxRepository:         NewMailboxRepository(mailstackDB),
 		MailboxSyncRepository:     NewMailboxSyncRepository(mailstackDB),
-		MessageStateRepository:    NewMessageStateRepository(mailstackDB),
 	}
 }
 
@@ -41,6 +39,5 @@ func MigrateDB(mailstackDB *gorm.DB) error {
 		&models.EmailAttachment{},
 		&models.Mailbox{},
 		&models.MailboxSyncState{},
-		&models.MessageState{},
 	)
 }

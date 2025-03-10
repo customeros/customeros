@@ -7,6 +7,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
 	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
@@ -22,9 +23,24 @@ func NewEmailRepository(db *gorm.DB) interfaces.EmailRepository {
 	}
 }
 
-// Create adds a new email to the database
 func (r *emailRepository) Create(ctx context.Context, email *models.Email) error {
-	return r.db.WithContext(ctx).Create(email).Error
+	span, ctx := opentracing.StartSpanFromContext(ctx, "emailRepository.Create")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	// Use OnConflict to prevent duplicates
+	result := r.db.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "message_id"}},
+			DoNothing: true, // Skip if duplicate
+		}).Create(email)
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	return nil
 }
 
 // GetByID retrieves an email by its ID

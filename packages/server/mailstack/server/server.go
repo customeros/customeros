@@ -54,7 +54,7 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB) (*Server, error) {
 		return nil, err
 	}
 
-	// Set up webhook handler for email events
+	// Set up handler for email events
 	emailProcessor := email_processor.NewProcessor(repos, svcs.EventsService, svcs.EmailFilterService)
 
 	// Initialize Gin

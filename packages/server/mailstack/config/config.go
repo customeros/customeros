@@ -44,5 +44,5 @@ type R2StorageConfig struct {
 	AccountID             string `env:"CLOUDFLARE_R2_ACCOUNT_ID,required"`
 	AccessKeyID           string `env:"CLOUDFLARE_R2_ACCESS_KEY_ID,required"`
 	AccessKeySecret       string `env:"CLOUDFLARE_R2_ACCESS_KEY_SECRET,required"`
-	EmailAttachmentBucket string `env:"BUCKET_NAME_EMAIL_ATTACHMENT" envDefault:"email_attachments"`
+	EmailAttachmentBucket string `env:"BUCKET_NAME_EMAIL_ATTACHMENT" envDefault:"attachments"`
 }

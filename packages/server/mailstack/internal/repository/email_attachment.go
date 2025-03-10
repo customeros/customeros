@@ -78,7 +78,7 @@ func (r *emailAttachmentRepository) Store(ctx context.Context, attachment *model
 
 	// Generate a storage key if one doesn't exist
 	if attachment.StorageKey == "" {
-		attachment.StorageKey = fmt.Sprintf("attachments/%s/%s", attachment.EmailID, attachment.ID)
+		attachment.StorageKey = fmt.Sprintf("%s/%s", attachment.EmailID, attachment.ID)
 	}
 
 	// Store the file in the storage service

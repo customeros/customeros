@@ -49,7 +49,6 @@ func (s *IMAPService) saveLastSyncedUID(ctx context.Context, mailboxID, folderNa
 	span.SetTag("uid", uid)
 
 	state := &models.MailboxSyncState{
-		ID:         fmt.Sprintf("%s-%s", mailboxID, folderName),
 		MailboxID:  mailboxID,
 		FolderName: folderName,
 		LastUID:    uid,

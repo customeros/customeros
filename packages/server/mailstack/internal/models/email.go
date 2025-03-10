@@ -17,7 +17,7 @@ type Email struct {
 	Provider   enum.EmailProvider `gorm:"column:provider;type:varchar(50);index;not null"`
 	Folder     string             `gorm:"column:folder;type:varchar(100);index;not null"`
 	ImapUID    uint32             `gorm:"column:imap_uid;index"`
-	MessageID  string             `gorm:"column:message_id;type:varchar(255);index"`
+	MessageID  string             `gorm:"column:message_id;uniqueIndex;type:varchar(255)"`
 	ThreadID   string             `gorm:"column:thread_id;type:varchar(255);index"`
 	InReplyTo  string             `gorm:"column:in_reply_to;type:varchar(255);index"`
 	References pq.StringArray     `gorm:"column:references;type:text[]"`
