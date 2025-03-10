@@ -12,11 +12,14 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
+	github.com/customeros/mailsherpa v0.3.8
 	github.com/emersion/go-imap v1.2.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/jhillyerd/enmime v1.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
+	github.com/opentracing/opentracing-go v1.2.0
+	github.com/pkg/errors v0.9.1
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 )
@@ -26,6 +29,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.3 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
@@ -63,9 +67,11 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/lucasepe/codename v0.2.0 // indirect
 	github.com/matoous/go-nanoid/v2 v2.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
@@ -74,10 +80,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
+	github.com/rdegges/go-ipify v0.0.0-20150526035502-2d94a6a86c40 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

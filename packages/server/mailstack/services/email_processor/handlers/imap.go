@@ -2,85 +2,187 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"strings"
-	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	go_imap "github.com/emersion/go-imap"
 	"github.com/jhillyerd/enmime"
+	"github.com/lib/pq"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/repository"
 )
 
 // IMAPHandler processes events from IMAP sources
 type IMAPHandler struct {
-	eventService *events.EventsService
+	repositories       *repository.Repositories
+	eventService       *events.EventsService
+	emailFilterService interfaces.EmailFilterService
 }
 
 // NewIMAPHandler creates a new IMAP email handler
-func NewIMAPHandler(eventService *events.EventsService) *IMAPHandler {
+func NewIMAPHandler(
+	repositories *repository.Repositories,
+	eventService *events.EventsService,
+	emailFilterService interfaces.EmailFilterService,
+) *IMAPHandler {
 	return &IMAPHandler{
-		eventService: eventService,
+		repositories:       repositories,
+		eventService:       eventService,
+		emailFilterService: emailFilterService,
 	}
 }
 
 // Handle processes an IMAP email event
-func (h *IMAPHandler) Handle(event interfaces.MailEvent) {
-	log.Printf("📩 NEW EMAIL EVENT RECEIVED - Mailbox: %s, Folder: %s",
-		event.MailboxID,
-		event.Folder)
+func (h *IMAPHandler) Handle(ctx context.Context, event interfaces.MailEvent) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IMAPHandler.Handle")
+	defer span.Finish()
 
-	// Process based on message type
 	switch msg := event.Message.(type) {
 	case *go_imap.Message:
-		h.processIMAPMessage(event.MailboxID, event.Folder, msg)
+		err := h.processIMAPMessage(ctx, event.MailboxID, event.Folder, msg)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
 	default:
-		log.Printf("  Unknown message type: %T", msg)
-		log.Printf("  Raw message: %+v", msg)
+		err := fmt.Errorf("  Unknown message type %T", msg)
+		span.LogKV("messageId", event.MessageID)
+		tracing.TraceErr(span, err)
+		return
 	}
 }
 
-// processIMAPMessage handles a go-imap Message
-func (h *IMAPHandler) processIMAPMessage(mailboxID, folder string, msg *go_imap.Message) {
-	// Create a comprehensive emailData structure
-	emailData := make(map[string]interface{})
+// Main processing function
+func (h *IMAPHandler) processIMAPMessage(ctx context.Context, mailboxID, folder string, msg *go_imap.Message) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IMAPHandler.processIMAPMessage")
+	defer span.Finish()
 
-	// Basic message metadata
-	emailData["mailbox_id"] = mailboxID
-	emailData["folder"] = folder
-	emailData["event_type"] = "new"
-	emailData["timestamp"] = time.Now().Format(time.RFC3339)
-	emailData["uid"] = msg.Uid
-	emailData["flags"] = msg.Flags
-	emailData["size"] = msg.Size
-	emailData["seq_num"] = msg.SeqNum
-
-	// Process envelope information
-	if msg.Envelope != nil {
-		envelope := make(map[string]interface{})
-		if !msg.Envelope.Date.IsZero() {
-			envelope["date"] = msg.Envelope.Date.Format(time.RFC3339)
-		}
-		envelope["subject"] = msg.Envelope.Subject
-		envelope["message_id"] = msg.Envelope.MessageId
-		envelope["in_reply_to"] = msg.Envelope.InReplyTo
-
-		// Process address fields
-		envelope["from"] = formatAddressesForJSON(msg.Envelope.From)
-		envelope["sender"] = formatAddressesForJSON(msg.Envelope.Sender)
-		envelope["reply_to"] = formatAddressesForJSON(msg.Envelope.ReplyTo)
-		envelope["to"] = formatAddressesForJSON(msg.Envelope.To)
-		envelope["cc"] = formatAddressesForJSON(msg.Envelope.Cc)
-		envelope["bcc"] = formatAddressesForJSON(msg.Envelope.Bcc)
-
-		emailData["envelope"] = envelope
+	email := models.Email{
+		MailboxID:  mailboxID,
+		Provider:   h.determineProvider(ctx, mailboxID),
+		Folder:     folder,
+		ImapUID:    msg.Uid,
+		ReceivedAt: utils.NowPtr(),
 	}
 
+	// Process envelope data
+	h.processEnvelope(&email, msg.Envelope)
+
+	// Process message content
+	attachments := h.processMessageContent(&email, msg)
+
+	err := h.emailFilterService.ScanEmail(ctx, &email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Save the email entity to the database
+	err = h.repositories.EmailRepository.Create(ctx, &email)
+	if err != nil {
+		err = errors.Wrap(err, "Error saving email")
+		return err
+	}
+
+	// Create attachment records if any
+	if email.HasAttachment && len(attachments) > 0 {
+		h.processAttachments(email.ID, attachments)
+	}
+
+	// Publish event for downstream processing
+	if email.Classification == enum.EmailOK {
+		return h.eventService.Publisher.PublishFanoutEvent(ctx, email.ID, model.EMAIL, dto.EmailReceived{})
+	}
+	return nil
+}
+
+// Process envelope data - separate function for better readability
+func (h *IMAPHandler) processEnvelope(email *models.Email, envelope *go_imap.Envelope) {
+	if envelope == nil {
+		return
+	}
+
+	// Basic envelope data
+	if !envelope.Date.IsZero() {
+		sentTime := envelope.Date
+		email.SentAt = &sentTime
+	}
+
+	email.Subject = envelope.Subject
+	email.InReplyTo = envelope.InReplyTo
+	email.MessageID = envelope.MessageId
+
+	// Extract References if available
+	if envelope.InReplyTo != "" {
+		// Many clients put References in the InReplyTo field separated by spaces
+		references := strings.Split(envelope.InReplyTo, " ")
+		email.References = pq.StringArray(references)
+	}
+
+	// Sender information
+	if len(envelope.From) > 0 {
+		sender := envelope.From[0]
+		email.FromName = sender.PersonalName
+		syntaxValidation := mailvalidate.ValidateEmailSyntax(sender.Address())
+		if syntaxValidation.IsValid {
+			email.FromAddress = syntaxValidation.CleanEmail
+		}
+	}
+
+	// Recipients
+	email.ToAddresses = h.convertAddressesToStringArray(envelope.To)
+	email.CcAddresses = h.convertAddressesToStringArray(envelope.Cc)
+	email.BccAddresses = h.convertAddressesToStringArray(envelope.Bcc)
+
+	// Store raw envelope data for reference
+	envelopeMap := make(map[string]interface{})
+	envelopeMap["date"] = envelope.Date
+	envelopeMap["subject"] = envelope.Subject
+	envelopeMap["message_id"] = envelope.MessageId
+	envelopeMap["in_reply_to"] = envelope.InReplyTo
+	envelopeMap["from"] = h.addressesToMap(envelope.From)
+	envelopeMap["to"] = h.addressesToMap(envelope.To)
+	envelopeMap["cc"] = h.addressesToMap(envelope.Cc)
+	envelopeMap["bcc"] = h.addressesToMap(envelope.Bcc)
+	email.Envelope = models.JSONMap(envelopeMap)
+}
+
+// Process message content
+func (h *IMAPHandler) processMessageContent(email *models.Email, msg *go_imap.Message) []map[string]interface{} {
+	// Determine thread ID (could be based on References, Subject, etc.)
+	email.ThreadID = h.determineThreadID(email)
+
 	// Get the full message content
+	fullMessageData := h.extractFullMessage(msg)
+
+	if len(fullMessageData) > 0 {
+		// Parse with enmime for better email parsing
+		return h.parseWithEnmime(email, fullMessageData)
+	} else {
+		// Fallback to manual extraction
+		return h.extractContentManually(email, msg)
+	}
+}
+
+// Extract full message data
+func (h *IMAPHandler) extractFullMessage(msg *go_imap.Message) []byte {
 	var fullMessageBuffer bytes.Buffer
+
 	for section, literal := range msg.Body {
 		if section.Peek {
 			continue // Skip PEEK sections to avoid duplicates
@@ -91,136 +193,178 @@ func (h *IMAPHandler) processIMAPMessage(mailboxID, folder string, msg *go_imap.
 			data, err := io.ReadAll(literal)
 			if err == nil {
 				fullMessageBuffer.Write(data)
+				break
 			}
-			break
 		}
 	}
 
-	// If we have the full message, parse it with enmime for better structure
-	if fullMessageBuffer.Len() > 0 {
-		emailParser, err := enmime.ReadEnvelope(&fullMessageBuffer)
-		if err == nil {
-			// Extract headers
-			headers := make(map[string]interface{})
-			for _, v := range emailParser.GetHeaderKeys() {
-				headerVals := emailParser.GetHeaderValues(v)
-				if len(headerVals) > 0 {
-					headers[v] = headerVals
-				}
-			}
-			emailData["headers"] = headers
-
-			// Extract text and HTML parts
-			if emailParser.Text != "" {
-				emailData["body_text"] = emailParser.Text
-			}
-			if emailParser.HTML != "" {
-				emailData["body_html"] = emailParser.HTML
-			}
-
-			// Process attachments
-			attachments := make([]map[string]interface{}, 0)
-			for _, attachment := range emailParser.Attachments {
-				attachmentInfo := map[string]interface{}{
-					"filename":     attachment.FileName,
-					"content_type": attachment.ContentType,
-					"disposition":  attachment.Disposition,
-					"size":         len(attachment.Content),
-				}
-				attachments = append(attachments, attachmentInfo)
-			}
-
-			// Process inline attachments (like embedded images)
-			for _, inlineAttachment := range emailParser.Inlines {
-				attachmentInfo := map[string]interface{}{
-					"filename":     inlineAttachment.FileName,
-					"content_type": inlineAttachment.ContentType,
-					"disposition":  "inline",
-					"content_id":   inlineAttachment.ContentID,
-					"size":         len(inlineAttachment.Content),
-				}
-				attachments = append(attachments, attachmentInfo)
-			}
-
-			if len(attachments) > 0 {
-				emailData["attachments"] = attachments
-				emailData["has_attachments"] = true
-			} else {
-				emailData["has_attachments"] = false
-			}
-
-			// Include the raw message for completeness
-			emailData["raw_message"] = fullMessageBuffer.String()
-		}
-	} else {
-		// Fallback to the original body structure approach if we don't have the full message
-		if msg.BodyStructure != nil {
-			emailData["body_structure"] = parseBodyStructure(msg.BodyStructure)
-
-			// Determine if there are attachments from body structure
-			attachments := extractAttachments(msg.BodyStructure)
-			if len(attachments) > 0 {
-				emailData["attachments"] = attachments
-				emailData["has_attachments"] = true
-			} else {
-				emailData["has_attachments"] = false
-			}
-		}
-
-		// Try to extract content from individual parts
-		contentMap := make(map[string]interface{})
-		for section, literal := range msg.Body {
-			sectionKey := fmt.Sprintf("%v", section)
-
-			data, err := io.ReadAll(literal)
-			if err != nil {
-				continue
-			}
-
-			// For text/plain parts, extract as body_text
-			if strings.Contains(sectionKey, "TEXT") || strings.Contains(sectionKey, "text/plain") {
-				emailData["body_text"] = string(data)
-			}
-
-			// For text/html parts, extract as body_html
-			if strings.Contains(sectionKey, "HTML") || strings.Contains(sectionKey, "text/html") {
-				emailData["body_html"] = string(data)
-			}
-
-			// Keep the section content in content map as well
-			contentMap[sectionKey] = string(data)
-		}
-
-		if len(contentMap) > 0 {
-			emailData["content"] = contentMap
-		}
-	}
-
-	// Send to webhook
-	h.eventService.Publisher.PublishFanoutEvent()
+	return fullMessageBuffer.Bytes()
 }
 
-// Helper function to format addresses for JSON
-func formatAddressesForJSON(addresses []*go_imap.Address) []map[string]string {
+// Parse message using enmime
+func (h *IMAPHandler) parseWithEnmime(email *models.Email, messageData []byte) []map[string]interface{} {
+	emailParser, err := enmime.ReadEnvelope(bytes.NewReader(messageData))
+	if err != nil {
+		log.Printf("Error parsing email with enmime: %v", err)
+		return nil
+	}
+
+	// Extract headers
+	headers := make(map[string]interface{})
+	for _, key := range emailParser.GetHeaderKeys() {
+		values := emailParser.GetHeaderValues(key)
+		if len(values) > 0 {
+			headers[key] = values
+		}
+	}
+	email.RawHeaders = models.JSONMap(headers)
+
+	// Extract body content
+	email.BodyText = emailParser.Text
+	email.BodyHTML = emailParser.HTML
+
+	// Process attachments
+	attachments := make([]map[string]interface{}, 0)
+
+	// Regular attachments
+	for _, attachment := range emailParser.Attachments {
+		attachmentInfo := map[string]interface{}{
+			"filename":     attachment.FileName,
+			"content_type": attachment.ContentType,
+			"disposition":  attachment.Disposition,
+			"size":         len(attachment.Content),
+			"content":      attachment.Content, // Include the actual content
+		}
+		attachments = append(attachments, attachmentInfo)
+	}
+
+	// Inline attachments
+	for _, inlineAttachment := range emailParser.Inlines {
+		attachmentInfo := map[string]interface{}{
+			"filename":     inlineAttachment.FileName,
+			"content_type": inlineAttachment.ContentType,
+			"disposition":  "inline",
+			"content_id":   inlineAttachment.ContentID,
+			"size":         len(inlineAttachment.Content),
+			"content":      inlineAttachment.Content,
+		}
+		attachments = append(attachments, attachmentInfo)
+	}
+
+	if len(attachments) > 0 {
+		email.HasAttachment = true
+	}
+	return attachments
+}
+
+// Manual content extraction as fallback
+func (h *IMAPHandler) extractContentManually(email *models.Email, msg *go_imap.Message) []map[string]interface{} {
+	// Store body structure if available
+	var attachments []map[string]interface{}
+	if msg.BodyStructure != nil {
+		bodyStructure := h.parseBodyStructure(msg.BodyStructure)
+		email.BodyStructure = models.JSONMap(bodyStructure)
+
+		// Check for attachments in body structure
+		attachments = h.extractAttachmentsFromStructure(msg.BodyStructure)
+		if len(attachments) > 0 {
+			email.HasAttachment = true
+		}
+	}
+
+	// Try to extract content from individual parts
+	for section, literal := range msg.Body {
+		sectionKey := fmt.Sprintf("%v", section)
+
+		data, err := io.ReadAll(literal)
+		if err != nil {
+			continue
+		}
+
+		// Extract text and HTML content
+		if strings.Contains(strings.ToLower(sectionKey), "text/plain") {
+			email.BodyText = string(data)
+		} else if strings.Contains(strings.ToLower(sectionKey), "text/html") {
+			email.BodyHTML = string(data)
+		}
+	}
+	return attachments
+}
+
+// Process attachments - create attachment records
+func (h *IMAPHandler) processAttachments(emailID string, attachmentsData []map[string]interface{}) {
+	for _, attachmentData := range attachmentsData {
+		// Create attachment entity
+		attachment := models.EmailAttachment{
+			EmailID:     emailID,
+			Filename:    attachmentData["filename"].(string),
+			ContentType: attachmentData["content_type"].(string),
+			Size:        attachmentData["size"].(int),
+			IsInline:    attachmentData["disposition"] == "inline",
+		}
+
+		// Set ContentID for inline attachments
+		if attachment.IsInline && attachmentData["content_id"] != nil {
+			attachment.ContentID = attachmentData["content_id"].(string)
+		}
+
+		// Save attachment metadata
+		if err := h.repositories.EmailAttachmentRepository.Create(context.Background(), &attachment); err != nil {
+			log.Printf("Error saving attachment: %v", err)
+			continue
+		}
+
+		// Upload attachment content to storage
+		if content, ok := attachmentData["content"].([]byte); ok && len(content) > 0 {
+			err := h.repositories.EmailAttachmentRepository.Store(
+				context.Background(),
+				&attachment,
+				content,
+			)
+			if err != nil {
+				log.Printf("Error storing attachment content: %v", err)
+			}
+		}
+	}
+}
+
+// Helper function to convert addresses to string array
+func (h *IMAPHandler) convertAddressesToStringArray(addresses []*go_imap.Address) pq.StringArray {
+	if len(addresses) == 0 {
+		return pq.StringArray{}
+	}
+
+	result := make([]string, 0, len(addresses))
+	for _, addr := range addresses {
+		if addr.MailboxName != "" && addr.HostName != "" {
+			emailAddr := addr.Address()
+			validation := mailvalidate.ValidateEmailSyntax(emailAddr)
+			if validation.IsValid {
+				result = append(result, validation.CleanEmail)
+			}
+		}
+	}
+
+	return pq.StringArray(result)
+}
+
+// Helper to convert addresses to map for JSON storage
+func (h *IMAPHandler) addressesToMap(addresses []*go_imap.Address) []map[string]string {
 	result := make([]map[string]string, 0, len(addresses))
 
 	for _, addr := range addresses {
-		addressMap := make(map[string]string)
-		if addr.PersonalName != "" {
-			addressMap["name"] = addr.PersonalName
+		addrMap := map[string]string{
+			"name":    addr.PersonalName,
+			"address": addr.Address(),
 		}
-		addressMap["mailbox"] = addr.MailboxName
-		addressMap["host"] = addr.HostName
-		addressMap["address"] = fmt.Sprintf("%s@%s", addr.MailboxName, addr.HostName)
-
-		result = append(result, addressMap)
+		result = append(result, addrMap)
 	}
 
 	return result
 }
 
-// Helper function to recursively parse body structure into a map
-func parseBodyStructure(bs *go_imap.BodyStructure) map[string]interface{} {
+// Parse body structure recursively
+func (h *IMAPHandler) parseBodyStructure(bs *go_imap.BodyStructure) map[string]interface{} {
 	if bs == nil {
 		return nil
 	}
@@ -256,7 +400,7 @@ func parseBodyStructure(bs *go_imap.BodyStructure) map[string]interface{} {
 	if len(bs.Parts) > 0 {
 		parts := make([]map[string]interface{}, 0, len(bs.Parts))
 		for _, part := range bs.Parts {
-			parts = append(parts, parseBodyStructure(part))
+			parts = append(parts, h.parseBodyStructure(part))
 		}
 		result["parts"] = parts
 	}
@@ -264,33 +408,34 @@ func parseBodyStructure(bs *go_imap.BodyStructure) map[string]interface{} {
 	return result
 }
 
-func extractAttachments(bs *go_imap.BodyStructure) []map[string]interface{} {
+// Extract attachments from body structure
+func (h *IMAPHandler) extractAttachmentsFromStructure(bs *go_imap.BodyStructure) []map[string]interface{} {
 	attachments := []map[string]interface{}{}
 
-	// Process this part if it's an attachment
+	// Check if this part is an attachment
 	if bs.Disposition == "attachment" || bs.Disposition == "inline" {
 		attachment := make(map[string]interface{})
 
-		// Get filename from disposition parameters
+		// Get filename
+		filename := ""
 		if bs.DispositionParams != nil {
-			if filename, ok := bs.DispositionParams["filename"]; ok {
-				attachment["filename"] = filename
+			if fname, ok := bs.DispositionParams["filename"]; ok {
+				filename = fname
 			}
 		}
 
-		// If filename wasn't in disposition params, check content type params
-		if _, hasFilename := attachment["filename"]; !hasFilename && bs.Params != nil {
+		if filename == "" && bs.Params != nil {
 			if name, ok := bs.Params["name"]; ok {
-				attachment["filename"] = name
+				filename = name
 			}
 		}
 
-		// If we still don't have a filename, generate one based on content type
-		if _, hasFilename := attachment["filename"]; !hasFilename {
-			attachment["filename"] = fmt.Sprintf("attachment.%s", strings.ToLower(bs.MIMESubType))
+		if filename == "" {
+			filename = fmt.Sprintf("attachment.%s", strings.ToLower(bs.MIMESubType))
 		}
 
-		attachment["mime_type"] = fmt.Sprintf("%s/%s", bs.MIMEType, bs.MIMESubType)
+		attachment["filename"] = filename
+		attachment["content_type"] = fmt.Sprintf("%s/%s", bs.MIMEType, bs.MIMESubType)
 		attachment["size"] = bs.Size
 		attachment["disposition"] = bs.Disposition
 
@@ -300,10 +445,37 @@ func extractAttachments(bs *go_imap.BodyStructure) []map[string]interface{} {
 	// Recursively check all parts
 	if len(bs.Parts) > 0 {
 		for _, part := range bs.Parts {
-			partAttachments := extractAttachments(part)
+			partAttachments := h.extractAttachmentsFromStructure(part)
 			attachments = append(attachments, partAttachments...)
 		}
 	}
 
 	return attachments
+}
+
+// Determine thread ID based on message references or subject
+func (h *IMAPHandler) determineThreadID(email *models.Email) string {
+	// If we have a reference, use the first reference as thread ID
+	if len(email.References) > 0 {
+		return email.References[0]
+	}
+
+	// If we have an in-reply-to, use that
+	if email.InReplyTo != "" {
+		return email.InReplyTo
+	}
+
+	// Otherwise use the message ID itself (starting a new thread)
+	return email.MessageID
+}
+
+// Determine email provider based on mailbox configuration
+func (h *IMAPHandler) determineProvider(ctx context.Context, mailboxID string) enum.EmailProvider {
+	// Get the mailbox configuration from repository
+	mailbox, err := h.repositories.MailboxRepository.GetMailbox(ctx, mailboxID)
+	if err != nil || mailbox == nil || mailbox.Provider == "" {
+		return ""
+	}
+
+	return mailbox.Provider
 }

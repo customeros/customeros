@@ -7,15 +7,24 @@ import (
 )
 
 type MessageStateRepository interface {
-	GetLastSeenUID(mailboxID, folderName string) (uint32, error)
-	UpdateLastSeenUID(mailboxID, folderName string, uid uint32) error
+	GetLastSeenUID(ctx context.Context, mailboxID, folderName string) (uint32, error)
+	UpdateLastSeenUID(ctx context.Context, mailboxID, folderName string, uid uint32) error
 }
 
 type MailboxRepository interface {
-	GetMailboxes() ([]MailboxConfig, error)
-	GetMailbox(id string) (MailboxConfig, error)
-	SaveMailbox(mailbox MailboxConfig) error
-	DeleteMailbox(id string) error
+	GetMailboxes(ctx context.Context) ([]*models.Mailbox, error)
+	GetMailbox(ctx context.Context, id string) (*models.Mailbox, error)
+	SaveMailbox(ctx context.Context, mailbox models.Mailbox) error
+	DeleteMailbox(ctx context.Context, id string) error
+}
+
+type MailboxSyncRepository interface {
+	GetSyncState(ctx context.Context, mailboxID, folderName string) (*models.MailboxSyncState, error)
+	SaveSyncState(ctx context.Context, state *models.MailboxSyncState) error
+	DeleteSyncState(ctx context.Context, mailboxID, folderName string) error
+	DeleteMailboxSyncStates(ctx context.Context, mailboxID string) error
+	GetAllSyncStates(ctx context.Context) (map[string]map[string]uint32, error)
+	GetMailboxSyncStates(ctx context.Context, mailboxID string) (map[string]uint32, error)
 }
 
 type EmailAttachmentRepository interface {

@@ -3,9 +3,12 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
 )
 
 // ListMailboxes returns all configured mailboxes
@@ -20,20 +23,25 @@ func ListMailboxes(imapService interfaces.IMAPService) gin.HandlerFunc {
 // AddMailbox adds a new mailbox configuration
 func AddMailbox(imapService interfaces.IMAPService, mailboxRepository interfaces.MailboxRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var config interfaces.MailboxConfig
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "AddMailbox", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		var config models.Mailbox
 		err := c.ShouldBindJSON(&config)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		err = mailboxRepository.SaveMailbox(config)
+		err = mailboxRepository.SaveMailbox(ctx, config)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		err = imapService.AddMailbox(config)
+		err = imapService.AddMailbox(ctx, &config)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -46,8 +54,13 @@ func AddMailbox(imapService interfaces.IMAPService, mailboxRepository interfaces
 // RemoveMailbox removes a mailbox configuration
 func RemoveMailbox(imapService interfaces.IMAPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "AddMailbox", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
 		id := c.Param("id")
-		if err := imapService.RemoveMailbox(id); err != nil {
+		if err := imapService.RemoveMailbox(ctx, id); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

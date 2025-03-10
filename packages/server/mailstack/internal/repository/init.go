@@ -2,23 +2,22 @@ package repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/storage"
-	common_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 
 	"github.com/customeros/customeros/packages/server/mailstack/config"
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
 )
 
 type Repositories struct {
-	AppKeyRepository              common_repository.AppKeyRepository
-	EmailRepository               interfaces.EmailRepository
-	EmailAttachmentRepository     interfaces.EmailAttachmentRepository
-	MailboxRepository             interfaces.MailboxRepository
-	MessageStateRepository        interfaces.MessageStateRepository
-	TenantWebhookAPIKeyRepository common_repository.TenantWebhookApiKeyRepository
+	EmailRepository           interfaces.EmailRepository
+	EmailAttachmentRepository interfaces.EmailAttachmentRepository
+	MailboxRepository         interfaces.MailboxRepository
+	MailboxSyncRepository     interfaces.MailboxSyncRepository
+	MessageStateRepository    interfaces.MessageStateRepository
 }
 
-func InitRepositories(mailstackDB, commonDB *gorm.DB, r2Config *config.R2StorageConfig) *Repositories {
+func InitRepositories(mailstackDB *gorm.DB, r2Config *config.R2StorageConfig) *Repositories {
 	emailAttachmentStorage := storage.NewR2StorageService(
 		r2Config.AccountID,
 		r2Config.AccessKeyID,
@@ -28,11 +27,20 @@ func InitRepositories(mailstackDB, commonDB *gorm.DB, r2Config *config.R2Storage
 	)
 
 	return &Repositories{
-		AppKeyRepository:              common_repository.NewAppKeyRepo(commonDB),
-		EmailRepository:               NewEmailRepository(mailstackDB),
-		EmailAttachmentRepository:     NewEmailAttachmentRepository(mailstackDB, emailAttachmentStorage),
-		MailboxRepository:             NewMailboxRepository(mailstackDB),
-		MessageStateRepository:        NewMessageStateRepository(mailstackDB),
-		TenantWebhookAPIKeyRepository: common_repository.NewTenantWebhookApiKeyRepository(commonDB),
+		EmailRepository:           NewEmailRepository(mailstackDB),
+		EmailAttachmentRepository: NewEmailAttachmentRepository(mailstackDB, emailAttachmentStorage),
+		MailboxRepository:         NewMailboxRepository(mailstackDB),
+		MailboxSyncRepository:     NewMailboxSyncRepository(mailstackDB),
+		MessageStateRepository:    NewMessageStateRepository(mailstackDB),
 	}
+}
+
+func MigrateDB(mailstackDB *gorm.DB) error {
+	return mailstackDB.AutoMigrate(
+		&models.Email{},
+		&models.EmailAttachment{},
+		&models.Mailbox{},
+		&models.MailboxSyncState{},
+		&models.MessageState{},
+	)
 }

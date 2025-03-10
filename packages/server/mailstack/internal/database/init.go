@@ -5,8 +5,6 @@ import (
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
-
-	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
 )
 
 func InitMailstackDatabase(dbConfig *DatabaseConfig) (*gorm.DB, error) {
@@ -15,10 +13,6 @@ func InitMailstackDatabase(dbConfig *DatabaseConfig) (*gorm.DB, error) {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
 
-	err = db.AutoMigrate(
-		&models.Mailbox{},
-		&models.MessageState{},
-	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database schema: %v", err)
 	}

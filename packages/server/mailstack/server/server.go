@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -11,12 +10,14 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"gorm.io/gorm"
 
 	"github.com/customeros/customeros/packages/server/mailstack/api"
 	"github.com/customeros/customeros/packages/server/mailstack/config"
 	"github.com/customeros/customeros/packages/server/mailstack/internal"
-	"github.com/customeros/customeros/packages/server/mailstack/internal/database"
 	"github.com/customeros/customeros/packages/server/mailstack/internal/repository"
 	"github.com/customeros/customeros/packages/server/mailstack/services"
 	"github.com/customeros/customeros/packages/server/mailstack/services/email_processor"
@@ -31,63 +32,29 @@ type Server struct {
 	emailProcessor *email_processor.Processor
 }
 
-func NewServer() (*Server, error) {
-	cfg, err := config.InitConfig()
-	if err != nil {
-		return nil, err
-	}
-	if cfg == nil {
-		err := errors.New("config is empty")
-		return nil, err
-	}
-
-	// Setup the databases
-	mailstackDB, err := database.InitMailstackDatabase(&database.DatabaseConfig{
-		DBName:          cfg.MailstackDatabaseConfig.DBName,
-		Host:            cfg.MailstackDatabaseConfig.Host,
-		Port:            cfg.MailstackDatabaseConfig.Port,
-		User:            cfg.MailstackDatabaseConfig.User,
-		Password:        cfg.MailstackDatabaseConfig.Password,
-		MaxConn:         cfg.MailstackDatabaseConfig.MaxConn,
-		MaxIdleConn:     cfg.MailstackDatabaseConfig.MaxIdleConn,
-		ConnMaxLifetime: cfg.MailstackDatabaseConfig.ConnMaxLifetime,
-		LogLevel:        cfg.MailstackDatabaseConfig.LogLevel,
-		SSLMode:         cfg.MailstackDatabaseConfig.SSLMode,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	openlineDB, err := database.InitMailstackDatabase(&database.DatabaseConfig{
-		DBName:          cfg.OpenlineDatabaseConfig.DBName,
-		Host:            cfg.OpenlineDatabaseConfig.Host,
-		Port:            cfg.OpenlineDatabaseConfig.Port,
-		User:            cfg.OpenlineDatabaseConfig.User,
-		Password:        cfg.OpenlineDatabaseConfig.Password,
-		MaxConn:         cfg.OpenlineDatabaseConfig.MaxConn,
-		MaxIdleConn:     cfg.OpenlineDatabaseConfig.MaxIdleConn,
-		ConnMaxLifetime: cfg.OpenlineDatabaseConfig.ConnMaxLifetime,
-		LogLevel:        cfg.OpenlineDatabaseConfig.LogLevel,
-		SSLMode:         cfg.OpenlineDatabaseConfig.SSLMode,
-	})
-	if err != nil {
-		return nil, err
-	}
-
+func NewServer(cfg *config.Config, mailstackDB *gorm.DB) (*Server, error) {
 	// Initialize logger
 	logger := logger.NewAppLogger(cfg.Logger)
 
+	// Initialize tracing
+	tracer, closer, err := tracing.NewJaegerTracer(cfg.Tracing, logger)
+	if err != nil {
+		log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
+	}
+	opentracing.SetGlobalTracer(tracer)
+	defer closer.Close()
+
 	// Initialize repositories
-	repos := repository.InitRepositories(mailstackDB, openlineDB, cfg.R2StorageConfig)
+	repos := repository.InitRepositories(mailstackDB, cfg.R2StorageConfig)
 
 	// Initialize services
-	svcs, err := services.InitServices(cfg.AppConfig.RabbitMQURL, logger)
+	svcs, err := services.InitServices(cfg.AppConfig.RabbitMQURL, logger, repos)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set up webhook handler for email events
-	emailProcessor := email_processor.NewProcessor(svcs.EventsService)
+	emailProcessor := email_processor.NewProcessor(repos, svcs.EventsService, svcs.EmailFilterService)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
@@ -112,12 +79,12 @@ func (s *Server) Initialize(ctx context.Context) error {
 	s.services.IMAPService.SetEventHandler(s.emailProcessor.ProcessMailEvent)
 
 	// Setup mailboxes
-	if err := internal.InitMailboxes(s.services); err != nil {
+	if err := internal.InitMailboxes(s.services, s.repositories); err != nil {
 		return err
 	}
 
 	// Setup API routes
-	api.RegisterRoutes(ctx, s.router, s.services, s.repositories)
+	api.RegisterRoutes(ctx, s.router, s.services, s.repositories, s.config.AppConfig.APIKey)
 
 	return nil
 }

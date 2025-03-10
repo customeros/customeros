@@ -6,16 +6,19 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/repository"
+	"github.com/customeros/customeros/packages/server/mailstack/services/email_filter"
 	"github.com/customeros/customeros/packages/server/mailstack/services/imap"
 )
 
 type Services struct {
-	Cache         *caches.Cache
-	EventsService *events.EventsService
-	IMAPService   interfaces.IMAPService
+	Cache              *caches.Cache
+	EventsService      *events.EventsService
+	EmailFilterService interfaces.EmailFilterService
+	IMAPService        interfaces.IMAPService
 }
 
-func InitServices(rabbitmqURL string, log logger.Logger) (*Services, error) {
+func InitServices(rabbitmqURL string, log logger.Logger, repos *repository.Repositories) (*Services, error) {
 	// events
 	publisherConfig := &events.PublisherConfig{
 		MessageTTL:          events.DefaultMessageTTL,
@@ -37,9 +40,10 @@ func InitServices(rabbitmqURL string, log logger.Logger) (*Services, error) {
 	}
 
 	services := Services{
-		Cache:         caches.NewCommonCache(),
-		EventsService: events,
-		IMAPService:   imap.NewIMAPService(),
+		Cache:              caches.NewCommonCache(),
+		EventsService:      events,
+		EmailFilterService: email_filter.NewEmailFilterService(),
+		IMAPService:        imap.NewIMAPService(repos),
 	}
 
 	return &services, nil

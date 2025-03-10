@@ -1,34 +1,29 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
+	"github.com/customeros/customeros/packages/server/mailstack/internal/repository"
 	"github.com/customeros/customeros/packages/server/mailstack/services"
 )
 
 // InitMailboxes initializes all mailbox connections from configuration
-func InitMailboxes(s *services.Services) error {
+func InitMailboxes(s *services.Services, r *repository.Repositories) error {
 	log.Println("Initializing mailbox connections...")
+	ctx := context.Background()
 
-	mailbox := interfaces.MailboxConfig{
-		ID:       "test",
-		Server:   "mail.hostedemail.com",
-		Port:     993,
-		Username: "test@testcustomeros.com",
-		Password: "admin123!",
-		Folders:  []string{"INBOX"},
-		TLS:      true,
+	// get mailboxes from database
+	mailboxes, err := r.MailboxRepository.GetMailboxes(ctx)
+	if err != nil {
+		return err
 	}
-	mailboxes := []interfaces.MailboxConfig{mailbox}
 
 	// Add each mailbox from configuration
-	for _, mbConfig := range mailboxes {
-		log.Printf("Adding mailbox: %s (%s)", mbConfig.ID, mbConfig.Username)
-
-		if err := s.IMAPService.AddMailbox(mbConfig); err != nil {
-			return fmt.Errorf("failed to add mailbox %s: %w", mbConfig.ID, err)
+	for _, mailbox := range mailboxes {
+		if err := s.IMAPService.AddMailbox(ctx, mailbox); err != nil {
+			return fmt.Errorf("failed to add mailbox %s: %w", mailbox.ID, err)
 		}
 	}
 

@@ -3,29 +3,28 @@ package api
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/mailstack/api/handlers"
+	"github.com/customeros/customeros/packages/server/mailstack/api/middleware"
 	"github.com/customeros/customeros/packages/server/mailstack/internal/repository"
 	"github.com/customeros/customeros/packages/server/mailstack/services"
 )
 
 // RegisterRoutes sets up all API endpoints
-func RegisterRoutes(ctx context.Context, r *gin.Engine, s *services.Services, repos *repository.Repositories) {
+func RegisterRoutes(ctx context.Context, r *gin.Engine, s *services.Services, repos *repository.Repositories, apikey string) {
 	// Health check and status endpoints
 	r.GET("/health", handlers.HealthCheck)
 	r.GET("/status", handlers.Status(s.IMAPService))
 
+	apiKeyMiddleware := middleware.APIKeyMiddleware(middleware.APIKeyConfig{
+		HeaderName:  "X-CUSTOMER-OS-API-KEY",
+		ValidAPIKey: apikey,
+	})
+
 	// API group with version
-	api := r.Group("/v1",
-		security.ApiKeyCheckerHTTP(
-			repos.TenantWebhookAPIKeyRepository,
-			repos.AppKeyRepository,
-			security.PLATFORM_ADMIN_API,
-			security.WithCache(s.Cache),
-		),
-	)
+	api := r.Group("/v1")
+	api.Use(apiKeyMiddleware)
 	{
 		// Mailbox endpoints
 		mailboxes := api.Group("/mailboxes")
