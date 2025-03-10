@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	ApiPort string `env:"PORT"`
-
+	ApiPort             string `env:"PORT"`
+	AppKey              string `env:"APP_KEY" envDefault:"" validate:"required"`
 	PostgresConfig      config.PostgresConfig
 	PostgresAsyncConfig config.PostgresAsyncConfig
 	Jaeger              tracing.JaegerConfig

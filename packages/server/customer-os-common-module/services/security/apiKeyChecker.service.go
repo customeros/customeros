@@ -1,11 +1,10 @@
 package security
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -26,7 +25,7 @@ const (
 	TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
 )
 
-func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKeyRepo postgresRepository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
+func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKey string, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {
@@ -41,37 +40,11 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 				span.Finish()
 			}
 		}()
-		span.LogFields(log.String("app", string(app)))
 
 		kh := c.GetHeader(ApiKeyHeader)
 		tenantKh := c.GetHeader(TenantApiKeyHeader)
 		if kh != "" {
-			// Check if the API key matches the cached value
-			if config.cache != nil && config.cache.CheckApiKey(string(app), kh) {
-				// Valid API key found in cache
-				span.LogFields(log.Bool("cached", true))
-				if !spanFinished {
-					spanFinished = true
-					span.Finish()
-				}
-				c.Next()
-				return
-			}
-			span.LogFields(log.Bool("cached", false))
-			appKey, err := appKeyRepo.FindByKey(ctx, string(app), kh)
-			if err != nil {
-
-				c.JSON(http.StatusUnauthorized, gin.H{
-					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
-					"status":    "error",
-					"message":   fmt.Sprintf("error while checking api key: %s", err.Error()),
-				})
-				c.Abort()
-				return
-			}
-
-			if appKey == nil {
-
+			if appKey != kh {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 					"status":    "error",
@@ -80,16 +53,8 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 				c.Abort()
 				return
 			}
-
-			// If the API key is valid after database check, cache it
-			if config.cache != nil && appKey != nil {
-				config.cache.SetApiKey(string(app), kh)
-			}
-
-			if !spanFinished {
-				spanFinished = true
-				span.Finish()
-			}
+			spanFinished = true
+			span.Finish()
 			c.Next()
 		} else if tenantKh != "" {
 			// Check if the API key matches the cached value
