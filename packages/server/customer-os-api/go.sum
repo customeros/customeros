@@ -105,8 +105,8 @@ github.com/cucumber/godog v0.15.0 h1:51AL8lBXF3f0cyA5CV4TnJFCTHpgiy+1x1Hb3TtZUmo
 github.com/cucumber/godog v0.15.0/go.mod h1:FX3rzIDybWABU4kuIXLZ/qtqEe1Ac5RdXmqvACJOces=
 github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM+RuOwHZiMI=
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
-github.com/customeros/mailsherpa v0.3.8 h1:RPi33d9qsYyO3uxbQ0B1m8FLCzkGMQxCKMHU6Yk1zZg=
-github.com/customeros/mailsherpa v0.3.8/go.mod h1:zBaYVUSDJ6EpyLGFMVytyqLC4BA+el3dFSsNA+iFIYw=
+github.com/customeros/mailsherpa v0.3.9 h1:i+usip3f5A3IgryzeiYTzZWDxI1fRxp4VxXWGpTDd7c=
+github.com/customeros/mailsherpa v0.3.9/go.mod h1:3PVCXCWUQQ6lTjxFtPs4KlFKteME14hD5GFNiElB7Fk=
 github.com/customeros/mailwatcher v0.1.6 h1:Gute8G5zDgnFsH1g0idx8Ht719boGdgvS5O2IgQqr4g=
 github.com/customeros/mailwatcher v0.1.6/go.mod h1:dclIn/x0b7eUeVo+I9wZq5APsoiXyMEmInHeWt3pTOc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -309,6 +309,8 @@ github.com/mattn/go-sqlite3 v1.14.15 h1:vfoHhTN1af61xCRSWzFIWzx2YskyMTwHLrExkBOj
 github.com/mattn/go-sqlite3 v1.14.15/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
 github.com/microsoft/go-mssqldb v1.7.2 h1:CHkFJiObW7ItKTJfHo1QX7QBBD1iV+mn1eOyRP3b/PA=
 github.com/microsoft/go-mssqldb v1.7.2/go.mod h1:kOvZKUdrhhFQmxLZqbwUV0rHkNkZpthMITIb2Ko1IoA=
+github.com/miekg/dns v1.1.63 h1:8M5aAw6OMZfFXTT7K5V0Eu5YiiL8l7nUAkyN6C9YwaY=
+github.com/miekg/dns v1.1.63/go.mod h1:6NGHfjhpmr5lt3XPLuyfDJi5AXbNIPM9PY6H6sF1Nfs=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/moby/docker-image-spec v1.3.1 h1:jMKff3w6PgbfSa69GfNg+zN/XLhfXJGnEx3Nl2EsFP0=
