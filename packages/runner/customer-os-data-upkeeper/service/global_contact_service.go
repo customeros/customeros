@@ -162,8 +162,8 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 		}
 
 		contact := &postgresentity.GlobalContact{
-			FirstName:               strings.TrimSpace(person.FirstName),
-			LastName:                strings.TrimSpace(person.LastName),
+			FirstName:               utils.CleanName(person.FirstName),
+			LastName:                utils.CleanName(person.LastName),
 			LinkedInIdentifier:      person.LinkedInIdentifier,
 			JobTitle:                currentPosition.Title,
 			JobStartedAt:            currentPosition.StartedOn,
