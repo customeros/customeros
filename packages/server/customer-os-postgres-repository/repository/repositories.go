@@ -170,7 +170,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	return repositories
 }
 
-func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
+func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 	err := postgresDB.GormDB.AutoMigrate(
 		&postgres_entity.Agent{},
 		&postgres_entity.AgentExecution{},
@@ -245,7 +245,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.WebTrackerEvents{},
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = postgresDB.AsyncGormDB.AutoMigrate(
@@ -254,6 +254,8 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.IngestEmailImportState{},
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
