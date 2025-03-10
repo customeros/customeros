@@ -23,7 +23,6 @@ func main() {
 	}
 	defer postgresDb.Close()
 
-	// Initialize repository with connection string
 	repo := postgres_repository.InitRepositories(postgresDb)
 	if err = repo.AutoMigrate(postgresDb); err != nil {
 		log.Fatalf("failed to run auto-migration: %v", err)
