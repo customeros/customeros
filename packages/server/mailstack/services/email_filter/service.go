@@ -100,7 +100,7 @@ func (s *emailFilterService) isSensitiveSubject(subject string) (bool, string) {
 		"legal": {
 			"legal", "lawsuit", "litigation", "settlement", "contract review",
 			"agreement", "terms", "legal review", "compliance", "regulatory",
-			"attorney", "counsel", "court", "lawsuit", "subpoena", "trademark",
+			"attorney", "counsel", "court", "subpoena", "trademark",
 		},
 		"personal": {
 			"personal", "medical", "health", "patient", "ssn", "social security",
@@ -240,7 +240,7 @@ func (s *emailFilterService) mailsherpaChecks(from string) (failedCheck bool, re
 
 	isPrimaryDomain, _ := domaincheck.PrimaryDomainCheck(syntaxValidation.Domain)
 
-	if !isPrimaryDomain {
+	if !isPrimaryDomain && !syntaxValidation.IsRoleAccount {
 		return true, "Email sent from non-primary domain"
 	}
 

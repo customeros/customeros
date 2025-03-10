@@ -7,7 +7,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/customeros/customeros/packages/server/mailstack/interfaces"
 	"github.com/customeros/customeros/packages/server/mailstack/internal/models"
@@ -28,13 +27,26 @@ func (r *emailRepository) Create(ctx context.Context, email *models.Email) error
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	// Use OnConflict to prevent duplicates
-	result := r.db.WithContext(ctx).
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "message_id"}},
-			DoNothing: true, // Skip if duplicate
-		}).Create(email)
+	// Check if email already exists before creating
+	existingEmail := &models.Email{}
+	err := r.db.WithContext(ctx).
+		Where("message_id = ?", email.MessageID).
+		First(existingEmail).Error
 
+	if err == nil {
+		// Email already exists
+		span.SetTag("duplicate", true)
+		return nil
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		// Some other error occurred
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Create the email if it doesn't exist
+	result := r.db.WithContext(ctx).Create(email)
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error
