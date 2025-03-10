@@ -146,6 +146,9 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 		}
 		existing.ProfilePhotoExternalUrl = new.ProfilePhotoExternalUrl
 	}
+	if new.DataFetchedAt != nil {
+		existing.DataFetchedAt = new.DataFetchedAt
+	}
 }
 
 func (s *globalContactService) SaveContact(ctx context.Context, contact *postgres_entity.GlobalContact) error {
