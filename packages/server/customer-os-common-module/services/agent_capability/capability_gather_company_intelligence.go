@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/opentracing/opentracing-go/log"
 	"strconv"
 
@@ -120,8 +121,7 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 		return enum.CapabilityExecutionError, result, err
 	}
 	if primaryDomain == "" {
-		err = errors.New("organization is missing primary domain")
-		return enum.CapabilityExecutionError, result, err
+		return enum.CapabilityExecutionError, result, coserrors.ErrCapabilityMissingPrimaryDomainForOrganization
 	}
 	company, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
