@@ -171,6 +171,7 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 			JobEndedAt:              currentPosition.EndedOn,
 			PrimaryDomain:           primaryDomain,
 			ProfilePhotoExternalUrl: person.PhotoUrl,
+			DataFetchedAt:           &record.CreatedAt,
 		}
 
 		err = s.commonServices.GlobalContactService.SaveContact(ctx, contact)
