@@ -1115,7 +1115,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	}
 
 	var emailsToCreateAndLinkWithContact []string
-	phoneNumbers := []string{}
+	var phoneNumbers []string
 	if enrichmentResponse.Data != nil {
 		for _, item := range enrichmentResponse.Data {
 			if item.ContactEmailAddress != "" {
