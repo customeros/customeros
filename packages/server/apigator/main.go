@@ -68,7 +68,6 @@ func main() {
 		postgresRepositories.TenantWebhookApiKeyRepository,
 		cfg.AppKey,
 		neo4jRepositories,
-		"apigator",
 		security.WithCache(cache)))
 
 	log.Printf("Auth service running on port %s", cfg.ApiPort)
@@ -135,7 +134,6 @@ func validateToken(
 	tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository,
 	appKey string,
 	repos *neo4jRepository.Repositories,
-	app security.App,
 	opts ...security.CommonServiceOption,
 ) gin.HandlerFunc {
 
