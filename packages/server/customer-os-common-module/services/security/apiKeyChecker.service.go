@@ -25,7 +25,11 @@ const (
 	TenantApiKeyHeader = "X-CUSTOMER-OS-API-KEY"
 )
 
-func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository, appKey string, opts ...CommonServiceOption) func(c *gin.Context) {
+func ApiKeyCheckerHTTP(
+	tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository,
+	appKey string,
+	opts ...CommonServiceOption,
+) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {

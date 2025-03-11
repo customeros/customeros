@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	ApiPort   string `env:"PORT"`
-	JwtSecret string `env:"JWT_SECRET"`
+	ApiPort string `env:"PORT"`
+	AppKey  string `env:"APP_KEY"`
 
 	PostgresConfig      config.PostgresConfig
 	PostgresAsyncConfig config.PostgresAsyncConfig

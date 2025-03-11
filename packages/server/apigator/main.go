@@ -66,7 +66,7 @@ func main() {
 
 	r.GET("/validate", validateToken(
 		postgresRepositories.TenantWebhookApiKeyRepository,
-		postgresRepositories.AppKeyRepository,
+		cfg.AppKey,
 		neo4jRepositories,
 		"apigator",
 		security.WithCache(cache)))
@@ -133,7 +133,7 @@ func isIntrospectionQuery(req *http.Request) bool {
 
 func validateToken(
 	tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRepository,
-	appKeyRepo postgresRepository.AppKeyRepository,
+	appKey string,
 	repos *neo4jRepository.Repositories,
 	app security.App,
 	opts ...security.CommonServiceOption,
@@ -145,7 +145,7 @@ func validateToken(
 			return
 		}
 
-		security.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKeyRepo, app, opts...)(c)
+		security.ApiKeyCheckerHTTP(tenantApiKeyRepo, appKey, opts...)(c)
 		security.TenantUserContextEnhancer(repos, opts...)(c)
 	}
 }
