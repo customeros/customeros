@@ -6,7 +6,6 @@ import { setTimeout as setTimeoutSync } from "timers";
 import { Browser, ProxyConfig } from "../browser";
 import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
-import { Proxy } from "@/domain/models/proxy";
 
 const Selectors = {
   profileNameHeading: "h1.inline.t-24.v-align-middle.break-words",
@@ -133,6 +132,8 @@ export class LinkedinAutomationService {
       throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
+      await context.close();
+      await browser.close();
     }
   }
 
@@ -261,6 +262,8 @@ export class LinkedinAutomationService {
       throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
+      await context.close();
+      await browser.close();
     }
   }
 
@@ -299,6 +302,8 @@ export class LinkedinAutomationService {
       throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
+      await context.close();
+      await browser.close();
     }
   }
 
@@ -398,6 +403,8 @@ export class LinkedinAutomationService {
       });
       throw LinkedinAutomationService.handleError(err);
     } finally {
+      await page.close();
+      await context.close();
       await browser.close();
     }
   }
@@ -491,6 +498,8 @@ export class LinkedinAutomationService {
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
     } finally {
+      await page.close();
+      await context.close();
       await browser.close();
     }
   }
@@ -548,6 +557,8 @@ export class LinkedinAutomationService {
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
     } finally {
+      await page.close();
+      await context.close();
       await browser.close();
     }
   }
@@ -555,9 +566,7 @@ export class LinkedinAutomationService {
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
   > {
-    const browser = await Browser.getFreshInstance(this.proxyConfig, {
-      debugRemote: true,
-    });
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
 
     const context = await browser.newContext({
       userAgent: this.userAgent,
@@ -809,6 +818,8 @@ export class LinkedinAutomationService {
       error = LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
+      await context.close();
+      await browser.close();
       return [results, error];
     }
   }
@@ -951,7 +962,9 @@ export class LinkedinAutomationService {
     } catch (error) {
       LinkedinAutomationService.handleError(error);
     } finally {
-      page.close();
+      await page.close();
+      await context.close();
+      await browser.close();
     }
   }
 
@@ -1037,6 +1050,10 @@ export class LinkedinAutomationService {
       return profileUrls;
     } catch (err) {
       LinkedinAutomationService.handleError(err);
+    } finally {
+      await page.close();
+      await context.close();
+      await browser.close();
     }
   }
 
