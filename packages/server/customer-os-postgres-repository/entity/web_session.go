@@ -10,7 +10,8 @@ import (
 type WebSession struct {
 	ID                    string          `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	Tenant                string          `gorm:"column:tenant;type:varchar(255);index:idx_tenant" json:"tenant"`
-	IP                    string          `gorm:"column:ip;type:varchar(255);" json:"ip"`
+	IP                    string          `gorm:"column:ip;type:varchar(255);index:idx_ip" json:"ip"`
+	VisitorID             string          `gorm:"column:visitor_id;type:varchar(255);index:idx_visitor_id" json:"visitorId"`
 	Hostname              string          `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
 	Domain                *string         `gorm:"column:domain;type:varchar(255);index:idx_domain" json:"domain"`
 	OrganizationId        *string         `gorm:"column:organization_id;varchar(255);index:idx_organization_id" json:"organizationId"`

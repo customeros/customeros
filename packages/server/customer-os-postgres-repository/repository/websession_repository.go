@@ -92,7 +92,7 @@ func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSes
 func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	query := r.gormDb.Where(&webSessionData).Order("last_activity DESC")
 
@@ -106,12 +106,14 @@ func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData p
 	err := query.First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogFields(log.Bool("result.found", false))
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.String("result.sessionId", result.ID))
 	return &result, nil
 }
 
@@ -192,7 +194,7 @@ func (r *webSessionRepository) UpdateLastActivity(ctx context.Context, sessionID
 func (r *webSessionRepository) SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionEnd")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, sessionID)
 
 	var updatedSession postgres_entity.WebSession

@@ -191,10 +191,21 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
+	span.LogKV(
+		"ip", trackerData.IP,
+		"hostname", trackerData.Hostname,
+		"visitor_id", trackerData.VisitorID,
+		"event_type", trackerData.EventType,
+	)
+
 	query := postgres_entity.WebSession{
-		Tenant:   trackerData.Tenant,
-		IsActive: true,
+		Tenant:    trackerData.Tenant,
+		IP:        trackerData.IP,
+		Hostname:  trackerData.Hostname,
+		VisitorID: trackerData.VisitorID,
+		IsActive:  true,
 	}
+
 	session, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -209,14 +220,26 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 		}
 	}
 
+	if session == nil {
+		err = errors.New("session not found and not created")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	trackerData.SessionID = session.ID
-	return h.updateSessionLastActivity(ctx, trackerData.SessionID, trackerData.EventType)
+	err = h.updateSessionLastActivity(ctx, trackerData.SessionID, trackerData.EventType)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }
 
 func (h *WebsiteTrackerEventsHandler) updateSessionLastActivity(ctx context.Context, sessionID, eventType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.updateSessionLastActivityTimestamp")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
+	span.LogKV("sessionID", sessionID, "eventType", eventType)
 
 	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.UpdateLastActivity(ctx, sessionID, eventType)
 	if err != nil {
@@ -235,6 +258,7 @@ func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trac
 	query := postgres_entity.WebSession{
 		Tenant:        trackerData.Tenant,
 		IP:            trackerData.IP,
+		VisitorID:     trackerData.VisitorID,
 		Hostname:      trackerData.Hostname,
 		Referrer:      &trackerData.Referrer,
 		StartTime:     utils.Now(),
@@ -313,6 +337,8 @@ func (h *WebsiteTrackerEventsHandler) buildTrackerDbData(c *gin.Context, tenant 
 	tracking.Search = utils.SanitizeUTF8(tracking.Search)
 	tracking.Hostname = utils.SanitizeUTF8(tracking.Hostname)
 	tracking.Pathname = utils.SanitizeUTF8(tracking.Pathname)
+	tracking.VisitorID = utils.SanitizeUTF8(tracking.VisitorID)
+
 	return &tracking
 }
 
