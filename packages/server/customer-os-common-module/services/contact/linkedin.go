@@ -37,10 +37,14 @@ func (l *LinkedInContact) Validate() error {
 		if !socialEntity.IsLinkedin() {
 			return errors.New("not a valid linkedin url")
 		}
-	}
 
-	if l.Alias == "" {
-		l.SetAliasFromUrl()
+		// Extract identifier from URL
+		identifier := socialEntity.ExtractLinkedinPersonIdentifierFromUrl()
+
+		// If no alias is provided, use the identifier from URL
+		if l.Alias == "" {
+			l.Alias = identifier
+		}
 	}
 
 	return nil
@@ -57,26 +61,11 @@ func (l *LinkedInContact) ConvertLinkedinSalesUrlToPublic() {
 	l.Url = strings.Replace(l.Url, "/sales/lead/", "/in/", 1)
 }
 
-func (l *LinkedInContact) SetAliasFromUrl() {
-	identifier := l.Url
-	identifier = strings.TrimSuffix(identifier, "/")
-	if i := strings.Index(identifier, "linkedin.com/in"); i != -1 {
-		identifier = identifier[i:]
-	}
-	if strings.HasPrefix(identifier, "linkedin.com/in") {
-		parts := strings.Split(identifier, "/")
-		identifier = parts[len(parts)-1]
-		if identifier == "in" {
-			identifier = ""
-		}
-	}
-	l.Alias = identifier
-}
-
 func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithLinkedIn")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("url", url, "alias", alias, "externalId", externalId)
 
 	linkedIn := NewLinkedInContact(url, alias, externalId)
 	err := linkedIn.Validate()

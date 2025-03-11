@@ -77,6 +77,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleIngestEmailsFromProviders:                             "0 0 */1 * * *",
 				CronScheduleIngestEmailsSendToAgents:                              "0 0 */1 * * *",
 				CronScheduleEnrichGlobalContactWithBettercontact:                  "0 0 */1 * * *",
+				CronScheduleSyncGlobalContactsToTenantContacts:                    "0 0 */1 * * *",
 			},
 		},
 	}

@@ -74,7 +74,7 @@ func (s SocialEntity) ExtractLinkedinPersonIdentifierFromUrl() string {
 	// trim trailing / from url
 	identifier = strings.TrimSuffix(s.Url, "/")
 
-	// remove all chars before linkedin.com/company
+	// remove all chars before linkedin.com/in
 	if i := strings.Index(identifier, "linkedin.com/in"); i != -1 {
 		identifier = identifier[i:]
 	}

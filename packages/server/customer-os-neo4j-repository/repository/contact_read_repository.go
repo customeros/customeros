@@ -2,6 +2,8 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -10,7 +12,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 type ContactsEnrichWorkEmail struct {
@@ -39,22 +40,25 @@ type ContactReadRepository interface {
 	CountByTenant(ctx context.Context, tenant string) (int64, error)
 	GetContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 	GetContacts(ctx context.Context, tenant string, contactIds []string) ([]*dbtype.Node, error)
-	GetContactsEnrichedNotLinkedToOrganization(ctx context.Context, delayFromPreviousAttemptDays, limit int) ([]TenantAndContactIdAndParams, error)
 	GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error)
 	GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetActiveContactsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
 	GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]ContactsEnrichWorkEmail, error)
+	GetContactsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndContact, error)
+	GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
+	GetDistinctContactRegions(ctx context.Context, tenant string) ([]string, error)
+	GetDistinctContactCities(ctx context.Context, tenant string) ([]string, error)
+
+	// cross tenant queries
+	GetContactsToSetPrimaryJobRole(ctx context.Context, limit int) ([]TenantAndContactIdAndParams, error)
 	GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]TenantAndContactIdAndParams, error)
 	GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, limit int) ([]TenantAndContactIdAndParams, error)
 	GetContactsWithGroupOrSystemGeneratedEmail(ctx context.Context, limit int) ([]TenantAndContactIdAndParams, error)
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactIdAndParams, error)
-	GetContactsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndContact, error)
-	GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
-	GetContactsToSetPrimaryJobRole(ctx context.Context, limit int) ([]TenantAndContactIdAndParams, error)
-	GetDistinctContactRegions(ctx context.Context, tenant string) ([]string, error)
-	GetDistinctContactCities(ctx context.Context, tenant string) ([]string, error)
+	GetContactsEnrichedNotLinkedToOrganization(ctx context.Context, delayFromPreviousAttemptDays, limit int) ([]TenantAndContactIdAndParams, error)
+	GetContactsWithProfilePhotoUrlCrossTenant(ctx context.Context, profilePhotoUrl string) ([]TenantAndContactIdAndParams, error)
 }
 
 type contactReadRepository struct {
@@ -899,4 +903,45 @@ func (r *contactReadRepository) GetDistinctContactCities(ctx context.Context, te
 	}
 
 	return result.([]string), err
+}
+
+func (r *contactReadRepository) GetContactsWithProfilePhotoUrlCrossTenant(ctx context.Context, profilePhotoUrl string) ([]TenantAndContactIdAndParams, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithProfilePhotoUrlCrossTenant")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.String("profilePhotoUrl", profilePhotoUrl))
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
+				WHERE c.profilePhotoUrl = $profilePhotoUrl
+				RETURN t.name, c.id`
+	params := map[string]any{
+		"profilePhotoUrl": profilePhotoUrl,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContactIdAndParams, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContactIdAndParams{
+				Tenant:    v.Values[0].(string),
+				ContactId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }

@@ -389,7 +389,7 @@ func (r *globalOrganizationRepository) MarkGlobalOrganizationSyncedToNeo(ctx con
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		UpdateColumn("synced_to_neo_at", utils.Now())
+		UpdateColumn("synced_to_neo_at", utils.Now().Add(10*time.Second))
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error

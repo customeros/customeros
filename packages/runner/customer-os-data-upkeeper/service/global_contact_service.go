@@ -3,11 +3,17 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/opentracing/opentracing-go/log"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,6 +26,7 @@ import (
 type GlobalContactService interface {
 	SyncDataIntoGlobalContacts()
 	EnrichGlobalOrganizationWithBettercontact()
+	SyncGlobalContactsToTenantContacts()
 }
 
 type globalContactService struct {
@@ -332,4 +339,85 @@ func (s *globalContactService) processBetterContactResponses() {
 
 		}(record)
 	}
+}
+
+func (s *globalContactService) SyncGlobalContactsToTenantContacts() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.SyncGlobalContactsToTenantContacts")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 250
+	daysFromPreviousSync := 1
+	forceSyncAfterDays := 30
+
+	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetGlobalContactsToSyncIntoTenantContacts(ctx, daysFromPreviousSync, forceSyncAfterDays, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	if len(records) == 0 {
+		return
+	}
+
+	for _, record := range records {
+		s.syncGlobalContactToTenantContact(ctx, record)
+	}
+}
+
+func (s *globalContactService) syncGlobalContactToTenantContact(ctx context.Context, globalContact *postgresentity.GlobalContact) {
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.syncGlobalContactToTenantContact")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+	tracing.TagEntity(span, strconv.FormatUint(globalContact.ID, 10))
+
+	// sync photo
+	if globalContact.ProfilePhotoExternalUrl != "" && globalContact.ProfilePhotoPath != "" {
+		s.syncGlobalContactPhotoToTenantContact(ctx, globalContact)
+	}
+
+	// mark global contact as synced to neo4j
+	// add 10 sec to avoid double processing
+	globalContact.SyncedToNeoAt = utils.TimePtr(utils.Now().Add(10 * time.Second))
+	_, err := s.commonServices.PostgresRepositories.GlobalContactRepository.Update(ctx, globalContact)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+}
+
+func (s *globalContactService) syncGlobalContactPhotoToTenantContact(ctx context.Context, globalContact *postgresentity.GlobalContact) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.syncGlobalContactPhotoToTenantContact")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	if globalContact.ProfilePhotoPath == "" {
+		return
+	}
+	if globalContact.ProfilePhotoExternalUrl == "" {
+		return
+	}
+
+	tenantContact, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithProfilePhotoUrlCrossTenant(ctx, globalContact.ProfilePhotoExternalUrl)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	if len(tenantContact) == 0 {
+		return
+	}
+
+	for _, tenantContact := range tenantContact {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenantContact.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		s.commonServices.ContactService.Save(innerCtx, nil, &tenantContact.ContactId, data_fields.ContactFields{
+			ProfilePhotoUrl: utils.StringPtr(commonconstants.S3ImagesCDN + globalContact.ProfilePhotoPath),
+		}, false)
+	}
+
 }
