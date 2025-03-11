@@ -312,13 +312,11 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 		if len(flowExecutions) == 0 {
 			startAction, err := s.flow.FlowActionGetStart(ctx, flowId)
 			if err != nil {
-				tracing.TraceErr(span, err)
 				return nil, err
 			}
 
 			nextActions, err := s.flow.FlowActionGetNext(ctx, startAction.Id)
 			if err != nil {
-				tracing.TraceErr(span, err)
 				return nil, err
 			}
 
@@ -328,7 +326,6 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 
 				err := s.scheduleNextAction(ctx, txWithPostCommit, flowId, flowParticipant, scheduleAt, *nextAction)
 				if err != nil {
-					tracing.TraceErr(span, err)
 					return nil, err
 				}
 			}
@@ -345,14 +342,18 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 
 			lastAction, err := s.flow.FlowActionGetById(ctx, lastActionExecution.ActionId)
 			if err != nil {
-				tracing.TraceErr(span, err)
 				return nil, err
 			}
 
 			nextActions, err := s.flow.FlowActionGetNext(ctx, lastAction.Id)
 			if err != nil {
-				tracing.TraceErr(span, err)
 				return nil, err
+			}
+
+			flowParticipant.Status = neo4j_entity.FlowParticipantStatusInProgress
+			_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, flowParticipant)
+			if err != nil {
+				tracing.TraceErr(span, err)
 			}
 
 			for _, nextAction := range nextActions {
@@ -360,13 +361,10 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 				// marking the flow as completed if the next action is FLOW_END
 				if nextAction.Data.Action == neo4j_entity.FlowActionTypeFlowEnd {
 					flowParticipant.Status = neo4j_entity.FlowParticipantStatusCompleted
-
 					_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, flowParticipant)
 					if err != nil {
-						tracing.TraceErr(span, err)
 						return nil, err
 					}
-
 					return nil, nil
 				}
 
@@ -374,7 +372,6 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 
 				err := s.scheduleNextAction(ctx, txWithPostCommit, flowId, flowParticipant, scheduleAt, *nextAction)
 				if err != nil {
-					tracing.TraceErr(span, err)
 					return nil, err
 				}
 			}
