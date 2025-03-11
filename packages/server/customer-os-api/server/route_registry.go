@@ -56,7 +56,7 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 		middlewares = append(middlewares,
 			security.ApiKeyCheckerHTTP(
 				config.services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository,
-				config.services.Cfg.App.AppKey,
+				config.services.Cfg.App.AppAdminKey,
 				security.WithCache(config.cache),
 			),
 			security.TenantUserContextEnhancer(
