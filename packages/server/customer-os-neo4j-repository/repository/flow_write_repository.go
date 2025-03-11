@@ -123,28 +123,36 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 }
 
 func (r *flowWriteRepositoryImpl) UpdateStatistics(ctx context.Context) ([]*utils.StringsWithTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowWriteRepository.Merge")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowWriteRepository.UpdateStatistics")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant)<-[:BELONGS_TO_TENANT]-(f:Flow)-[:HAS]->(fc:FlowParticipant)
-			WITH t, f, fc.status AS flowStatus, COUNT(fc.status) AS fs
-			WITH t, f, 
-				CASE flowStatus
-					WHEN 'ON_HOLD' THEN 'onHold'
-					WHEN 'READY' THEN 'ready'
-					WHEN 'SCHEDULED' THEN 'scheduled'
-					WHEN 'IN_PROGRESS' THEN 'inProgress'
-					WHEN 'COMPLETED' THEN 'completed'
-					WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
-					ELSE null
-				END AS property, fs
-			WHERE property IS NOT NULL
-			WITH t, f, property, fs, f[property] AS oldValue
-			WHERE oldValue <> fs OR oldValue IS NULL
-			SET f[property] = fs
-			RETURN collect(f.id), t.name`)
+			MATCH (t:Tenant)<-[:BELONGS_TO_TENANT]-(f:Flow)-[:HAS]->(fp:FlowParticipant)
+WITH t, f, fp.status AS flowStatus, COUNT(fp.status) AS fs
+WITH t, f, 
+    CASE flowStatus
+        WHEN 'ON_HOLD' THEN 'onHold'
+        WHEN 'READY' THEN 'ready'
+        WHEN 'SCHEDULED' THEN 'scheduled'
+        WHEN 'IN_PROGRESS' THEN 'inProgress'
+        WHEN 'COMPLETED' THEN 'completed'
+        WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
+        ELSE null
+    END AS property, fs
+WHERE property IS NOT NULL
+WITH t, f, collect({property: property, count: fs}) AS updates
+UNWIND updates AS update
+WITH t, f, update.property AS property, update.count AS count
+SET f[property] = count
+WITH t, f, collect(property) AS updatedProperties
+WITH t, f, updatedProperties, 
+    ['onHold', 'ready', 'scheduled', 'inProgress', 'completed', 'goalAchieved'] AS allProperties
+WITH t, f, [prop IN allProperties WHERE NOT prop IN updatedProperties] AS propsToReset
+UNWIND propsToReset AS prop
+SET f[prop] = 0
+
+RETURN collect(f.id), t.name;`)
 
 	params := map[string]any{}
 
@@ -183,23 +191,30 @@ func (r *flowWriteRepositoryImpl) UpdateFlowStatistics(ctx context.Context, tx *
 	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant{name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s)
-			WITH t, f, fc.status AS flowStatus, COUNT(fc.status) AS fs
-			WITH t, f, 
-				CASE flowStatus
-					WHEN 'ON_HOLD' THEN 'onHold'
-					WHEN 'READY' THEN 'ready'
-					WHEN 'SCHEDULED' THEN 'scheduled'
-					WHEN 'IN_PROGRESS' THEN 'inProgress'
-					WHEN 'COMPLETED' THEN 'completed'
-					WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
-					ELSE null
-				END AS property, fs
-			WHERE property IS NOT NULL
-			WITH t, f, property, fs, f[property] AS oldValue
-			WHERE oldValue <> fs OR oldValue IS NULL
-			SET f[property] = fs
-			RETURN collect(f.id), t.name`, tenant, tenant)
+			MATCH (t:Tenant{name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fp:FlowParticipant_%s)
+WITH t, f, fp.status AS flowParticipantStatus, COUNT(fp.status) AS fs
+WITH t, f, 
+    CASE flowParticipantStatus
+        WHEN 'ON_HOLD' THEN 'onHold'
+        WHEN 'READY' THEN 'ready'
+        WHEN 'SCHEDULED' THEN 'scheduled'
+        WHEN 'IN_PROGRESS' THEN 'inProgress'
+        WHEN 'COMPLETED' THEN 'completed'
+        WHEN 'GOAL_ACHIEVED' THEN 'goalAchieved'
+        ELSE null
+    END AS property, fs
+WHERE property IS NOT NULL
+WITH t, f, collect({property: property, count: fs}) AS updates
+UNWIND updates AS update
+WITH t, f, update.property AS property, update.count AS count
+SET f[property] = count
+WITH t, f, collect(property) AS updatedProperties
+WITH t, f, updatedProperties, 
+    ['onHold', 'ready', 'scheduled', 'inProgress', 'completed', 'goalAchieved'] AS allProperties
+WITH t, f, [prop IN allProperties WHERE NOT prop IN updatedProperties] AS propsToReset
+UNWIND propsToReset AS prop
+SET f[prop] = 0
+RETURN collect(f.id), t.name`, tenant, tenant)
 
 	params := map[string]any{
 		"tenant": tenant,
