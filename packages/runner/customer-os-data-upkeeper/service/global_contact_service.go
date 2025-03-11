@@ -257,6 +257,7 @@ func (s *globalContactService) sendRequestToBetterContact() {
 		func(globalContact *postgresentity.GlobalContact) {
 			innerSpan, innerCtx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact.Record")
 			defer innerSpan.Finish()
+			tracing.TagEntity(innerSpan, strconv.FormatUint(globalContact.ID, 10))
 
 			linkedInUrl := "https://linkedin.com/in/" + globalContact.LinkedInIdentifier
 			// get global organization by primary domain
