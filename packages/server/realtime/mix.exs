@@ -43,10 +43,10 @@ defmodule Realtime.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:phoenix, "~> 1.7.11"},
+      {:phoenix, "~> 1.7.20"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.2"},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:phoenix_live_view, "~> 1.0.5"},
+      {:phoenix_live_dashboard, "~> 0.8.6"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
@@ -58,7 +58,13 @@ defmodule Realtime.MixProject do
       {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_exporter, "~> 1.8"},
       {:opentelemetry_phoenix, "~> 2.0"},
-      {:opentelemetry_bandit, "~> 0.2"}
+      {:opentelemetry_bandit, "~> 0.2"},
+      {:y_ex, "~> 0.7"},
+      {:phoenix_ecto, "~> 4.6"},
+      {:ecto_sql, "~> 3.12"},
+      {:postgrex, "~> 0.20"},
+      {:ecto_psql_extras, "~> 0.8"},
+      {:temp, "~> 0.4"}
     ]
   end
 
@@ -70,9 +76,10 @@ defmodule Realtime.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"],
-      dev: ["phx.server"],
-      clean: ["deps.clean --unused --unlock"]
+      setup: ["deps.get", "ecto.setup"],
+      dev: ["compile.script", "phx.server"],
+      clean: ["deps.clean --unused --unlock"],
+      "ecto.setup": ["ecto.create", "ecto.migrate"]
     ]
   end
 end
