@@ -37,7 +37,7 @@ func main() {
 
 	neo4jDriver, err := commonConfig.NewNeo4jDriver(cfg.Neo4jConfig)
 	if err != nil {
-		log.Fatalf(
+		logrus.Fatalf(
 			"Could not establish connection with neo4j at: %v, error: %v",
 			cfg.Neo4jConfig.Target,
 			err.Error(),
@@ -73,10 +73,6 @@ func main() {
 
 	log.Printf("Auth service running on port %s", cfg.ApiPort)
 	r.Run(cfg.ApiPort)
-}
-
-type AppConfig struct {
-	JwtSecret string
 }
 
 func loadConfiguration() *config.Config {
