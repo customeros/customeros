@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -149,9 +150,17 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 	defer resp.Body.Close()
 
 	// Decode response body
-	var responseBody BetterContactResponseBody
-	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		span.LogKV("response_body", string(body))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read bettercontact response body"))
+		return "", "", nil, err
+	}
+
+	var responseBody BetterContactResponseBody
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		span.LogKV("response_body", string(body))
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode bettercontact response body"))
 		return "", "", nil, err
 	}
