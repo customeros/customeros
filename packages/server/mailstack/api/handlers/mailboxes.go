@@ -54,7 +54,7 @@ func AddMailbox(imapService interfaces.IMAPService, mailboxRepository interfaces
 // RemoveMailbox removes a mailbox configuration
 func RemoveMailbox(imapService interfaces.IMAPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "AddMailbox", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RemoveMailbox", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))

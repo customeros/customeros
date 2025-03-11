@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -30,6 +31,7 @@ type Server struct {
 	services       *services.Services
 	repositories   *repository.Repositories
 	emailProcessor *email_processor.Processor
+	tracerCloser   io.Closer
 }
 
 func NewServer(cfg *config.Config, mailstackDB *gorm.DB) (*Server, error) {
@@ -43,7 +45,6 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB) (*Server, error) {
 		log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	opentracing.SetGlobalTracer(tracer)
-	defer closer.Close()
 
 	// Initialize repositories
 	repos := repository.InitRepositories(mailstackDB, cfg.R2StorageConfig)
@@ -67,6 +68,7 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB) (*Server, error) {
 		services:       svcs,
 		repositories:   repos,
 		emailProcessor: emailProcessor,
+		tracerCloser:   closer,
 		httpServer: &http.Server{
 			Addr:    ":" + cfg.AppConfig.APIPort,
 			Handler: router,
@@ -135,6 +137,10 @@ func (s *Server) waitForShutdown() error {
 
 	// Shut down HTTP server
 	log.Println("Shutting down HTTP server...")
+	if s.tracerCloser != nil {
+		s.tracerCloser.Close()
+	}
+
 	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Printf("❌ HTTP server shutdown error: %v", err)
 	} else {
