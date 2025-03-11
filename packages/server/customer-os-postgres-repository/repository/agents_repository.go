@@ -307,6 +307,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx conte
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "agentTypes", agentTypes)
 
 	var records []postgres_entity.Agent
 	types := make([]string, len(agentTypes))

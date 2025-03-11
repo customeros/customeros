@@ -31,7 +31,8 @@ func NewWebTrackerEventsRepository(gormDb *gorm.DB) WebTrackerEventsRepository {
 func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData postgres_entity.WebTrackerEvents) (*postgres_entity.WebTrackerEvents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "webTrackerData", webTrackerData)
 
 	var created postgres_entity.WebTrackerEvents
 	err := r.gormDb.Create(&webTrackerData).Scan(&created).Error

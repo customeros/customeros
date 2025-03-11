@@ -137,11 +137,14 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 
 	// Return if we found identity from IP history
 	if identityFromIPStatus != nil {
+		tracing.LogObjectAsJson(span, "result", result)
 		return *identityFromIPStatus, result, nil
 	}
 
 	// Attempt to identify using third-party enrichment services
-	return c.tryIdentifyFromEnrichment(ctx, websession, executionContainer.AgentExecutionID, &result)
+	status, output, err := c.tryIdentifyFromEnrichment(ctx, websession, executionContainer.AgentExecutionID, &result)
+	tracing.LogObjectAsJson(span, "result", output)
+	return status, output, err
 }
 
 // getWebSession retrieves the web session with the given ID
@@ -150,18 +153,18 @@ func (c *IdentifyWebsiteVisitorCapability) getWebSession(ctx context.Context, se
 	defer span.Finish()
 	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 
-	websession, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
+	webSession, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
 		ID:     sessionID,
 		Tenant: common.GetTenantFromContext(ctx),
 	}, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find web session")
 	}
-	if websession == nil {
+	if webSession == nil {
 		return nil, errors.New("web session not found")
 	}
 
-	return websession, nil
+	return webSession, nil
 }
 
 // processExistingIdentity checks if identity is already set on the web session
