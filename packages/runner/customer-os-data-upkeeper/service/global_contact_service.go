@@ -270,10 +270,9 @@ func (s *globalContactService) sendRequestToBetterContact() {
 				companyName = globalOrg.Name
 			}
 
-			_, betterContactRequestId, _, err := s.commonServices.EnrichmentService.FindWorkEmail(innerCtx, linkedInUrl, globalContact.FirstName, globalContact.LastName, companyName, globalContact.PrimaryDomain, false)
+			_, betterContactRequestId, _, err := s.commonServices.EnrichmentService.FindWorkEmailWithBetterContact(innerCtx, linkedInUrl, globalContact.FirstName, globalContact.LastName, companyName, globalContact.PrimaryDomain, false)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				span.LogFields(log.Object("record", record))
 			} else {
 				// mark contact with enrich requested
 				err = s.commonServices.PostgresRepositories.GlobalContactRepository.MarkBetterContactRequested(innerCtx, globalContact.ID, betterContactRequestId)
