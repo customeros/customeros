@@ -15,6 +15,8 @@ cd ../customer-os-webhooks
 go mod tidy
 cd ../mailsherpa-api
 go mod tidy
+cd ../mailstack
+go mod tidy
 cd ../..
 cd runner
 cd customer-os-data-upkeeper

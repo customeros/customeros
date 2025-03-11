@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
@@ -174,6 +173,24 @@ func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Oppo
 		return nil, nil
 	}
 	return mapper.MapEntitiesToExternalSystems(entities), nil
+}
+
+// TaskIds is the resolver for the taskIds field.
+func (r *opportunityResolver) TaskIds(ctx context.Context, obj *model.Opportunity) ([]string, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetTasksForOpportunity(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get tasks for opportunity %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get tasks for opportunity %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	var taskIds []string
+	for _, entity := range *entities {
+		taskIds = append(taskIds, entity.Id)
+	}
+	return taskIds, nil
 }
 
 // Opportunity is the resolver for the opportunity field.

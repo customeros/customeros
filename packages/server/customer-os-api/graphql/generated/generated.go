@@ -1303,6 +1303,7 @@ type ComplexityRoot struct {
 		Source                 func(childComplexity int) int
 		SourceOfTruth          func(childComplexity int) int
 		StageLastUpdated       func(childComplexity int) int
+		TaskIds                func(childComplexity int) int
 		UpdatedAt              func(childComplexity int) int
 	}
 
@@ -2191,6 +2192,7 @@ type OpportunityResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error)
 	Owner(ctx context.Context, obj *model.Opportunity) (*model.User, error)
 	ExternalLinks(ctx context.Context, obj *model.Opportunity) ([]*model.ExternalSystem, error)
+	TaskIds(ctx context.Context, obj *model.Opportunity) ([]string, error)
 }
 type OrganizationResolver interface {
 	Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error)
@@ -9829,6 +9831,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Opportunity.StageLastUpdated(childComplexity), true
 
+	case "Opportunity.taskIds":
+		if e.complexity.Opportunity.TaskIds == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.TaskIds(childComplexity), true
+
 	case "Opportunity.updatedAt":
 		if e.complexity.Opportunity.UpdatedAt == nil {
 			break
@@ -16436,6 +16445,7 @@ type Opportunity implements MetadataInterface {
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    taskIds:            [ID!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     """
     Deprecated, use metadata
@@ -38057,6 +38067,8 @@ func (ec *executionContext) fieldContext_Contract_opportunities(_ context.Contex
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -74349,6 +74361,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunity_Save(ctx context.C
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -74561,6 +74575,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewalUpdate(ctx c
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -84291,6 +84307,84 @@ func (ec *executionContext) fieldContext_Opportunity_externalLinks(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Opportunity_taskIds(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_taskIds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Opportunity().TaskIds(rctx, obj)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, obj, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, obj, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_taskIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Opportunity_id(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Opportunity_id(ctx, field)
 	if err != nil {
@@ -84629,6 +84723,8 @@ func (ec *executionContext) fieldContext_OpportunityPage_content(_ context.Conte
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -85343,6 +85439,8 @@ func (ec *executionContext) fieldContext_Organization_opportunities(_ context.Co
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -98791,6 +98889,8 @@ func (ec *executionContext) fieldContext_Query_opportunity(ctx context.Context, 
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -103593,6 +103693,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_opportunity(_ context.Con
 				return ec.fieldContext_Opportunity_owner(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_Opportunity_taskIds(ctx, field)
 			case "id":
 				return ec.fieldContext_Opportunity_id(ctx, field)
 			case "createdAt":
@@ -131727,6 +131829,42 @@ func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionS
 					}
 				}()
 				res = ec._Opportunity_externalLinks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "taskIds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Opportunity_taskIds(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

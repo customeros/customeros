@@ -14,4 +14,5 @@ type TaskService interface {
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, taskFields data_fields.TaskFields) (string, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.TaskEntity, error)
 	GetAllByIds(ctx context.Context, ids []string) (*neo4jentity.TaskEntities, error)
+	GetTasksForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.TaskEntities, error)
 }

@@ -33,6 +33,7 @@ type TaskReadRepository interface {
 	GetAllByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	CountByTenant(ctx context.Context, tenant string) (int64, error)
 	SearchTasks(ctx context.Context, tenant string, limit int, where *model.Filter, sort *model.SortBy) (*utils.StringsWithTotalCount, error)
+	GetTasksForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type taskReadRepository struct {
@@ -469,4 +470,40 @@ func createTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, ne
 	} else if filter.Filter.Operation == model.ComparisonOperatorLt && filter.Filter.Value.Time != nil {
 		cypherFilter.Filters = append(cypherFilter.Filters, utils.CreateCypherFilter(neo4jProperty, *filter.Filter.Value.Time, model.ComparisonOperatorLt))
 	}
+}
+
+func (r *taskReadRepository) GetTasksForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetTasksForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "opportunityIds", opportunityIds)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)-[:LINKED_TO]->(opp:Opportunity)
+				WHERE opp.id IN $opportunityIds
+				RETURN tsk, opp.id`
+	params := map[string]any{
+		"tenant":         tenant,
+		"opportunityIds": opportunityIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	dbNodeAndIds := result.([]*utils.DbNodeAndId)
+	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	return dbNodeAndIds, err
 }

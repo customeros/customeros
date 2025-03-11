@@ -177,3 +177,17 @@ updates:
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/mailstack"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "go"
+      - "dependencies"
+      - "app/mailstack"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"

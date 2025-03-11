@@ -36,6 +36,7 @@ type Opportunity implements MetadataInterface {
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    taskIds:            [ID!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     """
     Deprecated, use metadata
