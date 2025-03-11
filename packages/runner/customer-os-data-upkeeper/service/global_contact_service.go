@@ -119,7 +119,9 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 		LinkedInId  string
 	}
 
-	for _, position := range person.Positions.PositionHistory {
+	orderedPositions := postgresentity.OrderPositionsByEndDate(person.Positions.PositionHistory)
+
+	for _, position := range orderedPositions {
 		var currentPosition struct {
 			Title       string
 			StartedOn   *time.Time
@@ -179,6 +181,7 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 			PrimaryDomain:           primaryDomain,
 			ProfilePhotoExternalUrl: person.PhotoUrl,
 			DataFetchedAt:           &record.CreatedAt,
+			LocationText:            person.Location,
 		}
 
 		err = s.commonServices.GlobalContactService.SaveContact(ctx, contact)

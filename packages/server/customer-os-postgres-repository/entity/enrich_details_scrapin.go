@@ -1,6 +1,9 @@
 package postgres_entity
 
-import "time"
+import (
+	"sort"
+	"time"
+)
 
 type ScrapInFlow string
 
@@ -45,6 +48,25 @@ type ScrapInResponseBody struct {
 	Company       *ScrapinCompanyDetails `json:"company,omitempty"`
 }
 
+type ScrapinPositionHistory struct {
+	Title        string `json:"title"`
+	CompanyName  string `json:"companyName"`
+	Description  string `json:"description"`
+	StartEndDate struct {
+		Start *struct {
+			Month int `json:"month"`
+			Year  int `json:"year"`
+		} `json:"start"`
+		End *struct {
+			Month int `json:"month"`
+			Year  int `json:"year"`
+		} `json:"end"`
+	} `json:"startEndDate"`
+	CompanyLogo string `json:"companyLogo"`
+	LinkedInUrl string `json:"linkedInUrl"`
+	LinkedInId  string `json:"linkedInId"`
+}
+
 type ScrapinPersonDetails struct {
 	PublicIdentifier   string `json:"publicIdentifier"`
 	LinkedInIdentifier string `json:"linkedInIdentifier"`
@@ -61,25 +83,8 @@ type ScrapinPersonDetails struct {
 	} `json:"creationDate"`
 	FollowerCount int `json:"followerCount"`
 	Positions     struct {
-		PositionsCount  int `json:"positionsCount"`
-		PositionHistory []struct {
-			Title        string `json:"title"`
-			CompanyName  string `json:"companyName"`
-			Description  string `json:"description"`
-			StartEndDate struct {
-				Start *struct {
-					Month int `json:"month"`
-					Year  int `json:"year"`
-				} `json:"start"`
-				End *struct {
-					Month int `json:"month"`
-					Year  int `json:"year"`
-				} `json:"end"`
-			} `json:"startEndDate"`
-			CompanyLogo string `json:"companyLogo"`
-			LinkedInUrl string `json:"linkedInUrl"`
-			LinkedInId  string `json:"linkedInId"`
-		} `json:"positionHistory"`
+		PositionsCount  int                      `json:"positionsCount"`
+		PositionHistory []ScrapinPositionHistory `json:"positionHistory"`
 	} `json:"positions"`
 	Schools struct {
 		EducationsCount  int `json:"educationsCount"`
@@ -150,4 +155,50 @@ func (c ScrapinCompanyDetails) GetEmployeeCount() int64 {
 		return int64(c.EmployeeCountRange.End)
 	}
 	return 0
+}
+
+// IsCurrentPosition returns true if the position has no end date
+func (p ScrapinPositionHistory) IsCurrentPosition() bool {
+	return p.StartEndDate.End == nil
+}
+
+// GetEndYear returns the end year or max int32 for current positions
+func (p ScrapinPositionHistory) GetEndYear() int {
+	if p.IsCurrentPosition() {
+		return int(^uint(0) >> 1) // max int32
+	}
+	return p.StartEndDate.End.Year
+}
+
+// GetEndMonth returns the end month or 12 for current positions
+func (p ScrapinPositionHistory) GetEndMonth() int {
+	if p.IsCurrentPosition() {
+		return 12
+	}
+	return p.StartEndDate.End.Month
+}
+
+// OrderPositionsByEndDate sorts positions by end date ascending, with current positions at the end
+func OrderPositionsByEndDate(positions []ScrapinPositionHistory) []ScrapinPositionHistory {
+	sorted := make([]ScrapinPositionHistory, len(positions))
+	copy(sorted, positions)
+
+	sort.SliceStable(sorted, func(i, j int) bool {
+		pos1, pos2 := sorted[i], sorted[j]
+
+		// If one is current and other isn't, current goes last
+		if pos1.IsCurrentPosition() != pos2.IsCurrentPosition() {
+			return !pos1.IsCurrentPosition()
+		}
+
+		// If both are current or both have end dates, compare dates
+		if pos1.GetEndYear() != pos2.GetEndYear() {
+			return pos1.GetEndYear() < pos2.GetEndYear()
+		}
+
+		// If same year, compare months
+		return pos1.GetEndMonth() < pos2.GetEndMonth()
+	})
+
+	return sorted
 }
