@@ -1985,6 +1985,7 @@ type Opportunity struct {
 	CreatedBy              *User                        `json:"createdBy,omitempty"`
 	Owner                  *User                        `json:"owner,omitempty"`
 	ExternalLinks          []*ExternalSystem            `json:"externalLinks"`
+	TaskIds                []string                     `json:"taskIds"`
 	// Deprecated, use metadata
 	ID string `json:"id"`
 	// Deprecated, use metadata

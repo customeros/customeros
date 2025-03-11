@@ -124,10 +124,14 @@ type Loaders struct {
 	FlowsWithContact                            *dataloader.Loader
 	FlowsWithSender                             *dataloader.Loader
 	FlowExecutionsForParticipant                *dataloader.Loader
+	TasksForOpportunity                         *dataloader.Loader
 }
 
 type tagBatcher struct {
 	tagService interfaces.TagService
+}
+type taskBatcher struct {
+	taskService interfaces.TaskService
 }
 type emailBatcher struct {
 	emailService       cosapi_interfaces.EmailService
@@ -236,6 +240,9 @@ type flowBatcher struct {
 func NewDataLoader(services *cosapi_services.Services) *Loaders {
 	tagBatcher := &tagBatcher{
 		tagService: services.CommonServices.TagService,
+	}
+	taskBatcher := &taskBatcher{
+		taskService: services.CommonServices.TaskService,
 	}
 	emailBatcher := &emailBatcher{
 		emailService:       services.EmailService,
@@ -438,6 +445,7 @@ func NewDataLoader(services *cosapi_services.Services) *Loaders {
 		FlowsWithContact:                            dataloader.NewBatchedLoader(flowBatcher.getFlowsWithContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowsWithSender:                             dataloader.NewBatchedLoader(flowBatcher.getFlowsWithSender, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowExecutionsForParticipant:                dataloader.NewBatchedLoader(flowBatcher.getFlowExecutionsForParticipant, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		TasksForOpportunity:                         dataloader.NewBatchedLoader(taskBatcher.getTasksForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

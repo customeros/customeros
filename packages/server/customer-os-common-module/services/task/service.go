@@ -224,3 +224,25 @@ func (s *taskService) GetAllByIds(ctx context.Context, ids []string) (*neo4jenti
 	}
 	return &taskEntities, nil
 }
+
+func (s *taskService) GetTasksForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.TaskEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetTasksForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	tasks, err := s.neo4j.TaskReadRepository.GetTasksForOpportunities(ctx, tenant, opportunityIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var taskEntities neo4jentity.TaskEntities
+	for _, v := range tasks {
+		taskEntity := neo4jmapper.MapDbNodeToTaskEntity(v.Node)
+		taskEntity.DataloaderKey = v.LinkedNodeId
+		taskEntities = append(taskEntities, *taskEntity)
+	}
+	return &taskEntities, nil
+}
