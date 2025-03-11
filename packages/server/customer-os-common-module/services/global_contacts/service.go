@@ -109,6 +109,8 @@ func (s *globalContactService) findExistingContact(ctx context.Context, contact 
 
 func (s *globalContactService) updateContactFields(existing *postgres_entity.GlobalContact, new *postgres_entity.GlobalContact) {
 	// Only update fields if they are non-empty in the new contact
+	existing.JobStartedAt = new.JobStartedAt
+	existing.JobEndedAt = new.JobEndedAt
 	if new.FirstName != "" {
 		existing.FirstName = new.FirstName
 	}
@@ -117,12 +119,6 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 	}
 	if new.JobTitle != "" {
 		existing.JobTitle = new.JobTitle
-	}
-	if new.JobStartedAt != nil {
-		existing.JobStartedAt = new.JobStartedAt
-	}
-	if new.JobEndedAt != nil {
-		existing.JobEndedAt = new.JobEndedAt
 	}
 	if new.PrimaryDomain != "" {
 		existing.PrimaryDomain = new.PrimaryDomain
@@ -139,9 +135,12 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 	if new.LinkedInAlias != "" {
 		existing.LinkedInAlias = new.LinkedInAlias
 	}
+	if new.LocationText != "" {
+		existing.LocationText = new.LocationText
+	}
 	if new.ProfilePhotoExternalUrl != "" {
 		// if new URL is different then existing one and download status is error, reset download status
-		if existing.ProfilePhotoExternalUrl != new.ProfilePhotoExternalUrl && existing.DownloadStatus == enum.DownloadError {
+		if existing.ProfilePhotoExternalUrl != new.ProfilePhotoExternalUrl {
 			existing.DownloadStatus = enum.DownloadNotStarted
 		}
 		existing.ProfilePhotoExternalUrl = new.ProfilePhotoExternalUrl

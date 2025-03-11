@@ -20,6 +20,7 @@ type GlobalContact struct {
 	JobStartedAt            *time.Time          `gorm:"type:timestamp;null" json:"job_started_at,omitempty"`
 	JobEndedAt              *time.Time          `gorm:"type:timestamp;null" json:"job_ended_at,omitempty"`
 	PrimaryDomain           string              `gorm:"type:varchar(255);index:idx_primary_domain" json:"primary_domain"`
+	LocationText            string              `gorm:"column:location_text;type:varchar(1000)" json:"location"`
 	ProfilePhotoExternalUrl string              `gorm:"type:varchar(1000)" json:"profile_photo_external_url,omitempty"`
 	ProfilePhotoPath        string              `gorm:"column:profile_photo_path;type:varchar(2000)" json:"profilePhotoPath"`
 	DownloadStatus          enum.DownloadStatus `gorm:"column:download_status;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatus"`
