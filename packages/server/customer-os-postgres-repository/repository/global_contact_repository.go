@@ -33,6 +33,7 @@ type GlobalContactRepository interface {
 	MarkBetterContactRequested(ctx context.Context, id uint64, betterContactRequestId string) error
 	GetContactsToSetWorkEmailFromBetterContactResponse(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error)
 	MarkBetterContactSet(ctx context.Context, id uint64) error
+	GetGlobalContactsToSyncIntoTenantContacts(ctx context.Context, daysFromPreviousSync, forceSyncAfterDays, limit int) ([]*postgres_entity.GlobalContact, error)
 }
 
 type globalContactRepository struct {
@@ -414,4 +415,24 @@ func (r *globalContactRepository) MarkBetterContactSet(ctx context.Context, id u
 	}
 
 	return nil
+}
+
+func (r *globalContactRepository) GetGlobalContactsToSyncIntoTenantContacts(ctx context.Context, daysFromPreviousSync, forceSyncAfterDays, limit int) ([]*postgres_entity.GlobalContact, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetGlobalContactsToSyncIntoTenantContacts")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Int("daysFromPreviousSync", daysFromPreviousSync), tracingLog.Int("forceSyncAfterDays", forceSyncAfterDays), tracingLog.Int("limit", limit))
+
+	contacts := make([]*postgres_entity.GlobalContact, 0)
+	result := r.db.WithContext(ctx).
+		Where("(synced_to_neo_at IS NULL OR (synced_to_neo_at < ? AND updated_at > synced_to_neo_at) OR (synced_to_neo_at < ?))", utils.Now().Add(-24*time.Hour*time.Duration(daysFromPreviousSync)), utils.Now().Add(-24*time.Hour*time.Duration(forceSyncAfterDays))).
+		Order("synced_to_neo_at IS NULL DESC, COALESCE(synced_to_neo_at, created_at) ASC").
+		Limit(limit).
+		Find(&contacts)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	return contacts, nil
 }

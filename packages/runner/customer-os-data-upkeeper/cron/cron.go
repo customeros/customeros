@@ -162,6 +162,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalContacts, GroupGlobalContact, syncDataToGlobalContacts, "syncDataToGlobalContacts")
 	addJob(cont.Cfg.App.Cron.CronScheduleDownloadContactProfilePhoto, GroupGlobalContact, downloadContactProfilePhoto, "downloadContactProfilePhoto")
 	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalContactWithBettercontact, GroupGlobalContact, enrichGlobalOrganizationWithBettercontact, "enrichGlobalOrganizationWithBettercontact")
+	addJob(cont.Cfg.App.Cron.CronScheduleSyncGlobalContactsToTenantContacts, GroupGlobalContact, syncGlobalContactsToTenantContacts, "syncGlobalContactsToTenantContacts")
 
 	// Email Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
@@ -415,4 +416,8 @@ func syncDataToGlobalContacts(cont *container.Container) {
 
 func enrichGlobalOrganizationWithBettercontact(cont *container.Container) {
 	service.NewGlobalContactService(cont.Cfg, cont.Log, cont.CommonServices).EnrichGlobalOrganizationWithBettercontact()
+}
+
+func syncGlobalContactsToTenantContacts(cont *container.Container) {
+	service.NewGlobalContactService(cont.Cfg, cont.Log, cont.CommonServices).SyncGlobalContactsToTenantContacts()
 }

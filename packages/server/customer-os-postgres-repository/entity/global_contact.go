@@ -25,6 +25,7 @@ type GlobalContact struct {
 	DownloadStatus          enum.DownloadStatus `gorm:"column:download_status;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatus"`
 	PhoneNumber             string              `gorm:"column:phone_number;type:varchar(50)" json:"phone_number,omitempty"`
 	DataFetchedAt           *time.Time          `gorm:"column:data_fetched_at;type:timestamp" json:"dataFetchedAt,omitempty"`
+	SyncedToNeoAt           *time.Time          `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
 
 	// Enrichment fields
 	BetterContactRequestedAt     *time.Time `gorm:"column:bettercontact_requested_at;type:timestamp" json:"betterContactRequestedAt"`

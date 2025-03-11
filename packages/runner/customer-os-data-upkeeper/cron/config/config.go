@@ -24,6 +24,7 @@ type Config struct {
 	CronScheduleSyncDataToGlobalContacts             string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_CONTACTS" envDefault:"0 */1 * * * *"`
 	CronScheduleDownloadContactProfilePhoto          string `env:"CRON_SCHEDULE_DOWNLOAD_CONTACT_PROFILE_PHOTO" envDefault:"15 */2 * * * *"`
 	CronScheduleEnrichGlobalContactWithBettercontact string `env:"CRON_SCHEDULE_ENRICH_GLOBAL_CONTACT_WITH_BETTERCONTACT" envDefault:"30 */2 * * * *"`
+	CronScheduleSyncGlobalContactsToTenantContacts   string `env:"CRON_SCHEDULE_SYNC_GLOBAL_CONTACTS_TO_TENANT_CONTACTS" envDefault:"30 */1 * * * *"`
 
 	// Contacts
 	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
