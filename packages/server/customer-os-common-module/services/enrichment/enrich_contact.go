@@ -25,22 +25,22 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, linkedInUrl string) error {
+func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, socialId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "enrichmentService.enrichContact")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.TagEntity(span, contactId)
-	span.LogFields(log.String("linkedInUrl", linkedInUrl))
+	span.LogFields(log.String("socialId", socialId))
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// skip enrichment if disabled in tenant settings
-	tenantSettings, err := s.neo4jRepository.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	tenantSettingsDbNode, err := s.neo4jRepository.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "TenantReadRepository.GetTenantSettings"))
 		return err
 	}
-	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
 	if !tenantSettingsEntity.EnrichContacts {
 		span.LogFields(log.String("result", "enrichment disabled"))
 		return nil
@@ -58,9 +58,25 @@ func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, linked
 		return nil
 	}
 
-	emailAddress, firstName, lastName, domain, companyName := "", "", "", "", ""
+	// load social entity if socialId is provided
+	var socialEntity *neo4j_entity.SocialEntity
+	if socialId != "" {
+		socialEntity, err = s.socialService.GetById(ctx, socialId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if !socialEntity.IsLinkedin() {
+			span.LogFields(log.String("result", "social not linkedin"))
+			return nil
+		}
+	}
+
+	//
+
+	linkedInUrl, emailAddress, firstName, lastName, domain, companyName := "", "", "", "", "", ""
 	// if linkedInUrl is empty fetch all data for searching person
-	if linkedInUrl == "" {
+	if socialEntity == nil {
 		// prepare linked in for searching person
 		socialDbNodes, err := s.neo4jRepository.SocialReadRepository.GetAllForEntities(ctx, tenant, commonModel.CONTACT, []string{contactId})
 		if err != nil {
@@ -118,6 +134,8 @@ func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, linked
 		}
 		firstName = contactEntity.FirstName
 		lastName = contactEntity.LastName
+	} else {
+		linkedInUrl = socialEntity.Url
 	}
 
 	span.LogFields(
