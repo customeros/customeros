@@ -379,7 +379,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			companyDomain = h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, enrichPersonResponse.Company.WebsiteUrl)
 		}
 
-		dbID, _, findWorkEmailResponse, err := h.services.CommonServices.EnrichmentService.FindWorkEmail(ctx,
+		dbID, _, findWorkEmailResponse, err := h.services.CommonServices.EnrichmentService.FindWorkEmailWithBetterContact(ctx,
 			enrichPersonResponse.Person.LinkedInUrl,
 			enrichPersonResponse.Person.FirstName,
 			enrichPersonResponse.Person.LastName,

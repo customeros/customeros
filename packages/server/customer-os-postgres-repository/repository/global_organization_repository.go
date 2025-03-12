@@ -95,14 +95,14 @@ func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, d
 	organization := &postgres_entity.GlobalOrganization{}
 	result := r.db.WithContext(ctx).Where("primary_domain = ?", domain).First(organization)
 	if result.Error != nil {
-		span.LogFields(tracingLog.Bool("found", false))
+		span.LogFields(tracingLog.Bool("result.found", false))
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
-	span.LogFields(tracingLog.Bool("found", true))
+	span.LogFields(tracingLog.Bool("result.found", true))
 	return organization, nil
 }
 

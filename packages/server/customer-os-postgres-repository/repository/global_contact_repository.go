@@ -320,8 +320,8 @@ func (r *globalContactRepository) GetContactsToFindWorkEmailWithBetterContact(ct
 		Where("work_email IS NULL OR work_email = ''").
 		Where("primary_domain IS NOT NULL AND primary_domain != ''").
 		Where("linked_in_identifier IS NOT NULL AND linked_in_identifier != ''").
-		Where("bettercontact_requested_at IS NULL").
-		Order("created_at").
+		Where("bettercontact_request_id = ''").
+		Order("bettercontact_requested_at IS NULL DESC, COALESCE(bettercontact_requested_at, created_at) ASC").
 		Limit(limit).
 		Find(&contacts)
 	if result.Error != nil {

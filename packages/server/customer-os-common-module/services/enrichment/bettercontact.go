@@ -44,8 +44,8 @@ type BetterContactData struct {
 	CompanyDomain string `json:"company_domain"`
 }
 
-func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *postgres_entity.BetterContactResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.BetterContactFindWorkEmail")
+func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *postgres_entity.BetterContactResponseBody, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.FindWorkEmailWithBetterContact")
 	defer span.Finish()
 	span.LogFields(
 		log.String("linkedInUrl", linkedInUrl),
