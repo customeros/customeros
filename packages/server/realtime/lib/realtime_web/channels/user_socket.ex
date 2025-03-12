@@ -76,6 +76,7 @@ defmodule RealtimeWeb.UserSocket do
   channel "Skus:*", RealtimeWeb.SkusChannel
   channel "Industries:*", RealtimeWeb.IndustriesChannel
   channel "JobRoles:*", RealtimeWeb.JobRolesChannel
+  channel "Document:*", RealtimeWeb.DocumentChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

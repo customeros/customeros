@@ -1,0 +1,26 @@
+{
+  "name": "y-participant",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "compile": "bun build --compile ./convert_lexical_to_yjs.ts --output ../priv/scripts/convert_lexical_to_yjs"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@lexical/headless": "^0.27.1",
+    "@lexical/html": "^0.27.1",
+    "@lexical/link": "^0.27.1",
+    "@lexical/react": "^0.27.1",
+    "@lexical/rich-text": "^0.27.1",
+    "@lexical/yjs": "^0.27.1",
+    "lexical": "^0.27.1",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.24"
+  }
+}

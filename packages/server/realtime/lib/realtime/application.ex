@@ -12,6 +12,7 @@ defmodule Realtime.Application do
 
     children = [
       RealtimeWeb.Telemetry,
+      Realtime.Repo,
       {DNSCluster, query: Application.get_env(:realtime, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Realtime.PubSub},
       RealtimeWeb.Presence,

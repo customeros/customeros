@@ -18,6 +18,7 @@ defmodule RealtimeWeb.Router do
 
   scope "/api", RealtimeWeb do
     pipe_through :api
+    resources "/document", DocumentController
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
