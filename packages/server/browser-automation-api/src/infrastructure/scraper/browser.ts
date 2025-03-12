@@ -25,6 +25,7 @@ const hyperbrowser = new Hyperbrowser({
 export class Browser {
   private static instances: Map<string, Browser>;
   public browser: BrowserType | null = null;
+  private hyperbrowserSessionId: string | null = null;
 
   constructor(private debug?: boolean, private debugRemote?: boolean) {}
 
@@ -82,6 +83,8 @@ export class Browser {
               useStealth: true,
               ...proxyConfig,
             });
+
+            this.hyperbrowserSessionId = session.id;
 
             if (!session.wsEndpoint) {
               throw new StandardError({
@@ -148,6 +151,11 @@ export class Browser {
     if (this.browser) {
       await this.browser.close();
       this.browser = null;
+    }
+
+    if (this.hyperbrowserSessionId) {
+      await hyperbrowser.sessions.stop(this.hyperbrowserSessionId);
+      this.hyperbrowserSessionId = null;
     }
   }
 
