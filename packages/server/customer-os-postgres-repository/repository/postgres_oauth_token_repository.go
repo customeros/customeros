@@ -81,7 +81,7 @@ func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provide
 	err := repo.db.
 		Where("LOWER(provider) = LOWER(?)", provider).
 		Where("tenant_name = ?", tenant).
-		Where("email_address = ?", email).
+		Where("LOWER(email_address) = LOWER(?)", email).
 		First(&oAuthTokenEntity).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
