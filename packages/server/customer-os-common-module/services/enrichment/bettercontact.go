@@ -21,7 +21,9 @@ import (
 )
 
 const (
-	BetterContactTTL = 180 * 24 * time.Hour
+	// better contact cached results set to 29 days,
+	// this is to avoid the cache from being used 30 days retry
+	BetterContactTTL = 29 * 24 * time.Hour
 )
 
 type BetterContactResponseBody struct {
