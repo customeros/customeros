@@ -103,9 +103,9 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 				tracing.TraceErr(span, err)
 				return "", "", nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 			}
+			span.LogFields(log.String("result.request_id", existingBetterContactData.RequestID))
 			return existingBetterContactData.ID, existingBetterContactData.RequestID, &responseBody, nil
 		}
-		return existingBetterContactData.ID, existingBetterContactData.RequestID, nil, nil
 	}
 
 	requestBodyDtls := BetterContactRequestBody{}
@@ -167,6 +167,13 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 		return "", "", nil, err
 	}
 
+	if responseBody.ID == "" {
+		span.LogKV("response_body", string(body))
+		err = errors.New("missing bettercontact response id")
+		tracing.TraceErr(span, err)
+		return "", "", nil, err
+	}
+
 	dbRecord, err := s.postgres.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, postgres_entity.EnrichDetailsBetterContact{
 		RequestID:          responseBody.ID,
 		ContactFirstName:   firstName,
@@ -182,5 +189,6 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 		return "", "", nil, err
 	}
 
+	span.LogFields(log.String("result.bettercontact_request_id", responseBody.ID))
 	return dbRecord.ID, responseBody.ID, nil, nil
 }
