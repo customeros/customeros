@@ -124,7 +124,6 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v6.15.0
         with:
-          no-cache: true
           context: packages/server/realtime/
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
