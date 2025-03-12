@@ -15,7 +15,8 @@ import (
 	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	service_verify "github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -32,10 +33,10 @@ type GlobalContactService interface {
 type globalContactService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonService.CommonServices
+	commonServices *commonservice.CommonServices
 }
 
-func NewGlobalContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) GlobalContactService {
+func NewGlobalContactService(cfg *config.Config, log logger.Logger, commonServices *commonservice.CommonServices) GlobalContactService {
 	return &globalContactService{
 		cfg:            cfg,
 		log:            log,
@@ -238,12 +239,13 @@ func (s *globalContactService) sendRequestToBetterContact() {
 	// Better contact is limited to 60 requests per minute
 	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
 	limit := 40
+	retryAfterDays := 30
 
 	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToFindWorkEmailWithBetterContact(ctx, limit)
+	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToFindWorkEmailWithBetterContact(ctx, retryAfterDays, limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -334,8 +336,35 @@ func (s *globalContactService) processBetterContactResponses() {
 				tracing.TraceErr(innerSpan, err)
 			}
 
-			if betterContactResponse.Data[0].ContactEmailAddress != "" {
-				err = s.commonServices.GlobalContactService.SetWorkEmail(innerCtx, globalContact.ID, betterContactResponse.Data[0].ContactEmailAddress)
+			workEmail := betterContactResponse.Data[0].ContactEmailAddress
+			if workEmail != "" {
+				innerSpan.LogFields(log.String("bettercontact.email", workEmail))
+
+				// validate email with mailsherpa
+				emailValidation, err := s.commonServices.VerifyService.ValidateEmail(innerCtx, workEmail)
+				if err != nil {
+					tracing.TraceErr(innerSpan, err)
+				}
+				if emailValidation == nil {
+					err = errors.New("mailsherpa validation returned nil")
+					tracing.TraceErr(innerSpan, err)
+					return
+				}
+
+				if !emailValidation.Syntax.IsValid {
+					err = errors.New("invalid email syntax: " + workEmail)
+					tracing.TraceErr(innerSpan, err)
+					span.LogFields(log.String("result", "invalid email syntax"))
+					return
+				}
+				if emailValidation.EmailData.Deliverable == string(service_verify.EmailDeliverableStatusUndeliverable) {
+					err = errors.New("email undeliverable: " + workEmail)
+					tracing.TraceErr(innerSpan, err)
+					span.LogFields(log.String("result", "email undeliverable"))
+					return
+				}
+
+				err = s.commonServices.GlobalContactService.SetWorkEmail(innerCtx, globalContact.ID, workEmail)
 				if err != nil {
 					tracing.TraceErr(innerSpan, err)
 				}

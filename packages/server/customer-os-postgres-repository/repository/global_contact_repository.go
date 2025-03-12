@@ -30,7 +30,7 @@ type GlobalContactRepository interface {
 	GetContactsToFetchPhoto(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error)
 	SetProfilePhoto(ctx context.Context, id uint64, photoPath string) error
 	SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error
-	GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error)
+	GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, retryAfterDays int, limit int) ([]*postgres_entity.GlobalContact, error)
 	MarkBetterContactRequested(ctx context.Context, id uint64, betterContactRequestId string) error
 	GetContactsToSetWorkEmailFromBetterContactResponse(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error)
 	MarkBetterContactSet(ctx context.Context, id uint64) error
@@ -339,17 +339,19 @@ func (r *globalContactRepository) SetDownloadStatus(ctx context.Context, id uint
 	return nil
 }
 
-func (r *globalContactRepository) GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error) {
+func (r *globalContactRepository) GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, retryAfterDays, limit int) ([]*postgres_entity.GlobalContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetContactsToFindWorkEmailWithBetterContact")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(tracingLog.Int("retryAfterDays", retryAfterDays), tracingLog.Int("limit", limit))
 
 	contacts := make([]*postgres_entity.GlobalContact, 0)
 	result := r.db.WithContext(ctx).
 		Where("work_email IS NULL OR work_email = ''").
 		Where("primary_domain IS NOT NULL AND primary_domain != ''").
 		Where("linked_in_identifier IS NOT NULL AND linked_in_identifier != ''").
-		Where("bettercontact_request_id = ''").
+		Where("job_ended_at IS NULL").
+		Where("bettercontact_requested_at IS NULL OR bettercontact_requested_at < ?", utils.Now().Add(-time.Duration(retryAfterDays)*24*time.Hour)).
 		Order("bettercontact_requested_at IS NULL DESC, COALESCE(bettercontact_requested_at, created_at) ASC").
 		Limit(limit).
 		Find(&contacts)
@@ -371,7 +373,9 @@ func (r *globalContactRepository) MarkBetterContactRequested(ctx context.Context
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
 		Where("id = ?", id).
 		UpdateColumn("bettercontact_requested_at", utils.Now()).
-		UpdateColumn("bettercontact_request_id", betterContactRequestId)
+		UpdateColumn("bettercontact_request_id", betterContactRequestId).
+		UpdateColumn("bettercontact_set_at", nil).
+		UpdateColumn("bettercontact_check_response_at", nil)
 
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
