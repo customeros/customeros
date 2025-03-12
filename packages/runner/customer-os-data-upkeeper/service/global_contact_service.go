@@ -275,7 +275,7 @@ func (s *globalContactService) sendRequestToBetterContact() {
 
 			_, betterContactRequestId, _, err := s.commonServices.EnrichmentService.FindWorkEmailWithBetterContact(innerCtx, linkedInUrl, globalContact.FirstName, globalContact.LastName, companyName, globalContact.PrimaryDomain, false)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(innerSpan, err)
 			} else {
 				if betterContactRequestId == "" {
 					err = errors.New("better contact request id is empty")
