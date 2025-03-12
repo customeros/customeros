@@ -27,6 +27,7 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIOrganizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "ids", ids)
 
 	tenant := common.GetTenantFromContext(ctx)
 

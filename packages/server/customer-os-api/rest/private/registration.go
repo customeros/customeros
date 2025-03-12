@@ -335,10 +335,9 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				}
 			}
 
-			span.LogKV("authId", authId)
-			span.LogKV("authUserId", authUserId)
-
 			if authId != "" && authUserId == "" {
+				span.LogKV("authId", authId)
+				span.LogKV("authUserId", authUserId)
 				return nil, fmt.Errorf("authId found but authUserId not found")
 			}
 
@@ -575,7 +574,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	// Handle Google provider
 	if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
 		if isRequestEnablingOAuthSync(signInRequest) {
-			oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+			oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
 			if oauthToken == nil {
 				oauthToken = &postgres_entity.OAuthTokenEntity{}
 			}
@@ -611,7 +610,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			}
 		}
 	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
-		oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+		oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
 		if oauthToken == nil {
 			oauthToken = &postgres_entity.OAuthTokenEntity{}
 		}
@@ -634,6 +633,13 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	} else {
 		tracing.TraceErr(span, fmt.Errorf("unsupported provider: %s", signInRequest.Provider))
 	}
+
+	span.LogKV(
+		"result.email", signInRequest.LoggedInEmail,
+		"result.authUserId", authUserId,
+		"result.currentTenant", currentTenant,
+		"result.defaultTenant", defaultTenant,
+		"result.userId", userId)
 
 	ginContext.JSON(http.StatusOK, gin.H{
 		"email":         signInRequest.LoggedInEmail,

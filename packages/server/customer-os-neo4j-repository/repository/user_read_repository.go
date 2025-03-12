@@ -331,10 +331,10 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 
 	cypher := fmt.Sprintf(`
 			MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant {name: $tenant})
-			WHERE e.email=$email OR e.rawEmail=$email
+			WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
 			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC LIMIT 1`, tenant, tenant)
 	params := map[string]interface{}{
-		"email":  email,
+		"email":  strings.ToLower(email),
 		"tenant": tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -393,7 +393,7 @@ func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, a
 	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := fmt.Sprintf(`MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:%s]->(a:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant {name:$tenant})
-		WHERE lower(e.email)=$email OR lower(e.rawEmail)=$email
+		WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
 		RETURN u`, tenant, tenant, model.AUTHENTICATED_BY.String(), model.HAS_WORKSPACE.String())
 	params := map[string]any{
 		"tenant":     tenant,

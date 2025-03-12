@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -36,7 +37,7 @@ func WithCustomContextFromGinRequest(c *gin.Context, appSource string) context.C
 		AuthUserId: c.GetString("AuthenticatedUserId"),
 		Tenant:     c.GetString("TenantName"),
 		UserId:     c.GetString("UserId"),
-		UserEmail:  c.GetString("UserEmail"),
+		UserEmail:  strings.ToLower(c.GetString("UserEmail")),
 		Roles:      c.GetStringSlice("UserRoles"),
 	}
 	return WithCustomContext(c.Request.Context(), customContext)
