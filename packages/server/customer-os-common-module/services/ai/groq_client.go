@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"time"
@@ -176,6 +177,8 @@ func (c *GroqClient) handleSuccessResponse(ctx context.Context, body []byte) (st
 func (c *GroqClient) handleErrorResponse(ctx context.Context, statusCode int, body []byte) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.handleErrorResponse")
 	defer span.Finish()
+	span.LogFields(log.Int("statusCode", statusCode))
+	span.LogFields(log.String("body", string(body)))
 
 	var errorResponse ErrorResponse
 	if err := json.Unmarshal(body, &errorResponse); err != nil {
@@ -183,6 +186,8 @@ func (c *GroqClient) handleErrorResponse(ctx context.Context, statusCode int, bo
 		tracing.TraceErr(span, err)
 		return err
 	}
+	span.LogFields(log.String("result.errorType", errorResponse.Error.Type))
+	span.LogFields(log.String("result.errorMessage", errorResponse.Error.Message))
 	return fmt.Errorf("%s: %s", errorResponse.Error.Type, errorResponse.Error.Message)
 }
 

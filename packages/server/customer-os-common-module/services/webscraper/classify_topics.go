@@ -17,7 +17,7 @@ import (
 )
 
 func (s *webscraperService) ClassifyWebpageTopics(ctx context.Context, url string, pageContent *string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.ClassifyWebpageTopics")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.ClassifyWebpageTopics")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
