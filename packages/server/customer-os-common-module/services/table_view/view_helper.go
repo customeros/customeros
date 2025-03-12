@@ -633,6 +633,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeOpportunitiesTimeInStage), Width: 100, Visible: true, Name: "Time in Stage", Filter: ``},
 				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOpportunitiesCreatedDate), Width: 100, Visible: true, Name: "Created", Filter: ``},
 				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOpportunitiesNextStep), Width: 100, Visible: true, Name: "Next Step", Filter: ``},
+				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOpportunitiesTasks), Width: 100, Visible: true, Name: "Task", Filter: ``},
 			},
 		}
 	case postgres_entity.TableIDTypeContracts:
