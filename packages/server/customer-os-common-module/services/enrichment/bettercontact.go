@@ -103,8 +103,11 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 				tracing.TraceErr(span, err)
 				return "", "", nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 			}
-			span.LogFields(log.String("result.request_id", existingBetterContactData.RequestID))
+			span.LogFields(log.String("result.bettercontact_request_id", existingBetterContactData.RequestID))
 			return existingBetterContactData.ID, existingBetterContactData.RequestID, &responseBody, nil
+		} else if existingBetterContactData.RequestID != "" {
+			span.LogFields(log.String("result.bettercontact_request_id", existingBetterContactData.RequestID))
+			return existingBetterContactData.ID, existingBetterContactData.RequestID, nil, nil
 		}
 	}
 
