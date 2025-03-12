@@ -66,6 +66,7 @@ func (s *flowService) FlowGetList(ctx context.Context) (*neo4jentity.FlowEntitie
 		entities = append(entities, *e)
 	}
 
+	span.LogFields(log.Int("result.count", len(entities)))
 	return &entities, nil
 }
 

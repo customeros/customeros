@@ -470,7 +470,7 @@ func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject stri
 
 // Flow is the resolver for the flow field.
 func (r *queryResolver) Flow(ctx context.Context, id string) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flows", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Flow", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
@@ -485,14 +485,14 @@ func (r *queryResolver) Flow(ctx context.Context, id string) (*model.Flow, error
 
 // Flows is the resolver for the flows field.
 func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flows", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Flows", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	entities, err := r.Services.CommonServices.FlowService.FlowGetList(ctx)
 	if err != nil || entities == nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "")
+		graphql.AddErrorf(ctx, "failed to get flows")
 		return nil, err
 	}
 	return mapper.MapEntitiesToFlows(entities), nil

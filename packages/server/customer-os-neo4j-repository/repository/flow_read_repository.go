@@ -54,8 +54,10 @@ func (r flowReadRepositoryImpl) GetList(ctx context.Context) ([]*dbtype.Node, er
 		}
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), nil
 }
 

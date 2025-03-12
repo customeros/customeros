@@ -21,6 +21,7 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 		},
 		Name:           entity.Name,
 		Nodes:          entity.Nodes,
+		TableViewDefID: entity.TableViewDefId,
 		Edges:          entity.Edges,
 		FirstStartedAt: entity.FirstStartedAt,
 		Status:         entity.Status,
