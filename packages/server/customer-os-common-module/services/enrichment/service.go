@@ -22,17 +22,18 @@ import (
 )
 
 type enrichmentService struct {
-	log                 logger.Logger
-	config              *config.ExternalServicesConfig
-	cache               *caches.Cache
-	events              *events.EventsService
-	postgres            *postgres_repository.Repositories
-	neo4jRepository     *neo4j_repository.Repositories
-	contactService      interfaces.ContactService
-	domainService       interfaces.DomainService
-	locationService     interfaces.LocationService
-	organizationService interfaces.OrganizationService
-	socialService       interfaces.SocialService
+	log                  logger.Logger
+	config               *config.ExternalServicesConfig
+	cache                *caches.Cache
+	events               *events.EventsService
+	postgres             *postgres_repository.Repositories
+	neo4jRepository      *neo4j_repository.Repositories
+	contactService       interfaces.ContactService
+	domainService        interfaces.DomainService
+	locationService      interfaces.LocationService
+	organizationService  interfaces.OrganizationService
+	socialService        interfaces.SocialService
+	globalContactService interfaces.GlobalContactService
 }
 
 func NewEnrichmentService(
@@ -47,19 +48,21 @@ func NewEnrichmentService(
 	locationService interfaces.LocationService,
 	organizationService interfaces.OrganizationService,
 	socialService interfaces.SocialService,
+	globalContactService interfaces.GlobalContactService,
 ) interfaces.EnrichmentService {
 	return &enrichmentService{
-		log:                 log,
-		config:              config,
-		cache:               cache,
-		events:              events,
-		postgres:            postgres,
-		neo4jRepository:     neo4j,
-		contactService:      contactService,
-		domainService:       domainService,
-		locationService:     locationService,
-		organizationService: organizationService,
-		socialService:       socialService,
+		log:                  log,
+		config:               config,
+		cache:                cache,
+		events:               events,
+		postgres:             postgres,
+		neo4jRepository:      neo4j,
+		contactService:       contactService,
+		domainService:        domainService,
+		locationService:      locationService,
+		organizationService:  organizationService,
+		socialService:        socialService,
+		globalContactService: globalContactService,
 	}
 }
 

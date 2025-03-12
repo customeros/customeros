@@ -20,7 +20,8 @@ type GlobalContactRepository interface {
 	Create(ctx context.Context, contact *postgres_entity.GlobalContact) (*postgres_entity.GlobalContact, error)
 	Update(ctx context.Context, contact *postgres_entity.GlobalContact) (*postgres_entity.GlobalContact, error)
 	GetById(ctx context.Context, id uint64) (*postgres_entity.GlobalContact, error)
-	GetByLinkedInIdentifier(ctx context.Context, linkedInIdentifier string) (*postgres_entity.GlobalContact, error)
+	GetByLinkedInIdentifier(ctx context.Context, linkedInIdentifier string) ([]*postgres_entity.GlobalContact, error)
+	GetByLinkedInAlias(ctx context.Context, linkedInAlias string) ([]*postgres_entity.GlobalContact, error)
 	GetByLinkedInIdentifierAndDomain(ctx context.Context, linkedInIdentifier string, primaryDomain string) (*postgres_entity.GlobalContact, error)
 	GetByWorkEmail(ctx context.Context, workEmail string) (*postgres_entity.GlobalContact, error)
 	GetByWorkEmailAndDomain(ctx context.Context, workEmail string, primaryDomain string) (*postgres_entity.GlobalContact, error)
@@ -99,30 +100,57 @@ func (r *globalContactRepository) Update(ctx context.Context, contact *postgres_
 	return contact, nil
 }
 
-func (r *globalContactRepository) GetByLinkedInIdentifier(ctx context.Context, linkedInIdentifier string) (*postgres_entity.GlobalContact, error) {
+func (r *globalContactRepository) GetByLinkedInIdentifier(ctx context.Context, linkedInIdentifier string) ([]*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByLinkedInIdentifier")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("linkedInIdentifier", linkedInIdentifier))
 
-	var contact postgres_entity.GlobalContact
+	if linkedInIdentifier == "" {
+		span.LogFields(tracingLog.Int("result.count", 0))
+		return nil, nil
+	}
+
+	contacts := make([]*postgres_entity.GlobalContact, 0)
 	result := r.addSortingClauses(
 		r.db.WithContext(ctx).Where("linked_in_identifier = ?", linkedInIdentifier),
-	).First(&contact)
+	).Find(&contacts)
 
 	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
 
-	return &contact, nil
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	return contacts, nil
+}
+
+func (r *globalContactRepository) GetByLinkedInAlias(ctx context.Context, linkedInAlias string) ([]*postgres_entity.GlobalContact, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByLinkedInAlias")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(tracingLog.String("linkedInAlias", linkedInAlias))
+
+	if linkedInAlias == "" {
+		span.LogFields(tracingLog.Int("result.count", 0))
+		return nil, nil
+	}
+
+	contacts := make([]*postgres_entity.GlobalContact, 0)
+	result := r.addSortingClauses(
+		r.db.WithContext(ctx).Where("linked_in_alias = ?", linkedInAlias),
+	).Find(&contacts)
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	return contacts, nil
 }
 
 func (r *globalContactRepository) GetByLinkedInIdentifierAndDomain(ctx context.Context, linkedInIdentifier string, primaryDomain string) (*postgres_entity.GlobalContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByLinkedInIdentifierAndDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(

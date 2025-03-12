@@ -1,9 +1,10 @@
 package neo4j_entity
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"strings"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 )
 
 type ContactProperty string
@@ -14,6 +15,7 @@ const (
 	ContactPropertyEnrichRequestedAt                           ContactProperty = "techEnrichRequestedAt"
 	ContactPropertyEnrichAttempts                              ContactProperty = "techEnrichAttempts"
 	ContactPropertyEnrichedScrapinRecordId                     ContactProperty = "enrichedScrapinRecordId"
+	ContactPropertyEnrichedGlobalContactId                     ContactProperty = "enrichedGlobalContactId"
 	ContactPropertyBettercontactFoundEmailAt                   ContactProperty = "bettercontactFoundEmailAt"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedId   ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedAt   ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
@@ -76,6 +78,7 @@ type ContactEnrichDetails struct {
 	EnrichAttempts                              int64
 	BettercontactFoundEmailAt                   *time.Time // TODO check how it is used
 	EnrichedScrapinRecordId                     string
+	EnrichedGlobalContactId                     string
 	FindWorkEmailWithBetterContactRequestedId   *string
 	FindWorkEmailWithBetterContactRequestedAt   *time.Time
 	FindWorkEmailWithBetterContactCompletedAt   *time.Time

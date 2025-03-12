@@ -133,6 +133,27 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 	return s.Save(ctx, txWithPostCommit, nil, dataFields)
 }
 
+func (s *organizationService) CreateFromGlobalOrganizationByDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, domain string, dataFields data_fields.OrganizationFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CreateFromGlobalOrganizationByDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("domain", domain))
+
+	globalOrganization, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if globalOrganization == nil {
+		err = errors.New(fmt.Sprintf("Global organization with domain %s not found", domain))
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return s.CreateFromGlobalOrganization(ctx, txWithPostCommit, globalOrganization.ID, dataFields)
+}
+
 func (s *organizationService) GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetById")
 	defer span.Finish()

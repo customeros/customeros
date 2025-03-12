@@ -117,6 +117,9 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 	if new.LastName != "" {
 		existing.LastName = new.LastName
 	}
+	if new.Description != "" {
+		existing.Description = new.Description
+	}
 	if new.JobTitle != "" {
 		existing.JobTitle = new.JobTitle
 	}
@@ -203,4 +206,33 @@ func (s *globalContactService) SetWorkEmail(ctx context.Context, id uint64, work
 	}
 
 	return nil
+}
+
+func (s *globalContactService) GetGlobalContactsByLinkedIn(ctx context.Context, linkedIn string) ([]*postgres_entity.GlobalContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.GetGlobalContactsByLinkedIn")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+	span.LogFields(tracingLog.String("linkedIn", linkedIn))
+
+	if linkedIn == "" {
+		span.LogFields(tracingLog.Int("result.count", 0))
+		return nil, nil
+	}
+
+	contacts, err := s.postgres.GlobalContactRepository.GetByLinkedInIdentifier(ctx, linkedIn)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting contacts by linkedin identifier"))
+		return nil, err
+	}
+
+	if len(contacts) == 0 {
+		contacts, err = s.postgres.GlobalContactRepository.GetByLinkedInAlias(ctx, linkedIn)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error getting contacts by linkedin alias"))
+			return nil, err
+		}
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	return contacts, nil
 }
