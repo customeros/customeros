@@ -3,6 +3,7 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -15,6 +16,7 @@ type TaskWriteRepository interface {
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error
 	SetOpportunities(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, opportunityIds []string) error
 	SetUserAssignees(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, userIds []string) error
+	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string) error
 }
 
 type taskWriteRepository struct {
@@ -47,7 +49,8 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 								tsk.subject=$subject,
 								tsk.description=$description,	
 								tsk.status=$status,	
-								tsk.dueAt=$dueAt
+								tsk.dueAt=$dueAt,
+								tsk.hide=$hide
 							WITH tsk, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
 							WHERE $createdByUserId <> ""
@@ -64,6 +67,7 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 		"status":          data.Status.String(),
 		"createdByUserId": utils.IfNotNilString(data.CreatedByUserId),
 		"dueAt":           utils.TimePtrAsAny(data.DueAt),
+		"hide":            false,
 	}
 
 	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
@@ -151,6 +155,22 @@ func (r *taskWriteRepository) SetUserAssignees(ctx context.Context, tx *neo4j.Ma
 		"tenant":  tenant,
 		"taskId":  taskId,
 		"userIds": userIds,
+	}
+
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+}
+
+func (r *taskWriteRepository) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.Hide")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagEntity(span, taskId)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
+		SET tsk.hide = true, tsk.hiddenAt = datetime()`
+	params := map[string]any{
+		"tenant": tenant,
+		"taskId": taskId,
 	}
 
 	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)

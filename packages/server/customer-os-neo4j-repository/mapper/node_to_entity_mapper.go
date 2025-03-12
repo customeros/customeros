@@ -1226,6 +1226,8 @@ func MapDbNodeToTaskEntity(dbNode *dbtype.Node) *neo4j_entity.TaskEntity {
 		Status:      commonenum.DecodeTaskStatus(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyStatus))),
 		Source:      neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertySource))),
 		AppSource:   utils.GetStringPropOrEmpty(props, string(neo4j_entity.TaskPropertyAppSource)),
+		Hide:        utils.GetBoolPropOrFalse(props, string(neo4j_entity.TaskPropertyHide)),
+		HiddenAt:    utils.GetTimePropOrNil(props, string(neo4j_entity.TaskPropertyHiddenAt)),
 	}
 	return &issue
 }

@@ -55,6 +55,24 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 	return mapper.MapEntityToTask(taskEntity), nil
 }
 
+// TaskArchive is the resolver for the task_Archive field.
+func (r *mutationResolver) TaskArchive(ctx context.Context, ids []string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TaskArchive", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.CommonServices.TaskService.HideAll(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to archive tasks")
+		return &model.ActionResponse{Accepted: false}, err
+	}
+
+	return &model.ActionResponse{
+		Accepted: true,
+	}, nil
+}
+
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context, ids []string) ([]*model.Task, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tasks", graphql.GetOperationContext(ctx))
