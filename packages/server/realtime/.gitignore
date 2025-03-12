@@ -36,6 +36,7 @@ realtime-*.tar
 npm-debug.log
 /assets/node_modules/
 /scripts/node_modules/
+/priv/scripts/*
 
 .vscode/
 .elixir_ls/
