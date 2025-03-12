@@ -151,7 +151,7 @@ async function main() {
 
     // Check if we have the required arguments
     if (args.length < 2) {
-      process.stderr.write("Usage: bun run cli.ts <id> <lexicalState>\n");
+      process.stderr.write("Usage: bun run convert_lexical_to_yjs.ts <id> <lexicalState>\n");
       process.exit(1);
     }
 
