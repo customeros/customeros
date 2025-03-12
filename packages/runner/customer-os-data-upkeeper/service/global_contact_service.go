@@ -277,6 +277,10 @@ func (s *globalContactService) sendRequestToBetterContact() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 			} else {
+				if betterContactRequestId == "" {
+					err = errors.New("better contact request id is empty")
+					tracing.TraceErr(innerSpan, err)
+				}
 				// mark contact with enrich requested
 				err = s.commonServices.PostgresRepositories.GlobalContactRepository.MarkBetterContactRequested(innerCtx, globalContact.ID, betterContactRequestId)
 				if err != nil {
