@@ -481,40 +481,37 @@ func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Co
 func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, domain string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("domain", domain))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domain}) RETURN o limit 1`
+	params := map[string]any{
+		"tenant": tenant,
+		"domain": domain,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
-			"tenant": tenant,
-			"domain": domain,
-		}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
-	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
-		return nil, nil
-	}
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
-	if result == nil {
+	if len(result.([]*dbtype.Node)) == 0 {
 		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 	span.LogFields(log.Bool("result.found", true))
-
-	return result.(*dbtype.Node), err
+	return result.([]*dbtype.Node)[0], err
 }
 
 func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error) {

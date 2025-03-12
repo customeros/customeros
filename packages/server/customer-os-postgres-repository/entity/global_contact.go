@@ -12,6 +12,7 @@ type GlobalContact struct {
 	UpdatedAt               time.Time           `gorm:"type:timestamp;default:current_timestamp" json:"updated_at"`
 	FirstName               string              `gorm:"type:varchar(255)" json:"first_name"`
 	LastName                string              `gorm:"type:varchar(255)" json:"last_name"`
+	Description             string              `gorm:"type:text" json:"description"`
 	LinkedInIdentifier      string              `gorm:"type:varchar(255);index:idx_linkedin_identifier" json:"linkedin_identifier"`
 	LinkedInAlias           string              `gorm:"type:varchar(255);index:idx_linkedin_alias" json:"linkedin_alias"`
 	WorkEmail               string              `gorm:"type:varchar(255);index:idx_work_email" json:"work_email,omitempty"`

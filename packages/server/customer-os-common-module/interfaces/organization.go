@@ -23,6 +23,7 @@ type OrganizationService interface {
 	GetOrganizationByDomain(ctx context.Context, domain string, includePrimaryDomainCheck bool) (*neo4j_entity.OrganizationEntity, error)
 
 	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64, dataFields data_fields.OrganizationFields) (string, error)
+	CreateFromGlobalOrganizationByDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, domain string, dataFields data_fields.OrganizationFields) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) (bool, error)
 	UnlinkDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error

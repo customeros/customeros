@@ -2,8 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"strings"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -51,21 +49,19 @@ func (l *AddSocialToContactListener) Handle(ctx context.Context, baseEvent any) 
 		return err
 	}
 
-	if data.Social == "" {
+	if data.SocialUrl == "" {
 		err = errors.New("Social not set on event message")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	socialUrl := data.Social
+	socialId := data.SocialId
 	contactId := event.Event.EntityId
 
-	if strings.Contains(data.Social, "linkedin.com") {
-		err := l.dependencies.CommonServices.EnrichmentService.EnrichContact(ctx, contactId, socialUrl)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	err = l.dependencies.CommonServices.EnrichmentService.EnrichContact(ctx, contactId, socialId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
@@ -83,7 +79,7 @@ func (l *AddSocialToContactListener) validateMessage(ctx context.Context, event 
 		return nil, err
 	}
 
-	if eventDataObj.Social == "" {
+	if eventDataObj.SocialUrl == "" {
 		err := errors.New("Social not set on event message")
 		tracing.TraceErr(span, err)
 		return nil, err

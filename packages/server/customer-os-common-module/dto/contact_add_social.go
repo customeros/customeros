@@ -1,6 +1,6 @@
 package dto
 
 type AddSocialToContact struct {
-	SocialId string `json:"socialId"`
-	Social   string `json:"social"`
+	SocialId  string `json:"socialId"`
+	SocialUrl string `json:"social"`
 }

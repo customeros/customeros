@@ -265,7 +265,7 @@ func InitCommonServices(
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicConfig.Prompts, aiImpl, contactImpl, orgImpl)
-	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl)
+	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl, globalContactImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
 	tasksImpl := task.NewTaskService(log, neo4jRepositories, eventsImpl, userImpl, opportunityImpl)
