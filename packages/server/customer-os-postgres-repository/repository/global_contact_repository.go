@@ -151,6 +151,7 @@ func (r *globalContactRepository) GetByLinkedInAlias(ctx context.Context, linked
 }
 
 func (r *globalContactRepository) GetByLinkedInIdentifierAndDomain(ctx context.Context, linkedInIdentifier string, primaryDomain string) (*postgres_entity.GlobalContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByLinkedInIdentifierAndDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(
@@ -177,7 +178,7 @@ func (r *globalContactRepository) GetByLinkedInIdentifierAndDomain(ctx context.C
 func (r *globalContactRepository) GetByWorkEmail(ctx context.Context, workEmail string) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByWorkEmail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.String("workEmail", workEmail))
 
 	var contact postgres_entity.GlobalContact

@@ -79,7 +79,7 @@ func (l *AddSocialToContactListener) validateMessage(ctx context.Context, event 
 		return nil, err
 	}
 
-	if eventDataObj.Social == "" {
+	if eventDataObj.SocialUrl == "" {
 		err := errors.New("Social not set on event message")
 		tracing.TraceErr(span, err)
 		return nil, err

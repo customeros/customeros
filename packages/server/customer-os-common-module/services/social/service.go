@@ -363,8 +363,8 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 			switch linkWith.Type {
 			case model.CONTACT:
 				err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
-					SocialId: socialId,
-					Social:   socialUrl,
+					SocialId:  socialId,
+					SocialUrl: socialUrl,
 				})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))

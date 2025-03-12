@@ -66,35 +66,6 @@ func (s *globalContactService) findExistingContact(ctx context.Context, contact 
 				return nil, err
 			}
 		}
-	} else {
-		// If no primary domain, try single field searches
-		span.LogFields(tracingLog.String("search_mode", "without_primary_domain"))
-
-		// Try LinkedIn identifier
-		if contact.LinkedInIdentifier != "" {
-			span.LogFields(tracingLog.String("search_by", "linkedin"))
-			existingContact, err = s.postgres.GlobalContactRepository.GetByLinkedInIdentifier(ctx, contact.LinkedInIdentifier)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting contact by LinkedIn identifier"))
-				return nil, err
-			}
-		} else if contact.WorkEmail != "" {
-			// Try work email
-			span.LogFields(tracingLog.String("search_by", "work_email"))
-			existingContact, err = s.postgres.GlobalContactRepository.GetByWorkEmail(ctx, contact.WorkEmail)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting contact by work email"))
-				return nil, err
-			}
-		} else if contact.PersonalEmail != "" {
-			// Try personal email as last resort
-			span.LogFields(tracingLog.String("search_by", "personal_email"))
-			existingContact, err = s.postgres.GlobalContactRepository.GetByPersonalEmail(ctx, contact.PersonalEmail)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting contact by personal email"))
-				return nil, err
-			}
-		}
 	}
 
 	if existingContact != nil && existingContact.LinkedInIdentifier != "" && contact.LinkedInIdentifier != "" && existingContact.LinkedInIdentifier != contact.LinkedInIdentifier {
