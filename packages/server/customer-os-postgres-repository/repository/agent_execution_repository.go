@@ -82,7 +82,7 @@ func (f *agentExecutionRepository) Completed(ctx context.Context, executionID st
 		return nil, err
 	}
 
-	fields := map[string]interface{}{
+	fields := map[string]any{
 		"status":        enum.AgentExecutionCompleted.String(),
 		"completed_at":  utils.NowPtr(),
 		"next_retry_at": nil,
@@ -115,7 +115,7 @@ func (f *agentExecutionRepository) Finish(ctx context.Context, executionID strin
 	err := f.gormDb.
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":        enum.AgentExecutionCompleted.String(),
 			"error_message": nil,
 			"completed_at":  utils.Now(),
@@ -138,7 +138,7 @@ func (f *agentExecutionRepository) Fail(ctx context.Context, executionID, errorM
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
 		Where("status <> ?", enum.AgentExecutionCompleted.String()).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":        enum.AgentExecutionError.String(),
 			"error_message": errorMessage,
 		}).
@@ -166,7 +166,7 @@ func (f *agentExecutionRepository) Pending(ctx context.Context, executionID stri
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
 		Where("status <> ?", enum.AgentExecutionCompleted.String()).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status": enum.AgentExecutionPending.String(),
 			// Don't set completed_at since it's pending
 			// Don't clear error_message in case we want to preserve previous errors
@@ -229,9 +229,7 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionID string, inputError error, stateData map[string]any) (*time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.ScheduleRetry")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagEntity(span, executionID)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
 	if inputError == nil {
 		span.LogFields(log.String("inputError", "nil"))
@@ -245,17 +243,23 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 		return nil, result.Error
 	}
 
+	// Prepare update fields
+	updateFields := map[string]any{
+		"state_data": stateData,
+	}
+
 	// Increment retry count and set next retry time if it's not the first scheduling
 	if execution.NextRetryAt != nil {
-		execution.RetryCount++
+		updateFields["retry_count"] = execution.RetryCount + 1
 	}
-	execution.StateData = stateData
+
+	// Check retry conditions and set appropriate fields
 	if execution.RetryCount != 0 && execution.RetryCount >= execution.MaxRetries {
-		execution.Status = enum.AgentExecutionError
+		updateFields["status"] = enum.AgentExecutionError.String()
 		if inputError != nil {
-			execution.ErrorMessage = utils.StringPtr(inputError.Error())
+			updateFields["error_message"] = inputError.Error()
 		}
-		execution.NextRetryAt = nil
+		updateFields["next_retry_at"] = nil
 	} else {
 		backoff := utils.CalculateExponentialBackoffDelay(execution.RetryCount, utils.BackoffConfig{
 			InitialDelay: 30 * time.Second,
@@ -264,26 +268,39 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 			Jitter:       0.12,
 		})
 		nextRetry := utils.Now().Add(backoff)
-		execution.NextRetryAt = &nextRetry
+		updateFields["next_retry_at"] = nextRetry
 		if inputError != nil {
-			execution.ErrorMessage = utils.StringPtr(inputError.Error())
+			updateFields["error_message"] = inputError.Error()
 		}
-		execution.Status = enum.AgentExecutionRetrying
+		updateFields["status"] = enum.AgentExecutionRetrying.String()
 	}
 
-	err := f.gormDb.Save(execution).Error
-	return execution.NextRetryAt, err
+	// Update the record
+	result = f.gormDb.Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Updates(updateFields)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// reload the record
+	result = f.gormDb.First(execution, "id = ?", executionID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return execution.NextRetryAt, nil
 }
 
 func (f *agentExecutionRepository) SaveAsyncState(ctx context.Context, executionID string, currentStep string, stateData map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.SaveAsyncState")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
 
 	return f.gormDb.Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"current_step": currentStep,
 			"state_data":   stateData,
 			"status":       enum.AgentExecutionPending,
@@ -296,23 +313,28 @@ func (f *agentExecutionRepository) CompleteStep(ctx context.Context, executionID
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("executionID", executionID))
 
+	// First get the current execution to check/initialize checkpoints
 	execution := &postgres_entity.AgentExecution{}
 	err := f.gormDb.First(execution, "id = ?", executionID).Error
 	if err != nil {
 		return err
 	}
 
-	// Initialize checkpoints if nil
-	if execution.Checkpoints == nil {
-		execution.Checkpoints = make(map[string]any)
+	// Initialize or update checkpoints
+	checkpoints := execution.Checkpoints
+	if checkpoints == nil {
+		checkpoints = make(map[string]any)
 	}
+	checkpoints[step] = result
 
-	// Store step completion data
-	execution.Checkpoints[step] = result
-	execution.CurrentStep = "" // Clear current step
-	execution.StateData = nil  // Clear state data since step is complete
-
-	return f.gormDb.Save(execution).Error
+	// Update only the specific fields we want to change
+	return f.gormDb.Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Updates(map[string]any{
+			"checkpoints":  checkpoints,
+			"current_step": "",
+			"state_data":   nil,
+		}).Error
 }
 
 func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID string, goalAchieved bool, impactedId *string) error {
@@ -329,7 +351,7 @@ func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID
 		return err
 	}
 
-	fieldsToUpdate := map[string]interface{}{
+	fieldsToUpdate := map[string]any{
 		"goal_achieved": goalAchieved,
 		"completed_at":  utils.NowPtr(),
 	}
