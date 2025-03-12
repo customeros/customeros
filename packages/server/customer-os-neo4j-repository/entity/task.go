@@ -1,8 +1,9 @@
 package neo4j_entity
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
 type TaskProperty string
@@ -17,6 +18,8 @@ const (
 	TaskPropertyUpdatedAt   TaskProperty = "updatedAt"
 	TaskPropertySource      TaskProperty = "source"
 	TaskPropertyAppSource   TaskProperty = "appSource"
+	TaskPropertyHide        TaskProperty = "hide"
+	TaskPropertyHiddenAt    TaskProperty = "hiddenAt"
 )
 
 type TaskEntity struct {
@@ -30,6 +33,8 @@ type TaskEntity struct {
 	Status      enum.TaskStatus
 	Source      DataSource
 	AppSource   string
+	Hide        bool
+	HiddenAt    *time.Time
 }
 
 type TaskEntities []TaskEntity

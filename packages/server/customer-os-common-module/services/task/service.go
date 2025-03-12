@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -188,6 +189,60 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 	}
 
 	return taskId, nil
+}
+
+func (s *taskService) HideAll(ctx context.Context, ids []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.HideAll")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "ids", ids)
+
+	for _, id := range ids {
+		err := s.Hide(ctx, nil, id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *taskService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.Hide")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, id)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err = s.neo4j.TaskWriteRepository.Hide(ctx, txWithPostCommit.Tx, tenant, id)
+		if err != nil {
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err := s.events.Publisher.PublishFanoutEvent(ctx, id, model.TASK, dto.Archive{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message Archive"))
+			}
+			s.events.Publisher.PublishNotification(ctx, tenant, id, model.TASK, utils.NewEventCompletedDetails().WithDelete())
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }
 
 func (s *taskService) GetById(ctx context.Context, id string) (*neo4jentity.TaskEntity, error) {

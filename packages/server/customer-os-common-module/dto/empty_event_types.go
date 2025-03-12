@@ -6,6 +6,8 @@ type HideContact struct{}
 
 type ShowContact struct{}
 
+type Archive struct{}
+
 type RequestEnrichContact struct{}
 
 type RequestRefreshLastTouchpoint struct{}

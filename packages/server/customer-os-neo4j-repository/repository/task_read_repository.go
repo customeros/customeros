@@ -119,6 +119,7 @@ func (r *taskReadRepository) CountByTenant(ctx context.Context, tenant string) (
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
+				WHERE tsk.hide = false OR tsk.hide IS NULL
 				RETURN count(tsk) as count`
 	params := map[string]any{
 		"tenant": tenant,
@@ -241,7 +242,7 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 		}
 
 		if taskFilterCypher != "" || userAuthorFilterCypher != "" || userAssigneeFilterCypher != "" {
-			countQuery += " WHERE "
+			countQuery += " WHERE (tsk.hide = false OR tsk.hide IS NULL) "
 		}
 
 		countQueryParts := []string{}
@@ -254,7 +255,10 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 		if userAssigneeFilterCypher != "" {
 			countQueryParts = append(countQueryParts, userAssigneeFilterCypher)
 		}
-		countQuery += strings.Join(countQueryParts, " AND ") + ` RETURN count(distinct(tsk))`
+		if len(countQueryParts) > 0 {
+			countQuery += " AND " + strings.Join(countQueryParts, " AND ")
+		}
+		countQuery += ` RETURN count(distinct(tsk))`
 	}
 	//end count region
 
@@ -263,12 +267,12 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task_%s) `, tenant)
 		if userAuthorFilterCypher != "" || (sort != nil && (sort.By == TasksAuthor)) {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (tsk)-[:CREATED_BY]->(ua:User) WITH *`)
+			selectQuery += ` OPTIONAL MATCH (tsk)-[:CREATED_BY]->(ua:User) WITH *`
 		}
 		if userAssigneeFilterCypher != "" || (sort != nil && (sort.By == TasksAssignees)) {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (tsk)-[:ASSIGNED_TO]->(uas:User) WITH *`)
+			selectQuery += ` OPTIONAL MATCH (tsk)-[:ASSIGNED_TO]->(uas:User) WITH *`
 		}
-		selectQuery += ` WHERE 1=1 `
+		selectQuery += ` WHERE (tsk.hide = false OR tsk.hide IS NULL) `
 		if taskFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` AND %s`, taskFilterCypher)
 		}
@@ -480,6 +484,7 @@ func (r *taskReadRepository) GetTasksForOpportunities(ctx context.Context, tenan
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)-[:LINKED_TO]->(opp:Opportunity)
 				WHERE opp.id IN $opportunityIds
+				AND (tsk.hide = false OR tsk.hide IS NULL)
 				RETURN tsk, opp.id`
 	params := map[string]any{
 		"tenant":         tenant,

@@ -1237,6 +1237,7 @@ type ComplexityRoot struct {
 		TagCreate                                  func(childComplexity int, input model.TagInput) int
 		TagDelete                                  func(childComplexity int, id string) int
 		TagUpdate                                  func(childComplexity int, input model.TagUpdateInput) int
+		TaskArchive                                func(childComplexity int, ids []string) int
 		TaskSave                                   func(childComplexity int, input model.TaskInput) int
 		TenantAddBillingProfile                    func(childComplexity int, input model.TenantBillingProfileInput) int
 		TenantUpdateBillingProfile                 func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
@@ -2171,6 +2172,7 @@ type MutationResolver interface {
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
 	TaskSave(ctx context.Context, input model.TaskInput) (*model.Task, error)
+	TaskArchive(ctx context.Context, ids []string) (*model.ActionResponse, error)
 	TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error)
 	TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error)
 	TenantUpdateSettings(ctx context.Context, input *model.TenantSettingsInput) (*model.TenantSettings, error)
@@ -9412,6 +9414,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.TagUpdate(childComplexity, args["input"].(model.TagUpdateInput)), true
+
+	case "Mutation.task_Archive":
+		if e.complexity.Mutation.TaskArchive == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_task_Archive_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TaskArchive(childComplexity, args["ids"].([]string)), true
 
 	case "Mutation.task_Save":
 		if e.complexity.Mutation.TaskSave == nil {
@@ -17506,6 +17520,7 @@ input TagIdOrNameInput {
 
 extend type Mutation {
     task_Save(input: TaskInput!): Task! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    task_Archive(ids: [ID!]!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input TaskInput {
@@ -25060,6 +25075,34 @@ func (ec *executionContext) field_Mutation_tag_Update_argsInput(
 	}
 
 	var zeroVal model.TagUpdateInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_task_Archive_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_task_Archive_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_task_Archive_argsIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["ids"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
 	return zeroVal, nil
 }
 
@@ -80772,6 +80815,99 @@ func (ec *executionContext) fieldContext_Mutation_task_Save(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_task_Archive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_task_Archive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().TaskArchive(rctx, fc.Args["ids"].([]string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.ActionResponse
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.ActionResponse
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.ActionResponse
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_task_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_task_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_tenant_AddBillingProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_tenant_AddBillingProfile(ctx, field)
 	if err != nil {
@@ -131287,6 +131423,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "task_Save":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_task_Save(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "task_Archive":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_task_Archive(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

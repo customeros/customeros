@@ -5,6 +5,7 @@ extend type Query {
 
 extend type Mutation {
     task_Save(input: TaskInput!): Task! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    task_Archive(ids: [ID!]!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input TaskInput {
