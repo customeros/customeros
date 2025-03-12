@@ -228,9 +228,10 @@ type IdentifiedVisitor struct {
 }
 
 func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, page string, endTime time.Time) (IdentifiedVisitor, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "NewWebSessionProducer.processPageView")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.processPageView")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	visitor := IdentifiedVisitor{}
 

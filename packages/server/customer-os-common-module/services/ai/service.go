@@ -146,6 +146,7 @@ func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.A
 func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAIWithRetry")
 	defer span.Finish()
+	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	llmTracker := s.newObservabilityContainer(ctx, span, request)
 
@@ -480,6 +481,7 @@ func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest
 
 	if response == "" {
 		err = s.NewRetryableError("Empty response from Groq", nil)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
