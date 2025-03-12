@@ -3,7 +3,6 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -103,7 +102,7 @@ func (l *WebVisitorIdentifiedListener) handleGoalAchieved(ctx context.Context, a
 	}
 
 	// update execution with goal achieved
-	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, utils.TruePtr())
+	err = l.postgresRepositories.AgentExecutionRepository.GoalAchieved(ctx, agentExecution.ID, true, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
