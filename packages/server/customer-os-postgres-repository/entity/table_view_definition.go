@@ -149,6 +149,7 @@ const (
 	ColumnViewTypeOpportunitiesTimeInStage           ColumnViewType = "OPPORTUNITIES_TIME_IN_STAGE"
 	ColumnViewTypeOpportunitiesCreatedDate           ColumnViewType = "OPPORTUNITIES_CREATED_DATE"
 	ColumnViewTypeOpportunitiesNextStep              ColumnViewType = "OPPORTUNITIES_NEXT_STEP"
+	ColumnViewTypeOpportunitiesTasks                 ColumnViewType = "OPPORTUNITIES_TASKS"
 	ColumnViewTypeContractsName                      ColumnViewType = "CONTRACTS_NAME"
 	ColumnViewTypeContractsEnded                     ColumnViewType = "CONTRACTS_ENDED"
 	ColumnViewTypeContractsPeriod                    ColumnViewType = "CONTRACTS_PERIOD"
