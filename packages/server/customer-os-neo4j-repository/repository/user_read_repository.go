@@ -292,19 +292,24 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetCurrentTenantByUserEmail")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	cypher := `MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
+				WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
+				WITH COALESCE(au.currentTenant, au.defaultTenant) as tenant
+				WHERE tenant IS NOT NULL RETURN tenant`
+	params := map[string]interface{}{
+		"email": strings.ToLower(email),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
-			WHERE e.email=$email OR e.rawEmail=$email
-			WITH COALESCE(au.currentTenant, au.defaultTenant) as tenant
-			WHERE tenant IS NOT NULL RETURN tenant`),
-			map[string]interface{}{
-				"email": email,
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -316,8 +321,11 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 	}
 
 	if len(records.([]string)) == 0 {
+		span.LogFields(log.Bool("result.found", false))
 		return "", nil
 	}
+	span.LogFields(log.Bool("result.found", true))
+	span.LogFields(log.String("result.tenant", records.([]string)[0]))
 	return records.([]string)[0], nil
 }
 
