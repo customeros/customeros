@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -15,6 +16,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+)
+
+const (
+	IPHistoryTTL = 30 * 24 * time.Hour
 )
 
 type IdentifyWebsiteVisitorCapability struct {
@@ -110,14 +116,14 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 	}
 
 	// Get web session
-	websession, err := c.getWebSession(ctx, executionContainer.InputData.WebSessionID)
+	webSession, err := c.getWebSession(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// Check if identity already set
-	identityStatus, err := c.processExistingIdentity(ctx, websession, executionContainer.AgentExecutionID, &result)
+	identityStatus, err := c.processExistingIdentity(ctx, webSession, executionContainer.AgentExecutionID, &result)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
@@ -129,7 +135,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 	}
 
 	// Check if we have identifiable information from other sessions with the same IP
-	identityFromIPStatus, err := c.tryIdentifyFromIPHistory(ctx, websession, executionContainer.AgentExecutionID, &result)
+	identityFromIPStatus, err := c.tryIdentifyFromIPHistory(ctx, webSession, executionContainer.AgentExecutionID, &result)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionError, result, err
@@ -142,7 +148,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 	}
 
 	// Attempt to identify using third-party enrichment services
-	status, output, err := c.tryIdentifyFromEnrichment(ctx, websession, executionContainer.AgentExecutionID, &result)
+	status, output, err := c.tryIdentifyFromEnrichment(ctx, webSession, executionContainer.AgentExecutionID, &result)
 	tracing.LogObjectAsJson(span, "result", output)
 	return status, output, err
 }
@@ -245,11 +251,21 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromIPHistory(
 	if identifiedSession == nil || identifiedSession.Domain == nil || *identifiedSession.Domain == "" {
 		return nil, nil
 	}
+	// If identified session is older that TTL, continue with processing
+	if time.Since(identifiedSession.LastActivity) > IPHistoryTTL {
+		return nil, nil
+	}
 
 	// Identified from IP history
-	result.Domain = *identifiedSession.Domain
-	if identifiedSession.Email != nil && *identifiedSession.Email != "" {
-		result.EmailAddress = *identifiedSession.Email
+	result.Domain = utils.IfNotNilString(identifiedSession.Domain)
+	if utils.IfNotNilString(identifiedSession.Email) != "" {
+		result.EmailAddress = utils.IfNotNilString(identifiedSession.Email)
+	}
+
+	// update current session with identified domain
+	err = c.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, websession.ID, identifiedSession.Domain, nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to set visitor identity")
 	}
 
 	err = c.publishWebVisitorIdentifiedEvent(ctx, agentExecutionID)

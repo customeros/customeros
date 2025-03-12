@@ -146,7 +146,7 @@ func (r *webSessionRepository) FindLastNotification(ctx context.Context, tenant,
 func (r *webSessionRepository) FindLatestSessionWithDomainByIP(ctx context.Context, ipAddress string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLatestSessionWithDomainByIP")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	// Build the query with IP and ensure domain is not null
 	query := r.gormDb.Where("ip = ?", ipAddress).
@@ -158,12 +158,15 @@ func (r *webSessionRepository) FindLatestSessionWithDomainByIP(ctx context.Conte
 	err := query.First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogFields(log.Bool("result.found", false))
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.String("result.sessionId", result.ID))
+	span.LogFields(log.String("result.domain", *result.Domain))
 	return &result, nil
 }
 
