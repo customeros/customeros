@@ -11,3 +11,15 @@ const (
 func (w WebTrackerEvent) String() string {
 	return string(w)
 }
+
+func IsValidWebTrackerEvent(event string) bool {
+	switch event {
+	case WebTrackerPageExit.String():
+		return true
+	case WebTrackerPageView.String():
+		return true
+	case WebTrackerClick.String():
+		return true
+	}
+	return false
+}

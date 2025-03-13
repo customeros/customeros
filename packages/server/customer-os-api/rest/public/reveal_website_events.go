@@ -75,6 +75,13 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 			return
 		}
 
+		// check if the event type is known
+		if !enum.IsValidWebTrackerEvent(trackerData.EventType) {
+			err = fmt.Errorf("unsupported web-tracker event type: %s", trackerData.EventType)
+			tracing.TraceErr(span, err)
+			return
+		}
+
 		if err := h.assignEventToSession(ctx, trackerData); err != nil {
 			tracing.TraceErr(span, err)
 			return
