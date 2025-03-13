@@ -23,6 +23,7 @@ ENV PATH="${BUN_INSTALL}/bin:$PATH"
 WORKDIR /app
 COPY priv priv
 COPY scripts scripts
+RUN mkdir -p priv/scripts
 
 WORKDIR /app/scripts
 RUN bun install
