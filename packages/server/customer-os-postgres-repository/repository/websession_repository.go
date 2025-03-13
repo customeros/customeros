@@ -57,7 +57,7 @@ func (r *webSessionRepository) Create(ctx context.Context, webSessionData postgr
 func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	// Start with a base query
 	query := r.gormDb.Model(&postgres_entity.WebSession{})
@@ -68,6 +68,9 @@ func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSes
 	}
 	if webSessionData.Domain != nil {
 		query = query.Where("domain = ?", *webSessionData.Domain)
+	}
+	if webSessionData.LastEventType != "" {
+		query = query.Where("last_event_type = ?", webSessionData.LastEventType)
 	}
 
 	// Explicitly add the is_active condition
@@ -90,15 +93,17 @@ func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSes
 }
 
 func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Find")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindSession")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
+	span.LogFields(log.Int("lookbackPeriodInMins", *lookbackPeriodInMins))
 
 	query := r.gormDb.Where(&webSessionData).Order("last_activity DESC")
 
 	// Add lookback period if provided
 	if lookbackPeriodInMins != nil {
-		lookbackDate := time.Now().Add(-time.Duration(*lookbackPeriodInMins) * time.Minute)
+		lookbackDate := utils.Now().Add(-time.Duration(*lookbackPeriodInMins) * time.Minute)
 		query = query.Where("last_activity > ?", lookbackDate)
 	}
 

@@ -75,8 +75,17 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 			return
 		}
 
-		if err := h.assignEventToSession(ctx, trackerData); err != nil {
+		// check if the event type is known
+		if !enum.IsValidWebTrackerEvent(trackerData.EventType) {
+			err = fmt.Errorf("unsupported web-tracker event type: %s", trackerData.EventType)
 			tracing.TraceErr(span, err)
+			return
+		}
+
+		if err := h.assignEventToSession(ctx, trackerData); err != nil {
+			if trackerData.EventType != enum.WebTrackerPageExit.String() {
+				tracing.TraceErr(span, err)
+			}
 			return
 		}
 
@@ -212,7 +221,7 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 		return err
 	}
 
-	if session == nil && trackerData.EventType == enum.WebTrackerPageView.String() {
+	if session == nil && (trackerData.EventType == enum.WebTrackerPageView.String() || trackerData.EventType == enum.WebTrackerClick.String()) {
 		session, err = h.createWebSession(ctx, trackerData)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -222,7 +231,9 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 
 	if session == nil {
 		err = errors.New("session not found and not created")
-		tracing.TraceErr(span, err)
+		if trackerData.EventType != enum.WebTrackerPageExit.String() {
+			tracing.TraceErr(span, err)
+		}
 		return err
 	}
 
