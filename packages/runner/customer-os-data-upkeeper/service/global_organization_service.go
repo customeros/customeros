@@ -74,7 +74,7 @@ func (s *globalOrganizationService) SyncDataIntoGlobalOrganizations() {
 }
 
 func (s *globalOrganizationService) EnrichGlobalOrganization() {
-	s.enrichName()
+	s.enrichNames()
 	s.enrichIndustries()
 	s.enrichDescriptions()
 }
@@ -726,9 +726,13 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 		return
 	}
 
+	span.LogFields(log.Float64("result.confidence", aiOutput.Confidence))
+
 	if aiOutput.Confidence < 0.5 {
 		return
 	}
+
+	span.LogFields(log.String("result.code", aiOutput.Code))
 
 	// get industry for organization
 	industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
@@ -846,6 +850,8 @@ func (s *globalOrganizationService) enrichDescription(ctx context.Context, globa
 		aiOutput.Description = utils.FirstNotEmptyString(globalOrganization.Description, globalOrganization.SourceDescription3, globalOrganization.SourceDescription1, globalOrganization.SourceDescription4, globalOrganization.SourceDescription2)
 	}
 
+	span.LogFields(log.String("result.description", aiOutput.Description))
+
 	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(ctx, globalOrganization.ID, aiOutput.Description)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error setting description"))
@@ -853,11 +859,11 @@ func (s *globalOrganizationService) enrichDescription(ctx context.Context, globa
 	}
 }
 
-func (s *globalOrganizationService) enrichName() {
+func (s *globalOrganizationService) enrichNames() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichName")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichNames")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -879,66 +885,73 @@ func (s *globalOrganizationService) enrichName() {
 
 	// process records
 	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichName.Record")
-		defer recordSpan.Finish()
-		recordSpan.LogFields(log.Uint64("record.id", record.ID))
+		s.enrichName(ctx, record)
+	}
+}
 
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkNameEnrichRequested(recordCtx, record.ID)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
-		}
+func (s *globalOrganizationService) enrichName(ctx context.Context, globalOrganization *postgres_entity.GlobalOrganization) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichName")
+	defer span.Finish()
+	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
-		url := "https://" + record.PrimaryDomain
-		pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
+	// mark record as processed initially to not process same record again, even if error occurs
+	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkNameEnrichRequested(ctx, globalOrganization.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+		s.log.Errorf("Error marking record as processed: %s", err.Error())
+		return
+	}
 
-		var sp strings.Builder
-		sp.WriteString("I am going to provide you with metadata about a company, which will include:\n")
-		sp.WriteString("•	A current/partial company name\n")
-		sp.WriteString("•	The company's website\n")
-		sp.WriteString("•	Scraped page content from the company's website (if available)\n")
-		sp.WriteString("Your task is to identify and return the commonly recognized company name in English, along with a confidence score between 0 and 1.\n")
-		sp.WriteString("The confidence score should reflect how certain you are that the name your return accurately reflects the commonly recognized company name in English, with a score of 1 indicating absolute confidence.\n")
-		sp.WriteString("SPECIAL INSTRUCTIONS:\n")
-		sp.WriteString("If the business is more commonly recognized by a brand name e.g., Apple instead of Apple Inc., return that simpler, branded name.\n")
-		sp.WriteString("Remove all suffixes like Inc, Ltd, LLC, Corp, etc\n")
-		sp.WriteString("Return the name in title case EXCEPT when the recognized brand name is spelled in uppercase e.g. UPS or HSBC, or the commonly recognized brand starts with a lower case e.g. ebay\n")
+	url := "https://" + globalOrganization.PrimaryDomain
+	pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
 
-		systemPrompt := sp.String()
+	var sp strings.Builder
+	sp.WriteString("I am going to provide you with metadata about a company, which will include:\n")
+	sp.WriteString("•	A current/partial company name\n")
+	sp.WriteString("•	The company's website\n")
+	sp.WriteString("•	Scraped page content from the company's website (if available)\n")
+	sp.WriteString("Your task is to identify and return the commonly recognized company name in English, along with a confidence score between 0 and 1.\n")
+	sp.WriteString("The confidence score should reflect how certain you are that the name your return accurately reflects the commonly recognized company name in English, with a score of 1 indicating absolute confidence.\n")
+	sp.WriteString("SPECIAL INSTRUCTIONS:\n")
+	sp.WriteString("If the business is more commonly recognized by a brand name e.g., Apple instead of Apple Inc., return that simpler, branded name.\n")
+	sp.WriteString("Remove all suffixes like Inc, Ltd, LLC, Corp, etc\n")
+	sp.WriteString("Return the name in title case EXCEPT when the recognized brand name is spelled in uppercase e.g. UPS or HSBC, or the commonly recognized brand starts with a lower case e.g. ebay\n")
 
-		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name as we currently have it: %s\n", record.Name))
-		p.WriteString(fmt.Sprintf("Webpage url: %s\n", url))
-		if pageContent != "" {
-			p.WriteString("--- Webpage content --- \n")
-			p.WriteString(pageContent)
-		}
-		prompt := p.String()
+	systemPrompt := sp.String()
 
-		// ask AI for concise description
-		temperature := float32(0.1)
-		aiOutput, err := s.commonServices.AIService.AskAIForCompanyName(ctx, interfaces.AskAIRequest{
-			Model:            enum.AIModelLlama8B,
-			SystemPrompt:     &systemPrompt,
-			Prompt:           &prompt,
-			ModelTemperature: &temperature,
-		})
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
-			continue
-		}
+	var p strings.Builder
+	p.WriteString(fmt.Sprintf("Company name as we currently have it: %s\n", globalOrganization.Name))
+	p.WriteString(fmt.Sprintf("Webpage url: %s\n", url))
+	if pageContent != "" {
+		p.WriteString("--- Webpage content --- \n")
+		p.WriteString(pageContent)
+	}
+	prompt := p.String()
 
-		if aiOutput.Confidence < 0.5 {
-			continue
-		}
+	// ask AI for concise description
+	temperature := float32(0.1)
+	aiOutput, err := s.commonServices.AIService.AskAIForCompanyName(ctx, interfaces.AskAIRequest{
+		Model:            enum.AIModelLlama8B,
+		SystemPrompt:     &systemPrompt,
+		Prompt:           &prompt,
+		ModelTemperature: &temperature,
+		OutputFormat:     enum.AIOutputText,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		return
+	}
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetName(recordCtx, record.ID, aiOutput.Name)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting name"))
-			continue
-		}
+	span.LogFields(log.String("result.confidence", fmt.Sprintf("%f", aiOutput.Confidence)))
+	if aiOutput.Confidence < 0.5 {
+		return
+	}
+
+	span.LogFields(log.String("result.name", aiOutput.Name))
+	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetName(ctx, globalOrganization.ID, aiOutput.Name)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error setting name"))
+		return
 	}
 }
 
