@@ -2,6 +2,7 @@ package postgres_repository
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
@@ -68,9 +69,10 @@ func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData
 }
 
 func (r *webTrackerEventsRepository) FindEventsForPageVisit(ctx context.Context, sessionId, page string) ([]postgres_entity.WebTrackerEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindEventsForSession")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindEventsForPageVisit")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("sessionId", sessionId, "page", page)
 
 	if sessionId == "" {
 		return nil, errors.New("sessionId cannot be empty")
@@ -101,5 +103,6 @@ func (r *webTrackerEventsRepository) FindEventsForPageVisit(ctx context.Context,
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(results)))
 	return results, nil
 }

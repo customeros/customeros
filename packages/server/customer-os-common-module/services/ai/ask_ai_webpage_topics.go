@@ -16,6 +16,7 @@ import (
 func (s *aiService) AskAIForWebpageTopics(ctx context.Context, request interfaces.AskAIRequest) ([]data_fields.Topic, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForWebpageTopics")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	err := s.validateAIRequest(ctx, &request)

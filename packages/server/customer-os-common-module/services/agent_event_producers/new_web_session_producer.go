@@ -3,6 +3,7 @@ package agent_producers
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"sort"
 	"strings"
 	"time"
@@ -232,6 +233,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("sessionId", sessionId), log.String("page", page), log.String("endTime", endTime.String()))
 
 	visitor := IdentifiedVisitor{}
 
