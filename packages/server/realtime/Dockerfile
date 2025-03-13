@@ -25,6 +25,7 @@ COPY priv priv
 COPY scripts scripts
 
 WORKDIR /app/scripts
+RUN bun install
 RUN bun build --compile convert_lexical_to_yjs.ts --output convert_lexical_to_yjs
 RUN mv convert_lexical_to_yjs /app/priv/scripts/
 
