@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -74,8 +75,8 @@ func (s *globalOrganizationService) SyncDataIntoGlobalOrganizations() {
 
 func (s *globalOrganizationService) EnrichGlobalOrganization() {
 	s.enrichName()
-	s.enrichIndustry()
-	s.enrichDescription()
+	s.enrichIndustries()
+	s.enrichDescriptions()
 }
 
 func (s *globalOrganizationService) ExtractWebpageLinks() {
@@ -642,11 +643,11 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	return nil
 }
 
-func (s *globalOrganizationService) enrichIndustry() {
+func (s *globalOrganizationService) enrichIndustries() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustries")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -668,27 +669,31 @@ func (s *globalOrganizationService) enrichIndustry() {
 
 	// process records
 	for _, record := range records {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry.Record")
-		defer span.Finish()
-		span.LogFields(log.Uint64("record.id", record.ID))
+		s.enrichIndustry(ctx, record)
+	}
+}
+func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry")
+	defer span.Finish()
+	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, record.ID)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
-		}
+	// mark globalOrganization as processed initially to not process same globalOrganization again, even if error occurs
+	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, globalOrganization.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking globalOrganization as processed"))
+		s.log.Errorf("Error marking globalOrganization as processed: %s", err.Error())
+		return
+	}
 
-		url := "https://" + record.PrimaryDomain
-		scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
-		}
+	url := "https://" + globalOrganization.PrimaryDomain
+	scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
 
-		// Construct the prompt
-		systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from their homepage (if available).
+	// Construct the prompt
+	systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from their homepage (if available).
         Your job is to classify the NAICS industry code the company belongs to based on the data provided.
         Return only the single most specific and appropriate NAICS code (digits only, e.g. "541511") for the company. 
 
@@ -697,61 +702,61 @@ func (s *globalOrganizationService) enrichIndustry() {
         - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
         `
 
-		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name: %s\n", record.Name))
-		p.WriteString(fmt.Sprintf("Website: %s\n", url))
-		p.WriteString(fmt.Sprintf("Company description: %s\n", record.Description))
-		if scrapedPage != "" {
-			p.WriteString("---Homepage content---\n")
-			p.WriteString(scrapedPage)
-		}
-		prompt := p.String()
+	var p strings.Builder
+	p.WriteString(fmt.Sprintf("Company name: %s\n", globalOrganization.Name))
+	p.WriteString(fmt.Sprintf("Website: %s\n", url))
+	p.WriteString(fmt.Sprintf("Company description: %s\n", globalOrganization.Description))
+	if scrapedPage != "" {
+		p.WriteString("---Homepage content---\n")
+		p.WriteString(scrapedPage)
+	}
+	prompt := p.String()
 
-		temperature := float32(0.1)
-		// ask AI for NAICS code
-		aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
-			Model:            enum.AIModelAnthropicHaiku,
-			SystemPrompt:     &systemPrompt,
-			Prompt:           &prompt,
-			ModelTemperature: &temperature,
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
-			continue
-		}
+	temperature := float32(0.1)
+	// ask AI for NAICS code
+	aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
+		Model:            enum.AIModelAnthropicHaiku,
+		SystemPrompt:     &systemPrompt,
+		Prompt:           &prompt,
+		ModelTemperature: &temperature,
+		OutputFormat:     enum.AIOutputText,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		return
+	}
 
-		if aiOutput.Confidence < 0.5 {
-			continue
-		}
+	if aiOutput.Confidence < 0.5 {
+		return
+	}
 
-		// get industry for organization
-		industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
-			s.log.Errorf("Error getting industry by code: %s", err.Error())
-			continue
-		}
+	// get industry for organization
+	industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
+		s.log.Errorf("Error getting industry by code: %s", err.Error())
+		return
+	}
 
-		if industryEntity == nil {
-			span.LogFields(log.Bool("result.industryFound", false))
-			continue
-		}
+	if industryEntity == nil {
+		span.LogFields(log.Bool("result.industryFound", false))
+		return
+	}
 
-		span.LogFields(log.Bool("result.industryFound", true))
+	span.LogFields(log.Bool("result.industryFound", true))
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, record.ID, industryEntity.Code, industryEntity.Name)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
-			continue
-		}
+	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, globalOrganization.ID, industryEntity.Code, industryEntity.Name)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
+		return
 	}
 }
 
-func (s *globalOrganizationService) enrichDescription() {
+func (s *globalOrganizationService) enrichDescriptions() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescription")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescriptions")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -773,73 +778,78 @@ func (s *globalOrganizationService) enrichDescription() {
 
 	// process records
 	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichDescription.Record")
-		defer recordSpan.Finish()
-		recordSpan.LogFields(log.Uint64("record.id", record.ID))
+		s.enrichDescription(ctx, record)
+	}
+}
 
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkDescriptionEnrichRequested(recordCtx, record.ID)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
+func (s *globalOrganizationService) enrichDescription(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichDescription")
+	defer span.Finish()
+	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
+
+	// mark record as processed initially to not process same record again, even if error occurs
+	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkDescriptionEnrichRequested(ctx, globalOrganization.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+		s.log.Errorf("Error marking record as processed: %s", err.Error())
+		return
+	}
+
+	url := "https://" + globalOrganization.PrimaryDomain
+	pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	// prepare Anthropic prompt
+	var descLines []string
+	descriptions := []string{globalOrganization.Description, globalOrganization.SourceDescription1, globalOrganization.SourceDescription2, globalOrganization.SourceDescription3, globalOrganization.SourceDescription4, globalOrganization.SourceDescription5}
+	for i, d := range descriptions {
+		if strings.TrimSpace(d) != "" {
+			descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
 		}
+	}
 
-		url := "https://" + record.PrimaryDomain
-		pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-
-		// prepare Anthropic prompt
-		var descLines []string
-		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
-		for i, d := range descriptions {
-			if strings.TrimSpace(d) != "" {
-				descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
-			}
-		}
-
-		// Construct the prompt
-		systemPrompt := `I am going to provide you metadata about a company, including the company name, website url, various descriptions from social media, and scraped content from their homepage (if available).  Your job is to write a clear, direct description of the company that explains who they serve and their revenue model.  
+	// Construct the prompt
+	systemPrompt := `I am going to provide you metadata about a company, including the company name, website url, various descriptions from social media, and scraped content from their homepage (if available).  Your job is to write a clear, direct description of the company that explains who they serve and their revenue model.  
 
         Please return a single paragraph (max 300 characters), in American English.
         No marketing speak or jargon.`
 
-		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name: %s\n", record.Name))
-		p.WriteString(fmt.Sprintf("Company website: %s\n", url))
-		for _, desc := range descLines {
-			p.WriteString(desc)
-		}
-		if pageContent != "" {
-			p.WriteString("---Scraped homepage content---\n")
-			p.WriteString(pageContent)
-		}
-		prompt := p.String()
+	var p strings.Builder
+	p.WriteString(fmt.Sprintf("Company name: %s\n", globalOrganization.Name))
+	p.WriteString(fmt.Sprintf("Company website: %s\n", url))
+	for _, desc := range descLines {
+		p.WriteString(desc)
+	}
+	if pageContent != "" {
+		p.WriteString("---Scraped homepage content---\n")
+		p.WriteString(pageContent)
+	}
+	prompt := p.String()
 
-		// ask AI for concise description
-		temperature := float32(1.0)
-		aiOutput, err := s.commonServices.AIService.AskAIForCompanyDescription(ctx, interfaces.AskAIRequest{
-			Model:            enum.AIModelAnthropicHaiku,
-			SystemPrompt:     &systemPrompt,
-			Prompt:           &prompt,
-			ModelTemperature: &temperature,
-		})
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
-			continue
-		}
+	// ask AI for concise description
+	temperature := float32(1.0)
+	aiOutput, err := s.commonServices.AIService.AskAIForCompanyDescription(ctx, interfaces.AskAIRequest{
+		Model:            enum.AIModelAnthropicHaiku,
+		SystemPrompt:     &systemPrompt,
+		Prompt:           &prompt,
+		ModelTemperature: &temperature,
+		OutputFormat:     enum.AIOutputText,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		return
+	}
 
-		if aiOutput.Description == "" {
-			aiOutput.Description = utils.FirstNotEmptyString(record.Description, record.SourceDescription3, record.SourceDescription1, record.SourceDescription4, record.SourceDescription2)
-		}
+	if aiOutput.Description == "" {
+		aiOutput.Description = utils.FirstNotEmptyString(globalOrganization.Description, globalOrganization.SourceDescription3, globalOrganization.SourceDescription1, globalOrganization.SourceDescription4, globalOrganization.SourceDescription2)
+	}
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(recordCtx, record.ID, aiOutput.Description)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting description"))
-			continue
-		}
+	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(ctx, globalOrganization.ID, aiOutput.Description)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error setting description"))
+		return
 	}
 }
 
