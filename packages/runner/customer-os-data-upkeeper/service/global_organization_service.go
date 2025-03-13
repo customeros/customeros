@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -74,7 +75,7 @@ func (s *globalOrganizationService) SyncDataIntoGlobalOrganizations() {
 
 func (s *globalOrganizationService) EnrichGlobalOrganization() {
 	s.enrichName()
-	s.enrichIndustry()
+	s.enrichIndustries()
 	s.enrichDescription()
 }
 
@@ -642,11 +643,11 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	return nil
 }
 
-func (s *globalOrganizationService) enrichIndustry() {
+func (s *globalOrganizationService) enrichIndustries() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustries")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -668,27 +669,31 @@ func (s *globalOrganizationService) enrichIndustry() {
 
 	// process records
 	for _, record := range records {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry.Record")
-		defer span.Finish()
-		span.LogFields(log.Uint64("record.id", record.ID))
+		s.enrichIndustry(ctx, record)
+	}
+}
+func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry")
+	defer span.Finish()
+	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, record.ID)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
-		}
+	// mark globalOrganization as processed initially to not process same globalOrganization again, even if error occurs
+	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, globalOrganization.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking globalOrganization as processed"))
+		s.log.Errorf("Error marking globalOrganization as processed: %s", err.Error())
+		return
+	}
 
-		url := "https://" + record.PrimaryDomain
-		scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
-		}
+	url := "https://" + globalOrganization.PrimaryDomain
+	scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
 
-		// Construct the prompt
-		systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from their homepage (if available).
+	// Construct the prompt
+	systemPrompt := `I'm going to provide you metadata about a company, including the company name, website url, description, and content scraped from their homepage (if available).
         Your job is to classify the NAICS industry code the company belongs to based on the data provided.
         Return only the single most specific and appropriate NAICS code (digits only, e.g. "541511") for the company. 
 
@@ -697,53 +702,53 @@ func (s *globalOrganizationService) enrichIndustry() {
         - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
         `
 
-		var p strings.Builder
-		p.WriteString(fmt.Sprintf("Company name: %s\n", record.Name))
-		p.WriteString(fmt.Sprintf("Website: %s\n", url))
-		p.WriteString(fmt.Sprintf("Company description: %s\n", record.Description))
-		if scrapedPage != "" {
-			p.WriteString("---Homepage content---\n")
-			p.WriteString(scrapedPage)
-		}
-		prompt := p.String()
+	var p strings.Builder
+	p.WriteString(fmt.Sprintf("Company name: %s\n", globalOrganization.Name))
+	p.WriteString(fmt.Sprintf("Website: %s\n", url))
+	p.WriteString(fmt.Sprintf("Company description: %s\n", globalOrganization.Description))
+	if scrapedPage != "" {
+		p.WriteString("---Homepage content---\n")
+		p.WriteString(scrapedPage)
+	}
+	prompt := p.String()
 
-		temperature := float32(0.1)
-		// ask AI for NAICS code
-		aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
-			Model:            enum.AIModelAnthropicHaiku,
-			SystemPrompt:     &systemPrompt,
-			Prompt:           &prompt,
-			ModelTemperature: &temperature,
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
-			continue
-		}
+	temperature := float32(0.1)
+	// ask AI for NAICS code
+	aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
+		Model:            enum.AIModelAnthropicHaiku,
+		SystemPrompt:     &systemPrompt,
+		Prompt:           &prompt,
+		ModelTemperature: &temperature,
+		OutputFormat:     enum.AIOutputText,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		return
+	}
 
-		if aiOutput.Confidence < 0.5 {
-			continue
-		}
+	if aiOutput.Confidence < 0.5 {
+		return
+	}
 
-		// get industry for organization
-		industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
-			s.log.Errorf("Error getting industry by code: %s", err.Error())
-			continue
-		}
+	// get industry for organization
+	industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
+		s.log.Errorf("Error getting industry by code: %s", err.Error())
+		return
+	}
 
-		if industryEntity == nil {
-			span.LogFields(log.Bool("result.industryFound", false))
-			continue
-		}
+	if industryEntity == nil {
+		span.LogFields(log.Bool("result.industryFound", false))
+		return
+	}
 
-		span.LogFields(log.Bool("result.industryFound", true))
+	span.LogFields(log.Bool("result.industryFound", true))
 
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, record.ID, industryEntity.Code, industryEntity.Name)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
-			continue
-		}
+	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, globalOrganization.ID, industryEntity.Code, industryEntity.Name)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
+		return
 	}
 }
 
