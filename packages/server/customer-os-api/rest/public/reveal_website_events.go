@@ -83,7 +83,9 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 		}
 
 		if err := h.assignEventToSession(ctx, trackerData); err != nil {
-			tracing.TraceErr(span, err)
+			if trackerData.EventType != enum.WebTrackerPageExit.String() {
+				tracing.TraceErr(span, err)
+			}
 			return
 		}
 
@@ -229,7 +231,9 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 
 	if session == nil {
 		err = errors.New("session not found and not created")
-		tracing.TraceErr(span, err)
+		if trackerData.EventType != enum.WebTrackerPageExit.String() {
+			tracing.TraceErr(span, err)
+		}
 		return err
 	}
 
