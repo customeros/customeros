@@ -21,6 +21,19 @@ ENV PATH="${BUN_INSTALL}/bin:$PATH"
 
 # prepare build dir
 WORKDIR /app
+COPY priv priv
+COPY scripts scripts
+RUN mkdir -p priv/scripts
+
+WORKDIR /app/scripts
+RUN bun install
+RUN bun build --compile convert_lexical_to_yjs.ts --output convert_lexical_to_yjs
+RUN ls -la
+RUN ls -la /app/priv/
+RUN ls -la /app/priv/scripts
+RUN mv convert_lexical_to_yjs /app/priv/scripts/
+
+WORKDIR /app
 
 # install hex + rebar
 RUN mix local.hex --force && \
@@ -40,10 +53,8 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
-COPY priv priv
+# COPY priv priv
 COPY lib lib
-COPY scripts scripts
-RUN cd scripts && bun install && bun compile
 
 # COPY assets assets
 
