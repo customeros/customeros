@@ -2,4 +2,4 @@
 set -eu
 
 cd -P -- "$(dirname -- "$0")"
-./realtime eval Realtime.Release.migrate && PHX_SERVER=true exec ./realtime start
+PHX_SERVER=true exec ./realtime start
