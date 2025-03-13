@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -20,6 +21,8 @@ func (s *webscraperService) ClassifyWebpageTopics(ctx context.Context, url strin
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.ClassifyWebpageTopics")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("url", url))
+	tracing.LogObjectAsJson(span, "pageContent", pageContent)
 
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
 
@@ -74,6 +77,7 @@ The confidence score should reflect how certain you are that the topic is releva
 		return nil, err
 	}
 	if topics == nil {
+		span.LogFields(log.String("result", "no topics returned"))
 		return nil, nil
 	}
 
@@ -84,6 +88,7 @@ The confidence score should reflect how certain you are that the topic is releva
 		tracing.TraceErr(span, err)
 	}
 
+	tracing.LogObjectAsJson(span, "result.topics", cleanTopics)
 	return cleanTopics, nil
 }
 

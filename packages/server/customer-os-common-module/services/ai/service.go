@@ -114,6 +114,7 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.AskAIRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.validateAIRequest")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
 	if request.Prompt == nil {
@@ -138,6 +139,25 @@ func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.A
 	if request.Retries == nil {
 		maxRetries := MaxAttempts
 		request.Retries = &maxRetries
+	}
+
+	// If JSON output is requested, enhance the system prompt with JSON validation requirements
+	if request.OutputFormat == enum.AIOutputJson && request.SystemPrompt != nil {
+		enhancedPrompt := *request.SystemPrompt + `
+
+CRITICAL JSON REQUIREMENTS:
+1. The response must be complete, valid JSON
+2. Always include ALL closing brackets and braces
+3. Do not truncate the JSON structure
+4. Before responding, validate that your JSON is complete and properly closed
+5. Do not include any text outside of the JSON object
+
+VALIDATION STEPS:
+1. Generate your response
+2. Verify all opening brackets/braces have matching closing ones
+3. Confirm the JSON structure is complete
+4. Only then return the response`
+		request.SystemPrompt = &enhancedPrompt
 	}
 
 	return nil

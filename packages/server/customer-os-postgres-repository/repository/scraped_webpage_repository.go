@@ -3,6 +3,8 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -83,12 +85,13 @@ func (r *scrapedWebpageRepository) Save(ctx context.Context, webpageData postgre
 }
 
 func (r *scrapedWebpageRepository) GetWebpage(ctx context.Context, url string, lookbackInDays int) (*postgres_entity.ScrapedWebpage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetWebpage")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.GetWebpage")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("url", url, "lookbackInDays", lookbackInDays)
 
 	// Calculate the cutoff date
-	cutoffDate := time.Now().AddDate(0, 0, -lookbackInDays)
+	cutoffDate := utils.Now().AddDate(0, 0, -lookbackInDays)
 
 	var record postgres_entity.ScrapedWebpage
 	err := r.gormDb.
@@ -98,13 +101,13 @@ func (r *scrapedWebpageRepository) GetWebpage(ctx context.Context, url string, l
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogFields(log.Bool("result.found", false))
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	tracing.LogObjectAsJson(span, "webpage", record)
-
+	tracing.LogObjectAsJson(span, "result.webpage", record)
 	return &record, nil
 }
 
