@@ -17,11 +17,11 @@ end
 
 jeager_host = System.get_env("JAEGER_AGENT_HOST", "localhost")
 jeager_port = String.to_integer(System.get_env("JAEGER_AGENT_PORT", "4318"))
-postgres_host = System.get_env("POSTGRES_POOL_HOST", "localhost")
-postgres_port = String.to_integer(System.get_env("POSTGRES_POOL_PORT", "5432"))
-postgres_username = System.get_env("POSTGRES_POOL_USER", "postgres")
-postgres_password = System.get_env("POSTGRES_POOL_PASSWORD", "password")
-postgres_database = System.get_env("POSTGRES_POOL_DB", "realtime")
+postgres_host = System.get_env("POSTGRES_HOST", "localhost")
+postgres_port = String.to_integer(System.get_env("POSTGRES_PORT", "5432"))
+postgres_username = System.get_env("POSTGRES_USER", "postgres")
+postgres_password = System.get_env("POSTGRES_PASSWORD", "password")
+postgres_database = System.get_env("POSTGRES_DB", "realtime")
 
 config :realtime, Realtime.Repo,
   username: postgres_username,
