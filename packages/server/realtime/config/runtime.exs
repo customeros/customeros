@@ -32,7 +32,7 @@ config :realtime, Realtime.Repo,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10,
-  ssl: true,
+  ssl: config_env() == :prod,
   ssl_opts: [verify: :verify_none]
 
 config :opentelemetry,
