@@ -346,17 +346,16 @@ func (h *MailstackHandler) GetDomains() gin.HandlerFunc {
 			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
 				errorResponse.Error = "Unknown error occurred"
 			}
+			tracing.TraceErr(span, errors.New(errorResponse.Error))
 
 			// For 500 errors, use a generic message
-			if resp.StatusCode == http.StatusInternalServerError {
+			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
 				message := "Internal server error"
-				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 
 			// For other errors, propagate the status code and message from Mailstack
-			tracing.TraceErr(span, errors.New(errorResponse.Error))
 			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
 			return
 		}
@@ -439,17 +438,16 @@ func (h *MailstackHandler) RecommendDomain() gin.HandlerFunc {
 			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
 				errorResponse.Error = "Unknown error occurred"
 			}
+			tracing.TraceErr(span, errors.New(errorResponse.Error))
 
 			// For 500 errors, use a generic message
-			if resp.StatusCode == http.StatusInternalServerError {
+			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
 				message := "Internal server error"
-				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 
 			// For other errors, propagate the status code and message from Mailstack
-			tracing.TraceErr(span, errors.New(errorResponse.Error))
 			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
 			return
 		}
