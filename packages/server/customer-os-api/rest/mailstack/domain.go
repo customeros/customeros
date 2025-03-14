@@ -2,6 +2,7 @@
 package mailstack
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -303,34 +304,70 @@ func (h *MailstackHandler) GetDomains() gin.HandlerFunc {
 			return
 		}
 
-		// get all active domains from postgres
-		activeDomainRecords, err := h.services.Repositories.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
+		// Create request to Mailstack API
+		req, err := http.NewRequestWithContext(ctx, "GET", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl+"/v1/domains", nil)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving domains"))
-			message := "Unable to retrieve domains"
+			message := "Unable to create request to Mailstack API"
+			tracing.TraceErr(span, errors.Wrap(err, message))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		response := DomainsResponse{
-			Domains: make([]DomainRecord, 0, len(activeDomainRecords)),
+		// Add required headers
+		req.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
+		req.Header.Set("tenant", tenant)
+
+		// Forward Jaeger trace context
+		carrier := opentracing.HTTPHeadersCarrier(req.Header)
+		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+		if err != nil {
+			span.LogFields(tracingLog.Error(err))
 		}
 
-		for _, domainRecord := range activeDomainRecords {
-			domain, err := h.services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
-			if err != nil {
-				message := "Unable to retreive domain info"
-				tracing.TraceErr(span, errors.Wrap(err, message))
-				span.LogFields(tracingLog.String("result", message))
+		// Create HTTP client with default transport
+		client := &http.Client{}
+
+		// Make request to Mailstack API
+		resp, err := client.Do(req)
+		if err != nil {
+			message := "Unable to connect to Mailstack API"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+		defer resp.Body.Close()
+
+		// Check response status
+		if resp.StatusCode != http.StatusOK {
+			// Read error response body
+			var errorResponse struct {
+				Message string `json:"message"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+				errorResponse.Message = "Unknown error occurred"
+			}
+
+			// For 500 errors, use a generic message
+			if resp.StatusCode == http.StatusInternalServerError {
+				message := "Internal server error"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
-			response.Domains = append(response.Domains, DomainRecord{
-				Domain:      domain.DomainName,
-				CreatedDate: domain.CreatedDate,
-				ExpiredDate: domain.ExpiredDate,
-				Nameservers: domain.Nameservers,
-			})
+
+			// For other errors, propagate the status code and message from Mailstack
+			tracing.TraceErr(span, errors.New(errorResponse.Message))
+			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Message)
+			return
+		}
+
+		// Parse response
+		var response DomainsResponse
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			message := "Unable to parse Mailstack API response"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
 		}
 
 		h.responseHandler.HandleSuccess(c, response)
