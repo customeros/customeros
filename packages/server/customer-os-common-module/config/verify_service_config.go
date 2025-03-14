@@ -13,10 +13,6 @@ type EmailConfig struct {
 	EmailValidationSkipProvidersCommaSeparated string `env:"EMAIL_VALIDATION_SKIP_PROVIDERS" envDefault:""`
 }
 
-type MailstackConfig struct {
-	SupportedTlds []string `env:"MAILSTACK_SUPPORTED_TLD" envDefault:"com"`
-}
-
 type ScrubbyIoConfig struct {
 	ApiUrl       string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io"`
 	ApiKey       string `env:"SCRUBBY_IO_API_KEY"`

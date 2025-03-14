@@ -41,6 +41,7 @@ func NewMailboxService(log logger.Logger, postgres *postgres_repository.Reposito
 	}
 }
 
+// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
 func (s *mailboxService) CreateMailbox(ctx context.Context, tx *gorm.DB, request interfaces.CreateMailboxRequest) error {
 	span, ctx := s.initializeTracing(ctx, "MailboxService.CreateMailbox")
 	span.LogFields(
