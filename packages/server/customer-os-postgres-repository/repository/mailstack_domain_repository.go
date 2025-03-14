@@ -116,6 +116,7 @@ func (r *mailStackDomainRepository) CheckDomainOwnership(ctx context.Context, te
 	return true, nil
 }
 
+// TODO to be rmoved once not used
 func (r *mailStackDomainRepository) GetActiveDomains(ctx context.Context, tenant string) ([]postgres_entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetActiveDomains")
 	defer span.Finish()

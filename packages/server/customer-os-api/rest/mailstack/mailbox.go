@@ -143,6 +143,7 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			return
 		}
 
+		// TODO this code will remain here. invoke it after the mailbox is created in mailstack app
 		err = h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
 			message := "Error provisioning mailbox"
