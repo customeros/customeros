@@ -25,7 +25,7 @@ type InfrastructureConfig struct {
 
 type InternalServicesConfig struct {
 	EmailConfig         EmailConfig
-	MailstackConfig     MailstackConfig
+	MailstackApiConfig  MailstackApiConfig
 	MailSherpaApiConfig MailSherpaApiConfig
 	CustomerOsApi       CustomerOsApiConfig
 	FileStoreConfig     FileStoreConfig

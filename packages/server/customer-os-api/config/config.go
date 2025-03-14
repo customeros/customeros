@@ -42,7 +42,7 @@ type CommonConfig struct {
 	IpData            commonconf.IpDataConfig
 	Jina              commonconf.JinaConfig
 	Mailsherpa        commonconf.MailSherpaApiConfig
-	Mailstack         commonconf.MailstackConfig
+	MailstackApi      commonconf.MailstackApiConfig
 	Namecheap         commonconf.NamecheapConfig
 	Novu              commonconf.NovuConfig
 	OpenSRS           commonconf.OpenSRSConfig
@@ -149,7 +149,7 @@ func InitConfig() (*Config, error) {
 			CustomerOsApi:       cmnCfg.CosApi,
 			FileStoreConfig:     cmnCfg.FileStore,
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
-			MailstackConfig:     cmnCfg.Mailstack,
+			MailstackApiConfig:  cmnCfg.MailstackApi,
 			PdfConverterConfig:  cmnCfg.PdfConverter,
 		},
 	}

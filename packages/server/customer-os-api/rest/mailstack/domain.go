@@ -130,7 +130,7 @@ func (h *MailstackHandler) registerDomain(ctx context.Context, tenant, domain, w
 	// check if domain tld is supported
 	// Extract the TLD from the domain (e.g., "com" from "example.com")
 	tld := strings.Split(domain, ".")[1]
-	if !utils.IsStringInSlice(tld, h.services.Cfg.Common.Internal.MailstackConfig.SupportedTlds) {
+	if !utils.IsStringInSlice(tld, h.services.Cfg.Common.Internal.MailstackApiConfig.SupportedTlds) {
 		return registerNewDomainResponse, coserrors.ErrNotSupported
 	}
 
