@@ -374,7 +374,7 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 	return 0, coserrors.ErrDomainPriceNotFound
 }
 
-// TODO to be rmoved once not used
+// TODO delete once not used
 func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain string) (interfaces.NamecheapDomainInfo, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NamecheapService.GetDomainInfo")
 	defer span.Finish()
