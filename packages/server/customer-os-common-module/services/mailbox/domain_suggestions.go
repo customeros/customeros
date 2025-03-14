@@ -45,6 +45,7 @@ func (s *mailboxService) IsDomainAvailable(ctx context.Context, domain string) (
 	return true, true
 }
 
+// TODO delete once not used
 func (s *mailboxService) RecommendOutboundDomains(ctx context.Context, domainRoot string, count int) []string {
 	span, ctx := s.initializeTracing(ctx, "MailboxService.RecommendOutboundDomains")
 	span.LogFields(log.String("domainRoot", domainRoot))
