@@ -98,7 +98,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		UTC:        true,
 		SkipPaths:  []string{"/metrics", "/health", "/readiness", "/"},
 	}))
-	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
+	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer(), server.log))
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)

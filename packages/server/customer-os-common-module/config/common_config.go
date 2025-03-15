@@ -36,7 +36,6 @@ type ExternalServicesConfig struct {
 	AnthropicConfig      AnthropicConfig
 	BetterContactConfig  BetterContactConfig
 	BrandfetchConfig     BrandfetchConfig
-	CloudflareConfig     CloudflareConfig
 	DeepseekConfig       DeepseekConfig
 	EnrowConfig          EnrowConfig
 	GroqConfig           GroqConfig
@@ -44,7 +43,6 @@ type ExternalServicesConfig struct {
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig
 	JinaConfig           JinaConfig
-	NamecheapConfig      NamecheapConfig
 	NovuConfig           NovuConfig
 	OpenSRSConfig        OpenSRSConfig
 	PostmarkConfig       PostmarkConfig

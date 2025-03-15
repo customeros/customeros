@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"io"
 	"net/http"
 	"runtime"
 	"runtime/debug"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
@@ -209,6 +210,11 @@ func SetDefaultAgentCapabilitySpanTags(ctx context.Context, span opentracing.Spa
 	TagComponentAgentCapability(span)
 }
 
+func SetDefaultRestSpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	TagComponentRest(span)
+}
+
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	if span == nil || err == nil || coserrors.SkipTracing(err) {
 		return
@@ -290,22 +296,53 @@ func TagComponentListener(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentListener)
 }
 
-func RecoveryWithJaeger(tracer opentracing.Tracer) gin.HandlerFunc {
+func RecoveryWithJaeger(tracer opentracing.Tracer, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if r := recover(); r != nil {
-				// Log the panic to Jaeger
-				span := tracer.StartSpan("panic-recovery")
+				// Get the current span from context or create a new one
+				var span opentracing.Span
+				if existingSpan := opentracing.SpanFromContext(c.Request.Context()); existingSpan != nil {
+					span = existingSpan
+				} else {
+					span = tracer.StartSpan("panic-recovery")
+				}
 				defer span.Finish()
 
+				// Get detailed stack trace
 				buf := make([]byte, 4096)
 				stackSize := runtime.Stack(buf, false)
+				stackTrace := string(buf[:stackSize])
+
+				// Log detailed error information to Jaeger
 				span.LogKV(
-					"event", "error",
+					"event", "panic",
 					"error.object", r,
-					"stack", string(buf[:stackSize]),
+					"error.kind", fmt.Sprintf("%T", r),
+					"stack", stackTrace,
+					"path", c.Request.URL.Path,
+					"method", c.Request.Method,
 				)
-				span.SetTag("error", true)
+
+				// Set error tags
+				ext.Error.Set(span, true)
+				span.SetTag("error.type", "panic")
+
+				// Set HTTP tags
+				ext.HTTPUrl.Set(span, c.Request.URL.String())
+				ext.HTTPMethod.Set(span, c.Request.Method)
+				ext.HTTPStatusCode.Set(span, 500)
+
+				// Log to Zap as well
+				log.Errorf("[Panic Recovery] Error: %v\nStack trace:\n%s\nPath: %s\nMethod: %s",
+					r,
+					stackTrace,
+					c.Request.URL.Path,
+					c.Request.Method,
+				)
+
+				// Let the chain continue to allow Zap recovery to handle the panic as well
+				panic(r)
 			}
 		}()
 		c.Next()

@@ -27,6 +27,7 @@ type CommonConfig struct {
 	PostgresAsync     commonconf.PostgresAsyncConfig
 	Neo4j             commonconf.Neo4jConfig
 	Mailsherpa        commonconf.MailSherpaApiConfig
+	MailstackApi      commonconf.MailstackApiConfig
 	FileStore         commonconf.FileStoreConfig
 	PdfConverter      commonconf.PdfConverterConfig
 	SlackConfig       commonconf.SlackConfig
@@ -115,6 +116,7 @@ func Load() *Config {
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
+			MailstackApiConfig:  cmnCfg.MailstackApi,
 			FileStoreConfig:     cmnCfg.FileStore,
 			PdfConverterConfig:  cmnCfg.PdfConverter,
 		},

@@ -28,14 +28,13 @@ type CommonConfig struct {
 	RabbitMQ         commonconf.RabbitMQConfig
 	OpensearchConfig commonconf.OpensearchConfig
 	MailSherpaApi    commonconf.MailSherpaApiConfig
+	MaistackApi      commonconf.MailstackApiConfig
 	BetterContact    commonconf.BetterContactConfig
 	Scrapin          commonconf.ScrapinConfig
 	Snitcher         commonconf.SnitcherConfig
 	Anthropic        commonconf.AnthropicConfig
 	Novu             commonconf.NovuConfig
-	Namecheap        commonconf.NamecheapConfig
 	OpenSrs          commonconf.OpenSRSConfig
-	Cloudflare       commonconf.CloudflareConfig
 	TrueInbox        commonconf.TrueInboxConfig
 	Brandfetch       commonconf.BrandfetchConfig
 	Enrow            commonconf.EnrowConfig
@@ -77,6 +76,7 @@ func Load() *Config {
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,
+			MailstackApiConfig:  cmnCfg.MaistackApi,
 			PdfConverterConfig:  cmnCfg.PdfConverter,
 			FileStoreConfig:     cmnCfg.FileStore,
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
@@ -87,9 +87,7 @@ func Load() *Config {
 			SnitcherConfig:       cmnCfg.Snitcher,
 			AnthropicConfig:      cmnCfg.Anthropic,
 			NovuConfig:           cmnCfg.Novu,
-			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSrs,
-			CloudflareConfig:     cmnCfg.Cloudflare,
 			TrueInboxConfig:      cmnCfg.TrueInbox,
 			BrandfetchConfig:     cmnCfg.Brandfetch,
 			EnrowConfig:          cmnCfg.Enrow,

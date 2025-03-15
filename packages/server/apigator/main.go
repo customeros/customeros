@@ -62,7 +62,7 @@ func main() {
 
 	r := gin.Default()
 
-	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
+	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer(), appLogger))
 
 	r.GET("/validate", validateToken(
 		postgresRepositories.TenantWebhookApiKeyRepository,

@@ -1,7 +1,10 @@
 package events_listeners
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"net/http"
 	"sync"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -12,8 +15,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
@@ -138,6 +143,143 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 	return nil
 }
 
+func (l *MailstackProvisionBuyRequestListener) configureDomainInMailstack(ctx context.Context, domain string, website string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.configureDomainInMailstack")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("missing tenant in context")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Create request body
+	reqBody := struct {
+		Domain  string `json:"domain"`
+		Website string `json:"website"`
+	}{
+		Domain:  domain,
+		Website: website,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to marshal request body"))
+		return err
+	}
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "POST", l.dependencies.CommonConfig.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/configure", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create request to Mailstack API"))
+		return err
+	}
+
+	// Add required headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", l.dependencies.CommonConfig.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to connect to Mailstack API"))
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return errors.New(errorResponse.Error)
+	}
+
+	return nil
+}
+
+func (l *MailstackProvisionBuyRequestListener) purchaseDomainInMailstack(ctx context.Context, tenant string, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.purchaseDomainInMailstack")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	// Create request body
+	reqBody := struct {
+		Domain string `json:"domain"`
+	}{
+		Domain: domain,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to marshal request body"))
+		return err
+	}
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "POST", l.dependencies.CommonConfig.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/purchase", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create request to Mailstack API"))
+		return err
+	}
+
+	// Add required headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", l.dependencies.CommonConfig.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to connect to Mailstack API"))
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusCreated {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return errors.New(errorResponse.Error)
+	}
+
+	return nil
+}
+
 func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Context, mailstackBuyRequest *postgres_entity.MailstackBuyRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.processDomains")
 	defer span.Finish()
@@ -162,9 +304,9 @@ func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Contex
 			sem <- struct{}{}        // Acquire semaphore
 			defer func() { <-sem }() // Release semaphore
 
-			// Step 1 - Purchase domain in Namecheap
+			// Step 1 - Purchase domain in Mailstack
 			if domain.Status == postgres_entity.MailstackBuyRequestDomainStatusPendingProvisioning {
-				err := l.dependencies.CommonServices.NamecheapService.PurchaseDomain(ctx, domain.Tenant, domain.Domain)
+				err := l.purchaseDomainInMailstack(ctx, domain.Tenant, domain.Domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					mailstackBuyRequest.Status = postgres_entity.MailstackBuyRequestStatusFailed
@@ -182,7 +324,7 @@ func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Contex
 
 			// Step 2 - Configure domain in Mailstack
 			if domain.Status == postgres_entity.MailstackBuyRequestDomainStatusPendingConfiguration {
-				err := l.dependencies.CommonServices.MailstackService.ConfigureMailstackDomain(ctx, domain.Domain, domain.RedirectWebsite)
+				err := l.configureDomainInMailstack(ctx, domain.Domain, domain.RedirectWebsite)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				} else {

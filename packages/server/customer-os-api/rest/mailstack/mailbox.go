@@ -111,6 +111,7 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			ForwardingTo:      forwardingTo,
 		}
 
+		// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
 		err := h.services.CommonServices.MailboxService.CreateMailbox(ctx, nil, interfaces.CreateMailboxRequest{
 			Domain:          domain,
 			Username:        username,

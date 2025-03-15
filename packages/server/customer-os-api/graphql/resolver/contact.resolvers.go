@@ -212,9 +212,7 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 	}
 	customFieldEntities, err := r.Services.CustomFieldService.GetCustomFields(ctx, entityType)
 
-	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
-		customFields = append(customFields, v)
-	}
+	customFields = append(customFields, mapper.MapEntitiesToCustomFields(customFieldEntities)...)
 	return customFields, err
 }
 
@@ -428,7 +426,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 				return
 			}
 
-			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+			if len(flowsUpdated) > 0 {
 				for _, flowData := range flowsUpdated {
 					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
@@ -524,7 +522,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 				return
 			}
 
-			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+			if len(flowsUpdated) > 0 {
 				for _, flowData := range flowsUpdated {
 					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
@@ -625,7 +623,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 				return
 			}
 
-			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+			if len(flowsUpdated) > 0 {
 				for _, flowData := range flowsUpdated {
 					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
@@ -735,7 +733,7 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 				return
 			}
 
-			if flowsUpdated != nil && len(flowsUpdated) > 0 {
+			if len(flowsUpdated) > 0 {
 				for _, flowData := range flowsUpdated {
 					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
@@ -1327,7 +1325,7 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 	}
 
 	if tagId == "" {
-		tracing.TraceErr(span, errors.New("Missing tag id"))
+		tracing.TraceErr(span, errors.New("missing tag id"))
 		graphql.AddErrorf(ctx, "Missing tag")
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -1350,8 +1348,8 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 	span.LogFields(log.String("request.contactID", id))
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("Missing contact input id"))
-		graphql.AddErrorf(ctx, "Missing contact input id")
+		tracing.TraceErr(span, errors.New("missing contact input id"))
+		graphql.AddErrorf(ctx, "missing contact input id")
 		return nil, nil
 	}
 

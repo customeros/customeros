@@ -283,7 +283,7 @@ func (r *mutationResolver) FlowParticipantAdd(ctx context.Context, flowID string
 		return nil, err
 	}
 
-	if flowsUpdated != nil && len(flowsUpdated) > 0 {
+	if len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
 			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
@@ -314,7 +314,7 @@ func (r *mutationResolver) FlowParticipantAddBulk(ctx context.Context, flowID st
 		return nil, err
 	}
 
-	if flowsUpdated != nil && len(flowsUpdated) > 0 {
+	if len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
 			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
@@ -350,7 +350,7 @@ func (r *mutationResolver) FlowParticipantDelete(ctx context.Context, id string)
 		return nil, err
 	}
 
-	if flowsUpdated != nil && len(flowsUpdated) > 0 {
+	if len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
 			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
@@ -388,7 +388,7 @@ func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []s
 		return nil, err
 	}
 
-	if flowsUpdated != nil && len(flowsUpdated) > 0 {
+	if len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
 			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
@@ -569,7 +569,7 @@ func (r *queryResolver) FlowTestEmailSender(ctx context.Context) (string, error)
 		if testEmailAddress == "" {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")
-			return "", fmt.Errorf("Test email address not found")
+			return "", fmt.Errorf("test email address not found")
 		}
 	}
 

@@ -78,7 +78,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	}
 
 	response.Mailboxes = make([]string, 0)
-	if mailboxes != nil && len(mailboxes) > 0 {
+	if len(mailboxes) > 0 {
 		for _, mailbox := range mailboxes {
 			response.Mailboxes = append(response.Mailboxes, mailbox.MailboxUsername)
 		}

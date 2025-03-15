@@ -560,6 +560,7 @@ func (s *registrationService) setupTestMailbox(ctx context.Context, span opentra
 	return s.createMailboxIfNotExists(ctx, span, tenant, mailboxAddress)
 }
 
+// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
 func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span opentracing.Span, tenant, mailboxAddress string) error {
 	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxAddress)
 	if err != nil {
