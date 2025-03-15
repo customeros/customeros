@@ -20,7 +20,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	mailstack "github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -32,7 +32,6 @@ type registrationService struct {
 	contact      interfaces.ContactService
 	email        interfaces.EmailService
 	flow         interfaces.FlowService
-	mailbox      interfaces.MailboxService
 	mailstack    interfaces.MailstackService
 	org          interfaces.OrganizationService
 	postmark     interfaces.PostmarkService
@@ -46,7 +45,6 @@ func NewRegistrationService(events *events.EventsService,
 	contact interfaces.ContactService,
 	email interfaces.EmailService,
 	flow interfaces.FlowService,
-	mailbox interfaces.MailboxService,
 	mailstack interfaces.MailstackService,
 	org interfaces.OrganizationService,
 	postmark interfaces.PostmarkService,
@@ -60,7 +58,7 @@ func NewRegistrationService(events *events.EventsService,
 		contact:      contact,
 		email:        email,
 		flow:         flow,
-		mailbox:      mailbox,
+		mailstack:    mailstack,
 		org:          org,
 		postmark:     postmark,
 		user:         user,
@@ -78,10 +76,6 @@ func (s *registrationService) SetEmailService(email interfaces.EmailService) {
 
 func (s *registrationService) SetFlowService(flow interfaces.FlowService) {
 	s.flow = flow
-}
-
-func (s *registrationService) SetMailboxService(mailbox interfaces.MailboxService) {
-	s.mailbox = mailbox
 }
 
 func (s *registrationService) SetOrganizationService(org interfaces.OrganizationService) {

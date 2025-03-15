@@ -6,7 +6,6 @@ type RegistrationService interface {
 	SetContactService(contact ContactService)
 	SetEmailService(email EmailService)
 	SetFlowService(flow FlowService)
-	SetMailboxService(mailbox MailboxService)
 	SetOrganizationService(org OrganizationService)
 	IsInitialized() bool
 
