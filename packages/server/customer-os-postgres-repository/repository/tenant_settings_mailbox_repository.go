@@ -20,11 +20,9 @@ type tenantSettingsMailboxRepository struct {
 type TenantSettingsMailboxRepository interface {
 	GetAll(ctx context.Context) ([]*postgres_entity.TenantSettingsMailbox, error)
 	GetForRampUp(ctx context.Context) ([]*postgres_entity.TenantSettingsMailbox, error)
-	GetById(ctx context.Context, id string) (*postgres_entity.TenantSettingsMailbox, error)
 	GetByMailbox(ctx context.Context, mailbox string) (*postgres_entity.TenantSettingsMailbox, error)
 	GetAllByDomain(ctx context.Context, domain string) ([]*postgres_entity.TenantSettingsMailbox, error)
 	GetAllByUserId(ctx context.Context, userId string) ([]*postgres_entity.TenantSettingsMailbox, error)
-
 	Merge(ctx context.Context, tx *gorm.DB, mailbox *postgres_entity.TenantSettingsMailbox) error
 }
 
@@ -70,36 +68,6 @@ func (r *tenantSettingsMailboxRepository) GetForRampUp(ctx context.Context) ([]*
 	}
 
 	return result, nil
-}
-
-func (r *tenantSettingsMailboxRepository) GetById(ctx context.Context, id string) (*postgres_entity.TenantSettingsMailbox, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	span.LogFields(tracingLog.String("id", id))
-
-	var result postgres_entity.TenantSettingsMailbox
-	err := r.gormDb.
-		Where("tenant = ? and id = ?", tenant, id).
-		First(&result).
-		Error
-
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		span.LogFields(tracingLog.Bool("result.found", false))
-		return nil, nil
-	}
-
-	span.LogFields(tracingLog.Bool("result.found", true))
-
-	return &result, nil
 }
 
 func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, mailbox string) (*postgres_entity.TenantSettingsMailbox, error) {

@@ -13,9 +13,6 @@ import (
 )
 
 type MailStackDomainRepository interface {
-	GetDomain(ctx context.Context, tenant, domain string) (*postgres_entity.MailStackDomain, error)
-	MarkConfigured(ctx context.Context, tenant, domain string) error
-	SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error
 	CreateDMARCReport(ctx context.Context, tenant string, report *postgres_entity.DMARCMonitoring) error
 	CreateMailstackReputationScore(ctx context.Context, tenant string, score *postgres_entity.MailstackReputationEntity) error
 	GetDomainCrossTenant(ctx context.Context, domain string) (*postgres_entity.MailStackDomain, error)
@@ -59,71 +56,6 @@ func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenan
 		return err
 	}
 	return nil
-}
-
-func (r *mailStackDomainRepository) MarkConfigured(ctx context.Context, tenant, domain string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.MarkConfigured")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain)
-
-	err := r.db.WithContext(ctx).
-		Model(&postgres_entity.MailStackDomain{}).
-		Where("tenant = ? AND domain = ?", tenant, domain).
-		UpdateColumn("configured", true).
-		UpdateColumn("updated_at", utils.Now()).
-		Error
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
-		return err
-	}
-
-	return nil
-}
-
-func (r *mailStackDomainRepository) SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.SetDkimKeys")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain)
-
-	err := r.db.WithContext(ctx).
-		Model(&postgres_entity.MailStackDomain{}).
-		Where("tenant = ? AND domain = ?", tenant, domain).
-		UpdateColumn("dkim_public", dkimPublic).
-		UpdateColumn("dkim_private", dkimPrivate).
-		UpdateColumn("updated_at", utils.Now()).
-		Error
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
-		return err
-	}
-
-	return nil
-}
-
-func (r *mailStackDomainRepository) GetDomain(ctx context.Context, tenant, domain string) (*postgres_entity.MailStackDomain, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetDomain")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain)
-
-	var mailStackDomain postgres_entity.MailStackDomain
-	err := r.db.WithContext(ctx).
-		Where("tenant = ? AND domain = ?", tenant, domain).
-		First(&mailStackDomain).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
-		return nil, err
-	}
-
-	return &mailStackDomain, nil
 }
 
 func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, domain string) (*postgres_entity.MailStackDomain, error) {
