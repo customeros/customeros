@@ -56,19 +56,17 @@ func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService,
 	}
 }
 
-func (s *mailstackService) checkDomainAvailability(ctx context.Context, domain string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.checkDomainAvailability")
+func (s *mailstackService) CheckDomainAvailability(ctx context.Context, tenant, domain string) (int, string, bool, bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.CheckDomainAvailability")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("request.domain", domain)
-
-	tenant := common.GetTenantFromContext(ctx)
 
 	// Create request to Mailstack API
 	req, err := http.NewRequestWithContext(ctx, "GET", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/check-availability/"+domain, nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
-		return false, err
+		return http.StatusInternalServerError, "Unable to create request to Mailstack API", false, false, err
 	}
 
 	// Add required headers
@@ -84,13 +82,15 @@ func (s *mailstackService) checkDomainAvailability(ctx context.Context, domain s
 	}
 
 	// Create HTTP client with default transport
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	// Make request to Mailstack API
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
-		return false, err
+		return http.StatusInternalServerError, "Unable to connect to Mailstack API", false, false, err
 	}
 	defer resp.Body.Close()
 
@@ -104,7 +104,14 @@ func (s *mailstackService) checkDomainAvailability(ctx context.Context, domain s
 			errorResponse.Error = "Unknown error occurred"
 		}
 		tracing.TraceErr(span, errors.New(errorResponse.Error))
-		return false, errors.New(errorResponse.Error)
+
+		// For 500 errors, use a generic message
+		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+			return http.StatusInternalServerError, "Internal server error", false, false, errors.New(errorResponse.Error)
+		}
+
+		// For other errors, propagate the message from Mailstack
+		return resp.StatusCode, errorResponse.Error, false, false, errors.New(errorResponse.Error)
 	}
 
 	// Parse response
@@ -114,10 +121,10 @@ func (s *mailstackService) checkDomainAvailability(ctx context.Context, domain s
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
-		return false, err
+		return http.StatusInternalServerError, "Unable to parse Mailstack API response", false, false, err
 	}
 
-	return response.IsAvailable, nil
+	return http.StatusOK, "", response.IsAvailable, response.IsPremium, nil
 }
 
 func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error) {
@@ -139,9 +146,14 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 
 	// validate domains before creating payment intent
 	for _, domain := range domains {
-		available, err := s.checkDomainAvailability(ctx, domain)
+		statusCode, errMsg, available, _, err := s.CheckDomainAvailability(ctx, tenant, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
+			return "", err
+		}
+		if statusCode != http.StatusOK {
+			err = errors.New(errMsg)
+			tracing.TraceErr(span, err)
 			return "", err
 		}
 		if !available {
