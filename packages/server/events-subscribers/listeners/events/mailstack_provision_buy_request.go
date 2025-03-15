@@ -1,9 +1,7 @@
 package events_listeners
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"sync"
 
@@ -15,7 +13,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -175,60 +172,16 @@ func (l *MailstackProvisionBuyRequestListener) purchaseDomainInMailstack(ctx con
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	// Create request body
-	reqBody := struct {
-		Domain string `json:"domain"`
-	}{
-		Domain: domain,
-	}
-
-	jsonBody, err := json.Marshal(reqBody)
+	statusCode, errorMsg, err := l.dependencies.CommonServices.MailstackService.PurchaseDomain(ctx, tenant, domain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to marshal request body"))
+		tracing.TraceErr(span, err)
 		return err
 	}
 
-	// Create request to Mailstack API
-	req, err := http.NewRequestWithContext(ctx, "POST", l.dependencies.CommonConfig.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/purchase", bytes.NewBuffer(jsonBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to create request to Mailstack API"))
+	if statusCode != http.StatusOK {
+		err := errors.New(errorMsg)
+		tracing.TraceErr(span, err)
 		return err
-	}
-
-	// Add required headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-CUSTOMER-OS-API-KEY", l.dependencies.CommonConfig.Internal.MailstackApiConfig.ApiKey)
-	req.Header.Set("tenant", tenant)
-
-	// Forward Jaeger trace context
-	carrier := opentracing.HTTPHeadersCarrier(req.Header)
-	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-	if err != nil {
-		span.LogFields(tracingLog.Error(err))
-	}
-
-	// Create HTTP client with default transport
-	client := &http.Client{}
-
-	// Make request to Mailstack API
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to connect to Mailstack API"))
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Check response status
-	if resp.StatusCode != http.StatusCreated {
-		// Read error response body
-		var errorResponse struct {
-			Error string `json:"error"`
-		}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-			errorResponse.Error = "Unknown error occurred"
-		}
-		tracing.TraceErr(span, errors.New(errorResponse.Error))
-		return errors.New(errorResponse.Error)
 	}
 
 	return nil

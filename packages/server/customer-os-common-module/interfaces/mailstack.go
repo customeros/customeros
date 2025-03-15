@@ -48,4 +48,5 @@ type MailstackService interface {
 	RecommendDomain(ctx context.Context, tenant, baseName string) (int, string, []string, error)
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
 	CheckDomainAvailability(ctx context.Context, tenant, domain string) (int, string, bool, bool, error)
+	PurchaseDomain(ctx context.Context, tenant, domain string) (int, string, error)
 }

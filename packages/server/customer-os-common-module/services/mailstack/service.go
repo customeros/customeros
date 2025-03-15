@@ -808,3 +808,76 @@ func (s *mailstackService) RecommendDomain(ctx context.Context, tenant, baseName
 
 	return http.StatusOK, "", response.Recommendations, nil
 }
+
+func (s *mailstackService) PurchaseDomain(ctx context.Context, tenant, domain string) (int, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.PurchaseDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Create request body
+	reqBody := struct {
+		Domain string `json:"domain"`
+	}{
+		Domain: domain,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to marshal request body"))
+		return http.StatusInternalServerError, "Unable to marshal request body", err
+	}
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "POST", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/purchase", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to create request to Mailstack API", err
+	}
+
+	// Add required headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to connect to Mailstack API", err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusCreated {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+
+		// For 500 errors, use a generic message
+		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+			return http.StatusInternalServerError, "Internal server error", errors.New(errorResponse.Error)
+		}
+
+		// For other errors, propagate the message from Mailstack
+		return resp.StatusCode, errorResponse.Error, errors.New(errorResponse.Error)
+	}
+
+	return http.StatusOK, "", nil
+}
