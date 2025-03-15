@@ -47,12 +47,6 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		type sss struct {
-			s *string
-		}
-		var s *sss
-		fmt.Println(s.s)
-
 		if err := h.validateHeaders(c); err != nil {
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
