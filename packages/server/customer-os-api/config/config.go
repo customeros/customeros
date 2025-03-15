@@ -32,7 +32,6 @@ type CommonConfig struct {
 	AzureOAuthConfig  commonconf.AzureOAuthConfig
 	BetterContact     commonconf.BetterContactConfig
 	Brandfetch        commonconf.BrandfetchConfig
-	Cloudflare        commonconf.CloudflareConfig
 	Deepseek          commonconf.DeepseekConfig
 	FileStore         commonconf.FileStoreConfig
 	GoogleOAuthConfig commonconf.GoogleOAuthConfig
@@ -126,7 +125,6 @@ func InitConfig() (*Config, error) {
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,
 			BrandfetchConfig:     cmnCfg.Brandfetch,
-			CloudflareConfig:     cmnCfg.Cloudflare,
 			DeepseekConfig:       cmnCfg.Deepseek,
 			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSRS,

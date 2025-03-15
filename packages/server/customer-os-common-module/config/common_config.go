@@ -36,7 +36,6 @@ type ExternalServicesConfig struct {
 	AnthropicConfig      AnthropicConfig
 	BetterContactConfig  BetterContactConfig
 	BrandfetchConfig     BrandfetchConfig
-	CloudflareConfig     CloudflareConfig
 	DeepseekConfig       DeepseekConfig
 	EnrowConfig          EnrowConfig
 	GroqConfig           GroqConfig

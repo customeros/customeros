@@ -36,7 +36,6 @@ type CommonConfig struct {
 	Novu             commonconf.NovuConfig
 	Namecheap        commonconf.NamecheapConfig
 	OpenSrs          commonconf.OpenSRSConfig
-	Cloudflare       commonconf.CloudflareConfig
 	TrueInbox        commonconf.TrueInboxConfig
 	Brandfetch       commonconf.BrandfetchConfig
 	Enrow            commonconf.EnrowConfig
@@ -91,7 +90,6 @@ func Load() *Config {
 			NovuConfig:           cmnCfg.Novu,
 			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSrs,
-			CloudflareConfig:     cmnCfg.Cloudflare,
 			TrueInboxConfig:      cmnCfg.TrueInbox,
 			BrandfetchConfig:     cmnCfg.Brandfetch,
 			EnrowConfig:          cmnCfg.Enrow,

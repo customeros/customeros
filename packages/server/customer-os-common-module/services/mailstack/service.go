@@ -26,24 +26,22 @@ import (
 )
 
 type mailstackService struct {
-	cfg        *config.StripeConfig
-	events     *events.EventsService
-	postgres   *postgres_repository.Repositories
-	cloudflare interfaces.CloudflareService
-	mailbox    interfaces.MailboxService
-	namecheap  interfaces.NamecheapService
-	opensrs    interfaces.OpenSrsService
+	cfg       *config.StripeConfig
+	events    *events.EventsService
+	postgres  *postgres_repository.Repositories
+	mailbox   interfaces.MailboxService
+	namecheap interfaces.NamecheapService
+	opensrs   interfaces.OpenSrsService
 }
 
-func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService, postgres *postgres_repository.Repositories, cloudflare interfaces.CloudflareService, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService, postgres *postgres_repository.Repositories, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
 	return &mailstackService{
-		cfg:        cfg,
-		events:     events,
-		postgres:   postgres,
-		cloudflare: cloudflare,
-		mailbox:    mailbox,
-		namecheap:  namecheap,
-		opensrs:    opensrs,
+		cfg:       cfg,
+		events:    events,
+		postgres:  postgres,
+		mailbox:   mailbox,
+		namecheap: namecheap,
+		opensrs:   opensrs,
 	}
 }
 
@@ -163,6 +161,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			}
 
 			for _, username := range usernames {
+				// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
 				err = s.mailbox.CreateMailbox(ctx, tx, interfaces.CreateMailboxRequest{
 					IgnoreDomainOwnership: true,
 					Domain:                domain,
@@ -234,49 +233,4 @@ func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[stri
 
 	span.LogFields(tracingLog.Int("response.count", len(output)))
 	return output, nil
-}
-
-func (s *mailstackService) ConfigureMailstackDomain(ctx context.Context, domain, redirectWebsite string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.ConfigureMailstackDomain")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("request.domain", domain)
-	span.LogKV("request.redirectWebsite", redirectWebsite)
-
-	// validate tenant
-	err := common.ValidateTenant(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	tenant := common.GetTenantFromContext(ctx)
-
-	// setup domain in cloudflare
-	nameservers, err := s.cloudflare.SetupDomainForMailStack(ctx, tenant, domain, redirectWebsite)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in Cloudflare"))
-		return err
-	}
-
-	// setup domain in openSRS
-	err = s.opensrs.SetupDomain(ctx, tenant, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in OpenSRS"))
-		return err
-	}
-
-	// replace nameservers in namecheap
-	err = s.namecheap.UpdateNameservers(ctx, tenant, domain, nameservers)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
-		return err
-	}
-
-	// mark domain as configured
-	err = s.postgres.MailStackDomainRepository.MarkConfigured(ctx, tenant, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
-	}
-
-	return nil
 }

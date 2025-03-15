@@ -8,5 +8,4 @@ type MailstackService interface {
 	GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error)
 	// key domain, value tenant
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
-	ConfigureMailstackDomain(ctx context.Context, domain, redirectWebsite string) error
 }
