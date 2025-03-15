@@ -210,6 +210,11 @@ func SetDefaultAgentCapabilitySpanTags(ctx context.Context, span opentracing.Spa
 	TagComponentAgentCapability(span)
 }
 
+func SetDefaultRestSpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	TagComponentRest(span)
+}
+
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	if span == nil || err == nil || coserrors.SkipTracing(err) {
 		return
