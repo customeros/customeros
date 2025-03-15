@@ -2,19 +2,20 @@
 package mailstack
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"net/http"
-	"regexp"
-	"strings"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
@@ -77,75 +78,135 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			return
 		}
 
-		username := strings.TrimSpace(mailboxRequest.Username)
-		if username == "" {
-			message := "Missing parameter: username"
-			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-			return
-		}
-		span.LogKV("request.username", username)
-
-		password := strings.TrimSpace(mailboxRequest.Password)
-		passwordGenerated := false
-		if password == "" {
-			passwordGenerated = true
-			password = utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false)
-		}
-
-		// validate username format
-		if err := h.validateMailboxUsername(username); err != nil {
-			message := "username is invalid"
-			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-			return
-		}
-
-		// add mailbox
-		forwardingTo := mailboxRequest.ForwardingTo
-		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
-		forwardingTo = append(forwardingTo, additionalForwardingTo)
-
-		response := MailboxRecord{
-			Email:             username + "@" + domain,
-			WebmailEnabled:    mailboxRequest.WebmailEnabled,
-			ForwardingEnabled: true,
-			ForwardingTo:      forwardingTo,
-		}
-
-		// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
-		err := h.services.CommonServices.MailboxService.CreateMailbox(ctx, nil, interfaces.CreateMailboxRequest{
-			Domain:          domain,
-			Username:        username,
-			Password:        password,
-			LinkedUserEmail: mailboxRequest.LinkedUser,
-			WebmailEnabled:  mailboxRequest.WebmailEnabled,
-			ForwardingTo:    forwardingTo,
-		})
-		if err != nil {
-			if errors.Is(err, coserrors.ErrDomainNotFound) {
-				message := "domain not found"
-				h.responseHandler.HandleError(c, http.StatusNotFound, &message)
-				return
-			} else if errors.Is(err, coserrors.ErrMailboxExists) {
-				message := "username already exists"
-				h.responseHandler.HandleError(c, http.StatusConflict, &message)
-				return
-			} else {
-				message := "Mailbox setup failed"
+		// Get user ID from linked email
+		var userId string
+		if mailboxRequest.LinkedUser != "" {
+			userDbNode, err := h.services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, mailboxRequest.LinkedUser)
+			if err != nil {
+				message := "Error finding linked user"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+				tracing.TraceErr(span, errors.Wrap(err, "Error finding linked user"))
 				return
+			}
+			if userDbNode != nil {
+				userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+				userId = userEntity.Id
 			}
 		}
 
-		mailbox, err := h.services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, username+"@"+domain)
+		// Create request body for Mailstack API
+		reqBody := struct {
+			Username       string   `json:"username"`
+			Password       string   `json:"password"`
+			Domain         string   `json:"domain"`
+			ForwardingTo   []string `json:"forwardingTo"`
+			WebmailEnabled bool     `json:"webmailEnabled"`
+			UserId         string   `json:"userId"`
+		}{
+			Username:       mailboxRequest.Username,
+			Password:       mailboxRequest.Password,
+			Domain:         domain,
+			ForwardingTo:   mailboxRequest.ForwardingTo,
+			WebmailEnabled: mailboxRequest.WebmailEnabled,
+			UserId:         userId,
+		}
+
+		jsonBody, err := json.Marshal(reqBody)
 		if err != nil {
-			message := "Error retrieving mailbox"
+			message := "Unable to marshal request body"
+			tracing.TraceErr(span, errors.Wrap(err, message))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailbox"))
 			return
 		}
 
-		// TODO this code will remain here. invoke it after the mailbox is created in mailstack app
-		err = h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		// Create request to Mailstack API
+		mailstackReq, err := http.NewRequestWithContext(ctx, "POST", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl+"/v1/mailboxes", bytes.NewBuffer(jsonBody))
+		if err != nil {
+			message := "Unable to create request to Mailstack API"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+
+		// Add required headers
+		mailstackReq.Header.Set("Content-Type", "application/json")
+		mailstackReq.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
+		mailstackReq.Header.Set("tenant", tenant)
+
+		// Forward Jaeger trace context
+		carrier := opentracing.HTTPHeadersCarrier(mailstackReq.Header)
+		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+		if err != nil {
+			span.LogFields(tracingLog.Error(err))
+		}
+
+		// Create HTTP client with default transport and timeout
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+		}
+
+		// Make request to Mailstack API
+		resp, err := client.Do(mailstackReq)
+		if err != nil {
+			message := "Unable to connect to Mailstack API"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+		defer resp.Body.Close()
+
+		// Check response status
+		if resp.StatusCode != http.StatusOK {
+			// Read error response body
+			var errorResponse struct {
+				Error string `json:"error"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+				errorResponse.Error = "Unknown error occurred"
+			}
+			tracing.TraceErr(span, errors.New(errorResponse.Error))
+
+			// For 500 errors, use a generic message
+			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+				message := "Internal server error"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+				return
+			}
+
+			// For other errors, propagate the status code and message from Mailstack
+			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
+			return
+		}
+
+		// Parse response
+		var apiResponse MailboxRecord
+		if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+			message := "Unable to parse Mailstack API response"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+
+		// create email node
+		emailFields := interfaces.EmailFields{
+			Email: apiResponse.Email,
+		}
+		var linkWith *common_srv.LinkWith
+		if userId != "" {
+			linkWith = &common_srv.LinkWith{
+				Type: model.USER,
+				Id:   userId,
+			}
+		}
+		_, err = h.services.CommonServices.EmailService.Merge(ctx, nil, tenant, emailFields, linkWith)
+		if err != nil {
+			message := "Internal server error"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			return
+		}
+
+		err = h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, apiResponse.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
 			message := "Error provisioning mailbox"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -153,23 +214,12 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			return
 		}
 
-		if passwordGenerated {
-			response.Password = password
+		mailboxResponse := MailboxResponse{
+			Mailbox: apiResponse,
 		}
-		h.responseHandler.HandleSuccess(c, MailboxResponse{
-			Mailbox: response,
-		})
-	}
-}
 
-func (h *MailstackHandler) validateMailboxUsername(username string) error {
-	// Regular expression for a valid username (allows alphanumeric, dots, underscores, hyphens)
-	re := regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
-	if !re.MatchString(username) {
-		return errors.New("invalid username format: only alphanumeric characters, dots, underscores, and hyphens are allowed")
+		h.responseHandler.HandleSuccess(c, mailboxResponse)
 	}
-	// Additional checks (length, etc.) can be added if necessary
-	return nil
 }
 
 // GetMailboxes retrieves all mailboxes for a domain

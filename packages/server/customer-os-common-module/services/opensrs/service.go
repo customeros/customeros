@@ -228,37 +228,6 @@ func generateMessageID(fromEmail string) string {
 	return messageID
 }
 
-func (s *openSRSService) SetupDomain(ctx context.Context, tenant, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupDomain")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain)
-
-	// step 1: get domain record from the database
-	domainRecord, err := s.postgres.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain record"))
-		s.log.Error("failed to get domain record", err)
-		return err
-	}
-	if domainRecord == nil {
-		tracing.TraceErr(span, errors.New("domain record not found"))
-		s.log.Errorf("domain record not found for domain")
-		return errors.New("domain record not found")
-	}
-
-	// step 2: Configure the domain in OpenSRS
-	err = s.setEmailDomainInOpenSRS(ctx, domain, domainRecord.DkimPrivate)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to configure email domain in open SRS"))
-		s.log.Error("failed to configure email domain in open SRS", err)
-		return err
-	}
-
-	return nil
-}
-
 func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dkimPrivateKey string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.setEmailDomainInOpenSRS")
 	defer span.Finish()

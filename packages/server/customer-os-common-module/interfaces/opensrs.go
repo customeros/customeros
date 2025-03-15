@@ -8,7 +8,6 @@ import (
 
 type OpenSrsService interface {
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
-	SetupDomain(ctx context.Context, tenant, domain string) error
 	SetupMailbox(ctx context.Context, tenant, username, password string, forwardingTo []string, webmailEnabled bool) error
 	GetMailboxDetails(ctx context.Context, email string) (MailboxDetails, error)
 }

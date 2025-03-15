@@ -133,6 +133,12 @@ type MailboxesResponse struct {
 // MailboxRecord represents detailed mailbox information
 // @Description Comprehensive mailbox configuration and status
 type MailboxRecord struct {
+	// Mailbox ID
+	// required: true
+	// format: uuid
+	// example: 123e4567-e89b-12d3-a456-426614174000
+	ID string `json:"id"`
+
 	// Email address for the mailbox
 	// required: true
 	// format: email
