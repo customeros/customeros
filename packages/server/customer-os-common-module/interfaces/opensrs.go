@@ -8,12 +8,4 @@ import (
 
 type OpenSrsService interface {
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
-	SetupMailbox(ctx context.Context, tenant, username, password string, forwardingTo []string, webmailEnabled bool) error
-}
-
-type MailboxDetails struct {
-	Email             string   `json:"email"`
-	ForwardingEnabled bool     `json:"forwardingEnabled"`
-	ForwardingTo      []string `json:"forwardingTo"`
-	WebmailEnabled    bool     `json:"webmailEnabled"`
 }

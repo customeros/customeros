@@ -4,10 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/smtp"
 	"strings"
 	"text/template"
@@ -17,7 +14,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
@@ -25,12 +21,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
-
-type OpenSRSResponse struct {
-	Success     bool   `json:"success"`
-	Error       string `json:"error,omitempty"`
-	ErrorNumber int    `json:"error_number,omitempty"`
-}
 
 type openSRSService struct {
 	log           logger.Logger
@@ -226,208 +216,4 @@ func generateMessageID(fromEmail string) string {
 	messageID := fmt.Sprintf("<%s@%s>", uniqueID, domain)
 
 	return messageID
-}
-
-func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dkimPrivateKey string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.setEmailDomainInOpenSRS")
-	defer span.Finish()
-	span.LogKV("domain", domain)
-
-	// validate if open srs is configured
-	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
-		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
-		s.log.Error("OpenSRS credentials not set")
-		return errors.New("OpenSRS credentials not set")
-	}
-
-	// Define the API endpoint (replace with your environment's URL)
-	apiURL := s.openSrsConfig.Url + "/api/change_domain"
-
-	// Prepare the request body
-	requestBody := map[string]interface{}{
-		"credentials": map[string]string{
-			"user":     s.openSrsConfig.Username,
-			"password": s.openSrsConfig.ApiKey,
-		},
-		"domain": domain,
-		"attributes": map[string]interface{}{
-			"dkim_selector": "dkim",
-			"dkim_key":      dkimPrivateKey,
-		},
-	}
-
-	// Convert the request body to JSON
-	requestData, err := json.Marshal(requestBody)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
-		s.log.Error("failed to marshal request body", err)
-		return fmt.Errorf("failed to marshal request body: %v", err)
-	}
-
-	// Create a new HTTP request with context
-	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(requestData))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
-		s.log.Error("failed to create HTTP request", err)
-		return fmt.Errorf("failed to create HTTP request: %v", err)
-	}
-
-	// Set necessary headers
-	req.Header.Set("Content-Type", "application/json")
-
-	// Create an HTTP client with a timeout
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	// Make the HTTP request
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to make API request"))
-		s.log.Error("failed to make API request", err)
-		return fmt.Errorf("failed to make API request: %s", err.Error())
-	}
-	defer resp.Body.Close()
-
-	// Parse the response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		s.log.Error("failed to read response body", err)
-		return errors.Wrap(err, "failed to read response body")
-	}
-	span.LogKV("responseBody", string(body))
-
-	// Check for a successful response
-	var response OpenSRSResponse
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
-		s.log.Error("failed to unmarshal response", err)
-		return fmt.Errorf("failed to unmarshal response: %v", err)
-	}
-
-	// Check if the response indicates success
-	if !response.Success {
-		tracing.TraceErr(span, errors.New(response.Error))
-		s.log.Error("API request failed", response.Error)
-		return fmt.Errorf("API request failed: %s", response.Error)
-	}
-
-	return nil
-}
-
-func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, password string, forwardingTo []string, webmailEnabled bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupMailbox")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("username", username)
-	span.LogFields(log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
-
-	// validate if open srs is configured
-	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
-		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
-		s.log.Error("OpenSRS credentials not set")
-		return errors.New("OpenSRS credentials not set")
-	}
-
-	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
-	apiURL := s.openSrsConfig.Url + "/api/change_user"
-
-	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
-		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
-		s.log.Error("OpenSRS credentials not set")
-		return errors.New("OpenSRS credentials not set")
-	}
-
-	// prepare the attributes for the openSRS API
-	attributes := map[string]interface{}{
-		"type":           "mailbox",
-		"password":       password,
-		"delivery_local": true, // Store mail locally
-	}
-
-	if webmailEnabled {
-		attributes["service_webmail"] = "enabled"
-	} else {
-		attributes["service_webmail"] = "disabled"
-	}
-	// Add forwarding options if enabled
-	if len(forwardingTo) > 0 {
-		attributes["delivery_forward"] = true
-		attributes["forward_recipients"] = forwardingTo
-	}
-
-	// Create the requestBody with the extracted attributes
-	requestBody := map[string]interface{}{
-		"credentials": map[string]string{
-			"user":     s.openSrsConfig.Username,
-			"password": s.openSrsConfig.ApiKey,
-		},
-		"user":       username,
-		"attributes": attributes,
-	}
-
-	// Convert the request body to JSON
-	requestData, err := json.Marshal(requestBody)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
-		s.log.Error("failed to marshal request body", err)
-		return fmt.Errorf("failed to marshal request body: %v", err)
-	}
-
-	// Create a new HTTP request with context
-	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(requestData))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
-		s.log.Error("failed to create HTTP request", err)
-		return fmt.Errorf("failed to create HTTP request: %s", err.Error())
-	}
-
-	// Set necessary headers
-	req.Header.Set("Content-Type", "application/json")
-
-	// Create an HTTP client with a timeout
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	// Make the HTTP request
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to make API request"))
-		s.log.Error("failed to make API request", err)
-		return fmt.Errorf("failed to make API request: %s", err.Error())
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		tracing.TraceErr(span, errors.New("API request failed"))
-		s.log.Error("API request failed", err)
-		return fmt.Errorf("API request failed, status code: %d", resp.StatusCode)
-	}
-
-	// Parse the response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		s.log.Error("failed to read response body", err)
-		return err
-	}
-	span.LogKV("OpenSRS.responseBody", string(body))
-
-	// Check for a successful response
-	var response OpenSRSResponse
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
-		s.log.Error("failed to unmarshal response", err)
-		return err
-	}
-
-	// Check if the response indicates success
-	if !response.Success {
-		tracing.TraceErr(span, errors.New(response.Error))
-		s.log.Error("API request failed", response.Error)
-		return err
-	}
-
-	return nil
 }
