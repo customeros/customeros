@@ -38,8 +38,12 @@ type MailstackService interface {
 	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)
 	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error
 	GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error)
+	// mailboxes
+	RegisterMailbox(ctx context.Context, tenant, domain string, request CreateMailboxRequest) (*RegisterMailboxResponse, error)
+	ConfigureMailbox(ctx context.Context, tenant, mailboxId string) error
+	// domains
+	RegisterNewDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
+	ConfigureDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
+	GetDomains(ctx context.Context, tenant string) (int, string, []DomainRecord, error)
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
-	RegisterMailbox(ctx context.Context, tenant string, domain string, request CreateMailboxRequest) (*RegisterMailboxResponse, error)
-	ConfigureMailbox(ctx context.Context, tenant string, mailboxId string) error
-	RegisterNewDomain(ctx context.Context, tenant string, domain string, website string) (int, string, *DomainRecord, error)
 }

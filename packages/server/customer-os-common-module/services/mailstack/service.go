@@ -576,3 +576,155 @@ func (s *mailstackService) RegisterNewDomain(ctx context.Context, tenant, domain
 
 	return http.StatusOK, "", &response.Domain, nil
 }
+
+func (s *mailstackService) ConfigureDomain(ctx context.Context, tenant, domain, website string) (int, string, *interfaces.DomainRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.ConfigureDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Create request body
+	reqBody := struct {
+		Domain  string `json:"domain"`
+		Website string `json:"website"`
+	}{
+		Domain:  domain,
+		Website: website,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to marshal request body"))
+		return http.StatusInternalServerError, "Unable to marshal request body", nil, err
+	}
+
+	// Create request to Mailstack API
+	mailstackReq, err := http.NewRequestWithContext(ctx, "POST", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/configure", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to create request to Mailstack API", nil, err
+	}
+
+	// Add required headers
+	mailstackReq.Header.Set("Content-Type", "application/json")
+	mailstackReq.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	mailstackReq.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(mailstackReq.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(mailstackReq)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to connect to Mailstack API", nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+
+		// For 500 errors, use a generic message
+		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+			return http.StatusInternalServerError, "Internal server error", nil, errors.New(errorResponse.Error)
+		}
+
+		// For other errors, propagate the message from Mailstack
+		return resp.StatusCode, errorResponse.Error, nil, errors.New(errorResponse.Error)
+	}
+
+	// Parse response
+	var response struct {
+		Domain interfaces.DomainRecord `json:"domain"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+		return http.StatusInternalServerError, "Unable to parse Mailstack API response", nil, err
+	}
+
+	return http.StatusOK, "", &response.Domain, nil
+}
+
+func (s *mailstackService) GetDomains(ctx context.Context, tenant string) (int, string, []interfaces.DomainRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetDomains")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "GET", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/domains", nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to create request to Mailstack API", nil, err
+	}
+
+	// Add required headers
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to connect to Mailstack API", nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+
+		// For 500 errors, use a generic message
+		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+			return http.StatusInternalServerError, "Internal server error", nil, errors.New(errorResponse.Error)
+		}
+
+		// For other errors, propagate the message from Mailstack
+		return resp.StatusCode, errorResponse.Error, nil, errors.New(errorResponse.Error)
+	}
+
+	// Parse response
+	var response struct {
+		Domains []interfaces.DomainRecord `json:"domains"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+		return http.StatusInternalServerError, "Unable to parse Mailstack API response", nil, err
+	}
+
+	return http.StatusOK, "", response.Domains, nil
+}
