@@ -28,6 +28,7 @@ type CommonConfig struct {
 	RabbitMQ         commonconf.RabbitMQConfig
 	OpensearchConfig commonconf.OpensearchConfig
 	MailSherpaApi    commonconf.MailSherpaApiConfig
+	MaistackApi      commonconf.MailstackApiConfig
 	BetterContact    commonconf.BetterContactConfig
 	Scrapin          commonconf.ScrapinConfig
 	Snitcher         commonconf.SnitcherConfig
@@ -77,6 +78,7 @@ func Load() *Config {
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,
+			MailstackApiConfig:  cmnCfg.MaistackApi,
 			PdfConverterConfig:  cmnCfg.PdfConverter,
 			FileStoreConfig:     cmnCfg.FileStore,
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
