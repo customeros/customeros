@@ -14,9 +14,7 @@ import (
 
 type MailStackDomainRepository interface {
 	CreateDMARCReport(ctx context.Context, tenant string, report *postgres_entity.DMARCMonitoring) error
-	CreateMailstackReputationScore(ctx context.Context, tenant string, score *postgres_entity.MailstackReputationEntity) error
 	GetDomainCrossTenant(ctx context.Context, domain string) (*postgres_entity.MailStackDomain, error)
-	GetAllActiveDomainsCrossTenant(ctx context.Context) ([]postgres_entity.MailStackDomain, error)
 }
 
 type mailStackDomainRepository struct {
@@ -25,20 +23,6 @@ type mailStackDomainRepository struct {
 
 func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
 	return &mailStackDomainRepository{db: db}
-}
-
-func (r *mailStackDomainRepository) CreateMailstackReputationScore(ctx context.Context, tenant string, score *postgres_entity.MailstackReputationEntity) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.CreateMailstackReputationScore")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	err := r.db.Create(&score).Error
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
-		return err
-	}
-	return nil
 }
 
 func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenant string, report *postgres_entity.DMARCMonitoring) error {
@@ -77,22 +61,4 @@ func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, do
 	}
 
 	return &mailStackDomain, nil
-}
-
-func (r *mailStackDomainRepository) GetAllActiveDomainsCrossTenant(ctx context.Context) ([]postgres_entity.MailStackDomain, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetAllActiveDomainsCrossTenant")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	var mailStackDomains []postgres_entity.MailStackDomain
-	err := r.db.WithContext(ctx).
-		Where("active = ?", true).
-		Where("configured = ?", true).
-		Find(&mailStackDomains).Error
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
-		return nil, err
-	}
-
-	return mailStackDomains, nil
 }

@@ -193,7 +193,6 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleGetCurrencyRatesECB, GroupCurrency, getCurrencyRatesECB, "getCurrencyRatesECB")
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkUnthreadIssues, GroupUnthreadIssues, linkUnthreadIssues, "linkUnthreadIssues")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckDomains, GroupDomain, checkDomains, "checkDomains")
-	addJob(cont.Cfg.App.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
 }
@@ -364,10 +363,6 @@ func linkUnthreadIssues(cont *container.Container) {
 
 func checkDomains(cont *container.Container) {
 	service.NewDomainService(cont.Cfg, cont.Log, cont.CommonServices).CheckDomains()
-}
-
-func checkMailstackDomainReputation(cont *container.Container) {
-	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
 }
 
 func enrichGlobalOrganization(cont *container.Container) {
