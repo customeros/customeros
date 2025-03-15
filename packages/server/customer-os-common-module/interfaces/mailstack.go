@@ -27,6 +27,13 @@ type RegisterMailboxResponse struct {
 	ErrorMsg   string
 }
 
+type DomainRecord struct {
+	Domain      string   `json:"domain"`
+	CreatedDate string   `json:"createdDate"`
+	ExpiredDate string   `json:"expiredDate"`
+	Nameservers []string `json:"nameservers"`
+}
+
 type MailstackService interface {
 	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)
 	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error
@@ -34,4 +41,5 @@ type MailstackService interface {
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
 	RegisterMailbox(ctx context.Context, tenant string, domain string, request CreateMailboxRequest) (*RegisterMailboxResponse, error)
 	ConfigureMailbox(ctx context.Context, tenant string, mailboxId string) error
+	RegisterNewDomain(ctx context.Context, tenant string, domain string, website string) (int, string, *DomainRecord, error)
 }
