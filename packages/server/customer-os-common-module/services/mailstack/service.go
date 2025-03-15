@@ -32,6 +32,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
+const TEST_MAILBOX_DOMAIN = "testcustomeros.com"
+
 type mailstackService struct {
 	cfg      *config.CommonConfig
 	events   *events.EventsService

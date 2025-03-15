@@ -16,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailbox"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/google/uuid"
@@ -435,7 +435,7 @@ func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject stri
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	mailboxUsername := fmt.Sprintf("%s@%s", tenant, mailbox.TEST_MAILBOX_DOMAIN)
+	mailboxUsername := fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN)
 
 	fromFirstName := "Yu"
 	fromLastName := "Senderson"

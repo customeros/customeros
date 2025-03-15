@@ -20,7 +20,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	mailbov_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailbox"
+	mailstack "github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -172,7 +172,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 	}
 
 	_, err = s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
-		Email: fmt.Sprintf("%s@%s", tenant, mailbov_srv.TEST_MAILBOX_DOMAIN),
+		Email: fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN),
 	},
 		&common_srv.LinkWith{
 			Id:   contactId,
@@ -545,7 +545,7 @@ func (s *registrationService) setupTestUser(ctx context.Context, span opentracin
 }
 
 func (s *registrationService) setupTestMailbox(ctx context.Context, span opentracing.Span, tenant string, testUser *interfaces.TestUserSetup) error {
-	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, mailbov_srv.TEST_MAILBOX_DOMAIN))
+	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN))
 	testUser.MailboxAddress = mailboxAddress
 
 	testEmailId, err := s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
@@ -563,7 +563,6 @@ func (s *registrationService) setupTestMailbox(ctx context.Context, span opentra
 	return s.createMailboxIfNotExists(ctx, span, tenant, mailboxAddress)
 }
 
-// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
 func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span opentracing.Span, tenant, mailboxAddress string) error {
 	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxAddress)
 	if err != nil {
@@ -572,8 +571,8 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 	}
 
 	if mailbox == nil {
-		result, err := s.mailstack.RegisterMailbox(ctx, tenant, mailbov_srv.TEST_MAILBOX_DOMAIN, interfaces.CreateMailboxRequest{
-			Domain:          mailbov_srv.TEST_MAILBOX_DOMAIN,
+		result, err := s.mailstack.RegisterMailbox(ctx, tenant, mailstack.TEST_MAILBOX_DOMAIN, interfaces.CreateMailboxRequest{
+			Domain:          mailstack.TEST_MAILBOX_DOMAIN,
 			Username:        strings.ToLower(tenant),
 			Password:        utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
 			LinkedUserEmail: mailboxAddress,
@@ -592,7 +591,7 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			return err
 		}
 
-		mailboxEntity, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, strings.ToLower(tenant)+"@"+mailbov_srv.TEST_MAILBOX_DOMAIN)
+		mailboxEntity, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, strings.ToLower(tenant)+"@"+mailstack.TEST_MAILBOX_DOMAIN)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
 			return err
