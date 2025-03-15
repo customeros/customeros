@@ -406,8 +406,14 @@ func prometheusMiddleware() gin.HandlerFunc {
 func bodyLoggerMiddleware(c *gin.Context) {
 	blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
 	c.Writer = blw
+	// Set bodyBytes in context before calling Next()
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err == nil {
+		// Restore the body for subsequent middleware/handlers
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		c.Set("bodyBytes", bodyBytes)
+	}
 	c.Next()
-	c.Set("bodyBytes", blw.body.Bytes())
 }
 
 type bodyLogWriter struct {
