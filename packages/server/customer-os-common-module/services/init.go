@@ -254,7 +254,7 @@ func InitCommonServices(
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
 	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
-	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, mailboxImpl, openSRSImpl)
+	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, neo4jRepositories, mailboxImpl, openSRSImpl, emailImpl)
 	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl, workspaceImpl)
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)

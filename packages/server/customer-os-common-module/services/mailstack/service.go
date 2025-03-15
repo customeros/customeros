@@ -234,8 +234,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			}
 
 			for _, username := range usernames {
-				// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
-				err = s.mailbox.CreateMailbox(ctx, tx, interfaces.CreateMailboxRequest{
+				result, err := s.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
 					IgnoreDomainOwnership: true,
 					Domain:                domain,
 					Username:              username,
@@ -246,6 +245,9 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 				})
 				if err != nil {
 					return err
+				}
+				if result.StatusCode != http.StatusCreated {
+					return errors.New(result.ErrorMsg)
 				}
 			}
 		}
@@ -331,19 +333,21 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 
 	// Create request body for Mailstack API
 	reqBody := struct {
-		Username       string   `json:"username"`
-		Password       string   `json:"password"`
-		Domain         string   `json:"domain"`
-		ForwardingTo   []string `json:"forwardingTo"`
-		WebmailEnabled bool     `json:"webmailEnabled"`
-		UserId         string   `json:"userId"`
+		Username              string   `json:"username"`
+		Password              string   `json:"password"`
+		Domain                string   `json:"domain"`
+		ForwardingTo          []string `json:"forwardingTo"`
+		WebmailEnabled        bool     `json:"webmailEnabled"`
+		UserId                string   `json:"userId"`
+		IgnoreDomainOwnership bool     `json:"ignoreDomainOwnership"`
 	}{
-		Username:       request.Username,
-		Password:       request.Password,
-		Domain:         domain,
-		ForwardingTo:   request.ForwardingTo,
-		WebmailEnabled: request.WebmailEnabled,
-		UserId:         userId,
+		Username:              request.Username,
+		Password:              request.Password,
+		Domain:                domain,
+		ForwardingTo:          request.ForwardingTo,
+		WebmailEnabled:        request.WebmailEnabled,
+		UserId:                userId,
+		IgnoreDomainOwnership: request.IgnoreDomainOwnership,
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
