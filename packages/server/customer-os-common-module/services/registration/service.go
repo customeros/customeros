@@ -3,6 +3,7 @@ package registration
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -32,6 +33,7 @@ type registrationService struct {
 	email        interfaces.EmailService
 	flow         interfaces.FlowService
 	mailbox      interfaces.MailboxService
+	mailstack    interfaces.MailstackService
 	org          interfaces.OrganizationService
 	postmark     interfaces.PostmarkService
 	user         interfaces.UserService
@@ -45,6 +47,7 @@ func NewRegistrationService(events *events.EventsService,
 	email interfaces.EmailService,
 	flow interfaces.FlowService,
 	mailbox interfaces.MailboxService,
+	mailstack interfaces.MailstackService,
 	org interfaces.OrganizationService,
 	postmark interfaces.PostmarkService,
 	user interfaces.UserService,
@@ -569,14 +572,22 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 	}
 
 	if mailbox == nil {
-		if err := s.mailbox.CreateMailbox(ctx, nil, interfaces.CreateMailboxRequest{
+		result, err := s.mailstack.RegisterMailbox(ctx, tenant, mailbov_srv.TEST_MAILBOX_DOMAIN, interfaces.CreateMailboxRequest{
 			Domain:          mailbov_srv.TEST_MAILBOX_DOMAIN,
 			Username:        strings.ToLower(tenant),
 			Password:        utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
 			LinkedUserEmail: mailboxAddress,
 			WebmailEnabled:  true,
 			ForwardingTo:    []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))},
-		}); err != nil {
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to add mailbox"))
+			return err
+		}
+
+		// Handle non-201 responses
+		if result.StatusCode != http.StatusCreated {
+			err = errors.New(result.ErrorMsg)
 			tracing.TraceErr(span, errors.Wrap(err, "failed to add mailbox"))
 			return err
 		}
