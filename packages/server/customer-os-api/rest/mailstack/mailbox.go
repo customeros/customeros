@@ -2,20 +2,12 @@
 package mailstack
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
@@ -78,147 +70,41 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			return
 		}
 
-		// Get user ID from linked email
-		var userId string
-		if mailboxRequest.LinkedUser != "" {
-			userDbNode, err := h.services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, mailboxRequest.LinkedUser)
-			if err != nil {
-				message := "Error finding linked user"
-				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-				tracing.TraceErr(span, errors.Wrap(err, "Error finding linked user"))
-				return
-			}
-			if userDbNode != nil {
-				userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-				userId = userEntity.Id
-			}
-		}
-
-		// Create request body for Mailstack API
-		reqBody := struct {
-			Username       string   `json:"username"`
-			Password       string   `json:"password"`
-			Domain         string   `json:"domain"`
-			ForwardingTo   []string `json:"forwardingTo"`
-			WebmailEnabled bool     `json:"webmailEnabled"`
-			UserId         string   `json:"userId"`
-		}{
-			Username:       mailboxRequest.Username,
-			Password:       mailboxRequest.Password,
-			Domain:         domain,
-			ForwardingTo:   mailboxRequest.ForwardingTo,
-			WebmailEnabled: mailboxRequest.WebmailEnabled,
-			UserId:         userId,
-		}
-
-		jsonBody, err := json.Marshal(reqBody)
+		// Create mailbox using service
+		result, err := h.services.CommonServices.MailstackService.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
+			Username:        mailboxRequest.Username,
+			Password:        mailboxRequest.Password,
+			ForwardingTo:    mailboxRequest.ForwardingTo,
+			WebmailEnabled:  mailboxRequest.WebmailEnabled,
+			LinkedUserEmail: mailboxRequest.LinkedUser,
+		})
 		if err != nil {
-			message := "Unable to marshal request body"
-			tracing.TraceErr(span, errors.Wrap(err, message))
+			message := "Internal server error"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			tracing.TraceErr(span, err)
 			return
 		}
 
-		// Create request to Mailstack API
-		mailstackReq, err := http.NewRequestWithContext(ctx, "POST", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl+"/v1/mailboxes", bytes.NewBuffer(jsonBody))
-		if err != nil {
-			message := "Unable to create request to Mailstack API"
-			tracing.TraceErr(span, errors.Wrap(err, message))
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		// Add required headers
-		mailstackReq.Header.Set("Content-Type", "application/json")
-		mailstackReq.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
-		mailstackReq.Header.Set("tenant", tenant)
-
-		// Forward Jaeger trace context
-		carrier := opentracing.HTTPHeadersCarrier(mailstackReq.Header)
-		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-		if err != nil {
-			span.LogFields(tracingLog.Error(err))
-		}
-
-		// Create HTTP client with default transport and timeout
-		client := &http.Client{
-			Timeout: 10 * time.Second,
-		}
-
-		// Make request to Mailstack API
-		resp, err := client.Do(mailstackReq)
-		if err != nil {
-			message := "Unable to connect to Mailstack API"
-			tracing.TraceErr(span, errors.Wrap(err, message))
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-		defer resp.Body.Close()
-
-		// Check response status
-		if resp.StatusCode != http.StatusOK {
-			// Read error response body
-			var errorResponse struct {
-				Error string `json:"error"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-				errorResponse.Error = "Unknown error occurred"
-			}
-			tracing.TraceErr(span, errors.New(errorResponse.Error))
-
-			// For 500 errors, use a generic message
-			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+		// Handle non-201 responses
+		if result.StatusCode != http.StatusCreated {
+			if result.StatusCode == http.StatusInternalServerError || result.StatusCode == http.StatusUnauthorized {
 				message := "Internal server error"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
-
-			// For other errors, propagate the status code and message from Mailstack
-			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
+			h.responseHandler.HandleError(c, result.StatusCode, &result.ErrorMsg)
 			return
 		}
 
-		// Parse response
-		var apiResponse MailboxRecord
-		if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-			message := "Unable to parse Mailstack API response"
-			tracing.TraceErr(span, errors.Wrap(err, message))
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		// create email node
-		emailFields := interfaces.EmailFields{
-			Email: apiResponse.Email,
-		}
-		var linkWith *common_srv.LinkWith
-		if userId != "" {
-			linkWith = &common_srv.LinkWith{
-				Type: model.USER,
-				Id:   userId,
-			}
-		}
-		_, err = h.services.CommonServices.EmailService.Merge(ctx, nil, tenant, emailFields, linkWith)
-		if err != nil {
-			message := "Internal server error"
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			tracing.TraceErr(span, errors.Wrap(err, message))
-			return
-		}
-
-		err = h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, apiResponse.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
-		if err != nil {
-			message := "Error provisioning mailbox"
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			tracing.TraceErr(span, errors.Wrap(err, "Error provisioning mailbox"))
-			return
-		}
-
-		mailboxResponse := MailboxResponse{
-			Mailbox: apiResponse,
-		}
-
-		h.responseHandler.HandleSuccess(c, mailboxResponse)
+		h.responseHandler.HandleSuccess(c, MailboxResponse{
+			Mailbox: MailboxRecord{
+				Email:             result.Mailbox.Email,
+				Password:          result.Mailbox.Password,
+				ForwardingTo:      result.Mailbox.ForwardingTo,
+				ForwardingEnabled: result.Mailbox.ForwardingEnabled,
+				WebmailEnabled:    result.Mailbox.WebmailEnabled,
+			},
+		})
 	}
 }
 
