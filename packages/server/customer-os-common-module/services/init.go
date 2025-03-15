@@ -51,7 +51,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/markdown_event"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/media"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/namecheap"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/notification"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
@@ -126,7 +125,6 @@ type CommonServices struct {
 	MailstackService           interfaces.MailstackService
 	MarkdownEventService       interfaces.MarkdownEventService
 	MediaService               interfaces.MediaService
-	NamecheapService           interfaces.NamecheapService
 	NotificationService        interfaces.NotificationService
 	NovuService                interfaces.NovuService
 	OpenSRSService             interfaces.OpenSrsService
@@ -216,7 +214,6 @@ func InitCommonServices(
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
 	mediaImpl := media.NewMediaService(postgresRepositories)
-	namecheapImpl := namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories)
 	novuImpl := novu.NewNovuService(cfg.External.NovuConfig.ApiKey)
 	openSRSImpl := opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories)
 	phoneNumberImpl := phone_number.NewPhoneNumberService(neo4jRepositories, eventsImpl)
@@ -257,7 +254,7 @@ func InitCommonServices(
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
 	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
-	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, namecheapImpl, mailboxImpl, openSRSImpl)
+	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, mailboxImpl, openSRSImpl)
 	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl, workspaceImpl)
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
@@ -365,7 +362,6 @@ func InitCommonServices(
 		MailstackService:           mailstackImpl,
 		MarkdownEventService:       markdownEventImpl,
 		MediaService:               mediaImpl,
-		NamecheapService:           namecheapImpl,
 		NotificationService:        notificationImpl,
 		NovuService:                novuImpl,
 		OpenSRSService:             openSRSImpl,

@@ -34,7 +34,6 @@ type CommonConfig struct {
 	Snitcher         commonconf.SnitcherConfig
 	Anthropic        commonconf.AnthropicConfig
 	Novu             commonconf.NovuConfig
-	Namecheap        commonconf.NamecheapConfig
 	OpenSrs          commonconf.OpenSRSConfig
 	TrueInbox        commonconf.TrueInboxConfig
 	Brandfetch       commonconf.BrandfetchConfig
@@ -88,7 +87,6 @@ func Load() *Config {
 			SnitcherConfig:       cmnCfg.Snitcher,
 			AnthropicConfig:      cmnCfg.Anthropic,
 			NovuConfig:           cmnCfg.Novu,
-			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSrs,
 			TrueInboxConfig:      cmnCfg.TrueInbox,
 			BrandfetchConfig:     cmnCfg.Brandfetch,

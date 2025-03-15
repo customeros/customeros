@@ -28,22 +28,20 @@ import (
 )
 
 type mailstackService struct {
-	cfg       *config.CommonConfig
-	events    *events.EventsService
-	postgres  *postgres_repository.Repositories
-	mailbox   interfaces.MailboxService
-	namecheap interfaces.NamecheapService
-	opensrs   interfaces.OpenSrsService
+	cfg      *config.CommonConfig
+	events   *events.EventsService
+	postgres *postgres_repository.Repositories
+	mailbox  interfaces.MailboxService
+	opensrs  interfaces.OpenSrsService
 }
 
-func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
 	return &mailstackService{
-		cfg:       cfg,
-		events:    events,
-		postgres:  postgres,
-		mailbox:   mailbox,
-		namecheap: namecheap,
-		opensrs:   opensrs,
+		cfg:      cfg,
+		events:   events,
+		postgres: postgres,
+		mailbox:  mailbox,
+		opensrs:  opensrs,
 	}
 }
 

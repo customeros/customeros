@@ -43,7 +43,6 @@ type ExternalServicesConfig struct {
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig
 	JinaConfig           JinaConfig
-	NamecheapConfig      NamecheapConfig
 	NovuConfig           NovuConfig
 	OpenSRSConfig        OpenSRSConfig
 	PostmarkConfig       PostmarkConfig

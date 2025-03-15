@@ -42,7 +42,6 @@ type CommonConfig struct {
 	Jina              commonconf.JinaConfig
 	Mailsherpa        commonconf.MailSherpaApiConfig
 	MailstackApi      commonconf.MailstackApiConfig
-	Namecheap         commonconf.NamecheapConfig
 	Novu              commonconf.NovuConfig
 	OpenSRS           commonconf.OpenSRSConfig
 	PdfConverter      commonconf.PdfConverterConfig
@@ -126,7 +125,6 @@ func InitConfig() (*Config, error) {
 			AnthropicConfig:      cmnCfg.Anthropic,
 			BrandfetchConfig:     cmnCfg.Brandfetch,
 			DeepseekConfig:       cmnCfg.Deepseek,
-			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSRS,
 			JinaConfig:           cmnCfg.Jina,
 			IpDataConfig:         cmnCfg.IpData,
