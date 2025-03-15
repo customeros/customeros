@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -99,7 +100,9 @@ func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, 
 	}
 
 	// Create HTTP client with default transport
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 
 	// Make request to Mailstack API
 	resp, err := client.Do(req)
@@ -143,20 +146,64 @@ func (r *queryResolver) MailstackDomains(ctx context.Context) ([]string, error) 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	domains, err := r.Services.Repositories.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "GET", r.Services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl+"/v1/domains", nil)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get active domains for tenant %s", tenant)
-		graphql.AddErrorf(ctx, "Failed to get active domains for tenant %s", tenant)
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		graphql.AddErrorf(ctx, "Failed to get domains")
 		return nil, nil
 	}
 
-	var domainNames []string
-	for _, domain := range domains {
-		domainNames = append(domainNames, domain.Domain)
+	// Add required headers
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", r.Services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
 	}
 
-	return domainNames, nil
+	// Create HTTP client with default transport
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		graphql.AddErrorf(ctx, "Failed to get domains")
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		graphql.AddErrorf(ctx, "Failed to get domains")
+		return nil, nil
+	}
+
+	// Parse response
+	var response struct {
+		Domains []string `json:"domains"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+		graphql.AddErrorf(ctx, "Failed to get domains")
+		return nil, nil
+	}
+
+	return response.Domains, nil
 }
 
 // MailstackCheckUnavailableDomains is the resolver for the mailstack_CheckUnavailableDomains field.
@@ -191,7 +238,9 @@ func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, do
 		}
 
 		// Create HTTP client with default transport
-		client := &http.Client{}
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+		}
 
 		// Make request to Mailstack API
 		resp, err := client.Do(req)

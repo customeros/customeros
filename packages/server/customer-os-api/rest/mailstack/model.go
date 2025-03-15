@@ -1,8 +1,6 @@
 // @openapi 3.0.0
 package mailstack
 
-import ()
-
 // RegisterNewDomainRequest represents the domain registration request
 // @Description Request payload for registering a new domain for mail services
 type RegisterNewDomainRequest struct {

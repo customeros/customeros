@@ -1,13 +1,17 @@
 package mailstack
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -22,26 +26,33 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
+const TEST_MAILBOX_DOMAIN = "testcustomeros.com"
+
 type mailstackService struct {
 	cfg      *config.CommonConfig
 	events   *events.EventsService
 	postgres *postgres_repository.Repositories
+	neo4j    *neo4j_repository.Repositories
 	mailbox  interfaces.MailboxService
 	opensrs  interfaces.OpenSrsService
+	email    interfaces.EmailService
 }
 
-func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService, email interfaces.EmailService) interfaces.MailstackService {
 	return &mailstackService{
 		cfg:      cfg,
 		events:   events,
 		postgres: postgres,
 		mailbox:  mailbox,
 		opensrs:  opensrs,
+		neo4j:    neo4j,
+		email:    email,
 	}
 }
 
@@ -225,8 +236,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			}
 
 			for _, username := range usernames {
-				// TODO IMPORTANT, before delete in places where it's called extract email and user id part from here to invocation code
-				err = s.mailbox.CreateMailbox(ctx, tx, interfaces.CreateMailboxRequest{
+				result, err := s.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
 					IgnoreDomainOwnership: true,
 					Domain:                domain,
 					Username:              username,
@@ -237,6 +247,9 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 				})
 				if err != nil {
 					return err
+				}
+				if result.StatusCode != http.StatusCreated {
+					return errors.New(result.ErrorMsg)
 				}
 			}
 		}
@@ -297,4 +310,185 @@ func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[stri
 
 	span.LogFields(tracingLog.Int("response.count", len(output)))
 	return output, nil
+}
+
+func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, domain string, request interfaces.CreateMailboxRequest) (*interfaces.RegisterMailboxResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.RegisterMailbox")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("request.domain", domain)
+	tracing.LogObjectAsJson(span, "request.request", request)
+
+	// Get user ID from linked email
+	var userId string
+	if request.LinkedUserEmail != "" {
+		userDbNode, err := s.neo4j.UserReadRepository.GetFirstUserByEmail(ctx, tenant, request.LinkedUserEmail)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error finding linked user"))
+			return nil, err
+		}
+		if userDbNode != nil {
+			userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+			userId = userEntity.Id
+		}
+	}
+
+	// Create request body for Mailstack API
+	reqBody := struct {
+		Username              string   `json:"username"`
+		Password              string   `json:"password"`
+		Domain                string   `json:"domain"`
+		ForwardingTo          []string `json:"forwardingTo"`
+		WebmailEnabled        bool     `json:"webmailEnabled"`
+		UserId                string   `json:"userId"`
+		IgnoreDomainOwnership bool     `json:"ignoreDomainOwnership"`
+	}{
+		Username:              request.Username,
+		Password:              request.Password,
+		Domain:                domain,
+		ForwardingTo:          request.ForwardingTo,
+		WebmailEnabled:        request.WebmailEnabled,
+		UserId:                userId,
+		IgnoreDomainOwnership: request.IgnoreDomainOwnership,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to marshal request body")
+	}
+
+	// Create request to Mailstack API
+	mailstackReq, err := http.NewRequestWithContext(ctx, "POST", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/mailboxes", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to create request to Mailstack API")
+	}
+
+	// Add required headers
+	mailstackReq.Header.Set("Content-Type", "application/json")
+	mailstackReq.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	mailstackReq.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(mailstackReq.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport and timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(mailstackReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to connect to Mailstack API")
+	}
+	defer resp.Body.Close()
+
+	response := &interfaces.RegisterMailboxResponse{
+		StatusCode: resp.StatusCode,
+	}
+
+	// Check response status
+	if resp.StatusCode != http.StatusCreated {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		response.ErrorMsg = errorResponse.Error
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return response, nil
+	}
+
+	// Parse response
+	var mailboxRecord interfaces.MailboxRecord
+	if err := json.NewDecoder(resp.Body).Decode(&mailboxRecord); err != nil {
+		return nil, errors.Wrap(err, "Unable to parse Mailstack API response")
+	}
+
+	// Create email node and link with user if identified
+	emailFields := interfaces.EmailFields{
+		Email: mailboxRecord.Email,
+	}
+	var linkWith *common_srv.LinkWith
+	if userId != "" {
+		linkWith = &common_srv.LinkWith{
+			Type: model.USER,
+			Id:   userId,
+		}
+	}
+	_, err = s.email.Merge(ctx, nil, tenant, emailFields, linkWith)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating email node"))
+		return nil, err
+	}
+
+	// Publish fanout event to provision mailbox
+	err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error publishing mailbox provision event"))
+		return nil, err
+	}
+
+	response.Mailbox = &mailboxRecord
+	return response, nil
+}
+
+func (s *mailstackService) ConfigureMailbox(ctx context.Context, tenant string, mailboxId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "mailstackService.ConfigureMailbox")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, mailboxId)
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "POST", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/mailboxes/"+mailboxId+"/configure", nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Add required headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return errors.New(errorResponse.Error)
+	}
+
+	return nil
 }
