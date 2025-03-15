@@ -374,7 +374,7 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 	span.LogFields(log.String("request.contractID", id))
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("Missing contract input id"))
+		tracing.TraceErr(span, errors.New("missing contract input id"))
 		graphql.AddErrorf(ctx, "Missing contract input id")
 		return nil, nil
 	}
