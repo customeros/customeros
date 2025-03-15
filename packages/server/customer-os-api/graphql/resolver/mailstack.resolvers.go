@@ -80,58 +80,14 @@ func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, 
 		domain = strings.Split(domain, ".")[0]
 	}
 
-	// Create request to Mailstack API
-	req, err := http.NewRequestWithContext(ctx, "GET", r.Services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/recommendations?baseName="+domain, nil)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
-		graphql.AddErrorf(ctx, "Failed to create request to Mailstack API")
-		return nil, nil
-	}
-
-	// Add required headers
-	req.Header.Set("X-CUSTOMER-OS-API-KEY", r.Services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
-	req.Header.Set("tenant", tenant)
-
-	// Forward Jaeger trace context
-	carrier := opentracing.HTTPHeadersCarrier(req.Header)
-	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-	if err != nil {
-		span.LogFields(tracingLog.Error(err))
-	}
-
-	// Create HTTP client with default transport
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	// Make request to Mailstack API
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
-		graphql.AddErrorf(ctx, "Failed to connect to Mailstack API")
-		return nil, nil
-	}
-	defer resp.Body.Close()
-
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		// Read error response body
-		var errorResponse struct {
-			Error string `json:"error"`
+	// Call service to get domain recommendations
+	statusCode, errorMsg, recommendations, err := r.Services.CommonServices.MailstackService.RecommendDomain(ctx, tenant, domain)
+	if err != nil || statusCode != http.StatusOK {
+		if errorMsg != "" {
+			graphql.AddErrorf(ctx, errorMsg)
+		} else {
+			graphql.AddErrorf(ctx, "Failed to get domain recommendations")
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-			errorResponse.Error = "Unknown error occurred"
-		}
-		tracing.TraceErr(span, errors.New(errorResponse.Error))
-		graphql.AddErrorf(ctx, errorResponse.Error)
-		return nil, nil
-	}
-
-	// Parse response
-	var recommendations []string
-	if err := json.NewDecoder(resp.Body).Decode(&recommendations); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
-		graphql.AddErrorf(ctx, "Failed to parse Mailstack API response")
 		return nil, nil
 	}
 

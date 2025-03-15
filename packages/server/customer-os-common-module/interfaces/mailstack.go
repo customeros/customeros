@@ -45,5 +45,6 @@ type MailstackService interface {
 	RegisterNewDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
 	ConfigureDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
 	GetDomains(ctx context.Context, tenant string) (int, string, []DomainRecord, error)
+	RecommendDomain(ctx context.Context, tenant, baseName string) (int, string, []string, error)
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
 }
