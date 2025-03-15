@@ -2,14 +2,13 @@ package events_listeners
 
 import (
 	"context"
-	"strings"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
@@ -51,23 +50,12 @@ func (l *MailstackProvisionMailboxListener) handle(ctx context.Context, entityId
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	mailbox, err := l.dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetById(ctx, entityId)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := l.dependencies.CommonServices.MailstackService.ConfigureMailbox(ctx, tenant, entityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
-	}
-
-	err = l.dependencies.CommonServices.OpenSRSService.SetupMailbox(ctx, mailbox.Tenant, mailbox.MailboxUsername, mailbox.MailboxPassword, strings.Split(mailbox.ForwardingTo, ","), mailbox.WebmailEnabled)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	mailbox.Status = postgres_entity.MailboxStatusProvisioned
-
-	err = l.dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, mailbox.Tenant, postgres_entity.TenantSettingsMailbox{}, mailbox.ID, "Status", mailbox.Status)
-	if err != nil {
-		tracing.TraceErr(span, err)
 	}
 
 	return nil

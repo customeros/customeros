@@ -33,4 +33,5 @@ type MailstackService interface {
 	GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error)
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
 	RegisterMailbox(ctx context.Context, tenant string, domain string, request CreateMailboxRequest) (*RegisterMailboxResponse, error)
+	ConfigureMailbox(ctx context.Context, tenant string, mailboxId string) error
 }
