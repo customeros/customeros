@@ -3,7 +3,6 @@ package interfaces
 import "context"
 
 type NamecheapService interface {
-	CheckDomainAvailability(ctx context.Context, domain string) (bool, bool, error)
 	PurchaseDomain(ctx context.Context, tenant, domain string) error
 	GetDomainPrice(ctx context.Context, domain string) (float64, error)
 	GetDomainInfo(ctx context.Context, tenant, domain string) (NamecheapDomainInfo, error)

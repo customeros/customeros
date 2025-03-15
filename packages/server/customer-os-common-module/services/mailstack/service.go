@@ -2,8 +2,10 @@ package mailstack
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -26,7 +28,7 @@ import (
 )
 
 type mailstackService struct {
-	cfg       *config.StripeConfig
+	cfg       *config.CommonConfig
 	events    *events.EventsService
 	postgres  *postgres_repository.Repositories
 	mailbox   interfaces.MailboxService
@@ -34,7 +36,7 @@ type mailstackService struct {
 	opensrs   interfaces.OpenSrsService
 }
 
-func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService, postgres *postgres_repository.Repositories, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
 	return &mailstackService{
 		cfg:       cfg,
 		events:    events,
@@ -43,6 +45,70 @@ func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService,
 		namecheap: namecheap,
 		opensrs:   opensrs,
 	}
+}
+
+func (s *mailstackService) checkDomainAvailability(ctx context.Context, domain string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.checkDomainAvailability")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("request.domain", domain)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "GET", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/check-availability/"+domain, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return false, err
+	}
+
+	// Add required headers
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return false, errors.New(errorResponse.Error)
+	}
+
+	// Parse response
+	var response struct {
+		IsAvailable bool `json:"isAvailable"`
+		IsPremium   bool `json:"isPremium"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+		return false, err
+	}
+
+	return response.IsAvailable, nil
 }
 
 func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error) {
@@ -56,15 +122,15 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	tenant := common.GetTenantFromContext(ctx)
 	email := common.GetUserEmailFromContext(ctx)
 
-	if s.cfg.ApiKey == "" {
+	if s.cfg.External.StripeConfig.ApiKey == "" {
 		err := errors.New("Stripe API key not set")
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		return "", err
 	}
 
-	// validate domains  before creating payment intent
+	// validate domains before creating payment intent
 	for _, domain := range domains {
-		available, _, err := s.namecheap.CheckDomainAvailability(ctx, domain)
+		available, err := s.checkDomainAvailability(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
 			return "", err
@@ -96,7 +162,7 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	}
 
 	// Create a PaymentIntent
-	stripe.Key = s.cfg.ApiKey
+	stripe.Key = s.cfg.External.StripeConfig.ApiKey
 	pi, err := paymentintent.New(params)
 	if err != nil {
 		log.Fatalf("Failed to create payment intent: %v", err)
@@ -116,14 +182,14 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	if s.cfg.ApiKey == "" {
+	if s.cfg.External.StripeConfig.ApiKey == "" {
 		err := errors.New("Stripe API key not set")
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		return err
 	}
 
 	// call stripe and check if payment is successful
-	stripe.Key = s.cfg.ApiKey
+	stripe.Key = s.cfg.External.StripeConfig.ApiKey
 	stripePaymentIntent, err := paymentintent.Get(paymentIntentId, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)

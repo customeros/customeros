@@ -166,22 +166,73 @@ func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, do
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogKV("request.domain", domains)
 
-	var unaivalableDomains []string
+	tenant := common.GetTenantFromContext(ctx)
+
+	var unavailableDomains []string
 	for _, domain := range domains {
-		isAvailable, isPremium, err := r.Services.CommonServices.NamecheapService.CheckDomainAvailability(ctx, domain)
+		// Create request to Mailstack API
+		req, err := http.NewRequestWithContext(ctx, "GET", r.Services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl+"/v1/domains/check-availability/"+domain, nil)
 		if err != nil {
-			tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-			r.log.Errorf("Failed to check domain %s availability", domain)
+			tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
 			graphql.AddErrorf(ctx, "Failed to check domain %s availability", domain)
 			return nil, nil
 		}
 
-		if !isAvailable || isPremium {
-			unaivalableDomains = append(unaivalableDomains, domain)
+		// Add required headers
+		req.Header.Set("X-CUSTOMER-OS-API-KEY", r.Services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
+		req.Header.Set("tenant", tenant)
+		req.Header.Set("Content-Type", "application/json")
+
+		// Forward Jaeger trace context
+		carrier := opentracing.HTTPHeadersCarrier(req.Header)
+		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+		if err != nil {
+			span.LogFields(tracingLog.Error(err))
+		}
+
+		// Create HTTP client with default transport
+		client := &http.Client{}
+
+		// Make request to Mailstack API
+		resp, err := client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+			graphql.AddErrorf(ctx, "Failed to check domain %s availability", domain)
+			return nil, nil
+		}
+		defer resp.Body.Close()
+
+		// Check response status
+		if resp.StatusCode != http.StatusOK {
+			// Read error response body
+			var errorResponse struct {
+				Error string `json:"error"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+				errorResponse.Error = "Unknown error occurred"
+			}
+			tracing.TraceErr(span, errors.New(errorResponse.Error))
+			graphql.AddErrorf(ctx, errorResponse.Error)
+			return nil, nil
+		}
+
+		// Parse response
+		var response struct {
+			IsAvailable bool `json:"isAvailable"`
+			IsPremium   bool `json:"isPremium"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+			graphql.AddErrorf(ctx, "Failed to check domain %s availability", domain)
+			return nil, nil
+		}
+
+		if !response.IsAvailable || response.IsPremium {
+			unavailableDomains = append(unavailableDomains, domain)
 		}
 	}
 
-	return unaivalableDomains, nil
+	return unavailableDomains, nil
 }
 
 // MailstackUniqueUsernames is the resolver for the mailstack_UniqueUsernames field.
