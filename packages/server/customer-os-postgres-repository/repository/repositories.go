@@ -216,7 +216,6 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.MailStackDomain{},
 		&postgres_entity.MailstackBuyRequest{},
 		&postgres_entity.MailstackBuyRequestDomain{},
-		&postgres_entity.MailstackReputationEntity{},
 		&postgres_entity.OrganizationWebsiteHostingPlatform{},
 		&postgres_entity.PersonalEmailProvider{},
 		&postgres_entity.PersonalIntegration{},

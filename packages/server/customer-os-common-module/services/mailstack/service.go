@@ -39,17 +39,15 @@ type mailstackService struct {
 	events   *events.EventsService
 	postgres *postgres_repository.Repositories
 	neo4j    *neo4j_repository.Repositories
-	mailbox  interfaces.MailboxService
 	opensrs  interfaces.OpenSrsService
 	email    interfaces.EmailService
 }
 
-func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService, email interfaces.EmailService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.CommonConfig, events *events.EventsService, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, opensrs interfaces.OpenSrsService, email interfaces.EmailService) interfaces.MailstackService {
 	return &mailstackService{
 		cfg:      cfg,
 		events:   events,
 		postgres: postgres,
-		mailbox:  mailbox,
 		opensrs:  opensrs,
 		neo4j:    neo4j,
 		email:    email,
@@ -301,27 +299,6 @@ func (s *mailstackService) GetTenantForMailstackDomain(ctx context.Context, doma
 	}
 
 	return mailStackDomainEntity.Tenant, nil
-}
-
-func (s *mailstackService) GetAllMailstackDomains(ctx context.Context) (map[string]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetAllMailstackDomains")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	output := map[string]string{}
-
-	mailStackDomains, err := s.postgres.MailStackDomainRepository.GetAllActiveDomainsCrossTenant(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return output, err
-	}
-
-	for _, mailStackDomain := range mailStackDomains {
-		output[mailStackDomain.Domain] = mailStackDomain.Tenant
-	}
-
-	span.LogFields(tracingLog.Int("response.count", len(output)))
-	return output, nil
 }
 
 func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, domain string, request interfaces.CreateMailboxRequest) (*interfaces.RegisterMailboxResponse, error) {

@@ -47,7 +47,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/location"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/log_entry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mail"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailbox"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/markdown_event"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/media"
@@ -120,7 +119,6 @@ type CommonServices struct {
 	JobRoleService             interfaces.JobRoleService
 	LocationService            interfaces.LocationService
 	LogEntryService            interfaces.LogEntryService
-	MailboxService             interfaces.MailboxService
 	MailService                interfaces.MailService
 	MailstackService           interfaces.MailstackService
 	MarkdownEventService       interfaces.MarkdownEventService
@@ -252,9 +250,8 @@ func InitCommonServices(
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, postgresRepositories, contractImpl)
 	invoiceImpl := invoice.NewInvoiceService(log, neo4jRepositories, postgresRepositories, &cfg.External, &cfg.Internal, eventsImpl, contractImpl, sliImpl, tenantSettingsImpl, postmarkImpl, fileImpl, externalSystemImpl)
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
-	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
-	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, neo4jRepositories, mailboxImpl, openSRSImpl, emailImpl)
+	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, neo4jRepositories, openSRSImpl, emailImpl)
 	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl, workspaceImpl)
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
@@ -358,7 +355,6 @@ func InitCommonServices(
 		LocationService:            locationImpl,
 		LogEntryService:            logEntry,
 		MailService:                mailImpl,
-		MailboxService:             mailboxImpl,
 		MailstackService:           mailstackImpl,
 		MarkdownEventService:       markdownEventImpl,
 		MediaService:               mediaImpl,
