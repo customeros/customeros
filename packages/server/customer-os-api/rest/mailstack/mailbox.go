@@ -2,12 +2,15 @@
 package mailstack
 
 import (
+	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
@@ -147,32 +150,75 @@ func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 			return
 		}
 
-		// get mailboxes for domain from postgres
-		mailboxRecords, err := h.services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain)
+		// Create request to Mailstack API
+		url := h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl + "/v1/mailboxes"
+		if domain != "" {
+			url += "?domain=" + domain
+		}
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 		if err != nil {
-			message := "Error retrieving mailboxes"
+			message := "Unable to create request to Mailstack API"
+			tracing.TraceErr(span, errors.Wrap(err, message))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailboxes"))
 			return
 		}
 
-		response := MailboxesResponse{
-			Mailboxes: make([]MailboxRecord, 0, len(mailboxRecords)),
+		// Add required headers
+		req.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
+		req.Header.Set("tenant", tenant)
+
+		// Forward Jaeger trace context
+		carrier := opentracing.HTTPHeadersCarrier(req.Header)
+		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+		if err != nil {
+			span.LogFields(tracingLog.Error(err))
 		}
-		for _, mailboxRecord := range mailboxRecords {
-			mailboxDetails, err := h.services.CommonServices.OpenSRSService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
-			if err != nil {
-				message := "Could not get mailbox details"
-				tracing.TraceErr(span, errors.Wrap(err, message))
+
+		// Create HTTP client with default transport and timeout
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+		}
+
+		// Make request to Mailstack API
+		resp, err := client.Do(req)
+		if err != nil {
+			message := "Unable to connect to Mailstack API"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+		defer resp.Body.Close()
+
+		// Check response status
+		if resp.StatusCode != http.StatusOK {
+			// Read error response body
+			var errorResponse struct {
+				Error string `json:"error"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+				errorResponse.Error = "Unknown error occurred"
+			}
+			tracing.TraceErr(span, errors.New(errorResponse.Error))
+
+			// For 500 errors, use a generic message
+			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+				message := "Internal server error"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
-			response.Mailboxes = append(response.Mailboxes, MailboxRecord{
-				Email:             mailboxRecord.MailboxUsername,
-				ForwardingEnabled: mailboxDetails.ForwardingEnabled,
-				ForwardingTo:      mailboxDetails.ForwardingTo,
-				WebmailEnabled:    mailboxDetails.WebmailEnabled,
-			})
+
+			// For other errors, propagate the status code and message from Mailstack
+			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
+			return
+		}
+
+		// Parse response
+		var response MailboxesResponse
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			message := "Unable to parse Mailstack API response"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
 		}
 
 		h.responseHandler.HandleSuccess(c, response)
