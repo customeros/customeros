@@ -1,17 +1,13 @@
 package mailstack
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type DNSRecord struct {
@@ -31,7 +27,7 @@ type DNSRecordResponse struct {
 
 func (h *MailstackHandler) DNS() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mailstack.DNS", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.DNS", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -46,78 +42,38 @@ func (h *MailstackHandler) DNS() gin.HandlerFunc {
 
 		domain := c.Param("domain")
 
-		// Create request to Mailstack API
-		req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v1/domains/%s/dns", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl, domain), nil)
-		if err != nil {
-			message := "Unable to create request to Mailstack API"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		// Add required headers
-		req.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
-		req.Header.Set("tenant", tenant)
-
-		// Forward Jaeger trace context
-		carrier := opentracing.HTTPHeadersCarrier(req.Header)
-		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-		if err != nil {
-			span.LogFields(log.Error(err))
-		}
-
-		// Create HTTP client with default transport
-		client := &http.Client{}
-
-		// Make request to Mailstack API
-		resp, err := client.Do(req)
-		if err != nil {
-			message := "Unable to connect to Mailstack API"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-		defer resp.Body.Close()
-
-		// Check response status
-		if resp.StatusCode != http.StatusOK {
-			// Read error response body
-			var errorResponse struct {
-				Error string `json:"error"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-				errorResponse.Error = "Unknown error occurred"
-			}
-			tracing.TraceErr(span, errors.New(errorResponse.Error))
-
-			// For 500 errors, use a generic message
-			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+		// Call service to get DNS records
+		statusCode, errorMsg, records, err := h.services.CommonServices.MailstackService.GetDNSRecords(ctx, tenant, domain)
+		if err != nil || statusCode != http.StatusOK {
+			if errorMsg != "" {
+				h.responseHandler.HandleError(c, statusCode, &errorMsg)
+			} else {
 				message := "Internal server error"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-				return
 			}
-
-			// For other errors, propagate the status code and message from Mailstack
-			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
 			return
 		}
 
-		// Parse response
-		var response DNSResponse
-		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			message := "Unable to parse Mailstack API response"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
+		// Convert interface records to response type
+		var dnsRecords []DNSRecord
+		for _, record := range records {
+			dnsRecords = append(dnsRecords, DNSRecord{
+				ID:      record.ID,
+				Type:    record.Type,
+				Name:    record.Name,
+				Content: record.Content,
+			})
 		}
 
-		h.responseHandler.HandleSuccess(c, response)
+		h.responseHandler.HandleSuccess(c, DNSResponse{
+			Records: dnsRecords,
+		})
 	}
 }
 
 func (h *MailstackHandler) AddDNSRecord() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mailstack.AddDNSRecord", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.AddDNSRecord", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -140,88 +96,40 @@ func (h *MailstackHandler) AddDNSRecord() gin.HandlerFunc {
 			return
 		}
 
-		// Create request body
-		requestBody, err := json.Marshal(record)
-		if err != nil {
-			message := "Unable to marshal request"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
+		// Convert to interfaces.DNSRecord
+		interfaceRecord := interfaces.DNSRecord{
+			ID:      record.ID,
+			Type:    record.Type,
+			Name:    record.Name,
+			Content: record.Content,
 		}
 
-		// Create request to Mailstack API
-		req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/v1/domains/%s/dns", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl, domain), strings.NewReader(string(requestBody)))
-		if err != nil {
-			message := "Unable to create request to Mailstack API"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		// Add required headers
-		req.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
-		req.Header.Set("tenant", tenant)
-		req.Header.Set("Content-Type", "application/json")
-
-		// Forward Jaeger trace context
-		carrier := opentracing.HTTPHeadersCarrier(req.Header)
-		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-		if err != nil {
-			span.LogFields(log.Error(err))
-		}
-
-		// Create HTTP client with default transport
-		client := &http.Client{}
-
-		// Make request to Mailstack API
-		resp, err := client.Do(req)
-		if err != nil {
-			message := "Unable to connect to Mailstack API"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-		defer resp.Body.Close()
-
-		// Check response status
-		if resp.StatusCode != http.StatusOK {
-			// Read error response body
-			var errorResponse struct {
-				Error string `json:"error"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-				errorResponse.Error = "Unknown error occurred"
-			}
-			tracing.TraceErr(span, errors.New(errorResponse.Error))
-
-			// For 500 errors, use a generic message
-			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+		// Call service to add DNS record
+		statusCode, errorMsg, dnsRecord, err := h.services.CommonServices.MailstackService.AddDNSRecord(ctx, tenant, domain, interfaceRecord)
+		if err != nil || statusCode != http.StatusOK {
+			if errorMsg != "" {
+				h.responseHandler.HandleError(c, statusCode, &errorMsg)
+			} else {
 				message := "Internal server error"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-				return
 			}
-
-			// For other errors, propagate the status code and message from Mailstack
-			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
 			return
 		}
 
-		// Parse response
-		var response DNSRecordResponse
-		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			message := "Unable to parse Mailstack API response"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		h.responseHandler.HandleSuccess(c, response)
+		h.responseHandler.HandleSuccess(c, DNSRecordResponse{
+			Record: DNSRecord{
+				ID:      dnsRecord.ID,
+				Type:    dnsRecord.Type,
+				Name:    dnsRecord.Name,
+				Content: dnsRecord.Content,
+			},
+		})
 	}
 }
 
 func (h *MailstackHandler) DeleteDNSRecord() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mailstack.DeleteDNSRecord", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.DeleteDNSRecord", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -237,59 +145,15 @@ func (h *MailstackHandler) DeleteDNSRecord() gin.HandlerFunc {
 		domain := c.Param("domain")
 		dnsId := c.Param("dnsId")
 
-		// Create request to Mailstack API
-		req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf("%s/v1/domains/%s/dns/%s", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiUrl, domain, dnsId), nil)
-		if err != nil {
-			message := "Unable to create request to Mailstack API"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		// Add required headers
-		req.Header.Set("X-CUSTOMER-OS-API-KEY", h.services.Cfg.Common.Internal.MailstackApiConfig.ApiKey)
-		req.Header.Set("tenant", tenant)
-
-		// Forward Jaeger trace context
-		carrier := opentracing.HTTPHeadersCarrier(req.Header)
-		err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-		if err != nil {
-			span.LogFields(log.Error(err))
-		}
-
-		// Create HTTP client with default transport
-		client := &http.Client{}
-
-		// Make request to Mailstack API
-		resp, err := client.Do(req)
-		if err != nil {
-			message := "Unable to connect to Mailstack API"
-			tracing.TraceErr(span, err)
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-		defer resp.Body.Close()
-
-		// Check response status
-		if resp.StatusCode != http.StatusOK {
-			// Read error response body
-			var errorResponse struct {
-				Error string `json:"error"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-				errorResponse.Error = "Unknown error occurred"
-			}
-			tracing.TraceErr(span, errors.New(errorResponse.Error))
-
-			// For 500 errors, use a generic message
-			if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+		// Call service to delete DNS record
+		statusCode, errorMsg, err := h.services.CommonServices.MailstackService.DeleteDNSRecord(ctx, tenant, domain, dnsId)
+		if err != nil || statusCode != http.StatusOK {
+			if errorMsg != "" {
+				h.responseHandler.HandleError(c, statusCode, &errorMsg)
+			} else {
 				message := "Internal server error"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-				return
 			}
-
-			// For other errors, propagate the status code and message from Mailstack
-			h.responseHandler.HandleError(c, resp.StatusCode, &errorResponse.Error)
 			return
 		}
 
@@ -298,7 +162,7 @@ func (h *MailstackHandler) DeleteDNSRecord() gin.HandlerFunc {
 }
 
 func (h *MailstackHandler) getDNSRequestPayload(c *gin.Context) (DNSRecord, error) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Flows.getDNSRequestPayload")
+	span, _ := tracing.StartTracerSpan(c.Request.Context(), "MailstackHandler.getDNSRequestPayload")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 

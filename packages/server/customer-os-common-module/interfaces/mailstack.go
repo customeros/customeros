@@ -34,6 +34,13 @@ type DomainRecord struct {
 	Nameservers []string `json:"nameservers"`
 }
 
+type DNSRecord struct {
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
 type MailstackService interface {
 	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)
 	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error
@@ -49,4 +56,8 @@ type MailstackService interface {
 	GetAllMailstackDomains(ctx context.Context) (map[string]string, error)
 	CheckDomainAvailability(ctx context.Context, tenant, domain string) (int, string, bool, bool, error)
 	PurchaseDomain(ctx context.Context, tenant, domain string) (int, string, error)
+	// DNS records
+	AddDNSRecord(ctx context.Context, tenant, domain string, record DNSRecord) (int, string, *DNSRecord, error)
+	DeleteDNSRecord(ctx context.Context, tenant, domain, dnsId string) (int, string, error)
+	GetDNSRecords(ctx context.Context, tenant, domain string) (int, string, []DNSRecord, error)
 }
