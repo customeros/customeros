@@ -52,10 +52,6 @@ func NewOrganizationWriteRepository(driver *neo4j.DriverWithContext, database st
 	}
 }
 
-func (r *organizationWriteRepository) prepareWriteSession(ctx context.Context) neo4j.SessionWithContext {
-	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-}
-
 func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.Save")
 	defer span.Finish()
