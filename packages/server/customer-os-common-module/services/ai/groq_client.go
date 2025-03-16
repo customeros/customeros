@@ -140,7 +140,7 @@ func (c *GroqClient) processResponse(ctx context.Context, resp *http.Response) (
 }
 
 func (c *GroqClient) handleSuccessResponse(ctx context.Context, body []byte) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.handleSuccessResponse")
+	span, _ := opentracing.StartSpanFromContext(ctx, "GroqClient.handleSuccessResponse")
 	defer span.Finish()
 
 	var data GroqResponse
@@ -175,7 +175,7 @@ func (c *GroqClient) handleSuccessResponse(ctx context.Context, body []byte) (st
 }
 
 func (c *GroqClient) handleErrorResponse(ctx context.Context, statusCode int, body []byte) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GroqClient.handleErrorResponse")
+	span, _ := opentracing.StartSpanFromContext(ctx, "GroqClient.handleErrorResponse")
 	defer span.Finish()
 	span.LogFields(log.Int("statusCode", statusCode))
 	span.LogFields(log.String("body", string(body)))
@@ -200,7 +200,7 @@ func (c *GroqClient) executeWithRetry(ctx context.Context, reqBody GroqRequest) 
 	for attempt := 1; attempt <= MaxRetries; attempt++ {
 		_, jsonErr := json.MarshalIndent(reqBody, "", "  ")
 		if jsonErr != nil {
-			err := fmt.Errorf("Failed to marshal request for logging: %v", jsonErr)
+			err := fmt.Errorf("failed to marshal request for logging: %v", jsonErr)
 			tracing.TraceErr(span, err)
 		}
 		req, err := c.createHttpRequest(ctx, reqBody)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/api/option"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -145,18 +146,30 @@ func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.A
 	if request.OutputFormat == enum.AIOutputJson && request.SystemPrompt != nil {
 		enhancedPrompt := *request.SystemPrompt + `
 
-CRITICAL JSON REQUIREMENTS:
-1. The response must be complete, valid JSON
-2. Always include ALL closing brackets and braces
-3. Do not truncate the JSON structure
-4. Before responding, validate that your JSON is complete and properly closed
-5. Do not include any text outside of the JSON object
+CRITICAL JSON FORMATTING REQUIREMENTS:
+1. Response MUST be a complete, valid JSON object
+2. Response MUST start with { and end with }
+3. All arrays MUST start with [ and end with ]
+4. Every opening bracket MUST have a matching closing bracket
+5. Every opening brace MUST have a matching closing brace
+6. NO text outside the JSON structure
+7. NO truncation of the JSON response
+8. All string values MUST be in double quotes
+9. All numeric values MUST NOT be in quotes
+10. NO trailing commas allowed
 
-VALIDATION STEPS:
-1. Generate your response
-2. Verify all opening brackets/braces have matching closing ones
-3. Confirm the JSON structure is complete
-4. Only then return the response`
+VALIDATION CHECKLIST (complete ALL before responding):
+1. Count opening { and verify matching number of closing }
+2. Count opening [ and verify matching number of closing ]
+3. Verify all string values are in double quotes
+4. Verify all numeric values are unquoted
+5. Verify no trailing commas
+6. Verify complete JSON structure
+7. Test parse the JSON to ensure it's valid
+8. Only then return the response
+
+Remember: NEVER return incomplete JSON. If you need more tokens, make the response more concise but ensure it is complete.`
+
 		request.SystemPrompt = &enhancedPrompt
 	}
 
@@ -249,7 +262,7 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	tracing.LogObjectAsJson(span, "llm", llmTracker)
 
 	if s.opensearchService == nil {
-		err := errors.New("Opensearch service is not initialized")
+		err := errors.New("opensearch service is not initialized")
 		tracing.TraceErr(span, err)
 		return
 	}
@@ -277,7 +290,6 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 		tracing.TraceErr(span, err)
 		return
 	}
-	return
 }
 
 func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObservability, result *string) {
@@ -287,7 +299,7 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	tracing.LogObjectAsJson(span, "llm", llmTracker)
 
 	if s.opensearchService == nil {
-		err := errors.New("Opensearch service is not initialized")
+		err := errors.New("opensearch service is not initialized")
 		tracing.TraceErr(span, err)
 		return
 	}
@@ -319,7 +331,6 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 		tracing.TraceErr(span, err)
 		return
 	}
-	return
 }
 
 func (s *aiService) newObservabilityContainer(ctx context.Context, span opentracing.Span, request interfaces.AskAIRequest) *dto.LLMObservability {
@@ -475,6 +486,7 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 		return nil, err
 	}
 
+	span.LogFields(log.String("response", response))
 	return &response, nil
 }
 

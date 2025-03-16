@@ -56,8 +56,6 @@ func NewAnthropicClient(cfg *config.AnthropicConfig) *AnthropicClient {
 func (c *AnthropicClient) Invoke(ctx context.Context, request interfaces.AskAIRequest) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnthropicClient.Invoke")
 	defer span.Finish()
-	span.LogKV("systemPrompt", request.SystemPrompt)
-	span.LogKV("prompt", request.Prompt)
 
 	if *request.Prompt == "" || request.Prompt == nil {
 		err := errors.New("content (user prompt) cannot be nil")

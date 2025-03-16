@@ -14,7 +14,7 @@ import (
 
 func TestAgentExecutionRepository_CreateAndGet(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create a new AgentExecution record to save
 	exec := &postgresentity.AgentExecution{
@@ -52,7 +52,7 @@ func TestAgentExecutionRepository_CreateAndGet(t *testing.T) {
 
 func TestAgentExecutionRepository_Find(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create a record to later find
 	exec := &postgresentity.AgentExecution{
@@ -86,7 +86,7 @@ func TestAgentExecutionRepository_Find(t *testing.T) {
 
 func TestAgentExecutionRepository_Fail(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-003"),
@@ -119,7 +119,7 @@ func TestAgentExecutionRepository_Fail(t *testing.T) {
 
 func TestAgentExecutionRepository_Pending(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create a record with an error status initially
 	exec := &postgresentity.AgentExecution{
@@ -150,7 +150,7 @@ func TestAgentExecutionRepository_Pending(t *testing.T) {
 
 func TestAgentExecutionRepository_Finish(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create a record with status Running (only running executions can be finished)
 	exec := &postgresentity.AgentExecution{
@@ -180,7 +180,7 @@ func TestAgentExecutionRepository_Finish(t *testing.T) {
 
 func TestAgentExecutionRepository_Completed(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-006"),
@@ -212,7 +212,7 @@ func TestAgentExecutionRepository_Completed(t *testing.T) {
 
 func TestAgentExecutionRepository_ScheduleRetry_FirstTime(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-007"),
@@ -252,7 +252,7 @@ func TestAgentExecutionRepository_ScheduleRetry_FirstTime(t *testing.T) {
 
 func TestAgentExecutionRepository_ScheduleRetry(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-007"),
@@ -292,7 +292,7 @@ func TestAgentExecutionRepository_ScheduleRetry(t *testing.T) {
 
 func TestAgentExecutionRepository_SaveAsyncState(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-008"),
@@ -326,7 +326,7 @@ func TestAgentExecutionRepository_SaveAsyncState(t *testing.T) {
 
 func TestAgentExecutionRepository_CompleteStep(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-009"),
@@ -374,7 +374,7 @@ func TestAgentExecutionRepository_CompleteStep(t *testing.T) {
 
 func TestAgentExecutionRepository_GoalAchieved(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	exec := &postgresentity.AgentExecution{
 		AgentID:      utils.StringPtr("agent-010"),
@@ -409,7 +409,7 @@ func TestAgentExecutionRepository_GoalAchieved(t *testing.T) {
 
 func TestAgentExecutionRepository_GetGoalAchievedCountLast30Days(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	agentID := "agent-011"
 	now := time.Now()
@@ -455,7 +455,7 @@ func TestAgentExecutionRepository_GetGoalAchievedCountLast30Days(t *testing.T) {
 
 func TestAgentExecutionRepository_GetExecutionsForRetry(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	agentID := "agent-012"
 	pastTime := time.Now().Add(-time.Hour)

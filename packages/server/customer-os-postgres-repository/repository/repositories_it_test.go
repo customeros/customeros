@@ -3,13 +3,14 @@ package postgres_repository
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commontest "github.com/customeros/customeros/packages/server/customer-os-common-module/test"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
-	"os"
-	"strings"
-	"testing"
 )
 
 var (
@@ -50,7 +51,7 @@ func createPostgresTables(db *gorm.DB) {
 	}
 }
 
-func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
+func tearDownTestCase() func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning postgres DB", tb.Name())
 		// Query all table names in the public schema
