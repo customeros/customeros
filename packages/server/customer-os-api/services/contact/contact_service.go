@@ -310,7 +310,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 
 	tenant := common.GetContext(ctx).Tenant
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		err = s.repositories.ContactRepository.MergeContactPropertiesInTx(ctx, tx, tenant, primaryContactId, mergedContactId, neo4jentity.DataSourceOpenline)
+		err = s.repositories.ContactRepository.MergeContactPropertiesInTx(ctx, tx, tenant, primaryContactId, mergedContactId)
 		if err != nil {
 			return nil, err
 		}

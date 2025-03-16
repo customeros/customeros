@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -80,18 +80,16 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 	query := "MATCH (n:%s {id:$noteId}) " +
 		" SET 	n.content=$content, " +
 		"		n.contentType=$contentType, " +
-		"		n.sourceOfTruth=$sourceOfTruth, " +
 		"		n.updatedAt=datetime() " +
 		" RETURN n"
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		txResult, err := tx.Run(ctx, fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
-				"tenant":        tenant,
-				"noteId":        entity.Id,
-				"content":       entity.Content,
-				"contentType":   entity.ContentType,
-				"sourceOfTruth": entity.SourceOfTruth,
-				"now":           utils.Now(),
+				"tenant":      tenant,
+				"noteId":      entity.Id,
+				"content":     entity.Content,
+				"contentType": entity.ContentType,
+				"now":         utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, txResult, err)
 	})
@@ -188,21 +186,19 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=datetime(), " +
 		"				n.source=$source, " +
-		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
 		"				n:Note_%s," +
 		"				n:TimelineEvent," +
 		"				n:TimelineEvent_%s " +
 		" RETURN n"
 	params := map[string]any{
-		"tenant":        tenant,
-		"meetingId":     meetingId,
-		"content":       entity.Content,
-		"contentType":   entity.ContentType,
-		"now":           utils.Now(),
-		"source":        entity.Source,
-		"sourceOfTruth": entity.SourceOfTruth,
-		"appSource":     entity.AppSource,
+		"tenant":      tenant,
+		"meetingId":   meetingId,
+		"content":     entity.Content,
+		"contentType": entity.ContentType,
+		"now":         utils.Now(),
+		"source":      entity.Source,
+		"appSource":   entity.AppSource,
 	}
 	return params, fmt.Sprintf(query, tenant, tenant, tenant)
 }

@@ -57,7 +57,6 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.endedAt=$endedAt, " +
 		"				m.appSource=$appSource, " +
 		"				m.source=$source, " +
-		"				m.sourceOfTruth=$sourceOfTruth, " +
 		"				m.status=$status " +
 		" RETURN m"
 

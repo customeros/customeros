@@ -47,8 +47,8 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Contex
 	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source,  f:%s "+
+			" ON MATCH SET f.%s=$value, f.updatedAt=datetime() "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":    tenant,
@@ -76,8 +76,8 @@ func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo
 	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf("MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source,  f:%s "+
+			" ON MATCH SET f.%s=$value, f.updatedAt=datetime() "+
 			" RETURN f", obj.EntityType, rel, entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":   tenant,
@@ -246,7 +246,6 @@ func (r *customFieldRepository) UpdateForContactInTx(ctx context.Context, tx neo
 			" (c)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId}) "+
 			" SET f.name=$name, "+
 			" f.%s=$value, "+
-			" f.sourceOfTruth=$sourceOfTruth, "+
 			" f.updatedAt=datetime() "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName()),
 		map[string]any{

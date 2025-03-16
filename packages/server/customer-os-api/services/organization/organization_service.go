@@ -487,7 +487,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	defer session.Close(ctx)
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, neo4jentity.DataSourceOpenline)
+		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId)
 		if err != nil {
 			return nil, err
 		}
