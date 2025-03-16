@@ -9,7 +9,7 @@ import (
 
 func TestSkuRepository_SaveAndGet(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create a new SkuEntity to save
 	sku := &postgresentity.SkuEntity{
@@ -44,7 +44,7 @@ func TestSkuRepository_SaveAndGet(t *testing.T) {
 
 func TestSkuRepository_GetAll(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create two SKU records with different archived statuses.
 	sku1 := &postgresentity.SkuEntity{
@@ -95,7 +95,7 @@ func TestSkuRepository_GetAll(t *testing.T) {
 
 func TestSkuRepository_Archive(t *testing.T) {
 	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase()(t)
 
 	// Create a new SKU that is not archived
 	sku := &postgresentity.SkuEntity{
