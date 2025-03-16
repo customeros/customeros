@@ -673,8 +673,9 @@ func (s *globalOrganizationService) enrichIndustries() {
 	}
 }
 func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark globalOrganization as processed initially to not process same globalOrganization again, even if error occurs
@@ -787,8 +788,9 @@ func (s *globalOrganizationService) enrichDescriptions() {
 }
 
 func (s *globalOrganizationService) enrichDescription(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichDescription")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescription")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark record as processed initially to not process same record again, even if error occurs
@@ -890,8 +892,9 @@ func (s *globalOrganizationService) enrichNames() {
 }
 
 func (s *globalOrganizationService) enrichName(ctx context.Context, globalOrganization *postgres_entity.GlobalOrganization) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichName")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichName")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark record as processed initially to not process same record again, even if error occurs
