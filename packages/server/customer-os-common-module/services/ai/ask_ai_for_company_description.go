@@ -3,8 +3,6 @@ package ai
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
