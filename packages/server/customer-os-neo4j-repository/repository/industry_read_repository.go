@@ -3,10 +3,10 @@ package neo4j_repository
 import (
 	context2 "context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -28,10 +28,6 @@ func NewIndustryReadRepository(driver *neo4j.DriverWithContext, database string)
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *industryReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
-	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
 func (r *industryReadRepository) GetAllForOrganizationIds(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {

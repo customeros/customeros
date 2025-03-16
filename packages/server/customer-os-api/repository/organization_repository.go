@@ -7,12 +7,12 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -21,7 +21,7 @@ type OrganizationRepository interface {
 	CountCustomers(ctx context.Context, tenant string) (int64, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth neo4jentity.DataSource) error
+	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error
 	MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error
 	UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
@@ -180,7 +180,7 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth neo4jentity.DataSource) error {
+func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganizationPropertiesInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -212,7 +212,6 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.stage = CASE WHEN primary.stage is null THEN merged.stage ELSE primary.stage END,
 				primary.leadSource = CASE WHEN primary.leadSource is null OR primary.leadSource = '' THEN merged.leadSource ELSE primary.leadSource END,
 				primary.icpFit = CASE WHEN primary.icpFit is null OR primary.leadSource = false THEN merged.icpFit ELSE primary.icpFit END,
-				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = datetime(),
 				merged.updatedAt = datetime()
 			`,
@@ -220,7 +219,6 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 			"tenant":                tenant,
 			"primaryOrganizationId": primaryOrganizationId,
 			"mergedOrganizationId":  mergedOrganizationId,
-			"sourceOfTruth":         string(sourceOfTruth),
 			"now":                   utils.Now(),
 		})
 	return err
@@ -637,7 +635,7 @@ func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organi
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
-			SET org.updatedAt=datetime(), org.sourceOfTruth=$source
+			SET org.updatedAt=datetime()
 			DELETE r
 			RETURN org`
 

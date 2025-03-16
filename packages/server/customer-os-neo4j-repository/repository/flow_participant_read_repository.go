@@ -38,7 +38,7 @@ func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	if flowIds != nil && len(flowIds) > 0 {
+	if len(flowIds) > 0 {
 		span.LogFields(log.String("flowIds", fmt.Sprintf("%v", flowIds)))
 	}
 
@@ -49,7 +49,7 @@ func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds 
 	}
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s) `, tenant, tenant)
-	if flowIds != nil && len(flowIds) > 0 {
+	if len(flowIds) > 0 {
 		cypher += "WHERE f.id in $flowIds "
 		params["flowIds"] = flowIds
 	}

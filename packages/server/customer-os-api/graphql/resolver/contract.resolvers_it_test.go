@@ -125,7 +125,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 
 	firstContractLineItem := contract.ContractLineItems[0]
 	require.Equal(t, serviceLineItemId1, firstContractLineItem.Metadata.ID)
-	require.Equal(t, "service line item 1", firstContractLineItem.Description)
+	require.Equal(t, utils.StringPtr("service line item 1"), firstContractLineItem.Description)
 	require.Equal(t, yesterday, firstContractLineItem.Metadata.Created)
 	require.Equal(t, yesterday, firstContractLineItem.Metadata.LastUpdated)
 	require.Equal(t, model.BilledTypeAnnually, firstContractLineItem.BillingCycle)
@@ -137,7 +137,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 
 	secondContractLineItem := contract.ContractLineItems[1]
 	require.Equal(t, serviceLineItemId2, secondContractLineItem.Metadata.ID)
-	require.Equal(t, "service line item 2", secondContractLineItem.Description)
+	require.Equal(t, utils.StringPtr("service line item 2"), secondContractLineItem.Description)
 	require.Equal(t, now, secondContractLineItem.Metadata.Created)
 	require.Equal(t, now, secondContractLineItem.Metadata.LastUpdated)
 	require.Equal(t, model.BilledTypeUsage, secondContractLineItem.BillingCycle)
@@ -253,7 +253,7 @@ func TestQueryResolver_Contract_WithInvoices(t *testing.T) {
 
 	firstContractLineItem := contract.ContractLineItems[0]
 	require.Equal(t, serviceLineItemId1, firstContractLineItem.Metadata.ID)
-	require.Equal(t, "service line item 1", firstContractLineItem.Description)
+	require.Equal(t, "service line item 1", *firstContractLineItem.Description)
 	require.Equal(t, yesterday, firstContractLineItem.Metadata.Created)
 	require.Equal(t, yesterday, firstContractLineItem.Metadata.LastUpdated)
 	require.Equal(t, model.BilledTypeAnnually, firstContractLineItem.BillingCycle)
@@ -265,7 +265,7 @@ func TestQueryResolver_Contract_WithInvoices(t *testing.T) {
 
 	secondContractLineItem := contract.ContractLineItems[1]
 	require.Equal(t, serviceLineItemId2, secondContractLineItem.Metadata.ID)
-	require.Equal(t, "service line item 2", secondContractLineItem.Description)
+	require.Equal(t, "service line item 2", *secondContractLineItem.Description)
 	require.Equal(t, now, secondContractLineItem.Metadata.Created)
 	require.Equal(t, now, secondContractLineItem.Metadata.LastUpdated)
 	require.Equal(t, model.BilledTypeUsage, secondContractLineItem.BillingCycle)

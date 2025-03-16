@@ -26,7 +26,7 @@ func (h *IntegrationHandler) PostmarkInboundEmail(c *gin.Context) {
 
 	// Validate Postmark User-Agent
 	if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
-		tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.Request.UserAgent()))
+		tracing.TraceErr(span, fmt.Errorf("invalid user agent %s", c.Request.UserAgent()))
 		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 		return
 	}
@@ -96,7 +96,7 @@ func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *Post
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("Unable to determine if email exists in db for messageId %s: %v", messageId, err)
+		return fmt.Errorf("unable to determine if email exists in db for messageId %s: %v", messageId, err)
 	}
 
 	if emailExistsInDb {
@@ -165,12 +165,12 @@ func (h *IntegrationHandler) getTenant(c *gin.Context, emailData *PostmarkInboun
 	if err != nil {
 		span.LogFields(tracingLog.Bool("tenant.found", false))
 		tracing.TraceErr(span, err)
-		return "", fmt.Errorf("Cannot identify tenant %s: %v", nameFromBcc, err)
+		return "", fmt.Errorf("cannot identify tenant %s: %v", nameFromBcc, err)
 	}
 
 	if n == nil {
 		span.LogFields(tracingLog.Bool("tenant.found", false))
-		return "", fmt.Errorf("No valid tenant %s: %v", nameFromBcc, err)
+		return "", fmt.Errorf("no valid tenant %s: %v", nameFromBcc, err)
 	}
 
 	tenant := mapper.MapDbNodeToTenantEntity(n)
@@ -191,12 +191,12 @@ func (h *IntegrationHandler) getUsername(ctx context.Context, EmailParticipants 
 		userByEmail, err := h.services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(
 			ctx, tenant, p)
 		if err != nil {
-			return "", fmt.Errorf("Error getting username from email %s: %v", p, err)
+			return "", fmt.Errorf("error getting username from email %s: %v", p, err)
 		}
 		if userByEmail != nil {
 			return p, nil
 		}
 	}
 
-	return "", fmt.Errorf("Unable to find user amongst email participants")
+	return "", fmt.Errorf("unable to find user amongst email participants")
 }

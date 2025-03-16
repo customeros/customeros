@@ -3,13 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -26,7 +25,7 @@ type ContactRepository interface {
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	// Deprecated, use events-platform
-	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth neo4jentity.DataSource) error
+	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
 	// Deprecated, use events-platform
 	MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
 	// Deprecated, use events-platform
@@ -268,7 +267,7 @@ func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenan
 	return result.([]*dbtype.Node), err
 }
 
-func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth neo4jentity.DataSource) error {
+func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContactPropertiesInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -284,14 +283,12 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 				primary.profilePhotoUrl = CASE WHEN primary.profilePhotoUrl is null OR primary.profilePhotoUrl = '' THEN merged.profilePhotoUrl ELSE primary.profilePhotoUrl END, 
 				primary.username = CASE WHEN primary.username is null OR primary.username = '' THEN merged.username ELSE primary.username END, 
 				primary.prefix = CASE WHEN primary.prefix is null OR primary.prefix = '' THEN merged.prefix ELSE primary.prefix END, 
-				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = datetime()
 			`,
 		map[string]any{
 			"tenant":           tenant,
 			"primaryContactId": primaryContactId,
 			"mergedContactId":  mergedContactId,
-			"sourceOfTruth":    string(sourceOfTruth),
 			"now":              utils.Now(),
 		})
 	return err

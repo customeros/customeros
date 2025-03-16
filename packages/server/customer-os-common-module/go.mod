@@ -97,9 +97,6 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lib/pq v1.10.9 // indirect
-	github.com/likexian/gokit v0.25.15 // indirect
-	github.com/likexian/whois v1.15.5 // indirect
-	github.com/likexian/whois-parser v1.24.20 // indirect
 	github.com/lucasepe/codename v0.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect

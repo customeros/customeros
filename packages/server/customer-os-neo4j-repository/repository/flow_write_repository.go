@@ -127,8 +127,7 @@ func (r *flowWriteRepositoryImpl) UpdateStatistics(ctx context.Context) ([]*util
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant)<-[:BELONGS_TO_TENANT]-(f:Flow)-[:HAS]->(fp:FlowParticipant)
+	cypher := `MATCH (t:Tenant)<-[:BELONGS_TO_TENANT]-(f:Flow)-[:HAS]->(fp:FlowParticipant)
 WITH t, f, fp.status AS flowStatus, COUNT(fp.status) AS fs
 WITH t, f, 
     CASE flowStatus
@@ -152,7 +151,7 @@ WITH t, f, [prop IN allProperties WHERE NOT prop IN updatedProperties] AS propsT
 UNWIND propsToReset AS prop
 SET f[prop] = 0
 
-RETURN collect(f.id), t.name;`)
+RETURN collect(f.id), t.name`
 
 	params := map[string]any{}
 

@@ -3,6 +3,7 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -46,7 +47,7 @@ func (r *authenticationReadRepository) GetByAuthIdAndProvider(ctx context.Contex
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	cypher := fmt.Sprintf("MATCH (a:Authentication {authId:$authId, provider:$provider}) RETURN a")
+	cypher := "MATCH (a:Authentication {authId:$authId, provider:$provider}) RETURN a"
 	params := map[string]any{
 		"authId":   authId,
 		"provider": provider,
@@ -84,13 +85,15 @@ func (r *authenticationReadRepository) GetByAuthId(ctx context.Context, authId s
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (a:Authentication {authId:$authId}) RETURN a`
+	cypher := `MATCH (a:Authentication {authId:$authId}) RETURN a`
+	params := map[string]any{
+		"authId": authId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
-			map[string]any{
-				"authId": authId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
@@ -110,16 +113,18 @@ func (r *authenticationReadRepository) GetAuthUser(ctx context.Context, authId s
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf(`MATCH (a:Authentication {id: $authId})-[:%s]->(u:AuthenticationUser) RETURN u`, model.HAS.String())
+	params := map[string]any{
+		"authId": authId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := fmt.Sprintf(`MATCH (a:Authentication {id: $authId})-[:%s]->(u:AuthenticationUser) RETURN u`, model.HAS.String())
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
-			map[string]any{
-				"authId": authId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
@@ -148,13 +153,15 @@ func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserI
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := fmt.Sprintf(`MATCH (u:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant) RETURN t`, model.HAS_WORKSPACE.String())
+	cypher := fmt.Sprintf(`MATCH (u:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant) RETURN t`, model.HAS_WORKSPACE.String())
+	params := map[string]any{
+		"authUserId": authUserId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
-			map[string]any{
-				"authUserId": authUserId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
@@ -183,7 +190,7 @@ func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Co
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `
+	cypher := `
 			MATCH (au:AuthenticationUser {id: $authUserId})-[:HAS_WORKSPACE]-(t:Tenant)
 			OPTIONAL MATCH (t)-[:HAS_WORKSPACE]-(w:Workspace)
 			WITH t, COUNT(w) AS workspaceCount
@@ -191,12 +198,14 @@ func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Co
 				t.name,
 				t.createdBy,
 				CASE WHEN workspaceCount = 0 THEN true ELSE false END AS isPersonal`
+	params := map[string]any{
+		"authUserId": authUserId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
-			map[string]any{
-				"authUserId": authUserId,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return queryResult.Collect(ctx)

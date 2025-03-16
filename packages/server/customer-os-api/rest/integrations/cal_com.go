@@ -107,7 +107,6 @@ func (h *IntegrationHandler) handleCalDotComEvent(c *gin.Context) {
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse cal.com payload"))
 		return
-
 	}
 
 	switch webhook.TriggerEvent {
@@ -119,10 +118,4 @@ func (h *IntegrationHandler) handleCalDotComEvent(c *gin.Context) {
 	case "BOOKING_CANCELLED":
 		// todo -- Handle cancellation
 	}
-
-	return
-}
-
-func (h *IntegrationHandler) processBookingCreatedEvent(c *gin.Context, payload *CalDotComPayload) error {
-	return nil
 }

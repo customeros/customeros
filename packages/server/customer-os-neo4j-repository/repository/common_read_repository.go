@@ -2,12 +2,13 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -50,7 +51,7 @@ func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label str
 	tracing.TagTenant(span, tenant)
 
 	id := ""
-	for true {
+	for {
 		id = uuid.New().String()
 		exists, err := r.ExistsById(ctx, tenant, id, label)
 		if err != nil {

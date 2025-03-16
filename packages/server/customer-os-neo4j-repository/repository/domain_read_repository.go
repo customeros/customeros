@@ -2,11 +2,11 @@ package neo4j_repository
 
 import (
 	"context"
-	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -38,7 +38,7 @@ func (r *domainReadRepository) GetDomain(ctx context.Context, tx *neo4j.ManagedT
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (d:Domain {domain:$domain}) RETURN d`)
+	cypher := `MATCH (d:Domain {domain:$domain}) RETURN d`
 	params := map[string]any{
 		"domain": domain,
 	}

@@ -3,12 +3,13 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -37,7 +38,7 @@ func (r flowActionReadRepositoryImpl) GetList(ctx context.Context, flowIds []str
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	if flowIds != nil && len(flowIds) > 0 {
+	if len(flowIds) > 0 {
 		span.LogFields(log.String("flowIds", fmt.Sprintf("%v", flowIds)))
 	}
 
@@ -48,7 +49,7 @@ func (r flowActionReadRepositoryImpl) GetList(ctx context.Context, flowIds []str
 	}
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fa:FlowAction_%s) `, tenant, tenant)
-	if flowIds != nil && len(flowIds) > 0 {
+	if len(flowIds) > 0 {
 		cypher += "WHERE f.id in $flowIds "
 		params["flowIds"] = flowIds
 	}

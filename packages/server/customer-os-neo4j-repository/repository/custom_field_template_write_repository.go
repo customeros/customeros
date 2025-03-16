@@ -3,10 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -121,10 +122,10 @@ func (r *customFieldTemplateWriteRepository) Delete(ctx context.Context, tenant,
 	tracing.TagTenant(span, tenant)
 	tracing.TagEntity(span, customFieldTemplateId)
 
-	cypher := fmt.Sprintf(`
+	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[rel:CUSTOM_FIELD_TEMPLATE_BELONGS_TO_TENANT]-(cft:CustomFieldTemplate {id:$customFieldTemplateId})
 		DELETE rel, cft
-	`)
+	`
 	params := map[string]any{
 		"tenant":                tenant,
 		"customFieldTemplateId": customFieldTemplateId,

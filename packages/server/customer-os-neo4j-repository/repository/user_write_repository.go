@@ -197,12 +197,11 @@ func (r *userWriteRepository) AddRole(c context.Context, userId, role string) er
 	defer session.Close(ctx)
 
 	tx, err := session.BeginTransaction(ctx)
-	defer tx.Close(ctx)
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+	defer tx.Close(ctx)
 
 	err = r.AddRoleInTx(ctx, tx, userId, role)
 	if err != nil {

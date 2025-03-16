@@ -664,9 +664,13 @@ func (r *contractReadRepository) GetPaginatedContracts(ctx context.Context, tena
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		queryResult, err = tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {

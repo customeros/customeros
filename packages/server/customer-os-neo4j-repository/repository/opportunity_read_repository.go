@@ -3,6 +3,7 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -360,13 +361,18 @@ func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganizat
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		queryResult, err = tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
+	span.LogFields(log.Int("result.count", len(dbNodesWithTotalCount.Nodes)))
 	return dbNodesWithTotalCount, nil
 }

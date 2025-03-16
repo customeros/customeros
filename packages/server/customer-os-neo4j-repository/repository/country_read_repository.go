@@ -2,10 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -179,9 +179,13 @@ func (r *countryReadRepository) GetCountriesPaginated(ctx context.Context, skip,
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		queryResult, err = tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {

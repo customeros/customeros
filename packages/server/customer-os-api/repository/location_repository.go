@@ -45,7 +45,6 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 		  loc.createdAt=$now, 
 		  loc.updatedAt=datetime(), 
 		  loc.source=$source, 
-		  loc.sourceOfTruth=$sourceOfTruth, 
 		  loc.appSource=$appSource, 
 		  loc:%s
 		 RETURN loc`
@@ -53,12 +52,11 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, entityType.Neo4jLabel()+"_"+tenant, "Location_"+tenant),
 			map[string]any{
-				"tenant":        tenant,
-				"now":           utils.Now(),
-				"entityId":      entityId,
-				"source":        source.Source,
-				"sourceOfTruth": source.SourceOfTruth,
-				"appSource":     source.AppSource,
+				"tenant":    tenant,
+				"now":       utils.Now(),
+				"entityId":  entityId,
+				"source":    source.Source,
+				"appSource": source.AppSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
@@ -80,7 +78,6 @@ func (r *locationRepository) Update(ctx context.Context, tenant string, location
 			SET loc.updatedAt=datetime(),
 				loc.name=$name,
 				loc.rawAddress=$rawAddress,
-				loc.sourceOfTruth=$sourceOfTruth,
 				loc.country=$country,	
 				loc.region=$region,
 				loc.locality=$locality,

@@ -241,7 +241,7 @@ func (r *interactionEventReadRepository) GetInteractionEventByCustomerOSIdentifi
 	defer span.Finish()
 	span.LogFields(log.String("customerOSInternalIdentifier", customerOSInternalIdentifier))
 
-	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent {customerOSInternalIdentifier:$customerOSInternalIdentifier}) WHERE i:InteractionEvent RETURN i`)
+	cypher := `MATCH (i:InteractionEvent {customerOSInternalIdentifier:$customerOSInternalIdentifier}) WHERE i:InteractionEvent RETURN i`
 	params := map[string]any{
 		"customerOSInternalIdentifier": customerOSInternalIdentifier,
 	}
