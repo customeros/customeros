@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
+
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
@@ -63,7 +64,8 @@ The confidence score should reflect how certain you are that the topic is releva
 	promptStr := prompt.String()
 
 	temperature := float32(0.2)
-	maxOutputTokens := int32(100)
+	maxOutputTokens := int32(250)
+	retries := 1
 	topics, err := s.aiService.AskAIForWebpageTopics(ctx, interfaces.AskAIRequest{
 		Model:            enum.AIModelLlama8B,
 		SystemPrompt:     &systemPrompt,
@@ -71,6 +73,7 @@ The confidence score should reflect how certain you are that the topic is releva
 		ModelTemperature: &temperature,
 		MaxOutputTokens:  &maxOutputTokens,
 		OutputFormat:     enum.AIOutputJson,
+		Retries:          &retries,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
