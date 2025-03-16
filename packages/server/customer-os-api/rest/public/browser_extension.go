@@ -85,7 +85,6 @@ func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context)
 	resp := ContactResponse{}
 	resp.ContactID, resp.LinkedinURL = h.processCreateContact(c.Request.Context(), contactRecord)
 	h.responseHandler.HandleSuccess(c, resp)
-	return
 }
 
 func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, record customerbase.ContactRecord) (string, string) {
