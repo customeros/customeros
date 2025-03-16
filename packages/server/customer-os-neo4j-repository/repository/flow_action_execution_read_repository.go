@@ -3,17 +3,18 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type FlowActionExecutionReadRepository interface {
@@ -142,9 +143,6 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForParticipants(ctx context.C
 	})
 
 	if err != nil {
-		return nil, nil
-	}
-	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -179,9 +177,6 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context
 	})
 
 	if err != nil {
-		return nil, nil
-	}
-	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -194,7 +189,7 @@ func (r *flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.C
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (f:Flow {status: 'ON'})-[:HAS]->(:FlowAction)-[:HAS_EXECUTION]->(fae:FlowActionExecution) where fae.status = 'SCHEDULED' and fae.scheduledAt < $before RETURN fae order by fae.scheduledAt limit 100`)
+	cypher := `MATCH (f:Flow {status: 'ON'})-[:HAS]->(:FlowAction)-[:HAS_EXECUTION]->(fae:FlowActionExecution) where fae.status = 'SCHEDULED' and fae.scheduledAt < $before RETURN fae order by fae.scheduledAt limit 100`
 	params := map[string]any{
 		"before": before,
 	}
@@ -213,8 +208,10 @@ func (r *flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.C
 		}
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), nil
 }
 
@@ -449,10 +446,6 @@ func (r *flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx 
 		return count, nil
 	} else {
 		queryResult, err := (*tx).Run(ctx, cypher, params)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return 0, err
-		}
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return 0, err

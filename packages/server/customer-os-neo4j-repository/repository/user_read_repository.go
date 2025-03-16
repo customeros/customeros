@@ -2,6 +2,8 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -11,7 +13,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 type AuthenticatedUserInTenant struct {
@@ -79,30 +80,34 @@ func (r *userReadRepository) GetAllForTenant(ctx context.Context, tenant string)
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u `
+	params := map[string]any{
+		"tenant": tenant,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	dbNodes := make([]*dbtype.Node, 0)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		params := map[string]any{
-			"tenant": tenant,
-		}
-
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u `),
-			params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
+	span.LogFields(log.Int("result.count", len(dbNodes)))
 	return dbNodes, nil
 }
 
@@ -111,31 +116,35 @@ func (r *userReadRepository) GetByIds(ctx context.Context, tenant string, ids []
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) where u.id in $ids RETURN u`
+	params := map[string]any{
+		"tenant": tenant,
+		"ids":    ids,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	dbNodes := make([]*dbtype.Node, 0)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		params := map[string]any{
-			"tenant": tenant,
-			"ids":    ids,
-		}
 
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) where u.id in $ids RETURN u`),
-			params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
+	span.LogFields(log.Int("result.count", len(dbNodes)))
 	return dbNodes, nil
 }
 
@@ -175,15 +184,19 @@ func (u *userReadRepository) FindPlatformOwners(ctx context.Context) ([]*Authent
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := `MATCH (e:Email)-[:HAS{primary:true}]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant{name:"customerosai"}), (au)--(a:Authentication{provider:"google"})
+			WHERE 'PLATFORM_OWNER' in u.roles
+			RETURN t.name, au.id, u.id, u.roles, e.rawEmail, u.firstName, u.lastName ORDER BY u.createdAt ASC`
+	params := map[string]any{}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (e:Email)-[:HAS{primary:true}]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant{name:"customerosai"}), (au)--(a:Authentication{provider:"google"})
-			WHERE 'PLATFORM_OWNER' in u.roles
-			RETURN t.name, au.id, u.id, u.roles, e.rawEmail, u.firstName, u.lastName ORDER BY u.createdAt ASC`),
-			map[string]interface{}{})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -236,17 +249,20 @@ func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, e
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := `MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC`
+	params := map[string]any{
+		"email": email,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
-			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC`),
-			map[string]interface{}{
-				"email": email,
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -583,8 +599,8 @@ func (r *userReadRepository) GetOwnerForContact(parentCtx context.Context, tenan
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
-			RETURN u`)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
+			RETURN u`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
@@ -601,12 +617,15 @@ func (r *userReadRepository) GetOwnerForContact(parentCtx context.Context, tenan
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return result.(*dbtype.Node), nil
 }
 
@@ -615,8 +634,8 @@ func (r *userReadRepository) GetCreatorForNote(parentCtx context.Context, tenant
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
-			RETURN u`)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
+			RETURN u`
 	params := map[string]any{
 		"tenant": tenant,
 		"noteId": noteId,
@@ -633,12 +652,15 @@ func (r *userReadRepository) GetCreatorForNote(parentCtx context.Context, tenant
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return result.(*dbtype.Node), nil
 }
 
@@ -683,14 +705,19 @@ func (r *userReadRepository) GetPaginatedCustomerUsers(parentCtx context.Context
 					%s 
 					SKIP $skip LIMIT $limit`, filterCypherStr, sort.SortingCypherFragment("u")),
 			params)
+		if err != nil {
+			return nil, err
+		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
+	span.LogFields(log.Int("result.count", len(dbNodesWithTotalCount.Nodes)))
 	return dbNodesWithTotalCount, nil
 }
 
@@ -1116,8 +1143,8 @@ func (r *userReadRepository) GetOwnerForContract(parentCtx context.Context, tena
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})<-[:OWNS]-(u:User)
-			RETURN u`)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})<-[:OWNS]-(u:User)
+			RETURN u`
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,
@@ -1134,12 +1161,15 @@ func (r *userReadRepository) GetOwnerForContract(parentCtx context.Context, tena
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return result.(*dbtype.Node), nil
 }
 
@@ -1148,8 +1178,8 @@ func (r *userReadRepository) GetOwnerForReminder(parentCtx context.Context, tena
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})-[:REMINDER_BELONGS_TO_USER]->(u:User)
-			RETURN u`)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})-[:REMINDER_BELONGS_TO_USER]->(u:User)
+			RETURN u`
 	params := map[string]any{
 		"tenant":     tenant,
 		"reminderId": reminderId,
@@ -1166,11 +1196,14 @@ func (r *userReadRepository) GetOwnerForReminder(parentCtx context.Context, tena
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return result.(*dbtype.Node), nil
 }

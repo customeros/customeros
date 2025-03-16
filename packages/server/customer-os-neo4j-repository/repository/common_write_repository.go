@@ -101,7 +101,7 @@ func (r *commonWriteRepository) Unlink(ctx context.Context, tx *neo4j.ManagedTra
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId})-[r:%s]-(child:%s_%s {id:$withEntityId}) `, details.FromEntityType.Neo4jLabel(), tenant, details.Relationship.String(), details.ToEntityType.Neo4jLabel(), tenant)
-	cypher += fmt.Sprintf(`DELETE r`)
+	cypher += `DELETE r`
 
 	params := map[string]any{
 		"tenant":       tenant,

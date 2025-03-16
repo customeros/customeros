@@ -3,12 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -59,9 +59,6 @@ func (r *linkedinConnectionRequestReadRepository) GetPendingRequestByUserForSoci
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 
-	if err != nil {
-		return nil, nil
-	}
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

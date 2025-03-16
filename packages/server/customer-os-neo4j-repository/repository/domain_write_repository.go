@@ -2,10 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
-	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -33,14 +33,14 @@ func (r domainWriteRepository) MergeDomain(ctx context.Context, tx *neo4j.Manage
 	tracing.TagComponentNeo4jRepository(span)
 	span.SetTag(tracing.SpanTagEntityId, domain)
 
-	cypher := fmt.Sprintf(`
+	cypher := `
 	MERGE (d:Domain {domain:$domain})
 	ON CREATE SET
 		d.createdAt=datetime(),
 		d.updatedAt=datetime(),
 		d.source=$source,
 		d.appSource=$appSource
-	RETURN d.createdAt = datetime() AS justCreated`)
+	RETURN d.createdAt = datetime() AS justCreated`
 
 	params := map[string]interface{}{
 		"domain":    domain,

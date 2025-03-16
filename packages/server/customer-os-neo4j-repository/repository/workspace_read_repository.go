@@ -2,7 +2,7 @@ package neo4j_repository
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -38,7 +38,7 @@ func (r *workspaceReadRepository) GetAllForTenant(ctx context.Context, tenant st
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(w:Workspace) return w`)
+	cypher := `MATCH (t:Tenant {name:$tenant})--(w:Workspace) return w`
 	params := map[string]any{
 		"tenant": tenant,
 	}
@@ -75,7 +75,7 @@ func (r *workspaceReadRepository) GetByName(ctx context.Context, tenant, name st
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
-		if err != nil && err.Error() == "Result contains no more records" {
+		if err.Error() == "Result contains no more records" {
 			return nil, nil
 		} else {
 			return nil, err
