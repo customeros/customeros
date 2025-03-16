@@ -44,6 +44,7 @@ type DNSRecord struct {
 type MailstackService interface {
 	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)
 	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error
+	// TODO delete once not used
 	GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error)
 	// mailboxes
 	RegisterMailbox(ctx context.Context, tenant, domain string, request CreateMailboxRequest) (*RegisterMailboxResponse, error)
@@ -59,4 +60,6 @@ type MailstackService interface {
 	AddDNSRecord(ctx context.Context, tenant, domain string, record DNSRecord) (int, string, *DNSRecord, error)
 	DeleteDNSRecord(ctx context.Context, tenant, domain, dnsId string) (int, string, error)
 	GetDNSRecords(ctx context.Context, tenant, domain string) (int, string, []DNSRecord, error)
+	// DMARC monitoring
+	ProcessDMARCMonitoringReport(ctx context.Context, emailData []byte) error
 }

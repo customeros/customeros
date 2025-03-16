@@ -1063,3 +1063,55 @@ func (s *mailstackService) GetDNSRecords(ctx context.Context, tenant, domain str
 
 	return http.StatusOK, "", response.Records, nil
 }
+
+func (s *mailstackService) ProcessDMARCMonitoringReport(ctx context.Context, emailData []byte) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.ProcessDMARCMonitoringReport")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Create request to Mailstack API
+	req, err := http.NewRequestWithContext(ctx, "POST", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/dmarc", bytes.NewBuffer(emailData))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return err
+	}
+
+	// Add required headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusAccepted {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return errors.New(errorResponse.Error)
+	}
+
+	return nil
+}
