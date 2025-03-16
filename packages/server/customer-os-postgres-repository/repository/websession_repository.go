@@ -97,7 +97,9 @@ func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData p
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
-	span.LogFields(log.Int("lookbackPeriodInMins", *lookbackPeriodInMins))
+	if lookbackPeriodInMins != nil {
+		span.LogFields(log.Int("lookbackPeriodInMins", *lookbackPeriodInMins))
+	}
 
 	query := r.gormDb.Where(&webSessionData).Order("last_activity DESC")
 

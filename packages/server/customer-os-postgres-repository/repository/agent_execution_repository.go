@@ -44,11 +44,11 @@ func NewAgentExecutionRepository(gormDb *gorm.DB) AgentExecutionRepository {
 func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if executionRecord.AgentID == nil {
 		span.LogFields(log.Object("executionRecord", executionRecord))
-		err := errors.New("Agent or ExecutionID missing")
+		err := errors.New("agent or executionID missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -68,8 +68,7 @@ func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord p
 func (f *agentExecutionRepository) Completed(ctx context.Context, executionID string, goalAchieved *bool) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Completed")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, executionID)
 	span.LogFields(log.String("executionID", executionID))
 	if goalAchieved != nil {
@@ -109,7 +108,7 @@ func (f *agentExecutionRepository) Completed(ctx context.Context, executionID st
 func (f *agentExecutionRepository) Finish(ctx context.Context, executionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Finish")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
 
 	err := f.gormDb.
@@ -131,7 +130,7 @@ func (f *agentExecutionRepository) Finish(ctx context.Context, executionID strin
 func (f *agentExecutionRepository) Fail(ctx context.Context, executionID, errorMessage string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Fail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
 
 	err := f.gormDb.
@@ -153,7 +152,7 @@ func (f *agentExecutionRepository) Fail(ctx context.Context, executionID, errorM
 func (f *agentExecutionRepository) Pending(ctx context.Context, executionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Pending")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
 
 	if executionID == "" {
@@ -182,7 +181,7 @@ func (f *agentExecutionRepository) Pending(ctx context.Context, executionID stri
 func (f *agentExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var agentExecution postgres_entity.AgentExecution
 	err := f.gormDb.
@@ -203,9 +202,8 @@ func (f *agentExecutionRepository) Find(ctx context.Context, executionRecord pos
 func (f *agentExecutionRepository) GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.TagEntity(span, executionID)
 
 	var agentExecution postgres_entity.AgentExecution
@@ -310,7 +308,7 @@ func (f *agentExecutionRepository) SaveAsyncState(ctx context.Context, execution
 func (f *agentExecutionRepository) CompleteStep(ctx context.Context, executionID string, step string, result map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.CompleteStep")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("executionID", executionID))
 
 	// First get the current execution to check/initialize checkpoints
@@ -340,9 +338,8 @@ func (f *agentExecutionRepository) CompleteStep(ctx context.Context, executionID
 func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID string, goalAchieved bool, impactedId *string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GoalAchieved")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, executionID)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	span.LogFields(log.Bool("goalAchieved", goalAchieved))
 
 	if executionID == "" {
@@ -375,7 +372,7 @@ func (f *agentExecutionRepository) GoalAchieved(ctx context.Context, executionID
 func (r *agentExecutionRepository) GetGoalAchievedCountLast30Days(ctx context.Context, agentID string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetGoalAchievedCountLast30Days")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var count int64
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
@@ -394,7 +391,7 @@ func (r *agentExecutionRepository) GetGoalAchievedCountLast30Days(ctx context.Co
 func (f *agentExecutionRepository) GetExecutionsForRetry(ctx context.Context, limit int) ([]postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetExecutionsForRetry")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("limit", limit))
 
 	var executions []postgres_entity.AgentExecution
@@ -416,7 +413,7 @@ func (f *agentExecutionRepository) GetExecutionsForRetry(ctx context.Context, li
 func (f *agentExecutionRepository) GetGoalAchievedImpactedIdsLast30Days(ctx context.Context, agentID string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetGoalAchievedImpactedIdsLast30Days")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var impactedIds []string
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)

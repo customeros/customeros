@@ -28,7 +28,7 @@ func NewCacheIPIdentifyRepository(gormDb *gorm.DB) CacheIPIdentifyRepository {
 func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_entity.CacheIPIdentify) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "ipData", ipData)
 
 	if ipData.IPAddress == "" {
@@ -49,7 +49,7 @@ func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_
 func (r *cacheIPIdentifyRepository) Find(ctx context.Context, ipData postgres_entity.CacheIPIdentify, cacheLookbackInDays int) (*postgres_entity.CacheIPIdentify, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	lookbackDate := time.Now().AddDate(0, 0, -cacheLookbackInDays)
 
