@@ -712,7 +712,6 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 	prompt := p.String()
 
 	temperature := float32(0.1)
-	// ask AI for NAICS code
 	aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
 		Model:            enum.AIModelAnthropicHaiku,
 		SystemPrompt:     &systemPrompt,
@@ -720,6 +719,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 		ModelTemperature: &temperature,
 		OutputFormat:     enum.AIOutputJson,
 		MaxOutputTokens:  utils.Int32Ptr(250),
+		Retries:          utils.IntPtr(2),
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
