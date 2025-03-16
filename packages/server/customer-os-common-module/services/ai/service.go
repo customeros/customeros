@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/api/option"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -475,6 +476,7 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 		return nil, err
 	}
 
+	span.LogFields(log.String("response", response))
 	return &response, nil
 }
 

@@ -719,7 +719,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &prompt,
 		ModelTemperature: &temperature,
-		OutputFormat:     enum.AIOutputText,
+		OutputFormat:     enum.AIOutputJson,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
@@ -839,7 +839,7 @@ func (s *globalOrganizationService) enrichDescription(ctx context.Context, globa
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &prompt,
 		ModelTemperature: &temperature,
-		OutputFormat:     enum.AIOutputText,
+		OutputFormat:     enum.AIOutputJson,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
@@ -935,7 +935,7 @@ func (s *globalOrganizationService) enrichName(ctx context.Context, globalOrgani
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &prompt,
 		ModelTemperature: &temperature,
-		OutputFormat:     enum.AIOutputText,
+		OutputFormat:     enum.AIOutputJson,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))

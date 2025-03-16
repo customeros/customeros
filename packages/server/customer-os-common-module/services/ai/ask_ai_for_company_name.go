@@ -3,7 +3,6 @@ package ai
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -36,14 +35,12 @@ func (s *aiService) AskAIForCompanyName(ctx context.Context, request interfaces.
 		currentPrompt := *request.SystemPrompt
 		schema := validator.GetExpectedSchema()
 		// Only add the schema example if not already present
-		if !strings.Contains(currentPrompt, "\"confidence\"") {
-			enhancedPrompt := fmt.Sprintf(`%s
+		enhancedPrompt := fmt.Sprintf(`%s
 IMPORTANT: Your response MUST be in valid JSON format exactly matching this schema:
 %s
 Do not include any text outside of the JSON object. Provide the company name with high confidence if clearly identifiable, or lower confidence if uncertain.`,
-				currentPrompt, schema)
-			request.SystemPrompt = &enhancedPrompt
-		}
+			currentPrompt, schema)
+		request.SystemPrompt = &enhancedPrompt
 	}
 
 	var lastError error

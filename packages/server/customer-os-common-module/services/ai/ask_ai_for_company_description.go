@@ -36,14 +36,12 @@ func (s *aiService) AskAIForCompanyDescription(ctx context.Context, request inte
 		currentPrompt := *request.SystemPrompt
 		schema := validator.GetExpectedSchema()
 		// Only add the schema example if not already present
-		if !strings.Contains(currentPrompt, "\"description\"") {
-			enhancedPrompt := fmt.Sprintf(`%s
+		enhancedPrompt := fmt.Sprintf(`%s
 IMPORTANT: Your response MUST be in valid JSON format exactly matching this schema:
 %s
 Do not include any text outside of the JSON object. The description should be a single paragraph of max 300 characters that clearly explains who the company serves and their revenue model.`,
-				currentPrompt, schema)
-			request.SystemPrompt = &enhancedPrompt
-		}
+			currentPrompt, schema)
+		request.SystemPrompt = &enhancedPrompt
 	}
 
 	var lastError error
