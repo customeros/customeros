@@ -37,6 +37,7 @@ type AskAIRequest struct {
 	SystemPrompt *string            `json:"systemPrompt,omitempty"`
 	Prompt       PromptContent      `json:"prompt"`
 	AIModel      commonEnum.AIModel `json:"-"`
+	OutputFormat string             `json:"outputFormat,omitempty"`
 }
 
 type PromptContent struct {
@@ -96,6 +97,11 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 			Model:        request.AIModel,
 			SystemPrompt: request.SystemPrompt,
 			Prompt:       &promptStr,
+		}
+		if request.OutputFormat == commonEnum.AIOutputJson.String() {
+			AIRequest.OutputFormat = commonEnum.AIOutputJson
+		} else {
+			AIRequest.OutputFormat = commonEnum.AIOutputText
 		}
 
 		answer, err := h.services.CommonServices.AIService.AskAI(ctx, AIRequest)

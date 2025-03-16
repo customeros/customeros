@@ -44,8 +44,8 @@ const (
 )
 
 var (
-	ErrPaymentRequired = errors.New("Jina balance requires topup")
-	ErrUnprocessable   = errors.New("Jina cannot process webpage")
+	ErrPaymentRequired = errors.New("jina balance requires topup")
+	ErrUnprocessable   = errors.New("jina cannot process webpage")
 )
 
 func (s *webscraperService) Scrape(ctx context.Context, url string) (string, error) {
@@ -169,7 +169,9 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if s.config.ApiKey == "" {
-		return "", errors.New("Jina API key not set")
+		err := errors.New("jina API key not set")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	requestUrl := s.config.Url + url

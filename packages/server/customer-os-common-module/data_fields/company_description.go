@@ -25,7 +25,7 @@ type CompanyDescriptionResponseValidator struct {
 
 func NewCompanyDescriptionResponseValidator() *CompanyDescriptionResponseValidator {
 	return &CompanyDescriptionResponseValidator{
-		MaxLength:     300, // As per the prompt requirement
+		MaxLength:     400, // Allow up to 400 chars, though we ask AI for 300 to be conservative
 		MinLength:     50,  // Reasonable minimum for a useful description
 		DisallowEmpty: true,
 		BlockedWords:  []string{},
