@@ -699,8 +699,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 
         Important details:
         - Use the latest NAICS codes available.
-        - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
-        `
+        - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).`
 
 	var p strings.Builder
 	p.WriteString(fmt.Sprintf("Company name: %s\n", globalOrganization.Name))
@@ -720,6 +719,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 		Prompt:           &prompt,
 		ModelTemperature: &temperature,
 		OutputFormat:     enum.AIOutputJson,
+		MaxOutputTokens:  utils.Int32Ptr(250),
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))

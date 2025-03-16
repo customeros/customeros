@@ -157,6 +157,7 @@ CRITICAL JSON FORMATTING REQUIREMENTS:
 8. All string values MUST be in double quotes
 9. All numeric values MUST NOT be in quotes
 10. NO trailing commas allowed
+11. Do not include reasoning or explanations in response
 
 VALIDATION CHECKLIST (complete ALL before responding):
 1. Count opening { and verify matching number of closing }
