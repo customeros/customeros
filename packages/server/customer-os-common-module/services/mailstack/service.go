@@ -282,25 +282,6 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	return nil
 }
 
-func (s *mailstackService) GetTenantForMailstackDomain(ctx context.Context, domain string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetTenantForMailstackDomain")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	span.LogKV("request.domain", domain)
-
-	mailStackDomainEntity, err := s.postgres.MailStackDomainRepository.GetDomainCrossTenant(ctx, domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if mailStackDomainEntity == nil {
-		return "", nil
-	}
-
-	return mailStackDomainEntity.Tenant, nil
-}
-
 func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, domain string, request interfaces.CreateMailboxRequest) (*interfaces.RegisterMailboxResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.RegisterMailbox")
 	defer span.Finish()

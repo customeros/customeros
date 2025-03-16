@@ -56,7 +56,6 @@ type Repositories struct {
 	IngestEmailMessageRepository                 IngestEmailMessageRepository
 	InvoiceRepository                            InvoiceRepository
 	MagicLinkRepository                          MagicLinkRepository
-	MailStackDomainRepository                    MailStackDomainRepository
 	MailstackBuyRequestRepository                MailstackBuyRequestRepository
 	OAuthTokenRepository                         OAuthTokenRepository
 	OranizationWebsiteHostingPlatformRepository  OrganizationWebsiteHostingPlatformRepository
@@ -136,7 +135,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 		InvoiceRepository:                            NewInvoiceRepository(postgresDB.GormDB),
-		MailStackDomainRepository:                    NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:                NewMailstackBuyRequestRepository(postgresDB.GormDB),
 		MagicLinkRepository:                          NewMagicLinkRepository(postgresDB.GormDB),
 		OranizationWebsiteHostingPlatformRepository:  NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
@@ -189,7 +187,6 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.CosApiEnrichPersonTempResult{},
 		&postgres_entity.CurrencyRate{},
 		&postgres_entity.CustomerOsIds{},
-		&postgres_entity.DMARCMonitoring{},
 		&postgres_entity.DomainPrimaryException{},
 		&postgres_entity.EmailLookup{},
 		&postgres_entity.EmailMessage{},
@@ -213,7 +210,6 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.InvoiceNumberEntity{},
 		&postgres_entity.Listener{},
 		&postgres_entity.MagicLink{},
-		&postgres_entity.MailStackDomain{},
 		&postgres_entity.MailstackBuyRequest{},
 		&postgres_entity.MailstackBuyRequestDomain{},
 		&postgres_entity.OrganizationWebsiteHostingPlatform{},
