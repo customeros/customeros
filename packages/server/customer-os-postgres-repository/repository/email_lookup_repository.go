@@ -27,7 +27,7 @@ func NewEmailLookupRepository(gormDb *gorm.DB) EmailLookupRepository {
 func (e emailLookupRepository) GetById(ctx context.Context, id string) (*postgres_entity.EmailLookup, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(tracingLog.String("id", id))
 

@@ -82,7 +82,7 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, po
 func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonRepository.PermanentlyDelete")
 	defer span.Finish()
-
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	asyncTablesWithTenantNameColumn := []string{
 		postgres_entity.OAuthTokenEntity{}.TableName(),
 	}

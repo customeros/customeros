@@ -367,7 +367,7 @@ func TestAgentExecutionRepository_CompleteStep(t *testing.T) {
 	if fetched.CurrentStep != "" {
 		t.Errorf("expected CurrentStep to be cleared, got %q", fetched.CurrentStep)
 	}
-	if fetched.StateData != nil && len(fetched.StateData) > 0 {
+	if len(fetched.StateData) > 0 {
 		t.Errorf("expected StateData to be cleared, got %v", fetched.StateData)
 	}
 }

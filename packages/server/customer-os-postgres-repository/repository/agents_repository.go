@@ -42,7 +42,7 @@ func NewAgentRepository(gormDb *gorm.DB) AgentRepository {
 func (f *agentsRepository) GetById(ctx context.Context, id string) (*postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
 	var agent postgres_entity.Agent
@@ -72,7 +72,7 @@ func (f *agentsRepository) GetById(ctx context.Context, id string) (*postgres_en
 func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if agent.Scope == enum.AgentScopePersonal {
 		agent.Owner = common.GetUserIdFromContext(ctx)
@@ -85,7 +85,7 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 
 	agent.Tenant = common.GetTenantFromContext(ctx)
 	if agent.Tenant == "" {
-		err := errors.New("Tenant not set on context")
+		err := errors.New("tenant not set on context")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -119,11 +119,11 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
-		err := errors.New("Tenant not set")
+		err := errors.New("tenant not set")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -155,11 +155,11 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 func (f *agentsRepository) GetAllAgentsByTypes(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetAllAgentsByTypes")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
-		err := errors.New("Tenant not set")
+		err := errors.New("tenant not set")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (f *agentsRepository) GetAllAgentsByTypes(ctx context.Context, agentTypes [
 func (f *agentsRepository) GetAllAgentsByTypesCrossTenant(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetAllAgentsByTypesCrossTenant")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Object("agentTypes", agentTypes))
 
 	var records []postgres_entity.Agent
@@ -225,7 +225,7 @@ func (f *agentsRepository) GetAllAgentsByTypesCrossTenant(ctx context.Context, a
 func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByTypes")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -264,7 +264,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context,
 func (f *agentsRepository) GetActiveConfiguredAgentsByUserAndType(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByUserAndType")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -306,7 +306,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByUserAndType(ctx context.Co
 func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "agentTypes", agentTypes)
 
 	var records []postgres_entity.Agent
@@ -339,7 +339,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx conte
 func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "agentEntity", agent)
 
 	if agent.ID == "" {
@@ -380,7 +380,7 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 func (f *agentsRepository) UpdateCapabilities(ctx context.Context, capabilities []postgres_entity.Capability) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.UpdateCapabilities")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	return f.gormDb.Transaction(func(tx *gorm.DB) error {
 		for _, capability := range capabilities {
@@ -401,7 +401,7 @@ func (f *agentsRepository) UpdateCapabilities(ctx context.Context, capabilities 
 func (f *agentsRepository) UpdateListeners(ctx context.Context, listeners []postgres_entity.Listener) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.UpdateListeners")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	return f.gormDb.Transaction(func(tx *gorm.DB) error {
 		for _, listener := range listeners {
@@ -422,7 +422,7 @@ func (f *agentsRepository) UpdateListeners(ctx context.Context, listeners []post
 func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, capabilityType enum.AgentCapability) (*postgres_entity.Capability, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.FindActiveCapability")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(
 		log.String("agentID", agentID),
 		log.String("capabilityType", capabilityType.String()),
@@ -450,7 +450,7 @@ func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, c
 func (f *agentsRepository) Delete(ctx context.Context, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.Delete")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
 	tenant := common.GetTenantFromContext(ctx)

@@ -30,7 +30,7 @@ func NewFlowEdgeRepository(gormDb *gorm.DB) FlowEdgeRepository {
 func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.CreateFlowEdge")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge", 16)
 
@@ -45,7 +45,7 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge postgres_entit
 func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge postgres_entity.FlowEdge) ([]postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var results []postgres_entity.FlowEdge
 	err := f.gormDb.
@@ -61,7 +61,7 @@ func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge postgres_enti
 func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result postgres_entity.FlowEdge
 	err := f.gormDb.
@@ -81,7 +81,7 @@ func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge postgres_entity.
 func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if flowEdge.ID == "" {
 		err := errors.New("flow edge ID is missing")

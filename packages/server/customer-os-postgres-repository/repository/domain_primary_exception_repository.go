@@ -24,7 +24,7 @@ func NewDomainPrimaryExceptionRepository(gormDb *gorm.DB) DomainPrimaryException
 func (d domainPrimaryExceptionRepository) Exists(ctx context.Context, domain string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainPrimaryExceptionRepository.Exists")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("domain", domain))
 
 	var count int64

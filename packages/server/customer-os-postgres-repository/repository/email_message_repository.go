@@ -30,7 +30,7 @@ func NewEmailMessageRepository(gormDb *gorm.DB) EmailMessageRepository {
 func (repo *emailMessageRepositoryImpl) GetByProviderMessageId(ctx context.Context, tenant, providerMessageId string) (*postgres_entity.EmailMessage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetByProviderMessageId")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(log.String("tenant", tenant), log.String("providerMessageId", providerMessageId))
 
@@ -57,7 +57,7 @@ func (repo *emailMessageRepositoryImpl) GetByProviderMessageId(ctx context.Conte
 func (repo *emailMessageRepositoryImpl) GetByProducer(ctx context.Context, tenant, producerId, producerType string) (*postgres_entity.EmailMessage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetByProducer")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(log.String("tenant", tenant), log.String("producerId", producerId), log.String("producerType", producerType))
 
@@ -84,7 +84,7 @@ func (repo *emailMessageRepositoryImpl) GetByProducer(ctx context.Context, tenan
 func (repo *emailMessageRepositoryImpl) GetForSending(ctx context.Context) ([]*postgres_entity.EmailMessage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetForSending")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entities []*postgres_entity.EmailMessage
 	err := repo.gormDb.Where("status = ?", postgres_entity.EmailMessageStatusScheduled).Order("created_at asc").Limit(25).Find(&entities).Error
@@ -99,7 +99,7 @@ func (repo *emailMessageRepositoryImpl) GetForSending(ctx context.Context) ([]*p
 func (repo *emailMessageRepositoryImpl) GetForProcessing(ctx context.Context) ([]*postgres_entity.EmailMessage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetForProcessing")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entities []*postgres_entity.EmailMessage
 	err := repo.gormDb.Where("status = ?", postgres_entity.EmailMessageStatusSent).Order("created_at asc").Limit(25).Find(&entities).Error
@@ -114,8 +114,7 @@ func (repo *emailMessageRepositoryImpl) GetForProcessing(ctx context.Context) ([
 func (repo *emailMessageRepositoryImpl) Store(ctx context.Context, tenant string, input *postgres_entity.EmailMessage) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.Store")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(log.String("tenant", tenant), log.String("producerId", input.ProducerId), log.String("producerType", input.ProducerType))
 
