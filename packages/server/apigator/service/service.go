@@ -97,7 +97,7 @@ func (s *Service) GetUserDetails(tenant string, username string) (*entities.User
 	var result *entities.UserDetails
 	var err error
 
-	key := fmt.Appendf(nil, "%s:%s", tenant, username)
+	key := []byte(fmt.Sprintf("%s:%s", tenant, username))
 
 	cached, cacheErr := s.cache.userDetails.Get(key)
 	if cacheErr != nil {

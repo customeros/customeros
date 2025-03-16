@@ -1,4 +1,4 @@
-package user_details
+package userdetails
 
 import (
 	"encoding/json"
