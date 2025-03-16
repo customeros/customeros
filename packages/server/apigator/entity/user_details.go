@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,9 +17,9 @@ type UserDetails struct {
 }
 
 func (instance *UserDetails) ToHeaders(c *gin.Context) {
-	roles := strings.Join(filterNonEmpty(instance.Roles), ",")
+	roles := strings.Join(utils.RemoveEmpties(instance.Roles), ",")
 	fullName := strings.Join(
-		filterNonEmpty([]string{instance.FirstName, instance.LastName}),
+		utils.RemoveEmpties([]string{instance.FirstName, instance.LastName}),
 		" ",
 	)
 
@@ -30,14 +31,4 @@ func (instance *UserDetails) ToHeaders(c *gin.Context) {
 
 func (instance *UserDetails) Marshal() ([]byte, error) {
 	return json.Marshal(instance)
-}
-
-func filterNonEmpty(arr []string) []string {
-	var res []string
-	for _, str := range arr {
-		if str != "" {
-			res = append(res, str)
-		}
-	}
-	return res
 }

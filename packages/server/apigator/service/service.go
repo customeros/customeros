@@ -120,7 +120,10 @@ func (s *Service) GetUserDetails(tenant string, username string) (*entities.User
 			s.cache.userDetails.Set(key, marshaled, 24*60*60)
 		}
 	} else {
-		json.Unmarshal(cached, &result)
+		err := json.Unmarshal(cached, &result)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal user details: %w", err)
+		}
 	}
 
 	return result, err

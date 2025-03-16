@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -17,11 +16,11 @@ import (
 	apigator_service "github.com/customeros/customeros/packages/server/apigator/service"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
@@ -160,7 +159,7 @@ func validate(
 		}
 
 		var response ApigatorResponse
-		response.RequestId = generateNanoIdWithPrefix("api", 16)
+		response.RequestId = utils.GenerateNanoIdWithPrefix("api", 16)
 
 		internalApiKey := c.GetHeader(INTERNAL_API_KEY_HEADER)
 		tenantApiKey := c.GetHeader(TENANT_API_KEY_HEADER)
@@ -192,14 +191,13 @@ func validate(
 
 			foundTenant, err := service.GetTenantByUser(username)
 			if err != nil || foundTenant == "" {
-				c.JSON(http.StatusUnauthorized, response.Payload("error", "Failed to authenticate user"))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Failed to authenticate user"))
 				c.Abort()
 				return
 			}
 
 			if tenant != "" && tenant != foundTenant {
-				c.JSON(http.StatusUnauthorized, response.Payload("error", "Invalid tenant"))
-				c.Abort()
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid tenant"))
 				return
 			} else {
 				tenant = foundTenant
@@ -207,8 +205,7 @@ func validate(
 
 			foundUser, err := service.GetUserDetails(tenant, username)
 			if err != nil {
-				c.JSON(http.StatusUnauthorized, response.Payload("error", "User not found"))
-				c.Abort()
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "User not found"))
 				return
 			}
 
@@ -222,13 +219,13 @@ func validate(
 			 */
 			foundTenant, err := service.GetTenantByApiKey(tenantApiKey)
 			if err != nil || foundTenant == "" {
-				c.JSON(http.StatusUnauthorized, response.Payload("error", "Invalid API key"))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid API key"))
 				c.Abort()
 				return
 			}
 
 			if tenant != "" && tenant != foundTenant {
-				c.JSON(http.StatusUnauthorized, response.Payload("error", "Invalid tenant"))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid tenant"))
 				c.Abort()
 				return
 			} else {
@@ -239,7 +236,7 @@ func validate(
 				foundUser, err := service.GetUserDetails(foundTenant, username)
 
 				if err != nil || foundUser == nil {
-					c.JSON(http.StatusUnauthorized, response.Payload("error", "User not found"))
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "User not found"))
 					c.Abort()
 					return
 				}
@@ -249,6 +246,7 @@ func validate(
 		}
 
 		c.Header("X-Tenant", tenant)
+		c.Header("X-Request-Id", response.RequestId)
 		if userDetails != nil {
 			userDetails.ToHeaders(c)
 		}
@@ -268,13 +266,4 @@ func (instance *ApigatorResponse) Payload(status, message string) *ApigatorRespo
 	instance.Status = status
 	instance.Message = message
 	return instance
-}
-
-func generateNanoIdWithPrefix(s string, length int) string {
-	alphabet := "abcdefghijklmnopqrstuvwxyz0123456789"
-	id, err := gonanoid.Generate(alphabet, length)
-	if err != nil {
-		panic(err)
-	}
-	return fmt.Sprintf("%s_%s", s, id)
 }
