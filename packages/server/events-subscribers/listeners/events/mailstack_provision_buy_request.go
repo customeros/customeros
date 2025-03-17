@@ -97,7 +97,7 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 			continue
 		}
 
-		statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain)
+		statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -284,7 +284,7 @@ func (l *MailstackProvisionBuyRequestListener) processMailboxes(ctx context.Cont
 			sem <- struct{}{}        // Acquire semaphore
 			defer func() { <-sem }() // Release semaphore
 
-			statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain)
+			statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain, "")
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return // Exit the goroutine on error

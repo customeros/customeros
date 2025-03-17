@@ -27,7 +27,7 @@ func GetMailboxes(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		// Get mailboxes using service
-		statusCode, _, mailboxes, err := s.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "")
+		statusCode, _, mailboxes, err := s.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(http.StatusInternalServerError)

@@ -15,6 +15,8 @@ type CreateMailboxRequest struct {
 type MailboxRecord struct {
 	ID                string   `json:"id"`
 	Email             string   `json:"email"`
+	Username          string   `json:"username"`
+	Domain            string   `json:"domain"`
 	Password          string   `json:"password"`
 	ForwardingTo      []string `json:"forwardingTo"`
 	ForwardingEnabled bool     `json:"forwardingEnabled"`
@@ -42,7 +44,7 @@ type MailstackService interface {
 	// mailboxes
 	RegisterMailbox(ctx context.Context, tenant, domain string, request CreateMailboxRequest) (int, string, *MailboxRecord, error)
 	ConfigureMailbox(ctx context.Context, tenant, mailboxId string) error
-	GetMailboxes(ctx context.Context, tenant, domain string) (int, string, []MailboxRecord, error)
+	GetMailboxes(ctx context.Context, tenant, domain, userId string) (int, string, []MailboxRecord, error)
 	// domains
 	RegisterNewDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
 	ConfigureDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)

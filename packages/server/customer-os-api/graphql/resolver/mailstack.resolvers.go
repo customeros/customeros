@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -14,8 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 )
 
@@ -181,26 +181,29 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 	span.LogKV("request.userId", userId)
 	isImpersonated := common.IsImpersonatedUserInContext(ctx)
 
-	var allMailboxes []*postgres_entity.TenantSettingsMailbox
-	var err error
-
+	tenant := common.GetTenantFromContext(ctx)
+	requestUserId := userId
 	if isImpersonated {
-		allMailboxes, err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
-	} else {
-		allMailboxes, err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, userId)
+		requestUserId = ""
 	}
+
+	statusCode, errMessage, mailboxes, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", requestUserId)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get all mailboxes")
-		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get mailboxes")
+		return nil, nil
+	}
+	if statusCode != http.StatusOK {
+		tracing.TraceErr(span, errors.New(errMessage))
+		graphql.AddErrorf(ctx, errMessage)
 		return nil, nil
 	}
 
 	var response []*model.Mailbox
-	for _, mailbox := range allMailboxes {
+	for _, mailbox := range mailboxes {
 		response = append(response, &model.Mailbox{
 			Provider:           model.MailboxProviderMailstack,
-			Mailbox:            mailbox.MailboxUsername,
+			Mailbox:            mailbox.Email,
 			RampUpCurrent:      40,
 			RampUpMax:          40,
 			RampUpRate:         3,

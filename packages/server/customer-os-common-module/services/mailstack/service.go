@@ -1097,15 +1097,23 @@ func (s *mailstackService) ProcessDMARCMonitoringReport(ctx context.Context, ema
 	return nil
 }
 
-func (s *mailstackService) GetMailboxes(ctx context.Context, tenant, domain string) (int, string, []interfaces.MailboxRecord, error) {
+func (s *mailstackService) GetMailboxes(ctx context.Context, tenant, domain, userId string) (int, string, []interfaces.MailboxRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetMailboxes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(tracingLog.String("domain", domain), tracingLog.String("userId", userId))
 
 	// Create request to Mailstack API
 	url := s.cfg.Internal.MailstackApiConfig.ApiUrl + "/v1/mailboxes"
+	params := make([]string, 0)
 	if domain != "" {
-		url += "?domain=" + domain
+		params = append(params, "domain="+domain)
+	}
+	if userId != "" {
+		params = append(params, "userId="+userId)
+	}
+	if len(params) > 0 {
+		url += "?" + strings.Join(params, "&")
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {

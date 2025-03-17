@@ -140,7 +140,7 @@ func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 		}
 
 		// Get mailboxes using service
-		statusCode, errMsg, mailboxes, err := h.services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, domain)
+		statusCode, errMsg, mailboxes, err := h.services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, domain, "")
 		if err != nil {
 			message := "Internal server error"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
