@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
@@ -172,6 +174,15 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 		agent.Metric = metric
 		agents = append(agents, agent)
 	}
+
+	// log agent ids in trace
+	agentIds := make([]string, 0, len(agents))
+	for _, agent := range agents {
+		agentIds = append(agentIds, agent.ID)
+	}
+	tracing.LogObjectAsJson(span, "result.agent_ids", agentIds)
+	span.LogFields(log.Int("result.count", len(agents)))
+
 	return agents, nil
 }
 
