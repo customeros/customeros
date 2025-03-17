@@ -38,7 +38,6 @@ const (
 	GroupMailstack                         = "mailstack"
 	GroupSendEmails                        = "sendEmails"
 	GroupProcessEmails                     = "processSentEmails"
-	GroupRampMailboxes                     = "rampUpMailboxes"
 	GroupIngestEmailsFromProvidersRealtime = "ingestEmailsFromProvidersRealtime"
 	GroupIngestEmailsFromProvidersHistory  = "ingestEmailsFromProvidersHistory"
 	GroupIngestEmailsSendToAgents          = "ingestEmailsSendToAgents"
@@ -82,7 +81,6 @@ var jobLocks = struct {
 		GroupEmailBulk:                         {},
 		GroupFlow:                              {},
 		GroupFlowStats:                         {},
-		GroupRampMailboxes:                     {},
 		GroupIngestEmailsFromProvidersRealtime: {},
 		GroupIngestEmailsFromProvidersHistory:  {},
 		GroupIngestEmailsSendToAgents:          {},
@@ -180,7 +178,6 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	// Flow Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowStatistics, GroupFlowStats, flowStatistics, "flowStatistics")
-	addJob(cont.Cfg.App.Cron.CronScheduleRampUpMailboxes, GroupRampMailboxes, rampUpMailboxes, "rampUpMailboxes")
 
 	// Tenant Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckTenantOnboarding, GroupTenant, checkTenantOnboarding, "checkTenantOnboarding")
@@ -342,10 +339,6 @@ func flowExecution(cont *container.Container) {
 
 func flowStatistics(cont *container.Container) {
 	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ComputeFlowStatistics()
-}
-
-func rampUpMailboxes(cont *container.Container) {
-	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).RampUpMailboxes()
 }
 
 // Other Jobs

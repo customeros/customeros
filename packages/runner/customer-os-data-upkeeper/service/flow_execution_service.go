@@ -10,8 +10,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -20,7 +18,6 @@ import (
 )
 
 type FlowExecutionService interface {
-	RampUpMailboxes()
 	ExecuteScheduledFlowActions()
 	ComputeFlowStatistics()
 }
@@ -37,66 +34,6 @@ func NewFlowExecutionService(cfg *config.Config, log logger.Logger, commonServic
 		log:            log,
 		commonServices: commonServices,
 	}
-}
-
-func (s *flowExecutionService) RampUpMailboxes() {
-	ctx, cancel := utils.GetContextWithTimeout(context.Background(), utils.HalfOfHourDuration)
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowExecutionService.RampUpMailboxes")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	mailboxes, err := s.commonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetForRampUp(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return
-	}
-
-	span.LogFields(log.Int("mailboxes.count", len(mailboxes)))
-
-	for _, mailbox := range mailboxes {
-		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant: mailbox.Tenant,
-		})
-
-		err := s.rampUpMailbox(innerCtx, mailbox)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-	}
-}
-
-func (s *flowExecutionService) rampUpMailbox(ctx context.Context, mailbox *postgres_entity.TenantSettingsMailbox) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.rampUpMailbox")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	for {
-		if mailbox.RampUpCurrent >= mailbox.RampUpMax {
-			break
-		}
-
-		if mailbox.LastRampUpAt.After(utils.StartOfDayInUTC(utils.Now())) {
-			break
-		}
-
-		mailbox.RampUpCurrent = mailbox.RampUpCurrent + mailbox.RampUpRate
-
-		if mailbox.RampUpCurrent > mailbox.RampUpMax {
-			mailbox.RampUpCurrent = mailbox.RampUpMax
-		}
-
-		mailbox.LastRampUpAt = mailbox.LastRampUpAt.AddDate(0, 0, 1)
-
-		err := s.commonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, mailbox)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (s *flowExecutionService) ExecuteScheduledFlowActions() {
