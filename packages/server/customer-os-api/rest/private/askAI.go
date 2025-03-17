@@ -33,11 +33,13 @@ func NewAskAIHandler(services *cosapi_services.Services, responseHandler *respon
 }
 
 type AskAIRequest struct {
-	Model        string             `json:"model"`
-	SystemPrompt *string            `json:"systemPrompt,omitempty"`
-	Prompt       PromptContent      `json:"prompt"`
-	AIModel      commonEnum.AIModel `json:"-"`
-	OutputFormat string             `json:"outputFormat,omitempty"`
+	Model            string                    `json:"model"`
+	SystemPrompt     *string                   `json:"systemPrompt,omitempty"`
+	Prompt           PromptContent             `json:"prompt"`
+	AIModel          commonEnum.AIModel        `json:"-"`
+	OutputFormat     commonEnum.AIOutputFormat `json:"outputFormat,omitempty"`
+	ModelTemperature float32                   `json:"modelTemperature"`
+	MaxOutputTokens  int32                     `json:"maxOutputTokens"`
 }
 
 type PromptContent struct {
@@ -98,7 +100,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 			SystemPrompt: request.SystemPrompt,
 			Prompt:       &promptStr,
 		}
-		if request.OutputFormat == commonEnum.AIOutputJson.String() {
+		if request.OutputFormat == commonEnum.AIOutputJson {
 			AIRequest.OutputFormat = commonEnum.AIOutputJson
 		} else {
 			AIRequest.OutputFormat = commonEnum.AIOutputText

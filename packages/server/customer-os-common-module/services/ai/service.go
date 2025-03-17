@@ -160,8 +160,8 @@ CRITICAL JSON FORMATTING REQUIREMENTS:
 11. Do not include reasoning or rationalization in response
 
 VALIDATION CHECKLIST (complete ALL before responding):
-1. Count opening { and verify matching number of closing }
-2. Count opening [ and verify matching number of closing ]
+1. Verify all opening { have a matching number of closing }
+2. Verify all opening [ have a matching number of closing ]
 3. Verify all string values are in double quotes
 4. Verify all numeric values are unquoted
 5. Verify no trailing commas
