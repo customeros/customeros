@@ -253,7 +253,7 @@ func InitCommonServices(
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
 	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, neo4jRepositories, openSRSImpl, emailImpl)
 	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl, workspaceImpl)
-	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
+	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl, mailstackImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicConfig.Prompts, aiImpl, contactImpl, orgImpl)
 	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl, globalContactImpl)
