@@ -54,8 +54,6 @@ func (h *CompanyResearchHandler) GenerateCompanyBrief() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
-
-		return
 	}
 }
 

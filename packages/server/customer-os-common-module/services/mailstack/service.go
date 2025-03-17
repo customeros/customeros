@@ -1096,3 +1096,75 @@ func (s *mailstackService) ProcessDMARCMonitoringReport(ctx context.Context, ema
 
 	return nil
 }
+
+func (s *mailstackService) GetMailboxes(ctx context.Context, tenant, domain string) (int, string, []interfaces.MailboxRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetMailboxes")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// Create request to Mailstack API
+	url := s.cfg.Internal.MailstackApiConfig.ApiUrl + "/v1/mailboxes"
+	if domain != "" {
+		url += "?domain=" + domain
+	}
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to create request to Mailstack API", nil, err
+	}
+
+	// Add required headers
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport and timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return http.StatusInternalServerError, "Unable to connect to Mailstack API", nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+
+		// For 500 errors, use a generic message
+		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+			return http.StatusInternalServerError, "Internal server error", nil, errors.New(errorResponse.Error)
+		}
+
+		// For other errors, propagate the message from Mailstack
+		return resp.StatusCode, errorResponse.Error, nil, errors.New(errorResponse.Error)
+	}
+
+	// Parse response
+	var response struct {
+		Mailboxes []interfaces.MailboxRecord `json:"mailboxes"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+		return http.StatusInternalServerError, "Unable to parse Mailstack API response", nil, err
+	}
+
+	return http.StatusOK, "", response.Mailboxes, nil
+}

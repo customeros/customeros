@@ -58,6 +58,5 @@ func (h *HybridSearchHandler) Search() gin.HandlerFunc {
 		h.responseHandler.HandleSuccess(c, HybridSearchResponse{
 			Answer: answer,
 		})
-		return
 	}
 }
