@@ -19,7 +19,6 @@ type tenantSettingsMailboxRepository struct {
 type TenantSettingsMailboxRepository interface {
 	GetAll(ctx context.Context) ([]*postgres_entity.TenantSettingsMailbox, error)
 	GetByMailbox(ctx context.Context, mailbox string) (*postgres_entity.TenantSettingsMailbox, error)
-	GetAllByUserId(ctx context.Context, userId string) ([]*postgres_entity.TenantSettingsMailbox, error)
 }
 
 func NewTenantSettingsMailboxRepository(db *gorm.DB) TenantSettingsMailboxRepository {
@@ -75,28 +74,4 @@ func (r *tenantSettingsMailboxRepository) GetByMailbox(ctx context.Context, mail
 	span.LogFields(tracingLog.Bool("result.found", true))
 
 	return &result, nil
-}
-
-func (r *tenantSettingsMailboxRepository) GetAllByUserId(ctx context.Context, userId string) ([]*postgres_entity.TenantSettingsMailbox, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByUserId")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	span.LogKV("userId", userId)
-
-	var result []*postgres_entity.TenantSettingsMailbox
-	err := r.gormDb.WithContext(ctx).
-		Where("tenant = ? and user_id = ?", tenant, userId).
-		Find(&result).
-		Error
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	span.LogFields(tracingLog.Int("result.count", len(result)))
-	return result, nil
 }
