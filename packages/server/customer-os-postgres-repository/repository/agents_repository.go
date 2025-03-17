@@ -149,6 +149,7 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 		return nil, err
 	}
 
+	span.LogFields(log.Int("result.count", len(agents)))
 	return agents, nil
 }
 
