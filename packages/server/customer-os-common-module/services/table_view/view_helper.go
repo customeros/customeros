@@ -515,7 +515,6 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsEmployeeCount), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsYearFounded), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCity), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIsPublic), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsStage), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLinkedinFollowerCount), Width: 100, Visible: true, Name: "", Filter: ""},
