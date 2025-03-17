@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
@@ -200,16 +202,23 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 	span.LogFields(log.String("request.user", obj.ID))
 
 	mailboxes := make([]string, 0)
+	tenant := common.GetTenantFromContext(ctx)
 
-	mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, obj.ID)
+	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
 		return nil, err
 	}
 
+	if statusCode != http.StatusOK {
+		tracing.TraceErr(span, fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
+		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
+		return nil, nil
+	}
+
 	for _, mailbox := range mb {
-		mailboxes = append(mailboxes, mailbox.MailboxUsername)
+		mailboxes = append(mailboxes, mailbox.Email)
 	}
 
 	return mailboxes, nil
@@ -223,25 +232,32 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 	span.LogFields(log.String("request.user", obj.ID))
 
 	mailboxes := make([]*model.Mailbox, 0)
+	tenant := common.GetTenantFromContext(ctx)
 
-	mb, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUserId(ctx, obj.ID)
+	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
 		return nil, err
 	}
 
+	if statusCode != http.StatusOK {
+		tracing.TraceErr(span, fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
+		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
+		return nil, nil
+	}
+
 	for _, mailbox := range mb {
 		mb := model.Mailbox{
 			Provider:           model.MailboxProviderMailstack,
-			Mailbox:            mailbox.MailboxUsername,
+			Mailbox:            mailbox.Email,
 			RampUpCurrent:      40,
 			RampUpMax:          40,
 			RampUpRate:         3,
 			NeedsManualRefresh: false,
 		}
 
-		userUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, []string{mailbox.UserId})
+		userUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, []string{obj.ID})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to get users used in flows")
