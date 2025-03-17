@@ -283,7 +283,7 @@ func (v *EmailSignatureValidator) validateAdditional(additional EmailSignatureAd
 // GetExpectedSchema returns a sample schema for documentation
 func (v *EmailSignatureValidator) GetExpectedSchema() string {
 	return `{
-  "messageBody": "This is the clean message body without salutations, greetings, old threads, or messages, formatted in markdown."
+  "messageBody": "This is the clean message body without salutations, greetings, old threads, or messages, formatted in markdown.",
   "signature": true,
   "details": {
     "basics": {
