@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -27,24 +28,26 @@ import (
 )
 
 type flowExecutionService struct {
-	neo4j    *neo4j_repository.Repositories
-	postgres *postgres_repository.Repositories
-	events   *events.EventsService
-	email    interfaces.EmailService
-	flow     interfaces.FlowService
-	org      interfaces.OrganizationService
-	social   interfaces.SocialService
+	neo4j     *neo4j_repository.Repositories
+	postgres  *postgres_repository.Repositories
+	events    *events.EventsService
+	email     interfaces.EmailService
+	flow      interfaces.FlowService
+	org       interfaces.OrganizationService
+	social    interfaces.SocialService
+	mailstack interfaces.MailstackService
 }
 
-func NewFlowExecutionService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, email interfaces.EmailService, flow interfaces.FlowService, org interfaces.OrganizationService, social interfaces.SocialService) interfaces.FlowExecutionService {
+func NewFlowExecutionService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, email interfaces.EmailService, flow interfaces.FlowService, org interfaces.OrganizationService, social interfaces.SocialService, mailstack interfaces.MailstackService) interfaces.FlowExecutionService {
 	return &flowExecutionService{
-		neo4j:    neo4j,
-		postgres: postgres,
-		events:   events,
-		email:    email,
-		flow:     flow,
-		org:      org,
-		social:   social,
+		neo4j:     neo4j,
+		postgres:  postgres,
+		events:    events,
+		email:     email,
+		flow:      flow,
+		org:       org,
+		social:    social,
+		mailstack: mailstack,
 	}
 }
 
@@ -489,20 +492,25 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 				continue
 			}
 
-			mailboxes, err := s.postgres.TenantSettingsMailboxRepository.GetAllByUserId(ctx, *flowActionSender.UserId)
+			statusCode, errMsg, mailboxes, err := s.mailstack.GetMailboxes(ctx, tenant, "", *flowActionSender.UserId)
 			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			if statusCode != http.StatusOK {
+				err = errors.New(errMsg)
 				tracing.TraceErr(span, err)
 				return err
 			}
 
 			for _, mailbox := range mailboxes {
-				scheduledAt, err := s.neo4j.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.MailboxUsername)
+				scheduledAt, err := s.neo4j.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.Email)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
 				}
 
-				mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
+				mailboxesScheduledAt[mailbox.Email] = scheduledAt
 			}
 		}
 
@@ -1137,9 +1145,14 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 					contact := mapper.MapDbNodeToContactEntity(contactNode)
 
+					// Replace parameters in both body and subject templates
 					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_first_name", contact.FirstName)
 					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_last_name", contact.LastName)
 					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_email", toEmail)
+
+					subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "contact_first_name", contact.FirstName)
+					subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "contact_last_name", contact.LastName)
+					subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "contact_email", toEmail)
 
 					contactWithOrganizations, err := s.org.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{contact.Id})
 					if err != nil {
@@ -1149,12 +1162,11 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 					if len(*contactWithOrganizations) > 0 {
 						contactWithOrganization := (*contactWithOrganizations)[0]
 						bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
-						subjectTemplate = strings.ReplaceAll(subjectTemplate, "{{organization_name}}", contactWithOrganization.Organization.Name)
+						subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "organization_name", contactWithOrganization.Organization.Name)
 					} else {
 						bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "organization_name", "")
-						subjectTemplate = strings.ReplaceAll(subjectTemplate, "{{organization_name}}", "")
+						subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "organization_name", "")
 					}
-
 				}
 
 				mailbox, err = s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, *scheduledActionExecution.Mailbox)
@@ -1175,6 +1187,9 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 				bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "sender_first_name", user.FirstName)
 				bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "sender_last_name", user.LastName)
+
+				subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "sender_first_name", user.FirstName)
+				subjectTemplate = s.ReplacePlaceholder(subjectTemplate, "sender_last_name", user.LastName)
 
 				addBillableEvent = true
 				emailMessage := &postgres_entity.EmailMessage{
