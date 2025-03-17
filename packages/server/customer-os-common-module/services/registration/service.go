@@ -87,10 +87,10 @@ func (s *registrationService) IsInitialized() bool {
 }
 
 func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	span, ctx := s.initializeTracing(ctx, "PrepareDefaultTenantSetup", map[string]interface{}{
-		"loggedInUserEmail": loggedInUserEmail,
-	})
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.PrepareDefaultTenantSetup")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("loggedInUserEmail", loggedInUserEmail)
 
 	if err := common.ValidateTenant(ctx); err != nil {
 		tracing.TraceErr(span, err)
@@ -118,8 +118,9 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 }
 
 func (s *registrationService) configureDefaultFlowData(ctx context.Context, testUser *interfaces.TestUserSetup) error {
-	span, ctx := s.initializeTracing(ctx, "configureDefaultFlowData", nil)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.configureDefaultFlowData")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if err := common.ValidateTenant(ctx); err != nil {
 		tracing.TraceErr(span, err)
@@ -424,8 +425,9 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 }
 
 func (s *registrationService) configureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
-	span, ctx := s.initializeTracing(ctx, "configureTestMailbox", nil)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.configureTestMailbox")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if err := common.ValidateTenant(ctx); err != nil {
 		tracing.TraceErr(span, err)
@@ -447,8 +449,9 @@ func (s *registrationService) configureTestMailbox(ctx context.Context) (*interf
 }
 
 func (s *registrationService) createDefaultAgents(ctx context.Context) error {
-	span, ctx := s.initializeTracing(ctx, "createDefaultAgents", nil)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.createDefaultAgents")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if err := common.ValidateTenant(ctx); err != nil {
 		tracing.TraceErr(span, err)
@@ -487,8 +490,9 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 }
 
 func (s *registrationService) createPostmarkServer(ctx context.Context) error {
-	span, ctx := s.initializeTracing(ctx, "createPostmarkServer", nil)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.createPostmarkServer")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if err := common.ValidateTenant(ctx); err != nil {
 		tracing.TraceErr(span, err)
@@ -500,16 +504,6 @@ func (s *registrationService) createPostmarkServer(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// Helper functions
-func (s *registrationService) initializeTracing(ctx context.Context, operation string, logFields map[string]interface{}) (opentracing.Span, context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("RegistrationService.%s", operation))
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	for key, value := range logFields {
-		span.LogKV(key, value)
-	}
-	return span, ctx
 }
 
 func (s *registrationService) setupTestUser(ctx context.Context, span opentracing.Span) (*interfaces.TestUserSetup, error) {

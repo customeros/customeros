@@ -207,13 +207,11 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 
 	if statusCode != http.StatusOK {
 		tracing.TraceErr(span, fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
-		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
 		return nil, nil
 	}
 
@@ -237,13 +235,11 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 
 	if statusCode != http.StatusOK {
 		tracing.TraceErr(span, fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
-		graphql.AddErrorf(ctx, "Failed to get mailboxes for user %s", obj.ID)
 		return nil, nil
 	}
 
