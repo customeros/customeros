@@ -121,8 +121,6 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 			Model:  request.AIModel.String(),
 			Answer: *answer,
 		})
-
-		return
 	}
 }
 

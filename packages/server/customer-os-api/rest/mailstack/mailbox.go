@@ -126,8 +126,7 @@ func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetMailboxes", c.Request.Header)
 		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		tracing.SetDefaultRestSpanTags(ctx, span)
 
 		// get domain from path
 		domain := c.Param("domain")
