@@ -23,6 +23,14 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	})
 
 	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/askAIForEmail", InternalPath),
+		handler:   h.AskAI.AskAIForEmail(),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/settings/integrations", InternalPath),
 		handler:   h.PrivateIntegrations.GetIntegrations(),
