@@ -13,7 +13,7 @@ import (
 )
 
 func (s *aiService) AskAIForEmail(ctx context.Context, request interfaces.AskAIRequest) (*data_fields.EmailResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForCompanyDescription")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForEmail")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "requestParams", request)
 
