@@ -221,7 +221,7 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 		return err
 	}
 
-	if session == nil && (trackerData.EventType == enum.WebTrackerPageView.String() || trackerData.EventType == enum.WebTrackerClick.String()) {
+	if session == nil && enum.IsActiveWebTrackerEvent(trackerData.EventType) {
 		session, err = h.createWebSession(ctx, trackerData)
 		if err != nil {
 			tracing.TraceErr(span, err)

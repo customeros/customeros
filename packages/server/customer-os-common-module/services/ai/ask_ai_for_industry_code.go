@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -75,6 +76,14 @@ Please respond ONLY with valid JSON matching this schema:
 		if answer == nil {
 			lastError = fmt.Errorf("received nil response from LLM")
 			continue
+		}
+
+		if request.OutputFormat == enum.AIOutputJson {
+			lastBrace := strings.LastIndex(*answer, "}")
+			if lastBrace >= 0 {
+				trimmed := (*answer)[:lastBrace+1]
+				answer = &trimmed
+			}
 		}
 
 		// Validate the response

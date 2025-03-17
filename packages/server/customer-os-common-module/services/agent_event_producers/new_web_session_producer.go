@@ -48,15 +48,7 @@ func NewNewWebSessionProducer(
 const (
 	WebSessionTimeoutPageExit int = 5  // mins -- page exit without a following page view
 	WebSessionTimeoutPageView int = 30 // mins -- page view without a page exit
-	WebSessionTimeoutClick    int = 30 // mins -- click without a page exit
 )
-
-// Add all Agent types subscribed to this event here
-func (p *NewWebSessionProducer) subscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentWebVisitorIdentifier,
-	}
-}
 
 func (s *NewWebSessionProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -82,32 +74,16 @@ func (s *NewWebSessionProducer) Execute() {
 		}
 	}
 
-	// find timed out page view events
-	pageViewSessions, err := s.findTimedOutPageViewEvents(ctx)
+	// find timed out active events
+	activeSessions, err := s.findTimedOutActiveEvents(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
 	}
 
 	// close sessions & fire webtracker event
-	if pageViewSessions != nil {
-		err = s.closeSessions(ctx, pageViewSessions)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-	}
-
-	// find timed out click events
-	clickSessions, err := s.findTimedOutClickEvents(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return
-	}
-
-	// close sessions & fire webtracker event
-	if clickSessions != nil {
-		err = s.closeSessions(ctx, clickSessions)
+	if activeSessions != nil {
+		err = s.closeSessions(ctx, activeSessions)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
@@ -128,41 +104,31 @@ func (s *NewWebSessionProducer) findTimedOutPageExitEvents(ctx context.Context) 
 	return s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
 }
 
-func (s *NewWebSessionProducer) findTimedOutPageViewEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.findTimedOutPageViewEvents")
+func (s *NewWebSessionProducer) findTimedOutActiveEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.findTimedOutActiveEvents")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
+	activeEvents := []string{
+		enum.WebTrackerPageView.String(),
+		enum.WebTrackerClick.String(),
+		enum.WebTrackerIdentify.String(),
+	}
+
+	var activeSessions []postgres_entity.WebSession
 	lookback := WebSessionTimeoutPageView
-	query := postgres_entity.WebSession{
-		LastEventType: enum.WebTrackerPageView.String(),
-		IsActive:      true,
-	}
-	activeSessions, err := s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	for _, eventType := range activeEvents {
+		query := postgres_entity.WebSession{
+			LastEventType: eventType,
+			IsActive:      true,
+		}
 
-	span.LogFields(log.Int("result.count", len(activeSessions)))
-	return activeSessions, nil
-}
-
-func (s *NewWebSessionProducer) findTimedOutClickEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.findTimedOutClickEvents")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	lookback := WebSessionTimeoutClick
-	query := postgres_entity.WebSession{
-		LastEventType: enum.WebTrackerClick.String(),
-		IsActive:      true,
-	}
-
-	activeSessions, err := s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
+		sessions, err := s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		activeSessions = append(activeSessions, sessions...)
 	}
 
 	span.LogFields(log.Int("result.count", len(activeSessions)))

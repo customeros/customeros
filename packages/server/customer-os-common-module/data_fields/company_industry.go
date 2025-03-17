@@ -40,10 +40,10 @@ func (v *IndustryCodeResponseValidator) IsValidJSON(jsonStr string) bool {
 	return err == nil
 }
 
-func (v *IndustryCodeResponseValidator) ValidateResponse(jsonStr string) (*IndustryCode, error) {
+func (v *IndustryCodeResponseValidator) ValidateResponse(responseStr string) (*IndustryCode, error) {
 	// Parse the JSON
 	var response IndustryCodeResponse
-	err := json.Unmarshal([]byte(jsonStr), &response)
+	err := json.Unmarshal([]byte(responseStr), &response)
 	if err != nil {
 		return nil, fmt.Errorf("invalid JSON format: %w", err)
 	}

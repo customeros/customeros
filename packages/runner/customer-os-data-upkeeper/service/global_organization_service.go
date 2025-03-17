@@ -673,8 +673,9 @@ func (s *globalOrganizationService) enrichIndustries() {
 	}
 }
 func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark globalOrganization as processed initially to not process same globalOrganization again, even if error occurs
@@ -699,8 +700,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 
         Important details:
         - Use the latest NAICS codes available.
-        - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
-        `
+        - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).`
 
 	var p strings.Builder
 	p.WriteString(fmt.Sprintf("Company name: %s\n", globalOrganization.Name))
@@ -713,13 +713,14 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 	prompt := p.String()
 
 	temperature := float32(0.1)
-	// ask AI for NAICS code
 	aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
 		Model:            enum.AIModelAnthropicHaiku,
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &prompt,
 		ModelTemperature: &temperature,
 		OutputFormat:     enum.AIOutputJson,
+		MaxOutputTokens:  utils.Int32Ptr(250),
+		Retries:          utils.IntPtr(2),
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
@@ -787,8 +788,9 @@ func (s *globalOrganizationService) enrichDescriptions() {
 }
 
 func (s *globalOrganizationService) enrichDescription(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichDescription")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescription")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark record as processed initially to not process same record again, even if error occurs
@@ -890,8 +892,9 @@ func (s *globalOrganizationService) enrichNames() {
 }
 
 func (s *globalOrganizationService) enrichName(ctx context.Context, globalOrganization *postgres_entity.GlobalOrganization) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichName")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichName")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark record as processed initially to not process same record again, even if error occurs
