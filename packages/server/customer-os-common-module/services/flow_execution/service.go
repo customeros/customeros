@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -27,24 +28,26 @@ import (
 )
 
 type flowExecutionService struct {
-	neo4j    *neo4j_repository.Repositories
-	postgres *postgres_repository.Repositories
-	events   *events.EventsService
-	email    interfaces.EmailService
-	flow     interfaces.FlowService
-	org      interfaces.OrganizationService
-	social   interfaces.SocialService
+	neo4j     *neo4j_repository.Repositories
+	postgres  *postgres_repository.Repositories
+	events    *events.EventsService
+	email     interfaces.EmailService
+	flow      interfaces.FlowService
+	org       interfaces.OrganizationService
+	social    interfaces.SocialService
+	mailstack interfaces.MailstackService
 }
 
-func NewFlowExecutionService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, email interfaces.EmailService, flow interfaces.FlowService, org interfaces.OrganizationService, social interfaces.SocialService) interfaces.FlowExecutionService {
+func NewFlowExecutionService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, email interfaces.EmailService, flow interfaces.FlowService, org interfaces.OrganizationService, social interfaces.SocialService, mailstack interfaces.MailstackService) interfaces.FlowExecutionService {
 	return &flowExecutionService{
-		neo4j:    neo4j,
-		postgres: postgres,
-		events:   events,
-		email:    email,
-		flow:     flow,
-		org:      org,
-		social:   social,
+		neo4j:     neo4j,
+		postgres:  postgres,
+		events:    events,
+		email:     email,
+		flow:      flow,
+		org:       org,
+		social:    social,
+		mailstack: mailstack,
 	}
 }
 
@@ -489,20 +492,25 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 				continue
 			}
 
-			mailboxes, err := s.postgres.TenantSettingsMailboxRepository.GetAllByUserId(ctx, *flowActionSender.UserId)
+			statusCode, errMsg, mailboxes, err := s.mailstack.GetMailboxes(ctx, tenant, "", *flowActionSender.UserId)
 			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			if statusCode != http.StatusOK {
+				err = errors.New(errMsg)
 				tracing.TraceErr(span, err)
 				return err
 			}
 
 			for _, mailbox := range mailboxes {
-				scheduledAt, err := s.neo4j.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.MailboxUsername)
+				scheduledAt, err := s.neo4j.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.Email)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
 				}
 
-				mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
+				mailboxesScheduledAt[mailbox.Email] = scheduledAt
 			}
 		}
 
