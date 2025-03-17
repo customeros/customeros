@@ -434,9 +434,13 @@ func (s *flowExecutionService) scheduleNextAction(ctx context.Context, txWithPos
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleNextAction")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("flowId", flowId))
+	tracing.LogObjectAsJson(span, "flowParticipant", flowParticipant)
+	tracing.LogObjectAsJson(span, "nextAction", nextAction)
 
-	if flowParticipant.Status != neo4j_entity.FlowParticipantStatusReady {
-		// todo return business error
+	// participant should be ready or in progress to schedule the next action
+	if flowParticipant.Status != neo4j_entity.FlowParticipantStatusReady && flowParticipant.Status != neo4j_entity.FlowParticipantStatusInProgress {
+		tracing.TraceErr(span, fmt.Errorf("participant is not ready, current status: %s", flowParticipant.Status))
 		return nil
 	}
 
@@ -446,8 +450,9 @@ func (s *flowExecutionService) scheduleNextAction(ctx context.Context, txWithPos
 	case neo4j_entity.FlowActionTypeLinkedinConnectionRequest:
 		return s.scheduleSendLinkedInConnection(ctx, txWithPostCommit, flowId, flowParticipant, scheduleAt, nextAction)
 	default:
-		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.Data.Action))
-		return errors.New("Unsupported action type")
+		err := errors.New("unsupported action type")
+		tracing.TraceErr(span, err)
+		return err
 	}
 }
 
