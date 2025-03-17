@@ -565,7 +565,7 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 	}
 
 	if mailbox == nil {
-		result, err := s.mailstack.RegisterMailbox(ctx, tenant, mailstack.TEST_MAILBOX_DOMAIN, interfaces.CreateMailboxRequest{
+		statusCode, errMsg, _, err := s.mailstack.RegisterMailbox(ctx, tenant, mailstack.TEST_MAILBOX_DOMAIN, interfaces.CreateMailboxRequest{
 			Domain:          mailstack.TEST_MAILBOX_DOMAIN,
 			Username:        strings.ToLower(tenant),
 			Password:        utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
@@ -578,9 +578,9 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			return err
 		}
 
-		// Handle non-201 responses
-		if result.StatusCode != http.StatusCreated {
-			err = errors.New(result.ErrorMsg)
+		// Handle non-200 responses
+		if statusCode != http.StatusOK {
+			err = errors.New(errMsg)
 			tracing.TraceErr(span, errors.Wrap(err, "failed to add mailbox"))
 			return err
 		}

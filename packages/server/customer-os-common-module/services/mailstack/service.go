@@ -246,7 +246,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 			}
 
 			for _, username := range usernames {
-				result, err := s.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
+				statusCode, errMessage, _, err := s.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
 					IgnoreDomainOwnership: true,
 					Domain:                domain,
 					Username:              username,
@@ -258,8 +258,8 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 				if err != nil {
 					return err
 				}
-				if result.StatusCode != http.StatusCreated {
-					return errors.New(result.ErrorMsg)
+				if statusCode != http.StatusOK {
+					return errors.New(errMessage)
 				}
 			}
 		}
@@ -282,7 +282,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	return nil
 }
 
-func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, domain string, request interfaces.CreateMailboxRequest) (*interfaces.RegisterMailboxResponse, error) {
+func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, domain string, request interfaces.CreateMailboxRequest) (int, string, *interfaces.MailboxRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.RegisterMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -295,7 +295,7 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 		userDbNode, err := s.neo4j.UserReadRepository.GetFirstUserByEmail(ctx, tenant, request.LinkedUserEmail)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error finding linked user"))
-			return nil, err
+			return http.StatusInternalServerError, "Error finding linked user for linked email", nil, err
 		}
 		if userDbNode != nil {
 			userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
@@ -324,13 +324,13 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to marshal request body")
+		return http.StatusInternalServerError, "Internal server error", nil, errors.Wrap(err, "Unable to marshal request body")
 	}
 
 	// Create request to Mailstack API
 	mailstackReq, err := http.NewRequestWithContext(ctx, "POST", s.cfg.Internal.MailstackApiConfig.ApiUrl+"/v1/mailboxes", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to create request to Mailstack API")
+		return http.StatusInternalServerError, "Internal server error", nil, errors.Wrap(err, "Unable to create request to Mailstack API")
 	}
 
 	// Add required headers
@@ -353,13 +353,9 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 	// Make request to Mailstack API
 	resp, err := client.Do(mailstackReq)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to connect to Mailstack API")
+		return http.StatusInternalServerError, "Internal server error", nil, errors.Wrap(err, "Unable to connect to Mailstack API")
 	}
 	defer resp.Body.Close()
-
-	response := &interfaces.RegisterMailboxResponse{
-		StatusCode: resp.StatusCode,
-	}
 
 	// Check response status
 	if resp.StatusCode != http.StatusCreated {
@@ -370,15 +366,21 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
 			errorResponse.Error = "Unknown error occurred"
 		}
-		response.ErrorMsg = errorResponse.Error
 		tracing.TraceErr(span, errors.New(errorResponse.Error))
-		return response, nil
+
+		// For 500 errors, use a generic message
+		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
+			return http.StatusInternalServerError, "Internal server error", nil, errors.New(errorResponse.Error)
+		}
+
+		// For other errors, propagate the message from Mailstack
+		return resp.StatusCode, errorResponse.Error, nil, errors.New(errorResponse.Error)
 	}
 
 	// Parse response
 	var mailboxRecord interfaces.MailboxRecord
 	if err := json.NewDecoder(resp.Body).Decode(&mailboxRecord); err != nil {
-		return nil, errors.Wrap(err, "Unable to parse Mailstack API response")
+		return http.StatusInternalServerError, "Internal server error", nil, errors.Wrap(err, "Unable to parse Mailstack API response")
 	}
 
 	// Create email node and link with user if identified
@@ -395,18 +397,16 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 	_, err = s.email.Merge(ctx, nil, tenant, emailFields, linkWith)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error creating email node"))
-		return nil, err
+		return http.StatusInternalServerError, "Internal server error", nil, err
 	}
 
 	// Publish fanout event to provision mailbox
 	err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error publishing mailbox provision event"))
-		return nil, err
 	}
 
-	response.Mailbox = &mailboxRecord
-	return response, nil
+	return http.StatusOK, "", &mailboxRecord, nil
 }
 
 func (s *mailstackService) ConfigureMailbox(ctx context.Context, tenant string, mailboxId string) error {

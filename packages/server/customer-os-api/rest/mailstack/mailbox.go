@@ -71,7 +71,7 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 		}
 
 		// Create mailbox using service
-		result, err := h.services.CommonServices.MailstackService.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
+		statusCode, errMsg, result, err := h.services.CommonServices.MailstackService.RegisterMailbox(ctx, tenant, domain, interfaces.CreateMailboxRequest{
 			Username:        mailboxRequest.Username,
 			Password:        mailboxRequest.Password,
 			ForwardingTo:    mailboxRequest.ForwardingTo,
@@ -79,30 +79,23 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			LinkedUserEmail: mailboxRequest.LinkedUser,
 		})
 		if err != nil {
-			message := "Internal server error"
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			h.responseHandler.HandleError(c, statusCode, &errMsg)
 			tracing.TraceErr(span, err)
 			return
 		}
 
-		// Handle non-201 responses
-		if result.StatusCode != http.StatusCreated {
-			if result.StatusCode == http.StatusInternalServerError || result.StatusCode == http.StatusUnauthorized {
-				message := "Internal server error"
-				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-				return
-			}
-			h.responseHandler.HandleError(c, result.StatusCode, &result.ErrorMsg)
+		if statusCode != http.StatusOK {
+			h.responseHandler.HandleError(c, statusCode, &errMsg)
 			return
 		}
 
 		h.responseHandler.HandleSuccess(c, MailboxResponse{
 			Mailbox: MailboxRecord{
-				Email:             result.Mailbox.Email,
-				Password:          result.Mailbox.Password,
-				ForwardingTo:      result.Mailbox.ForwardingTo,
-				ForwardingEnabled: result.Mailbox.ForwardingEnabled,
-				WebmailEnabled:    result.Mailbox.WebmailEnabled,
+				Email:             result.Email,
+				Password:          result.Password,
+				ForwardingTo:      result.ForwardingTo,
+				ForwardingEnabled: result.ForwardingEnabled,
+				WebmailEnabled:    result.WebmailEnabled,
 			},
 		})
 	}

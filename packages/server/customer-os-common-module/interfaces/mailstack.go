@@ -21,12 +21,6 @@ type MailboxRecord struct {
 	WebmailEnabled    bool     `json:"webmailEnabled"`
 }
 
-type RegisterMailboxResponse struct {
-	Mailbox    *MailboxRecord
-	StatusCode int
-	ErrorMsg   string
-}
-
 type DomainRecord struct {
 	Domain      string   `json:"domain"`
 	CreatedDate string   `json:"createdDate"`
@@ -45,7 +39,7 @@ type MailstackService interface {
 	GetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount int64) (string, error)
 	RegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentId string, domains []string, usernames []string, redirectWebsite string) error
 	// mailboxes
-	RegisterMailbox(ctx context.Context, tenant, domain string, request CreateMailboxRequest) (*RegisterMailboxResponse, error)
+	RegisterMailbox(ctx context.Context, tenant, domain string, request CreateMailboxRequest) (int, string, *MailboxRecord, error)
 	ConfigureMailbox(ctx context.Context, tenant, mailboxId string) error
 	GetMailboxes(ctx context.Context, tenant, domain string) (int, string, []MailboxRecord, error)
 	// domains
