@@ -190,12 +190,10 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 	statusCode, errMessage, mailboxes, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", requestUserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get mailboxes")
 		return nil, nil
 	}
 	if statusCode != http.StatusOK {
 		tracing.TraceErr(span, errors.New(errMessage))
-		graphql.AddErrorf(ctx, errMessage)
 		return nil, nil
 	}
 

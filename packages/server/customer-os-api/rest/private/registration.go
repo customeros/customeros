@@ -509,6 +509,10 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
 				defer span.Finish()
 
+				ctx = common.WithCustomContext(ctx, &common.CustomContext{
+					Tenant: currentTenant,
+				})
+
 				err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
 				if err != nil {
 					tracing.TraceErr(span, err)
