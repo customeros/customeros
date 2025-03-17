@@ -97,14 +97,19 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 			continue
 		}
 
-		mailboxes, err := l.dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
+		statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain)
 		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if statusCode != http.StatusOK {
+			err = errors.New(errMessage)
 			tracing.TraceErr(span, err)
 			return err
 		}
 
 		for _, mailbox := range mailboxes {
-			if mailbox.Status != postgres_entity.MailboxStatusPendingProvisioning {
+			if mailbox.Provisioned {
 				continue
 			}
 
@@ -279,14 +284,20 @@ func (l *MailstackProvisionBuyRequestListener) processMailboxes(ctx context.Cont
 			sem <- struct{}{}        // Acquire semaphore
 			defer func() { <-sem }() // Release semaphore
 
-			mailboxes, err := l.dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
+			statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return // Exit the goroutine on error
 			}
 
+			if statusCode != http.StatusOK {
+				err = errors.New(errMessage)
+				tracing.TraceErr(span, err)
+				return // Exit the goroutine on error
+			}
+
 			for _, mailbox := range mailboxes {
-				if mailbox.Status != postgres_entity.MailboxStatusPendingProvisioning {
+				if mailbox.Provisioned {
 					continue
 				}
 

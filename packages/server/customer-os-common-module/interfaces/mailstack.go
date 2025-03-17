@@ -19,6 +19,7 @@ type MailboxRecord struct {
 	ForwardingTo      []string `json:"forwardingTo"`
 	ForwardingEnabled bool     `json:"forwardingEnabled"`
 	WebmailEnabled    bool     `json:"webmailEnabled"`
+	Provisioned       bool     `json:"provisioned"`
 }
 
 type DomainRecord struct {
