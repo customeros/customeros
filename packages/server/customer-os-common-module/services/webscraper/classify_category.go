@@ -58,9 +58,11 @@ func (s *webscraperService) ClassifyWebpageCategory(ctx context.Context, url str
 	}
 
 	prompt.WriteString(fmt.Sprintf("Webpage url: %s\n", url))
-	if *pageContent != "" {
+	if pageContent != nil && *pageContent != "" {
 		prompt.WriteString("--- Webpage content --- \n")
 		prompt.WriteString(*pageContent)
+	} else {
+		prompt.WriteString("--- No content available ---\n")
 	}
 	promptStr := prompt.String()
 
