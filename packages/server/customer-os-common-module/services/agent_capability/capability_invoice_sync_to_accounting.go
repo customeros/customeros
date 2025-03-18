@@ -3,6 +3,8 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"net/url"
+
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -11,7 +13,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/url"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -162,8 +163,31 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 			}
 		}
 
+		if invoiceEntity.QuickbooksJournalEntryIdReverse == "" {
+			err = c.syncInvoiceToQuickbooksJournalEntryReverse(ctx, *invoiceEntity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
+
+			// re-fetch invoice to get updated quickbooks invoice id
+			invoiceEntity, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
+		}
+
 		if invoiceEntity.QuickbooksPaymentId == "" {
 			err = c.syncPaymentLinkingJournalEntryToInvoice(ctx, *invoiceEntity)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return enum.CapabilityExecutionRetry, result, err
+			}
+		}
+
+		if invoiceEntity.QuickbooksPaymentIdReverse == "" {
+			err = c.syncPaymentLinkingJournalEntryToInvoiceReverse(ctx, *invoiceEntity)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return enum.CapabilityExecutionRetry, result, err
@@ -418,8 +442,10 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		}
 	}
 
+	// FIRST JOURNAL ENTRY
+
 	// prepare debit journal line item
-	journalLineItems := make([]interfaces.QuickbooksJournalEntryLine, 0)
+	debitJournalLineItems := make([]interfaces.QuickbooksJournalEntryLine, 0)
 	debitJournalLineItem := interfaces.QuickbooksJournalEntryLine{
 		DetailType:  "JournalEntryLineDetail",
 		Amount:      invoice.Amount,
@@ -434,7 +460,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		return err
 	}
 	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Value = debtorsAccountId
-	journalLineItems = append(journalLineItems, debitJournalLineItem)
+	debitJournalLineItems = append(debitJournalLineItems, debitJournalLineItem)
 
 	// prepare credit journal line items
 	for incomeAccount, amount := range journalLineAmountsByIncomeAccount {
@@ -446,22 +472,145 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 		journalLineItem.JournalEntryLineDetail.PostingType = "Credit"
 		journalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 		journalLineItem.JournalEntryLineDetail.AccountRef.Value = incomeAccount
-		journalLineItems = append(journalLineItems, journalLineItem)
+		debitJournalLineItems = append(debitJournalLineItems, journalLineItem)
 	}
 
-	savedJournalEntry, err := c.quickbooksService.SaveJournalEntry(ctx, invoice.PeriodEndDate, journalLineItems)
+	savedJournalEntry, err := c.quickbooksService.SaveJournalEntry(ctx, invoice.PeriodEndDate, debitJournalLineItems)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if savedJournalEntry == nil {
-		err := errors.New("Journal entry not saved in quickbooks")
+		err := errors.New("Journal entry not saved in quickbooks for moving invoice revenue to previos period")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksJournalEntryId), savedJournalEntry.JournalEntry.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntryReverse(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncInvoiceToQuickbooksJournalEntryReverse")
+	defer span.Finish()
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if quickbooksSettingsEntity == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	invoiceLines, err := c.invoiceService.GetInvoiceLinesForInvoices(ctx, []string{invoice.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if invoiceLines == nil || len(*invoiceLines) == 0 {
+		span.LogKV("skip", "Invoice lines not found")
+		return nil
+	}
+
+	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// prepare amounts by income account
+	journalLineAmountsByIncomeAccount := make(map[string]float64)
+	for _, invoiceLine := range *invoiceLines {
+		sku, err := c.postgresRepositories.SkuRepository.Get(ctx, tenant, invoiceLine.SkuId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if sku == nil {
+			err = errors.New(fmt.Sprintf("Sku not found for invoice line %s", invoiceLine.Id))
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if sku.QuickbooksId == "" {
+			err = errors.New(fmt.Sprintf("QuickbooksId not found for sku %s", sku.ID))
+			tracing.TraceErr(span, err)
+			return err
+		}
+		quickbooksProduct, err := c.quickbooksService.GetProduct(ctx, sku.QuickbooksId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if quickbooksProduct == nil {
+			err = errors.New(fmt.Sprintf("Quickbooks product not found for sku %s", sku.ID))
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if _, ok := journalLineAmountsByIncomeAccount[quickbooksProduct.Item.IncomeAccountRef.Value]; !ok {
+			journalLineAmountsByIncomeAccount[quickbooksProduct.Item.IncomeAccountRef.Value] = invoiceLine.Amount
+		} else {
+			journalLineAmountsByIncomeAccount[quickbooksProduct.Item.IncomeAccountRef.Value] += invoiceLine.Amount
+		}
+	}
+
+	// SECOND JOURNAL ENTRY
+
+	// prepare credit journal line item
+	creditJournalLineItems := make([]interfaces.QuickbooksJournalEntryLine, 0)
+	creditJournalLineItem := interfaces.QuickbooksJournalEntryLine{
+		DetailType:  "JournalEntryLineDetail",
+		Amount:      invoice.Amount,
+		Description: invoice.Number,
+	}
+	creditJournalLineItem.JournalEntryLineDetail.PostingType = "Credit"
+	creditJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
+	creditJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Accounts receivable (A/R)" // TODO: make it parameterized
+	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape("Accounts receivable (A/R)"))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	creditJournalLineItem.JournalEntryLineDetail.AccountRef.Value = debtorsAccountId
+	creditJournalLineItems = append(creditJournalLineItems, creditJournalLineItem)
+
+	// prepare debit journal line items
+	for incomeAccount, amount := range journalLineAmountsByIncomeAccount {
+		journalLineItem := interfaces.QuickbooksJournalEntryLine{
+			DetailType:  "JournalEntryLineDetail",
+			Amount:      amount,
+			Description: invoice.Number,
+		}
+		journalLineItem.JournalEntryLineDetail.PostingType = "Debit"
+		journalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
+		journalLineItem.JournalEntryLineDetail.AccountRef.Value = incomeAccount
+		creditJournalLineItems = append(creditJournalLineItems, journalLineItem)
+	}
+
+	savedJournalEntry, err := c.quickbooksService.SaveJournalEntry(ctx, invoice.IssuedDate, creditJournalLineItems)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if savedJournalEntry == nil {
+		err := errors.New("Journal entry not saved in quickbooks for reversing invoice revenue")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksJournalEntryIdReverse), savedJournalEntry.JournalEntry.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -493,6 +642,7 @@ func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvo
 		return err
 	}
 
+	// Link first journal entry to invoice
 	quickbooksPayment, err := c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.QuickbooksJournalEntryId, invoice.IssuedDate, invoice.Amount)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error saving payment linking journal entry to invoice"))
@@ -506,6 +656,45 @@ func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvo
 		}
 	}
 
+	return nil
+}
+
+func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvoiceReverse(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncPaymentLinkingJournalEntryToInvoiceReverse")
+	defer span.Finish()
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if quickbooksSettingsEntity == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Link reverse journal entry to invoice
+	quickbooksPaymentReverse, err := c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.QuickbooksJournalEntryIdReverse, invoice.IssuedDate, invoice.Amount)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error saving payment linking journal entry to invoice"))
+		return err
+	}
+	if quickbooksPaymentReverse != nil {
+		err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksPaymentIdReverse), quickbooksPaymentReverse.Payment.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
 	return nil
 }
 

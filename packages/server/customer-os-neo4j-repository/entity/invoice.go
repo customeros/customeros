@@ -25,7 +25,9 @@ const (
 	InvoicePropertyVoidInvoiceNotificationRequestAt     InvoiceProperty = "techVoidInvoiceNotificationSentAt"
 	InvoicePropertyQuickbooksInvoiceId                  InvoiceProperty = "quickbooksInvoiceId"
 	InvoicePropertyQuickbooksJournalEntryId             InvoiceProperty = "quickbooksJournalEntryId"
+	InvoicePropertyQuickbooksJournalEntryIdReverse      InvoiceProperty = "quickbooksJournalEntryIdReverse"
 	InvoicePropertyQuickbooksPaymentId                  InvoiceProperty = "quickbooksPaymentId"
+	InvoicePropertyQuickbooksPaymentIdReverse           InvoiceProperty = "quickbooksPaymentIdReverse"
 	InvoicePropertyProviderBankDetailsAvailable         InvoiceProperty = "providerBankDetailsAvailable"
 	InvoicePropertyProviderBankAccountName              InvoiceProperty = "providerBankAccountName"
 	InvoicePropertyProviderBankAccountNumber            InvoiceProperty = "providerBankAccountNumber"
@@ -38,32 +40,34 @@ const (
 
 type InvoiceEntity struct {
 	EventStoreAggregate
-	Id                       string
-	CreatedAt                time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
-	UpdatedAt                time.Time
-	DryRun                   bool          `neo4jDb:"property:dryRun;lookupName:DRY_RUN;supportCaseSensitive:false"`
-	Number                   string        `neo4jDb:"property:number;lookupName:NUMBER;supportCaseSensitive:false"`
-	Currency                 enum.Currency `neo4jDb:"property:currency;lookupName:CURRENCY;supportCaseSensitive:false"`
-	PeriodStartDate          time.Time     // Date only
-	PeriodEndDate            time.Time     // Date only
-	DueDate                  time.Time     `neo4jDb:"property:dueDate;lookupName:DUE_DATE;supportCaseSensitive:false"`       // Date only
-	IssuedDate               time.Time     `neo4jDb:"property:issuedDate;lookupName:ISSUED_DATE;supportCaseSensitive:false"` // Datetime
-	Customer                 InvoiceCustomer
-	Provider                 InvoiceProvider
-	Amount                   float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`
-	Vat                      float64 `neo4jDb:"property:vat;lookupName:VAT;supportCaseSensitive:false"`
-	TotalAmount              float64 `neo4jDb:"property:totalAmount;lookupName:TOTAL_AMOUNT;supportCaseSensitive:false"`
-	RepositoryFileId         string
-	BillingCycleInMonths     int64
-	Status                   enum.InvoiceStatus `neo4jDb:"property:status;lookupName:STATUS;supportCaseSensitive:false"`
-	Note                     string
-	QuickbooksInvoiceId      string
-	QuickbooksJournalEntryId string
-	QuickbooksPaymentId      string
-	PaymentDetails           PaymentDetails
-	OffCycle                 bool
-	Postpaid                 bool
-	Preview                  bool `neo4jDb:"property:preview;lookupName:PREVIEW;supportCaseSensitive:false"`
+	Id                              string
+	CreatedAt                       time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
+	UpdatedAt                       time.Time
+	DryRun                          bool          `neo4jDb:"property:dryRun;lookupName:DRY_RUN;supportCaseSensitive:false"`
+	Number                          string        `neo4jDb:"property:number;lookupName:NUMBER;supportCaseSensitive:false"`
+	Currency                        enum.Currency `neo4jDb:"property:currency;lookupName:CURRENCY;supportCaseSensitive:false"`
+	PeriodStartDate                 time.Time     // Date only
+	PeriodEndDate                   time.Time     // Date only
+	DueDate                         time.Time     `neo4jDb:"property:dueDate;lookupName:DUE_DATE;supportCaseSensitive:false"`       // Date only
+	IssuedDate                      time.Time     `neo4jDb:"property:issuedDate;lookupName:ISSUED_DATE;supportCaseSensitive:false"` // Datetime
+	Customer                        InvoiceCustomer
+	Provider                        InvoiceProvider
+	Amount                          float64 `neo4jDb:"property:amount;lookupName:AMOUNT;supportCaseSensitive:false"`
+	Vat                             float64 `neo4jDb:"property:vat;lookupName:VAT;supportCaseSensitive:false"`
+	TotalAmount                     float64 `neo4jDb:"property:totalAmount;lookupName:TOTAL_AMOUNT;supportCaseSensitive:false"`
+	RepositoryFileId                string
+	BillingCycleInMonths            int64
+	Status                          enum.InvoiceStatus `neo4jDb:"property:status;lookupName:STATUS;supportCaseSensitive:false"`
+	Note                            string
+	QuickbooksInvoiceId             string
+	QuickbooksJournalEntryId        string
+	QuickbooksJournalEntryIdReverse string
+	QuickbooksPaymentId             string
+	QuickbooksPaymentIdReverse      string
+	PaymentDetails                  PaymentDetails
+	OffCycle                        bool
+	Postpaid                        bool
+	Preview                         bool `neo4jDb:"property:preview;lookupName:PREVIEW;supportCaseSensitive:false"`
 
 	Source    DataSource
 	AppSource string
