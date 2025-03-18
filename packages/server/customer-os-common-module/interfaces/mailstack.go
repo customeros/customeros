@@ -13,19 +13,21 @@ type CreateMailboxRequest struct {
 }
 
 type MailboxRecord struct {
-	ID                string   `json:"id"`
-	Email             string   `json:"email"`
-	Username          string   `json:"username"`
-	Domain            string   `json:"domain"`
-	Password          string   `json:"password"`
-	ForwardingTo      []string `json:"forwardingTo"`
-	ForwardingEnabled bool     `json:"forwardingEnabled"`
-	WebmailEnabled    bool     `json:"webmailEnabled"`
-	Provisioned       bool     `json:"provisioned"`
-	RampUpCurrent     int      `json:"rampUpCurrent"`
-	RampUpMax         int      `json:"rampUpMax"`
-	RampUpRate        int      `json:"rampUpRate"`
-	UserId            string   `json:"userId"`
+	ID                      string   `json:"id"`
+	Email                   string   `json:"email"`
+	Username                string   `json:"username"`
+	Domain                  string   `json:"domain"`
+	Password                string   `json:"password"`
+	ForwardingTo            []string `json:"forwardingTo"`
+	ForwardingEnabled       bool     `json:"forwardingEnabled"`
+	WebmailEnabled          bool     `json:"webmailEnabled"`
+	Provisioned             bool     `json:"provisioned"`
+	RampUpCurrent           int      `json:"rampUpCurrent"`
+	RampUpMax               int      `json:"rampUpMax"`
+	RampUpRate              int      `json:"rampUpRate"`
+	UserId                  string   `json:"userId"`
+	MinMinutesBetweenEmails int      `json:"minMinutesBetweenEmails"`
+	MaxMinutesBetweenEmails int      `json:"maxMinutesBetweenEmails"`
 }
 
 type DomainRecord struct {

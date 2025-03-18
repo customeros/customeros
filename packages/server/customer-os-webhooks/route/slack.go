@@ -76,21 +76,9 @@ func syncSlackChannelsHandler(services *service.Services, log logger.Logger) gin
 				} else {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
 				}
-			} else {
-				c.JSON(http.StatusOK, gin.H{"status": "ok"})
 			}
 		}
 
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncSlackChannels) error in sync users: %s", err.Error())
-			if errors.IsBadRequest(err) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
-			}
-		} else {
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
-		}
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	}
 }
