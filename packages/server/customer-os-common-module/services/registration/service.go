@@ -97,7 +97,7 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 		return err
 	}
 
-	testUser, err := s.configureTestMailbox(ctx)
+	testUser, err := s.ConfigureTestMailbox(ctx)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
 	}
@@ -424,8 +424,8 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 	return nil
 }
 
-func (s *registrationService) configureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.configureTestMailbox")
+func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.ConfigureTestMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -435,12 +435,12 @@ func (s *registrationService) configureTestMailbox(ctx context.Context) (*interf
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
-	testUser, err := s.setupTestUser(ctx, span)
+	testUser, err := s.SetupTestUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.setupTestMailbox(ctx, span, tenant, testUser); err != nil {
+	if err := s.SetupTestMailbox(ctx, tenant, testUser); err != nil {
 		return nil, err
 	}
 
@@ -506,7 +506,11 @@ func (s *registrationService) createPostmarkServer(ctx context.Context) error {
 	return nil
 }
 
-func (s *registrationService) setupTestUser(ctx context.Context, span opentracing.Span) (*interfaces.TestUserSetup, error) {
+func (s *registrationService) SetupTestUser(ctx context.Context) (*interfaces.TestUserSetup, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.SetupTestUser")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	existingTestUser, err := s.neo4j.UserReadRepository.FindTestUser(ctx)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "cannot find test user"))
@@ -532,7 +536,11 @@ func (s *registrationService) setupTestUser(ctx context.Context, span opentracin
 	return &interfaces.TestUserSetup{UserId: testUserId}, nil
 }
 
-func (s *registrationService) setupTestMailbox(ctx context.Context, span opentracing.Span, tenant string, testUser *interfaces.TestUserSetup) error {
+func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant string, testUser *interfaces.TestUserSetup) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.SetupTestMailbox")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN))
 	testUser.MailboxAddress = mailboxAddress
 
