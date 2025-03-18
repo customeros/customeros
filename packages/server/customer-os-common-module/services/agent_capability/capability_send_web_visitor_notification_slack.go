@@ -210,6 +210,10 @@ func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context
 
 	// don't send if from workspace domain
 	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, nil
+	}
 	if isWorkspaceDomain {
 		span.LogFields(log.Bool("result.skip", true))
 		return true, nil
@@ -229,7 +233,7 @@ func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context
 	}
 
 	// determine how long since last notification
-	hoursSinceLastNotification := time.Now().Sub(*lastNotification.SentSlackNotification).Hours()
+	hoursSinceLastNotification := time.Since(*lastNotification.SentSlackNotification).Hours()
 	if hoursSinceLastNotification < float64(cooldownInHrs) {
 		span.LogFields(log.Bool("result.skip", true))
 		return true, nil
@@ -272,7 +276,7 @@ func (c *SendWebVisitorSlackNotificationCapability) buildWebVisitorSlackNotifica
 	companyLines = append(companyLines, fmt.Sprintf("<%s|*%s*>", website, name))
 
 	if globalOrg != nil && globalOrg.Description != "" {
-		companyLines = append(companyLines, fmt.Sprintf("%s", globalOrg.Description))
+		companyLines = append(companyLines, globalOrg.Description)
 	}
 
 	if website != "" {

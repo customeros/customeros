@@ -29,7 +29,7 @@ func NewTopicsResponseValidator() *TopicsResponseValidator {
 	return &TopicsResponseValidator{
 		MaxTopics:     5,
 		MinTopics:     1,
-		MaxTopicLen:   50,
+		MaxTopicLen:   100,
 		DisallowEmpty: true,
 		BlockedWords:  []string{},
 		MinConfidence: 0.0,

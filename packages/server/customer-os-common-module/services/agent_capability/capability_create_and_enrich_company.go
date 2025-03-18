@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+
 	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -109,6 +110,10 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 	}
 
 	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, executionContainer.InputData.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionRetry, result, err
+	}
 	if isWorkspaceDomain {
 		err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.AgentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{
 			AgentExecutionId: executionContainer.AgentExecutionID,
@@ -125,6 +130,10 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 
 	// Check if the domain is already linked to an organization
 	organizationEntity, err := c.organizationService.GetOrganizationByDomain(ctx, executionContainer.InputData.Domain, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return enum.CapabilityExecutionRetry, result, err
+	}
 
 	// organization found
 	orgID := ""

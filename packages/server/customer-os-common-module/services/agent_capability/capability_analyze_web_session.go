@@ -456,7 +456,7 @@ func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, dom
 	}
 	span.LogKV("recordsReturned", len(results))
 
-	if results == nil || len(results) == 0 {
+	if len(results) == 0 {
 		return true, nil
 	}
 	return false, nil
@@ -488,7 +488,7 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 		return false, err
 	}
 
-	if results == nil || len(results) == 0 {
+	if len(results) == 0 {
 		return true, nil
 	}
 	return false, nil

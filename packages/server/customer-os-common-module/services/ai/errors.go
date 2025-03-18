@@ -12,7 +12,7 @@ func (e *AIError) Error() string {
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %v", e.Message, e.Cause)
 	}
-	return fmt.Sprintf("%s", e.Message)
+	return e.Message
 }
 
 func (e *AIError) Unwrap() error {
