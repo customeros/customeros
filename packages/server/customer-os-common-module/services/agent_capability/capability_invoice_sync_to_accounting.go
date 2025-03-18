@@ -93,6 +93,7 @@ type SyncInvoiceToAccountingOutput struct{}
 type SyncInvoiceToAccountingConfig struct {
 	Quickbooks              ConfigSingleBoolValue `json:"quickbooks"`
 	AccountingMethodAccrual ConfigSingleBoolValue `json:"accountingMethodAccrual"`
+	ARIncomeAccountName     ConfigSingleValue     `json:"arIncomeAccountName"`
 }
 
 func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingConfig]) (enum.CapabilityExecutionStatus, SyncInvoiceToAccountingOutput, error) {
@@ -111,6 +112,11 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionCompleted, result, err
+	}
+
+	arIncomeAccountName := executionContainer.ConfigData.ARIncomeAccountName.Value
+	if arIncomeAccountName == "" {
+		arIncomeAccountName = "Accounts receivable (A/R)"
 	}
 
 	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
@@ -149,7 +155,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 
 	if executionContainer.ConfigData.AccountingMethodAccrual.Value {
 		if invoiceEntity.QuickbooksJournalEntryId == "" {
-			err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoiceEntity)
+			err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoiceEntity, arIncomeAccountName)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return enum.CapabilityExecutionRetry, result, err
@@ -164,7 +170,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		}
 
 		if invoiceEntity.QuickbooksJournalEntryIdReverse == "" {
-			err = c.syncInvoiceToQuickbooksJournalEntryReverse(ctx, *invoiceEntity)
+			err = c.syncInvoiceToQuickbooksJournalEntryReverse(ctx, *invoiceEntity, arIncomeAccountName)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return enum.CapabilityExecutionRetry, result, err
@@ -373,12 +379,12 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 	return nil
 }
 
-func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(ctx context.Context, invoice neo4jentity.InvoiceEntity, arIncomeAccountName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncInvoiceToQuickbooksJournalEntry")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tenant := common.GetTenantFromContext(ctx)
-
+	span.LogFields(log.String("invoiceId", invoice.Id), log.String("arIncomeAccountName", arIncomeAccountName))
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -453,8 +459,8 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 	}
 	debitJournalLineItem.JournalEntryLineDetail.PostingType = "Debit"
 	debitJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
-	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Accounts receivable (A/R)"
-	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape("Accounts receivable (A/R)"))
+	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = arIncomeAccountName
+	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape(arIncomeAccountName))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -496,11 +502,12 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 	return nil
 }
 
-func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntryReverse(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntryReverse(ctx context.Context, invoice neo4jentity.InvoiceEntity, arIncomeAccountName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncInvoiceToQuickbooksJournalEntryReverse")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tenant := common.GetTenantFromContext(ctx)
+	span.LogFields(log.String("invoiceId", invoice.Id), log.String("arIncomeAccountName", arIncomeAccountName))
 
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
@@ -576,8 +583,8 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntryR
 	}
 	creditJournalLineItem.JournalEntryLineDetail.PostingType = "Credit"
 	creditJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
-	creditJournalLineItem.JournalEntryLineDetail.AccountRef.Name = "Accounts receivable (A/R)" // TODO: make it parameterized
-	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape("Accounts receivable (A/R)"))
+	creditJournalLineItem.JournalEntryLineDetail.AccountRef.Name = arIncomeAccountName
+	debtorsAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape(arIncomeAccountName))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
