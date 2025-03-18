@@ -18,7 +18,6 @@ import (
 type AskAIForEmailRequest struct {
 	EmailFrom        string `json:"emailFrom"`
 	FromEmailAddress string `json:"fromEmailAddress"`
-	EmailTo          string `json:"emailTo"`
 	ToEmailAddress   string `json:"toEmailAddress"`
 	EmailBodyText    string `json:"emailBodyText"`
 	EmailBodyHTML    string `json:"emailBodyHtml"`
@@ -64,7 +63,6 @@ Next, determine if an email signature is present.  If it is, then you are to ide
 
 		prompt.WriteString(fmt.Sprintf("Email from: %s\n", request.EmailFrom))
 		prompt.WriteString(fmt.Sprintf("From email address: %s\n", request.FromEmailAddress))
-		prompt.WriteString(fmt.Sprintf("Email to: %s\n", request.EmailTo))
 		prompt.WriteString(fmt.Sprintf("To email address: %s\n", request.ToEmailAddress))
 		prompt.WriteString(fmt.Sprintf("Email body text: %s\n", request.EmailBodyText))
 		prompt.WriteString(fmt.Sprintf("Email body html: %s\n", request.EmailBodyHTML))
