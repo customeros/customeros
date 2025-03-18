@@ -64,7 +64,9 @@ defmodule Realtime.MixProject do
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.20"},
       {:ecto_psql_extras, "~> 0.8"},
-      {:temp, "~> 0.4"}
+      {:temp, "~> 0.4"},
+      {:absinthe, "~> 1.7"},
+      {:absinthe_plug, "~> 1.5"}
     ]
   end
 

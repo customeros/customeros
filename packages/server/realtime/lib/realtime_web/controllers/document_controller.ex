@@ -1,38 +1,76 @@
 defmodule RealtimeWeb.DocumentController do
   use RealtimeWeb, :controller
   require Logger
+  alias Realtime.Documents
 
-  def create(conn, %{"docId" => doc_id, "lexicalState" => lexical_state}) do
-    script_path = Application.app_dir(:realtime, "priv/scripts/convert_lexical_to_yjs")
-    encoded_lexical_state = Jason.encode!(lexical_state)
+  def create(
+        conn,
+        %{
+          "name" => _name,
+          "body" => _body,
+          "userId" => _user_id,
+          "tenant" => _tenant,
+          "lexicalState" => _lexical_state,
+          "organizationId" => _organization_id
+        } = params
+      ) do
+    handle_create(conn, params)
+  end
 
-    # Create a temporary file for the lexical state
-    {:ok, temp_path} = Temp.path(%{suffix: ".json"})
-    File.write!(temp_path, encoded_lexical_state)
+  def create(conn, _params) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(400, Jason.encode!(%{error: "Invalid request body"}))
+  end
 
-    try do
-      case System.cmd("sh", ["-c", "#{script_path} #{doc_id} @#{temp_path}"],
-             stderr_to_stdout: true
-           ) do
-        {output, 0} ->
-          Logger.info("Script executed successfully: #{output}")
+  def index(conn, %{"organization_id" => organization_id}) do
+    tenant = get_req_header(conn, "x-tenant") |> List.first()
+    documents = Documents.list_by_organization(organization_id, tenant)
 
-          Realtime.YDoc.insert_update(doc_id, output)
+    json_response =
+      documents
+      |> Enum.map(fn doc ->
+        if is_struct(doc), do: Map.from_struct(doc), else: doc
+      end)
+      |> Enum.map(&Realtime.Util.to_camel_case_map/1)
+      |> Jason.encode!()
 
-          conn
-          |> put_status(:created)
-          |> json(%{message: "Document created"})
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, json_response)
+  end
 
-        {error_output, exit_code} ->
-          Logger.error("Script execution failed (exit #{exit_code}): #{error_output}")
+  defp handle_create(conn, params) do
+    case Documents.create_document(params, parseDto: true) do
+      {:ok, %{document: document}} ->
+        json_response =
+          document
+          |> Map.from_struct()
+          |> Realtime.Util.to_camel_case_map()
+          |> Jason.encode!()
 
-          conn
-          |> put_status(:internal_server_error)
-          |> json(%{error: "Script execution failed", details: error_output})
-      end
-    after
-      # Clean up the temporary file
-      File.rm(temp_path)
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(201, json_response)
+
+      {:error, changeset} ->
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
+          422,
+          Jason.encode!(%{
+            error: "Unprocessable entity",
+            details: errors_from_changeset(changeset)
+          })
+        )
     end
+  end
+
+  defp errors_from_changeset(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Enum.reduce(opts, msg, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
   end
 end
