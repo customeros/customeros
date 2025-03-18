@@ -25,7 +25,7 @@ type AskAIForEmailRequest struct {
 }
 
 type AskAIForEmailResponse struct {
-	Answer data_fields.EmailResponse `json:"answer"`
+	EmailData data_fields.EmailResponse `json:"emailData"`
 }
 
 // AskAI handles AI requests
@@ -56,9 +56,9 @@ func (h *AskAIHandler) AskAIForEmail() gin.HandlerFunc {
 			return
 		}
 
-		systemPrompt := `I will provide you with the raw body of an email that may or may not contain an email signature.  Your job is to process this email into structured json data.  Start by parsing the message body.  Ensure it's only the current message and does not include old email threads or content.  Please ensure you remove all salutations and greetings.  Also remove all odd or unnatural line breaks.  Return the message body in valid markdown format. Ensure any inline hrefs are converted to markdown hyperlinks.  
+		systemPrompt := `I will provide you with the raw body of an email that may or may not contain an email signature, along with some metadata about who sent and received the email.  Your job is to process this email into structured json data.  Start by parsing the message body.  Ensure it's only the current message and does not include old email threads or content.  Please ensure you remove all salutations and greetings.  Also remove all odd or unnatural line breaks.  Return the message body in valid markdown format. Ensure any inline hrefs are converted to markdown hyperlinks.  
 
-Next, determine if an email signature is present.  If it is, then you are to parse the signature and return it's data in exactly this format.  Please ensure you strip all query params from all URLs.  Please ensure all phone numbers are returned in international format with a valid country code.  If no signature is present, drop the details object from the response.`
+Next, determine if an email signature is present.  If it is, then you are to identify data in the signature that relates to the sender and the company, and return it in exactly the format below.  Please ensure you strip all query params from all URLs.  Please ensure all phone numbers are returned in international format with a valid country code.  If no signature is present, drop the details object from the response.`
 
 		var prompt strings.Builder
 
@@ -94,7 +94,7 @@ Next, determine if an email signature is present.  If it is, then you are to par
 		}
 
 		h.responseHandler.HandleSuccess(c, AskAIForEmailResponse{
-			Answer: *answer,
+			EmailData: *answer,
 		})
 		return
 	}
