@@ -1,14 +1,15 @@
 name: PR Notifications
-                
+
 on:
   pull_request:
-    types: [opened, synchronize, review_submitted, closed]
+    types: [opened, synchronize, review_submitted, closed, ready_for_review]
   pull_request_review:
     types: [submitted, dismissed]
+  issue_comment:
+    types: [created]
 
 jobs:
   notify:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Handle PR Events
@@ -128,21 +129,13 @@ jobs:
                 // Process different actions
                 switch(action) {
                   case 'opened':
-                    // Just created the message, no reactions yet
-                    await addReaction(messageInfo, 'eyes');
+                    // No reactions when PR is first opened
                     break;
                     
-                  case 'synchronize':
-                    // PR was updated with new commits, remove approval if exists
-                    if (currentReactions.includes(REACTIONS.APPROVED)) {
-                      await removeReaction(messageInfo, REACTIONS.APPROVED);
-                    }
-                    break;
-                    
-                  case 'approved':
-                    // PR was approved, add approval reaction
-                    if (!currentReactions.includes(REACTIONS.APPROVED)) {
-                      await addReaction(messageInfo, REACTIONS.APPROVED);
+                  case 'commented':
+                    // Add eyes reaction when PR gets a comment
+                    if (!currentReactions.includes('eyes')) {
+                      await addReaction(messageInfo, 'eyes');
                     }
                     break;
                     
@@ -156,6 +149,9 @@ jobs:
                       }
                       if (currentReactions.includes(REACTIONS.CLOSED)) {
                         await removeReaction(messageInfo, REACTIONS.CLOSED);
+                      }
+                      if (currentReactions.includes('eyes')) {
+                        await removeReaction(messageInfo, 'eyes');
                       }
                     }
                     break;
@@ -230,7 +226,8 @@ jobs:
             
             // Determine the action based on the event
             if (eventName === 'pull_request') {
-              if (payload.action === 'opened') {
+              if (payload.action === 'opened' || payload.action === 'ready_for_review') {
+                // Handle both new PRs and PRs moved from draft to ready
                 action = 'opened';
               } else if (payload.action === 'synchronize') {
                 action = 'synchronize';
@@ -244,6 +241,9 @@ jobs:
                 action = 'approved';
                 existingMessage = await findPrMessage();
               }
+            } else if (eventName === 'issue_comment' && payload.issue.pull_request) {
+              action = 'commented';
+              existingMessage = await findPrMessage();
             }
             
             // Handle the action
