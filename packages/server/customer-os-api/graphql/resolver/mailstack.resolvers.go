@@ -156,7 +156,9 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 
 	var usernames []string
 
-	allMailboxes, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx)
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, _, allMailboxes, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", "")
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get all mailboxes")
@@ -165,7 +167,7 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 	}
 
 	for _, mailbox := range allMailboxes {
-		usernames = append(usernames, strings.Split(mailbox.MailboxUsername, "@")[0])
+		usernames = append(usernames, strings.Split(mailbox.Email, "@")[0])
 	}
 
 	return utils.RemoveDuplicates(usernames), nil

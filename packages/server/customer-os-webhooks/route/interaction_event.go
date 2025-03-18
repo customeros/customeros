@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -171,7 +172,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		// identify mailbox
 		username := ""
 		for _, p := range participants {
-			mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, p)
+			mailboxRecord, err := services.CommonServices.MailstackService.GetByMailbox(ctx, tenantByName, p)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				log.Errorf("(SyncInteractionEvent) error getting mailbox: %s", err.Error())
@@ -179,7 +180,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				return
 			}
 
-			if mailbox != nil {
+			if mailboxRecord != nil {
 				username = p
 				break
 			}

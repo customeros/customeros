@@ -12,7 +12,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
@@ -23,11 +22,11 @@ import (
 
 func AddCommentRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/comments",
-		commontracing.TracingEnhancer(ctx, "/sync/comments"),
+		tracing.TracingEnhancer(ctx, "/sync/comments"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncCommentsHandler(services, log))
 	route.POST("/sync/comment",
-		commontracing.TracingEnhancer(ctx, "/sync/comment"),
+		tracing.TracingEnhancer(ctx, "/sync/comment"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncCommentHandler(services, log))
 }

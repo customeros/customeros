@@ -72,7 +72,6 @@ type Repositories struct {
 	TableViewDefinitionRepository                TableViewDefinitionRepository
 	TenantRepository                             TenantRepository
 	TenantSettingsEmailExclusionRepository       TenantSettingsEmailExclusionRepository
-	TenantSettingsMailboxRepository              TenantSettingsMailboxRepository
 	TenantSettingsOpportunityStageRepository     TenantSettingsOpportunityStageRepository
 	TenantSettingsRepository                     TenantSettingsRepository
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
@@ -150,7 +149,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TableViewDefinitionRepository:                NewTableViewDefinitionRepository(postgresDB.GormDB),
 		TenantRepository:                             NewTenantRepository(postgresDB.GormDB),
 		TenantSettingsEmailExclusionRepository:       NewEmailExclusionRepository(postgresDB.GormDB),
-		TenantSettingsMailboxRepository:              NewTenantSettingsMailboxRepository(postgresDB.GormDB),
 		TenantSettingsOpportunityStageRepository:     NewTenantSettingsOpportunityStageRepository(postgresDB.GormDB),
 		TenantSettingsRepository:                     NewTenantSettingsRepository(postgresDB.GormDB),
 		TenantWebhookApiKeyRepository:                NewTenantWebhookApiKeyRepository(postgresDB.GormDB),
@@ -227,7 +225,6 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.Tenant{},
 		&postgres_entity.TenantSettings{},
 		&postgres_entity.TenantSettingsEmailExclusion{},
-		&postgres_entity.TenantSettingsMailbox{},
 		&postgres_entity.TenantSettingsOpportunityStage{},
 		&postgres_entity.TenantWebhook{},
 		&postgres_entity.TenantWebhookApiKey{},

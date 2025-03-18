@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -1175,4 +1176,74 @@ func (s *mailstackService) GetMailboxes(ctx context.Context, tenant, domain, use
 	}
 
 	return http.StatusOK, "", response.Mailboxes, nil
+}
+
+func (s *mailstackService) GetByMailbox(ctx context.Context, tenant, email string) (*interfaces.MailboxRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetByMailbox")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("request.email", email)
+
+	if email == "" {
+		return nil, errors.New("email is required")
+	}
+
+	// Create request to Mailstack API
+	encodedEmail := url.QueryEscape(email)
+	url := fmt.Sprintf("%s/v1/mailboxes/by-email/%s", s.cfg.Internal.MailstackApiConfig.ApiUrl, encodedEmail)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to create request to Mailstack API"))
+		return nil, err
+	}
+
+	// Add required headers
+	req.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
+	req.Header.Set("tenant", tenant)
+
+	// Forward Jaeger trace context
+	carrier := opentracing.HTTPHeadersCarrier(req.Header)
+	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
+	if err != nil {
+		span.LogFields(tracingLog.Error(err))
+	}
+
+	// Create HTTP client with default transport and timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Make request to Mailstack API
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to connect to Mailstack API"))
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode == http.StatusNotFound {
+		span.LogFields(tracingLog.String("result.status", "not found"))
+		return nil, nil
+	} else if resp.StatusCode != http.StatusOK {
+		// Read error response body
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			errorResponse.Error = "Unknown error occurred"
+		}
+		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		return nil, errors.New(errorResponse.Error)
+	}
+
+	// Parse response
+	var mailboxRecord interfaces.MailboxRecord
+	if err := json.NewDecoder(resp.Body).Decode(&mailboxRecord); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse Mailstack API response"))
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.String("result.id", mailboxRecord.ID))
+	return &mailboxRecord, nil
 }
