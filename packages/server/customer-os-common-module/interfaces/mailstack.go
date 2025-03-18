@@ -22,6 +22,9 @@ type MailboxRecord struct {
 	ForwardingEnabled bool     `json:"forwardingEnabled"`
 	WebmailEnabled    bool     `json:"webmailEnabled"`
 	Provisioned       bool     `json:"provisioned"`
+	RampUpCurrent     int      `json:"rampUpCurrent"`
+	RampUpMax         int      `json:"rampUpMax"`
+	RampUpRate        int      `json:"rampUpRate"`
 }
 
 type DomainRecord struct {
@@ -45,6 +48,7 @@ type MailstackService interface {
 	RegisterMailbox(ctx context.Context, tenant, domain string, request CreateMailboxRequest) (int, string, *MailboxRecord, error)
 	ConfigureMailbox(ctx context.Context, tenant, mailboxId string) error
 	GetMailboxes(ctx context.Context, tenant, domain, userId string) (int, string, []MailboxRecord, error)
+	GetMailboxByEmail(ctx context.Context, tenant, email string) (*MailboxRecord, error)
 	// domains
 	RegisterNewDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
 	ConfigureDomain(ctx context.Context, tenant, domain, website string) (int, string, *DomainRecord, error)
