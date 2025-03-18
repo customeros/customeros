@@ -7,19 +7,28 @@ import (
 	"strings"
 )
 
-// EmailSignatureBasics contains the basic information of a person
-type EmailSignatureBasics struct {
-	Name     string `json:"name"`
-	JobTitle string `json:"jobTitle"`
-	Company  string `json:"company"`
+// EmailSignatureContactInfo contains the basic information of a person
+type EmailSignatureContactInfo struct {
+	Name         string `json:"name"`
+	JobTitle     string `json:"jobTitle"`
+	Company      string `json:"company"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	Mobile       string `json:"mobile"`
+	LinkedIn     string `json:"linkedin"`
+	GitHub       string `json:"github"`
+	CalendarLink string `json:"calendarLink"`
 }
 
-// EmailSignatureContact contains contact information
-type EmailSignatureContact struct {
-	Email   string `json:"email"`
-	Phone   string `json:"phone"`
-	Mobile  string `json:"mobile"`
-	Website string `json:"website"`
+// EmailSignatureCompanyInfo contains company information
+type EmailSignatureCompanyInfo struct {
+	Website   string                `json:"website"`
+	LinkedIn  string                `json:"linkedin"`
+	Twitter   string                `json:"twitter"`
+	Youtube   string                `json:"youtube"`
+	Instagram string                `json:"instagram"`
+	GitHub    string                `json:"github"`
+	Address   EmailSignatureAddress `json:"address"`
 }
 
 // EmailSignatureAddress contains address information
@@ -31,36 +40,17 @@ type EmailSignatureAddress struct {
 	Country    string `json:"country"`
 }
 
-// EmailSignatureSocial contains social media information
-type EmailSignatureSocial struct {
-	LinkedIn  string `json:"linkedin"`
-	Twitter   string `json:"twitter"`
-	Youtube   string `json:"youtube"`
-	Instagram string `json:"instagram"`
-	GitHub    string `json:"github"`
-}
-
-// EmailSignatureAdditional contains additional information
-type EmailSignatureAdditional struct {
-	Disclaimer   string `json:"disclaimer"`
-	LegalText    string `json:"legalText"`
-	CalendarLink string `json:"calendarLink"`
-}
-
 // EmailSignature represents the complete email signature
 type EmailSignature struct {
-	Basics     EmailSignatureBasics     `json:"basics"`
-	Contact    EmailSignatureContact    `json:"contact"`
-	Address    EmailSignatureAddress    `json:"address"`
-	Social     EmailSignatureSocial     `json:"social"`
-	Additional EmailSignatureAdditional `json:"additional"`
+	ContactInfo EmailSignatureContactInfo `json:"contactInfo"`
+	CompanyInfo EmailSignatureCompanyInfo `json:"companyInfo"`
 }
 
-// EmailSignatureResponse is the top-level response structure
+// EmailResponse is the top-level response structure
 type EmailResponse struct {
-	MessageBody string         `json:"messageBody"`
-	Signature   bool           `json:"signature"`
-	Details     EmailSignature `json:"details,omitempty"`
+	MessageBody  string         `json:"messageBody"`
+	HasSignature bool           `json:"hasSignature"`
+	Signature    EmailSignature `json:"signature,omitempty"`
 }
 
 // EmailSignatureValidator defines validation rules for email signatures
@@ -90,13 +80,11 @@ func NewEmailSignatureValidator() *EmailSignatureValidator {
 		RequiresMessageBody:  true,
 		RequireBasicName:     true,
 		RequireBasicCompany:  false,
-		RequireContactEmail:  true,
+		RequireContactEmail:  false,
 		MaxLengthMessageBody: 3000,
 		MaxLengthName:        100,
 		MaxLengthJobTitle:    200,
 		MaxLengthCompany:     100,
-		MaxLengthDisclaimer:  1000,
-		MaxLengthLegalText:   1000,
 		EmailRegex:           regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`),
 		PhoneRegex:           regexp.MustCompile(`^(\+)?[0-9\(\)\-\.\s]{6,20}(x\d+)?$`),
 		WebsiteRegex:         regexp.MustCompile(`^(http(s)?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*)?$`),
@@ -127,34 +115,19 @@ func (v *EmailSignatureValidator) ValidateResponse(jsonStr string) (*EmailRespon
 		return nil, err
 	}
 
-	if !response.Signature {
+	if !response.HasSignature {
 		return &response, nil
 	}
 
-	signature := response.Details
+	signature := response.Signature
 
-	// Validate basics section
-	if err := v.validateBasics(signature.Basics); err != nil {
+	// Validate contact info section
+	if err := v.validateContactInfo(signature.ContactInfo); err != nil {
 		return nil, err
 	}
 
-	// Validate contact section
-	if err := v.validateContact(signature.Contact); err != nil {
-		return nil, err
-	}
-
-	// Validate address section
-	if err := v.validateAddress(signature.Address); err != nil {
-		return nil, err
-	}
-
-	// Validate social section
-	if err := v.validateSocial(signature.Social); err != nil {
-		return nil, err
-	}
-
-	// Validate additional section
-	if err := v.validateAdditional(signature.Additional); err != nil {
+	// Validate company info section
+	if err := v.validateCompanyInfo(signature.CompanyInfo); err != nil {
 		return nil, err
 	}
 
@@ -173,63 +146,93 @@ func (v *EmailSignatureValidator) validateMessageBody(messageBody string) error 
 	return nil
 }
 
-// validateBasics validates the basics section
-func (v *EmailSignatureValidator) validateBasics(basics EmailSignatureBasics) error {
+// validateContactInfo validates the contact information section
+func (v *EmailSignatureValidator) validateContactInfo(contactInfo EmailSignatureContactInfo) error {
 	// Check required fields
-	if v.RequireBasicName && strings.TrimSpace(basics.Name) == "" {
-		return fmt.Errorf("name is required in basics section")
+	if v.RequireBasicName && strings.TrimSpace(contactInfo.Name) == "" {
+		return fmt.Errorf("name is required in contact information section")
 	}
 
-	if v.RequireBasicCompany && strings.TrimSpace(basics.Company) == "" {
-		return fmt.Errorf("company is required in basics section")
+	if v.RequireBasicCompany && strings.TrimSpace(contactInfo.Company) == "" {
+		return fmt.Errorf("company is required in contact information section")
 	}
 
 	// Check field lengths
-	if len(basics.Name) > v.MaxLengthName {
+	if len(contactInfo.Name) > v.MaxLengthName {
 		return fmt.Errorf("name exceeds maximum length: got %d characters, max is %d",
-			len(basics.Name), v.MaxLengthName)
+			len(contactInfo.Name), v.MaxLengthName)
 	}
 
-	if len(basics.JobTitle) > v.MaxLengthJobTitle {
+	if len(contactInfo.JobTitle) > v.MaxLengthJobTitle {
 		return fmt.Errorf("job title exceeds maximum length: got %d characters, max is %d",
-			len(basics.JobTitle), v.MaxLengthJobTitle)
+			len(contactInfo.JobTitle), v.MaxLengthJobTitle)
 	}
 
-	if len(basics.Company) > v.MaxLengthCompany {
+	if len(contactInfo.Company) > v.MaxLengthCompany {
 		return fmt.Errorf("company exceeds maximum length: got %d characters, max is %d",
-			len(basics.Company), v.MaxLengthCompany)
+			len(contactInfo.Company), v.MaxLengthCompany)
 	}
+
+	// Validate email if required
+	if v.RequireContactEmail && strings.TrimSpace(contactInfo.Email) == "" {
+		return fmt.Errorf("email is required in contact information section")
+	}
+
+	// Validate email format
+	if contactInfo.Email != "" && !v.EmailRegex.MatchString(contactInfo.Email) {
+		return fmt.Errorf("invalid email format: %s", contactInfo.Email)
+	}
+
+	// Validate phone formats
+	if contactInfo.Phone != "" && !v.PhoneRegex.MatchString(contactInfo.Phone) {
+		return fmt.Errorf("invalid phone format: %s", contactInfo.Phone)
+	}
+
+	if contactInfo.Mobile != "" && !v.PhoneRegex.MatchString(contactInfo.Mobile) {
+		return fmt.Errorf("invalid mobile format: %s", contactInfo.Mobile)
+	}
+
+	// Validate LinkedIn URL
+	if contactInfo.LinkedIn != "" && !v.LinkedInRegex.MatchString(contactInfo.LinkedIn) {
+		return fmt.Errorf("invalid LinkedIn URL format: %s", contactInfo.LinkedIn)
+	}
+
+	// Validate GitHub (no specific validation for now)
+
+	// Validate Calendar Link (no specific validation for now)
 
 	return nil
 }
 
-// validateContact validates the contact section
-func (v *EmailSignatureValidator) validateContact(contact EmailSignatureContact) error {
-	// Check required fields
-	if v.RequireContactEmail && strings.TrimSpace(contact.Email) == "" {
-		return fmt.Errorf("email is required in contact section")
-	}
-
-	// Validate email format
-	if contact.Email != "" && !v.EmailRegex.MatchString(contact.Email) {
-		return fmt.Errorf("invalid email format: %s", contact.Email)
-	}
-
-	// Validate phone formats
-	if contact.Phone != "" && !v.PhoneRegex.MatchString(contact.Phone) {
-		return fmt.Errorf("invalid phone format: %s", contact.Phone)
-	}
-
-	if contact.Mobile != "" && !v.PhoneRegex.MatchString(contact.Mobile) {
-		return fmt.Errorf("invalid mobile format: %s", contact.Mobile)
-	}
-
+// validateCompanyInfo validates the company information section
+func (v *EmailSignatureValidator) validateCompanyInfo(companyInfo EmailSignatureCompanyInfo) error {
 	// Validate website format
-	if contact.Website != "" && !v.WebsiteRegex.MatchString(contact.Website) {
-		return fmt.Errorf("invalid website format: %s", contact.Website)
+	if companyInfo.Website != "" && !v.WebsiteRegex.MatchString(companyInfo.Website) {
+		return fmt.Errorf("invalid website format: %s", companyInfo.Website)
 	}
 
-	return nil
+	// Validate LinkedIn URL
+	if companyInfo.LinkedIn != "" && !v.LinkedInRegex.MatchString(companyInfo.LinkedIn) {
+		return fmt.Errorf("invalid company LinkedIn URL format: %s", companyInfo.LinkedIn)
+	}
+
+	// Validate Twitter URL
+	if companyInfo.Twitter != "" && !v.TwitterRegex.MatchString(companyInfo.Twitter) {
+		return fmt.Errorf("invalid Twitter URL format: %s", companyInfo.Twitter)
+	}
+
+	// Validate Youtube URL
+	if companyInfo.Youtube != "" && !v.YoutubeRegex.MatchString(companyInfo.Youtube) {
+		return fmt.Errorf("invalid Youtube URL format: %s", companyInfo.Youtube)
+	}
+
+	// Validate Instagram URL
+	if companyInfo.Instagram != "" && !v.InstagramRegex.MatchString(companyInfo.Instagram) {
+		return fmt.Errorf("invalid Instagram URL format: %s", companyInfo.Instagram)
+	}
+
+	// Validate address (minimal validation)
+	return v.validateAddress(companyInfo.Address)
 }
 
 // validateAddress validates the address section
@@ -239,82 +242,37 @@ func (v *EmailSignatureValidator) validateAddress(address EmailSignatureAddress)
 	return nil
 }
 
-// validateSocial validates the social section
-func (v *EmailSignatureValidator) validateSocial(social EmailSignatureSocial) error {
-	// Validate LinkedIn URL
-	if social.LinkedIn != "" && !v.LinkedInRegex.MatchString(social.LinkedIn) {
-		return fmt.Errorf("invalid LinkedIn URL format: %s", social.LinkedIn)
-	}
-
-	// Validate Twitter URL
-	if social.Twitter != "" && !v.TwitterRegex.MatchString(social.Twitter) {
-		return fmt.Errorf("invalid Twitter URL format: %s", social.Twitter)
-	}
-
-	// Validate Youtube URL
-	if social.Youtube != "" && !v.YoutubeRegex.MatchString(social.Twitter) {
-		return fmt.Errorf("invalid Youtube URL format: %s", social.Twitter)
-	}
-
-	// Validate Instagram URL
-	if social.Instagram != "" && !v.InstagramRegex.MatchString(social.Twitter) {
-		return fmt.Errorf("invalid Instagram URL format: %s", social.Twitter)
-	}
-
-	return nil
-}
-
-// validateAdditional validates the additional section
-func (v *EmailSignatureValidator) validateAdditional(additional EmailSignatureAdditional) error {
-	// Check field lengths
-	if len(additional.Disclaimer) > v.MaxLengthDisclaimer {
-		return fmt.Errorf("disclaimer exceeds maximum length: got %d characters, max is %d",
-			len(additional.Disclaimer), v.MaxLengthDisclaimer)
-	}
-
-	if len(additional.LegalText) > v.MaxLengthLegalText {
-		return fmt.Errorf("legal text exceeds maximum length: got %d characters, max is %d",
-			len(additional.LegalText), v.MaxLengthLegalText)
-	}
-
-	return nil
-}
-
 // GetExpectedSchema returns a sample schema for documentation
 func (v *EmailSignatureValidator) GetExpectedSchema() string {
 	return `{
   "messageBody": "This is the clean message body without salutations, greetings, old threads, or messages, formatted in markdown.",
-  "signature": true,
-  "details": {
-    "basics": {
+  "hasSignature": true,
+  "signature": {
+    "contactInfo": {
       "name": "Jane Smith",
       "jobTitle": "Senior Marketing Manager",
       "company": "Acme Corporation",
-    },
-    "contact": {
       "email": "jane.smith@acme.com",
       "phone": "+15551234567",
       "mobile": "+15559876543",
-      "website": "https://www.acme.com"
-    },
-    "address": {
-      "street": "123 Main Street",
-      "city": "San Francisco",
-      "region": "CA",
-      "postalCode": "94105",
-      "country": "USA"
-    },
-    "social": {
       "linkedin": "https://linkedin.com/in/janesmith",
-      "twitter": "https://twitter.com/janesmith",
-      "youtube": "https://youtube.com/janesmith",
-      "instagram": "https://instagram.com/janesmith",
       "github": "https://github.com/janesmith",
+      "calendarLink": "https://calendly.com/janesmith"
     },
-    "additional": {
-      "disclaimer": "This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed.",
-      "legalText": "Acme Corporation is a registered trademark. Registration No. 12345.",
-      "calendarLink": "https://calendly.com/janesmith",
+    "companyInfo": {
+      "website": "https://www.acme.com",
+      "linkedin": "https://linkedin.com/company/acme",
+      "twitter": "https://twitter.com/acme",
+      "youtube": "https://youtube.com/acme",
+      "instagram": "https://instagram.com/acme",
+      "github": "https://github.com/acme",
+      "address": {
+        "street": "123 Main Street",
+        "city": "San Francisco",
+        "region": "CA",
+        "postalCode": "94105",
+        "country": "USA"
+      }
     }
   }
 }`
