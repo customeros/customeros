@@ -78,14 +78,6 @@ Please respond ONLY with valid JSON matching this schema:
 			continue
 		}
 
-		if request.OutputFormat == enum.AIOutputJson {
-			lastBrace := strings.LastIndex(*answer, "}")
-			if lastBrace >= 0 {
-				trimmed := (*answer)[:lastBrace+1]
-				answer = &trimmed
-			}
-		}
-
 		// Validate the response
 		industryCode, err := validator.ValidateResponse(*answer)
 		if err != nil {

@@ -245,15 +245,46 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 		return nil, err
 	}
 
-	if request.OutputFormat == enum.AIOutputText {
+	s.trackSuccess(ctx, llmTracker, result)
+
+	var processedResult *string
+	switch request.OutputFormat {
+	case enum.AIOutputText:
 		answer := strings.TrimPrefix(*result, `"""`)
 		answer = strings.TrimSuffix(answer, `"""`)
-		s.trackSuccess(ctx, llmTracker, result)
-		return &answer, nil
+		processedResult = &answer
+		span.LogFields(log.String("result.plain", answer))
+
+	case enum.AIOutputJson:
+		processedResult = s.extractJsonFromAiResponse(result)
+		span.LogFields(
+			log.String("result.plain", utils.IfNotNilString(result)),
+			log.String("result.json", utils.IfNotNilString(processedResult)),
+		)
+
+	default:
+		// For unknown formats, return the original result
+		processedResult = result
+		span.LogFields(log.String("result.plain", utils.IfNotNilString(*result)))
 	}
 
-	s.trackSuccess(ctx, llmTracker, result)
-	return result, nil
+	return processedResult, nil
+}
+
+func (s *aiService) extractJsonFromAiResponse(result *string) *string {
+	if result == nil {
+		return nil
+	}
+
+	firstBrace := strings.Index(*result, "{")
+	lastBrace := strings.LastIndex(*result, "}")
+
+	if firstBrace >= 0 && lastBrace >= 0 && lastBrace > firstBrace {
+		trimmed := (*result)[firstBrace : lastBrace+1]
+		return &trimmed
+	}
+
+	return result
 }
 
 func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservability, aiError error) {
