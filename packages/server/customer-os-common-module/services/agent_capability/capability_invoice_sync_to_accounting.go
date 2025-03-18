@@ -191,14 +191,6 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 				return enum.CapabilityExecutionRetry, result, err
 			}
 		}
-
-		if invoiceEntity.QuickbooksPaymentIdReverse == "" {
-			err = c.syncPaymentLinkingJournalEntryToInvoiceReverse(ctx, *invoiceEntity)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return enum.CapabilityExecutionRetry, result, err
-			}
-		}
 	}
 
 	// re-fetch invoice to get updated quickbooks journal id
@@ -663,45 +655,6 @@ func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvo
 		}
 	}
 
-	return nil
-}
-
-func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvoiceReverse(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncPaymentLinkingJournalEntryToInvoiceReverse")
-	defer span.Finish()
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tenant := common.GetTenantFromContext(ctx)
-
-	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if quickbooksSettingsEntity == nil {
-		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Link reverse journal entry to invoice
-	quickbooksPaymentReverse, err := c.quickbooksService.SavePaymentLinkingJournalEntryToInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.QuickbooksJournalEntryIdReverse, invoice.IssuedDate, invoice.Amount)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error saving payment linking journal entry to invoice"))
-		return err
-	}
-	if quickbooksPaymentReverse != nil {
-		err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksPaymentIdReverse), quickbooksPaymentReverse.Payment.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
 	return nil
 }
 

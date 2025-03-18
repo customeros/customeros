@@ -27,7 +27,6 @@ const (
 	InvoicePropertyQuickbooksJournalEntryId             InvoiceProperty = "quickbooksJournalEntryId"
 	InvoicePropertyQuickbooksJournalEntryIdReverse      InvoiceProperty = "quickbooksJournalEntryIdReverse"
 	InvoicePropertyQuickbooksPaymentId                  InvoiceProperty = "quickbooksPaymentId"
-	InvoicePropertyQuickbooksPaymentIdReverse           InvoiceProperty = "quickbooksPaymentIdReverse"
 	InvoicePropertyProviderBankDetailsAvailable         InvoiceProperty = "providerBankDetailsAvailable"
 	InvoicePropertyProviderBankAccountName              InvoiceProperty = "providerBankAccountName"
 	InvoicePropertyProviderBankAccountNumber            InvoiceProperty = "providerBankAccountNumber"
@@ -63,7 +62,6 @@ type InvoiceEntity struct {
 	QuickbooksJournalEntryId        string
 	QuickbooksJournalEntryIdReverse string
 	QuickbooksPaymentId             string
-	QuickbooksPaymentIdReverse      string
 	PaymentDetails                  PaymentDetails
 	OffCycle                        bool
 	Postpaid                        bool
