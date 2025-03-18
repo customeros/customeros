@@ -23,9 +23,10 @@ import (
 )
 
 type userService struct {
-	neo4j    *neo4j_repository.Repositories
-	postgres *postgres_repository.Repositories
-	events   *events.EventsService
+	neo4j     *neo4j_repository.Repositories
+	postgres  *postgres_repository.Repositories
+	events    *events.EventsService
+	mailstack interfaces.MailstackService
 }
 
 func NewUserService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService) interfaces.UserService {
@@ -34,6 +35,10 @@ func NewUserService(neo4j *neo4j_repository.Repositories, postgres *postgres_rep
 		postgres: postgres,
 		events:   events,
 	}
+}
+
+func (s *userService) SetMailstack(mailstack interfaces.MailstackService) {
+	s.mailstack = mailstack
 }
 
 func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error) {
@@ -392,7 +397,7 @@ func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.U
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	mailboxes, err := s.postgres.TenantSettingsMailboxRepository.GetAll(ctx)
+	_, _, mailboxes, err := s.mailstack.GetMailboxes(ctx, tenant, "", "")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

@@ -276,6 +276,7 @@ func InitCommonServices(
 	jobroleImpl.SetOrganizationService(orgImpl)
 	orgImpl.SetContractService(contractImpl)
 	openSRSImpl.SetMailstackService(mailstackImpl)
+	userImpl.SetMailstack(mailstackImpl)
 
 	// initialize agent capabilities
 	capabilityImpl := agent_capability.InitCapabilities(

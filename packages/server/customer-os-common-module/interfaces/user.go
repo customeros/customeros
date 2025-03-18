@@ -10,8 +10,9 @@ import (
 )
 
 type UserService interface {
-	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error)
+	SetMailstack(mailstack MailstackService)
 
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error)
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
 	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
