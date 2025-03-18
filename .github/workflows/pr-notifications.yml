@@ -1,5 +1,5 @@
 name: PR Notifications
-
+                
 on:
   pull_request:
     types: [opened, synchronize, review_submitted, closed]
@@ -63,6 +63,14 @@ jobs:
             
             async function postNewMessage() {
               try {
+                const userResponse = await fetch(`https://api.github.com/users/${pr.user.login}`, {
+                  headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `token ${process.env.GITHUB_TOKEN}`
+                  }
+                });
+                const userData = await userResponse.json();
+                const displayName = userData.name || pr.user.login;
                 const message = `\`${context.repo.owner}/${context.repo.repo}\` <${pr.html_url}|${pr.title}>`;
                 
                 const response = await fetch('https://slack.com/api/chat.postMessage', {
@@ -76,7 +84,7 @@ jobs:
                     text: message,
                     unfurl_links: false,
                     unfurl_media: false,
-                    username: pr.user.name,
+                    username: displayName,
                     icon_url: pr.user.avatar_url
                   }),
                 });
@@ -251,3 +259,5 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
