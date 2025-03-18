@@ -141,6 +141,13 @@ jobs:
                     }
                     break;
                     
+                  case 'approved':
+                    // Add checkmark reaction when PR is approved
+                    if (!currentReactions.includes(REACTIONS.APPROVED)) {
+                      await addReaction(messageInfo, REACTIONS.APPROVED);
+                    }
+                    break;
+                    
                   case 'merged':
                     // PR was merged, add merged reaction and remove other status reactions
                     if (!currentReactions.includes(REACTIONS.MERGED)) {
