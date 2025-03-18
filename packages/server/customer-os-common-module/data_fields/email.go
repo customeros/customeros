@@ -60,7 +60,7 @@ type EmailSignature struct {
 type EmailResponse struct {
 	MessageBody string         `json:"messageBody"`
 	Signature   bool           `json:"signature"`
-	Details     EmailSignature `json:"details"`
+	Details     EmailSignature `json:"details,omitempty"`
 }
 
 // EmailSignatureValidator defines validation rules for email signatures

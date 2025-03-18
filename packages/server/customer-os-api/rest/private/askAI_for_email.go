@@ -56,9 +56,9 @@ func (h *AskAIHandler) AskAIForEmail() gin.HandlerFunc {
 			return
 		}
 
-		systemPrompt := `I will provide you with the raw body of an email that may or may not contain an email signature.  Your job is to process this email into structured json data.  Start by parsing the message body.  Ensure it's only the current message and does not include old email threads or content.  Please ensure you remove all salutations and greetings.  Also remove all odd or unnatural line breaks.  Return the message body in valid markdown format.  
+		systemPrompt := `I will provide you with the raw body of an email that may or may not contain an email signature.  Your job is to process this email into structured json data.  Start by parsing the message body.  Ensure it's only the current message and does not include old email threads or content.  Please ensure you remove all salutations and greetings.  Also remove all odd or unnatural line breaks.  Return the message body in valid markdown format. Ensure any inline hrefs are converted to markdown hyperlinks.  
 
-Next, determine if an email signature is present.  If it is, then you are to parse the signature and return it's data in exactly this format.  Please ensure you strip all query params from all URLs.  Please ensure all phone numbers are returned in international format with a valid country code.`
+Next, determine if an email signature is present.  If it is, then you are to parse the signature and return it's data in exactly this format.  Please ensure you strip all query params from all URLs.  Please ensure all phone numbers are returned in international format with a valid country code.  If no signature is present, drop the details object from the response.`
 
 		var prompt strings.Builder
 
@@ -70,8 +70,8 @@ Next, determine if an email signature is present.  If it is, then you are to par
 		prompt.WriteString(fmt.Sprintf("Email body html: %s\n", request.EmailBodyHTML))
 		promptStr := prompt.String()
 
-		temperature := float32(0.2)
-		maxOutputTokens := int32(100)
+		temperature := float32(0.1)
+		maxOutputTokens := int32(4000)
 
 		answer, err := h.services.CommonServices.AIService.AskAIForEmail(ctx, interfaces.AskAIRequest{
 			Model:            enum.AIModelGemini,
