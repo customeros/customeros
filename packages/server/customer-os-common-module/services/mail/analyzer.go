@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 // TODO parse SMTP status code from message/deliver-status
@@ -16,6 +17,7 @@ import (
 func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emailData *interfaces.EmailMessageData) interfaces.HeaderAnalysis {
 	span, ctx := a.initializeTracing(ctx, "MailService.ProcessEmailCheck")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	analysis := interfaces.HeaderAnalysis{
 		ProcessEmail: true, // Default to processing

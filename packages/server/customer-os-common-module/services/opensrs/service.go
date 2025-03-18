@@ -16,6 +16,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -26,6 +27,7 @@ type openSRSService struct {
 	log           logger.Logger
 	openSrsConfig *config.OpenSRSConfig
 	postgres      *postgres_repository.Repositories
+	mailstack     interfaces.MailstackService
 }
 
 func NewOpenSRSService(log logger.Logger, openSrsConfig *config.OpenSRSConfig, postgres *postgres_repository.Repositories) interfaces.OpenSrsService {
@@ -36,6 +38,10 @@ func NewOpenSRSService(log logger.Logger, openSrsConfig *config.OpenSRSConfig, p
 	}
 }
 
+func (s *openSRSService) SetMailstackService(mailstack interfaces.MailstackService) {
+	s.mailstack = mailstack
+}
+
 func (s *openSRSService) SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpenSrsService.Reply")
 	defer span.Finish()
@@ -44,13 +50,15 @@ func (s *openSRSService) SendEmail(ctx context.Context, request *postgres_entity
 	smtpHost := "mail.hostedemail.com"
 	smtpPort := "587"
 
-	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, request.From)
+	tenant := common.GetTenantFromContext(ctx)
+
+	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, request.From)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if mailbox == nil {
+	if mailboxRecord == nil {
 		err = errors.New("mailbox not found")
 		tracing.TraceErr(span, err)
 		return err
@@ -126,7 +134,7 @@ Content-Type: text/html; charset=UTF-8
 		BCCEmail:   strings.Join(bccEmail, ", "),
 		Subject:    subject,
 		Date:       time.Now().Format("Mon, 02 Jan 2006 15:04:05 -0700"),
-		MessageId:  generateMessageID(mailbox.MailboxUsername),
+		MessageId:  generateMessageID(mailboxRecord.Email),
 		InReplyTo:  inReplyTo,
 		References: references,
 		Boundary:   fmt.Sprintf("=_%x", time.Now().UnixNano()),
@@ -160,7 +168,7 @@ Content-Type: text/html; charset=UTF-8
 	recipients = append(recipients, ccEmail...)
 	recipients = append(recipients, bccEmail...)
 
-	auth := smtp.PlainAuth("", mailbox.MailboxUsername, mailbox.MailboxPassword, smtpHost)
+	auth := smtp.PlainAuth("", mailboxRecord.Email, mailboxRecord.Password, smtpHost)
 
 	// Send the email
 	err = smtp.SendMail(

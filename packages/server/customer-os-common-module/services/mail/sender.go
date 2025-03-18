@@ -97,7 +97,6 @@ func (s *mailService) prepareEmailMessage(ctx context.Context, span opentracing.
 	emailMessage.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
 	if emailMessage.ReplyTo == nil {
-		emailMessage.Subject = emailMessage.Subject
 		return nil
 	}
 
@@ -160,7 +159,8 @@ func (s *mailService) sendEmailBasedOnProvider(
 }
 
 func (s *mailService) sendEmailViaOpenSrs(ctx context.Context, span opentracing.Span, emailMessage *postgres_entity.EmailMessage) error {
-	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, emailMessage.From)
+	tenant := common.GetTenantFromContext(ctx)
+	mailbox, err := s.mailstack.GetByMailbox(ctx, tenant, emailMessage.From)
 	if err != nil {
 		err = fmt.Errorf("failed to get mailbox: %v", err)
 		tracing.TraceErr(span, err)

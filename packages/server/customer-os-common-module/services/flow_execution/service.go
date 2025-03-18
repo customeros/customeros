@@ -529,7 +529,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 			return errors.New("No mailbox available")
 		}
 
-		mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, fastestMailbox)
+		mailbox, err := s.mailstack.GetByMailbox(ctx, tenant, fastestMailbox)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -908,7 +908,9 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	mailboxEntity, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailbox)
+	tenant := common.GetTenantFromContext(ctx)
+
+	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, mailbox)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -936,7 +938,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 			return nil, err
 		}
 
-		if emailsScheduledInDay >= int64(mailboxEntity.RampUpCurrent) {
+		if emailsScheduledInDay >= int64(mailboxRecord.RampUpCurrent) {
 			possibleScheduledAt = possibleScheduledAt.AddDate(0, 0, 1)
 			possibleScheduledAt = time.Date(possibleScheduledAt.Year(), possibleScheduledAt.Month(), possibleScheduledAt.Day(), 0, 0, 0, 0, time.UTC)
 			continue
@@ -946,7 +948,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	}
 
 	// Ensure possibleScheduledAt is not in the past and within working hours
-	possibleScheduledAt = adjustToWorkingTimeWithRandom(maxTime(possibleScheduledAt, utils.Now()), workingSchedule, mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)
+	possibleScheduledAt = adjustToWorkingTimeWithRandom(maxTime(possibleScheduledAt, utils.Now()), workingSchedule, mailboxRecord.MinMinutesBetweenEmails, mailboxRecord.MaxMinutesBetweenEmails)
 
 	// Add random seconds and miliseconds to not have 00:00:00 as the scheduled time
 	randomSeconds := time.Duration(utils.GenerateRandomInt(0, 60)) * time.Second
@@ -1105,7 +1107,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			if existingEmail == nil {
 				span.LogFields(log.Bool("process.existingEmail", true))
 
-				mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, *scheduledActionExecution.Mailbox)
+				mailbox, err := s.mailstack.GetByMailbox(ctx, tenant, *scheduledActionExecution.Mailbox)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to get mailbox by mailbox"))
 					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
@@ -1169,7 +1171,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 					}
 				}
 
-				mailbox, err = s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, *scheduledActionExecution.Mailbox)
+				mailbox, err = s.mailstack.GetByMailbox(ctx, tenant, *scheduledActionExecution.Mailbox)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
 				}
@@ -1374,7 +1376,7 @@ func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, action
 		return nil, errors.Wrap(err, "failed to get previous nodes for action")
 	}
 
-	if previousNodes == nil || len(previousNodes) == 0 {
+	if len(previousNodes) == 0 {
 		return nil, errors.New("no previous nodes found for action")
 	}
 

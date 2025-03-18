@@ -8,4 +8,5 @@ import (
 
 type OpenSrsService interface {
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
+	SetMailstackService(mailstack MailstackService)
 }

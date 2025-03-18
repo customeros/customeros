@@ -1178,8 +1178,8 @@ func (s *mailstackService) GetMailboxes(ctx context.Context, tenant, domain, use
 	return http.StatusOK, "", response.Mailboxes, nil
 }
 
-func (s *mailstackService) GetMailboxByEmail(ctx context.Context, tenant, email string) (*interfaces.MailboxRecord, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetMailboxByEmail")
+func (s *mailstackService) GetByMailbox(ctx context.Context, tenant, email string) (*interfaces.MailboxRecord, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.GetByMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("request.email", email)
@@ -1223,6 +1223,7 @@ func (s *mailstackService) GetMailboxByEmail(ctx context.Context, tenant, email 
 
 	// Check response status
 	if resp.StatusCode == http.StatusNotFound {
+		span.LogFields(tracingLog.String("result.status", "not found"))
 		return nil, nil
 	} else if resp.StatusCode != http.StatusOK {
 		// Read error response body
@@ -1243,5 +1244,6 @@ func (s *mailstackService) GetMailboxByEmail(ctx context.Context, tenant, email 
 		return nil, err
 	}
 
+	span.LogFields(tracingLog.String("result.id", mailboxRecord.ID))
 	return &mailboxRecord, nil
 }

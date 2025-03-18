@@ -560,13 +560,13 @@ func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant strin
 }
 
 func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span opentracing.Span, tenant, mailboxAddress string) error {
-	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxAddress)
+	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, mailboxAddress)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
 		return err
 	}
 
-	if mailbox == nil {
+	if mailboxRecord == nil {
 		statusCode, errMsg, _, err := s.mailstack.RegisterMailbox(ctx, tenant, mailstack.TEST_MAILBOX_DOMAIN, interfaces.CreateMailboxRequest{
 			Domain:          mailstack.TEST_MAILBOX_DOMAIN,
 			Username:        strings.ToLower(tenant),
@@ -587,13 +587,13 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			return err
 		}
 
-		mailboxEntity, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, strings.ToLower(tenant)+"@"+mailstack.TEST_MAILBOX_DOMAIN)
+		mailboxRecord, err = s.mailstack.GetByMailbox(ctx, tenant, strings.ToLower(tenant)+"@"+mailstack.TEST_MAILBOX_DOMAIN)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
 			return err
 		}
 
-		err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxEntity.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

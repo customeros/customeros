@@ -186,10 +186,7 @@ func (s *SnitcherResponse) CompanyWebsite() string {
 }
 
 func (s *SnitcherResponse) CompanyFound() bool {
-	if s.Company == nil {
-		return false
-	}
-	return true
+	return s.Company != nil
 }
 
 type SnitcherDataResponse struct {

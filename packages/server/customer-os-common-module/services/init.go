@@ -252,7 +252,7 @@ func InitCommonServices(
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
 	mailstackImpl := mailstack.NewMailstackService(cfg, eventsImpl, postgresRepositories, neo4jRepositories, openSRSImpl, emailImpl)
-	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl, workspaceImpl)
+	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl, workspaceImpl, mailstackImpl)
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl, mailstackImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicConfig.Prompts, aiImpl, contactImpl, orgImpl)
@@ -275,6 +275,7 @@ func InitCommonServices(
 	flowExecutionImpl.SetFlowService(flowImpl)
 	jobroleImpl.SetOrganizationService(orgImpl)
 	orgImpl.SetContractService(contractImpl)
+	openSRSImpl.SetMailstackService(mailstackImpl)
 
 	// initialize agent capabilities
 	capabilityImpl := agent_capability.InitCapabilities(
