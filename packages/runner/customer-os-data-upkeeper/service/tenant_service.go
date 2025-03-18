@@ -2,10 +2,16 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
@@ -58,28 +64,29 @@ func (s *tenantService) CheckOnboarding() {
 	}
 
 	for _, tenantDbNode := range tenantDbNodes {
-		recordSpan, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.CheckOnboarding.Record")
-		defer recordSpan.Finish()
+		func(tenantDbNode *dbtype.Node) {
+			recordSpan, ctx := tracing.StartTracerSpan(ctx, "TenantService.CheckOnboarding.Record")
+			defer recordSpan.Finish()
 
-		tenantEntity := neo4jmapper.MapDbNodeToTenantEntity(tenantDbNode)
-		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    tenantEntity.Name,
-			AppSource: constants.AppSourceDataUpkeeper,
-		})
-		tracing.TagTenant(recordSpan, tenantEntity.Name)
+			tenantEntity := neo4jmapper.MapDbNodeToTenantEntity(tenantDbNode)
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    tenantEntity.Name,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			tracing.TagTenant(recordSpan, tenantEntity.Name)
 
-		// mark tenant as checked
-		err = s.commonServices.Neo4jRepositories.TenantWriteRepository.MarkOnboardingChecked(innerCtx, tenantEntity.Name)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking tenant as checked"))
-			s.log.Errorf("Error marking tenant as checked: %s", err.Error())
-			continue
-		}
+			// mark tenant as checked
+			err = s.commonServices.Neo4jRepositories.TenantWriteRepository.MarkOnboardingChecked(innerCtx, tenantEntity.Name)
+			if err != nil {
+				tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking tenant as checked"))
+				s.log.Errorf("Error marking tenant as checked: %s", err.Error())
+				return
+			}
 
-		// Suppress creating default agents
-
-		//s.checkWebVisitorAgents(innerCtx, tenantEntity.Name)
-		//s.checkIcpQualificationAgents(innerCtx, tenantEntity.Name)
+			//s.checkWebVisitorAgents(innerCtx, tenantEntity.Name) // temporary disabled
+			//s.checkIcpQualificationAgents(innerCtx, tenantEntity.Name) // temporary disabled
+			s.checkTestMailbox(innerCtx, tenantEntity.Name)
+		}(tenantDbNode)
 	}
 }
 
@@ -135,4 +142,63 @@ func (s *tenantService) checkIcpQualificationAgents(ctx context.Context, tenant 
 		tracing.TraceErr(span, errors.Wrap(err, "error creating icp qualification agent"))
 		s.log.Errorf("Error creating icp qualification agents: %s", err.Error())
 	}
+}
+
+func (s *tenantService) checkTestMailbox(ctx context.Context, tenant string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.checkTestMailbox")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+	tracing.TagTenant(span, tenant)
+
+	// Skip if tenant has uppercase letters
+	if tenant != strings.ToLower(tenant) {
+		span.LogFields(log.Bool("result.skipped", true), log.String("reason", "tenant name was auto generated"))
+		return
+	}
+
+	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN))
+
+	// Check if mailbox exists using GetMailboxes from mailstack service
+	statusCode, errMsg, mailboxes, err := s.commonServices.MailstackService.GetMailboxes(ctx, tenant, mailstack.TEST_MAILBOX_DOMAIN, "")
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get mailboxes"))
+		s.log.Errorf("Error checking test mailbox: %s", err.Error())
+		return
+	}
+
+	// Handle non-200 responses
+	if statusCode != http.StatusOK {
+		err = errors.New(errMsg)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get mailboxes"))
+		s.log.Errorf("Error checking test mailbox: %s", err.Error())
+		return
+	}
+
+	// Check if our mailbox exists in the returned list
+	mailboxExists := false
+	for _, mailbox := range mailboxes {
+		if strings.EqualFold(mailbox.Email, mailboxAddress) {
+			mailboxExists = true
+			break
+		}
+	}
+
+	if mailboxExists {
+		span.LogFields(log.Bool("result.exists", true))
+		return
+	}
+
+	testUserSetup, err := s.commonServices.RegistrationService.ConfigureTestMailbox(ctx)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to configure test mailbox"))
+		s.log.Errorf("Error configuring test mailbox: %s", err.Error())
+		return
+	}
+
+	if testUserSetup == nil {
+		span.LogFields(log.Bool("result.created", false))
+		return
+	}
+
+	span.LogFields(log.Bool("result.created", true))
 }
