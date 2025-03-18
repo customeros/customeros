@@ -1,0 +1,250 @@
+name: PR Notifications
+
+on:
+  pull_request:
+    types: [opened, synchronize, review_submitted, closed]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+jobs:
+  notify:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Handle PR Events
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { eventName, payload } = context;
+            const pr = payload.pull_request;
+            const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+            const slackApiToken = process.env.SLACK_API_TOKEN;
+            const slackChannelId = process.env.SLACK_CHANNEL_ID;
+            
+            if (!slackWebhookUrl || !slackApiToken || !slackChannelId) {
+              console.error('Missing required environment variables. Please check SLACK_WEBHOOK_URL, SLACK_API_TOKEN, and SLACK_CHANNEL_ID.');
+              return;
+            }
+            
+            // Prepare the PR data for the message storage key
+            const prKey = `${context.repo.owner}-${context.repo.repo}-pr-${pr.number}`;
+            
+            async function findPrMessage() {
+              try {
+                // Search for messages containing the PR URL to find our notification
+                // Note: search.messages requires a team/enterprise plan
+                // Using conversations.history instead with a filter
+                const historyResponse = await fetch(`https://slack.com/api/conversations.history?channel=${slackChannelId}&limit=20`, {
+                  headers: {
+                    'Authorization': `Bearer ${slackApiToken}`,
+                  },
+                });
+                
+                const historyData = await historyResponse.json();
+                if (historyData.ok && historyData.messages.length > 0) {
+                  // Find the most recent message about this PR
+                  const prMessage = historyData.messages.find(msg => 
+                    msg.text && msg.text.includes(pr.html_url)
+                  );
+                  
+                  if (prMessage) {
+                    return {
+                      ts: prMessage.ts,
+                      channel: slackChannelId
+                    };
+                  }
+                }
+                return null;
+              } catch (error) {
+                console.error('Error searching for PR message:', error.message);
+                return null;
+              }
+            }
+            
+            async function postNewMessage() {
+              try {
+                const message = `<${pr.html_url}|${pr.title}> by @${pr.user.login}`;
+                
+                const response = await fetch('https://slack.com/api/chat.postMessage', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${slackApiToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    channel: slackChannelId,
+                    text: message,
+                    unfurl_links: false,
+                  }),
+                });
+                
+                const data = await response.json();
+                if (!data.ok) {
+                  throw new Error(`Failed to post message: ${data.error}`);
+                }
+                
+                console.log('New PR message posted successfully');
+                return { ts: data.ts, channel: data.channel || slackChannelId };
+              } catch (error) {
+                console.error('Error posting new PR message:', error.message);
+                return null;
+              }
+            }
+            
+            async function updateReactions(messageInfo, action) {
+              if (!messageInfo) return;
+              
+              try {
+                // Reactions to manage
+                const REACTIONS = {
+                  APPROVED: 'white_check_mark',
+                  MERGED: 'partymerge',
+                  CLOSED: 'x'
+                };
+                
+                // First, get current reactions
+                const reactionsResponse = await fetch(`https://slack.com/api/reactions.get?channel=${messageInfo.channel}&timestamp=${messageInfo.ts}`, {
+                  headers: {
+                    'Authorization': `Bearer ${slackApiToken}`,
+                  },
+                });
+                
+                const reactionsData = await reactionsResponse.json();
+                const currentReactions = reactionsData.ok && reactionsData.message && reactionsData.message.reactions ? 
+                  reactionsData.message.reactions.map(r => r.name) : 
+                  [];
+                
+                // Process different actions
+                switch(action) {
+                  case 'opened':
+                    // Just created the message, no reactions yet
+                    await addReaction(messageInfo, 'eyes');
+                    break;
+                    
+                  case 'synchronize':
+                    // PR was updated with new commits, remove approval if exists
+                    if (currentReactions.includes(REACTIONS.APPROVED)) {
+                      await removeReaction(messageInfo, REACTIONS.APPROVED);
+                    }
+                    break;
+                    
+                  case 'approved':
+                    // PR was approved, add approval reaction
+                    if (!currentReactions.includes(REACTIONS.APPROVED)) {
+                      await addReaction(messageInfo, REACTIONS.APPROVED);
+                    }
+                    break;
+                    
+                  case 'merged':
+                    // PR was merged, add merged reaction and remove other status reactions
+                    if (!currentReactions.includes(REACTIONS.MERGED)) {
+                      await addReaction(messageInfo, REACTIONS.MERGED);
+                      // Remove other status reactions if they exist
+                      if (currentReactions.includes(REACTIONS.APPROVED)) {
+                        await removeReaction(messageInfo, REACTIONS.APPROVED);
+                      }
+                      if (currentReactions.includes(REACTIONS.CLOSED)) {
+                        await removeReaction(messageInfo, REACTIONS.CLOSED);
+                      }
+                    }
+                    break;
+                    
+                  case 'closed':
+                    // PR was closed without merging
+                    if (!currentReactions.includes(REACTIONS.CLOSED) && !currentReactions.includes(REACTIONS.MERGED)) {
+                      await addReaction(messageInfo, REACTIONS.CLOSED);
+                    }
+                    break;
+                }
+              } catch (error) {
+                console.error('Error updating reactions:', error.message);
+              }
+            }
+            
+            async function addReaction(messageInfo, emoji) {
+              try {
+                const reactionResponse = await fetch('https://slack.com/api/reactions.add', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${slackApiToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    channel: messageInfo.channel,
+                    name: emoji,
+                    timestamp: messageInfo.ts,
+                  }),
+                });
+                
+                const reactionData = await reactionResponse.json();
+                if (reactionData.ok) {
+                  console.log(`Reaction ${emoji} added successfully`);
+                } else {
+                  console.error(`Failed to add reaction: ${reactionData.error}`);
+                }
+              } catch (error) {
+                console.error(`Error adding reaction ${emoji}:`, error.message);
+              }
+            }
+            
+            async function removeReaction(messageInfo, emoji) {
+              try {
+                const reactionResponse = await fetch('https://slack.com/api/reactions.remove', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${slackApiToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    channel: messageInfo.channel,
+                    name: emoji,
+                    timestamp: messageInfo.ts,
+                  }),
+                });
+                
+                const reactionData = await reactionResponse.json();
+                if (reactionData.ok) {
+                  console.log(`Reaction ${emoji} removed successfully`);
+                } else {
+                  console.error(`Failed to remove reaction: ${reactionData.error}`);
+                }
+              } catch (error) {
+                console.error(`Error removing reaction ${emoji}:`, error.message);
+              }
+            }
+            
+            // Main execution logic
+            let action = '';
+            let existingMessage = null;
+            
+            // Determine the action based on the event
+            if (eventName === 'pull_request') {
+              if (payload.action === 'opened') {
+                action = 'opened';
+              } else if (payload.action === 'synchronize') {
+                action = 'synchronize';
+                existingMessage = await findPrMessage();
+              } else if (payload.action === 'closed') {
+                existingMessage = await findPrMessage();
+                action = pr.merged ? 'merged' : 'closed';
+              }
+            } else if (eventName === 'pull_request_review') {
+              if (payload.review && payload.review.state === 'approved') {
+                action = 'approved';
+                existingMessage = await findPrMessage();
+              }
+            }
+            
+            // Handle the action
+            if (action === 'opened') {
+              const newMessage = await postNewMessage();
+              if (newMessage) {
+                await updateReactions(newMessage, action);
+              }
+            } else if (existingMessage && action) {
+              await updateReactions(existingMessage, action);
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
