@@ -49,8 +49,14 @@ func (s *webscraperService) ClassifyWebpageCategory(ctx context.Context, url str
 
 	var prompt strings.Builder
 
-	prompt.WriteString(fmt.Sprintf("Company name: %s\n", globalOrg.Name))
-	prompt.WriteString(fmt.Sprintf("Company description: %s\n", globalOrg.Description))
+	if globalOrg != nil {
+		prompt.WriteString(fmt.Sprintf("Company name: %s\n", globalOrg.Name))
+		prompt.WriteString(fmt.Sprintf("Company description: %s\n", globalOrg.Description))
+	} else {
+		// If no organization found, just use the domain
+		prompt.WriteString(fmt.Sprintf("Website domain: %s\n", primaryDomain))
+	}
+
 	prompt.WriteString(fmt.Sprintf("Webpage url: %s\n", url))
 	if *pageContent != "" {
 		prompt.WriteString("--- Webpage content --- \n")
