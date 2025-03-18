@@ -10,15 +10,33 @@ defmodule RealtimeWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug RealtimeWeb.Plugs.ValidateHeaders
+  end
+
+  pipeline :graphql do
+    plug RealtimeWeb.Plugs.ValidateHeaders
   end
 
   scope "/", RealtimeWeb do
     pipe_through :browser
   end
 
+  scope "/graphql" do
+    pipe_through :graphql
+    forward "/", Absinthe.Plug, schema: RealtimeWeb.Graphql.Schema
+  end
+
+  forward "/graphiql",
+          Absinthe.Plug.GraphiQL,
+          schema: RealtimeWeb.Graphql.Schema,
+          interface: :simple
+
   scope "/api", RealtimeWeb do
     pipe_through :api
-    resources "/document", DocumentController
+
+    resources "/documents", DocumentController, only: [:create]
+    post "/organizations/:organization_id/documents", DocumentController, :create
+    get "/organizations/:organization_id/documents", DocumentController, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
