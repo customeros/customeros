@@ -18,6 +18,11 @@ on:
     types:
       - completed
 
+# Ensure only one release workflow runs at a time for a commit
+concurrency: 
+  group: release-${{ github.sha }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   REPOSITORY_BASE: ${{ github.repository }}
@@ -38,6 +43,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Needed to fetch all tags
+
+      - name: Check if tag already exists for this commit
+        id: check_tag
+        run: |
+          # Get all tags pointing to the current commit
+          existing_tags=$(git tag --points-at HEAD)
+          if [ ! -z "$existing_tags" ]; then
+            echo "Tag already exists for this commit: $existing_tags"
+            echo "version_bump=skip" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
       - name: Get version info from commits
         id: commit_message
@@ -90,7 +106,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            console.log("No version bump prefix found. Cancelling workflow.");
+            console.log("No version bump prefix found or tag already exists. Cancelling workflow.");
             await github.rest.actions.cancelWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
