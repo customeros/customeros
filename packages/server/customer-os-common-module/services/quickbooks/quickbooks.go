@@ -551,37 +551,6 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 		return nil, nil
 	}
 
-	// Check if payment already exists for this invoice
-	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+*+from+Payment+where+Line.LinkedTxn.TxnId='%s'", s.qbConfig.Url, quickbooksSettingsEntity.RealmId, invoiceId)
-	existingPaymentResp, err := s.performRequest(ctx, quickbooksSettingsEntity, queryURL, "POST", nil, true)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	var searchPaymentResp struct {
-		QueryResponse struct {
-			Payment []interfaces.Payment `json:"Payment"`
-		} `json:"QueryResponse"`
-	}
-	err = json.Unmarshal(existingPaymentResp, &searchPaymentResp)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// If payment already exists, return early
-	if len(searchPaymentResp.QueryResponse.Payment) > 0 {
-		span.LogFields(log.String("result", "Payment already exists for this invoice"))
-		return &interfaces.QuickbooksSavePaymentResponse{
-			Payment: &struct {
-				Id string `json:"Id"`
-			}{
-				Id: searchPaymentResp.QueryResponse.Payment[0].Id,
-			},
-		}, nil
-	}
-
 	request := map[string]interface{}{
 		"CustomerRef": map[string]interface{}{
 			"value": customerId,
