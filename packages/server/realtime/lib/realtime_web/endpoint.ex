@@ -38,29 +38,29 @@ defmodule RealtimeWeb.Endpoint do
     param_key: "request_logger",
     cookie_key: "request_logger"
 
-  plug RealtimeWeb.Plugs.CORSWebSocket,
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    headers: [
-      "Authorization",
-      "Content-Type",
-      "Accept",
-      "X-Tenant",
-      "X-User-Id",
-      "X-User-Email",
-      "X-User-Roles",
-      "X-User-Name",
-      "X-Request-Id",
-      "X-OPENLINE-API-KEY",
-      "X-CUSTOMER-OS-API-KEY",
-      "X-OPENLINE-USERNAME",
-      "X-OPENLINE-TENANT"
-    ],
-    expose: [
-      "Authorization"
-    ],
-    max_age: 86400,
-    send_preflight_response?: true
+  # plug RealtimeWeb.Plugs.CORSWebSocket,
+  #   origin: "*",
+  #   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  #   headers: [
+  #     "Authorization",
+  #     "Content-Type",
+  #     "Accept",
+  #     "X-Tenant",
+  #     "X-User-Id",
+  #     "X-User-Email",
+  #     "X-User-Roles",
+  #     "X-User-Name",
+  #     "X-Request-Id",
+  #     "X-OPENLINE-API-KEY",
+  #     "X-CUSTOMER-OS-API-KEY",
+  #     "X-OPENLINE-USERNAME",
+  #     "X-OPENLINE-TENANT"
+  #   ],
+  #   expose: [
+  #     "Authorization"
+  #   ],
+  #   max_age: 86400,
+  #   send_preflight_response?: true
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]

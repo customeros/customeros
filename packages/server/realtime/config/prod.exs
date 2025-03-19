@@ -9,9 +9,7 @@ config :realtime, RealtimeWeb.Endpoint,
     "https://frontera.customeros.ai",
     "https://frontera.openline.dev",
     "//*.localcan.dev"
-  ],
-  http: [compress: true],
-  https: [compress: true]
+  ]
 
 config :logger, level: :info
 
