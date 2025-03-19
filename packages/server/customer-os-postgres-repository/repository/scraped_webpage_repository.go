@@ -139,8 +139,10 @@ func (r *scrapedWebpageRepository) SetLinks(ctx context.Context, url string, lin
 
 	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
 		Where("url = ?", url).
-		Update("links", pq.StringArray(links)).
-		Update("links_checked_at", time.Now()).
+		Updates(map[string]interface{}{
+			"links":            pq.StringArray(links),
+			"links_checked_at": time.Now(),
+		}).
 		Error
 
 	return err
