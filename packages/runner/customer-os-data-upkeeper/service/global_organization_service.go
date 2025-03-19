@@ -73,144 +73,6 @@ func (s *globalOrganizationService) SyncDataIntoGlobalOrganizations() {
 	s.syncBrandfetchToGlobalOrganization()
 }
 
-func (s *globalOrganizationService) EnrichGlobalOrganization() {
-	s.enrichNames()
-	s.enrichIndustries()
-	s.enrichDescriptions()
-}
-
-func (s *globalOrganizationService) ExtractWebpageLinks() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ExtractWebpageLinks")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	limit := 100
-	webpages, err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.GetWebpagesWithoutLinks(ctx, limit)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
-		return
-	}
-
-	if len(webpages) == 0 || webpages == nil {
-		return
-	}
-
-	// Use a WaitGroup to wait for all goroutines to finish
-	var wg sync.WaitGroup
-	// Create a semaphore to limit concurrent goroutines
-	semaphore := make(chan struct{}, 10) // Adjust the number based on your needs
-
-	for _, page := range webpages {
-		wg.Add(1)
-		// Acquire semaphore
-		semaphore <- struct{}{}
-
-		go func(org *postgres_entity.ScrapedWebpage) {
-			// Create timeout context for this goroutine
-			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
-			defer childCancel()
-
-			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ExtractWebpageLinks")
-			defer childSpan.Finish()
-			childSpan.LogFields(log.String("url", page.Url))
-
-			defer wg.Done()
-			defer func() { <-semaphore }() // Release semaphore when done
-
-			content, links := s.commonServices.WebscraperService.ProcessWebContent(childCtx, page.Content)
-			err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetLinks(childCtx, page.Url, links)
-			if err != nil {
-				tracing.TraceErr(childSpan, err)
-			}
-			err = s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetContent(childCtx, page.Url, content)
-			if err != nil {
-				tracing.TraceErr(childSpan, err)
-			}
-		}(page)
-	}
-
-	// Wait for all goroutines to finish
-	wg.Wait()
-}
-
-func (s *globalOrganizationService) ScrapeGlobalOrgs() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	limit := 100
-	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToScrape(ctx, limit)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
-		return
-	}
-
-	if len(orgs) == 0 {
-		return
-	}
-
-	// Use a WaitGroup to wait for all goroutines to finish
-	var wg sync.WaitGroup
-	// Create a semaphore to limit concurrent goroutines
-	semaphore := make(chan struct{}, 10) // Adjust the number based on your needs
-
-	for _, org := range orgs {
-		wg.Add(1)
-		// Acquire semaphore
-		semaphore <- struct{}{}
-
-		go func(org *postgres_entity.GlobalOrganization) {
-			// Create timeout context for this goroutine
-			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
-			defer childCancel()
-
-			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
-			defer childSpan.Finish()
-			childSpan.LogFields(log.String("primaryDomain", org.PrimaryDomain))
-
-			defer wg.Done()
-			defer func() { <-semaphore }() // Release semaphore when done
-
-			page := "https://" + org.PrimaryDomain
-			contents, err := s.commonServices.WebscraperService.Scrape(childCtx, page)
-			if err != nil {
-				switch {
-				case errors.Is(err, webscraper.ErrUnprocessable):
-					childSpan.LogKV("error", "Unprocessable content")
-					childSpan.LogKV("url", page)
-				default:
-					tracing.TraceErr(childSpan, errors.Wrap(err, "error scraping global org primary domain"))
-				}
-
-				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
-				if err != nil {
-					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-				}
-				return
-			}
-
-			if contents == "" {
-				return
-			}
-
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
-			if err != nil {
-				tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-				return
-			}
-		}(org)
-	}
-
-	// Wait for all goroutines to finish
-	wg.Wait()
-}
-
 func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
@@ -643,6 +505,145 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	return nil
 }
 
+func (s *globalOrganizationService) ExtractWebpageLinks() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ExtractWebpageLinks")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 100
+	webpages, err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.GetWebpagesWithoutLinks(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
+		return
+	}
+
+	if len(webpages) == 0 {
+		span.LogFields(log.Int("result.count", len(webpages)))
+		return
+	}
+
+	// Use a WaitGroup to wait for all goroutines to finish
+	var wg sync.WaitGroup
+	// Create a semaphore to limit concurrent goroutines
+	semaphore := make(chan struct{}, 10) // Adjust the number based on your needs
+
+	for _, page := range webpages {
+		wg.Add(1)
+		// Acquire semaphore
+		semaphore <- struct{}{}
+
+		go func(scrapedWebpage *postgres_entity.ScrapedWebpage) {
+			// Create timeout context for this goroutine
+			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
+			defer childCancel()
+
+			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ExtractWebpageLinks")
+			defer childSpan.Finish()
+			childSpan.LogFields(log.String("url", scrapedWebpage.Url))
+
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release semaphore when done
+
+			content, links := s.commonServices.WebscraperService.ProcessWebContent(childCtx, scrapedWebpage.Content)
+			err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetLinks(childCtx, scrapedWebpage.Url, links)
+			if err != nil {
+				tracing.TraceErr(childSpan, err)
+			}
+			err = s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetContent(childCtx, scrapedWebpage.Url, content)
+			if err != nil {
+				tracing.TraceErr(childSpan, err)
+			}
+		}(page)
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+}
+
+func (s *globalOrganizationService) ScrapeGlobalOrgs() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 100
+	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToScrape(ctx, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
+		return
+	}
+
+	if len(orgs) == 0 {
+		return
+	}
+
+	// Use a WaitGroup to wait for all goroutines to finish
+	var wg sync.WaitGroup
+	// Create a semaphore to limit concurrent goroutines
+	semaphore := make(chan struct{}, 10) // Adjust the number based on your needs
+
+	for _, org := range orgs {
+		wg.Add(1)
+		// Acquire semaphore
+		semaphore <- struct{}{}
+
+		go func(org *postgres_entity.GlobalOrganization) {
+			// Create timeout context for this goroutine
+			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
+			defer childCancel()
+
+			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
+			defer childSpan.Finish()
+			childSpan.LogFields(log.String("primaryDomain", org.PrimaryDomain))
+
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release semaphore when done
+
+			page := "https://" + org.PrimaryDomain
+			contents, err := s.commonServices.WebscraperService.Scrape(childCtx, page)
+			if err != nil {
+				switch {
+				case errors.Is(err, webscraper.ErrUnprocessable):
+					childSpan.LogKV("error", "Unprocessable content")
+					childSpan.LogKV("url", page)
+				default:
+					tracing.TraceErr(childSpan, errors.Wrap(err, "error scraping global org primary domain"))
+				}
+
+				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
+				if err != nil {
+					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
+				}
+				return
+			}
+
+			if contents == "" {
+				return
+			}
+
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
+			if err != nil {
+				tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
+				return
+			}
+		}(org)
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+}
+
+func (s *globalOrganizationService) EnrichGlobalOrganization() {
+	s.enrichNames()
+	s.enrichIndustries()
+	s.enrichDescriptions()
+}
+
 func (s *globalOrganizationService) enrichIndustries() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
@@ -672,6 +673,7 @@ func (s *globalOrganizationService) enrichIndustries() {
 		s.enrichIndustry(ctx, record)
 	}
 }
+
 func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
 	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
 	defer span.Finish()

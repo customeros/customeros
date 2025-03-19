@@ -160,6 +160,9 @@ func (s *webscraperService) ProcessWebContent(ctx context.Context, content strin
 	content = s.processMarkdownWebpage(sections[0])
 	links := s.extractLinks(sections[1])
 
+	span.LogFields(log.Int("result.links.count", len(links)))
+	span.LogFields(log.String("result.content", content))
+	tracing.LogObjectAsJson(span, "result.links", links)
 	return content, links
 }
 
