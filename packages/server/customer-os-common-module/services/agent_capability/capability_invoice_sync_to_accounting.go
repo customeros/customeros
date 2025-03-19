@@ -138,6 +138,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
+	// STEP 1 - create invoice in QBO
 	if invoiceEntity.QuickbooksInvoiceId == "" {
 		err = c.syncInvoiceToQuickbooks(ctx, *invoiceEntity)
 		if err != nil {
@@ -154,6 +155,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 	}
 
 	if executionContainer.ConfigData.AccountingMethodAccrual.Value {
+		// STEP 2 - create journal entry to move revenue to service period in QBO
 		if invoiceEntity.QuickbooksJournalEntryId == "" {
 			err = c.syncInvoiceToQuickbooksJournalEntry(ctx, *invoiceEntity, arIncomeAccountName)
 			if err != nil {
@@ -169,6 +171,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 			}
 		}
 
+		// STEP 3 - create journal entry to cancel revenue from invoice in QBO
 		if invoiceEntity.QuickbooksJournalEntryIdReverse == "" {
 			err = c.syncInvoiceToQuickbooksJournalEntryReverse(ctx, *invoiceEntity, arIncomeAccountName)
 			if err != nil {
@@ -184,13 +187,14 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 			}
 		}
 
-		if invoiceEntity.QuickbooksPaymentId == "" {
-			err = c.syncPaymentLinkingJournalEntryToInvoice(ctx, *invoiceEntity)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return enum.CapabilityExecutionRetry, result, err
-			}
-		}
+		// TODO alexb remove this code and invoked QBO services in May
+		//if invoiceEntity.QuickbooksPaymentId == "" {
+		//	err = c.syncPaymentLinkingJournalEntryToInvoice(ctx, *invoiceEntity)
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		return enum.CapabilityExecutionRetry, result, err
+		//	}
+		//}
 	}
 
 	// re-fetch invoice to get updated quickbooks journal id
@@ -201,6 +205,7 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 	}
 
 	if invoiceEntity.Status == neo4jenum.InvoiceStatusPaid {
+		// STEP 4 - add payment when invoice is paid and link to invoice in QBO
 		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoiceEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -242,6 +247,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooks(ctx context.
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagEntity(span, invoice.Id)
 
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
@@ -375,7 +381,9 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncInvoiceToQuickbooksJournalEntry")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, invoice.Id)
 	tenant := common.GetTenantFromContext(ctx)
+
 	span.LogFields(log.String("invoiceId", invoice.Id), log.String("arIncomeAccountName", arIncomeAccountName))
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
@@ -498,6 +506,8 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntryR
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncInvoiceToQuickbooksJournalEntryReverse")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, invoice.Id)
+
 	tenant := common.GetTenantFromContext(ctx)
 	span.LogFields(log.String("invoiceId", invoice.Id), log.String("arIncomeAccountName", arIncomeAccountName))
 
@@ -622,6 +632,8 @@ func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvo
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncPaymentLinkingJournalEntryToInvoice")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, invoice.Id)
+
 	tenant := common.GetTenantFromContext(ctx)
 
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
@@ -662,6 +674,8 @@ func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx cont
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncPaidInvoiceToQuickbooks")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, invoice.Id)
+
 	tenant := common.GetTenantFromContext(ctx)
 
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
@@ -699,6 +713,8 @@ func (c *SyncInvoiceToAccountingCapability) syncVoidInvoiceToQuickbooks(ctx cont
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncVoidInvoiceToQuickbooks")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, invoice.Id)
+
 	tenant := common.GetTenantFromContext(ctx)
 
 	quickbooksSettingsEntity, err := c.postgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
