@@ -66,6 +66,9 @@ func (c *SyncInvoiceToAccountingCapability) NewConfig() SyncInvoiceToAccountingC
 
 func (c *SyncInvoiceToAccountingCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.Quickbooks.Value = false
+	config.AccountingMethodAccrual.Value = false
+	config.ARIncomeAccountName.Value = "Accounts receivable (A/R)"
 	return &config
 }
 
