@@ -38,7 +38,7 @@ defmodule RealtimeWeb.Endpoint do
     param_key: "request_logger",
     cookie_key: "request_logger"
 
-  plug CORSPlug,
+  plug RealtimeWeb.Plugs.CORSWebSocket,
     origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     headers: [
