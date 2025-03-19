@@ -1,7 +1,7 @@
 package container
 
 import (
-	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -13,6 +13,6 @@ type Container struct {
 	Cfg            *config.Config
 	Log            logger.Logger
 	Repositories   *repository.Repositories
-	CommonServices *commonService.CommonServices
+	CommonServices *commonservice.CommonServices
 	AgentProducers *agent_producers.AgentProducers
 }

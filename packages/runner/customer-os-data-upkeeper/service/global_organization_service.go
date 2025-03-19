@@ -17,11 +17,14 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webscraper"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -57,10 +60,10 @@ type GlobalOrganizationService interface {
 type globalOrganizationService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonService.CommonServices
+	commonServices *commonservice.CommonServices
 }
 
-func NewGlobalOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) GlobalOrganizationService {
+func NewGlobalOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonservice.CommonServices) GlobalOrganizationService {
 	return &globalOrganizationService{
 		cfg:            cfg,
 		log:            log,
@@ -985,73 +988,123 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 
 	// process records
 	for _, record := range records {
-		func(globalOrganization *postgresentity.GlobalOrganization) {
-			recordSpan, recordCtx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
-			defer recordSpan.Finish()
-			recordSpan.LogFields(log.Uint64("record.id", globalOrganization.ID), log.String("record.primaryDomain", globalOrganization.PrimaryDomain))
-			tracing.TagEntity(recordSpan, globalOrganization.PrimaryDomain)
+		s.processGlobalOrganization(ctx, record)
+	}
+}
 
-			// mark record as processed initially to not process same record again, even if error occurs
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, globalOrganization.ID)
+func (s *globalOrganizationService) processGlobalOrganization(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
+	defer span.Finish()
+	span.LogFields(log.Uint64("record.id", globalOrganization.ID), log.String("record.primaryDomain", globalOrganization.PrimaryDomain))
+	tracing.TagEntity(span, globalOrganization.PrimaryDomain)
+
+	// mark record as processed initially to not process same record again, even if error occurs
+	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(ctx, globalOrganization.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+		s.log.Errorf("Error marking record as processed: %s", err.Error())
+		return
+	}
+
+	// Find organizations by domain across all tenants
+	tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(ctx, globalOrganization.PrimaryDomain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting organizations by domain"))
+		s.log.Errorf("Error getting organizations by domain: %s", err.Error())
+		return
+	}
+
+	for _, tenantOrg := range tenantWithOrgId {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenantOrg.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		s.syncOrganizationToTenant(innerCtx, globalOrganization, tenantOrg)
+	}
+}
+
+func (s *globalOrganizationService) syncOrganizationToTenant(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization, tenantOrg neo4jrepository.TenantAndOrganizationId) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.syncOrganizationToTenant")
+	defer span.Finish()
+	tenant := tenantOrg.Tenant
+	organizationId := tenantOrg.OrganizationId
+	tracing.TagTenant(span, tenant)
+	span.LogKV("industryNaicsCode", globalOrganization.IndustryNaicsCode, "description", globalOrganization.Description, "name", globalOrganization.Name)
+
+	// sync organization
+	dataFields := data_fields.OrganizationFields{}
+	if globalOrganization.IndustryNaicsCode != "" {
+		dataFields.IndustryCode = utils.StringPtr(globalOrganization.IndustryNaicsCode)
+	}
+	if globalOrganization.Description != "" {
+		dataFields.Description = utils.StringPtr(globalOrganization.Description)
+	}
+	if globalOrganization.Name != "" {
+		dataFields.Name = utils.StringPtr(globalOrganization.Name)
+	}
+	if globalOrganization.LogoPath != "" {
+		dataFields.LogoUrl = utils.StringPtr(commonconstants.S3ImagesCDN + globalOrganization.LogoPath)
+	} else if globalOrganization.LogoUrl != "" {
+		dataFields.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
+	}
+	if globalOrganization.IconPath != "" {
+		dataFields.IconUrl = utils.StringPtr(commonconstants.S3ImagesCDN + globalOrganization.IconPath)
+	} else if globalOrganization.IconUrl != "" {
+		dataFields.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
+	}
+	_, err := s.commonServices.OrganizationService.Save(ctx, nil, utils.StringPtr(organizationId), dataFields)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error syncing organization"))
+		s.log.Errorf("Error syncing organization: %s", err.Error())
+	}
+
+	// sync Linked In
+	socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, tenant, model.ORGANIZATION, []string{organizationId})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting social entities"))
+		s.log.Errorf("Error getting social entities: %s", err.Error())
+		return
+	}
+
+	if globalOrganization.LinkedInUrl != "" {
+		// check social entites contains no linked in before adding
+		skipAddingLinkedIn := false
+		for _, socialEntity := range *socialEntities {
+			if socialEntity.IsLinkedin() {
+				skipAddingLinkedIn = true
+			}
+		}
+		if !skipAddingLinkedIn {
+			// Check no other org contains current linked in
+			linkedInIdentifier := neo4jentity.SocialEntity{Url: globalOrganization.LinkedInUrl}.ExtractLinkedinCompanyIdentifierFromUrl()
+			orgsWithLinkedIn, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, linkedInIdentifier, globalOrganization.LinkedInAlias, linkedInIdentifier)
 			if err != nil {
-				tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
-				s.log.Errorf("Error marking record as processed: %s", err.Error())
+				tracing.TraceErr(span, errors.Wrap(err, "error getting organizations by linked in"))
+				s.log.Errorf("Error getting organizations by linked in: %s", err.Error())
 				return
 			}
-
-			// Find organizations by domain across all tenants
-			tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, globalOrganization.PrimaryDomain)
-			if err != nil {
-				tracing.TraceErr(recordSpan, errors.Wrap(err, "error getting organizations by domain"))
-				s.log.Errorf("Error getting organizations by domain: %s", err.Error())
-				return
+			if len(orgsWithLinkedIn) > 0 {
+				skipAddingLinkedIn = true
 			}
-
-			for _, tenantOrg := range tenantWithOrgId {
-				func(tenantOrg neo4jrepository.TenantAndOrganizationId) {
-					innerCtx := common.WithCustomContext(recordCtx, &common.CustomContext{
-						Tenant:    tenantOrg.Tenant,
-						AppSource: constants.AppSourceDataUpkeeper,
-					})
-					innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
-					defer innerSpan.Finish()
-					tracing.TagTenant(innerSpan, tenantOrg.Tenant)
-					tracing.TagEntity(innerSpan, tenantOrg.OrganizationId)
-					innerSpan.LogKV("industryNaicsCode", globalOrganization.IndustryNaicsCode, "description", globalOrganization.Description, "name", globalOrganization.Name)
-
-					if globalOrganization.IndustryNaicsCode == "" && globalOrganization.Description == "" {
-						innerSpan.LogFields(log.String("message", "skipping record as industry and description are empty"))
-						return
-					}
-
-					// sync organization
-					dataFields := data_fields.OrganizationFields{}
-					if globalOrganization.IndustryNaicsCode != "" {
-						dataFields.IndustryCode = utils.StringPtr(globalOrganization.IndustryNaicsCode)
-					}
-					if globalOrganization.Description != "" {
-						dataFields.Description = utils.StringPtr(globalOrganization.Description)
-					}
-					if globalOrganization.Name != "" {
-						dataFields.Name = utils.StringPtr(globalOrganization.Name)
-					}
-					if globalOrganization.LogoPath != "" {
-						dataFields.LogoUrl = utils.StringPtr(commonconstants.S3ImagesCDN + globalOrganization.LogoPath)
-					} else if globalOrganization.LogoUrl != "" {
-						dataFields.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
-					}
-					if globalOrganization.IconPath != "" {
-						dataFields.IconUrl = utils.StringPtr(commonconstants.S3ImagesCDN + globalOrganization.IconPath)
-					} else if globalOrganization.IconUrl != "" {
-						dataFields.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
-					}
-					_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrg.OrganizationId), dataFields)
-					if err != nil {
-						tracing.TraceErr(innerSpan, errors.Wrap(err, "error syncing organization"))
-						s.log.Errorf("Error syncing organization: %s", err.Error())
-					}
-				}(tenantOrg)
+			if !skipAddingLinkedIn {
+				s.commonServices.SocialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
+					Type: model.ORGANIZATION,
+					Id:   tenantOrg.OrganizationId,
+				}, neo4jentity.SocialEntity{
+					Url:   globalOrganization.LinkedInUrl,
+					Alias: globalOrganization.LinkedInAlias,
+				})
 			}
-		}(record)
+		}
+	}
+
+	// sync other socials
+	for _, otherSocialUrl := range globalOrganization.OtherSocials {
+		s.commonServices.SocialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
+			Type: model.ORGANIZATION,
+			Id:   organizationId,
+		}, neo4jentity.SocialEntity{
+			Url: otherSocialUrl,
+		})
 	}
 }

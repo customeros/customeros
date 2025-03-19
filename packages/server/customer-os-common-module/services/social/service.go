@@ -224,6 +224,20 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		return "", err
 	}
 
+	// Check if entity already has this social URL
+	existingSocials, err := s.GetAllForEntities(ctx, tenant, linkWith.Type, []string{linkWith.Id})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check existing socials"))
+		return "", err
+	}
+
+	for _, existing := range *existingSocials {
+		if existing.Url == socialEntity.Url {
+			span.LogFields(log.String("result", "social url already exists for entity"))
+			return existing.Id, nil
+		}
+	}
+
 	socialId := ""
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
