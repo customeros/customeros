@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/lib/pq"
 )
 
 type GlobalOrganization struct {
@@ -22,7 +23,7 @@ type GlobalOrganization struct {
 	LinkedInUrl   string `gorm:"column:linkedin;type:varchar(255)" json:"linkedin"`
 	LinkedInAlias string `gorm:"column:linkedin_alias;type:varchar(255)" json:"linkedinAlias"`
 
-	OtherSocials []string `gorm:"column:other_socials;type:text[]" json:"otherSocials"`
+	OtherSocials pq.StringArray `gorm:"column:other_socials;type:text[]" json:"otherSocials"`
 
 	IconUrl        string              `gorm:"column:icon_url;type:varchar(2000)" json:"iconUrl"`
 	LogoUrl        string              `gorm:"column:logo_url;type:varchar(2000)" json:"logoUrl"`
