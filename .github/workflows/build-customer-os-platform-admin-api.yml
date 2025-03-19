@@ -116,15 +116,16 @@ jobs:
         shell: bash
         working-directory: .
 
+      # Use GITHUB_TOKEN for authentication instead of custom secrets
       - name: Log in to the Container registry
         uses: docker/login-action@v3.4.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
-          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Don't use BuildX for single architecture builds
-      - name: Build and push amd64 image with regular Docker
+      # Build using native Docker to ensure single-architecture image
+      - name: Build and push amd64 image with native Docker
         run: |
           # Build the image
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 -f Dockerfile ../
@@ -141,15 +142,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Use GITHUB_TOKEN for authentication instead of custom secrets
       - name: Log in to the Container registry
         uses: docker/login-action@v3.4.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
-          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Don't use BuildX for single architecture builds
-      - name: Build and push arm64 image with regular Docker
+      # Build using native Docker to ensure single-architecture image
+      - name: Build and push arm64 image with native Docker
         run: |
           # Build the image
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 -f Dockerfile ../
@@ -180,12 +182,13 @@ jobs:
         shell: bash
         working-directory: .
 
+      # Use GITHUB_TOKEN for authentication instead of custom secrets
       - name: Log in to the Container registry
         uses: docker/login-action@v3.4.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
-          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Enable Docker experimental features for manifest command
       - name: Enable Docker experimental
@@ -195,6 +198,18 @@ jobs:
         shell: bash
         working-directory: .
 
+      # Inspect images before creating manifest to debug
+      - name: Inspect images before manifest creation
+        run: |
+          echo "Inspecting AMD64 image:"
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+          
+          echo "Inspecting ARM64 image:"
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+        shell: bash
+
       - name: Create and push manifest
         run: |
           # Create and push the SHA manifest
@@ -202,14 +217,15 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           
           # Create and push the branch/PR manifest
           docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }}
+          docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }}
           
           # If this is the otter branch, also tag as latest
           if [[ "${{ github.ref_name }}" == "otter" ]]; then
@@ -217,7 +233,7 @@ jobs:
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           fi
           
           # For releases, also tag with the release tag
@@ -228,6 +244,6 @@ jobs:
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG
+            docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG
           fi
         shell: bash
