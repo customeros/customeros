@@ -96,11 +96,25 @@ jobs:
   build-amd64:
     needs:
       - test
-    runs-on: ubicloud-standard-2  # x86 runner
-    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    runs-on: ubicloud-standard-2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Create a safe tag string from the branch name (replace / with -)
+      - name: Set safe tag
+        id: safe-tag
+        run: |
+          # For PR events, use pr-NUMBER format instead of the branch name
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "value=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            # For normal branches, replace / with - to make it safe for tags
+            SAFE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+            echo "value=$SAFE_TAG" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+        working-directory: .
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.4.0
@@ -112,12 +126,6 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.7.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image for AMD64
         uses: docker/build-push-action@v6.15.0
@@ -126,7 +134,6 @@ jobs:
           file: ./packages/server/customer-os-platform-admin-api/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
-          labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           cache-from: type=gha,scope=${{ github.workflow }}-amd64
           cache-to: type=gha,scope=${{ github.workflow }}-amd64,mode=max
@@ -134,8 +141,7 @@ jobs:
   build-arm64:
     needs:
       - test
-    runs-on: ubicloud-standard-2-arm  # ARM runner - replace with your actual Ubicloud ARM runner name
-    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    runs-on: ubicloud-standard-2-arm  # Change to native ARM runner when available
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -151,12 +157,6 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.7.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       - name: Build and push Docker image for ARM64
         uses: docker/build-push-action@v6.15.0
         with:
@@ -164,7 +164,6 @@ jobs:
           file: ./packages/server/customer-os-platform-admin-api/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64
           cache-from: type=gha,scope=${{ github.workflow }}-arm64
           cache-to: type=gha,scope=${{ github.workflow }}-arm64,mode=max
@@ -172,10 +171,24 @@ jobs:
   create-manifest:
     needs: [build-amd64, build-arm64]
     runs-on: ubicloud-standard-2
-    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Create a safe tag string from the branch name (replace / with -)
+      - name: Set safe tag
+        id: safe-tag
+        run: |
+          # For PR events, use pr-NUMBER format instead of the branch name
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "value=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            # For normal branches, replace / with - to make it safe for tags
+            SAFE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+            echo "value=$SAFE_TAG" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+        working-directory: .
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.4.0
@@ -189,31 +202,37 @@ jobs:
 
       - name: Create and push manifest
         run: |
-          # Create and push the multi-architecture manifest
+          # Create and push the SHA manifest
           docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-          # If this is a tag/release or on the otter branch, also tag as latest
-          if [[ "${{ github.ref_name }}" == "otter" || "${{ github.event_name }}" == "release" ]]; then
+          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
+          # Create and push the branch/PR manifest
+          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          
+          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }}
+          
+          # If this is the otter branch, also tag as latest
+          if [[ "${{ github.ref_name }}" == "otter" ]]; then
             docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-            # Push the latest manifest
             docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           fi
           
           # For releases, also tag with the release tag
           if [[ "${{ github.event_name }}" == "release" ]]; then
-            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} \
+            # For releases, the tag should be the release tag
+            RELEASE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           
-            # Push the release tag manifest
-            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG
           fi
-          
-          # Push the SHA manifest
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         shell: bash
