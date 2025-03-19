@@ -97,7 +97,7 @@ jobs:
     needs:
       - test
     runs-on: ubicloud-standard-2  # x86 runner
-    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
     needs:
       - test
     runs-on: ubicloud-arm64  # ARM runner - replace with your actual Ubicloud ARM runner name
-    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -172,7 +172,7 @@ jobs:
   create-manifest:
     needs: [build-amd64, build-arm64]
     runs-on: ubicloud-standard-2
-    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
