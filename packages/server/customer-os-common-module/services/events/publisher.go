@@ -3,12 +3,14 @@ package events
 import (
 	"context"
 	"encoding/json"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"reflect"
 	"sync"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+
 	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 	"github.com/rabbitmq/amqp091-go"
 
@@ -126,11 +128,11 @@ func (r *RabbitMQPublisher) PublishNotification(ctx context.Context, tenant stri
 func (r *RabbitMQPublisher) PublishNotificationBulk(ctx context.Context, tenant string, entityIds []string, entityType model.EntityType, details *utils.EventCompletedDetails) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQPublisher.PublishEventCompletedBulk")
 	defer span.Finish()
-	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds)
-
 	appSource := common.GetAppSourceFromContext(ctx)
+	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds, "appSource", appSource)
 
 	if appSource == constants.AppSourceCustomerOsApi {
+		span.LogKV("result.skipped", true)
 		return
 	}
 
@@ -154,6 +156,7 @@ func (r *RabbitMQPublisher) PublishNotificationBulk(ctx context.Context, tenant 
 		tracing.TraceErr(span, err)
 		r.logger.Errorf("Failed to publish event completed notification: %v", err)
 	}
+	span.LogKV("result.published", true)
 }
 
 func (r *RabbitMQPublisher) setupPublishChannel() error {

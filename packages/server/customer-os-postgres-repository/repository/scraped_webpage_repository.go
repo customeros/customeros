@@ -3,9 +3,10 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -39,7 +40,7 @@ func NewScrapedWebpageRepository(gormDb *gorm.DB) ScrapedWebpageRepository {
 func (r *scrapedWebpageRepository) Save(ctx context.Context, webpageData postgres_entity.ScrapedWebpage) (*postgres_entity.ScrapedWebpage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	// Check if a record with this URL already exists
 	var existingRecord postgres_entity.ScrapedWebpage
@@ -114,7 +115,7 @@ func (r *scrapedWebpageRepository) GetWebpage(ctx context.Context, url string, l
 func (r *scrapedWebpageRepository) GetAllWebpagesByPrimaryDomains(ctx context.Context, primaryDomains []string) ([]*postgres_entity.ScrapedWebpage, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetAllWebpagesByPrimaryDomains")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var records []*postgres_entity.ScrapedWebpage
 
@@ -130,22 +131,28 @@ func (r *scrapedWebpageRepository) GetAllWebpagesByPrimaryDomains(ctx context.Co
 }
 
 func (r *scrapedWebpageRepository) SetLinks(ctx context.Context, url string, links []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.SetLinks")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.SetLinks")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("url", url)
+	tracing.LogObjectAsJson(span, "links", links)
 
 	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
 		Where("url = ?", url).
-		Update("links", pq.StringArray(links)).
+		Updates(map[string]interface{}{
+			"links":            pq.StringArray(links),
+			"links_checked_at": time.Now(),
+		}).
 		Error
 
 	return err
 }
 
 func (r *scrapedWebpageRepository) SetContent(ctx context.Context, url string, content string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.SetContent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.SetContent")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("url", url, "content.length", len(content))
 
 	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
 		Where("url = ?", url).
@@ -156,9 +163,10 @@ func (r *scrapedWebpageRepository) SetContent(ctx context.Context, url string, c
 }
 
 func (r *scrapedWebpageRepository) SetContentStage(ctx context.Context, url string, contentStage enum.CustomerJourneyStage) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.SetContentStage")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.SetContentStage")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("url", url, "contentStage", contentStage)
 
 	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
 		Where("url = ?", url).
@@ -169,9 +177,11 @@ func (r *scrapedWebpageRepository) SetContentStage(ctx context.Context, url stri
 }
 
 func (r *scrapedWebpageRepository) SetWebpageTopics(ctx context.Context, url string, topics []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.SetWebpageTopics")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.SetWebpageTopics")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("url", url, "topics.length", len(topics))
+	tracing.LogObjectAsJson(span, "topics", topics)
 
 	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
 		Where("url = ?", url).
@@ -182,9 +192,10 @@ func (r *scrapedWebpageRepository) SetWebpageTopics(ctx context.Context, url str
 }
 
 func (r *scrapedWebpageRepository) SetWebpageCategory(ctx context.Context, url string, category enum.WebpageCategory) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.SetWebpageCategory")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.SetWebpageCategory")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("url", url, "category", category)
 
 	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
 		Where("url = ?", url).
@@ -194,21 +205,69 @@ func (r *scrapedWebpageRepository) SetWebpageCategory(ctx context.Context, url s
 	return err
 }
 
+// Number of days to recheck links
+const LinksCheckStaleThresholdDays = 30
+
 func (r *scrapedWebpageRepository) GetWebpagesWithoutLinks(ctx context.Context, limit int) ([]*postgres_entity.ScrapedWebpage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "scrapedWebpageRepository.GetWebpagesWithoutLinks")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapedWebpageRepository.GetWebpagesWithoutLinks")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	webpages := make([]*postgres_entity.ScrapedWebpage, 0)
-	result := r.gormDb.WithContext(ctx).
-		Where("array_length(links, 1) IS NULL OR array_length(links, 1) = 0").
-		Order("created_at DESC").
-		Limit(limit).
-		Find(&webpages)
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return nil, result.Error
+
+	// Calculate half of the limit
+	halfLimit := limit / 2
+	if halfLimit == 0 {
+		halfLimit = 1
 	}
-	span.LogKV("found", len(webpages))
+
+	// Calculate the cutoff date for stale links
+	staleDate := utils.Now().AddDate(0, 0, -LinksCheckStaleThresholdDays)
+
+	// Get recent records
+	var recentWebpages []*postgres_entity.ScrapedWebpage
+	resultRecent := r.gormDb.WithContext(ctx).
+		Where("array_length(links, 1) IS NULL OR array_length(links, 1) = 0").
+		Where("links_checked_at IS NULL OR links_checked_at < ?", staleDate).
+		Order("created_at DESC").
+		Limit(halfLimit).
+		Find(&recentWebpages)
+	if resultRecent.Error != nil {
+		tracing.TraceErr(span, resultRecent.Error)
+		return nil, resultRecent.Error
+	}
+
+	// Track URLs we've already seen to avoid duplicates
+	seenUrls := make(map[string]bool)
+	for _, webpage := range recentWebpages {
+		seenUrls[webpage.Url] = true
+		webpages = append(webpages, webpage)
+	}
+
+	// Get random records, excluding URLs we already have
+	remainingLimit := limit - len(webpages)
+	if remainingLimit > 0 {
+		var randomWebpages []*postgres_entity.ScrapedWebpage
+		excludeUrls := make([]string, 0, len(seenUrls))
+		for url := range seenUrls {
+			excludeUrls = append(excludeUrls, url)
+		}
+
+		resultRandom := r.gormDb.WithContext(ctx).
+			Where("array_length(links, 1) IS NULL OR array_length(links, 1) = 0").
+			Where("links_checked_at IS NULL OR links_checked_at < ?", staleDate).
+			Where("url NOT IN (?)", excludeUrls).
+			Order("RANDOM()").
+			Limit(remainingLimit).
+			Find(&randomWebpages)
+		if resultRandom.Error != nil {
+			tracing.TraceErr(span, resultRandom.Error)
+			return nil, resultRandom.Error
+		}
+
+		webpages = append(webpages, randomWebpages...)
+	}
+
+	span.LogKV("result.count", len(webpages))
 	return webpages, nil
 }

@@ -126,6 +126,7 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "contactFields", contactFields)
 	span.LogFields(log.Bool("updateOnlyIfEmpty", updateOnlyIfEmpty))
+	tracing.LogObjectAsJson(span, "options", options)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -233,9 +234,9 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	}
 
 	if createFlow {
-		span.LogFields(log.Bool("response.contactCreated", true))
+		span.LogFields(log.Bool("result.contactCreated", true))
 	} else {
-		span.LogFields(log.Bool("response.contactUpdated", true))
+		span.LogFields(log.Bool("result.contactUpdated", true))
 	}
 	return contactId, nil
 }

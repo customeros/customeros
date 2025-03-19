@@ -11,6 +11,7 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -146,7 +147,7 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery, queueName string
 	// Enrich context with event metadata
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
 		Tenant:    event.Event.Tenant,
-		AppSource: event.Metadata.AppSource,
+		AppSource: constants.AppSourceEventsSubscribers,
 		UserId:    event.Metadata.UserId,
 		UserEmail: event.Metadata.UserEmail,
 	})

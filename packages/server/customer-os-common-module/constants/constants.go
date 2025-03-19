@@ -1,9 +1,10 @@
 package constants
 
 const (
-	AppSourceCustomerOsApi = "customer-os-api"
-	AppSourceSyncEmail     = "sync-email"
-	AppSourceUpkeeper      = "customer-os-data-upkeeper"
+	AppSourceCustomerOsApi     = "customer-os-api"
+	AppSourceSyncEmail         = "sync-email"
+	AppSourceUpkeeper          = "customer-os-data-upkeeper"
+	AppSourceEventsSubscribers = "events-subscribers"
 
 	ComponentResolver = "resolver"
 	ComponentListener = "listener"
