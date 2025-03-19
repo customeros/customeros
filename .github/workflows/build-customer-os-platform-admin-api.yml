@@ -91,13 +91,68 @@ jobs:
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
-          echo "::set-output name=computed_coverage::$coverage"
+          echo "coverage=$coverage" >> $GITHUB_OUTPUT
 
-  build-publish:
+  build-per-arch:
     needs:
       - test
     runs-on: ubicloud-standard-2
-#    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    #if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.platform }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.7.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # Get the platform short name (amd64 or arm64) for tag
+      - name: Set platform short name
+        id: platform
+        run: |
+          PLATFORM="${{ matrix.platform }}"
+          echo "short_name=${PLATFORM##*/}" >> $GITHUB_OUTPUT
+        shell: bash
+        working-directory: .
+
+      - name: Build and push Docker image for ${{ matrix.platform }}
+        uses: docker/build-push-action@v6.15.0
+        with:
+          context: ./packages/server/
+          file: ./packages/server/customer-os-platform-admin-api/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{ steps.platform.outputs.short_name }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ github.workflow }}-${{ matrix.platform }}
+          cache-to: type=gha,scope=${{ github.workflow }}-${{ matrix.platform }},mode=max
+
+  create-manifest:
+    needs: build-per-arch
+    runs-on: ubicloud-standard-2
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,9 +166,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          # Enable buildkit caching
-          buildkitd-flags: --debug
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -121,16 +173,33 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Push Docker image
-        uses: docker/build-push-action@v6.15.0
-        with:
-          context: ./packages/server/
-          file: ./packages/server/customer-os-platform-admin-api/Dockerfile
-#          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          # Enable caching
-          cache-from: type=gha,scope=${{ github.workflow }}
-          cache-to: type=gha,scope=${{ github.workflow }},mode=max
+      - name: Create and push manifest
+        run: |
+          # Create and push the multi-architecture manifest
+          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          
+          # If this is a tag/release or on the otter branch, also tag as latest
+          if [[ "${{ github.ref_name }}" == "otter" || "${{ github.event_name }}" == "release" ]]; then
+            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          
+            # Push the latest manifest
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          fi
+          
+          # For releases, also tag with the release tag
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          
+            # Push the release tag manifest
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          fi
+          
+          # Push the SHA manifest
+          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        shell: bash
