@@ -378,12 +378,16 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 				}
 			}
 		}
+		otherSocials := []string{}
 		for _, link := range data.Links {
 			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
 				globalOrganization.LinkedInUrl = link.Url
 				break
+			} else if link.Url != "" && !strings.Contains(link.Url, "linkedin.com/company") {
+				otherSocials = append(otherSocials, link.Url)
 			}
 		}
+
 		if len(data.Company.Industries) > 0 {
 			industryDesc := "Business area: "
 			for _, industry := range data.Company.Industries {
@@ -406,6 +410,13 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 				tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
 				s.log.Errorf("Error updating global organization: %s", err.Error())
 				continue
+			}
+		}
+		if len(otherSocials) > 0 {
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.AddOtherSocials(ctx, globalOrganization.PrimaryDomain, otherSocials)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error adding other socials"))
+				s.log.Errorf("Error adding other socials: %s", err.Error())
 			}
 		}
 	}
