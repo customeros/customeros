@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -20,6 +21,7 @@ type GlobalOrganizationRepository interface {
 	GetByPrimaryDomain(ctx context.Context, domain string) (*postgres_entity.GlobalOrganization, error)
 	GetByPrimaryDomains(ctx context.Context, domains []string) ([]*postgres_entity.GlobalOrganization, error)
 	Create(ctx context.Context, organization *postgres_entity.GlobalOrganization) (*postgres_entity.GlobalOrganization, error)
+	CreateIfNotExists(ctx context.Context, primaryDomain string) (*postgres_entity.GlobalOrganization, error)
 	Update(ctx context.Context, organization *postgres_entity.GlobalOrganization) (*postgres_entity.GlobalOrganization, error)
 	Search(ctx context.Context, searchTerm string, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
@@ -40,6 +42,7 @@ type GlobalOrganizationRepository interface {
 	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
 	GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*postgres_entity.GlobalOrganization, error)
+	AddOtherSocials(ctx context.Context, primaryDomain string, otherSocials []string) error
 }
 
 type globalOrganizationRepository struct {
@@ -117,6 +120,40 @@ func (r *globalOrganizationRepository) Create(ctx context.Context, organization 
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
+	return organization, nil
+}
+
+func (r *globalOrganizationRepository) CreateIfNotExists(ctx context.Context, primaryDomain string) (*postgres_entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.CreateIfNotExists")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.String("primaryDomain", primaryDomain))
+
+	// Check if organization exists
+	existing, err := r.GetByPrimaryDomain(ctx, primaryDomain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if existing != nil {
+		span.LogFields(tracingLog.Bool("result.created", false))
+		return existing, nil
+	}
+
+	// Create new organization
+	organization := &postgres_entity.GlobalOrganization{
+		PrimaryDomain: primaryDomain,
+		CreatedAt:     utils.Now(),
+		UpdatedAt:     utils.Now(),
+	}
+
+	result := r.db.WithContext(ctx).Create(organization)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+
+	span.LogFields(tracingLog.Bool("result.created", true))
 	return organization, nil
 }
 
@@ -423,7 +460,9 @@ func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id u
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		UpdateColumn("scrape_status", status.String())
+		Updates(map[string]interface{}{
+			"scrape_status": status.String(),
+		})
 
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
@@ -500,7 +539,9 @@ func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		UpdateColumn("download_status", status.String())
+		Updates(map[string]interface{}{
+			"download_status": status.String(),
+		})
 
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
@@ -534,4 +575,53 @@ func (r *globalOrganizationRepository) GetByLinkedInUrl(ctx context.Context, lin
 	}
 	span.LogFields(tracingLog.Bool("found", true))
 	return organization, nil
+}
+
+func (r *globalOrganizationRepository) AddOtherSocials(ctx context.Context, primaryDomain string, otherSocials []string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.AddOtherSocials")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.String("primaryDomain", primaryDomain), tracingLog.Object("otherSocials", otherSocials))
+
+	// Get existing organization or create new one
+	org, err := r.CreateIfNotExists(ctx, primaryDomain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Add new socials if they don't exist
+	added := false
+	for _, social := range otherSocials {
+		social = strings.TrimSpace(social)
+		if social == "" {
+			continue
+		}
+		exists := false
+		for _, existing := range org.OtherSocials {
+			if existing == social {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			org.OtherSocials = append(org.OtherSocials, social)
+			added = true
+		}
+	}
+
+	// Update if new socials were added
+	if added {
+		result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+			Where("id = ?", org.ID).
+			Updates(map[string]interface{}{
+				"other_socials": org.OtherSocials,
+			})
+		if result.Error != nil {
+			tracing.TraceErr(span, result.Error)
+			return result.Error
+		}
+	}
+
+	return nil
 }
