@@ -706,7 +706,6 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 	scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return
 	}
 
 	// Construct the prompt
@@ -730,7 +729,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 
 	temperature := float32(0.1)
 	aiOutput, err := s.commonServices.AIService.AskAIForIndustryCode(ctx, interfaces.AskAIRequest{
-		Model:            enum.AIModelAnthropicHaiku,
+		Model:            enum.AIModelGemini,
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &prompt,
 		ModelTemperature: &temperature,
