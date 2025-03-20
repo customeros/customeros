@@ -155,7 +155,7 @@ jobs:
       - name: Get image digest
         id: digest
         run: |
-          digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 --format "{{json .Manifest}}" | jq -r '.digest')
+          digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 --format "{{json .Manifest}}" | jq -r '.digest') || exit 1
           echo "value=$digest" >> $GITHUB_OUTPUT
         shell: bash
 
