@@ -8,19 +8,6 @@ defmodule RealtimeWeb.FinderChannel do
   alias RealtimeWeb.Presence
 
   @impl true
-  def join("finder:" <> _organization_id, %{"user_id" => user_id}, socket) do
-    {:ok, color} = ColorManager.assign_color(user_id)
-
-    socket =
-      socket
-      |> assign(:user_id, user_id)
-      |> assign(user_color: %{user_id => color})
-
-    send(self(), :after_join)
-    {:ok, socket}
-  end
-
-  @impl true
   def join("finder:" <> _organization_id, %{"user_id" => user_id, "username" => username}, socket) do
     {:ok, color} = ColorManager.assign_color(user_id)
 
@@ -28,6 +15,19 @@ defmodule RealtimeWeb.FinderChannel do
       socket
       |> assign(:user_id, user_id)
       |> assign(:username, username)
+      |> assign(user_color: %{user_id => color})
+
+    send(self(), :after_join)
+    {:ok, socket}
+  end
+
+  @impl true
+  def join("finder:" <> _organization_id, %{"user_id" => user_id}, socket) do
+    {:ok, color} = ColorManager.assign_color(user_id)
+
+    socket =
+      socket
+      |> assign(:user_id, user_id)
       |> assign(user_color: %{user_id => color})
 
     send(self(), :after_join)
