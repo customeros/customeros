@@ -848,11 +848,8 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 		return "", err
 	}
 
-	// Properly escape the account name to prevent SQL injection
-	escapedName := url.QueryEscape(accountName)
-
 	// Construct the URL for querying the account by name.
-	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, escapedName)
+	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, accountName)
 	// Perform the request.
 	resp, err := s.performRequest(ctx, qbSettings, queryURL, "POST", nil, true)
 	if err != nil {
