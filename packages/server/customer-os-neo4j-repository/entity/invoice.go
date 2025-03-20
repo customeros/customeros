@@ -1,8 +1,9 @@
 package neo4j_entity
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
 type InvoiceProperty string
@@ -27,6 +28,7 @@ const (
 	InvoicePropertyQuickbooksJournalEntryId             InvoiceProperty = "quickbooksJournalEntryId"
 	InvoicePropertyQuickbooksJournalEntryIdReverse      InvoiceProperty = "quickbooksJournalEntryIdReverse"
 	InvoicePropertyQuickbooksPaymentId                  InvoiceProperty = "quickbooksPaymentId"
+	InvoicePropertyQuickbooksPaidPaymentId              InvoiceProperty = "quickbooksPaidPaymentId"
 	InvoicePropertyProviderBankDetailsAvailable         InvoiceProperty = "providerBankDetailsAvailable"
 	InvoicePropertyProviderBankAccountName              InvoiceProperty = "providerBankAccountName"
 	InvoicePropertyProviderBankAccountNumber            InvoiceProperty = "providerBankAccountNumber"
@@ -61,7 +63,8 @@ type InvoiceEntity struct {
 	QuickbooksInvoiceId             string
 	QuickbooksJournalEntryId        string
 	QuickbooksJournalEntryIdReverse string
-	QuickbooksPaymentId             string
+	QuickbooksPaymentId             string // Deprecated
+	QuickbooksPaidPaymentId         string
 	PaymentDetails                  PaymentDetails
 	OffCycle                        bool
 	Postpaid                        bool

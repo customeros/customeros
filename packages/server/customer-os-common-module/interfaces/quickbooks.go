@@ -16,7 +16,7 @@ type QuickbooksService interface {
 	GetAccountIdByName(ctx context.Context, accountName string) (string, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
 	SaveInvoice(ctx context.Context, customerId, invoiceNumber string, invoiceDate, dueDate time.Time, invoiceEmail string, lines []QuickbooksInvoiceLine) (*QuickbooksSaveInvoiceResponse, error)
-	PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*QuickbooksSavePaymentResponse, error)
+	PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64, paymentIncomeAccountName string) (*QuickbooksSavePaymentResponse, error)
 	VoidInvoice(ctx context.Context, invoiceId string) (*QuickbooksSaveInvoiceResponse, error)
 	SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []QuickbooksJournalEntryLine) (*QuickbooksJournalEntryResponse, error)
 	ZeroJournalEntry(ctx context.Context, journalEntryId string) error

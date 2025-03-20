@@ -84,15 +84,15 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 	if quickbooksResponse.Error == nil {
 		now := utils.Now()
 
-		quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+		qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
 		entity := postgres_entity.QuickbooksSettingsEntity{}
-		if quickbooksSettingsEntity != nil {
-			entity = *quickbooksSettingsEntity
+		if qbSettings != nil {
+			entity = *qbSettings
 		} else {
 			entity.Tenant = tenant
 			entity.RealmId = realmId
@@ -210,18 +210,19 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("result.error", "Quickbooks settings not found"))
-		return nil, nil
+	if qbSettings == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
-	if quickbooksSettingsEntity.SalesAccountId == "" {
+	if qbSettings.SalesAccountId == "" {
 		salesAccountId, err := s.GetAccountIdByName(ctx, "CustomerOS Sales")
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -229,20 +230,20 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		}
 
 		if salesAccountId != "" {
-			quickbooksSettingsEntity.SalesAccountId = salesAccountId
-			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
+			qbSettings.SalesAccountId = salesAccountId
+			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *qbSettings)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		} else {
-			salesAccountUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/account", quickbooksSettingsEntity.RealmId)
+			salesAccountUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/account", qbSettings.RealmId)
 			salesAccountRequest := map[string]interface{}{
 				"Name":        "CustomerOS Sales",
 				"AccountType": "Income",
 			}
 
-			qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest, true)
+			qbAccountResponse, err := s.performRequest(ctx, qbSettings, salesAccountUrl, "POST", salesAccountRequest, true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -255,8 +256,8 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 				return nil, err
 			}
 
-			quickbooksSettingsEntity.SalesAccountId = qbAccount.Account.Id
-			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
+			qbSettings.SalesAccountId = qbAccount.Account.Id
+			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *qbSettings)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -268,8 +269,8 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 	var qbProduct interfaces.QuickbooksGetProductResponse
 
 	if id != "" {
-		productByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
-		qbProductResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, productByIdUrl, "GET", nil, true)
+		productByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", qbSettings.RealmId, id)
+		qbProductResponse, err := s.performRequest(ctx, qbSettings, productByIdUrl, "GET", nil, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -304,13 +305,13 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 			"UnitPrice": price,
 			"Type":      "Service",
 			"IncomeAccountRef": map[string]interface{}{
-				"value": quickbooksSettingsEntity.SalesAccountId,
+				"value": qbSettings.SalesAccountId,
 			},
 		}
 	}
 
-	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item", quickbooksSettingsEntity.RealmId)
-	qbResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "POST", qbSaveProductRequest, true)
+	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item", qbSettings.RealmId)
+	qbResponse, err := s.performRequest(ctx, qbSettings, requestUrl, "POST", qbSaveProductRequest, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -335,19 +336,20 @@ func (s *quickbooksService) GetProduct(ctx context.Context, id string) (*interfa
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("result.error", "Quickbooks settings not found"))
-		return nil, nil
+	if qbSettings == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
-	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "GET", nil, true)
+	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", qbSettings.RealmId, id)
+	resp, err := s.performRequest(ctx, qbSettings, requestUrl, "GET", nil, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -369,16 +371,16 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	//TODO check how we return in case of missing integration
-	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("error", "Quickbooks settings not found"))
-		return nil, nil
+	if qbSettings == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	request := map[string]interface{}{
@@ -389,7 +391,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 		request["Id"] = id
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/customer", "POST", request, true)
+	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/customer", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -424,16 +426,16 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerI
 		log.Object("dueDate", dueDate),
 		log.String("invoiceEmail", invoiceEmail))
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	//TODO check how we return in case of missing integration
-	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("error", "Quickbooks settings not found"))
-		return nil, nil
+	if qbSettings == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	request := map[string]interface{}{
@@ -449,7 +451,7 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerI
 		},
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request, true)
+	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/invoice", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -477,16 +479,16 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	//TODO check how we return in case of missing integration
-	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("error", "Quickbooks settings not found"))
-		return nil, nil
+	if qbSettings == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	request := map[string]interface{}{
@@ -494,8 +496,8 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 	}
 
 	if invoiceId != "" {
-		invoiceByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/invoice/%s", quickbooksSettingsEntity.RealmId, invoiceId)
-		qbInvoiceResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, invoiceByIdUrl, "GET", request, true)
+		invoiceByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/invoice/%s", qbSettings.RealmId, invoiceId)
+		qbInvoiceResponse, err := s.performRequest(ctx, qbSettings, invoiceByIdUrl, "GET", request, true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -511,7 +513,7 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 		request["SyncToken"] = qbInvoice.Invoice.SyncToken
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice?operation=void", "POST", request, true)
+	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/invoice?operation=void", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -533,22 +535,25 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*interfaces.QuickbooksSavePaymentResponse, error) {
+func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64, paymentIncomeAccountName string) (*interfaces.QuickbooksSavePaymentResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.PayInvoice")
 	defer span.Finish()
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.TagEntity(span, invoiceId)
+	span.LogFields(log.String("paymentIncomeAccountName", paymentIncomeAccountName))
+	span.LogFields(log.String("totalAmount", fmt.Sprintf("%f", totalAmount)))
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
-	//TODO check how we return in case of missing integration
-	if quickbooksSettingsEntity == nil {
-		span.LogFields(log.String("error", "Quickbooks settings not found"))
-		return nil, nil
+	if qbSettings == nil {
+		err = errors.New("Quickbooks settings not found")
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	request := map[string]interface{}{
@@ -569,7 +574,19 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 		},
 	}
 
-	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, s.qbConfig.Url+"/v3/company/"+quickbooksSettingsEntity.RealmId+"/payment", "POST", request, true)
+	// If paymentIncomeAccountName is provided, try to find the account ID
+	if paymentIncomeAccountName != "" {
+		accountId, err := s.GetAccountIdByName(ctx, paymentIncomeAccountName)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		} else if accountId != "" {
+			request["DepositToAccountRef"] = map[string]interface{}{
+				"value": accountId,
+			}
+		}
+	}
+
+	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/payment", "POST", request, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -591,7 +608,7 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettingsEntity *postgres_entity.QuickbooksSettingsEntity, requestUrl string, requestMethod string, requestBody map[string]interface{}, rerunOnTokenRefresh bool) ([]byte, error) {
+func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *postgres_entity.QuickbooksSettingsEntity, requestUrl string, requestMethod string, requestBody map[string]interface{}, rerunOnTokenRefresh bool) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.performRequest")
 	defer span.Finish()
 	span.LogFields(log.String("requestUrl", requestUrl))
@@ -615,7 +632,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 	// Set headers
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+quickbooksSettingsEntity.AccessToken)
+	req.Header.Set("Authorization", "Bearer "+qbSettings.AccessToken)
 
 	// Perform the HTTP request
 	client := &http.Client{}
@@ -651,9 +668,9 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 			//refresh token
 			requestData := url.Values{}
 			requestData.Set("grant_type", "refresh_token")
-			requestData.Set("refresh_token", quickbooksSettingsEntity.RefreshToken)
+			requestData.Set("refresh_token", qbSettings.RefreshToken)
 
-			quickbooksSettingsEntity, err = s.GetAndStoreAccessToken(ctx, quickbooksSettingsEntity.RealmId, requestData)
+			qbSettings, err = s.GetAndStoreAccessToken(ctx, qbSettings.RealmId, requestData)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -661,7 +678,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettin
 
 			// re-run original request
 			if rerunOnTokenRefresh {
-				return s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, requestMethod, requestBody, false)
+				return s.performRequest(ctx, qbSettings, requestUrl, requestMethod, requestBody, false)
 			}
 		} else {
 			err = fmt.Errorf("error: %s", fault.Error[0].Message)
@@ -680,13 +697,13 @@ func (s *quickbooksService) QuickbooksConnected(ctx context.Context) (bool, erro
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
 
-	return quickbooksSettingsEntity != nil, nil
+	return qbSettings != nil, nil
 }
 
 func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []interfaces.QuickbooksJournalEntryLine) (*interfaces.QuickbooksJournalEntryResponse, error) {
@@ -756,7 +773,7 @@ func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId
 		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
-		err := fmt.Errorf("QuickBooks settings not found for tenant %s", tenant)
+		err = errors.New("Quickbooks settings not found")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -830,8 +847,11 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 		return "", err
 	}
 
+	// Properly escape the account name to prevent SQL injection
+	escapedName := url.QueryEscape(accountName)
+
 	// Construct the URL for querying the account by name.
-	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, accountName)
+	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, escapedName)
 	// Perform the request.
 	resp, err := s.performRequest(ctx, qbSettings, queryURL, "POST", nil, true)
 	if err != nil {

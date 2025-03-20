@@ -119,6 +119,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 		QuickbooksJournalEntryId:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyQuickbooksJournalEntryId)),
 		QuickbooksJournalEntryIdReverse: utils.GetStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyQuickbooksJournalEntryIdReverse)),
 		QuickbooksPaymentId:             utils.GetStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyQuickbooksPaymentId)),
+		QuickbooksPaidPaymentId:         utils.GetStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyQuickbooksPaidPaymentId)),
 		Customer: neo4j_entity.InvoiceCustomer{
 			Name:         utils.GetStringPropOrEmpty(props, "customerName"),
 			Email:        utils.GetStringPropOrEmpty(props, "customerEmail"),

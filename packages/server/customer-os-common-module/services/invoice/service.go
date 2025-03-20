@@ -682,7 +682,7 @@ func (s *invoiceService) GetById(ctx context.Context, tx *neo4j.ManagedTransacti
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("invoiceId", invoiceId))
+	tracing.TagEntity(span, invoiceId)
 
 	if invoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, tx, common.GetTenantFromContext(ctx), invoiceId); err != nil {
 		tracing.TraceErr(span, err)
