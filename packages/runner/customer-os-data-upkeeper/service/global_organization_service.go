@@ -381,9 +381,41 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 		otherSocials := []string{}
 		for _, link := range data.Links {
 			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
-				globalOrganization.LinkedInUrl = link.Url
-				break
-			} else if link.Url != "" && !strings.Contains(link.Url, "linkedin.com/company") {
+				_, scrapinResponse, err := s.commonServices.EnrichmentService.ScrapInCompanyProfile(ctx, link.Url)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "error calling scrapin for company profile"))
+					s.log.Errorf("Error calling scrapin for company profile: %s", err.Error())
+					continue
+				}
+
+				if scrapinResponse != nil && scrapinResponse.Company != nil {
+					globalOrganization.LinkedInUrl = scrapinResponse.Company.LinkedInUrl
+					if scrapinResponse.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
+						globalOrganization.LinkedInAlias = scrapinResponse.Company.UniversalName
+					}
+					if scrapinResponse.Company.Logo != "" && globalOrganization.LogoUrl == "" {
+						globalOrganization.LogoUrl = scrapinResponse.Company.Logo
+					}
+					if scrapinResponse.Company.Headquarter.City != "" && globalOrganization.City == "" {
+						globalOrganization.City = scrapinResponse.Company.Headquarter.City
+					}
+					if scrapinResponse.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
+						globalOrganization.Region = scrapinResponse.Company.Headquarter.GeographicArea
+					}
+					if scrapinResponse.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
+						if strings.ToUpper(scrapinResponse.Company.Headquarter.Country) == "OO" {
+							globalOrganization.CountryA2 = ""
+						} else {
+							country := countries.ByName(scrapinResponse.Company.Headquarter.Country)
+							if country != countries.Unknown {
+								globalOrganization.CountryA2 = country.Alpha2()
+							} else {
+								globalOrganization.CountryA2 = ""
+							}
+						}
+					}
+				}
+			} else if link.Url != "" && !strings.Contains(link.Url, "linkedin.com") {
 				otherSocials = append(otherSocials, link.Url)
 			}
 		}
