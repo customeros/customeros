@@ -535,14 +535,14 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64, paymentIncomeAccountName string) (*interfaces.QuickbooksSavePaymentResponse, error) {
+func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceId, invoiceNumber string, totalAmount float64, paymentIncomeAccountName string) (*interfaces.QuickbooksSavePaymentResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.PayInvoice")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.TagEntity(span, invoiceId)
 	span.LogFields(log.String("paymentIncomeAccountName", paymentIncomeAccountName))
 	span.LogFields(log.String("totalAmount", fmt.Sprintf("%f", totalAmount)))
-
+	span.LogFields(log.String("invoiceNumber", invoiceNumber))
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
@@ -560,7 +560,8 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 		"CustomerRef": map[string]interface{}{
 			"value": customerId,
 		},
-		"TotalAmt": totalAmount,
+		"TotalAmt":      totalAmount,
+		"PaymentRefNum": invoiceNumber,
 		"Line": []map[string]interface{}{
 			{
 				"Amount": totalAmount,

@@ -98,6 +98,10 @@
         {
           "name": "Contracts with wrong ltv",
           "query": "MATCH (c:Contract) OPTIONAL MATCH (c)--(i:Invoice) WHERE i.dryRun = false AND i.status <> 'VOID' WITH c, coalesce(sum(i.amount), 0) AS computedValue WHERE c.ltv <> computedValue RETURN count(c)"
+        },
+        {
+          "name": "Ended contracts with scheduled invoices",
+          "query": "MATCH (c:Contract)--(i:Invoice) WHERE c.status = 'ENDED' AND i.preview = true RETURN count(c)"
         }
       ]
     },
