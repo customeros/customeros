@@ -12,7 +12,7 @@ jobs:
   notify:
     # Only run for non-draft PRs OR when a PR becomes ready for review
     if: github.event.pull_request.draft == false || github.event.action == 'ready_for_review'
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Handle PR Events
         uses: actions/github-script@v7
