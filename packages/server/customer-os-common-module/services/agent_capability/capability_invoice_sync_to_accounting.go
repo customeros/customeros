@@ -94,9 +94,10 @@ type SyncInvoiceToAccountingInput struct {
 type SyncInvoiceToAccountingOutput struct{}
 
 type SyncInvoiceToAccountingConfig struct {
-	Quickbooks              ConfigSingleBoolValue `json:"quickbooks"`
-	AccountingMethodAccrual ConfigSingleBoolValue `json:"accountingMethodAccrual"`
-	ARIncomeAccountName     ConfigSingleValue     `json:"arIncomeAccountName"`
+	Quickbooks               ConfigSingleBoolValue `json:"quickbooks"`
+	AccountingMethodAccrual  ConfigSingleBoolValue `json:"accountingMethodAccrual"`
+	ARIncomeAccountName      ConfigSingleValue     `json:"arIncomeAccountName"`
+	PaymentIncomeAccountName ConfigSingleValue     `json:"paymentIncomeAccountName"`
 }
 
 func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SyncInvoiceToAccountingInput, SyncInvoiceToAccountingConfig]) (enum.CapabilityExecutionStatus, SyncInvoiceToAccountingOutput, error) {
@@ -207,9 +208,8 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
-	if invoiceEntity.Status == neo4jenum.InvoiceStatusPaid {
-		// STEP 4 - add payment when invoice is paid and link to invoice in QBO
-		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoiceEntity)
+	if invoiceEntity.Status == neo4jenum.InvoiceStatusPaid && invoiceEntity.QuickbooksPaidPaymentId == "" {
+		err = c.syncPaidInvoiceToQuickbooks(ctx, *invoiceEntity, executionContainer.ConfigData.PaymentIncomeAccountName.Value)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return enum.CapabilityExecutionRetry, result, err
@@ -673,7 +673,7 @@ func (c *SyncInvoiceToAccountingCapability) syncPaymentLinkingJournalEntryToInvo
 	return nil
 }
 
-func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx context.Context, invoice neo4jentity.InvoiceEntity) error {
+func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx context.Context, invoice neo4jentity.InvoiceEntity, paymentIncomeAccountName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncInvoiceToAccountingCapability.syncPaidInvoiceToQuickbooks")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -698,7 +698,7 @@ func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx cont
 		return err
 	}
 
-	paymentResponse, err := c.quickbooksService.PayInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.TotalAmount)
+	paymentResponse, err := c.quickbooksService.PayInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.TotalAmount, paymentIncomeAccountName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -707,6 +707,12 @@ func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx cont
 		err = errors.New("Invoice not paid in quickbooks")
 		tracing.TraceErr(span, err)
 		return err
+	} else {
+		err = c.neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyQuickbooksPaidPaymentId), paymentResponse.Payment.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	return nil
