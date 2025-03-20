@@ -97,6 +97,7 @@ jobs:
   prepare:
     needs: [ test ]
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
       safe-tag: ${{ steps.safe-tag.outputs.value }}
     steps:
@@ -118,6 +119,7 @@ jobs:
   build-amd64:
     needs: [ prepare ]
     runs-on: ubicloud-standard-2
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
@@ -160,6 +162,7 @@ jobs:
   build-arm64:
     needs: [ prepare ]
     runs-on: ubicloud-standard-2-arm
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
@@ -202,6 +205,7 @@ jobs:
   # Create multi-arch manifests
   create-manifest:
     needs: [ prepare, build-amd64, build-arm64 ]
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
