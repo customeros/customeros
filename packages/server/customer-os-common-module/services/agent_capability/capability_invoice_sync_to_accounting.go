@@ -698,7 +698,7 @@ func (c *SyncInvoiceToAccountingCapability) syncPaidInvoiceToQuickbooks(ctx cont
 		return err
 	}
 
-	paymentResponse, err := c.quickbooksService.PayInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.TotalAmount, paymentIncomeAccountName)
+	paymentResponse, err := c.quickbooksService.PayInvoice(ctx, contractEntity.QuickbooksCustomerId, invoice.QuickbooksInvoiceId, invoice.Number, invoice.TotalAmount, paymentIncomeAccountName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
