@@ -464,7 +464,7 @@ func (r *RabbitMQPublisher) publishEventOnExchange(ctx context.Context, entityId
 			AppSource:   common.GetAppSourceFromContext(ctx),
 			UserId:      common.GetUserIdFromContext(ctx),
 			UserEmail:   common.GetUserEmailFromContext(ctx),
-			Timestamp:   utils.Now().String(),
+			Timestamp:   utils.Now().Format(time.RFC3339),
 		},
 	}
 
