@@ -93,14 +93,13 @@ jobs:
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "coverage=$coverage" >> $GITHUB_OUTPUT
 
-  build-amd64:
-    needs:
-      - test
-    runs-on: ubicloud-standard-2
+  # Generate common metadata for all builds
+  prepare:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+    outputs:
+      safe-tag: ${{ steps.safe-tag.outputs.value }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       # Create a safe tag string from the branch name (replace / with -)
       - name: Set safe tag
         id: safe-tag
@@ -116,134 +115,147 @@ jobs:
         shell: bash
         working-directory: .
 
-      # Use GITHUB_TOKEN for authentication instead of custom secrets
+  build-amd64:
+    needs: [ prepare ]
+    runs-on: ubicloud-standard-2
+    outputs:
+      digest: ${{ steps.digest.outputs.value }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Log in to registry
       - name: Log in to the Container registry
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build using native Docker to ensure single-architecture image
-      - name: Build and push amd64 image with native Docker
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push amd64 image
+      - name: Build and push amd64 image
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./packages/server
+          file: ./packages/server/customer-os-platform-admin-api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+          provenance: false
+          outputs: type=registry,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # Get image digest
+      - name: Get image digest
+        id: digest
         run: |
-          # Build the image
-          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 -f Dockerfile ../
-          
-          # Push the image
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
+          digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 --format "{{json .Manifest}}" | jq -r '.digest')
+          echo "value=$digest" >> $GITHUB_OUTPUT
         shell: bash
 
   build-arm64:
-    needs:
-      - test
-    runs-on: ubicloud-standard-2-arm  # Native ARM runner
+    needs: [ prepare ]
+    runs-on: ubicloud-standard-2-arm
+    outputs:
+      digest: ${{ steps.digest.outputs.value }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Use GITHUB_TOKEN for authentication instead of custom secrets
+      # Log in to registry
       - name: Log in to the Container registry
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build using native Docker to ensure single-architecture image
-      - name: Build and push arm64 image with native Docker
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push arm64 image
+      - name: Build and push arm64 image
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./packages/server
+          file: ./packages/server/customer-os-platform-admin-api/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          provenance: false
+          outputs: type=registry,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # Get image digest
+      - name: Get image digest
+        id: digest
         run: |
-          # Build the image
-          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 -f Dockerfile ../
-          
-          # Push the image
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
+          digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64 --format "{{json .Manifest}}" | jq -r '.digest')
+          echo "value=$digest" >> $GITHUB_OUTPUT
         shell: bash
 
+  # Create multi-arch manifests
   create-manifest:
-    needs: [build-amd64, build-arm64]
-    runs-on: ubicloud-standard-2
+    needs: [ prepare, build-amd64, build-arm64 ]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Create a safe tag string from the branch name (replace / with -)
-      - name: Set safe tag
-        id: safe-tag
-        run: |
-          # For PR events, use pr-NUMBER format instead of the branch name
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "value=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-          else
-            # For normal branches, replace / with - to make it safe for tags
-            SAFE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            echo "value=$SAFE_TAG" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-        working-directory: .
-
-      # Use GITHUB_TOKEN for authentication instead of custom secrets
+      # Log in to the Container registry
       - name: Log in to the Container registry
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Enable Docker experimental features for manifest command
-      - name: Enable Docker experimental
-        run: |
-          mkdir -p ~/.docker
-          echo '{"experimental": "enabled"}' > ~/.docker/config.json
-        shell: bash
-        working-directory: .
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # Inspect images before creating manifest to debug
-      - name: Inspect images before manifest creation
-        run: |
-          echo "Inspecting AMD64 image:"
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
-          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64
-          
-          echo "Inspecting ARM64 image:"
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-        shell: bash
-
-      - name: Create and push manifest
+      # Create and push manifests
+      - name: Create and push manifests
         run: |
           # Create and push the SHA manifest
-          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          
-          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           
           # Create and push the branch/PR manifest
-          docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }} \
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.safe-tag }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          
-          docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.safe-tag.outputs.value }}
           
           # If this is the otter branch, also tag as latest
           if [[ "${{ github.ref_name }}" == "otter" ]]; then
-            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            docker buildx imagetools create \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          
-            docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           fi
           
           # For releases, also tag with the release tag
           if [[ "${{ github.event_name }}" == "release" ]]; then
             # For releases, the tag should be the release tag
             RELEASE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG \
+            docker buildx imagetools create \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          
-            docker manifest push --purge ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$RELEASE_TAG
           fi
         shell: bash
+
+      # Inspect the created manifest
+      - name: Inspect manifest
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.safe-tag }}
+        shell: bash
+        
