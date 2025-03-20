@@ -32,8 +32,6 @@ const (
 	SpanTagComponent      = "component"
 	SpanTagExternalSystem = "external-system"
 	SpanTagExternalId     = "external-id"
-	//Deprecated
-	SpanTagAggregateId = "aggregateID"
 )
 
 const (
@@ -170,7 +168,7 @@ func ExtractGraphQLMethodName(req *http.Request) string {
 	return ""
 }
 
-func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
+func SetDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 	tenant := common.GetTenantFromContext(ctx)
 	loggedInUserId := common.GetUserIdFromContext(ctx)
 	loggedInUserEmail := common.GetUserEmailFromContext(ctx)
@@ -186,32 +184,32 @@ func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 }
 
 func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
+	SetDefaultSpanTags(ctx, span)
 	TagComponentService(span)
 }
 
 func SetDefaultListenerSpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
+	SetDefaultSpanTags(ctx, span)
 	span.SetTag(SpanTagComponent, constants.ComponentListener)
 }
 
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
+	SetDefaultSpanTags(ctx, span)
 	TagComponentNeo4jRepository(span)
 }
 
 func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
+	SetDefaultSpanTags(ctx, span)
 	TagComponentPostgresRepository(span)
 }
 
 func SetDefaultAgentCapabilitySpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
+	SetDefaultSpanTags(ctx, span)
 	TagComponentAgentCapability(span)
 }
 
 func SetDefaultRestSpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
+	SetDefaultSpanTags(ctx, span)
 	TagComponentRest(span)
 }
 

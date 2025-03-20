@@ -129,7 +129,11 @@ func (r *RabbitMQPublisher) PublishNotificationBulk(ctx context.Context, tenant 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQPublisher.PublishEventCompletedBulk")
 	defer span.Finish()
 	appSource := common.GetAppSourceFromContext(ctx)
-	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds, "appSource", appSource)
+	tracing.TagTenant(span, tenant)
+	if len(entityIds) == 1 {
+		tracing.TagEntity(span, entityIds[0])
+	}
+	span.LogKV("entityType", entityType, "entityIds", entityIds, "appSource", appSource)
 
 	if appSource == constants.AppSourceCustomerOsApi {
 		span.LogKV("result.skipped", true)
