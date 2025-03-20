@@ -2,9 +2,11 @@ package agent
 
 import (
 	"context"
-	"github.com/dustin/go-humanize"
+	"encoding/json"
 	"strconv"
 	"strings"
+
+	"github.com/dustin/go-humanize"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -74,7 +76,69 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 		return nil, err
 	}
 
+	// Merge default configurations for capabilities
+	for i, capability := range agent.Capabilities {
+		executor, err := a.agentCapabilities.GetExecutor(capability.Type)
+		if err != nil {
+			continue // Skip if executor not found
+		}
+		if err := a.mergeDefaultConfig(&agent.Capabilities[i], executor); err != nil {
+			tracing.TraceErr(span, err)
+			continue
+		}
+	}
+
 	return agent, nil
+}
+
+// mergeDefaultConfig merges the default configuration with stored configuration
+func (a *agentService) mergeDefaultConfig(capability *postgresentity.Capability, executor interfaces.AgentCapabilityUntyped) error {
+	// Get default configuration
+	defaultConfig := executor.DefaultConfig()
+	if defaultConfig == nil {
+		return nil
+	}
+
+	// If no stored config, use default config
+	if capability.Config == nil {
+		data, err := json.Marshal(defaultConfig)
+		if err != nil {
+			return err
+		}
+		capability.Config = data
+		return nil
+	}
+
+	// Convert stored config to map
+	var storedMap map[string]interface{}
+	if err := json.Unmarshal(capability.Config, &storedMap); err != nil {
+		return err
+	}
+
+	// Convert default config to map
+	var defaultMap map[string]interface{}
+	defaultData, err := json.Marshal(defaultConfig)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(defaultData, &defaultMap); err != nil {
+		return err
+	}
+
+	// Merge default values for missing fields
+	for k, v := range defaultMap {
+		if _, exists := storedMap[k]; !exists {
+			storedMap[k] = v
+		}
+	}
+
+	// Update capability config with merged result
+	mergedData, err := json.Marshal(storedMap)
+	if err != nil {
+		return err
+	}
+	capability.Config = mergedData
+	return nil
 }
 
 func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agent, error) {
@@ -86,6 +150,20 @@ func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agen
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+
+	// Merge default configurations for all agents
+	for _, agent := range agents {
+		for i, capability := range agent.Capabilities {
+			executor, err := a.agentCapabilities.GetExecutor(capability.Type)
+			if err != nil {
+				continue // Skip if executor not found
+			}
+			if err := a.mergeDefaultConfig(&agent.Capabilities[i], executor); err != nil {
+				tracing.TraceErr(span, err)
+				continue
+			}
+		}
 	}
 
 	return agents, nil
