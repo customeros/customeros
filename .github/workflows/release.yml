@@ -35,7 +35,7 @@ permissions:
 
 jobs:
   check-release-needed:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'otter'
     outputs:
       version_bump: ${{ steps.commit_message.outputs.version_bump }}
@@ -116,7 +116,7 @@ jobs:
   create-release:
     needs: check-release-needed
     if: needs.check-release-needed.outputs.version_bump != 'skip'
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     outputs:
       next_version: ${{ steps.generate_version.outputs.next_version }}
     steps:
@@ -189,7 +189,7 @@ jobs:
 
   publish-images:
     needs: create-release
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     strategy:
       matrix:
         service:

@@ -96,7 +96,7 @@ jobs:
   # Generate common metadata for all builds
   prepare:
     needs: [ test ]
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
       safe-tag: ${{ steps.safe-tag.outputs.value }}
@@ -206,7 +206,7 @@ jobs:
   create-manifest:
     needs: [ prepare, build-amd64, build-arm64 ]
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
