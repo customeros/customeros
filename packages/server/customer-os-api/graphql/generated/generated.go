@@ -604,6 +604,13 @@ type ComplexityRoot struct {
 		Type             func(childComplexity int) int
 	}
 
+	EmailProfile struct {
+		Email             func(childComplexity int) int
+		Name              func(childComplexity int) int
+		ProfilePhotoURL   func(childComplexity int) int
+		ProfilePhotoURLID func(childComplexity int) int
+	}
+
 	EmailValidationDetails struct {
 		AlternateEmail    func(childComplexity int) int
 		CanConnectSMTP    func(childComplexity int) int
@@ -629,12 +636,6 @@ type ComplexityRoot struct {
 	EmailVariableEntity struct {
 		Type      func(childComplexity int) int
 		Variables func(childComplexity int) int
-	}
-
-	EmailWithProfilePhoto struct {
-		Email             func(childComplexity int) int
-		ProfilePhotoURL   func(childComplexity int) int
-		ProfilePhotoURLID func(childComplexity int) int
 	}
 
 	EnrichDetails struct {
@@ -2279,7 +2280,7 @@ type QueryResolver interface {
 	DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error)
 	CheckDomain(ctx context.Context, domain string) (*model.DomainCheckDetails, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
-	EmailProfilePhoto(ctx context.Context, emails []string) ([]*model.EmailWithProfilePhoto, error)
+	EmailProfilePhoto(ctx context.Context, emails []string) ([]*model.EmailProfile, error)
 	ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error)
 	Flow(ctx context.Context, id string) (*model.Flow, error)
 	Flows(ctx context.Context) ([]*model.Flow, error)
@@ -5014,6 +5015,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EmailParticipant.Type(childComplexity), true
 
+	case "EmailProfile.email":
+		if e.complexity.EmailProfile.Email == nil {
+			break
+		}
+
+		return e.complexity.EmailProfile.Email(childComplexity), true
+
+	case "EmailProfile.name":
+		if e.complexity.EmailProfile.Name == nil {
+			break
+		}
+
+		return e.complexity.EmailProfile.Name(childComplexity), true
+
+	case "EmailProfile.profilePhotoUrl":
+		if e.complexity.EmailProfile.ProfilePhotoURL == nil {
+			break
+		}
+
+		return e.complexity.EmailProfile.ProfilePhotoURL(childComplexity), true
+
+	case "EmailProfile.profilePhotoUrlId":
+		if e.complexity.EmailProfile.ProfilePhotoURLID == nil {
+			break
+		}
+
+		return e.complexity.EmailProfile.ProfilePhotoURLID(childComplexity), true
+
 	case "EmailValidationDetails.alternateEmail":
 		if e.complexity.EmailValidationDetails.AlternateEmail == nil {
 			break
@@ -5160,27 +5189,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailVariableEntity.Variables(childComplexity), true
-
-	case "EmailWithProfilePhoto.email":
-		if e.complexity.EmailWithProfilePhoto.Email == nil {
-			break
-		}
-
-		return e.complexity.EmailWithProfilePhoto.Email(childComplexity), true
-
-	case "EmailWithProfilePhoto.profilePhotoUrl":
-		if e.complexity.EmailWithProfilePhoto.ProfilePhotoURL == nil {
-			break
-		}
-
-		return e.complexity.EmailWithProfilePhoto.ProfilePhotoURL(childComplexity), true
-
-	case "EmailWithProfilePhoto.profilePhotoUrlId":
-		if e.complexity.EmailWithProfilePhoto.ProfilePhotoURLID == nil {
-			break
-		}
-
-		return e.complexity.EmailWithProfilePhoto.ProfilePhotoURLID(childComplexity), true
 
 	case "EnrichDetails.emailEnrichedAt":
 		if e.complexity.EnrichDetails.EmailEnrichedAt == nil {
@@ -15224,7 +15232,7 @@ type DomainCheckDetails {
 }`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    email_ProfilePhoto(emails: [String!]!): [EmailWithProfilePhoto!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    email_ProfilePhoto(emails: [String!]!): [EmailProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -15387,10 +15395,11 @@ enum EmailLabel {
     OTHER
 }
 
-type EmailWithProfilePhoto {
+type EmailProfile {
     email:              String!
     profilePhotoUrl:    String!
     profilePhotoUrlId:  String!
+    name:               String!
 }`, BuiltIn: false},
 	{Name: "../schemas/external_system.graphqls", Input: `extend type Query {
     externalSystemInstances: [ExternalSystemInstance!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -46239,6 +46248,182 @@ func (ec *executionContext) fieldContext_EmailParticipant_type(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailProfile_email(ctx context.Context, field graphql.CollectedField, obj *model.EmailProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailProfile_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailProfile_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailProfile_profilePhotoUrl(ctx context.Context, field graphql.CollectedField, obj *model.EmailProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailProfile_profilePhotoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProfilePhotoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailProfile_profilePhotoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailProfile_profilePhotoUrlId(ctx context.Context, field graphql.CollectedField, obj *model.EmailProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailProfile_profilePhotoUrlId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProfilePhotoURLID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailProfile_profilePhotoUrlId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailProfile_name(ctx context.Context, field graphql.CollectedField, obj *model.EmailProfile) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailProfile_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailProfile_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailValidationDetails_verified(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EmailValidationDetails_verified(ctx, field)
 	if err != nil {
@@ -47107,138 +47292,6 @@ func (ec *executionContext) fieldContext_EmailVariableEntity_variables(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type EmailVariableName does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EmailWithProfilePhoto_email(ctx context.Context, field graphql.CollectedField, obj *model.EmailWithProfilePhoto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmailWithProfilePhoto_email(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EmailWithProfilePhoto_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EmailWithProfilePhoto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EmailWithProfilePhoto_profilePhotoUrl(ctx context.Context, field graphql.CollectedField, obj *model.EmailWithProfilePhoto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmailWithProfilePhoto_profilePhotoUrl(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ProfilePhotoURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EmailWithProfilePhoto_profilePhotoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EmailWithProfilePhoto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EmailWithProfilePhoto_profilePhotoUrlId(ctx context.Context, field graphql.CollectedField, obj *model.EmailWithProfilePhoto) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EmailWithProfilePhoto_profilePhotoUrlId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ProfilePhotoURLID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EmailWithProfilePhoto_profilePhotoUrlId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EmailWithProfilePhoto",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -97028,18 +97081,18 @@ func (ec *executionContext) _Query_email_ProfilePhoto(ctx context.Context, field
 		directive1 := func(ctx context.Context) (any, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal []*model.EmailWithProfilePhoto
+				var zeroVal []*model.EmailProfile
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal []*model.EmailWithProfilePhoto
+				var zeroVal []*model.EmailProfile
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal []*model.EmailWithProfilePhoto
+				var zeroVal []*model.EmailProfile
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -97052,10 +97105,10 @@ func (ec *executionContext) _Query_email_ProfilePhoto(ctx context.Context, field
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.([]*model.EmailWithProfilePhoto); ok {
+		if data, ok := tmp.([]*model.EmailProfile); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.EmailWithProfilePhoto`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.EmailProfile`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -97067,9 +97120,9 @@ func (ec *executionContext) _Query_email_ProfilePhoto(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.EmailWithProfilePhoto)
+	res := resTmp.([]*model.EmailProfile)
 	fc.Result = res
-	return ec.marshalNEmailWithProfilePhoto2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailWithProfilePhotoᚄ(ctx, field.Selections, res)
+	return ec.marshalNEmailProfile2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailProfileᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_email_ProfilePhoto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97081,13 +97134,15 @@ func (ec *executionContext) fieldContext_Query_email_ProfilePhoto(ctx context.Co
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "email":
-				return ec.fieldContext_EmailWithProfilePhoto_email(ctx, field)
+				return ec.fieldContext_EmailProfile_email(ctx, field)
 			case "profilePhotoUrl":
-				return ec.fieldContext_EmailWithProfilePhoto_profilePhotoUrl(ctx, field)
+				return ec.fieldContext_EmailProfile_profilePhotoUrl(ctx, field)
 			case "profilePhotoUrlId":
-				return ec.fieldContext_EmailWithProfilePhoto_profilePhotoUrlId(ctx, field)
+				return ec.fieldContext_EmailProfile_profilePhotoUrlId(ctx, field)
+			case "name":
+				return ec.fieldContext_EmailProfile_name(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type EmailWithProfilePhoto", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type EmailProfile", field.Name)
 		},
 	}
 	defer func() {
@@ -126523,6 +126578,60 @@ func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var emailProfileImplementors = []string{"EmailProfile"}
+
+func (ec *executionContext) _EmailProfile(ctx context.Context, sel ast.SelectionSet, obj *model.EmailProfile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, emailProfileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EmailProfile")
+		case "email":
+			out.Values[i] = ec._EmailProfile_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "profilePhotoUrl":
+			out.Values[i] = ec._EmailProfile_profilePhotoUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "profilePhotoUrlId":
+			out.Values[i] = ec._EmailProfile_profilePhotoUrlId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._EmailProfile_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var emailValidationDetailsImplementors = []string{"EmailValidationDetails"}
 
 func (ec *executionContext) _EmailValidationDetails(ctx context.Context, sel ast.SelectionSet, obj *model.EmailValidationDetails) graphql.Marshaler {
@@ -126619,55 +126728,6 @@ func (ec *executionContext) _EmailVariableEntity(ctx context.Context, sel ast.Se
 			}
 		case "variables":
 			out.Values[i] = ec._EmailVariableEntity_variables(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var emailWithProfilePhotoImplementors = []string{"EmailWithProfilePhoto"}
-
-func (ec *executionContext) _EmailWithProfilePhoto(ctx context.Context, sel ast.SelectionSet, obj *model.EmailWithProfilePhoto) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, emailWithProfilePhotoImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("EmailWithProfilePhoto")
-		case "email":
-			out.Values[i] = ec._EmailWithProfilePhoto_email(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "profilePhotoUrl":
-			out.Values[i] = ec._EmailWithProfilePhoto_profilePhotoUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "profilePhotoUrlId":
-			out.Values[i] = ec._EmailWithProfilePhoto_profilePhotoUrlId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -140529,6 +140589,60 @@ func (ec *executionContext) unmarshalNEmailInput2ᚖgithubᚗcomᚋcustomerosᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNEmailProfile2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EmailProfile) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEmailProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailProfile(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNEmailProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailProfile(ctx context.Context, sel ast.SelectionSet, v *model.EmailProfile) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EmailProfile(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -140670,60 +140784,6 @@ func (ec *executionContext) marshalNEmailVariableName2ᚕgithubᚗcomᚋcustomer
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalNEmailWithProfilePhoto2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailWithProfilePhotoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EmailWithProfilePhoto) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNEmailWithProfilePhoto2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailWithProfilePhoto(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNEmailWithProfilePhoto2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailWithProfilePhoto(ctx context.Context, sel ast.SelectionSet, v *model.EmailWithProfilePhoto) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._EmailWithProfilePhoto(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEnrichDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx context.Context, sel ast.SelectionSet, v *model.EnrichDetails) graphql.Marshaler {

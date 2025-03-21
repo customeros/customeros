@@ -1,6 +1,6 @@
 extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    email_ProfilePhoto(emails: [String!]!): [EmailWithProfilePhoto!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    email_ProfilePhoto(emails: [String!]!): [EmailProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -163,8 +163,9 @@ enum EmailLabel {
     OTHER
 }
 
-type EmailWithProfilePhoto {
+type EmailProfile {
     email:              String!
     profilePhotoUrl:    String!
     profilePhotoUrlId:  String!
+    name:               String!
 }

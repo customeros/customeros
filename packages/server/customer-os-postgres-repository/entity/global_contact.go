@@ -45,7 +45,7 @@ func (GlobalContact) TableName() string {
 // CREATE INDEX idx_linkedin_identifier_primary_domain ON global_contacts (linkedin_identifier, primary_domain);
 // CREATE INDEX idx_work_email_primary_domain ON global_contacts (work_email, primary_domain);
 
-func (g *GlobalContact) GetProfilePhotoUrl(cdnPrefix string) string {
+func (g GlobalContact) GetProfilePhotoUrl(cdnPrefix string) string {
 	if g.ProfilePhotoPath != "" {
 		return cdnPrefix + g.ProfilePhotoPath
 	}
@@ -53,4 +53,13 @@ func (g *GlobalContact) GetProfilePhotoUrl(cdnPrefix string) string {
 		return g.ProfilePhotoExternalUrl
 	}
 	return ""
+}
+
+func (g GlobalContact) GetFullName() string {
+	if g.FirstName != "" && g.LastName != "" {
+		return g.FirstName + " " + g.LastName
+	} else if g.FirstName != "" {
+		return g.FirstName
+	}
+	return g.LastName
 }
