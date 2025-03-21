@@ -1,10 +1,10 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type Repositories struct {
@@ -26,7 +26,6 @@ type Repositories struct {
 	MeetingRepository              MeetingRepository
 	NoteRepository                 NoteRepository
 	OrganizationRepository         OrganizationRepository
-	SearchRepository               SearchRepository
 }
 
 type Drivers struct {
@@ -56,6 +55,5 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, postgresDB *com
 	repositories.MeetingRepository = NewMeetingRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver, database)
-	repositories.SearchRepository = NewSearchRepository(driver)
 	return &repositories
 }
