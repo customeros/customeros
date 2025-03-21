@@ -3,9 +3,9 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -83,7 +83,7 @@ func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys datalo
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.JobRoleEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -133,7 +133,7 @@ func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys d
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.JobRoleEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -183,7 +183,7 @@ func (b *jobRoleBatcher) getJobRolesForUsers(ctx context.Context, keys dataloade
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.JobRoleEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

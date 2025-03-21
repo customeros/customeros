@@ -187,7 +187,7 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -236,7 +236,7 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -285,7 +285,7 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -334,7 +334,7 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -380,7 +380,7 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -429,7 +429,7 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -475,7 +475,7 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))
@@ -521,7 +521,7 @@ func (b *organizationBatcher) getOrganizationsForContracts(ctx context.Context, 
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))
@@ -567,7 +567,7 @@ func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Conte
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))
@@ -616,7 +616,7 @@ func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloa
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -665,7 +665,7 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("result.length", len(results)))
@@ -714,7 +714,7 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationWithJobRole{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))

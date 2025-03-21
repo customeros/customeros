@@ -89,7 +89,7 @@ func (b *opportunityBatcher) getOpportunitiesForContracts(ctx context.Context, k
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OpportunityEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -143,7 +143,7 @@ func (b *opportunityBatcher) getOpportunitiesForOrganizations(ctx context.Contex
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OpportunityEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -195,7 +195,7 @@ func (b *opportunityBatcher) getOpportunitiesForTasks(ctx context.Context, keys 
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OpportunityEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.count", len(results)))
