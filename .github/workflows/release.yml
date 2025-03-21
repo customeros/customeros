@@ -4,7 +4,6 @@ on:
   workflow_run:
     workflows: 
       - "customer-os-api"
-      - "customer-os-platform-admin-api"
       - "customer-os-webhooks"
       - "customer-os-data-upkeeper"
       - "events-subscribers"
@@ -194,7 +193,6 @@ jobs:
       matrix:
         service:
           - customer-os-api
-          - customer-os-platform-admin-api
           - customer-os-webhooks
           - customer-os-data-upkeeper
           - events-subscribers

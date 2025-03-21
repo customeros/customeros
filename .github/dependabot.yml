@@ -165,20 +165,6 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/customer-os-platform-admin-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/customer-os-platform-admin-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
     directory: "/packages/server/mailstack"
     schedule:
       interval: "daily"

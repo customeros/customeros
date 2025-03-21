@@ -1,0 +1,23 @@
+# List available commands
+default:
+    @just --list
+
+# Build the application
+build:
+    go build -o app .
+
+# Run database migrations
+migrate:
+    go run customer_os_data_upkeeper_main.go migrate
+
+# Run the application
+run:
+    go run customer_os_data_upkeeper_main.go
+
+# Stop the running application
+stop:
+    @-pkill -f "customer-os-data-upkeeper"
+
+# Update and tidy dependencies
+tidy:
+    go mod tidy 
