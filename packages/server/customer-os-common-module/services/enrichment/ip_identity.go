@@ -18,8 +18,8 @@ import (
 
 const CACHE_LOOKBACK = 30 // days
 
-func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interfaces.SnitcherResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "EnrichmentService.GetSnitcherData")
+func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfaces.SnitcherResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.GetSnitcherData")
 	defer span.Finish()
 
 	// check to see if IP mapping data already exists
@@ -72,6 +72,8 @@ func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interface
 func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*interfaces.SnitcherResponse, *string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callSnitcher")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("ip", ip)
 
 	// validate if snitcher is configured
 	if s.config.SnitcherConfig.ApiKey == "" || s.config.SnitcherConfig.Url == "" {
@@ -101,18 +103,23 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 		return nil, nil, fmt.Errorf("failed to perform POST request: %v", err)
 	}
 	defer resp.Body.Close()
-
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, nil, fmt.Errorf("failed to read response body: %v", err)
 	}
 
+	// Check status code
+	span.LogFields(log.Int("response.statusCode", resp.StatusCode))
+	if resp.StatusCode != http.StatusOK {
+		span.LogKV("result.rawSnitcherResponse", string(responseBody))
+		return nil, nil, fmt.Errorf("snitcher API returned non-200 status code: %d", resp.StatusCode)
+	}
+
 	var buf bytes.Buffer
 	if err := json.Compact(&buf, responseBody); err != nil {
 		return nil, nil, fmt.Errorf("error compacting json: %w", err)
 	}
-
 	responseString := buf.String()
 
 	snitcherData, err := buildSnitcherResponse(ctx, responseBody)
@@ -121,13 +128,15 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 		return nil, nil, fmt.Errorf("faild to parse snitcher response: %v", err)
 	}
 
+	span.LogKV("result.rawSnitcherResponse", string(responseBody))
+	tracing.LogObjectAsJson(span, "result.snitcherData", snitcherData)
 	return snitcherData, &responseString, nil
 }
 
 func buildSnitcherResponse(ctx context.Context, responseBody []byte) (*interfaces.SnitcherResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.buildSnitcherResponse")
 	defer span.Finish()
-
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	// Parse the JSON request body
 	var snitcherResponse interfaces.SnitcherResponse
 	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
