@@ -100,144 +100,155 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 
 	// process records
 	for _, record := range records {
+		s.syncScrapinToGlobalOrganizationRecord(ctx, record)
+	}
+}
 
-		// mark record as synced initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.MarkSyncedToGlobalOrganizations(ctx, record.ID)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
-			s.log.Errorf("Error marking record as synced: %s", err.Error())
-			continue
-		}
+func (s *globalOrganizationService) syncScrapinToGlobalOrganizationRecord(ctx context.Context, record *postgres_entity.EnrichDetailsScrapIn) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.syncScrapinToGlobalOrganizationRecord")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		if record.Data == "" {
-			continue
-		}
+	// mark record as synced initially to not process same record again, even if error occurs
+	err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.MarkSyncedToGlobalOrganizations(ctx, record.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
+		s.log.Errorf("Error marking record as synced: %s", err.Error())
+		return
+	}
 
-		// unmarshal cached data
-		data := postgresentity.ScrapInResponseBody{}
-		if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin data"))
-			continue
-		}
+	if record.Data == "" {
+		return
+	}
 
-		if data.Company == nil {
-			continue
-		}
+	// unmarshal cached data
+	data := postgresentity.ScrapInResponseBody{}
+	if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin data"))
+		return
+	}
 
-		// if company website is missing skip processing as we cannot validate primary domain
-		if data.Company.WebsiteUrl == "" {
-			continue
-		}
+	if data.Company == nil {
+		return
+	}
 
-		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
-			continue
-		}
+	// if company website is missing skip processing as we cannot validate primary domain
+	if data.Company.WebsiteUrl == "" {
+		return
+	}
 
-		// identify primary domain
-		accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Company.WebsiteUrl)
-		if !accessible {
-			continue
-		}
+	if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
+		return
+	}
 
-		// if primary domain is empty, skip processing
-		if primaryDomain == "" {
-			continue
-		}
+	// identify primary domain
+	accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Company.WebsiteUrl)
+	if !accessible {
+		return
+	}
 
-		if !utils.IsValidDomain(primaryDomain) {
-			continue
-		}
+	// if primary domain is empty, skip processing
+	if primaryDomain == "" {
+		return
+	}
 
-		// check if primary domain is accepted
-		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
-			continue
-		}
+	if !utils.IsValidDomain(primaryDomain) {
+		return
+	}
 
-		// if global organization already exists, update otherwise create
-		globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting global organization by primary domain"))
-			s.log.Errorf("Error getting global organization by primary domain: %s", err.Error())
-			continue
-		}
+	// check if primary domain is accepted
+	if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
+		return
+	}
 
-		createGlobalOrg := false
-		if globalOrganization == nil {
-			createGlobalOrg = true
-			now := utils.Now()
-			globalOrganization = &postgresentity.GlobalOrganization{
-				PrimaryDomain: primaryDomain,
-				CreatedAt:     now,
-				UpdatedAt:     now,
-			}
-		}
+	// if global organization already exists, update otherwise create
+	globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting global organization by primary domain"))
+		s.log.Errorf("Error getting global organization by primary domain: %s", err.Error())
+		return
+	}
 
-		// populate global organization entity
-		if data.Company.Name != "" && globalOrganization.Name == "" {
-			name := strings.TrimSpace(data.Company.Name)
-			name = utils.SanitizeUTF8(name)
-			globalOrganization.Name = name
+	createGlobalOrg := false
+	if globalOrganization == nil {
+		createGlobalOrg = true
+		now := utils.Now()
+		globalOrganization = &postgresentity.GlobalOrganization{
+			PrimaryDomain: primaryDomain,
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		}
-		if data.Company.Description != "" {
-			globalOrganization.SourceDescription1 = data.Company.Description
-		}
-		if data.Company.Tagline != nil {
-			if tagline, ok := data.Company.Tagline.(string); ok {
-				globalOrganization.SourceDescription2 = tagline
-			}
-		}
-		if data.Company.GetEmployeeCount() > 0 && globalOrganization.EmployeeCount == 0 {
-			globalOrganization.EmployeeCount = data.Company.GetEmployeeCount()
-		}
-		if data.Company.WebsiteUrl != "" && globalOrganization.Website == "" {
-			globalOrganization.Website = data.Company.WebsiteUrl
-		}
-		if data.Company.FoundedOn.Year > 0 && globalOrganization.YearFounded == 0 {
-			globalOrganization.YearFounded = data.Company.FoundedOn.Year
-		}
-		if data.Company.LinkedInUrl != "" && globalOrganization.LinkedInUrl == "" {
-			globalOrganization.LinkedInUrl = data.Company.LinkedInUrl
-		}
-		if data.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
-			globalOrganization.LinkedInAlias = data.Company.UniversalName
-		}
-		if data.Company.Logo != "" && globalOrganization.LogoUrl == "" {
-			globalOrganization.LogoUrl = data.Company.Logo
-		}
-		if data.Company.Headquarter.City != "" && globalOrganization.City == "" {
-			globalOrganization.City = data.Company.Headquarter.City
-		}
-		if data.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
-			globalOrganization.Region = data.Company.Headquarter.GeographicArea
-		}
-		if data.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
-			if strings.ToUpper(data.Company.Headquarter.Country) == "OO" {
-				globalOrganization.CountryA2 = ""
-			} else {
-				country := countries.ByName(data.Company.Headquarter.Country)
-				if country != countries.Unknown {
-					globalOrganization.CountryA2 = country.Alpha2()
-				} else {
-					globalOrganization.CountryA2 = ""
-				}
-			}
-		}
+	}
 
-		if createGlobalOrg {
-			// create global organization
-			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
-				s.log.Errorf("Error creating global organization: %s", err.Error())
-				continue
-			}
+	// populate global organization entity
+	if data.Company.Name != "" && globalOrganization.Name == "" {
+		name := strings.TrimSpace(data.Company.Name)
+		name = utils.SanitizeUTF8(name)
+		globalOrganization.Name = name
+	}
+	if data.Company.Description != "" {
+		globalOrganization.SourceDescription1 = data.Company.Description
+	}
+	if data.Company.Tagline != nil {
+		if tagline, ok := data.Company.Tagline.(string); ok {
+			globalOrganization.SourceDescription2 = tagline
+		}
+	}
+	if data.Company.GetEmployeeCount() > 0 && globalOrganization.EmployeeCount == 0 {
+		globalOrganization.EmployeeCount = data.Company.GetEmployeeCount()
+	}
+	if data.Company.WebsiteUrl != "" && globalOrganization.Website == "" {
+		globalOrganization.Website = data.Company.WebsiteUrl
+	}
+	if data.Company.FoundedOn.Year > 0 && globalOrganization.YearFounded == 0 {
+		globalOrganization.YearFounded = data.Company.FoundedOn.Year
+	}
+	if data.Company.LinkedInUrl != "" && globalOrganization.LinkedInUrl == "" {
+		globalOrganization.LinkedInUrl = data.Company.LinkedInUrl
+	}
+	if data.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
+		globalOrganization.LinkedInAlias = data.Company.UniversalName
+	}
+	if data.Company.Logo != "" && globalOrganization.LogoUrl == "" {
+		globalOrganization.LogoUrl = data.Company.Logo
+	}
+	if data.Company.Headquarter.City != "" && globalOrganization.City == "" {
+		globalOrganization.City = data.Company.Headquarter.City
+	}
+	if data.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
+		globalOrganization.Region = data.Company.Headquarter.GeographicArea
+	}
+	if data.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
+		if strings.ToUpper(data.Company.Headquarter.Country) == "OO" {
+			globalOrganization.CountryA2 = ""
 		} else {
-			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
-				s.log.Errorf("Error updating global organization: %s", err.Error())
-				continue
+			country := countries.ByName(data.Company.Headquarter.Country)
+			if country != countries.Unknown {
+				globalOrganization.CountryA2 = country.Alpha2()
+			} else {
+				globalOrganization.CountryA2 = ""
 			}
+		}
+	}
+
+	if createGlobalOrg {
+		// create global organization
+		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
+			s.log.Errorf("Error creating global organization: %s", err.Error())
+			return
+		}
+		_, err := s.commonServices.WebscraperService.Scrape(ctx, "https://"+globalOrganization.PrimaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	} else {
+		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
+			s.log.Errorf("Error updating global organization: %s", err.Error())
+			return
 		}
 	}
 }
@@ -266,190 +277,201 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 
 	// process records
 	for _, record := range records {
+		s.syncBrandfetchToGlobalOrganizationRecord(ctx, record)
+	}
+}
 
-		// mark record as synced initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.EnrichDetailsBrandfetchRepository.MarkSyncedToGlobalOrganizations(ctx, record.ID)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
-			s.log.Errorf("Error marking record as synced: %s", err.Error())
-			continue
-		}
+func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx context.Context, record *postgres_entity.EnrichDetailsBrandfetch) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.syncBrandfetchToGlobalOrganizationRecord")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		if record.Data == "" {
-			continue
-		}
+	// mark record as synced initially to not process same record again, even if error occurs
+	err := s.commonServices.PostgresRepositories.EnrichDetailsBrandfetchRepository.MarkSyncedToGlobalOrganizations(ctx, record.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
+		s.log.Errorf("Error marking record as synced: %s", err.Error())
+		return
+	}
 
-		// unmarshal cached data
-		data := postgresentity.BrandfetchResponseBody{}
-		if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch data"))
-			continue
-		}
+	if record.Data == "" {
+		return
+	}
 
-		// if company domin is missing skip processing as we cannot validate primary domain
-		if data.Domain == "" {
-			continue
-		}
+	// unmarshal cached data
+	data := postgresentity.BrandfetchResponseBody{}
+	if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch data"))
+		return
+	}
 
-		// check if website is accepted
-		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
-			continue
-		}
+	// if company domin is missing skip processing as we cannot validate primary domain
+	if data.Domain == "" {
+		return
+	}
 
-		// identify primary domain
-		accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Domain)
-		if !accessible {
-			continue
-		}
+	// check if website is accepted
+	if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
+		return
+	}
 
-		// if primary domain is empty, skip processing
-		if primaryDomain == "" {
-			continue
-		}
+	// identify primary domain
+	accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Domain)
+	if !accessible {
+		return
+	}
 
-		if !utils.IsValidDomain(primaryDomain) {
-			continue
-		}
+	// if primary domain is empty, skip processing
+	if primaryDomain == "" {
+		return
+	}
 
-		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
-			continue
-		}
+	if !utils.IsValidDomain(primaryDomain) {
+		return
+	}
 
-		globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting global organization by primary domain"))
-			s.log.Errorf("Error getting global organization by primary domain: %s", err.Error())
-			continue
-		}
+	if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
+		return
+	}
 
-		createGlobalOrg := false
-		if globalOrganization == nil {
-			createGlobalOrg = true
-			now := utils.Now()
-			globalOrganization = &postgresentity.GlobalOrganization{
-				PrimaryDomain: primaryDomain,
-				CreatedAt:     now,
-				UpdatedAt:     now,
-			}
-		}
+	globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting global organization by primary domain"))
+		s.log.Errorf("Error getting global organization by primary domain: %s", err.Error())
+		return
+	}
 
-		// populate global organization entity
-		if data.Name != "" && globalOrganization.Name == "" {
-			name := strings.TrimSpace(data.Name)
-			name = utils.SanitizeUTF8(name)
-			globalOrganization.Name = name
+	createGlobalOrg := false
+	if globalOrganization == nil {
+		createGlobalOrg = true
+		now := utils.Now()
+		globalOrganization = &postgresentity.GlobalOrganization{
+			PrimaryDomain: primaryDomain,
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		}
-		if data.LongDescription != "" {
-			globalOrganization.SourceDescription3 = data.LongDescription
-		}
-		if data.Description != "" {
-			globalOrganization.SourceDescription4 = data.Description
-		}
-		if data.Company.GetEmployees() > 0 && globalOrganization.EmployeeCount == 0 {
-			globalOrganization.EmployeeCount = data.Company.GetEmployees()
-		}
-		if data.Domain != "" && globalOrganization.Website == "" {
-			globalOrganization.Website = data.Domain
-		}
-		if data.Company.FoundedYear > 0 && globalOrganization.YearFounded == 0 {
-			globalOrganization.YearFounded = int(data.Company.FoundedYear)
-		}
-		if len(data.GetLogoUrls()) > 0 && globalOrganization.LogoUrl == "" {
-			globalOrganization.LogoUrl = data.GetLogoUrls()[0]
-		}
-		if len(data.GetIconUrls()) > 0 && globalOrganization.IconUrl == "" {
-			globalOrganization.IconUrl = data.GetIconUrls()[0]
-		}
-		if data.Company.Location.City != "" && globalOrganization.City == "" {
-			globalOrganization.City = data.Company.Location.City
-		}
-		if data.Company.Location.Region != "" && globalOrganization.Region == "" {
-			globalOrganization.Region = data.Company.Location.Region
-		}
-		if data.Company.Location.CountryCodeA2 != "" && globalOrganization.CountryA2 == "" {
-			if strings.ToUpper(data.Company.Location.CountryCodeA2) == "OO" {
-				globalOrganization.CountryA2 = ""
+	}
+
+	// populate global organization entity
+	if data.Name != "" && globalOrganization.Name == "" {
+		name := strings.TrimSpace(data.Name)
+		name = utils.SanitizeUTF8(name)
+		globalOrganization.Name = name
+	}
+	if data.LongDescription != "" {
+		globalOrganization.SourceDescription3 = data.LongDescription
+	}
+	if data.Description != "" {
+		globalOrganization.SourceDescription4 = data.Description
+	}
+	if data.Company.GetEmployees() > 0 && globalOrganization.EmployeeCount == 0 {
+		globalOrganization.EmployeeCount = data.Company.GetEmployees()
+	}
+	if data.Domain != "" && globalOrganization.Website == "" {
+		globalOrganization.Website = data.Domain
+	}
+	if data.Company.FoundedYear > 0 && globalOrganization.YearFounded == 0 {
+		globalOrganization.YearFounded = int(data.Company.FoundedYear)
+	}
+	if len(data.GetLogoUrls()) > 0 && globalOrganization.LogoUrl == "" {
+		globalOrganization.LogoUrl = data.GetLogoUrls()[0]
+	}
+	if len(data.GetIconUrls()) > 0 && globalOrganization.IconUrl == "" {
+		globalOrganization.IconUrl = data.GetIconUrls()[0]
+	}
+	if data.Company.Location.City != "" && globalOrganization.City == "" {
+		globalOrganization.City = data.Company.Location.City
+	}
+	if data.Company.Location.Region != "" && globalOrganization.Region == "" {
+		globalOrganization.Region = data.Company.Location.Region
+	}
+	if data.Company.Location.CountryCodeA2 != "" && globalOrganization.CountryA2 == "" {
+		if strings.ToUpper(data.Company.Location.CountryCodeA2) == "OO" {
+			globalOrganization.CountryA2 = ""
+		} else {
+			country := countries.ByName(data.Company.Location.CountryCodeA2)
+			if country != countries.Unknown {
+				globalOrganization.CountryA2 = country.Alpha2()
 			} else {
-				country := countries.ByName(data.Company.Location.CountryCodeA2)
-				if country != countries.Unknown {
-					globalOrganization.CountryA2 = country.Alpha2()
-				} else {
-					globalOrganization.CountryA2 = ""
-				}
+				globalOrganization.CountryA2 = ""
 			}
 		}
-		otherSocials := []string{}
-		for _, link := range data.Links {
-			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
-				_, scrapinResponse, err := s.commonServices.EnrichmentService.ScrapInCompanyProfile(ctx, link.Url)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "error calling scrapin for company profile"))
-					s.log.Errorf("Error calling scrapin for company profile: %s", err.Error())
-					continue
-				}
+	}
+	otherSocials := []string{}
+	for _, link := range data.Links {
+		if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
+			_, scrapinResponse, err := s.commonServices.EnrichmentService.ScrapInCompanyProfile(ctx, link.Url)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error calling scrapin for company profile"))
+				s.log.Errorf("Error calling scrapin for company profile: %s", err.Error())
+				continue
+			}
 
-				if scrapinResponse != nil && scrapinResponse.Company != nil {
-					globalOrganization.LinkedInUrl = scrapinResponse.Company.LinkedInUrl
-					if scrapinResponse.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
-						globalOrganization.LinkedInAlias = scrapinResponse.Company.UniversalName
-					}
-					if scrapinResponse.Company.Logo != "" && globalOrganization.LogoUrl == "" {
-						globalOrganization.LogoUrl = scrapinResponse.Company.Logo
-					}
-					if scrapinResponse.Company.Headquarter.City != "" && globalOrganization.City == "" {
-						globalOrganization.City = scrapinResponse.Company.Headquarter.City
-					}
-					if scrapinResponse.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
-						globalOrganization.Region = scrapinResponse.Company.Headquarter.GeographicArea
-					}
-					if scrapinResponse.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
-						if strings.ToUpper(scrapinResponse.Company.Headquarter.Country) == "OO" {
-							globalOrganization.CountryA2 = ""
+			if scrapinResponse != nil && scrapinResponse.Company != nil {
+				globalOrganization.LinkedInUrl = scrapinResponse.Company.LinkedInUrl
+				if scrapinResponse.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
+					globalOrganization.LinkedInAlias = scrapinResponse.Company.UniversalName
+				}
+				if scrapinResponse.Company.Logo != "" && globalOrganization.LogoUrl == "" {
+					globalOrganization.LogoUrl = scrapinResponse.Company.Logo
+				}
+				if scrapinResponse.Company.Headquarter.City != "" && globalOrganization.City == "" {
+					globalOrganization.City = scrapinResponse.Company.Headquarter.City
+				}
+				if scrapinResponse.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
+					globalOrganization.Region = scrapinResponse.Company.Headquarter.GeographicArea
+				}
+				if scrapinResponse.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
+					if strings.ToUpper(scrapinResponse.Company.Headquarter.Country) == "OO" {
+						globalOrganization.CountryA2 = ""
+					} else {
+						country := countries.ByName(scrapinResponse.Company.Headquarter.Country)
+						if country != countries.Unknown {
+							globalOrganization.CountryA2 = country.Alpha2()
 						} else {
-							country := countries.ByName(scrapinResponse.Company.Headquarter.Country)
-							if country != countries.Unknown {
-								globalOrganization.CountryA2 = country.Alpha2()
-							} else {
-								globalOrganization.CountryA2 = ""
-							}
+							globalOrganization.CountryA2 = ""
 						}
 					}
 				}
-			} else if link.Url != "" && !strings.Contains(link.Url, "linkedin.com") {
-				otherSocials = append(otherSocials, link.Url)
 			}
+		} else if link.Url != "" && !strings.Contains(link.Url, "linkedin.com") {
+			otherSocials = append(otherSocials, link.Url)
 		}
+	}
 
-		if len(data.Company.Industries) > 0 {
-			industryDesc := "Business area: "
-			for _, industry := range data.Company.Industries {
-				industryDesc += industry.Name + "; "
-			}
-			globalOrganization.SourceDescription5 = industryDesc
+	if len(data.Company.Industries) > 0 {
+		industryDesc := "Business area: "
+		for _, industry := range data.Company.Industries {
+			industryDesc += industry.Name + "; "
 		}
+		globalOrganization.SourceDescription5 = industryDesc
+	}
 
-		if createGlobalOrg {
-			// create global organization
-			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
-				s.log.Errorf("Error creating global organization: %s", err.Error())
-				continue
-			}
-		} else {
-			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
-				s.log.Errorf("Error updating global organization: %s", err.Error())
-				continue
-			}
+	if createGlobalOrg {
+		// create global organization
+		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
+			s.log.Errorf("Error creating global organization: %s", err.Error())
+			return
 		}
-		if len(otherSocials) > 0 {
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.AddOtherSocials(ctx, globalOrganization.PrimaryDomain, otherSocials)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error adding other socials"))
-				s.log.Errorf("Error adding other socials: %s", err.Error())
-			}
+		_, err := s.commonServices.WebscraperService.Scrape(ctx, "https://"+globalOrganization.PrimaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	} else {
+		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
+			s.log.Errorf("Error updating global organization: %s", err.Error())
+			return
+		}
+	}
+	if len(otherSocials) > 0 {
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.AddOtherSocials(ctx, globalOrganization.PrimaryDomain, otherSocials)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error adding other socials"))
+			s.log.Errorf("Error adding other socials: %s", err.Error())
 		}
 	}
 }
@@ -1030,12 +1052,12 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 
 	// process records
 	for _, record := range records {
-		s.processGlobalOrganization(ctx, record)
+		s.syncGlobalOrganizationToTenantOrganizationRecord(ctx, record)
 	}
 }
 
-func (s *globalOrganizationService) processGlobalOrganization(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
+func (s *globalOrganizationService) syncGlobalOrganizationToTenantOrganizationRecord(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.syncGlobalOrganizationToTenantOrganizationRecord")
 	defer span.Finish()
 	span.LogFields(log.Uint64("record.id", globalOrganization.ID), log.String("record.primaryDomain", globalOrganization.PrimaryDomain))
 	tracing.TagEntity(span, globalOrganization.PrimaryDomain)

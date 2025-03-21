@@ -39,6 +39,7 @@ type CommonConfig struct {
 	QuickbooksConfig  commonconf.QuickbooksConfig
 	OpensearchConfig  commonconf.OpensearchConfig
 	TemporalConfig    commonconf.TemporalConfig
+	ScrapinConfig     commonconf.ScrapinConfig
 }
 
 type AppConfig struct {
@@ -112,6 +113,7 @@ func Load() *Config {
 			JinaConfig:          cmnCfg.JinaConfig,
 			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
 			TemporalConfig:      cmnCfg.TemporalConfig,
+			ScrapinConfig:       cmnCfg.ScrapinConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,

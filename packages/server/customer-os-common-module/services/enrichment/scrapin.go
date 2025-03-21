@@ -29,8 +29,9 @@ type ScrapInSearchRequestParams struct {
 }
 
 func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinService.ScrapInPersonProfile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.ScrapInPersonProfile")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("linkedInUrl", linkedInUrl))
 
 	latestEnrichDetailsScrapInRecord, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, linkedInUrl, postgres_entity.ScrapInFlowPersonProfile)
@@ -123,8 +124,9 @@ func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUr
 }
 
 func (s *enrichmentService) callScrapinPersonProfile(ctx context.Context, linkedInUrl string) (*postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.callScrapinPersonProfile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callScrapinPersonProfile")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("linkedInUrl", linkedInUrl))
 
 	baseUrl := s.config.ScrapinConfig.Url
@@ -167,8 +169,9 @@ func (s *enrichmentService) callScrapinPersonProfile(ctx context.Context, linked
 }
 
 func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firstName, lastName, domain, companyName string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinService.ScrapInSearchPerson")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.ScrapInSearchPerson")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(
 		log.String("email", email),
 		log.String("firstName", firstName),
@@ -316,8 +319,9 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 }
 
 func (s *enrichmentService) callScrapinPersonSearch(ctx context.Context, email, firstName, lastName, domain, companyName string) (*postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.callScrapinPersonSearch")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callScrapinPersonSearch")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("email", email, "firstName", firstName, "lastName", lastName, "domain", domain, "companyName", companyName)
 
 	baseUrl := s.config.ScrapinConfig.Url
@@ -372,8 +376,9 @@ func (s *enrichmentService) callScrapinPersonSearch(ctx context.Context, email, 
 }
 
 func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInUrl string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinService.ScrapInCompanyProfile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.ScrapInCompanyProfile")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("linkedInUrl", linkedInUrl))
 
 	latestEnrichDetailsScrapInRecord, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, linkedInUrl, postgres_entity.ScrapInFlowCompanyProfile)
