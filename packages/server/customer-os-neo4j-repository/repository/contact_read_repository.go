@@ -42,6 +42,7 @@ type ContactReadRepository interface {
 	GetContacts(ctx context.Context, tenant string, contactIds []string) ([]*dbtype.Node, error)
 	GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error)
 	GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
+	GetContactsByEmailAddresses(ctx context.Context, tenant string, emailAddresses []string) ([]*utils.DbNodeAndId, error)
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetActiveContactsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
@@ -182,6 +183,39 @@ func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
+}
+
+func (r *contactReadRepository) GetContactsByEmailAddresses(ctx context.Context, tenant string, emailAddresses []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsByEmailAddresses")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+			WHERE toLower(e.email)IN $emailAddresses OR toLower(e.rawEmail) IN $emailAddresses 
+			RETURN c, COALESCE(CASE WHEN e.email IS NOT NULL AND e.email <> '' THEN e.email ELSE e.rawEmail END, e.email) as emailId`
+	params := map[string]any{
+		"tenant":         tenant,
+		"emailAddresses": emailAddresses,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *contactReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {

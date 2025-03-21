@@ -1151,6 +1151,12 @@ type EmailVariableEntity struct {
 	Variables []EmailVariableName     `json:"variables"`
 }
 
+type EmailWithProfilePhoto struct {
+	Email             string `json:"email"`
+	ProfilePhotoURL   string `json:"profilePhotoUrl"`
+	ProfilePhotoURLID string `json:"profilePhotoUrlId"`
+}
+
 type EnrichDetails struct {
 	RequestedAt            *time.Time `json:"requestedAt,omitempty"`
 	EnrichedAt             *time.Time `json:"enrichedAt,omitempty"`

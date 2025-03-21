@@ -44,3 +44,13 @@ func (GlobalContact) TableName() string {
 // Composite indexes for unique combinations ???
 // CREATE INDEX idx_linkedin_identifier_primary_domain ON global_contacts (linkedin_identifier, primary_domain);
 // CREATE INDEX idx_work_email_primary_domain ON global_contacts (work_email, primary_domain);
+
+func (g *GlobalContact) GetProfilePhotoUrl(cdnPrefix string) string {
+	if g.ProfilePhotoPath != "" {
+		return cdnPrefix + g.ProfilePhotoPath
+	}
+	if g.ProfilePhotoExternalUrl != "" {
+		return g.ProfilePhotoExternalUrl
+	}
+	return ""
+}

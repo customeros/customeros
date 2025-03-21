@@ -41,7 +41,8 @@ type UserReadRepository interface {
 	GetOwnerForContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedCustomerUsers(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
+	GetUsersByEmailIds(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
+	GetUsersByEmailAddresses(ctx context.Context, tenant string, emailAddresses []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllOwnersForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllCreatorsForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
@@ -721,23 +722,26 @@ func (r *userReadRepository) GetPaginatedCustomerUsers(parentCtx context.Context
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *userReadRepository) GetAllForEmails(parentCtx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllForEmails")
+func (r *userReadRepository) GetUsersByEmailIds(parentCtx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetUsersByEmailIds")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "emailIds", emailIds)
+	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+			WHERE e.id IN $emailIds
+			RETURN u, e.id as emailId ORDER BY u.firstName, u.lastName`
+	params := map[string]any{
+		"tenant":   tenant,
+		"emailIds": emailIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
-			WHERE e.id IN $emailIds
-			RETURN u, e.id as emailId ORDER BY u.firstName, u.lastName`,
-			map[string]any{
-				"tenant":   tenant,
-				"emailIds": emailIds,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
@@ -746,6 +750,39 @@ func (r *userReadRepository) GetAllForEmails(parentCtx context.Context, tenant s
 	if err != nil {
 		return nil, err
 	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *userReadRepository) GetUsersByEmailAddresses(parentCtx context.Context, tenant string, emailAddresses []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetUsersByEmailAddresses")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+			WHERE toLower(e.email)IN $emailAddresses OR toLower(e.rawEmail) IN $emailAddresses 
+			RETURN u, COALESCE(CASE WHEN e.email IS NOT NULL AND e.email <> '' THEN e.email ELSE e.rawEmail END, e.email) as emailId`
+	params := map[string]any{
+		"tenant":         tenant,
+		"emailAddresses": emailAddresses,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
 	return result.([]*utils.DbNodeAndId), err
 }
 
