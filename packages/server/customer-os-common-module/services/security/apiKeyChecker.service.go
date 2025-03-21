@@ -17,7 +17,6 @@ const (
 	CUSTOMER_OS_API      App = "customer-os-api"
 	CUSTOMER_OS_WEBHOOKS App = "customer-os-webhooks"
 	MAILSHEPRA_API       App = "mailsherpa-api"
-	PLATFORM_ADMIN_API   App = "platform-admin-api"
 )
 
 const (

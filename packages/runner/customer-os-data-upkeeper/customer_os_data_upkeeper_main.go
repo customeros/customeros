@@ -58,6 +58,15 @@ func main() {
 
 	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb)
 
+	// Check if migration is requested
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		appLogger.Info("Running database migration...")
+		if err := repositories.PostgresRepositories.AutoMigrate(postgresDb); err != nil {
+			appLogger.Fatalf("Database migration failed: %v", err)
+		}
+		appLogger.Info("Database migration completed successfully")
+	}
+
 	cntnr := &container.Container{
 		Cfg:            cfg,
 		Log:            appLogger,

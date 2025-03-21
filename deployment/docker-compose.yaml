@@ -200,28 +200,12 @@ services:
     ports:
       - "11006:3000"
 
-  customer-os-platform-admin-api:
-    image: ghcr.io/customeros/customeros/customer-os-platform-admin-api:latest
-    networks:
-      - openline
-    ports:
-      - "10005:10005"
-    depends_on:
-      - postgres-sidecar
-      - neo4j-sidecar
-      - rabbitmq
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-
   customer-os-api:
     image: ghcr.io/customeros/customeros/customer-os-api:latest
     networks:
       - openline
     ports:
       - "10000:10000"
-    depends_on:
-      - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_ASYNC_HOST=postgres
@@ -232,8 +216,6 @@ services:
     image: ghcr.io/customeros/customeros/events-subscribers:latest
     networks:
       - openline
-    depends_on:
-      - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_ASYNC_HOST=postgres
@@ -246,8 +228,6 @@ services:
       - openline
     ports:
       - "10004:10004"
-    depends_on:
-      - customer-os-platform-admin-api
     environment:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687

@@ -9,8 +9,6 @@ cd ../customer-os-api
 go mod tidy
 cd ../customer-os-neo4j-repository
 go mod tidy
-cd ../customer-os-platform-admin-api
-go mod tidy
 cd ../customer-os-webhooks
 go mod tidy
 cd ../mailsherpa-api
