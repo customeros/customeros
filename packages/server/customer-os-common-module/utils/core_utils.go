@@ -306,25 +306,6 @@ func FirstNotEmptyString(input ...string) string {
 	return ""
 }
 
-// Helper to add commas to an integer string
-func addThousandSeparators(value string) string {
-	var newParts []string
-	// Get length of string
-	strlen := len(value)
-
-	for i, char := range value {
-
-		// Insert comma every 3 digits from right
-		if i > 0 && (strlen-i)%3 == 0 {
-			newParts = append(newParts, ",")
-		}
-
-		newParts = append(newParts, string(char))
-	}
-
-	return strings.Join(newParts, "")
-}
-
 func ToJson(obj any) (string, error) {
 	outputJson, err := json.Marshal(obj)
 	if err != nil {

@@ -107,9 +107,7 @@ func extractHostname(inputURL string) string {
 	hostname := u.Hostname()
 
 	// Remove "www." if it exists
-	if strings.HasPrefix(hostname, "www.") {
-		hostname = hostname[4:] // Remove the first 4 characters ("www.")
-	}
+	hostname = strings.TrimPrefix(hostname, "www.")
 
 	return strings.ToLower(hostname)
 }

@@ -129,27 +129,3 @@ func TestBackOffExponentialDelay(t *testing.T) {
 		})
 	}
 }
-
-func TestBackOffIncrementalDelay(t *testing.T) {
-	tests := []struct {
-		attempt   int
-		wantDelay time.Duration
-	}{
-		{-1, 50 * time.Millisecond},
-		{0, 50 * time.Millisecond},
-		{1, 50 * time.Millisecond},
-		{2, 100 * time.Millisecond},
-		{3, 150 * time.Millisecond},
-		{10, 500 * time.Millisecond},
-		{20, 1000 * time.Millisecond},
-		{40, 2 * time.Second}, // Cap at 2 seconds
-		{50, 2 * time.Second}, // Cap at 2 seconds
-	}
-
-	for _, tc := range tests {
-		got := BackOffIncrementalDelay(tc.attempt)
-		if got != tc.wantDelay {
-			t.Errorf("BackOffIncrementalDelay(%d) = %v; want %v", tc.attempt, got, tc.wantDelay)
-		}
-	}
-}

@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"strconv"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 )
 
 const (
@@ -127,7 +128,7 @@ func CreateCypherFilterNotEq(propertyName string, value any) *CypherFilter {
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
-	if f == nil || (f.Details == nil && (f.Filters == nil || len(f.Filters) == 0)) {
+	if f == nil || (f.Details == nil && len(f.Filters) == 0) {
 		return "", map[string]any{}
 	}
 
@@ -293,11 +294,7 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 				f.paramCount++
 				paramSuffix := strconv.Itoa(f.paramCount)
 				cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
-				if params == nil {
-					params = map[string]any{customParamPrefix + paramSuffix: f.Details.Value}
-				} else {
-					params[customParamPrefix+paramSuffix] = f.Details.Value
-				}
+				params[customParamPrefix+paramSuffix] = f.Details.Value
 			}
 
 			if toLower {

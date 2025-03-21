@@ -114,7 +114,7 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.AddActionToOrganization{actionFields})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.AddActionToOrganization{ActionFields: actionFields})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}

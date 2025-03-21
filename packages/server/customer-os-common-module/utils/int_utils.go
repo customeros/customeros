@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-func GenerateRandomInt(min, max int) int {
-	// Seed the random number generator to ensure different outputs each time
-	rand.Seed(time.Now().UnixNano())
+// Create a package-level random source
+var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+func GenerateRandomInt(min, max int) int {
 	// Generate a random integer between min and max
-	return rand.Intn(max-min+1) + min
+	return rng.Intn(max-min+1) + min
 }

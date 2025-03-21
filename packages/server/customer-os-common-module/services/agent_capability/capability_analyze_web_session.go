@@ -170,7 +170,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	result.IsNewCompanyVisit = isNewCompany
 
 	// build timeline event
-	timelineMessage, err := c.buildTimelineMessage(ctx, executionContainer.InputData.WebSessionID, result)
+	timelineMessage, err := c.buildTimelineMessage(ctx, result)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return enum.CapabilityExecutionRetry, result, err
@@ -494,7 +494,7 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 	return false, nil
 }
 
-func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, sessionID string, analysis AnalyzeWebSessionOutput) (string, error) {
+func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, analysis AnalyzeWebSessionOutput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.buildTimelineMessage")
 	defer span.Finish()
 	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)

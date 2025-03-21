@@ -25,7 +25,7 @@ func NewWebSessionPageVisitRepository(gormDb *gorm.DB) WebSessionPageVisitReposi
 func (r *webSessionPageVisitRepository) Create(ctx context.Context, pageVisit postgres_entity.WebSessionPageVisit) (*postgres_entity.WebSessionPageVisit, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionPageVisitRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "pageVisit", pageVisit)
 
 	var created postgres_entity.WebSessionPageVisit

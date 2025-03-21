@@ -3,15 +3,16 @@ package utils
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Cypher string
@@ -143,7 +144,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 			sugarLogger.Info("(VerifyConnectivity) Successfully verified connectivity, creating new session")
 			sessionConfig := neo4j.SessionConfig{
 				AccessMode: accessMode,
-				BoltLogger: neo4j.ConsoleBoltLogger(),
+				BoltLogger: log.BoltToConsole(),
 			}
 			for _, option := range options {
 				option(&sessionConfig)
