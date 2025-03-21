@@ -517,12 +517,15 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 			continue
 		}
 		// check if email is in the map by work email first
-		if emailProfileMap[globalContactEntity.WorkEmail] != nil {
+		if globalContactEntity.WorkEmail != "" && emailProfileMap[globalContactEntity.WorkEmail] != nil {
+			if emailProfileMap[globalContactEntity.WorkEmail].ProfilePhotoURL != "" {
+				continue
+			}
 			emailProfileMap[globalContactEntity.WorkEmail].ProfilePhotoURL = globalContactEntity.GetProfilePhotoUrl(commonconstants.S3ImagesCDN)
 			continue
 		}
 		// check if email is in the map by personal email
-		if emailProfileMap[globalContactEntity.PersonalEmail] != nil {
+		if globalContactEntity.PersonalEmail != "" && emailProfileMap[globalContactEntity.PersonalEmail] != nil {
 			if emailProfileMap[globalContactEntity.PersonalEmail].ProfilePhotoURL != "" {
 				continue
 			}

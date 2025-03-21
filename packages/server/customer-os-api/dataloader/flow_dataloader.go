@@ -3,10 +3,10 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -113,7 +113,7 @@ func (b *flowBatcher) getFlowParticipantsForFlow(ctx context.Context, keys datal
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowParticipantEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -162,7 +162,7 @@ func (b *flowBatcher) getFlowSendersForFlow(ctx context.Context, keys dataloader
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowSenderEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -211,7 +211,7 @@ func (b *flowBatcher) getFlowActionsForFlow(ctx context.Context, keys dataloader
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowActionEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -260,7 +260,7 @@ func (b *flowBatcher) getFlowsWithContact(ctx context.Context, keys dataloader.K
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -309,7 +309,7 @@ func (b *flowBatcher) getFlowsWithSender(ctx context.Context, keys dataloader.Ke
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -358,7 +358,7 @@ func (b *flowBatcher) getFlowExecutionsForParticipant(ctx context.Context, keys 
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowActionExecutionEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

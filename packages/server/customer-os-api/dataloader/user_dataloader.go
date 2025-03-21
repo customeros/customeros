@@ -2,6 +2,8 @@ package dataloader
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -9,7 +11,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*neo4jentity.UserEntities, error) {
@@ -213,7 +214,7 @@ func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys data
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))

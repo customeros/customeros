@@ -84,7 +84,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("output - results_length", len(results)))
@@ -134,7 +134,7 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("output - results_length", len(results)))
@@ -183,7 +183,7 @@ func (b *attachmentBatcher) getAttachmentsForContracts(ctx context.Context, keys
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("output - results_length", len(results)))
