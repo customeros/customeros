@@ -704,10 +704,12 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 				}
 			}
 
-			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
-			if err != nil {
-				tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-				return
+			if contents != "" {
+				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
+				if err != nil {
+					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
+					return
+				}
 			}
 		}(org)
 	}
