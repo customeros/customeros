@@ -49,7 +49,7 @@ func (s *CypherSort) NewSortRule(lookupName, direction string, caseSensitive boo
 	}
 
 	orderBy.nodeProperty = props[TagProperty]
-	orderBy.descending = "DESC" == direction
+	orderBy.descending = direction == "DESC"
 	orderBy.supportCaseSensitive = props[TagSupportCaseSensitive] == "true"
 	orderBy.caseSensitive = caseSensitive
 

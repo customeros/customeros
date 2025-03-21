@@ -50,17 +50,3 @@ func BackOffExponentialDelay(attempt int) time.Duration {
 	config := DefaultBackoffConfig()
 	return CalculateExponentialBackoffDelay(attempt, config)
 }
-
-func BackOffIncrementalDelay(attempt int) time.Duration {
-	if attempt <= 0 {
-		attempt = 1
-	}
-	// Calculate the delay with a simple exponential backoff formula
-	delay := time.Duration(attempt) * time.Millisecond * 50
-	// Cap the delay at 2 seconds
-	maxDelay := 2 * time.Second
-	if delay > maxDelay {
-		return maxDelay
-	}
-	return delay
-}

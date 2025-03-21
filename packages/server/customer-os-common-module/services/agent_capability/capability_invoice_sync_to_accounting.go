@@ -182,13 +182,6 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 				tracing.TraceErr(span, err)
 				return enum.CapabilityExecutionRetry, result, err
 			}
-
-			// re-fetch invoice to get updated quickbooks invoice id
-			invoiceEntity, err = c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return enum.CapabilityExecutionRetry, result, err
-			}
 		}
 
 		// TODO alexb remove this code and invoked QBO services in May

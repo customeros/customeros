@@ -270,5 +270,5 @@ func ConvertToUTC(datetimeStr string) (time.Time, error) {
 }
 
 func CloseToNow(t time.Time) bool {
-	return math.Abs(time.Now().Sub(t).Seconds()) < time.Minute.Seconds()
+	return math.Abs(time.Since(t).Seconds()) < time.Minute.Seconds()
 }
