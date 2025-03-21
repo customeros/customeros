@@ -392,10 +392,13 @@ func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAdd
 	}
 
 	if snitcherData == nil || snitcherData.Company == nil || snitcherData.Company.Domain == "" {
+		span.LogKV("result.domain_found", false)
 		return "", nil
 	}
+	span.LogKV("result.snitcher_domain", snitcherData.Company.Domain)
 
 	_, _, primaryDomain = c.domainService.CheckDomainWithMailsherpa(ctx, snitcherData.Company.Domain)
 
+	span.LogKV("result.domain", primaryDomain)
 	return primaryDomain, nil
 }
