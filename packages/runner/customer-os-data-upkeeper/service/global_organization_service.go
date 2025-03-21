@@ -665,9 +665,9 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
 			defer childCancel()
 
-			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
+			childSpan, childCtx := opentracing.StartSpanFromContext(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
 			defer childSpan.Finish()
-			childSpan.LogFields(log.String("primaryDomain", org.PrimaryDomain))
+			tracing.TagEntity(childSpan, org.PrimaryDomain)
 
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore when done
@@ -687,11 +687,21 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 				if err != nil {
 					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
 				}
-				return
+			} else if contents == "" {
+				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
+				if err != nil {
+					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
+				}
 			}
 
 			if contents == "" {
-				return
+				// delete global org after 5 attempts
+				if org.ScrapeAttempt > 5 {
+					err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Delete(childCtx, org.ID)
+					if err != nil {
+						tracing.TraceErr(childSpan, errors.Wrap(err, "error deleting global org"))
+					}
+				}
 			}
 
 			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)

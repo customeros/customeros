@@ -14,6 +14,7 @@ type GlobalOrganization struct {
 	OtherDomains  string    `gorm:"column:other_domains;type:text" json:"otherDomains"`
 	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
+	Active        bool      `gorm:"column:active;type:boolean;default:false" json:"active"`
 
 	Description   string `gorm:"column:description;type:text" json:"description"`
 	Website       string `gorm:"column:website;type:varchar(255)" json:"website"`
@@ -60,6 +61,8 @@ type GlobalOrganization struct {
 	SyncedToNeoAt *time.Time `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
 
 	ScrapedStatus enum.ScrapeStatus `gorm:"column:scrape_status;type:varchar(55);default:'NOT_SCRAPED'" json:"scrapeStatus"`
+	ScrapeAttempt int               `gorm:"column:scrape_attempt;type:int;default:0" json:"scrapeAttempt"`
+	ScrapedAt     *time.Time        `gorm:"column:scraped_at;type:timestamp" json:"scrapedAt"`
 }
 
 // TableName sets the name of the table for GORM
