@@ -34,7 +34,6 @@ import (
 	api_opportunity "github.com/customeros/customeros/packages/server/customer-os-api/services/opportunity"
 	api_organization "github.com/customeros/customeros/packages/server/customer-os-api/services/organization"
 	api_personal_integrations "github.com/customeros/customeros/packages/server/customer-os-api/services/personal_integrations"
-	api_search "github.com/customeros/customeros/packages/server/customer-os-api/services/search"
 	api_sli "github.com/customeros/customeros/packages/server/customer-os-api/services/service_line_item"
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
 	api_timeline_event "github.com/customeros/customeros/packages/server/customer-os-api/services/timeline_event"
