@@ -3,10 +3,10 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -97,7 +97,7 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ContactEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -146,7 +146,7 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ContactEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -192,7 +192,7 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.ContactEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))

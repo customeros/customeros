@@ -3,17 +3,17 @@ name: Create Release
 on:
   workflow_run:
     workflows: 
-      - "customer-os-api"
-      - "customer-os-webhooks"
-      - "customer-os-data-upkeeper"
-      - "events-subscribers"
-      - "sync-customer-os-data"
-      - "sync-slack"
-      - "realtime"
-      - "mailsherpa-api"
-      - "integrity-checker"
-      - "apigator"
-      - "browser-automation-api"
+#      - "customer-os-api"
+#      - "customer-os-webhooks"
+#      - "customer-os-data-upkeeper"
+#      - "events-subscribers"
+#      - "sync-customer-os-data"
+#      - "sync-slack"
+#      - "realtime"
+#      - "mailsherpa-api"
+#      - "integrity-checker"
+#      - "apigator"
+#      - "browser-automation-api"
     types:
       - completed
 

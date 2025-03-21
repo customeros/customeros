@@ -78,7 +78,7 @@ func (b *contractBatcher) getContractsForOrganizations(ctx context.Context, keys
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ContractEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -127,7 +127,7 @@ func (b *contractBatcher) getContractsForInvoices(ctx context.Context, keys data
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.ContractEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))

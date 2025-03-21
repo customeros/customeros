@@ -189,7 +189,7 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ExternalSystemEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("output - results_length", len(results)))
