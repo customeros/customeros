@@ -1,25 +1,21 @@
-.PHONY: build migrate run stop tidy
+run: build
+	go run customer_is_data_upkeeper_main.go
 
-build:
-	go build -o app .
+generate:
+	export PATH="${PATH}:$(shell go env GOPATH)/bin";
 
-migrate:
-	go run main.go migrate
+build: generate
+	go build -v -o bin/customer-os-data-upkeeper
 
-run:
-	go run main.go
+.PHONY: test
+test:
+	go test -v ./...
 
-stop:
-	@-pkill -f "customer-os-data-upkeeper"
+install:
+	go install gotest.tools/gotestsum@latest
 
-tidy:
-	go mod tidy
+clean:
+	find gen -mindepth 1 -maxdepth 1 -exec rm -r {} \;
+	rm -rf bin
 
-# Helper to show all available commands
-help:
-	@echo "Available commands:"
-	@echo "  build    - Build the application"
-	@echo "  migrate  - Run database migrations"
-	@echo "  run      - Run the application"
-	@echo "  stop     - Stop the running application"
-	@echo "  tidy     - Run go mod tidy"
+all: install build
