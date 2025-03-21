@@ -37,7 +37,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/vektah/gqlparser/v2 v2.5.23
 	go.uber.org/zap v1.27.0
-	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/net v0.37.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/text v0.23.0
@@ -150,7 +150,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/nyaruka/phonenumbers v1.5.0 // indirect
+	github.com/nyaruka/phonenumbers v1.6.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0 // indirect
