@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ type GlobalOrganizationRepository interface {
 	Create(ctx context.Context, organization *postgres_entity.GlobalOrganization) (*postgres_entity.GlobalOrganization, error)
 	CreateIfNotExists(ctx context.Context, primaryDomain string) (*postgres_entity.GlobalOrganization, error)
 	Update(ctx context.Context, organization *postgres_entity.GlobalOrganization) (*postgres_entity.GlobalOrganization, error)
+	Delete(ctx context.Context, id uint64) error
 	Search(ctx context.Context, searchTerm string, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
@@ -200,6 +202,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichIndustry(ctx cont
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
+		Where("active = ?", true).
 		Where("industry_naics_code IS NULL OR industry_naics_code = ''").
 		Where("industry_request_count IS NULL OR industry_request_count < ?", maxAttempts).
 		Where("industry_requested_at IS NULL OR industry_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
@@ -223,7 +226,10 @@ func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Cont
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Where("scrape_status = ? OR scrape_status IS NULL", enum.ScrapeNotScraped.String()).
+		Where("(scrape_status = ? OR scrape_status IS NULL) OR (scrape_status = ? AND (scraped_at < ? OR scraped_at IS NULL))",
+			enum.ScrapeNotScraped.String(),
+			enum.ScrapeError.String(),
+			utils.Now().Add(-48*time.Hour)).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&organizations)
@@ -262,6 +268,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichDescription(ctx c
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
+		Where("active = ?", true).
 		Where("description IS NULL OR description = ''").
 		Where("description_request_count IS NULL OR description_request_count < ?", maxAttempts).
 		Where("description_requested_at IS NULL OR description_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
@@ -312,6 +319,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
 		Where(suspiciousNameCondition).
+		Where("active = ?", true).
 		Where("name_request_count IS NULL OR name_request_count < ?", maxAttempts).
 		Where("name_requested_at IS NULL OR name_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
 		Order("CASE WHEN name_requested_at IS NULL THEN 0 ELSE 1 END ASC").
@@ -405,7 +413,7 @@ func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrg
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Where("industry_naics_code IS NOT NULL AND industry_naics_code != '' AND description IS NOT NULL AND description != ''").
+		Where("active = ?", true).
 		Where("(synced_to_neo_at IS NULL OR (synced_to_neo_at < ? AND updated_at > synced_to_neo_at))", utils.Now().Add(-24*time.Hour*time.Duration(daysFromPreviousSync))).
 		Order("synced_to_neo_at IS NULL DESC, COALESCE(synced_to_neo_at, created_at) ASC").
 		Limit(limit).
@@ -458,10 +466,14 @@ func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id u
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("status", status.String()))
 
+	active := status == enum.ScrapeCompleted
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"scrape_status": status.String(),
+			"scrape_status":  status.String(),
+			"scrape_attempt": gorm.Expr("COALESCE(scrape_attempt, 0) + 1"),
+			"scraped_at":     utils.Now(),
+			"active":         active,
 		})
 
 	if result.Error != nil {
@@ -621,6 +633,21 @@ func (r *globalOrganizationRepository) AddOtherSocials(ctx context.Context, prim
 			tracing.TraceErr(span, result.Error)
 			return result.Error
 		}
+	}
+
+	return nil
+}
+
+func (r *globalOrganizationRepository) Delete(ctx context.Context, id uint64) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Delete")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagEntity(span, fmt.Sprintf("%d", id))
+
+	result := r.db.WithContext(ctx).Delete(&postgres_entity.GlobalOrganization{}, id)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
 	}
 
 	return nil
