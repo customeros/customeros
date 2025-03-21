@@ -71,7 +71,6 @@ type Services struct {
 	OpportunityService          cosapi_interfaces.OpportunityService
 	OrganizationService         cosapi_interfaces.OrganizationService
 	PersonalIntegrationsService cosapi_interfaces.PersonalIntegrationsService
-	SearchService               cosapi_interfaces.SearchService
 	ServiceLineItemService      cosapi_interfaces.ServiceLineItemService
 	TenantSettingsService       cosapi_interfaces.TenantSettingsService
 	TimelineEventService        cosapi_interfaces.TimelineEventService
@@ -113,7 +112,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		NoteService:                 api_note.NewNoteService(log, repositories),
 		OAuthUserSettingsService:    api_oauthuser.NewUserSettingsService(log, repositories.PostgresRepositories),
 		PersonalIntegrationsService: api_personal_integrations.NewPersonalIntegrationsService(log, repositories.PostgresRepositories),
-		SearchService:               api_search.NewSearchService(log, repositories),
 		TenantSettingsService:       api_tenant_settings.NewTenantSettingsService(log, cfg, repositories.PostgresRepositories),
 		TimelineEventService:        api_timeline_event.NewTimelineEventService(log, repositories),
 		UserService:                 api_user.NewUserService(log, repositories),
