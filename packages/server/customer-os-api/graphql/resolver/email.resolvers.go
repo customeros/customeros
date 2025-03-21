@@ -16,6 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
@@ -436,6 +437,106 @@ func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, err
 		return nil, nil
 	}
 	return mapper.MapEntityToEmail(emailEntity), nil
+}
+
+// EmailProfilePhoto is the resolver for the email_ProfilePhoto field.
+func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) ([]*model.EmailWithProfilePhoto, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EmailProfilePhoto", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.emails", emails)
+
+	// lowercase all emails
+	lowercaseEmails := make([]string, len(emails))
+	for i, email := range emails {
+		lowercaseEmails[i] = strings.ToLower(email)
+	}
+	emails = lowercaseEmails
+	// remove empty emails
+	emails = utils.RemoveEmpties(emails)
+	// remove duplicates
+	emails = utils.RemoveDuplicates(emails)
+
+	// Limit to max 1000 emails
+	if len(emails) > 1000 {
+		emails = emails[:1000]
+	}
+
+	// Create map for storing results
+	emailProfileMap := make(map[string]*model.EmailWithProfilePhoto)
+	for _, email := range emails {
+		emailProfileMap[email] = &model.EmailWithProfilePhoto{
+			Email: email,
+		}
+	}
+
+	// populate profile photo url for tenant users identified by emails
+	userEntities, err := r.Services.CommonServices.UserService.GetUsersByEmailAddresses(ctx, emails)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get users by emails")
+		return nil, nil
+	}
+	for _, userEntity := range *userEntities {
+		if userEntity.ProfilePhotoUrl != "" && emailProfileMap[userEntity.DataloaderKey].ProfilePhotoURLID == "" {
+			emailProfileMap[userEntity.DataloaderKey].ProfilePhotoURLID = userEntity.ProfilePhotoUrl
+		}
+	}
+
+	// populate profile photo url for tenant contacts identified by emails
+	contactEntities, err := r.Services.CommonServices.ContactService.GetContactsByEmailAddresses(ctx, emails)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contacts by emails")
+		return nil, nil
+	}
+	for _, contactEntity := range *contactEntities {
+		if contactEntity.ProfilePhotoUrl != "" && emailProfileMap[contactEntity.DataloaderKey].ProfilePhotoURL == "" {
+			emailProfileMap[contactEntity.DataloaderKey].ProfilePhotoURL = contactEntity.ProfilePhotoUrl
+		}
+	}
+
+	// collect emails without profile photo
+	emailsWithoutProfilePhoto := make([]string, 0)
+	for _, email := range emails {
+		if emailProfileMap[email].ProfilePhotoURL == "" && emailProfileMap[email].ProfilePhotoURLID == "" {
+			emailsWithoutProfilePhoto = append(emailsWithoutProfilePhoto, email)
+		}
+	}
+
+	// get global contacts by emails
+	globalContactEntities, err := r.Services.CommonServices.GlobalContactService.GetGlobalContactsByEmailAddresses(ctx, emailsWithoutProfilePhoto)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get global contacts by emails")
+		return nil, nil
+	}
+
+	for _, globalContactEntity := range globalContactEntities {
+		if globalContactEntity.GetProfilePhotoUrl(commonconstants.S3ImagesCDN) == "" {
+			continue
+		}
+		// check if email is in the map by work email first
+		if emailProfileMap[globalContactEntity.WorkEmail] != nil {
+			emailProfileMap[globalContactEntity.WorkEmail].ProfilePhotoURL = globalContactEntity.GetProfilePhotoUrl(commonconstants.S3ImagesCDN)
+			continue
+		}
+		// check if email is in the map by personal email
+		if emailProfileMap[globalContactEntity.PersonalEmail] != nil {
+			if emailProfileMap[globalContactEntity.PersonalEmail].ProfilePhotoURL != "" {
+				continue
+			}
+			emailProfileMap[globalContactEntity.PersonalEmail].ProfilePhotoURL = globalContactEntity.GetProfilePhotoUrl(commonconstants.S3ImagesCDN)
+		}
+	}
+
+	// Convert map to slice for response
+	result := make([]*model.EmailWithProfilePhoto, 0, len(emailProfileMap))
+	for _, profile := range emailProfileMap {
+		result = append(result, profile)
+	}
+
+	return result, nil
 }
 
 // Email returns generated.EmailResolver implementation.

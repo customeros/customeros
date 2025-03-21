@@ -207,3 +207,19 @@ func (s *globalContactService) GetGlobalContactsByLinkedIn(ctx context.Context, 
 	span.LogFields(tracingLog.Int("result.count", len(contacts)))
 	return contacts, nil
 }
+
+func (s *globalContactService) GetGlobalContactsByEmailAddresses(ctx context.Context, emailAddresses []string) ([]*postgres_entity.GlobalContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.GetGlobalContactsByEmailAddresses")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+
+	contacts, err := s.postgres.GlobalContactRepository.GetGlobalContactsByEmailAddresses(ctx, emailAddresses)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting contacts by email addresses"))
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	return contacts, nil
+}

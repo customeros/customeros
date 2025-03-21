@@ -229,7 +229,7 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 
 	ids, keyOrder := sortKeys(keys)
 
-	userEntitiesPtr, err := b.userCommonService.GetUsersForEmails(ctx, ids)
+	userEntitiesPtr, err := b.userCommonService.GetUsersByEmailIds(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

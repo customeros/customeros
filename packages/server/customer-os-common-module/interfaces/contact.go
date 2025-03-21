@@ -33,4 +33,5 @@ type ContactService interface {
 	SetPrimaryJobRole(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string, primaryOrganizationId *string) error
 	GetFirstContactByEmail(ctx context.Context, email string) (*neo4j_entity.ContactEntity, error)
 	TouchContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error
+	GetContactsByEmailAddresses(ctx context.Context, emailAddresses []string) (*neo4j_entity.ContactEntities, error)
 }

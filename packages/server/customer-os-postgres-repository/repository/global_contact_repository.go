@@ -35,6 +35,7 @@ type GlobalContactRepository interface {
 	GetContactsToSetWorkEmailFromBetterContactResponse(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error)
 	MarkBetterContactSet(ctx context.Context, id uint64) error
 	GetGlobalContactsToSyncIntoTenantContacts(ctx context.Context, daysFromPreviousSync, forceSyncAfterDays, limit int) ([]*postgres_entity.GlobalContact, error)
+	GetGlobalContactsByEmailAddresses(ctx context.Context, emailAddresses []string) ([]*postgres_entity.GlobalContact, error)
 }
 
 type globalContactRepository struct {
@@ -461,6 +462,24 @@ func (r *globalContactRepository) GetGlobalContactsToSyncIntoTenantContacts(ctx 
 		Where("(synced_to_neo_at IS NULL OR (synced_to_neo_at < ? AND updated_at > synced_to_neo_at) OR (synced_to_neo_at < ?))", utils.Now().Add(-24*time.Hour*time.Duration(daysFromPreviousSync)), utils.Now().Add(-24*time.Hour*time.Duration(forceSyncAfterDays))).
 		Order("synced_to_neo_at IS NULL DESC, COALESCE(synced_to_neo_at, created_at) ASC").
 		Limit(limit).
+		Find(&contacts)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	return contacts, nil
+}
+
+func (r *globalContactRepository) GetGlobalContactsByEmailAddresses(ctx context.Context, emailAddresses []string) ([]*postgres_entity.GlobalContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetGlobalContactsByEmailAddresses")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+
+	contacts := make([]*postgres_entity.GlobalContact, 0)
+	result := r.db.WithContext(ctx).
+		Where("personal_email IN ? OR work_email IN ?", emailAddresses, emailAddresses).
 		Find(&contacts)
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)

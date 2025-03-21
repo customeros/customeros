@@ -240,12 +240,12 @@ func (s *userService) GetUsersConnectedForContacts(ctx context.Context, contactI
 	return &userEntities, nil
 }
 
-func (s *userService) GetUsersForEmails(parentCtx context.Context, emailIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForEmails")
+func (s *userService) GetUsersByEmailIds(parentCtx context.Context, emailIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersByEmailIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	users, err := s.neo4j.UserReadRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
+	users, err := s.neo4j.UserReadRepository.GetUsersByEmailIds(ctx, common.GetTenantFromContext(ctx), emailIds)
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +255,27 @@ func (s *userService) GetUsersForEmails(parentCtx context.Context, emailIds []st
 		userEntity.DataloaderKey = v.LinkedNodeId
 		userEntities = append(userEntities, *userEntity)
 	}
+	span.LogFields(log.Int("result.count", len(userEntities)))
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsersByEmailAddresses(parentCtx context.Context, emailAddresses []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersByEmailAddresses")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+
+	users, err := s.neo4j.UserReadRepository.GetUsersByEmailAddresses(ctx, common.GetTenantFromContext(ctx), emailAddresses)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := mapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	span.LogFields(log.Int("result.count", len(userEntities)))
 	return &userEntities, nil
 }
 

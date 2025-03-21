@@ -798,3 +798,25 @@ func (s *contactService) TouchContact(ctx context.Context, txWithPostCommit *uti
 	}
 	return nil
 }
+
+func (s *contactService) GetContactsByEmailAddresses(ctx context.Context, emailAddresses []string) (*neo4jentity.ContactEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsByEmailAddresses")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+
+	contacts, err := s.neo4j.ContactReadRepository.GetContactsByEmailAddresses(ctx, common.GetTenantFromContext(ctx), emailAddresses)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	contactEntities := make(neo4jentity.ContactEntities, 0, len(contacts))
+	for _, contact := range contacts {
+		contactEntity := neo4jmapper.MapDbNodeToContactEntity(contact.Node)
+		contactEntity.DataloaderKey = contact.LinkedNodeId
+		contactEntities = append(contactEntities, *contactEntity)
+	}
+	span.LogFields(log.Int("result.count", len(contactEntities)))
+	return &contactEntities, nil
+}
