@@ -16,23 +16,21 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-const CACHE_LOOKBACK = 30 // days
+const CACHE_LOOKBACK_DAYS = 30
 
 func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfaces.SnitcherResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.GetSnitcherData")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("ip", ip)
 
-	// check to see if IP mapping data already exists
-	query := postgres_entity.CacheIPIdentify{
-		IPAddress: ip,
-	}
-
-	results, err := s.postgres.CacheIPIdentifyRepository.Find(ctx, query, CACHE_LOOKBACK)
+	// check caching
+	results, err := s.postgres.CacheIPIdentifyRepository.FindByIP(ctx, ip, CACHE_LOOKBACK_DAYS)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
-	if results != nil && results.SnitcherData != "" {
+	if results != nil && results.SnitcherData != "" && results.Domain != "" {
 		var snitcherResponse interfaces.SnitcherResponse
 		err := json.Unmarshal([]byte(results.SnitcherData), &snitcherResponse)
 		if err != nil {
@@ -41,15 +39,11 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 		return &snitcherResponse, nil
 	}
 
+	// call snitcher
 	snitcherResponse, respString, err := s.callSnitcher(ctx, ip)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
-	}
-
-	// return early if no company found
-	if !snitcherResponse.CompanyFound() {
-		return snitcherResponse, nil
 	}
 
 	// Store response

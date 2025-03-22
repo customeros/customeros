@@ -14,7 +14,7 @@ import (
 
 type CacheIPIdentifyRepository interface {
 	Create(ctx context.Context, snitcherData postgres_entity.CacheIPIdentify) error
-	Find(ctx context.Context, snitcherData postgres_entity.CacheIPIdentify, cacheLookbackInDays int) (*postgres_entity.CacheIPIdentify, error)
+	FindByIP(ctx context.Context, ip string, cacheLookbackInDays int) (*postgres_entity.CacheIPIdentify, error)
 }
 
 type cacheIPIdentifyRepository struct {
@@ -46,25 +46,28 @@ func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_
 	return nil
 }
 
-func (r *cacheIPIdentifyRepository) Find(ctx context.Context, ipData postgres_entity.CacheIPIdentify, cacheLookbackInDays int) (*postgres_entity.CacheIPIdentify, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Find")
+func (r *cacheIPIdentifyRepository) FindByIP(ctx context.Context, ip string, cacheLookBackInDays int) (*postgres_entity.CacheIPIdentify, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.FindByIP")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("ip", ip, "cacheLookBackInDays", cacheLookBackInDays)
 
-	lookbackDate := time.Now().AddDate(0, 0, -cacheLookbackInDays)
+	lookBackDate := time.Now().AddDate(0, 0, -cacheLookBackInDays)
 
 	var result postgres_entity.CacheIPIdentify
 	err := r.db.
-		Where(&ipData).
-		Where("created_at > ?", lookbackDate).
+		Where("ip_address = ?", ip).
+		Where("created_at > ?", lookBackDate).
 		Order("created_at DESC").
 		First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogKV("result.found", false)
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogKV("result.found", true)
 	return &result, nil
 }
