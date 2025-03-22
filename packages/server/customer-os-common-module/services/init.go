@@ -36,7 +36,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/files"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/flow"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/flow_execution"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/global_contacts"
+	globalcontacts "github.com/customeros/customeros/packages/server/customer-os-common-module/services/global_contacts"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/google"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/industry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/interaction_event"
@@ -45,7 +45,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/issue"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/jobrole"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/location"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/log_entry"
+	logentry "github.com/customeros/customeros/packages/server/customer-os-common-module/services/log_entry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mail"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/markdown_event"
@@ -62,7 +62,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/registration"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/reminders"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/search"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/service_line_item"
+	sli "github.com/customeros/customeros/packages/server/customer-os-common-module/services/service_line_item"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/slack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/social"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/tags"
@@ -397,7 +397,7 @@ func InitCommonServices(
 	if options != nil {
 		if options.LoadPersonalEmailProviders {
 			// init app cache
-			personalEmailProviderEntities, err := postgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+			personalEmailProviderEntities, err := postgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders(context.Background())
 			if err != nil {
 				log.Fatalf("Error getting personal email providers: %s", err.Error())
 			}

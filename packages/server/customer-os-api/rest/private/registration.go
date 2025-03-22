@@ -151,7 +151,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 func PML(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// todo move to server init?
-		personalEmailProviders, err := s.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		personalEmailProviders, err := s.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders(c.Request.Context())
 		if err != nil {
 			panic(err)
 		}
@@ -212,7 +212,7 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		personalEmailProviders, err := s.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		personalEmailProviders, err := s.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders(contextWithTimeout)
 		if err != nil {
 			panic(err)
 		}
