@@ -15,7 +15,7 @@ func MapFilterToCommonModel(where *model.Filter) *commonmodel.Filter {
 	if where.Filter != nil {
 		commonWhere.Filter = &commonmodel.FilterItem{
 			Property:  where.Filter.Property,
-			Operation: commonmodel.ComparisonOperator(where.Filter.Operation),
+			Operation: where.Filter.Operation,
 			Value: commonmodel.AnyTypeValue{
 				Str:       where.Filter.Value.Str,
 				Int:       where.Filter.Value.Int,
