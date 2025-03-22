@@ -2,10 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -67,7 +67,7 @@ func (b *calendarBatcher) getCalendarsForUsers(ctx context.Context, keys dataloa
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.CalendarEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("output - results_length", len(results)))

@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToIssue(entity *neo4jentity.IssueEntity) *model.Issue {
@@ -20,7 +21,7 @@ func MapEntityToIssue(entity *neo4jentity.IssueEntity) *model.Issue {
 		IssueStatus: entity.Status,
 		Priority:    utils.StringPtr(entity.Priority),
 		Description: utils.StringPtr(entity.Description),
-		Source:      MapDataSourceToModel(entity.Source),
+		Source:      enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:   entity.AppSource,
 	}
 }

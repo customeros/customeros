@@ -34,7 +34,7 @@ func NewTenantRepository(gormDb *gorm.DB) TenantRepository {
 func (e *tenantRepository) GetTenantByHashId(ctx context.Context, hashID string) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenantByHashId")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("hashID", hashID)
 
 	var tenant postgres_entity.Tenant
@@ -52,7 +52,7 @@ func (e *tenantRepository) GetTenantByHashId(ctx context.Context, hashID string)
 func (e *tenantRepository) GetHashID(ctx context.Context, tenantName string) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetHashID")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var tenant postgres_entity.Tenant
 	err := e.gormDb.
@@ -69,7 +69,7 @@ func (e *tenantRepository) GetHashID(ctx context.Context, tenantName string) (st
 func (e *tenantRepository) Create(ctx context.Context, tenantEntity postgres_entity.Tenant) (*postgres_entity.Tenant, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if tenantEntity.Name == "" {
 		return nil, fmt.Errorf("No tenant name, cannot create tenant")
@@ -101,7 +101,7 @@ func (e *tenantRepository) PermanentlyDelete(ctx context.Context, tenant string)
 func (e *tenantRepository) SetCompanyReport(ctx context.Context, companyReport string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.SetCompanyReport")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {

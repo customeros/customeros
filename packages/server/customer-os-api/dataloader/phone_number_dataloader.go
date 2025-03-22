@@ -3,10 +3,10 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -84,7 +84,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.PhoneNumberEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -134,7 +134,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.PhoneNumberEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -184,7 +184,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, key
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.PhoneNumberEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

@@ -9,7 +9,7 @@ import (
 )
 
 type PersonalEmailProviderRepository interface {
-	GetPersonalEmailProviders() ([]postgres_entity.PersonalEmailProvider, error)
+	GetPersonalEmailProviders(ctx context.Context) ([]postgres_entity.PersonalEmailProvider, error)
 }
 
 type personalEmailProviderRepositoryImpl struct {
@@ -20,10 +20,10 @@ func NewPersonalEmailProviderRepository(gormDb *gorm.DB) PersonalEmailProviderRe
 	return &personalEmailProviderRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *personalEmailProviderRepositoryImpl) GetPersonalEmailProviders() ([]postgres_entity.PersonalEmailProvider, error) {
-	span, _ := opentracing.StartSpanFromContext(context.Background(), "PersonalEmailProviderRepository.GetPersonalEmailProviders")
+func (repo *personalEmailProviderRepositoryImpl) GetPersonalEmailProviders(ctx context.Context) ([]postgres_entity.PersonalEmailProvider, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PersonalEmailProviderRepository.GetPersonalEmailProviders")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result []postgres_entity.PersonalEmailProvider
 	err := repo.gormDb.Find(&result).Error

@@ -3,10 +3,10 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -74,7 +74,7 @@ func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx conte
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.MeetingParticipants{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -124,7 +124,7 @@ func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx cont
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.MeetingParticipants{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

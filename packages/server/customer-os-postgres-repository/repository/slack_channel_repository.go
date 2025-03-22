@@ -2,9 +2,9 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -31,8 +31,8 @@ func NewSlackChannelRepository(db *gorm.DB) SlackChannelRepository {
 func (r *slackChannelRepository) GetSlackChannel(ctx context.Context, tenant, channelId string) (*postgres_entity.SlackChannel, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackChannelRepository.GetSlackChannel")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("channelId", channelId)
 
 	var entities []postgres_entity.SlackChannel
 	err := r.db.
@@ -57,8 +57,7 @@ func (r *slackChannelRepository) GetSlackChannel(ctx context.Context, tenant, ch
 func (r *slackChannelRepository) GetSlackChannels(ctx context.Context, tenant string) ([]*postgres_entity.SlackChannel, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackChannelRepository.GetSlackChannels")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entities []*postgres_entity.SlackChannel
 	err := r.db.
@@ -75,8 +74,7 @@ func (r *slackChannelRepository) GetSlackChannels(ctx context.Context, tenant st
 func (r *slackChannelRepository) GetPaginatedSlackChannels(ctx context.Context, tenant string, skip, limit int) ([]*postgres_entity.SlackChannel, int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackChannelRepository.GetPaginatedSlackChannels")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var err error
 	var total int64
@@ -107,7 +105,7 @@ func (r *slackChannelRepository) GetPaginatedSlackChannels(ctx context.Context, 
 func (r *slackChannelRepository) CreateSlackChannel(ctx context.Context, postgres_entity *postgres_entity.SlackChannel) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackChannelRepository.CreateSlackChannel")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.db.Create(postgres_entity).Error
 	if err != nil {
@@ -120,7 +118,7 @@ func (r *slackChannelRepository) CreateSlackChannel(ctx context.Context, postgre
 func (r *slackChannelRepository) UpdateSlackChannelOrganization(ctx context.Context, postgres_entityId uuid.UUID, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackChannelRepository.UpdateSlackChannelOrganization")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	return r.db.Model(&postgres_entity.SlackChannel{}).Where("id = ?", postgres_entityId).Update("organization_id", organizationId).Error
 }
@@ -128,7 +126,7 @@ func (r *slackChannelRepository) UpdateSlackChannelOrganization(ctx context.Cont
 func (r *slackChannelRepository) UpdateSlackChannelName(ctx context.Context, postgres_entityId uuid.UUID, channelName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackChannelRepository.UpdateSlackChannelName")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	return r.db.Model(&postgres_entity.SlackChannel{}).Where("id = ?", postgres_entityId).Update("channel_name", channelName).Error
 }

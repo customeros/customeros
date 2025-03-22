@@ -29,7 +29,7 @@ func NewBrowserConfigRepository(gormDb *gorm.DB) BrowserConfigRepository {
 func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]postgres_entity.BrowserConfig, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result []postgres_entity.BrowserConfig
 	err := repo.gormDb.Where("session_status = 'VALID'").Find(&result).Error
@@ -45,7 +45,7 @@ func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]postgres_en
 func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId string) (*postgres_entity.BrowserConfig, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 

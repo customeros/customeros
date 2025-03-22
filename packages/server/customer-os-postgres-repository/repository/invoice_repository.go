@@ -24,7 +24,7 @@ func NewInvoiceRepository(gormDb *gorm.DB) InvoiceRepository {
 func (r *invoiceRepository) Reserve(ctx context.Context, invoiceNumber postgres_entity.InvoiceNumberEntity) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceRepository.Reserve")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.gormDb.Create(&invoiceNumber).Error
 	return err

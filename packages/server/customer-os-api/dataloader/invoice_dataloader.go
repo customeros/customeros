@@ -86,7 +86,7 @@ func (b *invoiceBatcher) getInvoiceLinesForInvoice(ctx context.Context, keys dat
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InvoiceLineEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -138,7 +138,7 @@ func (b *invoiceBatcher) getInvoicesForContract(ctx context.Context, keys datalo
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InvoiceEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))
@@ -190,7 +190,7 @@ func (b *invoiceBatcher) getInvoicesForServiceLineItem(ctx context.Context, keys
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InvoiceEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))

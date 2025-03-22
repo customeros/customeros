@@ -33,7 +33,7 @@ func NewCacheEmailEnrowRepository(gormDb *gorm.DB) CacheEmailEnrowRepository {
 func (r cacheEmailEnrowRepository) RegisterRequest(ctx context.Context, record postgres_entity.CacheEmailEnrow) (*postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.RegisterRequest")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "record", record)
 
 	now := utils.Now()
@@ -49,7 +49,7 @@ func (r cacheEmailEnrowRepository) RegisterRequest(ctx context.Context, record p
 func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, qualification, response string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.AddResponse")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("requestId", requestId)
 	span.LogKV("qualification", qualification)
 	span.LogKV("response", response)
@@ -76,7 +76,7 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.GetAllByEmail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("email", email)
 
 	var records []postgres_entity.CacheEmailEnrow
@@ -93,7 +93,7 @@ func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email stri
 func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.GetLatestByEmail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("email", email)
 
 	var data postgres_entity.CacheEmailEnrow
@@ -111,7 +111,7 @@ func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email s
 func (r cacheEmailEnrowRepository) GetWithoutResponses(ctx context.Context) ([]*postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var postgres_entity []*postgres_entity.CacheEmailEnrow
 	err := r.db.

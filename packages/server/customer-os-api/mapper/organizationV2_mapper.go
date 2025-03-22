@@ -28,7 +28,7 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.Website = utils.StringPtr(entity.Website)
 	output.Public = utils.BoolPtr(entity.IsPublic)
 	output.Employees = utils.Int64Ptr(entity.Employees)
-	output.Market = MapMarketToModel(entity.Market)
+	output.Market = enummapper.MapMarketToModel(entity.Market)
 	output.LastFundingRound = enummapper.MapFundingRoundToModel(entity.LastFundingRound)
 	output.YearFounded = entity.YearFounded
 	output.SlackChannelID = utils.StringPtr(entity.SlackChannelId)
@@ -46,7 +46,7 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.RenewalSummaryArrForecast = entity.RenewalSummary.ArrForecast
 	output.RenewalSummaryMaxArrForecast = entity.RenewalSummary.MaxArrForecast
 	output.RenewalSummaryNextRenewalAt = entity.RenewalSummary.NextRenewalAt
-	output.RenewalSummaryRenewalLikelihood = MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood)
+	output.RenewalSummaryRenewalLikelihood = enummapper.MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood)
 
 	output.OnboardingStatus = enummapper.MapOnboardingStatusToModel(neo4jenum.DecodeOnboardingStatus(entity.OnboardingDetails.Status))
 	output.OnboardingStatusUpdatedAt = entity.OnboardingDetails.UpdatedAt

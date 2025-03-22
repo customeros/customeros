@@ -7,18 +7,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
@@ -179,7 +178,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
-					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
+					renewalLikelihoodValues = append(renewalLikelihoodValues, enummapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("derivedRenewalLikelihood", renewalLikelihoodValues))
 			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
@@ -610,7 +609,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
-					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
+					renewalLikelihoodValues = append(renewalLikelihoodValues, enummapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
 				opportunityFilter.Filters = append(opportunityFilter.Filters, utils.CreateCypherFilterIn("renewalLikelihood", renewalLikelihoodValues))
 			} else if filter.Filter.Property == SearchSortParamOnboardingStatus && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {

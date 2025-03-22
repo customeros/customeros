@@ -5,6 +5,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToCalendar(entity *entity.CalendarEntity) *model.Calendar {
@@ -12,7 +13,7 @@ func MapEntityToCalendar(entity *entity.CalendarEntity) *model.Calendar {
 		ID:        entity.Id,
 		CalType:   model.CalendarType(entity.CalType),
 		Primary:   entity.Primary,
-		Source:    MapDataSourceToModel(entity.Source),
+		Source:    enummapper.MapDataSourceToModel(entity.Source),
 		AppSource: entity.AppSource,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,

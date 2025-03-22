@@ -78,8 +78,7 @@ func (repo *ingestEmailMessageRepositoryImpl) UpdateState(ctx context.Context, i
 func (repo *ingestEmailMessageRepositoryImpl) CountForUsername(ctx context.Context, tenant, username, provider string) (int64, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.CountForUsername")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result int64
 	err := repo.gormDb.Model(postgres_entity.IngestEmailMessage{}).Where("provider = ? AND tenant = ? AND username = ?", provider, tenant, username).Count(&result).Error
@@ -94,8 +93,7 @@ func (repo *ingestEmailMessageRepositoryImpl) CountForUsername(ctx context.Conte
 func (repo *ingestEmailMessageRepositoryImpl) GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*postgres_entity.IngestEmailMessage, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.GetByMessageId")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result *postgres_entity.IngestEmailMessage
 	err := repo.gormDb.Where("provider = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).First(&result).Error
@@ -113,8 +111,7 @@ func (repo *ingestEmailMessageRepositoryImpl) GetByMessageId(ctx context.Context
 func (repo *ingestEmailMessageRepositoryImpl) EmailExistsByMessageId(ctx context.Context, tenant, username, provider, messageId string) (bool, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.EmailExistsByMessageId")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result int64
 	err := repo.gormDb.Model(postgres_entity.IngestEmailMessage{}).Where("provider = ? AND tenant = ? AND username = ? AND message_id = ?", provider, tenant, username, messageId).Count(&result).Error

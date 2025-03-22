@@ -1,4 +1,4 @@
-package mapper
+package enummapper
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"

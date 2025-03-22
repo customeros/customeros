@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToInteractionEvent(entity *neo4jentity.InteractionEventEntity) *model.InteractionEvent {
@@ -17,7 +18,7 @@ func MapEntityToInteractionEvent(entity *neo4jentity.InteractionEventEntity) *mo
 		Channel:         entity.Channel.String(),
 		ChannelData:     &entity.ChannelData,
 		EventType:       &entity.EventType,
-		Source:          MapDataSourceToModel(entity.Source),
+		Source:          enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:       entity.AppSource,
 	}
 }

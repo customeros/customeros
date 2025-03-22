@@ -34,7 +34,6 @@ import (
 	api_opportunity "github.com/customeros/customeros/packages/server/customer-os-api/services/opportunity"
 	api_organization "github.com/customeros/customeros/packages/server/customer-os-api/services/organization"
 	api_personal_integrations "github.com/customeros/customeros/packages/server/customer-os-api/services/personal_integrations"
-	api_search "github.com/customeros/customeros/packages/server/customer-os-api/services/search"
 	api_sli "github.com/customeros/customeros/packages/server/customer-os-api/services/service_line_item"
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
 	api_timeline_event "github.com/customeros/customeros/packages/server/customer-os-api/services/timeline_event"
@@ -72,7 +71,6 @@ type Services struct {
 	OpportunityService          cosapi_interfaces.OpportunityService
 	OrganizationService         cosapi_interfaces.OrganizationService
 	PersonalIntegrationsService cosapi_interfaces.PersonalIntegrationsService
-	SearchService               cosapi_interfaces.SearchService
 	ServiceLineItemService      cosapi_interfaces.ServiceLineItemService
 	TenantSettingsService       cosapi_interfaces.TenantSettingsService
 	TimelineEventService        cosapi_interfaces.TimelineEventService
@@ -114,7 +112,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		NoteService:                 api_note.NewNoteService(log, repositories),
 		OAuthUserSettingsService:    api_oauthuser.NewUserSettingsService(log, repositories.PostgresRepositories),
 		PersonalIntegrationsService: api_personal_integrations.NewPersonalIntegrationsService(log, repositories.PostgresRepositories),
-		SearchService:               api_search.NewSearchService(log, repositories),
 		TenantSettingsService:       api_tenant_settings.NewTenantSettingsService(log, cfg, repositories.PostgresRepositories),
 		TimelineEventService:        api_timeline_event.NewTimelineEventService(log, repositories),
 		UserService:                 api_user.NewUserService(log, repositories),

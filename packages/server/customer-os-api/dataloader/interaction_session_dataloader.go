@@ -3,9 +3,9 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -62,7 +62,7 @@ func (b *interactionSessionBatcher) getInteractionSessionsForInteractionEvents(c
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.InteractionSessionEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

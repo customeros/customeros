@@ -9,7 +9,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	mapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
@@ -21,7 +21,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 			Version:     entity.AggregateVersion,
 		},
@@ -40,7 +40,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 		Currency:             entity.Currency.String(),
 		RepositoryFileID:     entity.RepositoryFileId,
 		InvoiceURL:           fmt.Sprintf(constants.FileStoreFileDownloadUrlTemplate, entity.RepositoryFileId),
-		Status:               utils.ToPtr(mapper.MapInvoiceStatusToModel(entity.Status)),
+		Status:               utils.ToPtr(enummapper.MapInvoiceStatusToModel(entity.Status)),
 		Note:                 utils.StringPtrNillable(entity.Note),
 		PaymentLink:          utils.StringPtrNillable(entity.PaymentDetails.PaymentLink),
 		BillingCycleInMonths: entity.BillingCycleInMonths,
@@ -86,7 +86,7 @@ func MapEntityToInvoiceLine(entity *neo4jentity.InvoiceLineEntity) *model.Invoic
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 		},
 		SkuID:       utils.StringPtrNillable(entity.SkuId),

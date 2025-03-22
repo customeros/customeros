@@ -28,11 +28,10 @@ func NewTenantSettingsOpportunityStageRepository(db *gorm.DB) TenantSettingsOppo
 	return &tenantSettingsOpportunityStageRepository{gormDb: db}
 }
 
-func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, tenant, id string) (*postgres_entity.TenantSettingsOpportunityStage, error) {
-	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.GetById")
+func (r *tenantSettingsOpportunityStageRepository) GetById(ctx context.Context, tenant, id string) (*postgres_entity.TenantSettingsOpportunityStage, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.String("id", id))
 
 	var result postgres_entity.TenantSettingsOpportunityStage
@@ -52,11 +51,10 @@ func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, te
 	return &result, nil
 }
 
-func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Context, tenant string) ([]*postgres_entity.TenantSettingsOpportunityStage, error) {
-	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Get")
+func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(ctx context.Context, tenant string) ([]*postgres_entity.TenantSettingsOpportunityStage, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entities []*postgres_entity.TenantSettingsOpportunityStage
 	err := r.gormDb.
@@ -70,7 +68,7 @@ func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Con
 	}
 
 	if len(entities) == 0 {
-		err = r.Init(c, tenant)
+		err = r.Init(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, errors.Wrap(err, "error while initializing tenant settings opportunity stages")
@@ -93,8 +91,7 @@ func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Con
 func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Init")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	r.Store(ctx, postgres_entity.TenantSettingsOpportunityStage{
 		Tenant:  tenant,
@@ -138,11 +135,10 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 	return nil
 }
 
-func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, postgres_entity postgres_entity.TenantSettingsOpportunityStage) (*postgres_entity.TenantSettingsOpportunityStage, error) {
-	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Store")
+func (r *tenantSettingsOpportunityStageRepository) Store(ctx context.Context, postgres_entity postgres_entity.TenantSettingsOpportunityStage) (*postgres_entity.TenantSettingsOpportunityStage, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Store")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, postgres_entity.Tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.gormDb.Save(&postgres_entity).Error
 
@@ -159,9 +155,8 @@ func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, post
 func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*postgres_entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(tracingLog.String("id", id))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id)
 
 	// update label, rate and visible if not null
 	updateFields := map[string]interface{}{}

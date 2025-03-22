@@ -28,7 +28,7 @@ func NewEnrichDetailsTrackingRepository(gormDb *gorm.DB) EnrichDetailsTrackingRe
 func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request postgres_entity.EnrichDetailsTracking) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.RegisterRequest")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	record, err := r.GetByIP(ctx, request.IP)
 	if err != nil {
@@ -61,8 +61,8 @@ func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request postg
 func (r enrichDetailsTrackingRepository) GetByIP(ctx context.Context, ip string) (*postgres_entity.EnrichDetailsTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.GetByIP")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("ip", ip))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("ip", ip)
 
 	var postgres_entity *postgres_entity.EnrichDetailsTracking
 	err := r.gormDb.
@@ -70,7 +70,7 @@ func (r enrichDetailsTrackingRepository) GetByIP(ctx context.Context, ip string)
 		First(&postgres_entity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		span.LogKV("result.found", false)
 		return nil, nil
 	}
 

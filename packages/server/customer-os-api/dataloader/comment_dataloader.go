@@ -2,10 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -66,7 +66,7 @@ func (b *commentBatcher) getCommentsForIssues(ctx context.Context, keys dataload
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.CommentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

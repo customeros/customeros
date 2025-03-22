@@ -62,7 +62,7 @@ func (b *taskBatcher) getTasksForOpportunities(ctx context.Context, keys dataloa
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TaskEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

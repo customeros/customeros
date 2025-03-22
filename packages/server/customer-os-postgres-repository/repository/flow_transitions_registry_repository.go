@@ -36,7 +36,7 @@ func NewFlowTransitionsRegistryRepository(gormDb *gorm.DB) FlowTransitionsRegist
 func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) (*postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.gormDb.WithContext(ctx).Create(transition).Error
 	if err != nil {
@@ -50,7 +50,7 @@ func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transiti
 func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) ([]postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var transitions []postgres_entity.FlowTransitionsRegistry
 	query := r.gormDb.WithContext(ctx)
@@ -74,7 +74,7 @@ func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transiti
 func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) ([]postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAllActive")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var transitions []postgres_entity.FlowTransitionsRegistry
 	query := r.gormDb.WithContext(ctx).
@@ -99,7 +99,7 @@ func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, tr
 func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition postgres_entity.FlowTransitionsRegistry) (*postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var foundTransition postgres_entity.FlowTransitionsRegistry
 	query := r.gormDb.WithContext(ctx).
@@ -125,7 +125,7 @@ func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition
 func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Initialize")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	return nil
 }

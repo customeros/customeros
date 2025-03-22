@@ -27,7 +27,7 @@ func NewPersonalIntegrationsRepo(db *gorm.DB) *PersonalIntegrationsRepo {
 func (r *PersonalIntegrationsRepo) FindActivesByIntegration(ctx context.Context, integration string) ([]*postgres_entity.PersonalIntegration, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindActivesByIntegration")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var personalIntegrationEntity []*postgres_entity.PersonalIntegration
 	err := r.db.
@@ -40,7 +40,7 @@ func (r *PersonalIntegrationsRepo) FindActivesByIntegration(ctx context.Context,
 func (r *PersonalIntegrationsRepo) FindIntegration(ctx context.Context, tenant, email, integration string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindIntegration")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var personalIntegrationEntity postgres_entity.PersonalIntegration
 	err := r.db.
@@ -59,7 +59,7 @@ func (r *PersonalIntegrationsRepo) FindIntegration(ctx context.Context, tenant, 
 func (r *PersonalIntegrationsRepo) FindIntegrations(ctx context.Context, tenant, email string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindIntegrations")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var personalIntegrationEntities []postgres_entity.PersonalIntegration
 	err := r.db.
@@ -77,7 +77,7 @@ func (r *PersonalIntegrationsRepo) FindIntegrations(ctx context.Context, tenant,
 func (r *PersonalIntegrationsRepo) SaveIntegration(ctx context.Context, integration postgres_entity.PersonalIntegration) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.SaveIntegration")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	personalIntegrationEntity := postgres_entity.PersonalIntegration{
 		TenantName: integration.TenantName,

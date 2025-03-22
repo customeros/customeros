@@ -63,7 +63,7 @@ func (b *countryBatcher) getCountriesForPhoneNumbers(ctx context.Context, keys d
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4j_entity.CountryEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("result.length", len(results)))

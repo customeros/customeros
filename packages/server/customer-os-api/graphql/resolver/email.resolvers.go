@@ -440,7 +440,7 @@ func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, err
 }
 
 // EmailProfilePhoto is the resolver for the email_ProfilePhoto field.
-func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) ([]*model.EmailWithProfilePhoto, error) {
+func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) ([]*model.EmailProfile, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EmailProfilePhoto", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -463,9 +463,9 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 	}
 
 	// Create map for storing results
-	emailProfileMap := make(map[string]*model.EmailWithProfilePhoto)
+	emailProfileMap := make(map[string]*model.EmailProfile)
 	for _, email := range emails {
-		emailProfileMap[email] = &model.EmailWithProfilePhoto{
+		emailProfileMap[email] = &model.EmailProfile{
 			Email: email,
 		}
 	}
@@ -480,6 +480,7 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 	for _, userEntity := range *userEntities {
 		if userEntity.ProfilePhotoUrl != "" && emailProfileMap[userEntity.DataloaderKey].ProfilePhotoURLID == "" {
 			emailProfileMap[userEntity.DataloaderKey].ProfilePhotoURLID = userEntity.ProfilePhotoUrl
+			emailProfileMap[userEntity.DataloaderKey].Name = userEntity.FullName()
 		}
 	}
 
@@ -493,6 +494,7 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 	for _, contactEntity := range *contactEntities {
 		if contactEntity.ProfilePhotoUrl != "" && emailProfileMap[contactEntity.DataloaderKey].ProfilePhotoURL == "" {
 			emailProfileMap[contactEntity.DataloaderKey].ProfilePhotoURL = contactEntity.ProfilePhotoUrl
+			emailProfileMap[contactEntity.DataloaderKey].Name = contactEntity.FullName()
 		}
 	}
 
@@ -517,21 +519,26 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 			continue
 		}
 		// check if email is in the map by work email first
-		if emailProfileMap[globalContactEntity.WorkEmail] != nil {
+		if globalContactEntity.WorkEmail != "" && emailProfileMap[globalContactEntity.WorkEmail] != nil {
+			if emailProfileMap[globalContactEntity.WorkEmail].ProfilePhotoURL != "" {
+				continue
+			}
 			emailProfileMap[globalContactEntity.WorkEmail].ProfilePhotoURL = globalContactEntity.GetProfilePhotoUrl(commonconstants.S3ImagesCDN)
+			emailProfileMap[globalContactEntity.WorkEmail].Name = globalContactEntity.GetFullName()
 			continue
 		}
 		// check if email is in the map by personal email
-		if emailProfileMap[globalContactEntity.PersonalEmail] != nil {
+		if globalContactEntity.PersonalEmail != "" && emailProfileMap[globalContactEntity.PersonalEmail] != nil {
 			if emailProfileMap[globalContactEntity.PersonalEmail].ProfilePhotoURL != "" {
 				continue
 			}
 			emailProfileMap[globalContactEntity.PersonalEmail].ProfilePhotoURL = globalContactEntity.GetProfilePhotoUrl(commonconstants.S3ImagesCDN)
+			emailProfileMap[globalContactEntity.PersonalEmail].Name = globalContactEntity.GetFullName()
 		}
 	}
 
 	// Convert map to slice for response
-	result := make([]*model.EmailWithProfilePhoto, 0, len(emailProfileMap))
+	result := make([]*model.EmailProfile, 0, len(emailProfileMap))
 	for _, profile := range emailProfileMap {
 		result = append(result, profile)
 	}

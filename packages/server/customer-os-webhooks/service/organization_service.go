@@ -93,7 +93,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 
 	personalEmailProviders := s.cache.GetPersonalEmailProviders()
 	if len(personalEmailProviders) == 0 {
-		personalEmailProviderEntities, err := s.repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		personalEmailProviderEntities, err := s.repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders(ctx)
 		if err != nil {
 			s.log.Errorf("error while getting personal email providers: %v", err)
 		}

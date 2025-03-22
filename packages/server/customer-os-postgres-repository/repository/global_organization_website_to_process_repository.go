@@ -27,8 +27,8 @@ func NewGlobalOrganizationWebsiteToProcessRepository(gormDb *gorm.DB) GlobalOrga
 func (r globalOrganizationWebsiteToProcessRepository) GetWebsitesToProcess(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganizationWebsiteToProcess, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.GetWebsitesToProcess")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Int("limit", limit))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("limit", limit)
 
 	var data []*postgres_entity.GlobalOrganizationWebsiteToProcess
 	err := r.db.
@@ -48,7 +48,8 @@ func (r globalOrganizationWebsiteToProcessRepository) GetWebsitesToProcess(ctx c
 func (r globalOrganizationWebsiteToProcessRepository) MarkAsProcessed(ctx context.Context, id uint64, notes string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.MarkAsProcessed")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id, "notes", notes)
 
 	err := r.db.Model(&postgres_entity.GlobalOrganizationWebsiteToProcess{}).
 		Where("id = ?", id).
@@ -67,7 +68,8 @@ func (r globalOrganizationWebsiteToProcessRepository) MarkAsProcessed(ctx contex
 func (r globalOrganizationWebsiteToProcessRepository) AddWebsiteToProcess(ctx context.Context, website string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("website", website)
 
 	err := r.db.Create(&postgres_entity.GlobalOrganizationWebsiteToProcess{
 		Website: website,

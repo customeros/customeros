@@ -27,7 +27,7 @@ func NewCacheIpDataRepository(gormDb *gorm.DB) CacheIpDataRepository {
 func (r cacheIpDataRepository) Get(ctx context.Context, ip string) (*postgres_entity.CacheIpData, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpDataRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("ip", ip))
 
 	var cacheIpData postgres_entity.CacheIpData
@@ -47,7 +47,7 @@ func (r cacheIpDataRepository) Get(ctx context.Context, ip string) (*postgres_en
 func (r cacheIpDataRepository) Save(ctx context.Context, cacheIpData postgres_entity.CacheIpData) (*postgres_entity.CacheIpData, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpDataRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "cacheIpData", cacheIpData)
 
 	var existingData postgres_entity.CacheIpData

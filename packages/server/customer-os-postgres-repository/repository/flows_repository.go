@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -30,7 +31,7 @@ func NewFlowsRepository(gormDb *gorm.DB) FlowsRepository {
 func (f *flowRepository) Create(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	flowRecord.ID = utils.GenerateNanoIdWithPrefix("flow", 16)
 
@@ -46,7 +47,7 @@ func (f *flowRepository) Create(ctx context.Context, flowRecord postgres_entity.
 func (f *flowRepository) FindAll(ctx context.Context, flowRecord postgres_entity.Flows) ([]postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var flows []postgres_entity.Flows
 	query := f.gormDb.Where("is_active = true")
@@ -68,7 +69,7 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord postgres_entity
 func (f *flowRepository) Find(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var flow postgres_entity.Flows
 	err := f.gormDb.
@@ -88,7 +89,7 @@ func (f *flowRepository) Find(ctx context.Context, flowRecord postgres_entity.Fl
 func (f *flowRepository) Update(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if flowRecord.ID == "" {
 		err := errors.New("flow ID is missing")

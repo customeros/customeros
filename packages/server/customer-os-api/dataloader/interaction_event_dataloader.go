@@ -2,10 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -96,7 +96,7 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -145,7 +145,7 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -197,7 +197,7 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -247,7 +247,7 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

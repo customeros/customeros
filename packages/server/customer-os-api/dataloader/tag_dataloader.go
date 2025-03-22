@@ -3,9 +3,9 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -92,7 +92,7 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -141,7 +141,7 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -190,7 +190,7 @@ func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys)
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))
@@ -239,7 +239,7 @@ func (b *tagBatcher) getTagsForLogEntries(ctx context.Context, keys dataloader.K
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.TagEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Int("results_length", len(results)))

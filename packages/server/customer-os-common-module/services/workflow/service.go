@@ -47,7 +47,7 @@ func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent e
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
-		err := errors.New("Tenant not set in context")
+		err := errors.New("tenant not set in context")
 		tracing.TraceErr(span, err)
 		return nil, err
 

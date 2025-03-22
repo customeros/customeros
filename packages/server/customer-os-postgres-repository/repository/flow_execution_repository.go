@@ -27,7 +27,7 @@ func NewFlowExecutionRepository(gormDb *gorm.DB) FlowExecutionRepository {
 func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := f.gormDb.Create(&executionRecord).Error
 	if err != nil {
@@ -41,7 +41,7 @@ func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord po
 func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var foundRecord postgres_entity.FlowExecution
 	err := f.gormDb.
@@ -60,7 +60,7 @@ func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord post
 func (f *flowExecutionRepository) FindAll(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*[]postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var records []postgres_entity.FlowExecution
 	err := f.gormDb.
@@ -76,7 +76,7 @@ func (f *flowExecutionRepository) FindAll(ctx context.Context, executionRecord p
 func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if executionRecord.ID == "" {
 		err := errors.New("flow execution ID is missing")

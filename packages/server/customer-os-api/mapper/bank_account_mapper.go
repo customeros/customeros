@@ -5,7 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	mapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToBankAccount(entity *neo4jentity.BankAccountEntity) *model.BankAccount {
@@ -17,13 +17,13 @@ func MapEntityToBankAccount(entity *neo4jentity.BankAccountEntity) *model.BankAc
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 		},
 		BankName:            utils.StringPtr(entity.BankName),
 		BankTransferEnabled: entity.BankTransferEnabled,
 		AllowInternational:  entity.AllowInternational,
-		Currency:            utils.ToPtr(mapper.MapCurrencyToModel(entity.Currency)),
+		Currency:            utils.ToPtr(enummapper.MapCurrencyToModel(entity.Currency)),
 		Iban:                utils.StringPtr(entity.Iban),
 		Bic:                 utils.StringPtr(entity.Bic),
 		SortCode:            utils.StringPtr(entity.SortCode),

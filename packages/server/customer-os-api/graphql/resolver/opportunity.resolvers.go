@@ -13,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -77,7 +78,7 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, input.RenewalAdjustedRate, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
+	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, enummapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, input.RenewalAdjustedRate, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update opportunity renewal %s", input.OpportunityID)
@@ -103,7 +104,7 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	tenant := common.GetTenantFromContext(ctx)
 
 	if input.RenewalLikelihood != nil {
-		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.RenewalAdjustedRate)
+		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, enummapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.RenewalAdjustedRate)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to update renewal opportunities for organization %s", input.OrganizationID)

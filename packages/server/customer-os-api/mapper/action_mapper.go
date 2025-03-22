@@ -6,6 +6,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToAction(entity *neo4jentity.ActionEntity) *model.Action {
@@ -17,7 +18,7 @@ func MapEntityToAction(entity *neo4jentity.ActionEntity) *model.Action {
 		CreatedAt:  entity.CreatedAt,
 		ActionType: MapActionTypeToModel(entity.Type),
 		AppSource:  entity.AppSource,
-		Source:     MapDataSourceToModel(entity.Source),
+		Source:     enummapper.MapDataSourceToModel(entity.Source),
 		Content:    utils.StringPtrNillable(entity.Content),
 		Metadata:   utils.StringPtrNillable(entity.Metadata),
 	}

@@ -32,7 +32,7 @@ func NewMailstackBuyRequestRepository(gormDb *gorm.DB) MailstackBuyRequestReposi
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Context) ([]*postgres_entity.MailstackBuyRequest, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetList")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -49,7 +49,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Con
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Context, id string) (*postgres_entity.MailstackBuyRequest, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
@@ -72,7 +72,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Con
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequest) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.Store")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -104,7 +104,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Conte
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*postgres_entity.MailstackBuyRequestDomain, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetDomains")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(log.String("mailstackBuyRequestId", mailstackBuyRequestId))
 
@@ -123,7 +123,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequestDomain) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.StoreDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 

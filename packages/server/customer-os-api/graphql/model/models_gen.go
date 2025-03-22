@@ -1104,6 +1104,13 @@ func (EmailParticipant) IsInteractionSessionParticipant() {}
 
 func (EmailParticipant) IsMeetingParticipant() {}
 
+type EmailProfile struct {
+	Email             string `json:"email"`
+	ProfilePhotoURL   string `json:"profilePhotoUrl"`
+	ProfilePhotoURLID string `json:"profilePhotoUrlId"`
+	Name              string `json:"name"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **An `update` object.**
 type EmailRelationUpdateInput struct {
@@ -1149,12 +1156,6 @@ type EmailValidationDetails struct {
 type EmailVariableEntity struct {
 	Type      EmailVariableEntityType `json:"type"`
 	Variables []EmailVariableName     `json:"variables"`
-}
-
-type EmailWithProfilePhoto struct {
-	Email             string `json:"email"`
-	ProfilePhotoURL   string `json:"profilePhotoUrl"`
-	ProfilePhotoURLID string `json:"profilePhotoUrlId"`
 }
 
 type EnrichDetails struct {

@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
@@ -25,9 +24,8 @@ func NewStatsApiCallsRepository(gormDb *gorm.DB) StatsApiCallsRepository {
 func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api string) (*postgres_entity.StatsApiCalls, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "StatsApiCallsRepository.Increment")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("api", api))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("api", api)
 
 	// Check if the record already exists
 	var stats postgres_entity.StatsApiCalls

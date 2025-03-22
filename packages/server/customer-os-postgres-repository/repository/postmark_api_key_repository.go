@@ -25,8 +25,7 @@ func NewPostmarkApiKeyRepo(db *gorm.DB) *PostmarkApiKeyRepo {
 func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(ctx context.Context, tenant string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PostmarkApiKeyRepo.GetPostmarkApiKey")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var postmarkApiKeyEntity postgres_entity.PostmarkApiKey
 	err := r.db.
@@ -43,7 +42,7 @@ func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(ctx context.Context, tenant strin
 func (r *PostmarkApiKeyRepo) CreateApiKey(ctx context.Context, apiKey postgres_entity.PostmarkApiKey) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PostmarkApiKeyRepo.CreateApiKey")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	postmarkApiKeyEntity := postgres_entity.PostmarkApiKey{
 		TenantName: apiKey.TenantName,

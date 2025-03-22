@@ -1,4 +1,4 @@
-package mapper
+package enummapper
 
 import (
 	"testing"

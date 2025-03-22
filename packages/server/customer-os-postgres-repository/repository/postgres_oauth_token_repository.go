@@ -36,7 +36,7 @@ func NewOAuthTokenRepository(db *gorm.DB) OAuthTokenRepository {
 func (repo oAuthTokenRepository) GetAll(ctx context.Context) ([]postgres_entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entities []postgres_entity.OAuthTokenEntity
 
@@ -102,8 +102,7 @@ func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provide
 func (repo oAuthTokenRepository) GetByPlayerId(ctx context.Context, tenant, provider, playerId string) (*postgres_entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByPlayerId")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("playerId", playerId), log.String("provider", provider))
 
 	var oAuthTokenEntity postgres_entity.OAuthTokenEntity
@@ -146,8 +145,7 @@ func (repo oAuthTokenRepository) Save(ctx context.Context, oAuthToken postgres_e
 func (repo oAuthTokenRepository) Update(ctx context.Context, tenant, playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*postgres_entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("playerId", playerId), log.String("provider", provider), log.String("expiresAt", expiresAt.String()))
 
 	existing, err := repo.GetByPlayerId(ctx, tenant, provider, playerId)
@@ -177,7 +175,7 @@ func (repo oAuthTokenRepository) Update(ctx context.Context, tenant, playerId, p
 func (repo oAuthTokenRepository) MarkForManualRefresh(ctx context.Context, tenant, playerId, provider string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.MarkForManualRefresh")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("playerId", playerId), log.String("provider", provider))
 
 	existing, err := repo.GetByPlayerId(ctx, tenant, provider, playerId)
@@ -205,8 +203,7 @@ func (repo oAuthTokenRepository) MarkForManualRefresh(ctx context.Context, tenan
 func (repo oAuthTokenRepository) DeleteByEmail(ctx context.Context, tenant, provider, email string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.DeleteByEmail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("provider", provider), log.String("email", email))
 
 	existing, err := repo.GetByEmail(ctx, tenant, provider, email)

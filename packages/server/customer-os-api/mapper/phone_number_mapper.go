@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *neo4jentity.PhoneNumberEntity {
@@ -40,7 +41,7 @@ func MapEntityToPhoneNumber(entity *neo4jentity.PhoneNumberEntity) *model.PhoneN
 		Validated:      entity.Validated,
 		Label:          utils.ToPtr(label),
 		Primary:        entity.Primary,
-		Source:         MapDataSourceToModel(entity.Source),
+		Source:         enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:      utils.StringPtrNillable(entity.AppSource),
 		CreatedAt:      entity.CreatedAt,
 		UpdatedAt:      entity.UpdatedAt,

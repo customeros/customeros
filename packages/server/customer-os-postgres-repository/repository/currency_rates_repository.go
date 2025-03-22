@@ -27,7 +27,7 @@ func NewCurrencyRateRepository(db *gorm.DB) CurrencyRateRepository {
 func (r *currencyRateRepo) GetLatestCurrencyRate(ctx context.Context, currency string) (*postgres_entity.CurrencyRate, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CurrencyRateRepository.GetLatestCurrencyRate")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var rate postgres_entity.CurrencyRate
 	err := r.db.
@@ -48,7 +48,7 @@ func (r *currencyRateRepo) GetLatestCurrencyRate(ctx context.Context, currency s
 func (r *currencyRateRepo) SaveCurrencyRate(ctx context.Context, currency string, rate float64, date time.Time, source string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CurrencyRateRepository.SaveCurrencyRate")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	// Check if the currency rate already exists for the given currency and date
 	var existingRate postgres_entity.CurrencyRate

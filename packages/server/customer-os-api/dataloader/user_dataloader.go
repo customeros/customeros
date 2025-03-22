@@ -2,6 +2,8 @@ package dataloader
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -9,7 +11,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*neo4jentity.UserEntities, error) {
@@ -213,7 +214,7 @@ func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys data
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -262,7 +263,7 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -311,7 +312,7 @@ func (b *userBatcher) getUsersForTasks(ctx context.Context, keys dataloader.Keys
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("result.count", len(results)))
@@ -359,7 +360,7 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -405,7 +406,7 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -454,7 +455,7 @@ func (b *userBatcher) getUserOwnersForOpportunities(ctx context.Context, keys da
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -503,7 +504,7 @@ func (b *userBatcher) getUserCreatorsForOpportunities(ctx context.Context, keys 
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -552,7 +553,7 @@ func (b *userBatcher) getUserCreatorsForServiceLineItems(ctx context.Context, ke
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -601,7 +602,7 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -650,7 +651,7 @@ func (b *userBatcher) getUserCreatorsForTasks(ctx context.Context, keys dataload
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("result.count", len(results)))
@@ -696,7 +697,7 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -745,7 +746,7 @@ func (b *userBatcher) getUserAuthorsForLogEntries(ctx context.Context, keys data
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -794,7 +795,7 @@ func (b *userBatcher) getUserAuthorsForComments(ctx context.Context, keys datalo
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
@@ -843,7 +844,7 @@ func (b *userBatcher) getUserForFlowSenders(ctx context.Context, keys dataloader
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
-		return []*dataloader.Result{{nil, err}}
+		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))

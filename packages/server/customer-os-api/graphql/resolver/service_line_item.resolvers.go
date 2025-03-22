@@ -14,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -47,7 +48,7 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 		data.EndedAt = input.ServiceEnded
 	}
 	if input.BillingCycle != nil {
-		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
+		data.SliBilledType = enummapper.MapBilledTypeFromModel(*input.BillingCycle)
 	} else {
 		data.SliBilledType = neo4jenum.BilledTypeNone
 	}
@@ -133,7 +134,7 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 		data.SliVatRate = (*input.Tax).TaxRate
 	}
 	if input.BillingCycle != nil {
-		data.SliBilledType = mapper.MapBilledTypeFromModel(*input.BillingCycle)
+		data.SliBilledType = enummapper.MapBilledTypeFromModel(*input.BillingCycle)
 	} else {
 		data.SliBilledType = neo4jenum.BilledTypeNone
 	}

@@ -41,7 +41,7 @@ func NewWebSessionRepository(gormDb *gorm.DB) WebSessionRepository {
 func (r *webSessionRepository) Create(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
 
 	var created postgres_entity.WebSession
@@ -127,8 +127,8 @@ func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData p
 func (r *webSessionRepository) FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLastNotification")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(log.String("tenant", tenant), log.String("domain", domain))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("tenant", tenant, "domain", domain)
 
 	var result postgres_entity.WebSession
 	err := r.gormDb.
@@ -180,7 +180,7 @@ func (r *webSessionRepository) FindLatestSessionWithDomainByIP(ctx context.Conte
 func (r *webSessionRepository) UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateLastActivity")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, sessionID)
 
 	var updatedSession postgres_entity.WebSession
@@ -229,7 +229,7 @@ func (r *webSessionRepository) SetSessionEnd(ctx context.Context, sessionID stri
 func (r *webSessionRepository) SetOrganizationId(ctx context.Context, sessionID, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetOrganizationId")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, sessionID)
 
 	// Perform a single-column update on organization_id for the matching session
@@ -249,7 +249,9 @@ func (r *webSessionRepository) SetOrganizationId(ctx context.Context, sessionID,
 func (r *webSessionRepository) SetSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionPageViews")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("sessionID", sessionID, "tenant", tenant)
+	tracing.LogObjectAsJson(span, "pageViews", pageViews)
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -268,7 +270,7 @@ func (r *webSessionRepository) SetSessionPageViews(ctx context.Context, sessionI
 func (r *webSessionRepository) SetSlackSentAt(ctx context.Context, sessionID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSlackSentAt")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, sessionID)
 
 	// Perform a single-column update on sent_slack_notification for the matching session
@@ -288,7 +290,7 @@ func (r *webSessionRepository) SetSlackSentAt(ctx context.Context, sessionID str
 func (r *webSessionRepository) SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetVisitorIdentity")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	// Start building the query
 	query := r.gormDb.Model(&postgres_entity.WebSession{}).

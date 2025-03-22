@@ -23,7 +23,7 @@ func NewBrowserAutomationRunResultRepository(gormDb *gorm.DB) BrowserAutomationR
 func (repo *browserAutomationRunResultRepositoryImpl) Get(ctx context.Context, runId int) (*postgres_entity.BrowserAutomationsRunResult, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserAutomationRunRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result *postgres_entity.BrowserAutomationsRunResult
 	err := repo.gormDb.Where("run_id = ? ", runId).Find(&result).Error

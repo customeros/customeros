@@ -35,7 +35,7 @@ func (s *issueService) GetIssueSummaryByStatusForOrganization(ctx context.Contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	return s.repositories.IssueRepository.GetIssueCountByStatusForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
+	return s.repositories.Neo4jRepositories.IssueReadRepository.GetIssueCountByStatusForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
 }
 
 func (s *issueService) GetById(ctx context.Context, issueId string) (*neo4jentity.IssueEntity, error) {
@@ -44,7 +44,7 @@ func (s *issueService) GetById(ctx context.Context, issueId string) (*neo4jentit
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("issueId", issueId))
 
-	if issueDbNode, err := s.repositories.IssueRepository.GetById(ctx, common.GetTenantFromContext(ctx), issueId); err != nil {
+	if issueDbNode, err := s.repositories.Neo4jRepositories.IssueReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), issueId); err != nil {
 		return nil, err
 	} else {
 		return neo4jmapper.MapDbNodeToIssueEntity(issueDbNode), nil

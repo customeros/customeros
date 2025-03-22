@@ -34,7 +34,7 @@ func NewEnrichDetailsBetterContactRepository(gormDb *gorm.DB) EnrichDetailsBette
 func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Context, data postgres_entity.EnrichDetailsBetterContact) (*postgres_entity.EnrichDetailsBetterContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.RegisterRequest")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	data.CreatedAt = utils.Now()

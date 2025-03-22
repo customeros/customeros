@@ -9,6 +9,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapContactUpdateInputToContactFields(input model.ContactUpdateInput) data_fields.ContactFields {
@@ -74,7 +75,7 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 			ID:          contact.Id,
 			Created:     contact.CreatedAt,
 			LastUpdated: contact.UpdatedAt,
-			Source:      MapDataSourceToModel(contact.Source),
+			Source:      enummapper.MapDataSourceToModel(contact.Source),
 			AppSource:   contact.AppSource,
 			Version:     contact.AggregateVersion,
 		},
@@ -90,7 +91,7 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 		Hide:            utils.BoolPtr(contact.Hide),
 		CreatedAt:       contact.CreatedAt,
 		UpdatedAt:       contact.UpdatedAt,
-		Source:          MapDataSourceToModel(contact.Source),
+		Source:          enummapper.MapDataSourceToModel(contact.Source),
 		AppSource:       utils.StringPtr(contact.AppSource),
 		EnrichDetails:   prepareContactEnrichDetails(contact.EnrichDetails),
 	}
