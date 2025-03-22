@@ -291,7 +291,7 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
 	// Try to identify IP via 3rd parties
 	domain, err := c.identifyIP(ctx, websession.IP)
 	if err != nil {
-		return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to identify IP")
+		return enum.CapabilityExecutionRetry, *result, errors.Wrap(err, "failed to identify company domain from IP")
 	}
 
 	result.Domain = domain
@@ -383,6 +383,7 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(c
 func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (primaryDomain string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
 	defer span.Finish()
+	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
 	span.LogKV("ipAddress", ipAddress)
 
 	snitcherData, err := c.enrichmentService.IPIdentity(ctx, ipAddress)
