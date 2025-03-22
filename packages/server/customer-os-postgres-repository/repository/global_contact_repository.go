@@ -56,7 +56,7 @@ func (r *globalContactRepository) addSortingClauses(query *gorm.DB) *gorm.DB {
 func (r *globalContactRepository) GetById(ctx context.Context, id uint64) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, strconv.FormatUint(id, 10))
 
 	var contact postgres_entity.GlobalContact
@@ -75,7 +75,7 @@ func (r *globalContactRepository) GetById(ctx context.Context, id uint64) (*post
 func (r *globalContactRepository) Create(ctx context.Context, contact *postgres_entity.GlobalContact) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := r.db.WithContext(ctx).Create(contact)
 	if result.Error != nil {
@@ -89,7 +89,7 @@ func (r *globalContactRepository) Create(ctx context.Context, contact *postgres_
 func (r *globalContactRepository) Update(ctx context.Context, contact *postgres_entity.GlobalContact) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, strconv.FormatUint(contact.ID, 10))
 
 	result := r.db.WithContext(ctx).Save(contact)
@@ -104,8 +104,8 @@ func (r *globalContactRepository) Update(ctx context.Context, contact *postgres_
 func (r *globalContactRepository) GetByLinkedInIdentifier(ctx context.Context, linkedInIdentifier string) ([]*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByLinkedInIdentifier")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("linkedInIdentifier", linkedInIdentifier))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("linkedInIdentifier", linkedInIdentifier)
 
 	if linkedInIdentifier == "" {
 		span.LogFields(tracingLog.Int("result.count", 0))
@@ -154,11 +154,8 @@ func (r *globalContactRepository) GetByLinkedInAlias(ctx context.Context, linked
 func (r *globalContactRepository) GetByLinkedInIdentifierAndDomain(ctx context.Context, linkedInIdentifier string, primaryDomain string) (*postgres_entity.GlobalContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByLinkedInIdentifierAndDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(
-		tracingLog.String("linkedInIdentifier", linkedInIdentifier),
-		tracingLog.String("primaryDomain", primaryDomain),
-	)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("linkedInIdentifier", linkedInIdentifier, "primaryDomain", primaryDomain)
 
 	var contact postgres_entity.GlobalContact
 	result := r.addSortingClauses(
@@ -201,11 +198,8 @@ func (r *globalContactRepository) GetByWorkEmail(ctx context.Context, workEmail 
 func (r *globalContactRepository) GetByWorkEmailAndDomain(ctx context.Context, workEmail string, primaryDomain string) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByWorkEmailAndDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(
-		tracingLog.String("workEmail", workEmail),
-		tracingLog.String("primaryDomain", primaryDomain),
-	)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("workEmail", workEmail, "primaryDomain", primaryDomain)
 
 	var contact postgres_entity.GlobalContact
 	result := r.addSortingClauses(
@@ -226,8 +220,8 @@ func (r *globalContactRepository) GetByWorkEmailAndDomain(ctx context.Context, w
 func (r *globalContactRepository) GetByPersonalEmail(ctx context.Context, personalEmail string) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByPersonalEmail")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("personalEmail", personalEmail))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("personalEmail", personalEmail)
 
 	var contact postgres_entity.GlobalContact
 	result := r.addSortingClauses(
@@ -248,11 +242,8 @@ func (r *globalContactRepository) GetByPersonalEmail(ctx context.Context, person
 func (r *globalContactRepository) GetByPersonalEmailAndDomain(ctx context.Context, personalEmail string, primaryDomain string) (*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetByPersonalEmailAndDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(
-		tracingLog.String("personalEmail", personalEmail),
-		tracingLog.String("primaryDomain", primaryDomain),
-	)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("personalEmail", personalEmail, "primaryDomain", primaryDomain)
 
 	var contact postgres_entity.GlobalContact
 	result := r.addSortingClauses(
@@ -273,7 +264,7 @@ func (r *globalContactRepository) GetByPersonalEmailAndDomain(ctx context.Contex
 func (r *globalContactRepository) GetContactsToFetchPhoto(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetContactsToFetchPhoto")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	contacts := make([]*postgres_entity.GlobalContact, 0)
 	result := r.db.WithContext(ctx).
@@ -294,7 +285,7 @@ func (r *globalContactRepository) GetContactsToFetchPhoto(ctx context.Context, l
 func (r *globalContactRepository) SetProfilePhoto(ctx context.Context, id uint64, photoPath string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.SetProfilePhoto")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
 		Where("id = ?", id).
@@ -318,9 +309,9 @@ func (r *globalContactRepository) SetProfilePhoto(ctx context.Context, id uint64
 func (r *globalContactRepository) SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.SetDownloadStatus")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, strconv.FormatUint(id, 10))
-	span.LogFields(tracingLog.String("status", status.String()))
+	span.LogKV("status", status.String())
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
 		Where("id = ?", id).
@@ -367,9 +358,9 @@ func (r *globalContactRepository) GetContactsToFindWorkEmailWithBetterContact(ct
 func (r *globalContactRepository) MarkBetterContactRequested(ctx context.Context, id uint64, betterContactRequestId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.MarkBetterContactRequested")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, strconv.FormatUint(id, 10))
-	span.LogFields(tracingLog.String("betterContactRequestId", betterContactRequestId))
+	span.LogKV("betterContactRequestId", betterContactRequestId)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
 		Where("id = ?", id).
@@ -395,7 +386,7 @@ func (r *globalContactRepository) MarkBetterContactRequested(ctx context.Context
 func (r *globalContactRepository) GetContactsToSetWorkEmailFromBetterContactResponse(ctx context.Context, limit int) ([]*postgres_entity.GlobalContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetContactsToSetWorkEmailFromBetterContactResponse")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	contacts := make([]*postgres_entity.GlobalContact, 0)
 	result := r.db.WithContext(ctx).
@@ -436,7 +427,7 @@ func (r *globalContactRepository) GetContactsToSetWorkEmailFromBetterContactResp
 func (r *globalContactRepository) MarkBetterContactSet(ctx context.Context, id uint64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.MarkBetterContactSet")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, strconv.FormatUint(id, 10))
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalContact{}).
@@ -454,8 +445,8 @@ func (r *globalContactRepository) MarkBetterContactSet(ctx context.Context, id u
 func (r *globalContactRepository) GetGlobalContactsToSyncIntoTenantContacts(ctx context.Context, daysFromPreviousSync, forceSyncAfterDays, limit int) ([]*postgres_entity.GlobalContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetGlobalContactsToSyncIntoTenantContacts")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Int("daysFromPreviousSync", daysFromPreviousSync), tracingLog.Int("forceSyncAfterDays", forceSyncAfterDays), tracingLog.Int("limit", limit))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("daysFromPreviousSync", daysFromPreviousSync, "forceSyncAfterDays", forceSyncAfterDays, "limit", limit)
 
 	contacts := make([]*postgres_entity.GlobalContact, 0)
 	result := r.db.WithContext(ctx).
@@ -474,7 +465,7 @@ func (r *globalContactRepository) GetGlobalContactsToSyncIntoTenantContacts(ctx 
 func (r *globalContactRepository) GetGlobalContactsByEmailAddresses(ctx context.Context, emailAddresses []string) ([]*postgres_entity.GlobalContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactRepository.GetGlobalContactsByEmailAddresses")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
 
 	contacts := make([]*postgres_entity.GlobalContact, 0)

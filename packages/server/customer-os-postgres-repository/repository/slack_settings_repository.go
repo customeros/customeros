@@ -29,8 +29,7 @@ func NewSlackSettingsRepository(db *gorm.DB) SlackSettingsRepository {
 func (repo *slackSettingsRepository) Get(ctx context.Context, tenant string) (*postgres_entity.SlackSettingsEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var existing *postgres_entity.SlackSettingsEntity
 	err := repo.db.Find(&existing, "tenant_name = ?", tenant).Error
@@ -58,7 +57,7 @@ func (repo *slackSettingsRepository) Get(ctx context.Context, tenant string) (*p
 func (repo *slackSettingsRepository) Save(ctx context.Context, slackSettings postgres_entity.SlackSettingsEntity) (*postgres_entity.SlackSettingsEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := repo.db.Save(&slackSettings)
 	if result.Error != nil {
@@ -71,8 +70,7 @@ func (repo *slackSettingsRepository) Save(ctx context.Context, slackSettings pos
 func (repo *slackSettingsRepository) Delete(ctx context.Context, tenant string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Delete")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	existing, err := repo.Get(ctx, tenant)
 	if err != nil {

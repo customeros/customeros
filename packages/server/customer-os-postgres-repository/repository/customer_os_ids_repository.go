@@ -23,7 +23,7 @@ func NewCustomerOsIdsRepository(gormDb *gorm.DB) CustomerOsIdsRepository {
 func (repo *customerOsIdsRepository) Reserve(ctx context.Context, customerOsIds postgres_entity.CustomerOsIds) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CustomerOsIdsRepository.Reserve")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := repo.gormDb.Save(&customerOsIds).Error
 	return err

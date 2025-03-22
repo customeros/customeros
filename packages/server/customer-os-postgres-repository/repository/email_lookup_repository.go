@@ -53,8 +53,7 @@ func (e emailLookupRepository) GetById(ctx context.Context, id string) (*postgre
 func (e emailLookupRepository) Create(ctx context.Context, emailLookup postgres_entity.EmailLookup) (*postgres_entity.EmailLookup, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.Create")
 	defer span.Finish()
-	tracing.TagTenant(span, emailLookup.Tenant)
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	emailLookup.ID = utils.GenerateRandomString(64)
 

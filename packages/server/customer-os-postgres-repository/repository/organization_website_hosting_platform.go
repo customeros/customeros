@@ -23,7 +23,7 @@ func NewOrganizationWebsiteHostingPlatformRepository(gormDb *gorm.DB) Organizati
 func (o organizationWebsiteHostingPlatformRepository) GetAllUrlPatterns(ctx context.Context) ([]string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationWebsiteHostingPlatformRepository.GetAllUrlPatterns")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result []string
 	err := o.gormDb.Model(&postgres_entity.OrganizationWebsiteHostingPlatform{}).Pluck("url_pattern", &result).Error

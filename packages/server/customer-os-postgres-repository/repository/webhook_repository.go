@@ -34,7 +34,7 @@ func NewWebhooksRepository(gormDb *gorm.DB) WebhooksRepository {
 func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var created postgres_entity.Webhooks
 	now := utils.Now()
@@ -86,7 +86,7 @@ func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity
 func (r *webhooksRepository) FindAll(ctx context.Context) (*[]postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -111,7 +111,7 @@ func (r *webhooksRepository) FindAll(ctx context.Context) (*[]postgres_entity.We
 func (r *webhooksRepository) Find(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Find")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if webhook.Tenant == "" {
 		webhook.Tenant = common.GetTenantFromContext(ctx)
@@ -145,7 +145,7 @@ func (r *webhooksRepository) Find(ctx context.Context, webhook postgres_entity.W
 func (r *webhooksRepository) FindLastRotationCount(ctx context.Context, integration enum.Source) (int, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.FindLastRotationCount")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -171,7 +171,7 @@ func (r *webhooksRepository) FindLastRotationCount(ctx context.Context, integrat
 func (r *webhooksRepository) Deactivate(ctx context.Context, webhook postgres_entity.Webhooks) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if webhook.Tenant == "" {
 		webhook.Tenant = common.GetTenantFromContext(ctx)

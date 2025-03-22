@@ -33,8 +33,7 @@ func NewEmailValidationRecordRepository(gormDb *gorm.DB) EmailValidationRecordRe
 func (r emailValidationRecordRepository) BulkInsertRecords(ctx context.Context, tenant, requestId string, verifyCatchAll bool, emails []string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.BulkInsertRecords")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(
 		log.String("requestId", requestId),
 		log.Int("emailsCount", len(emails)),
@@ -97,7 +96,7 @@ func assignPriority(recordCount int) int {
 func (r emailValidationRecordRepository) UpdateEmailRecord(ctx context.Context, id uint64, newData string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.UpdateEmailRecord")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Uint64("id", id), log.String("newData", newData))
 
 	// Find the record by email and request_id and update the data field
@@ -117,7 +116,7 @@ func (r emailValidationRecordRepository) UpdateEmailRecord(ctx context.Context, 
 func (r emailValidationRecordRepository) CountPendingRequests(ctx context.Context, priority int, createdBefore time.Time) (int64, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.CountPendingRequests")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("priority", priority), log.Object("createdBefore", createdBefore))
 
 	var count int64
@@ -136,7 +135,7 @@ func (r emailValidationRecordRepository) CountPendingRequests(ctx context.Contex
 func (r emailValidationRecordRepository) GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]postgres_entity.EmailValidationRecord, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.GetUnprocessedEmailRecords")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("limit", limit))
 
 	var records []postgres_entity.EmailValidationRecord
@@ -158,7 +157,7 @@ func (r emailValidationRecordRepository) GetUnprocessedEmailRecords(ctx context.
 func (r emailValidationRecordRepository) CountPendingRequestsByRequestID(ctx context.Context, requestID string) (int64, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.CountPendingRequestsByRequestID")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var count int64
 
@@ -176,7 +175,7 @@ func (r emailValidationRecordRepository) CountPendingRequestsByRequestID(ctx con
 func (r emailValidationRecordRepository) GetEmailRecordsInChunks(ctx context.Context, requestId string, chunkSize, offset int) ([]postgres_entity.EmailValidationRecord, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.GetEmailRecordsInChunks")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("requestId", requestId), log.Int("chunkSize", chunkSize), log.Int("offset", offset))
 
 	var records []postgres_entity.EmailValidationRecord

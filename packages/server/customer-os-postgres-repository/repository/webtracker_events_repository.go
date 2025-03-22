@@ -48,7 +48,7 @@ func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData 
 func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData postgres_entity.WebTrackerEvents, cacheLookbackInDays *int) ([]postgres_entity.WebTrackerEvents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindAll")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	query := r.gormDb.Where(&webTrackerData).Order("created_at DESC")
 

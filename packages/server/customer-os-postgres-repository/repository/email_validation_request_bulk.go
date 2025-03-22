@@ -30,8 +30,7 @@ func NewEmailValidationRequestBulkRepository(gormDb *gorm.DB) EmailValidationReq
 func (r emailValidationRequestBulkRepository) RegisterRequest(ctx context.Context, tenant, requestId, fileName string, verifyCatchAll bool, totalRecords int) (*postgres_entity.EmailValidationRequestBulk, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.RegisterRequest")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(
 		log.String("requestId", requestId),
 		log.String("fileName", fileName),
@@ -61,7 +60,7 @@ func (r emailValidationRequestBulkRepository) RegisterRequest(ctx context.Contex
 func (r emailValidationRequestBulkRepository) GetByRequestID(ctx context.Context, requestID string) (*postgres_entity.EmailValidationRequestBulk, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.GetByRequestID")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("requestID", requestID))
 
 	var record postgres_entity.EmailValidationRequestBulk
@@ -80,7 +79,7 @@ func (r emailValidationRequestBulkRepository) GetByRequestID(ctx context.Context
 func (r emailValidationRequestBulkRepository) IncrementDeliverableEmails(ctx context.Context, requestID string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.IncrementDeliverableEmails")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("requestID", requestID))
 
 	// Increment deliverable emails count and update the updated_at timestamp
@@ -100,7 +99,7 @@ func (r emailValidationRequestBulkRepository) IncrementDeliverableEmails(ctx con
 func (r emailValidationRequestBulkRepository) IncrementUndeliverableEmails(ctx context.Context, requestID string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.IncrementUndeliverableEmails")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("requestID", requestID))
 
 	// Increment undeliverable emails count
@@ -120,9 +119,8 @@ func (r emailValidationRequestBulkRepository) IncrementUndeliverableEmails(ctx c
 func (r emailValidationRequestBulkRepository) MarkRequestAsCompleted(ctx context.Context, requestId, fileStoreId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.MarkRequestAsCompleted")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogKV("requestId", requestId)
-	span.LogKV("fileStoreId", fileStoreId)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("requestId", requestId), log.String("fileStoreId", fileStoreId))
 
 	// Update the status to "completed" and set the updated_at field to the current time
 	if err := r.db.WithContext(ctx).
@@ -142,7 +140,7 @@ func (r emailValidationRequestBulkRepository) MarkRequestAsCompleted(ctx context
 func (r emailValidationRequestBulkRepository) GetOldestUncompletedRequests(ctx context.Context, limit int) ([]postgres_entity.EmailValidationRequestBulk, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.GetOldestUncompletedRequests")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("limit", limit))
 
 	var records []postgres_entity.EmailValidationRequestBulk

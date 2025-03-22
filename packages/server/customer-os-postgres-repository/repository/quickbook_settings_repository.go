@@ -30,8 +30,7 @@ func NewQuickbooksSettingsRepository(db *gorm.DB) QuickbooksSettingsRepository {
 func (repo *quickbooksSettingsRepository) Get(ctx context.Context, tenant string) (*postgres_entity.QuickbooksSettingsEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "QuickbooksSettingsRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var existing *postgres_entity.QuickbooksSettingsEntity
 	err := repo.db.Find(&existing, "tenant = ?", tenant).Error
@@ -59,7 +58,7 @@ func (repo *quickbooksSettingsRepository) Get(ctx context.Context, tenant string
 func (repo *quickbooksSettingsRepository) Save(ctx context.Context, quickbooksSettings postgres_entity.QuickbooksSettingsEntity) (*postgres_entity.QuickbooksSettingsEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "QuickbooksSettingsRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	quickbooksSettings.UpdatedAt = utils.NowPtr()
 	result := repo.db.Save(&quickbooksSettings)
@@ -73,8 +72,7 @@ func (repo *quickbooksSettingsRepository) Save(ctx context.Context, quickbooksSe
 func (repo *quickbooksSettingsRepository) Delete(ctx context.Context, tenant string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "QuickbooksSettingsRepository.Delete")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	existing, err := repo.Get(ctx, tenant)
 	if err != nil {

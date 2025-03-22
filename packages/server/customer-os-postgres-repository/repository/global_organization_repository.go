@@ -58,8 +58,8 @@ func NewGlobalOrganizationRepository(gormDb *gorm.DB) GlobalOrganizationReposito
 func (r *globalOrganizationRepository) GetById(ctx context.Context, id uint64) (*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id)
 
 	organization := &postgres_entity.GlobalOrganization{}
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(organization)
@@ -78,7 +78,7 @@ func (r *globalOrganizationRepository) GetById(ctx context.Context, id uint64) (
 func (r *globalOrganizationRepository) GetByPrimaryDomains(ctx context.Context, domains []string) ([]*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetByPrimaryDomains")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.Object("domains", domains))
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
@@ -94,8 +94,8 @@ func (r *globalOrganizationRepository) GetByPrimaryDomains(ctx context.Context, 
 func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, domain string) (*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetByPrimaryDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("domain", domain))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("domain", domain)
 
 	organization := &postgres_entity.GlobalOrganization{}
 	result := r.db.WithContext(ctx).Where("primary_domain = ?", domain).First(organization)
@@ -114,7 +114,7 @@ func (r *globalOrganizationRepository) GetByPrimaryDomain(ctx context.Context, d
 func (r *globalOrganizationRepository) Create(ctx context.Context, organization *postgres_entity.GlobalOrganization) (*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "organization", organization)
 
 	result := r.db.WithContext(ctx).Create(&organization)
@@ -128,8 +128,8 @@ func (r *globalOrganizationRepository) Create(ctx context.Context, organization 
 func (r *globalOrganizationRepository) CreateIfNotExists(ctx context.Context, primaryDomain string) (*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.CreateIfNotExists")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("primaryDomain", primaryDomain))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("primaryDomain", primaryDomain)
 
 	// Check if organization exists
 	existing, err := r.GetByPrimaryDomain(ctx, primaryDomain)
@@ -162,7 +162,7 @@ func (r *globalOrganizationRepository) CreateIfNotExists(ctx context.Context, pr
 func (r *globalOrganizationRepository) Update(ctx context.Context, organization *postgres_entity.GlobalOrganization) (*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Update")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "organization", organization)
 
 	organization.UpdatedAt = utils.Now()
@@ -177,8 +177,8 @@ func (r *globalOrganizationRepository) Update(ctx context.Context, organization 
 func (r *globalOrganizationRepository) Search(ctx context.Context, searchTerm string, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SearchOrganizations")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("searchTerm", searchTerm))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("searchTerm", searchTerm)
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
@@ -197,7 +197,7 @@ func (r *globalOrganizationRepository) Search(ctx context.Context, searchTerm st
 func (r *globalOrganizationRepository) GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToEnrichIndustry")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.Int("hoursFromPreviousAttempt", hoursFromPreviousAttempt), tracingLog.Int("limit", limit), tracingLog.Int("maxAttempts", maxAttempts))
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
@@ -222,7 +222,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichIndustry(ctx cont
 func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToScrape")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
@@ -244,7 +244,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToScrape(ctx context.Cont
 func (r *globalOrganizationRepository) GetOrganizationsToFetchLogo(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToFetchLogo")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
@@ -263,7 +263,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToFetchLogo(ctx context.C
 func (r *globalOrganizationRepository) GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToEnrichDescription")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.Int("hoursFromPreviousAttempt", hoursFromPreviousAttempt), tracingLog.Int("limit", limit), tracingLog.Int("maxAttempts", maxAttempts))
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
@@ -288,7 +288,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichDescription(ctx c
 func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToEnrichName")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.Int("hoursFromPreviousAttempt", hoursFromPreviousAttempt),
 		tracingLog.Int("limit", limit),
 		tracingLog.Int("maxAttempts", maxAttempts))
@@ -350,8 +350,8 @@ func (r *globalOrganizationRepository) MarkNameEnrichRequested(ctx context.Conte
 func (r *globalOrganizationRepository) SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetIndustry")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("industryNaicsCode", industryNaicsCode), tracingLog.String("industryNaicsName", industryNaicsName))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id, "industryNaicsCode", industryNaicsCode, "industryNaicsName", industryNaicsName)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -370,8 +370,8 @@ func (r *globalOrganizationRepository) SetIndustry(ctx context.Context, id uint6
 func (r *globalOrganizationRepository) SetDescription(ctx context.Context, id uint64, description string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetDescription")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("description", description))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id, "description", description)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -389,8 +389,8 @@ func (r *globalOrganizationRepository) SetDescription(ctx context.Context, id ui
 func (r *globalOrganizationRepository) SetName(ctx context.Context, id uint64, name string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetName")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("name", name))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id, "name", name)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -408,7 +408,7 @@ func (r *globalOrganizationRepository) SetName(ctx context.Context, id uint64, n
 func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.Int("daysFromPreviousSync", daysFromPreviousSync), tracingLog.Int("limit", limit))
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
@@ -429,8 +429,8 @@ func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrg
 func (r *globalOrganizationRepository) MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -463,8 +463,8 @@ func (r *globalOrganizationRepository) markEnrichRequested(ctx context.Context, 
 func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id uint64, status enum.ScrapeStatus) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetScrapeStatus")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("status", status.String()))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("id", id, "status", status.String())
 
 	active := status == enum.ScrapeCompleted
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
@@ -493,7 +493,7 @@ func (r *globalOrganizationRepository) SetScrapeStatus(ctx context.Context, id u
 func (r *globalOrganizationRepository) SetLogo(ctx context.Context, id uint64, logoPath string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetLogo")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -520,7 +520,7 @@ func (r *globalOrganizationRepository) SetLogo(ctx context.Context, id uint64, l
 func (r *globalOrganizationRepository) SetIcon(ctx context.Context, id uint64, iconPath string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetIcon")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -547,7 +547,7 @@ func (r *globalOrganizationRepository) SetIcon(ctx context.Context, id uint64, i
 func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetDownloadStatus")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
@@ -572,8 +572,8 @@ func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id
 func (r *globalOrganizationRepository) GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*postgres_entity.GlobalOrganization, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetByLinkedInUrl")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("linkedInUrl", linkedInUrl))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("linkedInUrl", linkedInUrl)
 
 	organization := &postgres_entity.GlobalOrganization{}
 	result := r.db.WithContext(ctx).Where("linkedin = ?", linkedInUrl).First(organization)
@@ -592,8 +592,8 @@ func (r *globalOrganizationRepository) GetByLinkedInUrl(ctx context.Context, lin
 func (r *globalOrganizationRepository) AddOtherSocials(ctx context.Context, primaryDomain string, otherSocials []string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.AddOtherSocials")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("primaryDomain", primaryDomain), tracingLog.Object("otherSocials", otherSocials))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("primaryDomain", primaryDomain, "otherSocials", otherSocials)
 
 	// Get existing organization or create new one
 	org, err := r.CreateIfNotExists(ctx, primaryDomain)
@@ -641,7 +641,7 @@ func (r *globalOrganizationRepository) AddOtherSocials(ctx context.Context, prim
 func (r *globalOrganizationRepository) Delete(ctx context.Context, id uint64) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.Delete")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.TagEntity(span, fmt.Sprintf("%d", id))
 
 	result := r.db.WithContext(ctx).Delete(&postgres_entity.GlobalOrganization{}, id)

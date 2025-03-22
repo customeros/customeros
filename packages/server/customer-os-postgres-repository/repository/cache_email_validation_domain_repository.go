@@ -27,7 +27,7 @@ func NewCacheEmailValidationDomainRepository(gormDb *gorm.DB) CacheEmailValidati
 func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain string) (*postgres_entity.CacheEmailValidationDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationDomainRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("domain", domain))
 
 	var cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain
@@ -47,7 +47,7 @@ func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain st
 func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain) (*postgres_entity.CacheEmailValidationDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationDomainRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "cacheEmailValidationDomain", cacheEmailValidationDomain)
 
 	query := `

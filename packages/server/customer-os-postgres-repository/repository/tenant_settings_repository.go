@@ -28,7 +28,7 @@ func NewTenantSettingsRepository(db *gorm.DB) TenantSettingsRepository {
 func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName string) (*postgres_entity.TenantSettings, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.FindForTenantName")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var tenantSettings postgres_entity.TenantSettings
 
@@ -54,7 +54,7 @@ func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName s
 func (r *tenantSettingsRepo) Save(ctx context.Context, tenantSettings *postgres_entity.TenantSettings) (*postgres_entity.TenantSettings, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.Save")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.db.Save(tenantSettings).Error
 

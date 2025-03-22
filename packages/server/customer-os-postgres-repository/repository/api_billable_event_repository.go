@@ -35,8 +35,7 @@ func NewApiBillableEventRepository(db *gorm.DB) ApiBillableEventRepository {
 func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant string, event postgres_entity.BillableEvent, details BillableEventDetails) (*postgres_entity.ApiBillableEvent, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BillableEventRepository.RegisterEvent")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("event", event)
 	span.LogKV("externalID", details.ExternalID)
 	span.LogKV("referenceData", details.ReferenceData)

@@ -30,8 +30,8 @@ func NewIngestEmailImportStateRepository(gormDb *gorm.DB) IngestEmailImportState
 func (repo *ingestEmailImportStateImpl) GetEmailImportState(ctx context.Context, tenantName, provider, username string, period postgres_entity.IngestEmailImportStatePeriod) (*postgres_entity.IngestEmailImportState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailImportStateRepository.GetEmailImportState")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenantName)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("provider", provider, "username", username, "period", period)
 
 	result := postgres_entity.IngestEmailImportState{}
 	err := repo.gormDb.First(&result, "tenant = ? AND provider = ? AND username = ? AND period = ?", tenantName, provider, username, period).Error
@@ -50,8 +50,8 @@ func (repo *ingestEmailImportStateImpl) GetEmailImportState(ctx context.Context,
 func (repo *ingestEmailImportStateImpl) CreateEmailImportState(ctx context.Context, tenantName, provider, username string, period postgres_entity.IngestEmailImportStatePeriod, startDate, stopDate *time.Time, active bool, cursor string) (*postgres_entity.IngestEmailImportState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailImportStateRepository.CreateEmailImportState")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenantName)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("provider", provider, "username", username, "period", period)
 
 	result := postgres_entity.IngestEmailImportState{}
 	err := repo.gormDb.Find(&result, "tenant = ? AND provider = ? AND username = ? AND period = ?", tenantName, provider, username, period).Error
@@ -84,10 +84,14 @@ func (repo *ingestEmailImportStateImpl) CreateEmailImportState(ctx context.Conte
 func (repo *ingestEmailImportStateImpl) UpdateEmailImportState(ctx context.Context, tenantName, provider, username string, period postgres_entity.IngestEmailImportStatePeriod, cursor string) (*postgres_entity.IngestEmailImportState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailImportStateRepository.UpdateEmailImportState")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenantName)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("provider", provider, "username", username, "period", period)
 
 	gmailImportState, err := repo.GetEmailImportState(ctx, tenantName, provider, username, period)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 	if gmailImportState == nil {
 		return nil, fmt.Errorf("UpdateEmailImportState - not found: %s; %s; %s", tenantName, username, period)
 	}
@@ -95,6 +99,7 @@ func (repo *ingestEmailImportStateImpl) UpdateEmailImportState(ctx context.Conte
 	gmailImportState.Cursor = cursor
 	err = repo.gormDb.Save(&gmailImportState).Error
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("UpdateEmailImportState - insert: %s", err.Error())
 	}
 
@@ -104,10 +109,14 @@ func (repo *ingestEmailImportStateImpl) UpdateEmailImportState(ctx context.Conte
 func (repo *ingestEmailImportStateImpl) ActivateEmailImportState(ctx context.Context, tenantName, provider, username string, period postgres_entity.IngestEmailImportStatePeriod) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailImportStateRepository.ActivateEmailImportState")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenantName)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("provider", provider, "username", username, "period", period)
 
 	gmailImportState, err := repo.GetEmailImportState(ctx, tenantName, provider, username, period)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 	if gmailImportState == nil {
 		return nil
 	}
@@ -115,6 +124,7 @@ func (repo *ingestEmailImportStateImpl) ActivateEmailImportState(ctx context.Con
 	gmailImportState.Active = true
 	err = repo.gormDb.Save(&gmailImportState).Error
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return fmt.Errorf("DeactivateEmailImportState - update: %s", err.Error())
 	}
 
@@ -124,8 +134,8 @@ func (repo *ingestEmailImportStateImpl) ActivateEmailImportState(ctx context.Con
 func (repo *ingestEmailImportStateImpl) DeactivateEmailImportState(ctx context.Context, tenantName, provider, username string, period postgres_entity.IngestEmailImportStatePeriod) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailImportStateRepository.DeactivateEmailImportState")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenantName)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("provider", provider, "username", username, "period", period)
 
 	emailImportState, err := repo.GetEmailImportState(ctx, tenantName, provider, username, period)
 	if emailImportState == nil {

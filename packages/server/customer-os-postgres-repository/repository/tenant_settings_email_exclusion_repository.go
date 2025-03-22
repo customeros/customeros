@@ -24,7 +24,7 @@ func NewEmailExclusionRepository(gormDb *gorm.DB) TenantSettingsEmailExclusionRe
 func (repo *tenantSettingsEmailExclusionRepositoryImpl) GetExclusionList(ctx context.Context) ([]postgres_entity.TenantSettingsEmailExclusion, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsEmailExclusionRepository.GetExclusionList")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := []postgres_entity.TenantSettingsEmailExclusion{}
 	err := repo.gormDb.Find(&result).Limit(5000).Error

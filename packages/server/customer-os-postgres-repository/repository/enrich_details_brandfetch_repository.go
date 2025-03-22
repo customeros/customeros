@@ -30,7 +30,7 @@ func NewEnrichDetailsBrandfetchRepository(gormDb *gorm.DB) EnrichDetailsBrandfet
 func (r enrichDetailsBrandfetchRepository) GetAllSuccessByDomain(ctx context.Context, domain string) ([]postgres_entity.EnrichDetailsBrandfetch, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "enrichDetailsBrandfetchRepository.GetAllSuccessByDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("domain", domain)
 
 	var data []postgres_entity.EnrichDetailsBrandfetch
@@ -47,7 +47,7 @@ func (r enrichDetailsBrandfetchRepository) GetAllSuccessByDomain(ctx context.Con
 func (r enrichDetailsBrandfetchRepository) GetLatestByDomain(ctx context.Context, domain string) (*postgres_entity.EnrichDetailsBrandfetch, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "enrichDetailsBrandfetchRepository.GetLatestByDomain")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogKV("domain", domain)
 
 	var data postgres_entity.EnrichDetailsBrandfetch
@@ -67,7 +67,7 @@ func (r enrichDetailsBrandfetchRepository) GetLatestByDomain(ctx context.Context
 func (r enrichDetailsBrandfetchRepository) Create(ctx context.Context, data postgres_entity.EnrichDetailsBrandfetch) (*postgres_entity.EnrichDetailsBrandfetch, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "enrichDetailsBrandfetchRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	data.CreatedAt = utils.Now()
@@ -82,7 +82,7 @@ func (r enrichDetailsBrandfetchRepository) Create(ctx context.Context, data post
 func (r enrichDetailsBrandfetchRepository) GetToSyncIntoGlobalOrganizations(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsBrandfetch, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBrandfetchRepository.GetToSyncIntoGlobalOrganizations")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var data []*postgres_entity.EnrichDetailsBrandfetch
 	err := r.db.
@@ -102,7 +102,7 @@ func (r enrichDetailsBrandfetchRepository) GetToSyncIntoGlobalOrganizations(ctx 
 func (r enrichDetailsBrandfetchRepository) MarkSyncedToGlobalOrganizations(ctx context.Context, id uint64) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBrandfetchRepository.MarkSyncedToGlobalOrganizations")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	err := r.db.Model(&postgres_entity.EnrichDetailsBrandfetch{}).Where("id = ?", id).Update("synced_to_global_orgs", true).Error
 	if err != nil {

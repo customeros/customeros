@@ -30,7 +30,7 @@ func NewEnrichDetailsPrefilterTrackingRepository(gormDb *gorm.DB) EnrichDetailsP
 func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx context.Context) ([]*postgres_entity.EnrichDetailsPreFilterTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var entitites []*postgres_entity.EnrichDetailsPreFilterTracking
 	err := r.gormDb.
@@ -50,7 +50,7 @@ func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx cont
 func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, ip string) (*postgres_entity.EnrichDetailsPreFilterTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetByIP")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.String("ip", ip))
 
 	var postgres_entity *postgres_entity.EnrichDetailsPreFilterTracking
@@ -75,8 +75,8 @@ func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, i
 func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Context, ip string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterRequest")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("ip", ip))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("ip", ip)
 
 	request := postgres_entity.EnrichDetailsPreFilterTracking{
 		CreatedAt: utils.Now(),
@@ -95,7 +95,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, skipIdenitifyReason, response string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterResponse")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(tracingLog.String("ip", ip), tracingLog.Bool("shouldIdentify", shouldIdentify), tracingLog.String("response", response), tracingLog.String("skipIdenitifyReason", skipIdenitifyReason))
 
 	byId, err := r.GetByIP(ctx, ip)

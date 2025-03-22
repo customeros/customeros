@@ -27,7 +27,7 @@ func NewCacheIpHunterRepository(gormDb *gorm.DB) CacheIpHunterRepository {
 func (r cacheIpHunterRepository) Get(ctx context.Context, ip string) (*postgres_entity.CacheIpHunter, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpHunterRepository.Register")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("ip", ip))
 
 	var cacheIpHunter postgres_entity.CacheIpHunter
@@ -47,7 +47,7 @@ func (r cacheIpHunterRepository) Get(ctx context.Context, ip string) (*postgres_
 func (r cacheIpHunterRepository) Save(ctx context.Context, cacheIpHunter postgres_entity.CacheIpHunter) (*postgres_entity.CacheIpHunter, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpHunterRepository.Register")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "cacheIpHunter", cacheIpHunter)
 
 	var existingHunter postgres_entity.CacheIpHunter

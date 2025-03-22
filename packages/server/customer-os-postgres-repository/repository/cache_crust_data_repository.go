@@ -32,7 +32,7 @@ func NewCacheCrustDataRepository(db *gorm.DB) CacheCrustDataRepository {
 func (r *cacheCrustDataRepository) Create(ctx context.Context, data postgres_entity.CacheCrustData) (*postgres_entity.CacheCrustData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataCacheRepository.Create")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create crust data cache"))
