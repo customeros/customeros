@@ -5,6 +5,7 @@ import (
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToAttachment(entity *neo4j_entity.AttachmentEntity) *model.Attachment {
@@ -20,7 +21,7 @@ func MapEntityToAttachment(entity *neo4j_entity.AttachmentEntity) *model.Attachm
 		FileName:  entity.FileName,
 		Size:      entity.Size,
 
-		Source:    MapDataSourceToModel(entity.Source),
+		Source:    enummapper.MapDataSourceToModel(entity.Source),
 		AppSource: entity.AppSource,
 	}
 }

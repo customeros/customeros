@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -15,10 +16,10 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 			ID:          entity.ID,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 		},
-		BillingCycle:   MapBilledTypeToModel(entity.Billed),
+		BillingCycle:   enummapper.MapBilledTypeToModel(entity.Billed),
 		Comments:       entity.Comments,
 		SkuID:          utils.StringPtr(entity.SkuId),
 		ParentID:       entity.ParentID,

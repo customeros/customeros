@@ -1,11 +1,11 @@
 package mapper
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapTagInputToEntity(input model.TagInput) *neo4jentity.TagEntity {
@@ -30,7 +30,7 @@ func MapEntityToTag(entity *neo4jentity.TagEntity) *model.Tag {
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
 			AppSource:   entity.AppSource,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 		},
 		Name:       entity.Name,
 		ColorCode:  entity.ColorCode,

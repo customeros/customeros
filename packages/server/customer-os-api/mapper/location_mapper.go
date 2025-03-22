@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapLocationUpdateInputToEntity(input *model.LocationUpdateInput) *neo4jentity.LocationEntity {
@@ -61,7 +62,7 @@ func MapEntityToLocation(entity *neo4jentity.LocationEntity) *model.Location {
 		Street:        utils.StringPtr(entity.Street),
 		Latitude:      entity.Latitude,
 		Longitude:     entity.Longitude,
-		Source:        MapDataSourceToModel(entity.Source),
+		Source:        enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:     entity.AppSource,
 		TimeZone:      utils.StringPtr(entity.TimeZone),
 		UtcOffset:     entity.UtcOffset,

@@ -5,7 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	mapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
@@ -17,7 +17,7 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 			Version:     entity.AggregateVersion,
 		},
@@ -48,10 +48,10 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		ContractName:            entity.Name,
 		ContractSigned:          entity.SignedAt,
 		ContractURL:             utils.StringPtrNillable(entity.ContractUrl),
-		Currency:                utils.ToPtr(mapper.MapCurrencyToModel(entity.Currency)),
+		Currency:                utils.ToPtr(enummapper.MapCurrencyToModel(entity.Currency)),
 		BillingEnabled:          entity.InvoicingEnabled,
 		ServiceStarted:          entity.ServiceStartedAt,
-		ContractStatus:          MapContractStatusToModel(entity.ContractStatus),
+		ContractStatus:          enummapper.MapContractStatusToModel(entity.ContractStatus),
 		AutoRenew:               entity.AutoRenew,
 		CommittedPeriodInMonths: utils.ToPtr[int64](entity.LengthInMonths),
 		Approved:                entity.Approved,
@@ -62,9 +62,9 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 		Name:                  entity.Name,
 		CreatedAt:             entity.CreatedAt,
 		UpdatedAt:             entity.UpdatedAt,
-		Source:                MapDataSourceToModel(entity.Source),
+		Source:                enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:             entity.AppSource,
-		Status:                MapContractStatusToModel(entity.ContractStatus),
+		Status:                enummapper.MapContractStatusToModel(entity.ContractStatus),
 		ServiceStartedAt:      entity.ServiceStartedAt,
 		SignedAt:              entity.SignedAt,
 		EndedAt:               entity.EndedAt,

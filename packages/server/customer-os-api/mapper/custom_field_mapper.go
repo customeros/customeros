@@ -6,6 +6,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapCustomFieldInputsToEntities(inputs []*model.CustomFieldInput) *entity.CustomFieldEntities {
@@ -61,7 +62,7 @@ func MapEntityToCustomField(entity *entity.CustomFieldEntity) *model.CustomField
 		Name:      entity.Name,
 		Datatype:  datatype,
 		Value:     entity.Value,
-		Source:    MapDataSourceToModel(entity.Source),
+		Source:    enummapper.MapDataSourceToModel(entity.Source),
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
 	}

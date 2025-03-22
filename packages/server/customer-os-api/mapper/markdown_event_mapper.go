@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToMarkdownEvent(entity *neo4jentity.MarkdownEventEntity) *model.MarkdownEvent {
@@ -13,7 +14,7 @@ func MapEntityToMarkdownEvent(entity *neo4jentity.MarkdownEventEntity) *model.Ma
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 		},
 		Content: utils.StringPtr(entity.Content),

@@ -6,6 +6,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapJobRoleInputToEntity(input *model.JobRoleInput) *neo4jentity.JobRoleEntity {
@@ -48,7 +49,7 @@ func MapEntityToJobRole(entity *neo4jentity.JobRoleEntity) *model.JobRole {
 	jobRole := model.JobRole{
 		ID:          entity.Id,
 		Primary:     entity.Primary,
-		Source:      MapDataSourceToModel(entity.Source),
+		Source:      enummapper.MapDataSourceToModel(entity.Source),
 		Description: entity.Description,
 		Company:     entity.Company,
 		AppSource:   entity.AppSource,

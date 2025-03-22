@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToActionItem(entity *entity.ActionItemEntity) *model.ActionItem {
@@ -10,8 +11,7 @@ func MapEntityToActionItem(entity *entity.ActionItemEntity) *model.ActionItem {
 		ID:        entity.Id,
 		CreatedAt: *entity.CreatedAt,
 		Content:   entity.Content,
-
-		Source:    MapDataSourceToModel(entity.Source),
+		Source:    enummapper.MapDataSourceToModel(entity.Source),
 		AppSource: entity.AppSource,
 	}
 }

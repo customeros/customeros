@@ -1,10 +1,10 @@
 package mapper
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapEntityToLogEntry(entity *neo4jentity.LogEntryEntity) *model.LogEntry {
@@ -15,7 +15,7 @@ func MapEntityToLogEntry(entity *neo4jentity.LogEntryEntity) *model.LogEntry {
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
 		StartedAt:   entity.StartedAt,
-		Source:      MapDataSourceToModel(entity.Source),
+		Source:      enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:   entity.AppSource,
 	}
 	return &logEntry

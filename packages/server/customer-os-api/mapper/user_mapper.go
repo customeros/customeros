@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
@@ -19,7 +20,7 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 		Timezone:        utils.StringPtrNillable(userEntity.Timezone),
 		CreatedAt:       userEntity.CreatedAt,
 		UpdatedAt:       userEntity.UpdatedAt,
-		Source:          MapDataSourceToModel(userEntity.Source),
+		Source:          enummapper.MapDataSourceToModel(userEntity.Source),
 		Roles:           MapRolesToModel(userEntity.Roles),
 		AppSource:       userEntity.AppSource,
 		Internal:        userEntity.Internal,

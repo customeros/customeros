@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToInteractionSession(entity *neo4jentity.InteractionSessionEntity) *model.InteractionSession {
@@ -22,7 +23,7 @@ func MapEntityToInteractionSession(entity *neo4jentity.InteractionSessionEntity)
 		Channel:     utils.StringPtr(entity.Channel.String()),
 		ChannelData: &entity.ChannelData,
 		AppSource:   entity.AppSource,
-		Source:      MapDataSourceToModel(entity.Source),
+		Source:      enummapper.MapDataSourceToModel(entity.Source),
 	}
 }
 

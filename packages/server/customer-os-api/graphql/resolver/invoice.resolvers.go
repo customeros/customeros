@@ -13,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -278,7 +279,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			ServiceLineItemID: utils.IfNotNilString(serviceLine.ServiceLineItemID),
 			ParentID:          utils.IfNotNilString(serviceLine.ParentID),
 			Description:       serviceLine.Description,
-			BillingCycle:      mapper.MapBilledTypeFromModel(serviceLine.BillingCycle),
+			BillingCycle:      enummapper.MapBilledTypeFromModel(serviceLine.BillingCycle),
 			Price:             serviceLine.Price,
 			Quantity:          serviceLine.Quantity,
 			ServiceStarted:    serviceLine.ServiceStarted,

@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapSocialUpdateInputToEntity(input *model.SocialUpdateInput) *neo4jentity.SocialEntity {
@@ -23,7 +24,7 @@ func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 		},
 		ID:             entity.Id,
@@ -33,7 +34,7 @@ func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 		Alias:          entity.Alias,
 		FollowersCount: entity.FollowersCount,
 		ExternalID:     entity.ExternalId,
-		Source:         MapDataSourceToModel(entity.Source),
+		Source:         enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:      entity.AppSource,
 	}
 }

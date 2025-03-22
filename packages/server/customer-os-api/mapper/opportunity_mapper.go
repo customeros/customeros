@@ -7,7 +7,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	mapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opportunity {
@@ -19,28 +19,28 @@ func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opport
 			ID:          entity.Id,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
 		},
 		Name:                   entity.Name,
 		Amount:                 entity.Amount,
 		MaxAmount:              entity.MaxAmount,
-		InternalType:           MapInternalTypeToModel(entity.InternalType),
+		InternalType:           enummapper.MapInternalTypeToModel(entity.InternalType),
 		ExternalType:           entity.ExternalType,
-		InternalStage:          MapInternalStageToModel(entity.InternalStage),
+		InternalStage:          enummapper.MapInternalStageToModel(entity.InternalStage),
 		ExternalStage:          entity.ExternalStage,
 		EstimatedClosedAt:      entity.EstimatedClosedAt,
 		GeneralNotes:           entity.GeneralNotes,
 		NextSteps:              entity.NextSteps,
 		RenewedAt:              entity.RenewalDetails.RenewedAt,
-		RenewalLikelihood:      MapOpportunityRenewalLikelihoodToModel(entity.RenewalDetails.RenewalLikelihood),
+		RenewalLikelihood:      enummapper.MapOpportunityRenewalLikelihoodToModel(entity.RenewalDetails.RenewalLikelihood),
 		RenewalUpdatedByUserAt: entity.RenewalDetails.RenewalUpdatedByUserAt,
 		RenewalUpdatedByUserID: entity.RenewalDetails.RenewalUpdatedByUserId,
 		RenewalApproved:        entity.RenewalDetails.RenewalApproved,
 		RenewalAdjustedRate:    entity.RenewalDetails.RenewalAdjustedRate,
 		Comments:               entity.Comments,
 		ID:                     entity.Id,
-		Currency:               utils.ToPtr(mapper.MapCurrencyToModel(entity.Currency)),
+		Currency:               utils.ToPtr(enummapper.MapCurrencyToModel(entity.Currency)),
 		LikelihoodRate:         entity.LikelihoodRate,
 		StageLastUpdated:       entity.StageUpdatedAt,
 	}
@@ -61,13 +61,13 @@ func MapOpportunitySaveInputToEntity(input model.OpportunitySaveInput) *data_fie
 		OwnerId:           input.OwnerID,
 	}
 	if input.InternalStage != nil {
-		mapped.InternalStage = utils.StringPtr(MapInternalStageFromModel(*input.InternalStage).String())
+		mapped.InternalStage = utils.StringPtr(enummapper.MapInternalStageFromModel(*input.InternalStage).String())
 	}
 	if input.InternalType != nil {
-		mapped.InternalType = utils.ToPtr(MapInternalTypeFromModel(*input.InternalType))
+		mapped.InternalType = utils.ToPtr(enummapper.MapInternalTypeFromModel(*input.InternalType))
 	}
 	if input.Currency != nil {
-		mapped.Currency = utils.ToPtr(mapper.MapCurrencyFromModel(*input.Currency))
+		mapped.Currency = utils.ToPtr(enummapper.MapCurrencyFromModel(*input.Currency))
 	}
 
 	return &mapped

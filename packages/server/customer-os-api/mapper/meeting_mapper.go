@@ -9,6 +9,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToMeeting(entity *neo4jentity.MeetingEntity) *model.Meeting {
@@ -28,10 +29,10 @@ func MapEntityToMeeting(entity *neo4jentity.MeetingEntity) *model.Meeting {
 		Agenda:             entity.Agenda,
 		AgendaContentType:  entity.AgendaContentType,
 		AppSource:          entity.AppSource,
-		Source:             MapDataSourceToModel(entity.Source),
+		Source:             enummapper.MapDataSourceToModel(entity.Source),
 	}
 	if entity.Status != nil {
-		meeting.Status = MapMeetingStatusToModel(*entity.Status)
+		meeting.Status = enummapper.MapMeetingStatusToModel(*entity.Status)
 	} else {
 		meeting.Status = model.MeetingStatusUndefined
 	}
@@ -57,7 +58,7 @@ func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *neo4jentity.Meeti
 	}
 
 	if model.Status != nil {
-		status := MapMeetingStatusFromModel(*model.Status)
+		status := enummapper.MapMeetingStatusFromModel(*model.Status)
 		meetingEntity.Status = &status
 	} else {
 		status := neo4jenum.MeetingStatusUndefined
@@ -91,7 +92,7 @@ func MapMeetingToEntity(model *model.MeetingInput) *neo4jentity.MeetingEntity {
 		Source:             neo4jentity.DataSourceOpenline,
 	}
 	if model.Status != nil {
-		status := MapMeetingStatusFromModel(*model.Status)
+		status := enummapper.MapMeetingStatusFromModel(*model.Status)
 		meetingEntity.Status = &status
 	} else {
 		status := neo4jenum.MeetingStatusUndefined

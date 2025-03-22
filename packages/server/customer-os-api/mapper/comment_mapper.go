@@ -5,6 +5,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToComment(entity *neo4jentity.CommentEntity) *model.Comment {
@@ -14,7 +15,7 @@ func MapEntityToComment(entity *neo4jentity.CommentEntity) *model.Comment {
 		ContentType: utils.StringPtr(entity.ContentType),
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
-		Source:      MapDataSourceToModel(entity.Source),
+		Source:      enummapper.MapDataSourceToModel(entity.Source),
 		AppSource:   entity.AppSource,
 	}
 	return &comment

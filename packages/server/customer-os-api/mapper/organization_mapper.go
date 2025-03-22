@@ -22,7 +22,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 			ID:          entity.ID,
 			Created:     entity.CreatedAt,
 			LastUpdated: entity.UpdatedAt,
-			Source:      MapDataSourceToModel(entity.Source),
+			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			Version:     entity.AggregateVersion,
 		},
 		CustomID:           utils.StringPtrNillable(entity.ReferenceId),
@@ -33,7 +33,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Website:            utils.StringPtr(entity.Website),
 		Public:             utils.BoolPtr(entity.IsPublic),
 		Employees:          utils.Int64Ptr(entity.Employees),
-		Market:             MapMarketToModel(entity.Market),
+		Market:             enummapper.MapMarketToModel(entity.Market),
 		LastFundingRound:   enummapper.MapFundingRoundToModel(entity.LastFundingRound),
 		LastFundingAmount:  utils.StringPtr(entity.LastFundingAmount),
 		YearFounded:        entity.YearFounded,
@@ -50,7 +50,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 				ArrForecast:       entity.RenewalSummary.ArrForecast,
 				MaxArrForecast:    entity.RenewalSummary.MaxArrForecast,
 				NextRenewalDate:   entity.RenewalSummary.NextRenewalAt,
-				RenewalLikelihood: MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood),
+				RenewalLikelihood: enummapper.MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood),
 			},
 			Onboarding: &model.OnboardingDetails{
 				Status:    enummapper.MapOnboardingStatusToModel(neo4jenum.DecodeOnboardingStatus(entity.OnboardingDetails.Status)),
@@ -79,7 +79,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Note:                          utils.StringPtr(entity.Note),
 		ID:                            entity.ID,
 		ReferenceID:                   utils.StringPtrNillable(entity.ReferenceId),
-		Source:                        MapDataSourceToModel(entity.Source),
+		Source:                        enummapper.MapDataSourceToModel(entity.Source),
 		CreatedAt:                     entity.CreatedAt,
 		UpdatedAt:                     entity.UpdatedAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,
@@ -141,7 +141,7 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_f
 	}
 
 	if input.Market != nil {
-		mapped.Market = utils.StringPtr(MapMarketFromModel(input.Market))
+		mapped.Market = utils.StringPtr(enummapper.MapMarketFromModel(input.Market))
 	}
 	if input.Stage != nil {
 		mapped.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
