@@ -1042,9 +1042,9 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ProcessActionExecution")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tenant := common.GetTenantFromContext(ctx)
+	tracing.LogObjectAsJson(span, "scheduledActionExecution", scheduledActionExecution)
 
-	span.LogFields(log.Object("scheduledActionExecution", scheduledActionExecution))
+	tenant := common.GetTenantFromContext(ctx)
 
 	var currentAction *neo4j_entity.FlowActionEntity
 
