@@ -17,6 +17,7 @@ type TaskWriteRepository interface {
 	SetOpportunities(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, opportunityIds []string) error
 	SetUserAssignees(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, userIds []string) error
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string) error
+	PermanentDeleteHiddenTasks(ctx context.Context, tx *neo4j.ManagedTransaction, taskIds []string) error
 }
 
 type taskWriteRepository struct {
@@ -171,6 +172,22 @@ func (r *taskWriteRepository) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 	params := map[string]any{
 		"tenant": tenant,
 		"taskId": taskId,
+	}
+
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+}
+
+func (r *taskWriteRepository) PermanentDeleteHiddenTasks(ctx context.Context, tx *neo4j.ManagedTransaction, taskIds []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.PermanentDeleteHiddenTasks")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+
+	cypher := `MATCH (:Tenant)<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
+		WHERE tsk.hide = true AND tsk.id IN $taskIds
+		DETACH DELETE tsk`
+	params := map[string]any{
+		"taskIds": taskIds,
 	}
 
 	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)

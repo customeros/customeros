@@ -55,6 +55,7 @@ const (
 	GroupTenant         = "tenant"
 	GroupAgent          = "agent"
 	GroupScraper        = "scraper"
+	GroupTask           = "task"
 )
 
 // LOCK MANAGEMENT
@@ -93,6 +94,7 @@ var jobLocks = struct {
 		GroupTenant:                            {},
 		GroupAgent:                             {},
 		GroupScraper:                           {},
+		GroupTask:                              {},
 	},
 }
 
@@ -184,6 +186,9 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Agent Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleRerunAgent, GroupAgent, rerunAgent, "rerunAgent")
+
+	// Task Jobs
+	addJob(cont.Cfg.App.Cron.CronScheduleDeleteArchivedTasks, GroupTask, deleteArchivedTasks, "deleteArchivedTasks")
 
 	// Other Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleRefreshLastTouchpoint, GroupTouchpoint, refreshLastTouchpoint, "refreshLastTouchpoint")
@@ -408,4 +413,8 @@ func enrichGlobalOrganizationWithBettercontact(cont *container.Container) {
 
 func syncGlobalContactsToTenantContacts(cont *container.Container) {
 	service.NewGlobalContactService(cont.Cfg, cont.Log, cont.CommonServices).SyncGlobalContactsToTenantContacts()
+}
+
+func deleteArchivedTasks(cont *container.Container) {
+	service.NewTaskService(cont.Log, cont.CommonServices).DeleteArchivedTasks()
 }
