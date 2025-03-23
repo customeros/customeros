@@ -96,4 +96,7 @@ type Config struct {
 
 	// Agents
 	CronScheduleRerunAgent string `env:"CRON_SCHEDULE_RERUN_AGENT" envDefault:"0 */1 * * * *"`
+
+	// Tasks
+	CronScheduleDeleteArchivedTasks string `env:"CRON_SCHEDULE_DELETE_ARCHIVED_TASKS" envDefault:"0 5 1 * * *"`
 }

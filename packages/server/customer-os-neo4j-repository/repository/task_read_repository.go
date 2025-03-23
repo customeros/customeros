@@ -34,6 +34,7 @@ type TaskReadRepository interface {
 	CountByTenant(ctx context.Context, tenant string) (int64, error)
 	SearchTasks(ctx context.Context, tenant string, limit int, where *model.Filter, sort *model.SortBy) (*utils.StringsWithTotalCount, error)
 	GetTasksForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
+	GetHiddenTasks(ctx context.Context, hiddenDaysAgo int) ([]string, error)
 }
 
 type taskReadRepository struct {
@@ -511,4 +512,41 @@ func (r *taskReadRepository) GetTasksForOpportunities(ctx context.Context, tenan
 	dbNodeAndIds := result.([]*utils.DbNodeAndId)
 	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
 	return dbNodeAndIds, err
+}
+
+func (r *taskReadRepository) GetHiddenTasks(ctx context.Context, hiddenDaysAgo int) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetHiddenTasks")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogKV("hiddenDaysAgo", hiddenDaysAgo)
+
+	cypher := `MATCH (:Tenant)<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
+				WHERE tsk.hide = true AND tsk.hiddenAt < datetime() - duration({days:$hiddenDaysAgo})
+				RETURN tsk.id`
+	params := map[string]any{
+		"hiddenDaysAgo": hiddenDaysAgo,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogKV("result.count", len(result.([]string)))
+	return result.([]string), nil
+
 }
