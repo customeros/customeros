@@ -31,6 +31,7 @@ type GlobalOrganizationRepository interface {
 	GetOrganizationsToEnrichName(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToScrape(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToFetchLogo(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error)
+	GetOrganizationsToFetchIcon(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
 	MarkNameEnrichRequested(ctx context.Context, id uint64) error
@@ -40,7 +41,8 @@ type GlobalOrganizationRepository interface {
 	SetName(ctx context.Context, id uint64, name string) error
 	SetLogo(ctx context.Context, id uint64, logoPath string) error
 	SetIcon(ctx context.Context, id uint64, iconPath string) error
-	SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error
+	SetDownloadStatusLogo(ctx context.Context, id uint64, status enum.DownloadStatus) error
+	SetDownloadStatusIcon(ctx context.Context, id uint64, status enum.DownloadStatus) error
 	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
 	GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*postgres_entity.GlobalOrganization, error)
@@ -245,10 +247,12 @@ func (r *globalOrganizationRepository) GetOrganizationsToFetchLogo(ctx context.C
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToFetchLogo")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("limit", limit)
 
 	organizations := make([]*postgres_entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Where("download_status = ? OR download_status IS NULL", enum.DownloadNotStarted.String()).
+		Where("download_status_logo = ? OR download_status_logo IS NULL", enum.DownloadNotStarted.String()).
+		Where("logo_url IS NOT NULL AND logo_url != ''").
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&organizations)
@@ -256,7 +260,29 @@ func (r *globalOrganizationRepository) GetOrganizationsToFetchLogo(ctx context.C
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
-	span.LogFields(tracingLog.Int("found", len(organizations)))
+	span.LogKV("result.count", len(organizations))
+	return organizations, nil
+}
+
+func (r *globalOrganizationRepository) GetOrganizationsToFetchIcon(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToFetchIcon")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogKV("limit", limit)
+
+	organizations := make([]*postgres_entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Where("download_status_icon = ? OR download_status_icon IS NULL", enum.DownloadNotStarted.String()).
+		Where("icon_url IS NOT NULL AND icon_url != ''").
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+
+	span.LogKV("result.count", len(organizations))
 	return organizations, nil
 }
 
@@ -544,15 +570,15 @@ func (r *globalOrganizationRepository) SetIcon(ctx context.Context, id uint64, i
 	return nil
 }
 
-func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id uint64, status enum.DownloadStatus) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetDownloadStatus")
+func (r *globalOrganizationRepository) SetDownloadStatusLogo(ctx context.Context, id uint64, status enum.DownloadStatus) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetDownloadStatusLogo")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"download_status": status.String(),
+			"download_status_logo": status.String(),
 		})
 
 	if result.Error != nil {
@@ -560,10 +586,23 @@ func (r *globalOrganizationRepository) SetDownloadStatus(ctx context.Context, id
 		return result.Error
 	}
 
-	if result.RowsAffected == 0 {
-		err := errors.New("no organization found with provided ID")
-		tracing.TraceErr(span, err)
-		return err
+	return nil
+}
+
+func (r *globalOrganizationRepository) SetDownloadStatusIcon(ctx context.Context, id uint64, status enum.DownloadStatus) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetDownloadStatusIcon")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"download_status_icon": status.String(),
+		})
+
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
 	}
 
 	return nil
