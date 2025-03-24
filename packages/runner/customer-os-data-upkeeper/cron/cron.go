@@ -385,6 +385,7 @@ func scrapeGlobalOrganizations(cont *container.Container) {
 
 func downloadGlobalOrganizationLogo(cont *container.Container) {
 	service.NewMediaService(cont.Log, cont.CommonServices).FetchAndStoreCompanyLogos()
+	service.NewMediaService(cont.Log, cont.CommonServices).FetchAndStoreCompanyIcons()
 }
 
 func downloadContactProfilePhoto(cont *container.Container) {
