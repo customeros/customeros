@@ -125,49 +125,23 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
+	minutesSinceLastUpdate := 5
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
+	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting socials: %v", err)
+		return
+	}
+	span.LogKV("result.count", len(records))
 
-		minutesSinceLastUpdate := 5
-		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
+	// remove socials from contact
+	for _, record := range records {
+		err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting socials: %v", err)
-			return
+			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		// remove socials from contact
-		for _, record := range records {
-			err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
-			}
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
-		return
 	}
 }
 
@@ -230,77 +204,55 @@ func (s *contactService) checkContacts(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 1000
-	minutesSinceLastUpdate := 180
+	minutesSinceLastUpdate := 30
 	hoursSinceLastCheck := 24
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToCheck(ctx, minutesSinceLastUpdate, hoursSinceLastCheck, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contacts: %v", err)
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		// update contact names
-		for _, record := range records {
-			// create new context from main one with custom context
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			contactEntity := neo4jmapper.MapDbNodeToContactEntity(record.Contact)
-			cleanFirstName := utils.CleanName(contactEntity.FirstName)
-			cleanLastName := utils.CleanName(contactEntity.LastName)
-
-			saveContact := false
-			contactFields := data_fields.ContactFields{}
-			if cleanFirstName != contactEntity.FirstName {
-				contactFields.FirstName = utils.StringPtr(cleanFirstName)
-				saveContact = true
-			}
-			if cleanLastName != contactEntity.LastName {
-				contactFields.LastName = utils.StringPtr(cleanLastName)
-				saveContact = true
-			}
-
-			if saveContact {
-				_, err = s.commonServices.ContactService.Save(innerCtx, nil, &contactEntity.Id, contactFields, false)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
-					s.log.Errorf("Error updating contact {%s}: %s", contactEntity.Id, err.Error())
-				}
-			}
-
-			// mark contact as checked
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyCheckedAt), utils.NowPtr())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating contact' checked at: %s", err.Error())
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToCheck(ctx, minutesSinceLastUpdate, hoursSinceLastCheck, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting contacts: %v", err)
 		return
 	}
+
+	// update contact names
+	for _, record := range records {
+		// create new context from main one with custom context
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		contactEntity := neo4jmapper.MapDbNodeToContactEntity(record.Contact)
+		cleanFirstName := utils.CleanName(contactEntity.FirstName)
+		cleanLastName := utils.CleanName(contactEntity.LastName)
+
+		saveContact := false
+		contactFields := data_fields.ContactFields{}
+		if cleanFirstName != contactEntity.FirstName {
+			contactFields.FirstName = utils.StringPtr(cleanFirstName)
+			saveContact = true
+		}
+		if cleanLastName != contactEntity.LastName {
+			contactFields.LastName = utils.StringPtr(cleanLastName)
+			saveContact = true
+		}
+
+		if saveContact {
+			_, err = s.commonServices.ContactService.Save(innerCtx, nil, &contactEntity.Id, contactFields, false)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
+				s.log.Errorf("Error updating contact {%s}: %s", contactEntity.Id, err.Error())
+			}
+		}
+
+		// mark contact as checked
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyCheckedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error updating contact' checked at: %s", err.Error())
+		}
+	}
+
 }
 
 func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
@@ -631,7 +583,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 				return err
 			}
 
-			if flowActionExecutions != nil && len(flowActionExecutions) > 0 {
+			if len(flowActionExecutions) > 0 {
 				for _, flowActionExecution := range flowActionExecutions {
 
 					_, err := utils.ExecuteWriteInTransaction(ctx, s.commonServices.Neo4jRepositories.Neo4jDriver, s.commonServices.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
