@@ -77,17 +77,17 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 	}
 
 	for _, org := range orgs {
-		// download icon
-		if org.IconUrl != "" {
-			iconPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "icon")
-			s.downloadImage(ctx, org.ID, org.IconUrl, iconPath, "icon")
-		}
-
 		// download logo
 		logoPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "logo")
 		clearbitUrl := "https://logo.clearbit.com/" + org.PrimaryDomain
 		if !s.downloadImage(ctx, org.ID, clearbitUrl, logoPath, "logo") && org.LogoUrl != "" {
 			s.downloadImage(ctx, org.ID, org.LogoUrl, logoPath, "logo")
+		}
+
+		// download icon
+		if org.IconUrl != "" {
+			iconPath := fmt.Sprintf("%s/%s", org.PrimaryDomain, "icon")
+			s.downloadImage(ctx, org.ID, org.IconUrl, iconPath, "icon")
 		}
 
 	}
@@ -137,9 +137,11 @@ func (s *mediaService) downloadImage(ctx context.Context, globalOrgId uint64, im
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			tracing.TraceErr(span, err)
 		}
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, globalOrgId, enum.DownloadError)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+		if imageType == "logo" {
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatus(ctx, globalOrgId, enum.DownloadError)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			}
 		}
 		return false
 	}
