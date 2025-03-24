@@ -50,7 +50,7 @@ func NewServiceLineItemService(
 }
 
 func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails cosapi_interfaces.ServiceLineItemCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItem.Create")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
@@ -260,6 +260,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		s.log.Errorf("Error on getting contract line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
 	}
+	tracing.TagEntity(span, baseServiceLineItemEntity.ID)
 
 	contractEntity, err := s.contract.GetContractByServiceLineItem(ctx, serviceLineItemDetails.Id)
 	if err != nil {
@@ -415,10 +416,20 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 					return err
 				}
 			}
-			if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft && !startedAt.After(utils.Today()) {
-				err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
-				tracing.TraceErr(span, err)
-				return err
+			if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft && contractEntity.NextInvoiceDate != nil {
+				lastInvoice, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetLastIssuedInvoiceForContract(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error on getting last issued invoice for contract {%s}: %s", contractEntity.Id, err.Error)
+				}
+				if lastInvoice != nil {
+					invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(lastInvoice)
+					if !startedAt.After(invoiceEntity.PeriodEndDate) {
+						err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
+						tracing.TraceErr(span, err)
+						return err
+					}
+				}
 			}
 			sliDataFields.StartedAt = serviceLineItemDetails.StartedAt
 		}
