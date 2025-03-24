@@ -26,11 +26,13 @@ type GlobalOrganization struct {
 
 	OtherSocials pq.StringArray `gorm:"column:other_socials;type:text[]" json:"otherSocials"`
 
-	IconUrl        string              `gorm:"column:icon_url;type:varchar(2000)" json:"iconUrl"`
-	LogoUrl        string              `gorm:"column:logo_url;type:varchar(2000)" json:"logoUrl"`
-	IconPath       string              `gorm:"column:icon_path;type:varchar(2000)" json:"iconPath"`
-	LogoPath       string              `gorm:"column:logo_path;type:varchar(2000)" json:"logoPath"`
-	DownloadStatus enum.DownloadStatus `gorm:"column:download_status;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatus"`
+	IconUrl            string              `gorm:"column:icon_url;type:varchar(2000)" json:"iconUrl"`
+	LogoUrl            string              `gorm:"column:logo_url;type:varchar(2000)" json:"logoUrl"`
+	IconPath           string              `gorm:"column:icon_path;type:varchar(2000)" json:"iconPath"`
+	LogoPath           string              `gorm:"column:logo_path;type:varchar(2000)" json:"logoPath"`
+	DownloadStatus     enum.DownloadStatus `gorm:"column:download_status;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatus"` // deprecated
+	DownloadStatusLogo enum.DownloadStatus `gorm:"column:download_status_logo;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatusLogo"`
+	DownloadStatusIcon enum.DownloadStatus `gorm:"column:download_status_icon;type:varchar(55);default:'NOT_STARTED'" json:"downloadStatusIcon"`
 
 	// not used yet
 	Market string `gorm:"column:market;type:text" json:"market"`
