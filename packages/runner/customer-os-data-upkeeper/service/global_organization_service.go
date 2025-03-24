@@ -631,6 +631,55 @@ func (s *globalOrganizationService) ExtractWebpageLinks() {
 	wg.Wait()
 }
 
+func (s *globalOrganizationService) scrapeGlobalOrganization(ctx context.Context, org *postgres_entity.GlobalOrganization) {
+	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
+	defer cancel()
+
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.scrapeGlobalOrganization")
+	defer span.Finish()
+	tracing.TagEntity(span, org.PrimaryDomain)
+
+	page := "https://" + org.PrimaryDomain
+	contents, err := s.commonServices.WebscraperService.Scrape(ctx, page)
+	if err != nil {
+		switch {
+		case errors.Is(err, webscraper.ErrUnprocessable):
+			span.LogKV("error", "Unprocessable content")
+			span.LogKV("url", page)
+		default:
+			tracing.TraceErr(span, errors.Wrap(err, "error scraping global org primary domain"))
+		}
+
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(ctx, org.ID, enum.ScrapeError)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
+		}
+	} else if contents == "" {
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(ctx, org.ID, enum.ScrapeError)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
+		}
+	}
+
+	if contents == "" {
+		// delete global org after 5 attempts
+		if org.ScrapeAttempt >= 5 {
+			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Delete(ctx, org.ID)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error deleting global org"))
+			}
+		}
+	}
+
+	if contents != "" {
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(ctx, org.ID, enum.ScrapeCompleted)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
+			return
+		}
+	}
+}
+
 func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
@@ -661,56 +710,9 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 		semaphore <- struct{}{}
 
 		go func(org *postgres_entity.GlobalOrganization) {
-			// Create timeout context for this goroutine
-			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
-			defer childCancel()
-
-			childSpan, childCtx := opentracing.StartSpanFromContext(childCtx, "GlobalOrganizationService.ScrapeGlobalOrg")
-			defer childSpan.Finish()
-			tracing.TagEntity(childSpan, org.PrimaryDomain)
-
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore when done
-
-			page := "https://" + org.PrimaryDomain
-			contents, err := s.commonServices.WebscraperService.Scrape(childCtx, page)
-			if err != nil {
-				switch {
-				case errors.Is(err, webscraper.ErrUnprocessable):
-					childSpan.LogKV("error", "Unprocessable content")
-					childSpan.LogKV("url", page)
-				default:
-					tracing.TraceErr(childSpan, errors.Wrap(err, "error scraping global org primary domain"))
-				}
-
-				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
-				if err != nil {
-					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-				}
-			} else if contents == "" {
-				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeError)
-				if err != nil {
-					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-				}
-			}
-
-			if contents == "" {
-				// delete global org after 5 attempts
-				if org.ScrapeAttempt > 5 {
-					err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Delete(childCtx, org.ID)
-					if err != nil {
-						tracing.TraceErr(childSpan, errors.Wrap(err, "error deleting global org"))
-					}
-				}
-			}
-
-			if contents != "" {
-				err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(childCtx, org.ID, enum.ScrapeCompleted)
-				if err != nil {
-					tracing.TraceErr(childSpan, errors.Wrap(err, "error updating global org scraped status"))
-					return
-				}
-			}
+			s.scrapeGlobalOrganization(ctx, org)
 		}(org)
 	}
 
