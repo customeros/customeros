@@ -246,6 +246,7 @@ func validate(
 		}
 
 		c.Header("X-Tenant", tenant)
+		c.Header("X-Username", username)
 		c.Header("X-Request-Id", response.RequestId)
 		if userDetails != nil {
 			userDetails.ToHeaders(c)
