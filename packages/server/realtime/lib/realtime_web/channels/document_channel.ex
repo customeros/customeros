@@ -24,7 +24,6 @@ defmodule RealtimeWeb.DocumentChannel do
 
   @impl true
   def handle_in("yjs_sync", {:binary, chunk}, socket) do
-    dbg(~c"yjs_sync")
     SharedDoc.start_sync(socket.assigns.doc_pid, chunk)
     {:noreply, socket}
   end

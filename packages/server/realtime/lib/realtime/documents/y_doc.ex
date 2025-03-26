@@ -1,5 +1,5 @@
 defmodule Realtime.YDoc do
-  use Realtime.YEcto, repo: Realtime.Repo, schema: Realtime.DocumentWrite
+  use Realtime.YEcto, repo: Realtime.Repo, schema: Realtime.Documents.DocumentWrite
 end
 
 defmodule Realtime.EctoPersistence do
