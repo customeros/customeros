@@ -10,6 +10,8 @@ defmodule RealtimeWeb.DocumentController do
           "body" => _body,
           "userId" => _user_id,
           "tenant" => _tenant,
+          "icon" => _icon,
+          "color" => _color,
           "lexicalState" => _lexical_state,
           "organizationId" => _organization_id
         } = params
