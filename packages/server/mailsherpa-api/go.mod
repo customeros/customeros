@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/smartystreets/smartystreets-go-sdk v1.21.1
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 )
 
 require (
