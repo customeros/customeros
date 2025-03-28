@@ -35,7 +35,6 @@ const (
 	// Email related groups
 	GroupEmail                             = "email"
 	GroupEmailBulk                         = "emailBulkValidation"
-	GroupMailstack                         = "mailstack"
 	GroupSendEmails                        = "sendEmails"
 	GroupProcessEmails                     = "processSentEmails"
 	GroupIngestEmailsFromProvidersRealtime = "ingestEmailsFromProvidersRealtime"
@@ -88,7 +87,6 @@ var jobLocks = struct {
 		GroupSendEmails:                        {},
 		GroupProcessEmails:                     {},
 		GroupDomain:                            {},
-		GroupMailstack:                         {},
 		GroupReminder:                          {},
 		GroupWebSession:                        {},
 		GroupTenant:                            {},

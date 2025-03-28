@@ -6,6 +6,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
 
@@ -16,6 +17,7 @@ type CommonConfig struct {
 	Enrow             commonconf.EnrowConfig
 	Logger            logger.Config
 	Jaeger            tracing.JaegerConfig
+	OpenTelemetry     telemetry.OpenTelemetryConfig
 	RabbitMQConfig    commonconf.RabbitMQConfig
 	ScrubbyIo         commonconf.ScrubbyIoConfig
 	Anthropic         commonconf.AnthropicConfig
@@ -93,6 +95,7 @@ func Load() *Config {
 		Infrastructure: commonconf.InfrastructureConfig{
 			LoggerConfig:        cmnCfg.Logger,
 			JaegerConfig:        cmnCfg.Jaeger,
+			OpenTelemetryConfig: cmnCfg.OpenTelemetry,
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
