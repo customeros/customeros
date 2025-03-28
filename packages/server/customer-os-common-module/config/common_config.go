@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -20,6 +21,7 @@ type InfrastructureConfig struct {
 	RabbitMQConfig      RabbitMQConfig
 	OpensearchConfig    OpensearchConfig
 	JaegerConfig        tracing.JaegerConfig
+	OpenTelemetryConfig telemetry.OpenTelemetryConfig
 	LoggerConfig        logger.Config
 }
 

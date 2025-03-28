@@ -13,6 +13,7 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -38,7 +39,7 @@ func main() {
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
-	defer tracing.RecoverAndLogToJaeger(appLogger)
+	defer telemetry.RecoverAndLogMain(appLogger)
 
 	ctx := context.Background()
 
@@ -129,15 +130,25 @@ func initLogger(cfg *config.Config) logger.Logger {
 }
 
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
+	var closer io.Closer
+
+	// Initialize Jaeger if enabled
 	if cfg.Common.Infrastructure.JaegerConfig.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
+		tracer, jaegerCloser, err := tracing.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}
 		opentracing.SetGlobalTracer(tracer)
-		return closer
+		closer = jaegerCloser
 	}
-	return nil
+
+	// Initialize OpenTelemetry
+	err := telemetry.InitOpenTelemetry(context.Background(), &cfg.Common.Infrastructure.OpenTelemetryConfig)
+	if err != nil {
+		appLogger.Warnf("Could not initialize OpenTelemetry: %v", err.Error())
+	}
+
+	return closer
 }
 
 func runTemporalWorker(cfg *config.Config, logger logger.Logger, waitGroup *sync.WaitGroup) {
