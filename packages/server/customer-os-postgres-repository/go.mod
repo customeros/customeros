@@ -15,7 +15,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/testcontainers/testcontainers-go v0.35.0
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 	gorm.io/datatypes v1.2.5
 	gorm.io/gorm v1.25.12
 )
