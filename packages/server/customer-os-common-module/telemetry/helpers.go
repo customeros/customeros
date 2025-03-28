@@ -32,6 +32,7 @@ const otelSpanKey contextKey = "otel_span"
 const (
 	ComponentGraphQL    = "graphql"
 	ComponentPostgres   = "postgres"
+	ComponentNeo4j      = "neo4j"
 	ComponentClickhouse = "clickhouse"
 	ComponentREST       = "rest"
 	ComponentService    = "service"
@@ -76,16 +77,21 @@ func startSpan(ctx context.Context, operationName string, opts ...SpanOptions) (
 		jaegerSpan, ctx = opentracing.StartSpanFromContext(ctx, operationName)
 	}
 
-	jaegerSpan.SetTag("service.name", "mailstack")
 	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
 		jaegerSpan.SetTag("tenant", tenant)
 	}
 	if userID := common.GetUserIdFromContext(ctx); userID != "" {
 		jaegerSpan.SetTag("user_id", userID)
 	}
+	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
+		jaegerSpan.SetTag("user_email", userEmail)
+	}
+	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
+		jaegerSpan.SetTag("app_source", appSource)
+	}
 
 	// Start OpenTelemetry span
-	tracer := otel.Tracer("github.com/customeros/mailstack")
+	tracer := otel.Tracer("github.com/customeros/customeros")
 	var otelCtx context.Context
 	var otelSpan trace.Span
 	if len(opts) > 0 && opts[0].NewRoot {
@@ -95,9 +101,6 @@ func startSpan(ctx context.Context, operationName string, opts ...SpanOptions) (
 		otelCtx, otelSpan = tracer.Start(ctx, operationName)
 	}
 
-	otelSpan.SetAttributes(
-		attribute.String("service.name", "mailstack"),
-	)
 	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
 		otelSpan.SetAttributes(attribute.String("tenant", tenant))
 	}
@@ -154,6 +157,13 @@ func StartGraphQLSpan(ctx context.Context, operationName string, opts ...SpanOpt
 func StartPostgresSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
 	spans, ctx := startSpan(ctx, operationName, opts...)
 	TagComponentPostgres(spans)
+	SetSpanKindDatabase(spans)
+	return spans, ctx
+}
+
+func StartNeo4jSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
+	spans, ctx := startSpan(ctx, operationName, opts...)
+	TagComponentNeo4j(spans)
 	SetSpanKindDatabase(spans)
 	return spans, ctx
 }
@@ -215,6 +225,18 @@ func TagComponentPostgres(spans *Spans) {
 	}
 	if spans.OTel != nil {
 		spans.OTel.SetAttributes(attribute.String(componentKey, ComponentPostgres))
+	}
+}
+
+func TagComponentNeo4j(spans *Spans) {
+	if spans == nil {
+		return
+	}
+	if spans.Jaeger != nil {
+		spans.Jaeger.SetTag(componentKey, ComponentNeo4j)
+	}
+	if spans.OTel != nil {
+		spans.OTel.SetAttributes(attribute.String(componentKey, ComponentNeo4j))
 	}
 }
 
@@ -744,9 +766,7 @@ func RecoverAndLogMain(appLogger logger.Logger) {
 
 // GetDefaultServiceSpanAttributes returns default attributes for service spans
 func GetDefaultServiceSpanAttributes(ctx context.Context) []attribute.KeyValue {
-	attrs := []attribute.KeyValue{
-		attribute.String("service.name", "mailstack"),
-	}
+	attrs := []attribute.KeyValue{}
 
 	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
 		attrs = append(attrs, attribute.String("tenant", tenant))
