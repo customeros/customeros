@@ -45,11 +45,11 @@
 
   "host_permissions": [
     "https://app.customeros.ai/*",
-    "https://bas.customeros.ai/*",
+    "https://bas.customeros.cloud/*",
     "http://localhost:5173/*",
     "https://localhost:5173/*",
     "https://www.linkedin.com/*",
-    "https://cos.customeros.ai/*",
+    "https://cos.customeros.cloud/*",
     "https://api.customeros.ai/*"
   ]
 }
