@@ -31,9 +31,7 @@ config :realtime, Realtime.Repo,
   port: postgres_port,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10,
-  ssl: config_env() == :prod,
-  ssl_opts: [verify: :verify_none]
+  pool_size: 10
 
 config :opentelemetry,
        :resource,
