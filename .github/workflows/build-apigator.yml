@@ -22,11 +22,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/apigator
-  GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
-  GOBIN: ${{ github.workspace }}/go/bin
-  CGO_ENABLED: 0
-  LANG: C.UTF-8
-  LC_ALL: C.UTF-8
 
 permissions:
   contents: read
