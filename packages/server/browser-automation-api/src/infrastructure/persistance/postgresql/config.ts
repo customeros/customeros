@@ -6,4 +6,4 @@ const DATABASE = process.env.POSTGRES_NAME ?? "";
 
 const isDev = process.env.NODE_ENV === "development";
 
-export const connectionUrl = `postgresql://${USER}:${PASS}@${HOST}:${PORT}/${DATABASE}${!isDev ? "?ssl=true" : ""}`;
+export const connectionUrl = `postgresql://${USER}:${PASS}@${HOST}:${PORT}/${DATABASE}?ssl=true`;
