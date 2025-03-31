@@ -7,6 +7,8 @@ volumes:
   neo4j_data:
   provision:
   opensearch-data:
+  prometheus_data:
+  grafana_data:
 
 services:
   rabbitmq:
@@ -232,3 +234,56 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - RABBITMQ_URL=amqp://host.docker.internal:5672
+
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: prometheus
+    networks:
+      - openline
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./provision/prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    networks:
+      - openline
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    networks:
+      - mailstack
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./provision/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4319:4317"  # OTLP gRPC receiver (mapped to 4319 externally)
+      - "4320:4318"  # OTLP HTTP receiver (mapped to 4320 externally)
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:13133"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
