@@ -153,6 +153,12 @@ func validate(
 			}
 		}()
 
+		// ✅ Skip auth entirely for WebSocket upgrade requests
+		if strings.EqualFold(c.GetHeader("Upgrade"), "websocket") {
+			c.Status(http.StatusOK)
+			return
+		}
+
 		if isIntrospectionQuery(c.Request) {
 			c.Next()
 			return
