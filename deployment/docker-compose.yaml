@@ -1,11 +1,18 @@
+version: "3.8"
+
 networks:
   openline:
 
 volumes:
   rabbitmq_data:
+<<<<<<< Updated upstream
   postgres_data_17:
+=======
+  postgres_data:
+  timescaledb_data:
+  nats_data:
+>>>>>>> Stashed changes
   neo4j_data:
-  provision:
   opensearch-data:
   prometheus_data:
   grafana_data:
@@ -17,8 +24,8 @@ services:
     networks:
       - openline
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./provision/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
@@ -29,23 +36,31 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.62.0
+    container_name: jaeger
+    networks:
+      - openline
     ports:
       - "16686:16686"
       - "6831:6831/udp"
+      - "6831:6831/tcp"
       - "4317:4317"
       - "4318:4318"
+      - "14268:14268"
     environment:
       - LOG_LEVEL=debug
-    networks:
-      - openline
 
+<<<<<<< Updated upstream
   postgres_17:
     image: postgres:17
+=======
+  postgres:
+    image: postgres:17.4
+>>>>>>> Stashed changes
     container_name: postgres
     networks:
       - openline
     ports:
-      - "5432:5432"
+      - "5555:5432"
     volumes:
       - postgres_data_17:/var/lib/postgresql/data
     environment:
@@ -60,23 +75,77 @@ services:
       retries: 5
       start_period: 5s
 
+<<<<<<< Updated upstream
   postgres-sidecar:
     image: postgres:17
     container_name: postgres-sidecar
+=======
+  timescaledb:
+    image: timescale/timescaledb:latest-pg17
+    container_name: timescaledb
+>>>>>>> Stashed changes
     networks:
       - openline
-    depends_on:
-      postgres:
-        condition: service_healthy
+    ports:
+      - "5556:5432"
     volumes:
-      - ./provision:/provision
-    command: >
-      bash -c "
-      until PGPASSWORD=password psql -U postgres -d openline -h postgres -c 'SELECT 1'; do
-        echo 'Waiting for Postgres...'
-        sleep 2
-      done &&
-      PGPASSWORD=password psql -U postgres -d openline -h postgres -f /provision/postgresql.sql"
+      - timescaledb_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: mailstack_timeseries
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d mailstack_timeseries -h localhost -p 5432",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    networks:
+      - openline
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./provision/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4319:4317" # OTLP gRPC receiver
+      - "4320:4318" # OTLP HTTP receiver
+    healthcheck:
+      test:
+        ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:13133"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  nats:
+    image: nats:2.11.0-alpine
+    container_name: nats
+    networks:
+      - openline
+    ports:
+      - "4222:4222" # Client connections
+      - "8222:8222" # HTTP management
+    command:
+      - "--jetstream"
+      - "--http_port=8222"
+      - "--debug=false"
+      - "--trace=false"
+    volumes:
+      - nats_data:/data
+    environment:
+      - NATS_SERVER_NAME=nats
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 
   neo4j:
@@ -121,6 +190,7 @@ services:
 
   opensearch:
     image: opensearchproject/opensearch:2.11.1
+    container_name: opensearch
     environment:
       - "discovery.type=single-node"
       - "plugins.security.disabled=true"
@@ -134,6 +204,7 @@ services:
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: opensearch-dashboards
     environment:
       - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
@@ -144,6 +215,7 @@ services:
       - openline
     depends_on:
       - opensearch
+<<<<<<< Updated upstream
 
   temporal:
     container_name: temporal
@@ -279,3 +351,5 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+=======
+>>>>>>> Stashed changes
