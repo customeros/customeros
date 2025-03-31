@@ -330,6 +330,13 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			}
 		}
 
+		// Step 5.1 - negative non dry-run invoices not allowed
+		if !dryRun && invoiceEntity.TotalAmount < 0 {
+			err = fmt.Errorf("invoice %s total amount is negative %f", invoiceId, invoiceEntity.TotalAmount)
+			s.log.Errorf("Invoice %s total amount is negative %f", invoiceId, invoiceEntity.TotalAmount)
+			tracing.TraceErr(span, err)
+		}
+
 		// Step 6 - prepare invoice status
 		invoiceStatus := neo4jenum.InvoiceStatusDue
 		if len(invoiceLines) == 0 {
@@ -2494,9 +2501,9 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 		return err
 	}
 
-	// Do not send email if invoice is dry run or total amount is 0 or invoice is not due or overdue or pending processing
+	// Do not send email if invoice is dry run or total amount is 0 or negative or invoice is not due or overdue or pending processing
 	invoiceStatusAllowedForPayNotification := invoiceEntity.IsDue() || invoiceEntity.IsOverdue() || invoiceEntity.IsPaymentProcessing()
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || !invoiceStatusAllowedForPayNotification {
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount <= float64(0) || !invoiceStatusAllowedForPayNotification {
 		span.LogFields(log.String("result", "skipped pay notification"))
 		return nil
 	}
@@ -2678,7 +2685,7 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 		return nil
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || !invoiceEntity.IsOverdue() {
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount <= float64(0) || !invoiceEntity.IsOverdue() {
 		tracing.TraceErr(span, errors.New("remind invoice notification requested for not applicable invoice"))
 		return nil
 	}
@@ -2839,8 +2846,11 @@ func (s *invoiceService) AutopayInvoice(ctx context.Context, invoiceId string) e
 	if invoiceEntity.DryRun {
 		span.LogFields(log.String("result", "skipped autopay for dry run invoice"))
 		return nil
-	} else if invoiceEntity.TotalAmount == 0 {
+	} else if invoiceEntity.TotalAmount == float64(0) {
 		span.LogFields(log.String("result", "skipped autopay for invoice with total amount of 0"))
+		return nil
+	} else if invoiceEntity.TotalAmount <= float64(0) {
+		span.LogFields(log.String("result", "skipped autopay for invoice with total amount negative"))
 		return nil
 	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
 		span.LogFields(log.String("result", "skipped autopay for invoice not due or overdue"))

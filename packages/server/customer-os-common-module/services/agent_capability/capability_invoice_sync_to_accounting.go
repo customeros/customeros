@@ -141,6 +141,10 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 		span.LogFields(log.String("skip", "Total amount is 0"))
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
+	if invoiceEntity.TotalAmount <= 0 {
+		span.LogFields(log.String("skip", "Total amount is negative"))
+		return enum.CapabilityExecutionCompleted, result, nil
+	}
 
 	// STEP 1 - create invoice in QBO
 	if invoiceEntity.QuickbooksInvoiceId == "" {
