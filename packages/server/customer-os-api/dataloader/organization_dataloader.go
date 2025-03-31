@@ -2,6 +2,8 @@ package dataloader
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -9,7 +11,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 func (i *Loaders) GetOrganizationsForEmail(ctx context.Context, emailId string) (*neo4jentity.OrganizationEntities, error) {
@@ -445,7 +446,7 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 
 	ids, keyOrder := sortKeys(keys)
 
-	organizationEntities, err := b.organizationService.GetOrganizationsForInvoices(ctx, ids)
+	organizationEntities, err := b.commonOrganizationService.GetOrganizationsForInvoices(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

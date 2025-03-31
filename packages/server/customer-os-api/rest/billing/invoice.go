@@ -2,9 +2,14 @@
 package billing
 
 import (
+	"bytes"
+	"encoding/csv"
+	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -28,6 +33,34 @@ func NewBillingHandler(services *cosapi_services.Services, responseHandler *resp
 		services:        services,
 		responseHandler: responseHandler,
 	}
+}
+
+type InvoiceCsvRecord struct {
+	CustomerID         string
+	CustomerName       string
+	InvoiceNumber      string
+	InvoiceDate        time.Time
+	BillingPeriodStart time.Time
+	BillingPeriodEnd   time.Time
+	InvoiceTotal       float64
+	Total              float64
+	BillingFrequency   string
+	Name               string
+	Description        string
+}
+
+var invoiceCsvHeaders = []string{
+	"Customer ID",
+	"Customer Name",
+	"Invoice Number",
+	"Invoice Date",
+	"Billing Period Start Date",
+	"Billing Period End Date",
+	"Invoice Total",
+	"Total",
+	"Billing Frequency",
+	"Name",
+	"Description",
 }
 
 // @Summary Get organization's invoices
@@ -147,5 +180,133 @@ func (h *BillingHandler) GetInvoicesForOrganization() gin.HandlerFunc {
 		})
 
 		h.responseHandler.HandleSuccess(c, response)
+	}
+}
+
+// @Summary Download upcoming invoices as CSV
+// @Description Downloads all upcoming invoices in CSV format
+// @Tags Billing API
+// @Accept json
+// @Produce text/csv
+// @Success 200 {file} binary "CSV file containing upcoming invoices"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized - Invalid or missing API key"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
+// @Router /billing/v1/invoices/upcoming/download [get]
+// @Security ApiKeyAuth
+func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "DownloadUpcomingInvoices", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		// Get upcoming invoices
+		upcomingInvoices, err := h.services.CommonServices.InvoiceService.GetUpcomingInvoices(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// collect all invoice ids
+		invoiceIds := make([]string, 0, len(*upcomingInvoices))
+		for _, invoice := range *upcomingInvoices {
+			invoiceIds = append(invoiceIds, invoice.Id)
+		}
+
+		// get all invoice lines for the invoices
+		invoiceLines, err := h.services.CommonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, invoiceIds)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// get organizations for the invoices
+		organizations, err := h.services.CommonServices.OrganizationService.GetOrganizationsForInvoices(ctx, invoiceIds)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// Create a map of invoice ID to organization for quick lookup
+		orgByInvoiceId := make(map[string]neo4jentity.OrganizationEntity)
+		for _, org := range *organizations {
+			orgByInvoiceId[org.DataloaderKey] = org
+		}
+
+		// Create CSV records
+		csvRecords := make([][]string, 0)
+		csvRecords = append(csvRecords, invoiceCsvHeaders)
+
+		// Convert invoice lines to CSV records
+		for _, line := range *invoiceLines {
+			// Get the invoice for this line
+			var invoice neo4jentity.InvoiceEntity
+			for _, inv := range *upcomingInvoices {
+				if inv.Id == line.ServiceLineItemId {
+					invoice = inv
+					break
+				}
+			}
+
+			// Get the organization for this invoice
+			org, exists := orgByInvoiceId[invoice.Id]
+			if !exists {
+				tracing.TraceErr(span, errors.Errorf("organization not found for invoice %s", invoice.Id))
+				continue
+			}
+
+			record := []string{
+				org.ID,
+				org.Name,
+				invoice.Number,
+				invoice.IssuedDate.Format("2006-01-02"),
+				invoice.PeriodStartDate.Format("2006-01-02"),
+				invoice.PeriodEndDate.Format("2006-01-02"),
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), invoice.TotalAmount),
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.TotalAmount),
+				line.BilledType.String(),
+				line.SkuName,
+				line.Description,
+			}
+			csvRecords = append(csvRecords, record)
+		}
+
+		// Sort records by customer name and SKU name (skip header row)
+		sort.Slice(csvRecords[1:], func(i, j int) bool {
+			// First sort by customer name (index 1)
+			if csvRecords[i+1][1] != csvRecords[j+1][1] {
+				return csvRecords[i+1][1] < csvRecords[j+1][1]
+			}
+			// If customer names are equal, sort by SKU name (index 9)
+			return csvRecords[i+1][9] < csvRecords[j+1][9]
+		})
+
+		// Create CSV buffer
+		var buf bytes.Buffer
+		writer := csv.NewWriter(&buf)
+		for _, record := range csvRecords {
+			if err := writer.Write(record); err != nil {
+				tracing.TraceErr(span, err)
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+				return
+			}
+		}
+		writer.Flush()
+
+		// Set response headers
+		filename := fmt.Sprintf("upcoming_invoices_%s.csv", utils.Now().Format("2006_01_02"))
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+		c.Header("Content-Type", "text/csv")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Expires", "0")
+		c.Header("Cache-Control", "must-revalidate")
+		c.Header("Pragma", "public")
+
+		// Write CSV data to response
+		c.Data(http.StatusOK, "text/csv", buf.Bytes())
 	}
 }

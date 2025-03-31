@@ -2,6 +2,8 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -11,7 +13,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-	"time"
 )
 
 type InvoiceReadRepository interface {
@@ -37,6 +38,7 @@ type InvoiceReadRepository interface {
 	GetExpiredPaymentProcessingInvoices(ctx context.Context, paymentProcessingMaxDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 	GetReadyInvoicesForFinalizedWebhook(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetUpcomingInvoices(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 }
 
 type invoiceReadRepository struct {
@@ -893,6 +895,38 @@ func (r *invoiceReadRepository) GetNonDryRunInvoicesForOrganization(ctx context.
 			neo4jenum.InvoiceStatusOnHold.String(),
 			neo4jenum.InvoiceStatusPaymentProcessing.String(),
 		},
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetUpcomingInvoices(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetUpcomingInvoices")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)
+			WHERE i.preview = true AND i.dryRun = true
+			RETURN i`
+	params := map[string]any{
+		"tenant": tenant,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

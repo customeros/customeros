@@ -3235,3 +3235,31 @@ func (s *invoiceService) RegenerateInvoicePdf(ctx context.Context, invoiceId str
 
 	return nil
 }
+
+func (s *invoiceService) GetUpcomingInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetUpcomingInvoices")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetUpcomingInvoices(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	invoiceEntities := neo4jentity.InvoiceEntities{}
+	for _, invoiceNode := range invoiceDbNodes {
+		invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+		invoiceEntities = append(invoiceEntities, *invoiceEntity)
+	}
+
+	return &invoiceEntities, nil
+}

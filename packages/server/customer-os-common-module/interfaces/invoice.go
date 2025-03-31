@@ -26,6 +26,8 @@ type InvoiceService interface {
 	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
 	GetInvoicesForServiceLineItems(ctx context.Context, sliIds []string) (*neo4jentity.InvoiceEntities, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) (*neo4jentity.InvoiceEntities, error)
+	GetUpcomingInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error)
+
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
 	PayInvoice(ctx context.Context, invoiceId string) error

@@ -289,25 +289,6 @@ func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(
 	organizationEntity.SuggestedMerge.Confidence = utils.GetFloatPropOrNil(props, "confidence")
 }
 
-func (s *organizationService) GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("invoiceIds", invoiceIds))
-
-	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
-	if err != nil {
-		return nil, err
-	}
-	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
-	for _, v := range organizations {
-		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
-		organizationEntity.DataloaderKey = v.LinkedNodeId
-		organizationEntities = append(organizationEntities, *organizationEntity)
-	}
-	return &organizationEntities, nil
-}
-
 func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForSlackChannels")
 	defer span.Finish()
