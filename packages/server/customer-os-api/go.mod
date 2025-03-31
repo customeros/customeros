@@ -11,7 +11,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
-	github.com/99designs/gqlgen v0.17.68
+	github.com/99designs/gqlgen v0.17.70
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250123143641-47eb9a512f9d
