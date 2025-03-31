@@ -3,7 +3,7 @@ networks:
 
 volumes:
   rabbitmq_data:
-  postgres_data:
+  postgres_data_17:
   neo4j_data:
   provision:
   opensearch-data:
@@ -39,15 +39,15 @@ services:
     networks:
       - openline
 
-  postgres:
-    image: postgres:14.5
+  postgres_17:
+    image: postgres:17
     container_name: postgres
     networks:
       - openline
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_17:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: openline
       POSTGRES_USER: postgres
@@ -61,7 +61,7 @@ services:
       start_period: 5s
 
   postgres-sidecar:
-    image: postgres:14.5
+    image: postgres:17
     container_name: postgres-sidecar
     networks:
       - openline
@@ -77,6 +77,7 @@ services:
         sleep 2
       done &&
       PGPASSWORD=password psql -U postgres -d openline -h postgres -f /provision/postgresql.sql"
+
 
   neo4j:
     image: neo4j:latest
@@ -116,6 +117,7 @@ services:
         sleep 2
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
+
 
   opensearch:
     image: opensearchproject/opensearch:2.11.1
@@ -214,16 +216,6 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
       - RABBITMQ_URL=amqp://guest:guest@host.docker.internal:5672
 
-  events-subscribers:
-    image: ghcr.io/customeros/customeros/events-subscribers:latest
-    networks:
-      - openline
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_ASYNC_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - RABBITMQ_URL=amqp://guest:guest@host.docker.internal:5672
-
   customer-os-webhooks:
     image: ghcr.io/customeros/customeros/customer-os-webhooks:latest
     networks:
@@ -274,7 +266,7 @@ services:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
     networks:
-      - mailstack
+      - openline
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./provision/otel-collector-config.yaml:/etc/otel-collector-config.yaml
