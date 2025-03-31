@@ -6,10 +6,10 @@ import { connectionUrl } from "./config";
 const isDev = process.env.NODE_ENV === "development";
 
 const pg = postgres(connectionUrl, {
-  ssl: !isDev
-    ? {
-        rejectUnauthorized: false,
-      }
-    : undefined,
+  // ssl: !isDev
+  //   ? {
+  //       rejectUnauthorized: false,
+  //     }
+  //   : undefined,
 });
 export const db = drizzle(pg);
