@@ -8,8 +8,13 @@ const pg = postgres(connectionUrl, { max: 1 });
 const db = drizzle(pg);
 
 (async () => {
-  await migrate(db, {
-    migrationsFolder: "./src/infrastructure/persistance/postgresql/drizzle",
-  });
-  await pg.end();
+  try {
+    console.info(`Running migrations on ${connectionUrl}`);
+    await migrate(db, {
+      migrationsFolder: "./src/infrastructure/persistance/postgresql/drizzle",
+    });
+    await pg.end();
+  } catch (err) {
+    console.error(err);
+  }
 })();
