@@ -5,13 +5,9 @@ networks:
 
 volumes:
   rabbitmq_data:
-<<<<<<< Updated upstream
-  postgres_data_17:
-=======
   postgres_data:
   timescaledb_data:
   nats_data:
->>>>>>> Stashed changes
   neo4j_data:
   opensearch-data:
   prometheus_data:
@@ -49,20 +45,15 @@ services:
     environment:
       - LOG_LEVEL=debug
 
-<<<<<<< Updated upstream
-  postgres_17:
-    image: postgres:17
-=======
   postgres:
     image: postgres:17.4
->>>>>>> Stashed changes
     container_name: postgres
     networks:
       - openline
     ports:
       - "5555:5432"
     volumes:
-      - postgres_data_17:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: openline
       POSTGRES_USER: postgres
@@ -75,15 +66,9 @@ services:
       retries: 5
       start_period: 5s
 
-<<<<<<< Updated upstream
-  postgres-sidecar:
-    image: postgres:17
-    container_name: postgres-sidecar
-=======
   timescaledb:
     image: timescale/timescaledb:latest-pg17
     container_name: timescaledb
->>>>>>> Stashed changes
     networks:
       - openline
     ports:
@@ -147,7 +132,6 @@ services:
       timeout: 5s
       retries: 3
 
-
   neo4j:
     image: neo4j:latest
     container_name: neo4j
@@ -187,7 +171,6 @@ services:
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
-
   opensearch:
     image: opensearchproject/opensearch:2.11.1
     container_name: opensearch
@@ -215,12 +198,9 @@ services:
       - openline
     depends_on:
       - opensearch
-<<<<<<< Updated upstream
 
   temporal:
     container_name: temporal
-    depends_on:
-      - postgres-sidecar
     environment:
       - DB=postgres
       - DB_PORT=5432
@@ -269,7 +249,6 @@ services:
     image: thecodingmachine/gotenberg:8@sha256:c23c892f5fee99be6ed0fecc295c584f294335f9333373def88899c2a9d38c32
     container_name: gotenberg
     depends_on:
-      - postgres-sidecar
       - neo4j-sidecar
     networks:
       - openline
@@ -310,11 +289,11 @@ services:
       - prometheus_data:/prometheus
       - ./provision/prometheus:/etc/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
     restart: unless-stopped
 
   grafana:
@@ -333,23 +312,3 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: otel-collector
-    networks:
-      - openline
-    command: ["--config=/etc/otel-collector-config.yaml"]
-    volumes:
-      - ./provision/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    ports:
-      - "4319:4317"  # OTLP gRPC receiver (mapped to 4319 externally)
-      - "4320:4318"  # OTLP HTTP receiver (mapped to 4320 externally)
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:13133"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-=======
->>>>>>> Stashed changes
