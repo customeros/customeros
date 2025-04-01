@@ -615,12 +615,13 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	agentExecutionRecord := postgresentity.AgentExecution{
-		Tenant:       agent.Tenant,
-		AgentID:      &agent.ID,
-		TriggerEvent: triggerEvent,
-		Status:       enum.AgentExecutionRunning,
-		StartedAt:    utils.NowPtr(),
-		TraceId:      traceId,
+		Tenant:        agent.Tenant,
+		AgentID:       &agent.ID,
+		TriggerEvent:  triggerEvent,
+		Status:        enum.AgentExecutionRunning,
+		StartedAt:     utils.NowPtr(),
+		TraceId:       traceId,
+		TraceIdLatest: traceId,
 	}
 
 	createdRecord, err := a.postgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)

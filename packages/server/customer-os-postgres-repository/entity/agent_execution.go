@@ -7,20 +7,21 @@ import (
 )
 
 type AgentExecution struct {
-	ID           string                    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
-	AgentID      *string                   `gorm:"column:agent_id;type:varchar(50);not null" json:"agent_id" binding:"required"`
-	Tenant       string                    `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
-	TriggerEvent string                    `gorm:"column:trigger_event;type:varchar(50)" json:"triggerEvent"`
-	FlowID       *string                   `gorm:"column:flow_id;type:varchar(255);" json:"flowId"`
-	Status       enum.AgentExecutionStatus `gorm:"column:status;type:varchar(255);not null;default:'PENDING'" json:"status"`
-	CreatedAt    time.Time                 `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	StartedAt    *time.Time                `gorm:"column:started_at" json:"startedAt"`
-	UpdatedAt    *time.Time                `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	CompletedAt  *time.Time                `gorm:"column:completed_at" json:"completedAt"`
-	ErrorMessage *string                   `gorm:"column:error_message;type:text" json:"errorMessage"`
-	GoalAchieved *bool                     `gorm:"column:goal_achieved;type:boolean" json:"goalAchieved"`
-	TraceId      string                    `gorm:"column:trace_id;type:varchar(255)" json:"traceId"`
-	ImpactedId   *string                   `gorm:"column:impacted_id;type:varchar(255)" json:"impactedId"`
+	ID            string                    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
+	AgentID       *string                   `gorm:"column:agent_id;type:varchar(50);not null" json:"agent_id" binding:"required"`
+	Tenant        string                    `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	TriggerEvent  string                    `gorm:"column:trigger_event;type:varchar(50)" json:"triggerEvent"`
+	FlowID        *string                   `gorm:"column:flow_id;type:varchar(255);" json:"flowId"`
+	Status        enum.AgentExecutionStatus `gorm:"column:status;type:varchar(255);not null;default:'PENDING'" json:"status"`
+	CreatedAt     time.Time                 `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	StartedAt     *time.Time                `gorm:"column:started_at" json:"startedAt"`
+	UpdatedAt     *time.Time                `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	CompletedAt   *time.Time                `gorm:"column:completed_at" json:"completedAt"`
+	ErrorMessage  *string                   `gorm:"column:error_message;type:text" json:"errorMessage"`
+	GoalAchieved  *bool                     `gorm:"column:goal_achieved;type:boolean" json:"goalAchieved"`
+	TraceId       string                    `gorm:"column:trace_id;type:varchar(255)" json:"traceId"`
+	TraceIdLatest string                    `gorm:"column:trace_id_latest;type:varchar(255)" json:"traceIdLatest"`
+	ImpactedId    *string                   `gorm:"column:impacted_id;type:varchar(255)" json:"impactedId"`
 
 	// Retry related fields
 	RetryCount  int        `gorm:"column:retry_count;type:int;default:0" json:"retryCount"` // Number of completed retries
