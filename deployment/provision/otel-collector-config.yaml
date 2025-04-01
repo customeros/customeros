@@ -12,14 +12,10 @@ processors:
     send_batch_size: 5000
 
 exporters:
-  clickhouse:
-    endpoint: tcp://clickhouse:9000
-    username: default
-    password: password
-    database: logs
-    create_schema: true
-    logs_table_name: otel_logs
-    traces_table_name: otel_traces
+  timescaledb:
+    # Note: Tables must be created manually before starting the collector
+    # See SQL queries in the documentation for table creation
+    endpoint: postgresql://postgres:password@localhost:5556/telemetry
     timeout: 5s
     retry_on_failure:
       enabled: true
@@ -32,8 +28,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [clickhouse]
+      exporters: [timescaledb]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [clickhouse]
+      exporters: [timescaledb]
