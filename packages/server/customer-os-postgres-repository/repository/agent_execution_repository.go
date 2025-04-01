@@ -243,7 +243,8 @@ func (f *agentExecutionRepository) ScheduleRetry(ctx context.Context, executionI
 
 	// Prepare update fields
 	updateFields := map[string]any{
-		"state_data": stateData,
+		"state_data":      stateData,
+		"trace_id_latest": tracing.GetTraceId(span),
 	}
 
 	// Increment retry count and set next retry time if it's not the first scheduling
@@ -407,6 +408,7 @@ func (f *agentExecutionRepository) GetExecutionsForRetry(ctx context.Context, li
 		return nil, err
 	}
 
+	span.LogKV("result.count", len(executions))
 	return executions, nil
 }
 
