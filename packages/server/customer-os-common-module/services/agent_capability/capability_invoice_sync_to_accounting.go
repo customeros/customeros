@@ -3,8 +3,6 @@ package agent_capability
 import (
 	"context"
 	"fmt"
-	"net/url"
-
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -460,7 +458,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntry(
 	debitJournalLineItem.JournalEntryLineDetail.PostingType = "Debit"
 	debitJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 	debitJournalLineItem.JournalEntryLineDetail.AccountRef.Name = arIncomeAccountName
-	arIncomeAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape(arIncomeAccountName))
+	arIncomeAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, arIncomeAccountName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -586,7 +584,7 @@ func (c *SyncInvoiceToAccountingCapability) syncInvoiceToQuickbooksJournalEntryR
 	creditJournalLineItem.JournalEntryLineDetail.PostingType = "Credit"
 	creditJournalLineItem.JournalEntryLineDetail.Entity.EntityRef.Value = contractEntity.QuickbooksCustomerId
 	creditJournalLineItem.JournalEntryLineDetail.AccountRef.Name = arIncomeAccountName
-	arIncomeAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, url.QueryEscape(arIncomeAccountName))
+	arIncomeAccountId, err := c.quickbooksService.GetAccountIdByName(ctx, arIncomeAccountName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
