@@ -834,7 +834,7 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 	defer span.Finish()
 	tenant := common.GetTenantFromContext(ctx)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("accountName", accountName))
+	span.LogKV("accountName", accountName)
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
@@ -848,8 +848,10 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 		return "", err
 	}
 
+	normalizedAccountName := strings.ReplaceAll(accountName, " ", "+")
+	span.LogKV("normalizedAccountName", normalizedAccountName)
 	// Construct the URL for querying the account by name.
-	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, accountName)
+	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, normalizedAccountName)
 	// Perform the request.
 	resp, err := s.performRequest(ctx, qbSettings, queryURL, "GET", nil, true)
 	if err != nil {
