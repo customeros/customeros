@@ -8,28 +8,37 @@ receivers:
 
 processors:
   batch:
+    send_batch_size: 10000
     timeout: 5s
-    send_batch_size: 5000
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1000
+    spike_limit_mib: 200
 
 exporters:
-  timescaledb:
-    # Note: Tables must be created manually before starting the collector
-    # See SQL queries in the documentation for table creation
-    endpoint: postgresql://postgres:password@localhost:5556/telemetry
-    timeout: 5s
-    retry_on_failure:
-      enabled: true
-      initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
+  otlp:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: otelcol
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
 
 service:
+  extensions: [health_check, pprof]
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [timescaledb]
-    logs:
+      processors: [memory_limiter, batch]
+      exporters: [otlp]
+    metrics:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [timescaledb]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+

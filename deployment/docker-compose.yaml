@@ -118,7 +118,6 @@ services:
       done &&
       PGPASSWORD=password psql -h timescaledb -p 5432 -U postgres -d telemetry -f /docker-entrypoint-initdb.d/timescaledb-init.sql"
 
-
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
@@ -136,6 +135,33 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 10s
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    networks:
+      - openline
+    ports:
+      - "3200:3200" # Tempo API and UI endpoint
+      - "4317:4317" # OTLP gRPC endpoint
+      - "4318:4318" # OTLP HTTP endpoint
+    volumes:
+      - tempo_data:/var/tempo
+      - ./provision/tempo.yaml:/etc/tempo/tempo.yaml
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--spider",
+          "http://localhost:3200/api/echo",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
       start_period: 10s
 
   nats:
@@ -199,7 +225,6 @@ services:
         sleep 2
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
-
 
   opensearch:
     image: opensearchproject/opensearch:2.11.1
