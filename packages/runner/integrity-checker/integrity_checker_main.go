@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"io"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/customeros/customeros/packages/runner/integrity-checker/caches"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/config"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/constants"
@@ -10,13 +15,10 @@ import (
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
-	"io"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -31,7 +33,7 @@ func main() {
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
-	defer tracing.RecoverAndLogToJaeger(appLogger)
+	defer telemetry.RecoverAndLogMain(appLogger)
 
 	ctx := context.Background()
 
@@ -86,13 +88,24 @@ func initLogger(cfg *config.Config) logger.Logger {
 }
 
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
+	var closer io.Closer
+
+	// Initialize Jaeger if enabled
 	if cfg.Jaeger.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		tracer, jaegerCloser, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}
 		opentracing.SetGlobalTracer(tracer)
-		return closer
+		closer = jaegerCloser
 	}
-	return nil
+
+	// Initialize OpenTelemetry if enabled
+	if cfg.OpenTelemetry.Enabled {
+		if err := telemetry.InitOpenTelemetry(context.Background(), &cfg.OpenTelemetry); err != nil {
+			appLogger.Fatalf("Could not initialize OpenTelemetry: %v", err.Error())
+		}
+	}
+
+	return closer
 }
