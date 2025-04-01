@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -12,6 +13,7 @@ type Config struct {
 	PostgresConfig      config.PostgresConfig
 	PostgresAsyncConfig config.PostgresAsyncConfig
 	Jaeger              tracing.JaegerConfig
+	OpenTelemetry       telemetry.OpenTelemetryConfig
 	Logger              logger.Config
 	EmailConfig         EmailConfig
 }

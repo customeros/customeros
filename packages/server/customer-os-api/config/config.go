@@ -6,6 +6,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/joho/godotenv"
@@ -21,6 +22,7 @@ type Config struct {
 type CommonConfig struct {
 	Logger         logger.Config
 	Jaeger         tracing.JaegerConfig
+	OpenTelemetry  telemetry.OpenTelemetryConfig
 	RabbitMQConfig commonconf.RabbitMQConfig
 	Postgres       commonconf.PostgresConfig
 	PostgresAsync  commonconf.PostgresAsyncConfig
@@ -81,8 +83,9 @@ type GraphQLConfig struct {
 }
 
 type ObservabilityConfig struct {
-	Jaeger  tracing.JaegerConfig
-	Metrics metrics.Config
+	Jaeger        tracing.JaegerConfig
+	Metrics       metrics.Config
+	OpenTelemetry telemetry.OpenTelemetryConfig
 }
 
 type CORSConfig struct {
@@ -114,6 +117,7 @@ func InitConfig() (*Config, error) {
 			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
 			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
 			JaegerConfig:        cmnCfg.Jaeger,
+			OpenTelemetryConfig: cmnCfg.OpenTelemetry,
 			LoggerConfig:        cmnCfg.Logger,
 			Neo4jConfig:         cmnCfg.Neo4j,
 			OpensearchConfig:    cmnCfg.Opensearch,

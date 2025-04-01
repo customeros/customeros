@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-api/config"
-	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-api/server"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/config"
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-api/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-api/server"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // @title CustomerOS API
@@ -36,6 +38,13 @@ func main() {
 	appLogger := logger.NewExtendedAppLogger(&cfg.Common.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
 	appLogger.WithName(constants.ServiceName)
+
+	// Initialize OpenTelemetry if enabled
+	if cfg.App.Observability.OpenTelemetry.Enabled {
+		if err := telemetry.InitOpenTelemetry(context.Background(), &cfg.App.Observability.OpenTelemetry); err != nil {
+			appLogger.Fatalf("Could not initialize OpenTelemetry: %v", err.Error())
+		}
+	}
 
 	// Create a context with a cancel function
 	ctx, cancel := context.WithCancel(context.Background())

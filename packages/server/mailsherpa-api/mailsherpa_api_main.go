@@ -7,6 +7,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-contrib/cors"
@@ -35,6 +36,13 @@ func main() {
 	defer tracing.RecoverAndLogToJaeger(appLogger)
 
 	ctx := context.Background()
+
+	// Initialize OpenTelemetry if enabled
+	if cfg.OpenTelemetry.Enabled {
+		if err := telemetry.InitOpenTelemetry(ctx, &cfg.OpenTelemetry); err != nil {
+			appLogger.Fatalf("Could not initialize OpenTelemetry: %v", err.Error())
+		}
+	}
 
 	// Initialize postgres db
 	postgresDb, err := commonconf.InitPostgres(&commonconf.CommonConfig{

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/logger"
@@ -27,6 +28,13 @@ func main() {
 
 	// Create a context with a cancel function
 	ctx, cancel := context.WithCancel(context.Background())
+
+	// Initialize OpenTelemetry if enabled
+	if cfg.Common.Infrastructure.OpenTelemetryConfig.Enabled {
+		if err := telemetry.InitOpenTelemetry(ctx, &cfg.Common.Infrastructure.OpenTelemetryConfig); err != nil {
+			appLogger.Fatalf("Could not initialize OpenTelemetry: %v", err.Error())
+		}
+	}
 
 	// Set up signal handler to cancel context on interrupt
 	sigChan := make(chan os.Signal, 1)

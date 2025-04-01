@@ -13,6 +13,7 @@ import (
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	common_agent_listeners "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -57,6 +58,13 @@ func (a *App) Initialize() error {
 	// Initialize tracing
 	if err := a.initTracing(); err != nil {
 		return fmt.Errorf("failed to initialize tracing: %w", err)
+	}
+
+	// Initialize OpenTelemetry if enabled
+	if a.config.Common.Infrastructure.OpenTelemetryConfig.Enabled {
+		if err := telemetry.InitOpenTelemetry(a.ctx, &a.config.Common.Infrastructure.OpenTelemetryConfig); err != nil {
+			return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+		}
 	}
 
 	// Initialize databases
