@@ -90,6 +90,35 @@ services:
       retries: 5
       start_period: 5s
 
+  timescaledb-sidecar:
+    image: postgres:17.4
+    container_name: timescaledb-sidecar
+    networks:
+      - openline
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - ./provision/timescaledb-create-db.sql:/docker-entrypoint-initdb.d/timescaledb-create-db.sql
+      - ./provision/timescaledb-init.sql:/docker-entrypoint-initdb.d/timescaledb-init.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      PGPASSWORD: password
+    command: >
+      sh -c "
+      until pg_isready -h timescaledb -p 5432 -U postgres -d postgres; do
+        echo 'Waiting for TimescaleDB...'
+        sleep 2
+      done &&
+      PGPASSWORD=password psql -h timescaledb -p 5432 -U postgres -d postgres -f /docker-entrypoint-initdb.d/timescaledb-create-db.sql &&
+      until pg_isready -h timescaledb -p 5432 -U postgres -d telemetry; do
+        echo 'Waiting for telemetry database...'
+        sleep 2
+      done &&
+      PGPASSWORD=password psql -h timescaledb -p 5432 -U postgres -d telemetry -f /docker-entrypoint-initdb.d/timescaledb-init.sql"
+
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel-collector
@@ -170,6 +199,7 @@ services:
         sleep 2
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
+
 
   opensearch:
     image: opensearchproject/opensearch:2.11.1
