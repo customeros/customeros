@@ -64,7 +64,7 @@ func (s *agentService) rerunAgentExecution(ctx context.Context, agentExecution p
 		Tenant:    agentExecution.Tenant,
 		AppSource: constants.AppSourceDataUpkeeper,
 	})
-	spans, ctx := telemetry.StartCronSpan(ctx, "AgentService.RerunExecutions.Record")
+	spans, ctx := telemetry.StartCronSpan(ctx, "AgentService.RerunExecutions.Record", telemetry.WithNewRoot())
 	defer spans.Finish()
 	spans.TagEntity(agentExecution.ID)
 
