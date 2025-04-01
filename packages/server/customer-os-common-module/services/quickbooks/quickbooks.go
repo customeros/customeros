@@ -851,7 +851,7 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 	// Construct the URL for querying the account by name.
 	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, accountName)
 	// Perform the request.
-	resp, err := s.performRequest(ctx, qbSettings, queryURL, "POST", nil, true)
+	resp, err := s.performRequest(ctx, qbSettings, queryURL, "GET", nil, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", fmt.Errorf("failed to query account: %w", err)
