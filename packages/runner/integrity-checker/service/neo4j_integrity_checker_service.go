@@ -5,6 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"sort"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -15,15 +20,9 @@ import (
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/model"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
-	"github.com/customeros/customeros/packages/runner/integrity-checker/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"sort"
-	"strings"
 )
 
 type Neo4jIntegrityCheckerService interface {
@@ -60,19 +59,18 @@ func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repo
 
 func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
 	ctx, cancel := context.WithCancel(context.Background())
-
-	span, ctx := tracing.StartTracerSpan(ctx, "Neo4jIntegrityCheckerService.RunIntegrityCheckerQueries")
-	defer span.Finish()
-
 	defer cancel() // Cancel context on exit
+
+	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.RunIntegrityCheckerQueries")
+	defer spans.Finish()
 
 	integrityCheckerQueries, err := s.getQueriesFromS3(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting queries from S3: %v", err)
 	}
 	result := s.executeQueries(ctx, integrityCheckerQueries)
-	tracing.LogObjectAsJson(span, "integrityCheckerResult", result)
+	spans.LogObjectAsJson("integrityCheckerResult", result)
 	s.log.Infof("Integrity checker result: %v", result)
 
 	s.sendMetrics(ctx, result)
@@ -80,8 +78,8 @@ func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
 }
 
 func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (model.IntegrityCheckQueries, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jIntegrityCheckerService.getQueriesFromS3")
-	defer span.Finish()
+	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.getQueriesFromS3")
+	defer spans.Finish()
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
@@ -98,14 +96,14 @@ func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (mo
 			Key:    aws.String("neo4j-integrity-checker-queries.json"),
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error downloading queries from S3: %v", err)
 		return model.IntegrityCheckQueries{}, err
 	}
 
 	var queries model.IntegrityCheckQueries
 	if err := json.Unmarshal(buffer.Bytes(), &queries); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error unmarshalling queries: %v", err)
 		return model.IntegrityCheckQueries{}, err
 	}
@@ -114,8 +112,8 @@ func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (mo
 }
 
 func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queries model.IntegrityCheckQueries) []integrityCheckerResult {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jIntegrityCheckerService.RunIntegrityCheckerQueries")
-	defer span.Finish()
+	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.executeQueries")
+	defer spans.Finish()
 
 	var output []integrityCheckerResult
 
@@ -154,8 +152,8 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 }
 
 func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results []integrityCheckerResult) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jIntegrityCheckerService.sendMetrics")
-	defer span.Finish()
+	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.sendMetrics")
+	defer spans.Finish()
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
@@ -219,19 +217,19 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error reporting metrics: %v", err)
 		return
 	}
 }
 
 func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results []integrityCheckerResult) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jIntegrityCheckerService.alertInSlack")
-	defer span.Finish()
+	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.alertInSlack")
+	defer spans.Finish()
 
 	// if no webhook is configured, return early
 	if h.cfg.SlackConfig.DataAlertsRegisteredWebhook == "" {
-		tracing.TraceErr(span, errors.New("no slack webhook configured"))
+		spans.TraceError(errors.New("no slack webhook configured"))
 		return nil
 	}
 
@@ -268,7 +266,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	// do not send messages to slack if no changes from previous run
 	previousAlertMessages, err := h.cache.GetPreviousAlertMessages()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting previous alert messages"))
+		spans.TraceError(errors.Wrap(err, "error getting previous alert messages"))
 	}
 	if utils.StringSlicesEqualIgnoreOrder(previousAlertMessages, alertMessages) {
 		return nil
@@ -276,7 +274,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 
 	err = h.cache.SetPreviousAlertMessages(alertMessages)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error setting previous alert messages"))
+		spans.TraceError(errors.Wrap(err, "error setting previous alert messages"))
 	}
 
 	// If no alerts, return early
@@ -296,19 +294,19 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	// Convert struct to JSON
 	jsonData, err := json.Marshal(message)
 	if err != nil {
-		span.LogFields(log.Error(err))
+		spans.TraceError(err)
 		return fmt.Errorf("error encoding JSON: %w", err)
 	}
 
 	// Send POST request
 	resp, err := http.Post(h.cfg.SlackConfig.DataAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		span.LogFields(log.Error(err))
+		spans.TraceError(err)
 		return fmt.Errorf("error sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	span.LogFields(log.String("result.status", resp.Status))
+	spans.LogKV("result.status", resp.Status)
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {

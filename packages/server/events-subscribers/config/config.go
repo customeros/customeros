@@ -6,6 +6,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
 )
@@ -22,6 +23,7 @@ type AppConfig struct {
 type CommonConfig struct {
 	Logger           logger.Config
 	Jaeger           tracing.JaegerConfig
+	OpenTelemetry    telemetry.OpenTelemetryConfig
 	Postgres         commonconf.PostgresConfig
 	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
@@ -68,6 +70,7 @@ func Load() *Config {
 		Infrastructure: commonconf.InfrastructureConfig{
 			LoggerConfig:        cmnCfg.Logger,
 			JaegerConfig:        cmnCfg.Jaeger,
+			OpenTelemetryConfig: cmnCfg.OpenTelemetry,
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,

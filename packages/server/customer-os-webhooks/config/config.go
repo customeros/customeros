@@ -1,8 +1,6 @@
 package config
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"log"
 
 	"github.com/caarlos0/env/v6"
@@ -17,14 +15,6 @@ import (
 type Config struct {
 	App    App
 	Common commonconf.CommonConfig
-}
-
-type CommonConfig struct {
-	Logger         logger.Config
-	Jaeger         tracing.JaegerConfig
-	RabbitMQConfig commonconf.RabbitMQConfig
-	Novu           commonconf.NovuConfig
-	Temporal       commonconf.TemporalConfig
 }
 
 type App struct {
@@ -47,11 +37,6 @@ func InitConfig() (*Config, error) {
 	err := validator.GetValidator().Struct(cfg.App)
 	if err != nil {
 		return nil, err
-	}
-
-	cmnCfg := CommonConfig{}
-	if err := env.Parse(&cmnCfg); err != nil {
-		log.Fatalf("Error loading app configuration: %+v", err)
 	}
 
 	return &cfg, nil

@@ -1,20 +1,23 @@
 package config
 
 import (
+	"log"
+
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	cronconfig "github.com/customeros/customeros/packages/runner/integrity-checker/cron/config"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"log"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Neo4j  commonConfig.Neo4jConfig
-	Logger logger.Config
-	Jaeger tracing.JaegerConfig
-	Cron   cronconfig.Config
+	Neo4j         commonConfig.Neo4jConfig
+	Logger        logger.Config
+	Jaeger        tracing.JaegerConfig
+	OpenTelemetry telemetry.OpenTelemetryConfig
+	Cron          cronconfig.Config
 
 	AWS struct {
 		Bucket                               string `env:"AWS_S3_BUCKET,required"`

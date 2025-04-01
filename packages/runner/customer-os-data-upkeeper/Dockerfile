@@ -8,7 +8,7 @@ RUN mkdir /app/packages/server
 COPY server/customer-os-common-module/. /app/packages/server/customer-os-common-module/
 COPY server/customer-os-neo4j-repository/. /app/packages/server/customer-os-neo4j-repository/
 COPY server/customer-os-postgres-repository/. /app/packages/server/customer-os-postgres-repository/
-COPY server/mailsherpa-api/. /app/packages/server/mailsherpa-api/
+COPY server /mailsherpa-api/. /app/packages/server/mailsherpa-api/
 COPY runner/customer-os-data-upkeeper/. /app/packages/runner/customer-os-data-upkeeper
 
 WORKDIR /app/packages/runner/customer-os-data-upkeeper
