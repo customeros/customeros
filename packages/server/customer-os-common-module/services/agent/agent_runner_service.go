@@ -180,7 +180,7 @@ func (a *agentRunnerService) processCapabilities(ctx context.Context, params exe
 		})
 		if !metrics.SkipPublishingObservability {
 			metrics.Status = status.String()
-			if err := a.pushObservabilityMetrics(ctx, metrics); err != nil {
+			if err = a.pushObservabilityMetrics(ctx, metrics); err != nil {
 				tracing.TraceErr(span, fmt.Errorf("failed to push metrics: %w", err))
 			}
 		}
