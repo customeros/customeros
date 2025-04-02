@@ -49,6 +49,9 @@ func ApiKeyCheckerHTTP(
 				return
 			}
 			spans.LogKV("result", "Valid app API key")
+			tenant := c.GetHeader(TenantHeader)
+			c.Set(KEY_TENANT_NAME, tenant)
+			c.Set(KEY_USER_ROLES, []string{"USER"})
 			spanFinished = true
 			spans.Finish()
 			c.Next()
