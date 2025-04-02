@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -231,20 +232,18 @@ func (r *authenticationWriteRepository) SetDefaultTenant(ctx context.Context, tx
 }
 
 func (r *authenticationWriteRepository) SetCurrentTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, currentTenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.SetCurrentTenant")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	span.LogKV("authUserId", authUserId)
-	span.LogKV("currentTenant", currentTenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationWriteRepository.SetCurrentTenant")
+	defer spans.Finish()
+	spans.LogKV("authUserId", authUserId)
+	spans.LogKV("currentTenant", currentTenant)
 
 	cypher := `MATCH (a:AuthenticationUser {id:$authUserId}) set a.currentTenant = $currentTenant`
 	params := map[string]any{
 		"authUserId":    authUserId,
 		"currentTenant": currentTenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogFields(log.String("cypher", cypher))
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -255,7 +254,7 @@ func (r *authenticationWriteRepository) SetCurrentTenant(ctx context.Context, tx
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return nil
