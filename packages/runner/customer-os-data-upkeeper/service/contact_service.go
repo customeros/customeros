@@ -14,7 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -23,8 +23,6 @@ import (
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/emailparser"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -86,16 +84,15 @@ func (s *contactService) UpkeepContacts() {
 }
 
 func (s *contactService) removeEmptySocials(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.removeEmptySocials")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.removeEmptySocials")
+	defer spans.Finish()
 
 	limit := 100
 	minutesSinceLastUpdate := 180
 
 	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting socials: %v", err)
 		return
 	}
@@ -113,42 +110,40 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 		})
 		err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(innerCtx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
 	}
 }
 
 func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.removeDuplicatedSocials")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.removeDuplicatedSocials")
+	defer spans.Finish()
 
 	limit := 100
 	minutesSinceLastUpdate := 5
 
 	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting socials: %v", err)
 		return
 	}
-	span.LogKV("result.count", len(records))
+	spans.LogKV("result.count", len(records))
 
 	// remove socials from contact
 	for _, record := range records {
 		err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
 	}
 }
 
 func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.hideContactsWithGroupOrSystemGeneratedEmail")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.hideContactsWithGroupOrSystemGeneratedEmail")
+	defer spans.Finish()
 
 	limit := 100
 
@@ -163,7 +158,7 @@ func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context
 
 		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithGroupOrSystemGeneratedEmail(ctx, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting contacts: %v", err)
 			return
 		}
@@ -183,7 +178,7 @@ func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context
 
 			err = s.commonServices.ContactService.HideContact(innerCtx, nil, record.ContactId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error hiding contact {%s}: %s", record.ContactId, err.Error())
 			}
 		}
@@ -199,9 +194,8 @@ func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context
 }
 
 func (s *contactService) checkContacts(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.checkContacts")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.checkContacts")
+	defer spans.Finish()
 
 	limit := 1000
 	minutesSinceLastUpdate := 30
@@ -209,7 +203,7 @@ func (s *contactService) checkContacts(ctx context.Context) {
 
 	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToCheck(ctx, minutesSinceLastUpdate, hoursSinceLastCheck, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting contacts: %v", err)
 		return
 	}
@@ -240,7 +234,7 @@ func (s *contactService) checkContacts(ctx context.Context) {
 		if saveContact {
 			_, err = s.commonServices.ContactService.Save(innerCtx, nil, &contactEntity.Id, contactFields, false)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
+				spans.TraceError(errors.Wrap(err, "ContactService.Save"))
 				s.log.Errorf("Error updating contact {%s}: %s", contactEntity.Id, err.Error())
 			}
 		}
@@ -248,7 +242,7 @@ func (s *contactService) checkContacts(ctx context.Context) {
 		// mark contact as checked
 		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyCheckedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error updating contact' checked at: %s", err.Error())
 		}
 	}
@@ -256,9 +250,8 @@ func (s *contactService) checkContacts(ctx context.Context) {
 }
 
 func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.updateContactNamesFromEmails")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.updateContactNamesFromEmails")
+	defer spans.Finish()
 
 	limit := 100
 
@@ -273,7 +266,7 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 
 		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmailForNameUpdate(ctx, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting contacts: %v", err)
 			return
 		}
@@ -293,7 +286,7 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 
 			parsedEmail, err := emailparser.Parse(record.FieldStr1)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error parsing email {%s}: %s", record.FieldStr1, err.Error())
 				continue
 			}
@@ -311,7 +304,7 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 			if saveContact {
 				_, err = s.commonServices.ContactService.Save(innerCtx, nil, &record.ContactId, contactFields, false)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
+					spans.TraceError(err)
 					s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
 				}
 			}
@@ -328,15 +321,14 @@ func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
 }
 
 func (s *contactService) setPrimaryJobRole(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.setPrimaryJobRole")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.setPrimaryJobRole")
+	defer spans.Finish()
 
 	limit := 500
 
 	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToSetPrimaryJobRole(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting contacts: %v", err)
 		return
 	}
@@ -349,7 +341,7 @@ func (s *contactService) setPrimaryJobRole(ctx context.Context) {
 		})
 		err = s.commonServices.ContactService.SetPrimaryJobRole(innerCtx, nil, record.ContactId, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			continue
 		}
 	}
@@ -396,17 +388,16 @@ type BetterContactResponseBody struct {
 }
 
 func (s *contactService) askForLinkedInConnections(c context.Context) {
-	span, ctx := tracing.StartTracerSpan(c, "ContactService.askForLinkedInConnections")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(c, "ContactService.askForLinkedInConnections")
+	defer spans.Finish()
 
 	linkedinTokens, err := s.commonServices.PostgresRepositories.BrowserConfigRepository.Get(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
-	span.LogFields(log.Int("linkedinTokens", len(linkedinTokens)))
+	spans.LogKV("linkedinTokens", len(linkedinTokens))
 
 	for _, linkedinToken := range linkedinTokens {
 		// todo check if there is already a scheduled job for this token today
@@ -419,7 +410,7 @@ func (s *contactService) askForLinkedInConnections(c context.Context) {
 			Payload:         "\"\"",
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			break
 		}
 	}
@@ -428,17 +419,17 @@ func (s *contactService) askForLinkedInConnections(c context.Context) {
 func (s *contactService) ProcessLinkedInConnections() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.ProcessLinkedInConnections")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.ProcessLinkedInConnections")
+	defer spans.Finish()
 
 	automationsRuns, err := s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.Get(ctx, "FIND_CONNECTIONS", "COMPLETED")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
-	span.LogFields(log.Int("processing", len(automationsRuns)))
+	spans.LogKV("processing", len(automationsRuns))
 
 	for _, automationRun := range automationsRuns {
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{
@@ -450,28 +441,27 @@ func (s *contactService) ProcessLinkedInConnections() {
 }
 
 func (s *contactService) processAutomationRunResult(ctx context.Context, automationRun postgresentity.BrowserAutomationsRun) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.processAutomationRunResult")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.processAutomationRunResult")
+	defer spans.Finish()
 
 	result, err := s.commonServices.PostgresRepositories.BrowserAutomationRunResultRepository.Get(ctx, automationRun.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
 	if result == nil || result.ResultData == "" {
-		span.LogFields(log.String("results", "empty"))
+		spans.LogKV("results", "empty")
 		return
 	}
 
 	useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, automationRun.Tenant, automationRun.UserId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "UserReadRepository.GetUserById"))
+		spans.TraceError(err)
 		return
 	}
 	if useByEmailNode == nil {
-		tracing.TraceErr(span, errors.Wrap(err, "User does not exist"))
+		spans.TraceError(errors.Wrap(err, "User does not exist"))
 		return
 	}
 
@@ -485,11 +475,11 @@ func (s *contactService) processAutomationRunResult(ctx context.Context, automat
 
 	err = json.Unmarshal([]byte(result.ResultData), &results)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
-	span.LogFields(log.Int("results", len(results)))
+	spans.LogKV("results.count", len(results))
 
 	tenant := automationRun.Tenant
 	userId := automationRun.UserId
@@ -497,7 +487,7 @@ func (s *contactService) processAutomationRunResult(ctx context.Context, automat
 	for _, linkedinUrl := range results {
 		err := s.processLinkedInUrl(ctx, tenant, linkedinUrl, userId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -505,15 +495,14 @@ func (s *contactService) processAutomationRunResult(ctx context.Context, automat
 
 	err = s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.MarkAsProcessed(ctx, automationRun.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 }
 
 func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedinUrl, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.processLinkedInUrl")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.processLinkedInUrl")
+	defer spans.Finish()
 
 	linkedinProfileUrl := linkedinUrl
 	if linkedinProfileUrl != "" && linkedinProfileUrl[len(linkedinProfileUrl)-1] != '/' {
@@ -524,7 +513,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContactsWithSocialUrl"))
+		spans.TraceError(errors.Wrap(err, "ContactReadRepository.GetContactsWithSocialUrl"))
 		return err
 	}
 
@@ -532,7 +521,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 	if len(contactsWithLinkedin) == 0 {
 		contactId, _, err := s.commonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedinProfileUrl)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		contactIds = append(contactIds, contactId)
@@ -549,7 +538,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 			isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, model.CONNECTED_WITH.String(), userId, model.USER)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
+				spans.TraceError(errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
 				return err
 			}
 
@@ -562,7 +551,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 					ToEntityType:   model.USER,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.Link"))
+					spans.TraceError(errors.Wrap(err, "CommonWriteRepository.Link"))
 					return err
 				}
 			}
@@ -571,7 +560,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 	pendingLinkedinRequests, err := s.commonServices.Neo4jRepositories.LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl(ctx, nil, tenant, userId, linkedinProfileUrl)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl"))
+		spans.TraceError(errors.Wrap(err, "LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl"))
 		return err
 	}
 
@@ -579,7 +568,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 		for _, cid := range contactIds {
 			flowActionExecutions, err := s.commonServices.FlowExecutionService.GetFlowActionExecutionsForParticipantWithActionType(ctx, cid, model.CONTACT, neo4jentity.FlowActionTypeLinkedinConnectionRequest)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "FlowService.FlowGetByParticipant"))
+				spans.TraceError(errors.Wrap(err, "FlowService.FlowGetByParticipant"))
 				return err
 			}
 
@@ -605,7 +594,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 						return nil, nil
 					})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "ExecuteWriteInTransaction"))
+						spans.TraceError(errors.Wrap(err, "ExecuteWriteInTransaction"))
 						return err
 					}
 				}
@@ -617,20 +606,19 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 }
 
 func (s *contactService) linkOrphanContactsToOrganizationBasedOnLinkedin(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBasedOnLinkedin")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBasedOnLinkedin")
+	defer spans.Finish()
 
 	limit := 200
 	delayFromPreviousAttemptDays := 14
 
 	orphanContacts, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization(ctx, delayFromPreviousAttemptDays, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
-	span.LogFields(log.Int("orphanContactsCount", len(orphanContacts)))
+	spans.LogKV("orphanContactsCount", len(orphanContacts))
 
 	for _, orphanContact := range orphanContacts {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
@@ -642,21 +630,20 @@ func (s *contactService) linkOrphanContactsToOrganizationBasedOnLinkedin(ctx con
 }
 
 func (s *contactService) processLinkOrphanContactToOrganizationBasedOnLinkedin(ctx context.Context, record neo4jrepository.TenantAndContactIdAndParams) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.processLinkOrphanContactToOrganizationBasedOnLinkedin")
-	defer span.Finish()
-	tracing.TagTenant(span, record.Tenant)
-	tracing.TagEntity(span, record.ContactId)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.processLinkOrphanContactToOrganizationBasedOnLinkedin")
+	defer spans.Finish()
+	spans.TagEntity(record.ContactId)
 
 	// Mark contact with link requested
 	err := s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyLinkWithOrgRequestedAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
 	scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, record.FieldStr1, postgresentity.ScrapInFlowPersonProfile)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
+		spans.TraceError(errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
 		return
 	}
 
@@ -665,7 +652,7 @@ func (s *contactService) processLinkOrphanContactToOrganizationBasedOnLinkedin(c
 		var scrapinContactResponse postgresentity.ScrapInResponseBody
 		err := json.Unmarshal([]byte(scrapIn.Data), &scrapinContactResponse)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
+			spans.TraceError(errors.Wrap(err, "json.Unmarshal"))
 			return
 		}
 
@@ -676,9 +663,7 @@ func (s *contactService) processLinkOrphanContactToOrganizationBasedOnLinkedin(c
 
 		organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, record.Tenant, domain)
 		if err != nil {
-			// TODO uncomment when data is fixed in DB
-			// tracing.TraceErr(innerSpan, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
-			// return
+			spans.TraceError(errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
 			return
 		}
 
@@ -698,7 +683,7 @@ func (s *contactService) processLinkOrphanContactToOrganizationBasedOnLinkedin(c
 			err = s.commonServices.ContactService.LinkContactWithOrganization(ctx, nil, record.ContactId, organizationId, positionName, "",
 				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}
 	}
@@ -708,15 +693,14 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.EnrichWithWorkEmailFromBetterContact")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.EnrichWithWorkEmailFromBetterContact")
+	defer spans.Finish()
 
 	limit := 250
 
 	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -730,26 +714,26 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		// mark contact with update requested
 		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyUpdateWithWorkEmailRequestedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
 		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(innerCtx, record.FieldStr1)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		if detailsBetterContact == nil {
-			tracing.TraceErr(span, errors.New("better contact details by request id not found"))
+			spans.TraceError(errors.New("better contact details by request id not found"))
 
 			detailsBetterContact, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(innerCtx, record.FieldStr1)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
 			if detailsBetterContact == nil {
-				tracing.TraceErr(span, errors.New("better contact details by id not found"))
+				spans.TraceError(errors.New("better contact details by id not found"))
 				continue
 			}
 		}
@@ -760,7 +744,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 
 		var betterContactResponse postgresentity.BetterContactResponseBody
 		if err = json.Unmarshal([]byte(detailsBetterContact.Response), &betterContactResponse); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -768,7 +752,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		var currentEmails []string
 		emailDbNodes, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(innerCtx, record.Tenant, model.CONTACT, []string{record.ContactId})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		for _, emailDbNode := range emailDbNodes {
 			emailEntity := neo4jmapper.MapDbNodeToEmailEntity(emailDbNode.Node)
@@ -781,7 +765,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		var currentPhones []string
 		phoneDbNodes, err := s.commonServices.Neo4jRepositories.PhoneNumberReadRepository.GetAllForLinkedEntityIds(innerCtx, record.Tenant, model.CONTACT, []string{record.ContactId})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		for _, phoneDbNode := range phoneDbNodes {
 			phoneEntity := neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneDbNode.Node)
@@ -810,7 +794,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 							Id:   record.ContactId,
 						})
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						continue
 					}
 					emailLinked = true
@@ -826,13 +810,13 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 
 						phoneNumberId, err := s.commonServices.PhoneNumberService.Merge(innerCtx, phoneNumber, neo4jentity.DataSourceOpenline)
 						if err != nil {
-							tracing.TraceErr(span, err)
+							spans.TraceError(err)
 							continue
 						}
 
 						err = s.commonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(innerCtx, record.Tenant, record.ContactId, phoneNumberId, "WORK", false)
 						if err != nil {
-							tracing.TraceErr(span, err)
+							spans.TraceError(err)
 							s.log.Errorf("Error from events processing %s", err.Error())
 							continue
 						}
@@ -853,7 +837,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				},
 			)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+				spans.TraceError(errors.Wrap(err, "failed to store billable event"))
 			}
 		}
 		if phoneLinked {
@@ -864,24 +848,24 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				},
 			)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+				spans.TraceError(errors.Wrap(err, "failed to store billable event"))
 			}
 		}
 
 		// mark contact enrich fields for email
 		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		if emailLinked {
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		} else {
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}
 
@@ -889,17 +873,17 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 		if detailsBetterContact.EnrichPhoneNumber {
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt), utils.NowPtr())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			if phoneLinked {
 				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 				}
 			} else {
 				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 				}
 			}
 		}
@@ -908,21 +892,20 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 }
 
 func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.checkBetterContactRequestsWithoutResponse")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.checkBetterContactRequestsWithoutResponse")
+	defer spans.Finish()
 
 	// validate bettercontact is configured
 	if s.cfg.Common.External.BetterContactConfig.ApiKey == "" || s.cfg.Common.External.BetterContactConfig.Url == "" {
 		err := errors.New("bettercontact is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("BetterContact is not configured")
 		return
 	}
 
 	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx, 50)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -934,7 +917,7 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		// Create POST request
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s?api_key=%s", s.cfg.Common.External.BetterContactConfig.Url+"/"+record.RequestID, s.cfg.Common.External.BetterContactConfig.ApiKey), nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -944,14 +927,14 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		// Perform the request
 		resp, err := client.Do(req)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 		defer resp.Body.Close()
 
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -962,21 +945,21 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		// Parse the JSON request body
 		var betterContactResponse postgresentity.BetterContactResponseBody
 		if err = json.Unmarshal(responseBody, &betterContactResponse); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		if betterContactResponse.Status == "terminated" {
 			err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, record.RequestID, string(responseBody))
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 			// store billable events
 			// first check if it was requested externally
 			personEnrichmentRequest, err := s.commonServices.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetByBettercontactRecordId(ctx, betterContactResponse.Id)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to check if bettercontact record was requested from person enrichment"))
+				spans.TraceError(errors.Wrap(err, "failed to check if bettercontact record was requested from person enrichment"))
 			} else if personEnrichmentRequest != nil {
 				emailFound, phoneFound := false, false
 				for _, item := range betterContactResponse.Data {
@@ -994,7 +977,7 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 							ReferenceData: "generated in upkeeper",
 						})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+						spans.TraceError(errors.Wrap(err, "failed to store billable event"))
 					}
 				}
 				if phoneFound {
@@ -1004,7 +987,7 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 							ReferenceData: "generated in upkeeper",
 						})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+						spans.TraceError(errors.Wrap(err, "failed to store billable event"))
 					}
 				}
 			}
@@ -1020,69 +1003,53 @@ func (s *contactService) EnrichContacts() {
 }
 
 func (s *contactService) enrichContacts(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichContacts")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContactService.enrichContacts")
+	defer spans.Finish()
 
 	limit := 20
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		minutesFromLastContactUpdate := 3
-		minutesFromLastContactEnrichAttempt := 1 * 24 * 60 // 1 day
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrich(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting socials: %v", err)
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		for _, record := range records {
-			// create new context from main one with custom context
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RequestEnrichContact"))
-				s.log.Errorf("Error requesting enrich contact {%s}: %s", record.ContactId, err.Error())
-			}
-
-			// mark contact with enrich requested
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())
-			}
-
-			// increment enrich attempts
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichAttempts))
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
+	minutesFromLastContactUpdate := 3
+	minutesFromLastContactEnrichAttempt := 1 * 24 * 60 // 1 day
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrich(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, limit)
+	if err != nil {
+		spans.TraceError(err)
+		s.log.Errorf("Error getting socials: %v", err)
 		return
 	}
+
+	spans.LogKV("records.count", len(records))
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	for _, record := range records {
+		// create new context from main one with custom context
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
+		if err != nil {
+			spans.TraceError(errors.Wrap(err, "unable to publish message RequestEnrichContact"))
+			s.log.Errorf("Error requesting enrich contact {%s}: %s", record.ContactId, err.Error())
+		}
+
+		// mark contact with enrich requested
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
+		if err != nil {
+			spans.TraceError(err)
+			s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())
+		}
+
+		// increment enrich attempts
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichAttempts))
+		if err != nil {
+			spans.TraceError(err)
+			s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
+		}
+	}
+
 }

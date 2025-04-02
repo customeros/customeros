@@ -5,7 +5,7 @@ import (
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 type TaskService interface {
@@ -28,9 +28,8 @@ func (s *taskService) DeleteArchivedTasks() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "TaskService.DeleteArchivedTasks")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "TaskService.DeleteArchivedTasks")
+	defer spans.Finish()
 
 	delitionDelayDays := 30
 
@@ -41,14 +40,14 @@ func (s *taskService) DeleteArchivedTasks() {
 		return
 	}
 
-	span.LogKV("taskIds.count", len(taskIds))
-	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+	spans.LogKV("taskIds.count", len(taskIds))
+	spans.LogObjectAsJson("taskIds", taskIds)
 	s.log.Infof("Deleting %d archived tasks: %v", len(taskIds), taskIds)
 
 	// Delete tasks
 	err = s.commonServices.Neo4jRepositories.TaskWriteRepository.PermanentDeleteHiddenTasks(ctx, nil, taskIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Error deleting tasks", "error", err)
 		return
 	}

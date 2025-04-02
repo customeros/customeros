@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -12,7 +11,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -66,9 +64,8 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateNextPreviewInvoices")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.GenerateNextPreviewInvoices")
+	defer spans.Finish()
 
 	referenceTime := utils.Now()
 	delayFromPreviousScheduleInvoiceRun := 15
@@ -77,7 +74,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 	// Get all agents for cashflow guardian
 	agents, err := s.repositories.PostgresRepositories.AgentRepository.GetAllAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentCashflowGuardian})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -97,7 +94,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 
 		contractRecords, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, referenceTime, delayFromPreviousScheduleInvoiceRun, limit)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error getting contracts for preview invoicing"))
+			spans.TraceError(errors.Wrap(err, "Error getting contracts for preview invoicing"))
 			s.log.Errorf("Error getting contracts for preview invoicing: %v", err)
 			return
 		}
@@ -114,16 +111,15 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 					Tenant:    record.Tenant,
 					AppSource: constants.AppSourceDataUpkeeper,
 				})
-				recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateNextPreviewInvoices.Record")
-				defer recordSpan.Finish()
-				tracing.TagTenant(recordSpan, record.Tenant)
+				recordSpans, innerCtx := telemetry.StartCronSpan(innerCtx, "InvoiceService.GenerateNextPreviewInvoices.Record")
+				defer recordSpans.Finish()
 
 				contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 
 				// mark next preview invoice requested
 				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkNextPreviewInvoicingRequested(innerCtx, record.Tenant, contract.Id, utils.Now())
 				if err != nil {
-					tracing.TraceErr(span, err)
+					recordSpans.TraceError(err)
 					s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 					return
 				}
@@ -161,31 +157,12 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 				}
 				_, err = s.commonServices.InvoiceService.InvoiceContract(innerCtx, nil, contract.Id, dataFields)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error generating preview invoice"))
+					recordSpans.TraceError(errors.Wrap(err, "Error generating preview invoice"))
 					s.log.Errorf("Error generating preview invoice for contract %s: %s", contract.Id, err.Error())
 				}
 			}(record)
 		}
 	}
-}
-
-func (s *invoiceService) calculateInvoiceCycleEnd(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
-	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
-	if start.Day() == 1 {
-		// if previous invoice was generated end of month, we need to substract extra 1 day
-		previousCycleInvoiceDbNode, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
-		if err != nil {
-			tracing.TraceErr(nil, errors.Wrap(err, "Error getting previous cycle invoice"))
-		}
-		if previousCycleInvoiceDbNode != nil {
-			previousInvoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
-			if previousInvoice.PeriodStartDate.Day() != 1 {
-				nextStart = nextStart.AddDate(0, -1, 0)
-				nextStart = time.Date(nextStart.Year(), nextStart.Month(), previousInvoice.PeriodStartDate.Day(), 0, 0, 0, 0, nextStart.Location())
-			}
-		}
-	}
-	return nextStart.AddDate(0, 0, -1)
 }
 
 func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant string, cachedTenantBaseCurrencies map[string]neo4jenum.Currency) neo4jenum.Currency {
@@ -207,9 +184,8 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel() // Cancel context on exit
 
-	//span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
-	//defer span.Finish()
-	//tracing.TagComponentCronJob(span)
+	//spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
+	//defer spans.Finish()
 	//
 	//if s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled == false {
 	//	s.log.Infof("Off-cycle invoicing is disabled, stopping")
@@ -219,7 +195,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	//
 	//if s.eventsProcessingClient == nil {
 	//	err := errors.New("eventsProcessingClient is nil")
-	//	tracing.TraceErr(span, err)
+	//	spans.TraceError(err)
 	//	s.log.Error(err.Error())
 	//	return
 	//}
@@ -241,7 +217,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	//
 	//	records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.App.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes, limit)
 	//	if err != nil {
-	//		tracing.TraceErr(span, err)
+	//		spans.TraceError(err)
 	//		s.log.Errorf("Error getting contracts for off-cycle invoicing: %v", err)
 	//		return
 	//	}
@@ -283,14 +259,14 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	//				return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
 	//			})
 	//			if err != nil {
-	//				tracing.TraceErr(span, err)
+	//				spans.TraceError(err)
 	//				s.log.Errorf("Error generating off-cycle invoice for contract %s: %s", contract.Id, err.Error())
 	//			}
 	//		}
 	//		// mark invoicing started
 	//		err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkOffCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
 	//		if err != nil {
-	//			tracing.TraceErr(span, err)
+	//			spans.TraceError(err)
 	//			s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 	//		}
 	//	}
@@ -306,9 +282,8 @@ func (s *invoiceService) CleanupInvoices() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.CleanupInvoices")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.CleanupInvoices")
+	defer spans.Finish()
 
 	for {
 		select {
@@ -321,7 +296,7 @@ func (s *invoiceService) CleanupInvoices() {
 
 		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredDryRunInvoices(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting invoices for cleanup: %v", err)
 			return
 		}
@@ -338,7 +313,7 @@ func (s *invoiceService) CleanupInvoices() {
 
 			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteDryRunInvoice(ctx, tenant, invoice.Id)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
 			}
 		}
@@ -429,14 +404,13 @@ func (s *invoiceService) updateInvoiceStatusToOverdue() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusToOverdue")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.updateInvoiceStatusToOverdue")
+	defer spans.Finish()
 
 	limit := 500
 	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOverdue(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting invoices for overdue: %v", err)
 		return
 	}
@@ -455,7 +429,7 @@ func (s *invoiceService) updateInvoiceStatusToOverdue() {
 			UpdateStatus: true,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error updating invoice %s to overdue: %s", invoice.Id, err.Error())
 			return // stop processing
 		}
@@ -466,15 +440,14 @@ func (s *invoiceService) updateInvoiceStatusToOnHold() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusToOnHold")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.updateInvoiceStatusToOnHold")
+	defer spans.Finish()
 
 	limit := 500
 
 	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForOnHold(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting invoices for on hold: %v", err)
 		return
 	}
@@ -493,7 +466,7 @@ func (s *invoiceService) updateInvoiceStatusToOnHold() {
 			UpdateStatus: true,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error updating invoice %s to on hold: %s", invoice.Id, err.Error())
 			return // stop processing
 		}
@@ -504,14 +477,13 @@ func (s *invoiceService) updateInvoiceStatusScheduled() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusScheduled")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.updateInvoiceStatusScheduled")
+	defer spans.Finish()
 
 	limit := 500
 	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForScheduled(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting invoices for scheduled: %v", err)
 		return
 	}
@@ -530,7 +502,7 @@ func (s *invoiceService) updateInvoiceStatusScheduled() {
 			UpdateStatus: true,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error updating invoice %s to scheduled: %s", invoice.Id, err.Error())
 			return // stop processing
 		}
@@ -541,15 +513,14 @@ func (s *invoiceService) updateInvoiceStatusFromPaymentProcessingToDue() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.updateInvoiceStatusFromPaymentProcessingToDue")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.updateInvoiceStatusFromPaymentProcessingToDue")
+	defer spans.Finish()
 
 	limit := 500
 	paymentProcessingMaxDays := 8
 	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredPaymentProcessingInvoices(ctx, paymentProcessingMaxDays, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting invoices for overdue: %v", err)
 		return
 	}
@@ -568,7 +539,7 @@ func (s *invoiceService) updateInvoiceStatusFromPaymentProcessingToDue() {
 			UpdateStatus: true,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error updating invoice %s to due: %s", invoice.Id, err.Error())
 			return // stop processing
 		}

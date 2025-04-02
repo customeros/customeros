@@ -412,6 +412,18 @@ func (s *Spans) TagEntity(entityId string) {
 	}
 }
 
+func (s *Spans) TagTenant(tenant string) {
+	if s == nil || tenant == "" {
+		return
+	}
+	if s.Jaeger != nil {
+		tracing.TagTenant(s.Jaeger, tenant)
+	}
+	if s.OTel != nil {
+		s.OTel.SetAttributes(attribute.String("tenant", tenant))
+	}
+}
+
 // Logging Methods
 func (s *Spans) LogFields(fields ...log.Field) {
 	if s == nil {
