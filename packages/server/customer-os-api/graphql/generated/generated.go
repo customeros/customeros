@@ -13681,7 +13681,7 @@ extend type Mutation {
     admin_addWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
     admin_removeWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 
-    admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+    admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER, IMPERSONATED]) @hasTenant
     admin_tenant_AddDomainAsWorkspace(domain: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
     admin_tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
@@ -63380,7 +63380,7 @@ func (ec *executionContext) _Mutation_admin_switchCurrentWorkspace(ctx context.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER", "IMPERSONATED"})
 			if err != nil {
 				var zeroVal bool
 				return zeroVal, err
