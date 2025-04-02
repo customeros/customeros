@@ -5,11 +5,12 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -236,6 +237,12 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 			orgByInvoiceId[org.DataloaderKey] = org
 		}
 
+		// Create a map of invoice ID to invoice for quick lookup
+		invoiceByInvoiceId := make(map[string]neo4jentity.InvoiceEntity)
+		for _, invoice := range *upcomingInvoices {
+			invoiceByInvoiceId[invoice.Id] = invoice
+		}
+
 		// Create CSV records
 		csvRecords := make([][]string, 0)
 		csvRecords = append(csvRecords, invoiceCsvHeaders)
@@ -243,18 +250,16 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 		// Convert invoice lines to CSV records
 		for _, line := range *invoiceLines {
 			// Get the invoice for this line
-			var invoice neo4jentity.InvoiceEntity
-			for _, inv := range *upcomingInvoices {
-				if inv.Id == line.ServiceLineItemId {
-					invoice = inv
-					break
-				}
+			invoice, exists := invoiceByInvoiceId[line.DataloaderKey]
+			if !exists {
+				tracing.TraceErr(span, errors.Errorf("expected invoice not found for line %s", line.Id))
+				continue
 			}
 
 			// Get the organization for this invoice
 			org, exists := orgByInvoiceId[invoice.Id]
 			if !exists {
-				tracing.TraceErr(span, errors.Errorf("organization not found for invoice %s", invoice.Id))
+				tracing.TraceErr(span, errors.Errorf("expected organization not found for invoice %s", invoice.Id))
 				continue
 			}
 
