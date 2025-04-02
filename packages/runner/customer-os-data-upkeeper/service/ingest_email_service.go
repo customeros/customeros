@@ -13,7 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"sync"
@@ -42,11 +42,11 @@ func NewIngestEmailService(cfg *config.Config, log logger.Logger, commonServices
 func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailImportStatePeriod) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-	span, ctx := tracing.StartTracerSpan(ctx, "IngestEmailService.SyncEmailsInState")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
 
-	span.LogKV("state", state)
+	spans, ctx := telemetry.StartCronSpan(ctx, "IngestEmailService.SyncEmailsInState")
+	defer spans.Finish()
+
+	spans.LogKV("state", state)
 
 	runImportFor := []map[string]interface{}{}
 
@@ -54,7 +54,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 
 	agents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypesCrossTenant(ctx, []commonenum.AgentType{commonenum.AgentEmailKeeper})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 			var listenerConfig agent_listeners.NewEmailConfig
 			err := json.Unmarshal(listener.Config, &listenerConfig)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				continue
 			}
 
@@ -87,7 +87,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 
 				oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, agent.Tenant, provider, emailAddress)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
@@ -124,7 +124,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 
 			oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, provider, email)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
@@ -138,18 +138,18 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 func (s *ingestEmailService) SendIngestedEmailsToAgents() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-	span, ctx := tracing.StartTracerSpan(ctx, "IngestEmailService.SendIngestedEmailsToAgents")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+
+	spans, ctx := telemetry.StartCronSpan(ctx, "IngestEmailService.SendIngestedEmailsToAgents")
+	defer spans.Finish()
 
 	distinctUsersForImport, err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.GetDistinctUsersForPendingMessages(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
 	if len(distinctUsersForImport) == 0 {
-		span.LogKV("result", "no distinct users for import with pending messages")
+		spans.LogKV("result", "no distinct users for import with pending messages")
 		return
 	}
 
@@ -166,56 +166,55 @@ func (s *ingestEmailService) SendIngestedEmailsToAgents() {
 			// Check if agent is enabled to process message
 			agentListener, err := s.commonServices.AgentService.GetListener(dto.NewEmail{}.ListenerEvent())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 			agentTypes := agentListener.ExecutingAgents()
 			agents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(localCtx, agentTypes)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 			if len(agents) == 0 {
-				span.LogKV("message", "no active agents found for tenant: %s", distinctUser.Tenant)
+				spans.LogKV("message", "no active agents found for tenant: %s", distinctUser.Tenant)
 				return
 			}
 
 			ingestEmailMessages, err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.GetEmailsForUserForSync(ctx, distinctUser.Tenant, distinctUser.Username)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
 			for _, ingestEmailMessage := range ingestEmailMessages {
 				err = s.commonServices.Events.Publisher.PublishFanoutEvent(localCtx, ingestEmailMessage.Id, model.INGEST_EMAIL_MESSAGE, dto.NewEmail{})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 				err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.UpdateState(localCtx, ingestEmailMessage.Id, postgresEntity.IngestEmailMessageStateSentToAgent)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 			}
 
-			span.LogKV("message", "sent emails to agents for user: %s in tenant: %s", distinctUser.Tenant, distinctUser.Username)
+			spans.LogKV("message", "sent emails to agents for user: %s in tenant: %s", distinctUser.Tenant, distinctUser.Username)
 		}(dt)
 	}
 
 	wg.Wait()
-	span.LogKV("message", "sent emails to agents for all users")
+	spans.LogKV("message", "sent emails to agents for all users")
 }
 
 func (s *ingestEmailService) syncEmailsForEmailAddress(ctx context.Context, authTokenEntity *postgresEntity.OAuthTokenEntity, state postgresEntity.IngestEmailImportStatePeriod) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailService.syncEmailsForEmailAddress - "+authTokenEntity.TenantName+" - "+authTokenEntity.EmailAddress)
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "IngestEmailService.syncEmailsForEmailAddress - "+authTokenEntity.TenantName+" - "+authTokenEntity.EmailAddress)
+	defer spans.Finish()
 
 	if authTokenEntity == nil {
-		span.LogKV("message", "no oauth token found for tenant: %s and username: %s", authTokenEntity.TenantName, authTokenEntity.EmailAddress)
+		spans.LogKV("message", "no oauth token found for tenant: %s and username: %s", authTokenEntity.TenantName, authTokenEntity.EmailAddress)
 		return
 	}
 
@@ -231,30 +230,30 @@ func (s *ingestEmailService) syncEmailsForEmailAddress(ctx context.Context, auth
 
 		emailImportStateLastWeek, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_WEEK)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		if emailImportStateLastWeek == nil {
-			span.LogKV("message", "no gmail import state found for tenant: %s and username: %s", tenant, email)
+			spans.LogKV("message", "no gmail import state found for tenant: %s and username: %s", tenant, email)
 			return
 		}
 
 		if emailImportStateLastWeek.Active == true {
-			span.LogKV("message", "gmail import state for tenant: %s and username: %s is active for last week. skipping real time import", tenant, email)
+			spans.LogKV("message", "gmail import state for tenant: %s and username: %s is active for last week. skipping real time import", tenant, email)
 			return
 		}
 
 		emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		if emailImportState.Active == false {
 			importedEmails, err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.CountForUsername(ctx, tenant, email, provider)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
@@ -262,56 +261,56 @@ func (s *ingestEmailService) syncEmailsForEmailAddress(ctx context.Context, auth
 			if importedEmails > 100 {
 				err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.ActivateEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 				emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 			} else {
 
 				lastWeek, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_WEEK)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 				last3Months, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_3_MONTHS)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 				lastYear, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_YEAR)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 				olderThanOneYear, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.OLDER_THAN_ONE_YEAR)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return
 				}
 
 				if lastWeek.Active == false && last3Months.Active == false && lastYear.Active == false && olderThanOneYear.Active == false {
 					err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.ActivateEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return
 					}
 
 					emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return
 					}
 				}
 
-				span.LogKV("message", "gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant, email)
+				spans.LogKV("message", "gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant, email)
 				return
 			}
 		}
@@ -319,31 +318,31 @@ func (s *ingestEmailService) syncEmailsForEmailAddress(ctx context.Context, auth
 
 		err := s.initializeEmailImportState(ctx, authTokenEntity)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		emailImportState, err = s.getHistoryImportState(ctx, authTokenEntity, postgresEntity.LAST_WEEK)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 		if emailImportState == nil {
-			span.LogKV("message", "no gmail import state found for tenant: %s and username: %s", tenant, email)
+			spans.LogKV("message", "no gmail import state found for tenant: %s and username: %s", tenant, email)
 			return
 		}
 	}
 
 	emailImportState, err := s.syncEmailsForState(ctx, emailImportState)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
 	if state == postgresEntity.HISTORY && emailImportState.Cursor == "" {
 		err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.DeactivateEmailImportState(ctx, tenant, provider, email, emailImportState.Period)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 	}
@@ -351,9 +350,8 @@ func (s *ingestEmailService) syncEmailsForEmailAddress(ctx context.Context, auth
 }
 
 func (s *ingestEmailService) getHistoryImportState(ctx context.Context, authTokenEntity *postgresEntity.OAuthTokenEntity, state postgresEntity.IngestEmailImportStatePeriod) (*postgresEntity.IngestEmailImportState, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailService.getHistoryImportState")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "IngestEmailService.getHistoryImportState")
+	defer spans.Finish()
 
 	tenant := authTokenEntity.TenantName
 	provider := authTokenEntity.Provider
@@ -361,12 +359,12 @@ func (s *ingestEmailService) getHistoryImportState(ctx context.Context, authToke
 
 	emailImportState, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, username, state)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if emailImportState == nil {
 		err := fmt.Errorf("failed to get gmail import state for tenant: %s and username: %s and week: %s", tenant, username, state)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -402,9 +400,8 @@ func (s *ingestEmailService) getNextEmailImportState(state postgresEntity.Ingest
 }
 
 func (s *ingestEmailService) initializeEmailImportState(ctx context.Context, authTokenEntity *postgresEntity.OAuthTokenEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailService.initializeEmailImportState")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "IngestEmailService.initializeEmailImportState")
+	defer spans.Finish()
 
 	now := time.Now()
 	tenant := authTokenEntity.TenantName
@@ -413,69 +410,69 @@ func (s *ingestEmailService) initializeEmailImportState(ctx context.Context, aut
 
 	emailImportState, err := s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if emailImportState == nil {
 		_, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.CreateEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME, nil, nil, false, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_WEEK)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(0, 0, -7)
 		_, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.CreateEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_WEEK, &now, &stop, true, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_3_MONTHS)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(0, -3, 0)
 		_, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.CreateEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_3_MONTHS, &now, &stop, true, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_YEAR)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(-1, 0, 0)
 		_, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.CreateEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_YEAR, &now, &stop, true, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	emailImportState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.OLDER_THAN_ONE_YEAR)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(-50, 0, 0)
 		_, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.CreateEmailImportState(ctx, tenant, provider, email, postgresEntity.OLDER_THAN_ONE_YEAR, &now, &stop, true, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -484,9 +481,8 @@ func (s *ingestEmailService) initializeEmailImportState(ctx context.Context, aut
 }
 
 func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState *postgresEntity.IngestEmailImportState) (*postgresEntity.IngestEmailImportState, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailService.syncEmailsForState")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "IngestEmailService.syncEmailsForState")
+	defer spans.Finish()
 
 	batchSize := int64(100)
 	countEmailsExists := int64(0)
@@ -498,13 +494,13 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 	if importState.Provider == commonenum.SourceGmail.String() {
 		rawEmails, next, err = s.commonServices.GoogleService.ReadEmails(ctx, batchSize, importState)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	} else if importState.Provider == commonenum.SourceOutlook.String() {
 		rawEmails, next, err = s.commonServices.AzureService.ReadEmailsFromAzureAd(ctx, importState)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -513,6 +509,7 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 
 		emailExists, err := s.commonServices.PostgresRepositories.IngestEmailMessageRepository.EmailExistsByMessageId(ctx, importState.Tenant, importState.Username, importState.Provider, emailRawData.MessageId)
 		if err != nil {
+			spans.TraceError(err)
 			return nil, fmt.Errorf("unable to check if email exists: %v", err)
 		}
 
@@ -527,7 +524,7 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 				if countEmailsExists >= batchSize {
 					importState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.UpdateEmailImportState(ctx, importState.Tenant, importState.Provider, importState.Username, importState.Period, "")
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, err
 					}
 					return importState, nil
@@ -540,7 +537,7 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 			if emailRawData.Sent != zeroTime && importState.StopDate != nil && emailRawData.Sent.Before(*importState.StopDate) {
 				importState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.UpdateEmailImportState(ctx, importState.Tenant, importState.Provider, importState.Username, importState.Period, "")
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, err
 				}
 				return importState, nil
@@ -550,7 +547,7 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 
 		headersString, err := JSONMarshal(emailRawData.Headers)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -582,14 +579,14 @@ func (s *ingestEmailService) syncEmailsForState(ctx context.Context, importState
 
 		err = s.commonServices.PostgresRepositories.IngestEmailMessageRepository.Store(ctx, importState.Tenant, importState.Username, importState.Provider, emailRawData.MessageId, &ingestEmailMessage)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
 
 	importState, err = s.commonServices.PostgresRepositories.IngestEmailImportStateRepository.UpdateEmailImportState(ctx, importState.Tenant, importState.Provider, importState.Username, importState.Period, next)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

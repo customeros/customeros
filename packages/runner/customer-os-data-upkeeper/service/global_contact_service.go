@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go/log"
-
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -17,10 +15,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	service_verify "github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -45,9 +42,8 @@ func NewGlobalContactService(cfg *config.Config, log logger.Logger, commonServic
 }
 
 func (s *globalContactService) findPrimaryDomainFromGlobalOrg(ctx context.Context, linkedInUrl string, linkedInId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.findPrimaryDomainFromGlobalOrg")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.findPrimaryDomainFromGlobalOrg")
+	defer spans.Finish()
 
 	var org *postgresentity.GlobalOrganization
 	var err error
@@ -58,7 +54,7 @@ func (s *globalContactService) findPrimaryDomainFromGlobalOrg(ctx context.Contex
 		linkedInUrl = strings.TrimSuffix(linkedInUrl, "/")
 		org, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByLinkedInUrl(ctx, linkedInUrl)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting organization by LinkedIn URL"))
+			spans.TraceError(errors.Wrap(err, "error getting organization by LinkedIn URL"))
 			return "", err
 		}
 		if org != nil {
@@ -71,7 +67,7 @@ func (s *globalContactService) findPrimaryDomainFromGlobalOrg(ctx context.Contex
 		linkedInUrl = "https://www.linkedin.com/company/" + linkedInId
 		org, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByLinkedInUrl(ctx, linkedInUrl)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting organization by LinkedIn ID"))
+			spans.TraceError(errors.Wrap(err, "error getting organization by LinkedIn ID"))
 			return "", err
 		}
 		if org != nil {
@@ -83,14 +79,13 @@ func (s *globalContactService) findPrimaryDomainFromGlobalOrg(ctx context.Contex
 }
 
 func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.Context, record *postgresentity.EnrichDetailsScrapIn) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.syncScrapinInRecordIntoGlobalContact")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.syncScrapinInRecordIntoGlobalContact")
+	defer spans.Finish()
 
 	// Mark as synced to avoid double processing
 	err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.MarkSyncedToGlobalContacts(ctx, record.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking scrapin data as synced to global contacts"))
+		spans.TraceError(errors.Wrap(err, "error marking scrapin data as synced to global contacts"))
 		return err
 	}
 
@@ -101,7 +96,7 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 	// unmarshal cached data
 	data := postgresentity.ScrapInResponseBody{}
 	if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin data"))
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin data"))
 		return err
 	}
 
@@ -160,7 +155,7 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 		// Find primary domain from global organizations
 		primaryDomain, err := s.findPrimaryDomainFromGlobalOrg(ctx, currentPosition.LinkedInUrl, currentPosition.LinkedInId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error finding primary domain from global organizations"))
+			spans.TraceError(errors.Wrap(err, "error finding primary domain from global organizations"))
 			return err
 		}
 
@@ -188,7 +183,7 @@ func (s *globalContactService) syncScrapinInRecordIntoGlobalContact(ctx context.
 
 		err = s.commonServices.GlobalContactService.SaveContact(ctx, contact)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error saving global contact"))
+			spans.TraceError(errors.Wrap(err, "error saving global contact"))
 			return err
 		}
 	}
@@ -200,15 +195,14 @@ func (s *globalContactService) SyncDataIntoGlobalContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.SyncDataIntoGlobalContacts")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.SyncDataIntoGlobalContacts")
+	defer spans.Finish()
 
 	limit := 500
 
 	records, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetToSyncIntoGlobalContacts(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to sync"))
+		spans.TraceError(errors.Wrap(err, "error getting records to sync"))
 		s.log.Errorf("Error getting records to sync: %s", err.Error())
 		return
 	}
@@ -241,13 +235,12 @@ func (s *globalContactService) sendRequestToBetterContact() {
 	limit := 40
 	retryAfterDays := 30
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.sendRequestToBetterContact")
+	defer spans.Finish()
 
 	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToFindWorkEmailWithBetterContact(ctx, retryAfterDays, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -258,15 +251,15 @@ func (s *globalContactService) sendRequestToBetterContact() {
 
 	for _, record := range records {
 		func(globalContact *postgresentity.GlobalContact) {
-			innerSpan, innerCtx := tracing.StartTracerSpan(ctx, "GlobalContactService.sendRequestToBetterContact.Record")
-			defer innerSpan.Finish()
-			tracing.TagEntity(innerSpan, strconv.FormatUint(globalContact.ID, 10))
+			innerSpans, innerCtx := telemetry.StartCronSpan(ctx, "GlobalContactService.sendRequestToBetterContact.Record")
+			defer innerSpans.Finish()
+			innerSpans.LogKV("globalContactId", globalContact.ID)
 
 			linkedInUrl := "https://linkedin.com/in/" + globalContact.LinkedInIdentifier
 			// get global organization by primary domain
 			globalOrg, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(innerCtx, globalContact.PrimaryDomain)
 			if err != nil {
-				tracing.TraceErr(innerSpan, err)
+				innerSpans.TraceError(err)
 			}
 			companyName := ""
 			if globalOrg != nil {
@@ -275,16 +268,16 @@ func (s *globalContactService) sendRequestToBetterContact() {
 
 			_, betterContactRequestId, _, err := s.commonServices.EnrichmentService.FindWorkEmailWithBetterContact(innerCtx, linkedInUrl, globalContact.FirstName, globalContact.LastName, companyName, globalContact.PrimaryDomain, false)
 			if err != nil {
-				tracing.TraceErr(innerSpan, err)
+				innerSpans.TraceError(err)
 			} else {
 				if betterContactRequestId == "" {
 					err = errors.New("better contact request id is empty")
-					tracing.TraceErr(innerSpan, err)
+					innerSpans.TraceError(err)
 				}
 				// mark contact with enrich requested
 				err = s.commonServices.PostgresRepositories.GlobalContactRepository.MarkBetterContactRequested(innerCtx, globalContact.ID, betterContactRequestId)
 				if err != nil {
-					tracing.TraceErr(innerSpan, err)
+					innerSpans.TraceError(err)
 				}
 			}
 		}(record)
@@ -295,15 +288,14 @@ func (s *globalContactService) processBetterContactResponses() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.processBetterContactResponses")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.processBetterContactResponses")
+	defer spans.Finish()
 
 	limit := 250
 
 	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToSetWorkEmailFromBetterContactResponse(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -314,63 +306,63 @@ func (s *globalContactService) processBetterContactResponses() {
 
 	for _, record := range records {
 		func(globalContact *postgresentity.GlobalContact) {
-			innerSpan, innerCtx := tracing.StartTracerSpan(ctx, "GlobalContactService.processBetterContactResponses.Record")
-			defer innerSpan.Finish()
+			innerSpans, innerCtx := telemetry.StartCronSpan(ctx, "GlobalContactService.processBetterContactResponses.Record")
+			defer innerSpans.Finish()
+			innerSpans.LogKV("globalContactId", globalContact.ID)
 
 			// get better contact response
 			betterContactRecord, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(innerCtx, globalContact.BetterContactRequestId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				innerSpans.TraceError(err)
 				return
 			}
 
 			if betterContactRecord == nil || betterContactRecord.Response == "" {
-				innerSpan.LogFields(log.String("message", "better contact response not ready"))
+				innerSpans.LogKV("message", "better contact response not ready")
 				return
 			}
 
 			var betterContactResponse postgresentity.BetterContactResponseBody
 			if err = json.Unmarshal([]byte(betterContactRecord.Response), &betterContactResponse); err != nil {
-				tracing.TraceErr(span, err)
+				innerSpans.TraceError(err)
 				return
 			}
 
 			err = s.commonServices.PostgresRepositories.GlobalContactRepository.MarkBetterContactSet(innerCtx, globalContact.ID)
 			if err != nil {
-				tracing.TraceErr(innerSpan, err)
+				innerSpans.TraceError(err)
 			}
 
 			workEmail := betterContactResponse.Data[0].ContactEmailAddress
 			if workEmail != "" {
-				innerSpan.LogFields(log.String("bettercontact.email", workEmail))
+				innerSpans.LogKV("bettercontact.email", workEmail)
 
 				// validate email with mailsherpa
 				emailValidation, err := s.commonServices.VerifyService.ValidateEmail(innerCtx, workEmail)
 				if err != nil {
-					tracing.TraceErr(innerSpan, err)
+					innerSpans.TraceError(err)
 				}
 				if emailValidation == nil {
 					err = errors.New("mailsherpa validation returned nil")
-					tracing.TraceErr(innerSpan, err)
+					innerSpans.TraceError(err)
 					return
 				}
 
 				if !emailValidation.Syntax.IsValid {
 					err = errors.New("invalid email syntax: " + workEmail)
-					tracing.TraceErr(innerSpan, err)
-					span.LogFields(log.String("result", "invalid email syntax"))
+					innerSpans.TraceError(err)
 					return
 				}
 				if emailValidation.EmailData.Deliverable == string(service_verify.EmailDeliverableStatusUndeliverable) {
 					err = errors.New("email undeliverable: " + workEmail)
-					tracing.TraceErr(innerSpan, err)
-					span.LogFields(log.String("result", "email undeliverable"))
+					innerSpans.TraceError(err)
+					innerSpans.LogKV("result", "email undeliverable")
 					return
 				}
 
 				err = s.commonServices.GlobalContactService.SetWorkEmail(innerCtx, globalContact.ID, workEmail)
 				if err != nil {
-					tracing.TraceErr(innerSpan, err)
+					innerSpans.TraceError(err)
 				}
 			}
 
@@ -382,9 +374,8 @@ func (s *globalContactService) SyncGlobalContactsToTenantContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.SyncGlobalContactsToTenantContacts")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.SyncGlobalContactsToTenantContacts")
+	defer spans.Finish()
 
 	limit := 250
 	daysFromPreviousSync := 1
@@ -392,7 +383,7 @@ func (s *globalContactService) SyncGlobalContactsToTenantContacts() {
 
 	records, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetGlobalContactsToSyncIntoTenantContacts(ctx, daysFromPreviousSync, forceSyncAfterDays, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -406,10 +397,9 @@ func (s *globalContactService) SyncGlobalContactsToTenantContacts() {
 }
 
 func (s *globalContactService) syncGlobalContactToTenantContact(ctx context.Context, globalContact *postgresentity.GlobalContact) {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalContactService.syncGlobalContactToTenantContact")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagEntity(span, strconv.FormatUint(globalContact.ID, 10))
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.syncGlobalContactToTenantContact")
+	defer spans.Finish()
+	spans.TagEntity(strconv.FormatUint(globalContact.ID, 10))
 
 	// sync photo
 	if globalContact.ProfilePhotoExternalUrl != "" && globalContact.ProfilePhotoPath != "" {
@@ -421,14 +411,14 @@ func (s *globalContactService) syncGlobalContactToTenantContact(ctx context.Cont
 	globalContact.SyncedToNeoAt = utils.TimePtr(utils.Now().Add(10 * time.Second))
 	_, err := s.commonServices.PostgresRepositories.GlobalContactRepository.Update(ctx, globalContact)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 }
 
 func (s *globalContactService) syncGlobalContactPhotoToTenantContact(ctx context.Context, globalContact *postgresentity.GlobalContact) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.syncGlobalContactPhotoToTenantContact")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalContactService.syncGlobalContactPhotoToTenantContact")
+	defer spans.Finish()
+	spans.TagEntity(strconv.FormatUint(globalContact.ID, 10))
 
 	if globalContact.ProfilePhotoPath == "" {
 		return
@@ -439,7 +429,7 @@ func (s *globalContactService) syncGlobalContactPhotoToTenantContact(ctx context
 
 	tenantContact, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithProfilePhotoUrlCrossTenant(ctx, globalContact.ProfilePhotoExternalUrl)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 

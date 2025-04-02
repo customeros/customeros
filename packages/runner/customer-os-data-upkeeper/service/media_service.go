@@ -7,14 +7,12 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
@@ -64,16 +62,15 @@ func (s *mediaService) FetchAndStoreCompanyLogos() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "MediaService.FetchAndStoreCompanyLogos")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "MediaService.FetchAndStoreCompanyLogos")
+	defer spans.Finish()
 
 	limit := 5
 
 	// get companies
 	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToFetchLogo(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -91,16 +88,15 @@ func (s *mediaService) FetchAndStoreCompanyIcons() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "MediaService.FetchAndStoreCompanyIcons")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "MediaService.FetchAndStoreCompanyIcons")
+	defer spans.Finish()
 
 	limit := 5
 
 	// get companies
 	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToFetchIcon(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -117,16 +113,15 @@ func (s *mediaService) FetchAndStoreContactProfilePhotos() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "MediaService.FetchAndStoreContactProfilePhotos")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "MediaService.FetchAndStoreContactProfilePhotos")
+	defer spans.Finish()
 
 	limit := 10
 
 	// get contacts
 	contacts, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetContactsToFetchPhoto(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -137,7 +132,7 @@ func (s *mediaService) FetchAndStoreContactProfilePhotos() {
 			if hashPath == "" {
 				// error, this contact has no valid identifier
 				err = errors.New("no valid identifier for contact")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				continue
 			}
 			photoPath := fmt.Sprintf("%s/%s", hashPath, "profile")
@@ -147,19 +142,20 @@ func (s *mediaService) FetchAndStoreContactProfilePhotos() {
 }
 
 func (s *mediaService) downloadCompanyLogo(ctx context.Context, globalOrgId uint64, imageUrl, imagePath string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadCompanyLogo")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	span.LogFields(log.String("imageUrl", imageUrl), log.String("imagePath", imagePath), log.Uint64("globalOrgId", globalOrgId))
+	spans, ctx := telemetry.StartCronSpan(ctx, "MediaService.downloadCompanyLogo")
+	defer spans.Finish()
+	spans.LogKV("imageUrl", imageUrl)
+	spans.LogKV("imagePath", imagePath)
+	spans.LogKV("globalOrgId", globalOrgId)
 
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatusLogo(ctx, globalOrgId, enum.DownloadError)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			spans.TraceError(errors.Wrap(err, "failed to set download status"))
 		}
 		return false
 	}
@@ -167,31 +163,32 @@ func (s *mediaService) downloadCompanyLogo(ctx context.Context, globalOrgId uint
 	if imagePath != "" {
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetLogo(ctx, globalOrgId, imagePath)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
+			spans.TraceError(errors.Wrap(err, "failed to set image path"))
 			return false
 		}
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatusLogo(ctx, globalOrgId, enum.DownloadCompleted)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			spans.TraceError(errors.Wrap(err, "failed to set download status"))
 		}
 	}
 	return true
 }
 
 func (s *mediaService) downloadCompanyIcon(ctx context.Context, globalOrgId uint64, imageUrl, imagePath string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadCompanyIcon")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	span.LogFields(log.String("imageUrl", imageUrl), log.String("imagePath", imagePath), log.Uint64("globalOrgId", globalOrgId))
+	spans, ctx := telemetry.StartCronSpan(ctx, "MediaService.downloadCompanyIcon")
+	defer spans.Finish()
+	spans.LogKV("imageUrl", imageUrl)
+	spans.LogKV("imagePath", imagePath)
+	spans.LogKV("globalOrgId", globalOrgId)
 
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatusIcon(ctx, globalOrgId, enum.DownloadError)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			spans.TraceError(errors.Wrap(err, "failed to set download status"))
 		}
 		return false
 	}
@@ -199,44 +196,45 @@ func (s *mediaService) downloadCompanyIcon(ctx context.Context, globalOrgId uint
 	if imagePath != "" {
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIcon(ctx, globalOrgId, imagePath)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
+			spans.TraceError(errors.Wrap(err, "failed to set image path"))
 			return false
 		}
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDownloadStatusIcon(ctx, globalOrgId, enum.DownloadCompleted)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			spans.TraceError(errors.Wrap(err, "failed to set download status"))
 		}
 	}
 	return true
 }
 
 func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId uint64, imageUrl, imagePath string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.downloadContactPhoto")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	span.LogFields(log.String("imageUrl", imageUrl), log.String("imagePath", imagePath), log.Uint64("globalContactId", globalContactId))
+	spans, ctx := telemetry.StartCronSpan(ctx, "MediaService.downloadContactPhoto")
+	defer spans.Finish()
+	spans.LogKV("imageUrl", imageUrl)
+	spans.LogKV("imagePath", imagePath)
+	spans.LogKV("globalContactId", globalContactId)
 
 	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		} else {
 			// clear global contact profile photo external url
 			globalContact, err := s.commonServices.PostgresRepositories.GlobalContactRepository.GetById(ctx, globalContactId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			if globalContact != nil {
 				globalContact.ProfilePhotoExternalUrl = ""
 				_, err = s.commonServices.PostgresRepositories.GlobalContactRepository.Update(ctx, globalContact)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to update global contact"))
+					spans.TraceError(errors.Wrap(err, "failed to update global contact"))
 				}
 			}
 		}
 		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetDownloadStatus(ctx, globalContactId, enum.DownloadError)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			spans.TraceError(errors.Wrap(err, "failed to set download status"))
 		}
 		return false
 	}
@@ -244,12 +242,12 @@ func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId
 	if imagePath != "" {
 		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetProfilePhoto(ctx, globalContactId, imagePath)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set image path"))
+			spans.TraceError(errors.Wrap(err, "failed to set image path"))
 			return false
 		}
 		err = s.commonServices.PostgresRepositories.GlobalContactRepository.SetDownloadStatus(ctx, globalContactId, enum.DownloadCompleted)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to set download status"))
+			spans.TraceError(errors.Wrap(err, "failed to set download status"))
 		}
 	}
 	return true
