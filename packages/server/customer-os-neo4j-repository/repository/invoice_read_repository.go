@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -18,6 +19,7 @@ import (
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string) (*dbtype.Node, error)
 	GetInvoicesByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
+	GetAllNonDryRunInvoices(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetInvoiceByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*dbtype.Node, string, error)
 	GetInvoiceByNumber(ctx context.Context, tenant, invoiceNumber string) (*dbtype.Node, error)
 	CountInvoices(ctx context.Context, tenant, filterString string, filterParams map[string]interface{}) (int64, error)
@@ -228,6 +230,35 @@ func (r *invoiceReadRepository) GetInvoicesByIds(ctx context.Context, tenant str
 		return nil, err
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetAllNonDryRunInvoices(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceReadRepository.GetAllNonDryRunInvoices")
+	defer spans.Finish()
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {dryRun:false}) RETURN i`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }
 

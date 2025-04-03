@@ -15,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/dgrijalva/jwt-go"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -3271,5 +3272,33 @@ func (s *invoiceService) GetUpcomingInvoices(ctx context.Context) (*neo4jentity.
 		invoiceEntities = append(invoiceEntities, *invoiceEntity)
 	}
 
+	return &invoiceEntities, nil
+}
+
+func (s *invoiceService) GetAllNonDryRunInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetAllNonDryRunInvoices")
+	defer spans.Finish()
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetAllNonDryRunInvoices(ctx, tenant)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+
+	invoiceEntities := neo4jentity.InvoiceEntities{}
+	for _, invoiceNode := range invoiceDbNodes {
+		invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+		invoiceEntities = append(invoiceEntities, *invoiceEntity)
+	}
+
+	spans.LogKV("result.count", len(invoiceEntities))
 	return &invoiceEntities, nil
 }

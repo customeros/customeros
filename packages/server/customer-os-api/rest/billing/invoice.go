@@ -37,34 +37,18 @@ func NewBillingHandler(services *cosapi_services.Services, responseHandler *resp
 	}
 }
 
-type InvoiceCsvRecord struct {
-	CustomerID         string
-	CustomerName       string
-	InvoiceNumber      string
-	InvoiceDate        time.Time
-	BillingPeriodStart time.Time
-	BillingPeriodEnd   time.Time
-	InvoiceTotal       float64
-	Total              float64
-	BillingFrequency   string
-	Price              float64
-	Quantity           int64
-	Name               string
-	Description        string
-}
-
 var invoiceCsvHeaders = []string{
 	"Customer ID",
 	"Customer Name",
 	"Invoice Number",
-	"Invoice Date",
 	"Billing Period Start Date",
 	"Billing Period End Date",
+	"Invoice Date",
 	"Invoice Total",
-	"Total",
-	"Billing Frequency",
 	"Price",
 	"Quantity",
+	"Total",
+	"Billing Frequency",
 	"Name",
 	"Description",
 }
@@ -257,9 +241,10 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 
 		// Create records for sorting
 		type CsvRecord struct {
-			CustomerName string
-			SkuName      string
-			Record       []string
+			PeriodStartDate time.Time // Change type from string to time.Time
+			CustomerName    string
+			SkuName         string
+			Record          []string
 		}
 
 		records := make([]CsvRecord, 0, len(*invoiceLines))
@@ -289,29 +274,34 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 				org.ID,
 				orgName,
 				invoice.Number,
-				invoice.IssuedDate.Format("2006-01-02"),
 				invoice.PeriodStartDate.Format("2006-01-02"),
 				invoice.PeriodEndDate.Format("2006-01-02"),
+				invoice.IssuedDate.Format("2006-01-02"),
 				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), invoice.TotalAmount),
-				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.TotalAmount),
-				line.BilledType.String(),
 				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.Price),
 				fmt.Sprintf("%d", line.Quantity),
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.TotalAmount),
+				line.BilledType.String(),
 				skuName,
 				description,
 			}
 
 			// Store record with sorting keys
 			records = append(records, CsvRecord{
-				CustomerName: org.Name,     // Use original name for sorting
-				SkuName:      line.SkuName, // Use original SKU name for sorting
-				Record:       record,
+				PeriodStartDate: invoice.PeriodStartDate, // Store actual time.Time for sorting
+				CustomerName:    org.Name,                // Use original name for sorting
+				SkuName:         line.SkuName,            // Use original SKU name for sorting
+				Record:          record,
 			})
 		}
 
-		// Sort records by customer name and SKU name
+		// Sort records by period start date (descending), customer name, and SKU name
 		sort.Slice(records, func(i, j int) bool {
-			// First sort by customer name
+			// First sort by period start date descending
+			if !records[i].PeriodStartDate.Equal(records[j].PeriodStartDate) {
+				return records[i].PeriodStartDate.After(records[j].PeriodStartDate) // Descending order
+			}
+			// If period start dates are equal, sort by customer name
 			if records[i].CustomerName != records[j].CustomerName {
 				return records[i].CustomerName < records[j].CustomerName
 			}
@@ -354,6 +344,183 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 
 		// Set response headers
 		filename := fmt.Sprintf("upcoming_invoices_%s.csv", utils.Now().Format("2006_01_02"))
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+		c.Header("Content-Type", "text/csv")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Expires", "0")
+		c.Header("Cache-Control", "must-revalidate")
+		c.Header("Pragma", "public")
+
+		// Write CSV data to response
+		c.Data(http.StatusOK, "text/csv", buf.Bytes())
+	}
+}
+
+// @Summary Download past invoices as CSV
+// @Description Downloads all past invoices in CSV format
+// @Tags Billing API
+// @Accept json
+// @Produce text/csv
+// @Success 200 {file} binary "CSV file containing past invoices"
+// @Failure 401 {object} rest.BaseResponse "Unauthorized - Invalid or missing API key"
+// @Failure 500 {object} rest.BaseResponse "Internal server error"
+// @Router /billing/v1/invoices/upcoming/download [get]
+// @Security ApiKeyAuth
+func (h *BillingHandler) DownloadPastInvoices() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "DownloadPastInvoices", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		// Get all past invoices
+		pastInvoices, err := h.services.CommonServices.InvoiceService.GetAllNonDryRunInvoices(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// collect all invoice ids
+		invoiceIds := make([]string, 0, len(*pastInvoices))
+		for _, invoice := range *pastInvoices {
+			invoiceIds = append(invoiceIds, invoice.Id)
+		}
+
+		// get all invoice lines for the invoices
+		invoiceLines, err := h.services.CommonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, invoiceIds)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// get organizations for the invoices
+		organizations, err := h.services.CommonServices.OrganizationService.GetOrganizationsForInvoices(ctx, invoiceIds)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// Create a map of invoice ID to organization for quick lookup
+		orgByInvoiceId := make(map[string]neo4jentity.OrganizationEntity)
+		for _, org := range *organizations {
+			orgByInvoiceId[org.DataloaderKey] = org
+		}
+
+		// Create a map of invoice ID to invoice for quick lookup
+		invoiceByInvoiceId := make(map[string]neo4jentity.InvoiceEntity)
+		for _, invoice := range *pastInvoices {
+			invoiceByInvoiceId[invoice.Id] = invoice
+		}
+
+		// Create records for sorting
+		type CsvRecord struct {
+			PeriodStartDate time.Time // Change type from string to time.Time
+			CustomerName    string
+			SkuName         string
+			Record          []string
+		}
+
+		records := make([]CsvRecord, 0, len(*invoiceLines))
+
+		// Convert invoice lines to CSV records
+		for _, line := range *invoiceLines {
+			// Get the invoice for this line
+			invoice, exists := invoiceByInvoiceId[line.DataloaderKey]
+			if !exists {
+				tracing.TraceErr(span, errors.Errorf("expected invoice not found for line %s", line.Id))
+				continue
+			}
+
+			// Get the organization for this invoice
+			org, exists := orgByInvoiceId[invoice.Id]
+			if !exists {
+				tracing.TraceErr(span, errors.Errorf("expected organization not found for invoice %s", invoice.Id))
+				continue
+			}
+
+			// Sanitize fields that might contain special characters
+			orgName := sanitizeCsvField(org.Name)
+			skuName := sanitizeCsvField(line.SkuName)
+			description := sanitizeCsvField(line.Description)
+
+			record := []string{
+				org.ID,
+				orgName,
+				invoice.Number,
+				invoice.PeriodStartDate.Format("2006-01-02"),
+				invoice.PeriodEndDate.Format("2006-01-02"),
+				invoice.IssuedDate.Format("2006-01-02"),
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), invoice.TotalAmount),
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.Price),
+				fmt.Sprintf("%d", line.Quantity),
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.TotalAmount),
+				line.BilledType.String(),
+				skuName,
+				description,
+			}
+
+			// Store record with sorting keys
+			records = append(records, CsvRecord{
+				PeriodStartDate: invoice.PeriodStartDate, // Store actual time.Time for sorting
+				CustomerName:    org.Name,                // Use original name for sorting
+				SkuName:         line.SkuName,            // Use original SKU name for sorting
+				Record:          record,
+			})
+		}
+
+		// Sort records by period start date (descending), customer name, and SKU name
+		sort.Slice(records, func(i, j int) bool {
+			// First sort by period start date descending
+			if !records[i].PeriodStartDate.Equal(records[j].PeriodStartDate) {
+				return records[i].PeriodStartDate.After(records[j].PeriodStartDate) // Descending order
+			}
+			// If period start dates are equal, sort by customer name
+			if records[i].CustomerName != records[j].CustomerName {
+				return records[i].CustomerName < records[j].CustomerName
+			}
+			// If customer names are equal, sort by SKU name
+			return records[i].SkuName < records[j].SkuName
+		})
+
+		// Create CSV buffer
+		var buf bytes.Buffer
+		writer := csv.NewWriter(&buf)
+
+		// Configure CSV writer to always quote fields
+		// This ensures that fields with commas are properly handled
+		writer.UseCRLF = true // Use Windows-style line endings for better compatibility
+
+		// Write headers
+		if err := writer.Write(invoiceCsvHeaders); err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// Write sorted records
+		for _, record := range records {
+			if err := writer.Write(record.Record); err != nil {
+				tracing.TraceErr(span, err)
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+				return
+			}
+		}
+
+		// Flush the writer to ensure all data is written
+		writer.Flush()
+
+		if err := writer.Error(); err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// Set response headers
+		filename := fmt.Sprintf("past_invoices_%s.csv", utils.Now().Format("2006_01_02"))
 		c.Header("Content-Description", "File Transfer")
 		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 		c.Header("Content-Type", "text/csv")
