@@ -282,42 +282,73 @@ func (s *invoiceService) CleanupInvoices() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.CleanupInvoices")
+	s.deleteOldDryRunInvoices(ctx)
+	s.deletePreviewInvoicesForEndedContracts(ctx)
+}
+
+func (s *invoiceService) deleteOldDryRunInvoices(ctx context.Context) {
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.deleteOldDryRunInvoices", telemetry.WithNewRoot())
 	defer spans.Finish()
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
+	limit := 200
 
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredDryRunInvoices(ctx)
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetExpiredDryRunInvoices(ctx, limit)
+	if err != nil {
+		spans.TraceError(err)
+		s.log.Errorf("Error getting invoices for cleanup: %v", err)
+		return
+	}
+
+	spans.LogKV("records.count", len(records))
+
+	// process records
+	for _, record := range records {
+		invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteDryRunInvoice(innerCtx, record.Tenant, invoice.Id)
 		if err != nil {
 			spans.TraceError(err)
-			s.log.Errorf("Error getting invoices for cleanup: %v", err)
-			return
-		}
-
-		// no invoices found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-			tenant := record.Tenant
-
-			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteDryRunInvoice(ctx, tenant, invoice.Id)
-			if err != nil {
-				spans.TraceError(err)
-				s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
-			}
+			s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
 		}
 	}
+}
+
+func (s *invoiceService) deletePreviewInvoicesForEndedContracts(ctx context.Context) {
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceService.deletePreviewInvoicesForEndedContracts", telemetry.WithNewRoot())
+	defer spans.Finish()
+
+	limit := 200
+
+	records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPreviewInvoicesForEndedContracts(ctx, limit)
+	if err != nil {
+		spans.TraceError(err)
+		s.log.Errorf("Error getting invoices for cleanup: %v", err)
+		return
+	}
+
+	spans.LogKV("records.count", len(records))
+
+	// process records
+	for _, record := range records {
+		invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteDryRunInvoice(innerCtx, record.Tenant, invoice.Id)
+		if err != nil {
+			spans.TraceError(err)
+			s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
+		}
+	}
+
 }
 
 func (s *invoiceService) UpkeepInvoices() {
