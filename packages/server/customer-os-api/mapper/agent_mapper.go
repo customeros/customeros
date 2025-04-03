@@ -26,24 +26,34 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 		Visible:      entity.VisibleInUI,
 	}
 	for _, capability := range entity.Capabilities {
-		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
+		modelCapability := model.Capability{
 			ID:     capability.ID,
 			Name:   capability.Name,
 			Type:   enummapper.MapAgentCapabilityTypeToModel(capability.Type),
 			Errors: utils.StringPtrNillable(capability.Error),
 			Active: capability.Active,
 			Config: capability.GetConfigString(),
-		})
+		}
+		// replace empty object with empty string
+		if modelCapability.Config == "{}" {
+			modelCapability.Config = ""
+		}
+		agentModel.Capabilities = append(agentModel.Capabilities, &modelCapability)
 	}
 	for _, listener := range entity.Listeners {
-		agentModel.Listeners = append(agentModel.Listeners, &model.AgentListener{
+		modelListener := model.AgentListener{
 			ID:     listener.ID,
 			Name:   listener.Name,
 			Type:   enummapper.MapAgentListenerTypeToModel(listener.Type),
 			Errors: utils.StringPtrNillable(listener.Error),
 			Active: listener.Active,
 			Config: listener.GetConfigString(),
-		})
+		}
+		// replace empty object with empty string
+		if modelListener.Config == "{}" {
+			modelListener.Config = ""
+		}
+		agentModel.Listeners = append(agentModel.Listeners, &modelListener)
 	}
 	return &agentModel
 }
