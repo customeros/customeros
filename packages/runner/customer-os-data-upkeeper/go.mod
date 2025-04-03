@@ -131,7 +131,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
 	go.temporal.io/api v1.44.1 // indirect
-	go.temporal.io/sdk v1.33.0 // indirect
+	go.temporal.io/sdk v1.33.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
