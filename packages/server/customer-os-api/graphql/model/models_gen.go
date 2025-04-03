@@ -2075,6 +2075,7 @@ type OpportunitySaveInput struct {
 	MaxAmount           *float64       `json:"maxAmount,omitempty"`
 	Currency            *Currency      `json:"currency,omitempty"`
 	OwnerID             *string        `json:"ownerId,omitempty"`
+	TaskID              *string        `json:"taskId,omitempty"`
 }
 
 type OpportunityUpdateInput struct {

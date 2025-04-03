@@ -16630,6 +16630,7 @@ input OpportunitySaveInput {
     currency:            Currency
 
     ownerId:             ID
+    taskId:              ID
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {
@@ -118854,7 +118855,7 @@ func (ec *executionContext) unmarshalInputOpportunitySaveInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "opportunityId", "name", "amount", "internalType", "internalStage", "externalType", "externalStage", "estimatedClosedDate", "nextSteps", "likelihoodRate", "maxAmount", "currency", "ownerId"}
+	fieldsInOrder := [...]string{"organizationId", "opportunityId", "name", "amount", "internalType", "internalStage", "externalType", "externalStage", "estimatedClosedDate", "nextSteps", "likelihoodRate", "maxAmount", "currency", "ownerId", "taskId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -118959,6 +118960,13 @@ func (ec *executionContext) unmarshalInputOpportunitySaveInput(ctx context.Conte
 				return it, err
 			}
 			it.OwnerID = data
+		case "taskId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taskId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TaskID = data
 		}
 	}
 

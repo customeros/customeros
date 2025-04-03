@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -14,6 +15,7 @@ import (
 type TaskWriteRepository interface {
 	Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error
+	AddOpportunity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId, opportunityId string) error
 	SetOpportunities(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, opportunityIds []string) error
 	SetUserAssignees(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, userIds []string) error
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string) error
@@ -191,4 +193,22 @@ func (r *taskWriteRepository) PermanentDeleteHiddenTasks(ctx context.Context, tx
 	}
 
 	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+}
+
+func (r *taskWriteRepository) AddOpportunity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId, opportunityId string) error {
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.AddOpportunity")
+	defer spans.Finish()
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
+		MATCH (o:Opportunity_%s)
+		WHERE o.id = $opportunityId
+		MERGE (tsk)-[:LINKED_TO]->(o)
+		`, tenant)
+	params := map[string]any{
+		"tenant":        tenant,
+		"taskId":        taskId,
+		"opportunityId": opportunityId,
+	}
+
+	return LogAndExecuteWriteQueryInTxV2(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
