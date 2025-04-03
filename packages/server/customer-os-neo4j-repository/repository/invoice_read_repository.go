@@ -29,7 +29,8 @@ type InvoiceReadRepository interface {
 	GetLastIssuedOnCycleInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetLastIssuedInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetFirstPreviewFilledInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
-	GetExpiredDryRunInvoices(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
+	GetExpiredDryRunInvoices(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetPreviewInvoicesForEndedContracts(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetAllForContracts(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetAllForServiceLineItems(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetInvoicesForOverdue(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error)
@@ -571,10 +572,11 @@ func (r *invoiceReadRepository) GetFirstPreviewFilledInvoice(ctx context.Context
 	return result.(*dbtype.Node), nil
 }
 
-func (r *invoiceReadRepository) GetExpiredDryRunInvoices(ctx context.Context) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetExpiredDryRunInvoices(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetExpiredDryRunInvoices")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogKV("limit", limit)
 
 	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
@@ -584,7 +586,45 @@ func (r *invoiceReadRepository) GetExpiredDryRunInvoices(ctx context.Context) ([
 				date(i.periodEndDate + duration({days: 7})) < date($now)
 			RETURN distinct(i), t.name limit 100`
 	params := map[string]any{
-		"now": utils.Now(),
+		"now":   utils.Now(),
+		"limit": limit,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
+	return result.([]*utils.DbNodeAndTenant), err
+}
+
+func (r *invoiceReadRepository) GetPreviewInvoicesForEndedContracts(ctx context.Context, limit int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetPreviewInvoicesForEndedContracts")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogKV("limit", limit)
+
+	cypher := `MATCH (c:Contract)--(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
+			WHERE 
+				i.dryRun = true AND i.preview = true AND
+				AND c.status = $ended 
+			RETURN distinct(i), t.name limit $limit`
+	params := map[string]any{
+		"ended": neo4jenum.ContractStatusEnded.String(),
+		"limit": limit,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

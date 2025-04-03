@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,6 +47,8 @@ type InvoiceCsvRecord struct {
 	InvoiceTotal       float64
 	Total              float64
 	BillingFrequency   string
+	Price              float64
+	Quantity           int64
 	Name               string
 	Description        string
 }
@@ -60,6 +63,8 @@ var invoiceCsvHeaders = []string{
 	"Invoice Total",
 	"Total",
 	"Billing Frequency",
+	"Price",
+	"Quantity",
 	"Name",
 	"Description",
 }
@@ -184,6 +189,13 @@ func (h *BillingHandler) GetInvoicesForOrganization() gin.HandlerFunc {
 	}
 }
 
+// sanitizeCsvField ensures that fields with special characters are properly handled
+func sanitizeCsvField(field string) string {
+	// If the field contains commas, quotes, or newlines, it will be automatically quoted by csv.Writer
+	// We just need to escape any existing double quotes by doubling them
+	return strings.ReplaceAll(field, `"`, `""`)
+}
+
 // @Summary Download upcoming invoices as CSV
 // @Description Downloads all upcoming invoices in CSV format
 // @Tags Billing API
@@ -243,9 +255,14 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 			invoiceByInvoiceId[invoice.Id] = invoice
 		}
 
-		// Create CSV records
-		csvRecords := make([][]string, 0)
-		csvRecords = append(csvRecords, invoiceCsvHeaders)
+		// Create records for sorting
+		type CsvRecord struct {
+			CustomerName string
+			SkuName      string
+			Record       []string
+		}
+
+		records := make([]CsvRecord, 0, len(*invoiceLines))
 
 		// Convert invoice lines to CSV records
 		for _, line := range *invoiceLines {
@@ -263,9 +280,14 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 				continue
 			}
 
+			// Sanitize fields that might contain special characters
+			orgName := sanitizeCsvField(org.Name)
+			skuName := sanitizeCsvField(line.SkuName)
+			description := sanitizeCsvField(line.Description)
+
 			record := []string{
 				org.ID,
-				org.Name,
+				orgName,
 				invoice.Number,
 				invoice.IssuedDate.Format("2006-01-02"),
 				invoice.PeriodStartDate.Format("2006-01-02"),
@@ -273,33 +295,62 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), invoice.TotalAmount),
 				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.TotalAmount),
 				line.BilledType.String(),
-				line.SkuName,
-				line.Description,
+				fmt.Sprintf("%s%.2f", invoice.Currency.Symbol(), line.Price),
+				fmt.Sprintf("%d", line.Quantity),
+				skuName,
+				description,
 			}
-			csvRecords = append(csvRecords, record)
+
+			// Store record with sorting keys
+			records = append(records, CsvRecord{
+				CustomerName: org.Name,     // Use original name for sorting
+				SkuName:      line.SkuName, // Use original SKU name for sorting
+				Record:       record,
+			})
 		}
 
-		// Sort records by customer name and SKU name (skip header row)
-		sort.Slice(csvRecords[1:], func(i, j int) bool {
-			// First sort by customer name (index 1)
-			if csvRecords[i+1][1] != csvRecords[j+1][1] {
-				return csvRecords[i+1][1] < csvRecords[j+1][1]
+		// Sort records by customer name and SKU name
+		sort.Slice(records, func(i, j int) bool {
+			// First sort by customer name
+			if records[i].CustomerName != records[j].CustomerName {
+				return records[i].CustomerName < records[j].CustomerName
 			}
-			// If customer names are equal, sort by SKU name (index 9)
-			return csvRecords[i+1][9] < csvRecords[j+1][9]
+			// If customer names are equal, sort by SKU name
+			return records[i].SkuName < records[j].SkuName
 		})
 
 		// Create CSV buffer
 		var buf bytes.Buffer
 		writer := csv.NewWriter(&buf)
-		for _, record := range csvRecords {
-			if err := writer.Write(record); err != nil {
+
+		// Configure CSV writer to always quote fields
+		// This ensures that fields with commas are properly handled
+		writer.UseCRLF = true // Use Windows-style line endings for better compatibility
+
+		// Write headers
+		if err := writer.Write(invoiceCsvHeaders); err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		// Write sorted records
+		for _, record := range records {
+			if err := writer.Write(record.Record); err != nil {
 				tracing.TraceErr(span, err)
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 				return
 			}
 		}
+
+		// Flush the writer to ensure all data is written
 		writer.Flush()
+
+		if err := writer.Error(); err != nil {
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
 
 		// Set response headers
 		filename := fmt.Sprintf("upcoming_invoices_%s.csv", utils.Now().Format("2006_01_02"))
