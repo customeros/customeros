@@ -620,7 +620,7 @@ func (r *invoiceReadRepository) GetPreviewInvoicesForEndedContracts(ctx context.
 	cypher := `MATCH (c:Contract)--(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE 
 				i.dryRun = true AND i.preview = true AND
-				AND c.status = $ended 
+				c.status = $ended
 			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
 		"ended": neo4jenum.ContractStatusEnded.String(),
