@@ -16,9 +16,9 @@ defmodule RealtimeWeb.Plugs.ValidateHeaders do
         [value] -> value
       end
 
-    internal_api_key = get_req_header(conn, "x-openline-api-key") |> List.first()
+    # internal_api_key = get_req_header(conn, "x-openline-api-key") |> List.first()
 
-    api_token = System.get_env("API_TOKEN")
+    # api_token = System.get_env("API_TOKEN")
 
     # if internal_api_key && internal_api_key != api_token do
     #   conn
