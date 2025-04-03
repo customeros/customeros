@@ -13,6 +13,7 @@ type TaskService interface {
 	IsInitialized() bool
 
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, taskFields data_fields.TaskFields) (string, error)
+	AssignToOpportunity(ctx context.Context, taskId, opportunityId string) error
 	HideAll(ctx context.Context, ids []string) error
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.TaskEntity, error)

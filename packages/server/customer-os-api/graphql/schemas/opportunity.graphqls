@@ -151,6 +151,7 @@ input OpportunitySaveInput {
     currency:            Currency
 
     ownerId:             ID
+    taskId:              ID
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {

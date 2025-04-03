@@ -16,6 +16,7 @@ import (
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -24,10 +25,11 @@ import (
 
 // OpportunitySave is the resolver for the opportunity_save field.
 func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunitySave", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.OpportunitySave", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	// Log the input as JSON
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -36,19 +38,29 @@ func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.Oppo
 
 	opportunityId, err := r.Services.CommonServices.OpportunityService.Save(ctx, nil, input.OpportunityID, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to save opportunity")
 		return nil, err
 	}
 
-	e, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, opportunityId)
+	if input.TaskID != nil && *input.TaskID != "" {
+		taskId := *input.TaskID
+		err := r.Services.CommonServices.TaskService.AssignToOpportunity(ctx, taskId, opportunityId)
+		if err != nil {
+			spans.TraceError(err)
+			graphql.AddErrorf(ctx, "Failed to assign task to opportunity")
+			return nil, err
+		}
+	}
+
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, opportunityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch opportunity details")
 		return nil, err
 	}
 
-	return mapper.MapEntityToOpportunity(e), nil
+	return mapper.MapEntityToOpportunity(opportunityEntity), nil
 }
 
 // OpportunityArchive is the resolver for the opportunity_Archive field.

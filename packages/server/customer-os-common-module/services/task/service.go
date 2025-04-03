@@ -6,6 +6,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -300,4 +301,18 @@ func (s *taskService) GetTasksForOpportunities(ctx context.Context, opportunityI
 		taskEntities = append(taskEntities, *taskEntity)
 	}
 	return &taskEntities, nil
+}
+
+func (s *taskService) AssignToOpportunity(ctx context.Context, taskId, opportunityId string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.AssignToOpportunity")
+	defer spans.Finish()
+	spans.TagEntity(taskId)
+	spans.LogKV("opportunityId", opportunityId)
+
+	err := s.neo4j.TaskWriteRepository.AddOpportunity(ctx, nil, common.GetTenantFromContext(ctx), taskId, opportunityId)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+	return nil
 }
