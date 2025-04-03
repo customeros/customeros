@@ -20,17 +20,17 @@ defmodule RealtimeWeb.Plugs.ValidateHeaders do
 
     api_token = System.get_env("API_TOKEN")
 
-    if internal_api_key && internal_api_key != api_token do
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(
-        401,
-        Jason.encode!(%{error: "Unauthorized", message: "Invalid internal app token"})
-      )
-      |> halt()
-    else
-      conn
-    end
+    # if internal_api_key && internal_api_key != api_token do
+    #   conn
+    #   |> put_resp_content_type("application/json")
+    #   |> send_resp(
+    #     401,
+    #     Jason.encode!(%{error: "Unauthorized", message: "Invalid internal app token"})
+    #   )
+    #   |> halt()
+    # else
+    #   conn
+    # end
 
     if !tenant do
       conn
