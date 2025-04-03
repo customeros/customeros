@@ -42,6 +42,14 @@ func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_service
 	})
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
+		path:      fmt.Sprintf("%s/invoices/past/download", BillingPath),
+		handler:   h.Billing.DownloadPastInvoices(),
+		routeType: RouteCustomer,
+		services:  s,
+		cache:     s.Cache,
+	})
+	registerRoute(ctx, r, RouteConfig{
+		method:    "GET",
 		path:      fmt.Sprintf("%s/skus", BillingPath),
 		handler:   h.Billing.GetSkus(),
 		routeType: RouteCustomer,

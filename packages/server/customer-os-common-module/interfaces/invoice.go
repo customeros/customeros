@@ -2,10 +2,11 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"time"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -27,6 +28,7 @@ type InvoiceService interface {
 	GetInvoicesForServiceLineItems(ctx context.Context, sliIds []string) (*neo4jentity.InvoiceEntities, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) (*neo4jentity.InvoiceEntities, error)
 	GetUpcomingInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error)
+	GetAllNonDryRunInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error)
 
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
