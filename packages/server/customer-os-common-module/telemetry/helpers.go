@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"runtime/debug"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -412,6 +414,18 @@ func (s *Spans) TagEntity(entityId string) {
 	}
 }
 
+func (s *Spans) TagTenant(tenant string) {
+	if s == nil || tenant == "" {
+		return
+	}
+	if s.Jaeger != nil {
+		tracing.TagTenant(s.Jaeger, tenant)
+	}
+	if s.OTel != nil {
+		s.OTel.SetAttributes(attribute.String("tenant", tenant))
+	}
+}
+
 // Logging Methods
 func (s *Spans) LogFields(fields ...log.Field) {
 	if s == nil {
@@ -768,4 +782,34 @@ func SetDefaultServiceSpanAttributes(ctx context.Context, span trace.Span) {
 		return
 	}
 	span.SetAttributes(GetDefaultServiceSpanAttributes(ctx)...)
+}
+
+// InjectSpanContextIntoHTTPRequest injects both Jaeger and OpenTelemetry span contexts into an HTTP request
+func InjectSpanContextIntoHTTPRequest(req *http.Request, spans *Spans) *http.Request {
+	if spans == nil {
+		return req
+	}
+
+	// Inject Jaeger span context
+	if spans.Jaeger != nil {
+		// Use existing tracing package's function for Jaeger
+		req = tracing.InjectSpanContextIntoHTTPRequest(req, spans.Jaeger)
+	}
+
+	// Inject OpenTelemetry span context
+	if spans.OTel != nil {
+		// Get the propagator from the global tracer provider
+		propagator := otel.GetTextMapPropagator()
+
+		// Create a carrier for the headers
+		carrier := propagation.HeaderCarrier(req.Header)
+
+		// Create a context with the span context
+		ctx := trace.ContextWithSpanContext(context.Background(), spans.OTel.SpanContext())
+
+		// Inject the span context into the carrier
+		propagator.Inject(ctx, carrier)
+	}
+
+	return req
 }

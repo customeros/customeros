@@ -5,7 +5,7 @@ import (
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/pkg/errors"
 )
 
@@ -31,16 +31,15 @@ func (s *domainService) CheckDomains() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "DomainService.CheckDomains")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "DomainService.CheckDomains")
+	defer spans.Finish()
 
 	limit := 50
 	delayFromLastUpdateInDays := 30
 
 	records, err := s.commonServices.Neo4jRepositories.DomainReadRepository.GetDomainsForPrimaryCheck(ctx, delayFromLastUpdateInDays, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting domains for primary check"))
+		spans.TraceError(errors.Wrap(err, "Error getting domains for primary check"))
 		return
 	}
 
@@ -52,7 +51,7 @@ func (s *domainService) CheckDomains() {
 	for _, domain := range records {
 		err = s.commonServices.DomainService.UpdateDomainPrimaryDetails(ctx, domain)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error updating domain primary details"))
+			spans.TraceError(errors.Wrap(err, "Error updating domain primary details"))
 			s.log.Errorf("Error updating domain primary details: %s", err.Error())
 		}
 	}

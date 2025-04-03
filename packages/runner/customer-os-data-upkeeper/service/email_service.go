@@ -18,13 +18,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -57,21 +55,21 @@ type emailService struct {
 func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.CheckEnrowRequestsWithoutResponse")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.CheckEnrowRequestsWithoutResponse")
+	defer spans.Finish()
 
 	// validate enrow is configured
 	if s.cfg.Common.External.EnrowConfig.ApiUrl == "" || s.cfg.Common.External.EnrowConfig.ApiKey == "" {
 		err := errors.New("Enrow API URL or API Key not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err)
 		return
 	}
 
 	enrowRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.CacheEmailEnrowRepository.GetWithoutResponses(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -82,7 +80,7 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 		// Create POST request
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/email/verify/single?id=%s", s.cfg.Common.External.EnrowConfig.ApiUrl, url.QueryEscape(record.RequestID)), nil)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+			spans.TraceError(errors.Wrap(err, "failed to create request"))
 			return
 		}
 
@@ -94,14 +92,14 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 		// Perform the request
 		resp, err := client.Do(req)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 		defer resp.Body.Close()
 
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			continue
 		}
 
@@ -112,19 +110,19 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 		// Parse the JSON request body
 		var enrowResponseBody postgresentity.EnrowResponseBody
 		if err = json.Unmarshal(responseBody, &enrowResponseBody); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error unmarshalling request body"))
+			spans.TraceError(errors.Wrap(err, "error unmarshalling request body"))
 			continue
 		}
 
 		if enrowResponseBody.Qualification != "" {
 			err = s.commonServices.PostgresRepositories.CacheEmailEnrowRepository.AddResponse(ctx, enrowResponseBody.Id, enrowResponseBody.Qualification, string(responseBody))
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error saving Enrow response to db"))
+				spans.TraceError(errors.Wrap(err, "error saving Enrow response to db"))
 				return
 			}
 		} else {
 			err = errors.New("Enrow response qualification is empty")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 }
@@ -141,9 +139,8 @@ func (s *emailService) ValidateEmails() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.ValidateEmails")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.ValidateEmails")
+	defer spans.Finish()
 
 	limit := s.cfg.App.Limits.EmailsValidationLimit
 	delayFromLastUpdateInSeconds := 10
@@ -160,7 +157,7 @@ func (s *emailService) ValidateEmails() {
 
 		records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailsForValidation(ctx, delayFromLastUpdateInSeconds, delayFromLastValidationAttemptInMinutes, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -177,13 +174,13 @@ func (s *emailService) ValidateEmails() {
 
 			err = s.commonServices.EmailService.RequestEmailValidation(innerCtx, record.EmailId)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error requesting email validation"))
+				spans.TraceError(errors.Wrap(err, "Error requesting email validation"))
 				s.log.Errorf("Error publishing email validation request: %s", err.Error())
 			}
 
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelEmail, record.EmailId, string(neo4jentity.EmailPropertyValidationRequestedAt), utils.NowPtr())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 
 			// pause 1 second before next request
@@ -202,16 +199,15 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.ValidateEmailsFromBulkRequests")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.ValidateEmailsFromBulkRequests")
+	defer spans.Finish()
 
 	limit := 200
 	workers := s.cfg.App.Limits.BulkEmailsValidationThreads
 
 	records, err := s.commonServices.PostgresRepositories.EmailValidationRecordRepository.GetUnprocessedEmailRecords(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -230,14 +226,14 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 					// Call the email validation method (Placeholder)
 					validationResult, err := s.commonServices.VerifyService.ValidateEmail(ctx, record.Email)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "Error validating email"))
+						spans.TraceError(errors.Wrap(err, "Error validating email"))
 						s.log.Errorf("Error validating email: %v", err)
 						continue
 					}
 
 					data, err := json.Marshal(validationResult)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "Error marshalling data"))
+						spans.TraceError(errors.Wrap(err, "Error marshalling data"))
 						s.log.Errorf("Error marshalling data: %v", err)
 						continue
 					}
@@ -245,7 +241,7 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 					// Update the record with the validation result
 					err = s.commonServices.PostgresRepositories.EmailValidationRecordRepository.UpdateEmailRecord(ctx, record.ID, string(data))
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "Error updating email record"))
+						spans.TraceError(errors.Wrap(err, "Error updating email record"))
 						s.log.Errorf("Failed to update email record: %s", err.Error())
 						continue
 					}
@@ -262,7 +258,7 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 								ReferenceData: record.Email,
 							})
 						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+							spans.TraceError(errors.Wrap(err, "failed to register billable event"))
 						}
 					}
 
@@ -298,7 +294,7 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 	// additionally include oldest 5 uncompleted requests for check
 	oldestUncompletedRequests, err := s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.GetOldestUncompletedRequests(ctx, 5)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting oldest uncompleted requests"))
+		spans.TraceError(errors.Wrap(err, "Error getting oldest uncompleted requests"))
 	}
 	for _, request := range oldestUncompletedRequests {
 		requestsToCheck[request.RequestID] = struct{}{}
@@ -311,14 +307,14 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 
 // Check if all records for each request are processed and update bulk request status
 func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsToCheck map[string]struct{}) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.checkAndUpdateBulkRequests")
-	defer span.Finish()
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.checkAndUpdateBulkRequests")
+	defer spans.Finish()
 
 	// For each unique Request ID, check if all records are processed
 	for requestID := range requestsToCheck {
 		unprocessedCount, err := s.commonServices.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequestsByRequestID(ctx, requestID)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error counting pending records"))
+			spans.TraceError(errors.Wrap(err, "Error counting pending records"))
 			s.log.Errorf("Failed to count pending records for request %s: %v", requestID, err)
 			continue
 		}
@@ -326,7 +322,7 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 		// get request by requestID
 		request, err := s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error getting request by requestID"))
+			spans.TraceError(errors.Wrap(err, "Error getting request by requestID"))
 			s.log.Errorf("Failed to get request %s: %v", requestID, err)
 			continue
 		}
@@ -336,31 +332,31 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 			// generate csv result file
 			csvContent, err := s.generateBulkEmailValidationResponseCSVFileContent(ctx, requestID)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error generating CSV content"))
+				spans.TraceError(errors.Wrap(err, "Error generating CSV content"))
 				s.log.Errorf("Failed to generate CSV content for request %s: %v", requestID, err.Error())
 				continue
 			}
 
 			// log csv content size
-			span.LogFields(log.Int("csvContent.size.request."+requestID, len(csvContent)))
+			spans.LogKV("csvContent.size.request."+requestID, len(csvContent))
 
 			// Upload result file to S3
 			basePath := fmt.Sprintf("/EMAIL_VALIDATION/BULK/%d", utils.Now().Year())
 
 			fileDTO, err := s.commonServices.FileService.UploadSingleFileBytesDirect(ctx, basePath, requestID, requestID+".csv", &csvContent, false)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
+				spans.TraceError(errors.Wrap(err, "UploadSingleFileBytes"))
 				continue
 			}
 
 			if fileDTO.ID == "" {
-				tracing.TraceErr(span, errors.New("fileDTO.Id is empty"))
+				spans.TraceError(errors.New("fileDTO.Id is empty"))
 				continue
 			}
 
 			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(ctx, requestID, fileDTO.ID)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error marking request as completed"))
+				spans.TraceError(errors.Wrap(err, "Error marking request as completed"))
 				s.log.Errorf("Failed to mark request %s as completed: %v", requestID, err)
 			}
 		}
@@ -371,9 +367,8 @@ func (s *emailService) CheckScrubbyResult() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.CheckScrubbyResult")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.CheckScrubbyResult")
+	defer spans.Finish()
 
 	limit := 100
 	delayFromPreviousCheckInHours := 12
@@ -389,7 +384,7 @@ func (s *emailService) CheckScrubbyResult() {
 
 		records, err := s.commonServices.PostgresRepositories.CacheEmailScrubbyRepository.GetToCheck(ctx, delayFromPreviousCheckInHours, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -408,19 +403,19 @@ func (s *emailService) CheckScrubbyResult() {
 			internalCounter++
 			scrubbyResult, err := s.callScrubbyIo(ctx, record.Email)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error calling scrubby.io"))
+				spans.TraceError(errors.Wrap(err, "Error calling scrubby.io"))
 				s.log.Errorf("Error calling scrubby.io for email {%s}: %s", record.Email, err.Error())
 			}
 			if scrubbyResult.Status != string(postgresentity.ScrubbyStatusPending) {
 				err = s.commonServices.PostgresRepositories.CacheEmailScrubbyRepository.SetStatus(ctx, record.Email, strings.ToLower(scrubbyResult.Status))
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error setting scrubby status"))
+					spans.TraceError(errors.Wrap(err, "Error setting scrubby status"))
 					s.log.Errorf("Error setting scrubby status for email {%s}: %s", record.Email, err.Error())
 				}
 			} else {
 				_, err = s.commonServices.PostgresRepositories.CacheEmailScrubbyRepository.SetJustChecked(ctx, record.ID)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error setting scrubby just checked"))
+					spans.TraceError(errors.Wrap(err, "Error setting scrubby just checked"))
 					s.log.Errorf("Error setting scrubby just checked for email {%s}: %s", record.Email, err.Error())
 				}
 			}
@@ -435,14 +430,14 @@ func (s *emailService) CheckScrubbyResult() {
 }
 
 func (s *emailService) callScrubbyIo(ctx context.Context, email string) (ScrubbyIoResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.callScrubbyIo")
-	defer span.Finish()
-	span.LogFields(log.String("email", email))
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.callScrubbyIo")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	// validate if scrubby is configured
 	if s.cfg.Common.External.ScrubbyIoConfig.ApiUrl == "" || s.cfg.Common.External.ScrubbyIoConfig.ApiKey == "" {
 		err := errors.New("scrubby.io is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err)
 		return ScrubbyIoResponse{}, err
 	}
@@ -450,7 +445,7 @@ func (s *emailService) callScrubbyIo(ctx context.Context, email string) (Scrubby
 	encodedEmail := url.QueryEscape(email)
 	req, err := http.NewRequest("GET", s.cfg.Common.External.ScrubbyIoConfig.ApiUrl+"/fetch_email/"+encodedEmail, nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		spans.TraceError(errors.Wrap(err, "failed to create request"))
 		return ScrubbyIoResponse{}, err
 	}
 
@@ -462,33 +457,32 @@ func (s *emailService) callScrubbyIo(ctx context.Context, email string) (Scrubby
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		spans.TraceError(errors.Wrap(err, "failed to perform request"))
 		return ScrubbyIoResponse{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		err = errors.New(fmt.Sprintf("scrubby.io returned %d status code", response.StatusCode))
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return ScrubbyIoResponse{}, err
 	}
 
 	var scrubbyIoResponse ScrubbyIoResponse
 	err = json.NewDecoder(response.Body).Decode(&scrubbyIoResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode scrubby.io response"))
+		spans.TraceError(errors.Wrap(err, "failed to decode scrubby.io response"))
 		return ScrubbyIoResponse{}, err
 	}
-	tracing.LogObjectAsJson(span, "response.scrubby", scrubbyIoResponse)
+	spans.LogObjectAsJson("response.scrubby", scrubbyIoResponse)
 
 	return scrubbyIoResponse, nil
 }
 
 func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx context.Context, requestId string) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.generateBulkEmailValidationResponseCSVFileContent")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("requestId", requestId)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.generateBulkEmailValidationResponseCSVFileContent")
+	defer spans.Finish()
+	spans.LogKV("requestId", requestId)
 
 	// Create an in-memory buffer to write the CSV content
 	var buffer bytes.Buffer
@@ -520,7 +514,7 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 			// Parse the record data (assuming it's in JSON format) into ValidateEmailMailSherpaData
 			var validationData interfaces.ValidateEmailMailSherpaData
 			if record.Data == "" {
-				tracing.TraceErr(span, fmt.Errorf("validation data is empty for email %s and requestId %s", record.Email, record.RequestID))
+				spans.TraceError(fmt.Errorf("validation data is empty for email %s and requestId %s", record.Email, record.RequestID))
 				continue
 			}
 			if err := json.Unmarshal([]byte(record.Data), &validationData); err != nil {
@@ -595,16 +589,15 @@ func (s *emailService) deleteOrphanEmails() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.deleteOrphanEmails")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.deleteOrphanEmails")
+	defer spans.Finish()
 
 	limit := 500
 	delayFromLastUpdateInHours := 24 // 24 hours
 
 	records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetOrphanEmailNodes(ctx, limit, delayFromLastUpdateInHours)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting orphan emails"))
+		spans.TraceError(errors.Wrap(err, "Error getting orphan emails"))
 		return
 	}
 
@@ -621,7 +614,7 @@ func (s *emailService) deleteOrphanEmails() {
 
 		err = s.commonServices.EmailService.DeleteOrphanEmail(innerCtx, record.EmailId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error deleting orphan email"))
+			spans.TraceError(errors.Wrap(err, "Error deleting orphan email"))
 			s.log.Errorf("Error deleting orphan email {%s}: %s", record.EmailId, err.Error())
 		}
 	}
@@ -635,13 +628,12 @@ func (s *emailService) sendEmails() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.sendEmails")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.sendEmails")
+	defer spans.Finish()
 
 	emailMessages, err := s.commonServices.PostgresRepositories.EmailMessageRepository.GetForSending(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return // return if error
 	}
 
@@ -657,7 +649,7 @@ func (s *emailService) sendEmails() {
 
 		err := s.commonServices.MailService.SendMail(localCtx, emailMessage)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 
 			s2 := err.Error()
 
@@ -666,7 +658,7 @@ func (s *emailService) sendEmails() {
 
 			err := s.commonServices.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				break
 			}
 
@@ -683,13 +675,12 @@ func (s *emailService) processSentEmails() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.processSentEmails")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "EmailService.processSentEmails")
+	defer spans.Finish()
 
 	emailMessages, err := s.commonServices.PostgresRepositories.EmailMessageRepository.GetForProcessing(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return // return if error
 	}
 
@@ -705,7 +696,7 @@ func (s *emailService) processSentEmails() {
 
 		_, err := s.commonServices.MailService.ProcessSentEmail(localCtx, nil, emailMessage)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 
 			s2 := err.Error()
 
@@ -714,7 +705,7 @@ func (s *emailService) processSentEmails() {
 
 			err := s.commonServices.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				break
 			}
 

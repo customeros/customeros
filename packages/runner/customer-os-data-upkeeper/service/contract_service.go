@@ -9,7 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"time"
 )
@@ -48,9 +48,8 @@ func (s *contractService) UpkeepContracts() {
 }
 
 func (s *contractService) updateContractStatuses(ctx context.Context, referenceTime time.Time) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.updateContractStatuses")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContractService.updateContractStatuses")
+	defer spans.Finish()
 
 	limit := 100
 	delayFromPreviousCheckHours := 3
@@ -66,7 +65,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForStatusRenewal(ctx, referenceTime, limit, delayFromPreviousCheckHours)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting contracts for status update: %v", err)
 			return
 		}
@@ -85,13 +84,13 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 			err = s.services.ContractService.RefreshContractStatus(innerCtx, record.ContractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
 			}
 
 			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error marking status renewal requested: %s", err.Error())
 			}
 		}
@@ -107,9 +106,8 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 }
 
 func (s *contractService) rolloutContractRenewals(ctx context.Context, referenceTime time.Time) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.rolloutContractRenewals")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContractService.rolloutContractRenewals")
+	defer spans.Finish()
 
 	limit := 100
 
@@ -124,7 +122,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 
 		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForRenewalRollout(ctx, referenceTime, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)
 			return
 		}
@@ -142,12 +140,12 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 			})
 			err = s.services.OpportunityService.RolloutRenewalOpportunity(innerCtx, record.ContractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error rollout renewal opportunity: %s", err.Error())
 			}
 			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
 			}
 		}
@@ -163,9 +161,8 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 }
 
 func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.closeActiveRenewalOpportunitiesForEndedContracts")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContractService.closeActiveRenewalOpportunitiesForEndedContracts")
+	defer spans.Finish()
 
 	limit := 100
 
@@ -180,7 +177,7 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 
 		records, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetRenewalOpportunitiesForClosingAsLost(ctx, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting opportunities for closing: %v", err)
 			return
 		}
@@ -198,12 +195,12 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 			})
 			err = s.services.OpportunityService.CloseLost(innerCtx, nil, record.Tenant, record.OpportunityId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error closing renewal opportunity: %s", err.Error())
 			} else {
 				err = s.repositories.Neo4jRepositories.OpportunityWriteRepository.MarkRenewalRequested(ctx, record.Tenant, record.OpportunityId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
 				}
 			}
@@ -220,9 +217,8 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 }
 
 func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.createRenewalOpportunitiesIfMissing")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "ContractService.createRenewalOpportunitiesIfMissing")
+	defer spans.Finish()
 
 	limit := 100
 
@@ -237,7 +233,7 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 
 		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetLiveContractsWithoutRenewalOpportunities(ctx, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting opportunities for closing: %v", err)
 			return
 		}
@@ -257,7 +253,7 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 				ContractId: &record.ContractId,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error creating renewal opportunity: %s", err.Error())
 			}
 		}
