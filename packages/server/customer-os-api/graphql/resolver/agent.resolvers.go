@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -176,10 +177,10 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 
 	// log agent ids in trace
 	agentIds := make([]string, 0, len(agents))
-	for _, agent := range agents {
+	for i, agent := range agents {
+		tracing.LogObjectAsJson(span, fmt.Sprintf("result.agent.%d", i+1), agent)
 		agentIds = append(agentIds, agent.ID)
 	}
-	tracing.LogObjectAsJson(span, "result.agent_ids", agentIds)
 	span.LogFields(log.Int("result.count", len(agents)))
 
 	return agents, nil
@@ -213,6 +214,8 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 		return nil, err
 	}
 	agent.Metric = metric
+
+	tracing.LogObjectAsJson(span, "result.agent", agent)
 
 	return agent, nil
 }
