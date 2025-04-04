@@ -6,11 +6,11 @@ package resolver
 
 import (
 	"context"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -18,10 +18,9 @@ import (
 
 // CheckDomain is the resolver for the checkDomain field.
 func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.DomainCheckDetails, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.CheckDomain", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.domain", domain)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CheckDomain", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogKV("request.domain", domain)
 
 	domain = strings.ToLower(strings.TrimSpace(domain))
 	domain = utils.ExtractDomain(domain)
@@ -42,7 +41,7 @@ func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.
 
 	orgByDomainDbNode, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	if orgByDomainDbNode != nil {
 		organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)
@@ -53,7 +52,7 @@ func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.
 	if domain != primaryDomain && primaryDomain != "" {
 		orgByDomainDbNode, err = r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), primaryDomain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		if orgByDomainDbNode != nil {
 			organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)

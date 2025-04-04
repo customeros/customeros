@@ -44,19 +44,6 @@ const (
 	SpanTagComponentAgentCapability    = "agentCapability"
 )
 
-func GraphQlTracingEnhancer(ctx context.Context) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, ExtractGraphQLMethodName(c.Request), c.Request.Header)
-		for k, v := range c.Request.Header {
-			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
-		}
-		defer span.Finish()
-		TagComponentRest(span)
-		c.Request = c.Request.WithContext(ctxWithSpan)
-		c.Next()
-	}
-}
-
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, endpoint, c.Request.Header)
@@ -64,7 +51,6 @@ func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) 
 			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
 		}
 		defer span.Finish()
-		TagComponentRest(span)
 		c.Request = c.Request.WithContext(ctxWithSpan)
 		c.Next()
 	}

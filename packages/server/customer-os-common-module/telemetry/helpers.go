@@ -12,8 +12,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -77,13 +77,13 @@ func getDefaultServiceSpanAttributes(ctx context.Context) []attribute.KeyValue {
 		attrs = append(attrs, attribute.String("tenant", tenant))
 	}
 	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		attrs = append(attrs, attribute.String("user_id", userID))
+		attrs = append(attrs, attribute.String("user.id", userID))
 	}
 	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
-		attrs = append(attrs, attribute.String("user_email", userEmail))
+		attrs = append(attrs, attribute.String("user.email", userEmail))
 	}
 	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
-		attrs = append(attrs, attribute.String("app_source", appSource))
+		attrs = append(attrs, attribute.String("app.source", appSource))
 	}
 
 	return attrs
@@ -106,13 +106,13 @@ func setDefaultJaegerSpanTags(ctx context.Context, span opentracing.Span) {
 		span.SetTag("tenant", tenant)
 	}
 	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		span.SetTag("user_id", userID)
+		span.SetTag("user.id", userID)
 	}
 	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
-		span.SetTag("user_email", userEmail)
+		span.SetTag("user.email", userEmail)
 	}
 	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
-		span.SetTag("app_source", appSource)
+		span.SetTag("app.source", appSource)
 	}
 }
 
@@ -181,42 +181,7 @@ func StartCronSpan(ctx context.Context, operationName string, opts ...SpanOption
 }
 
 func StartGraphQLSpan(ctx context.Context, operationName string, gqlCtx *graphql.OperationContext, opts ...SpanOptions) (*Spans, context.Context) {
-	var jaegerSpan opentracing.Span
-	var otelSpan trace.Span
-
-	// Handle Jaeger span creation with header propagation
-	if gqlCtx != nil {
-		spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(gqlCtx.Headers))
-		if err != nil {
-			jaegerSpan = opentracing.GlobalTracer().StartSpan(operationName)
-			opentracing.GlobalTracer().Inject(jaegerSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(gqlCtx.Headers))
-		} else {
-			jaegerSpan = opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
-		}
-		ctx = opentracing.ContextWithSpan(ctx, jaegerSpan)
-	} else {
-		jaegerSpan, ctx = opentracing.StartSpanFromContext(ctx, operationName)
-	}
-
-	setDefaultJaegerSpanTags(ctx, jaegerSpan)
-
-	// Start OpenTelemetry span
-	tracer := otel.Tracer("github.com/customeros/customeros")
-	if gqlCtx != nil {
-		// Extract context from headers for OpenTelemetry
-		carrier := propagation.HeaderCarrier(gqlCtx.Headers)
-		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
-	}
-	ctx, otelSpan = tracer.Start(ctx, operationName)
-
-	setDefaultServiceSpanAttributes(ctx, otelSpan)
-
-	spans := &Spans{
-		Jaeger: jaegerSpan,
-		OTel:   otelSpan,
-	}
-
-	// Tag as GraphQL component
+	spans, ctx := StartSpan(ctx, operationName, opts...)
 	TagComponentGraphQL(spans)
 	SetSpanKindServer(spans)
 
@@ -233,9 +198,6 @@ func StartGraphQLSpan(ctx context.Context, operationName string, gqlCtx *graphql
 			)
 		}
 	}
-
-	// Store spans in context
-	ctx = context.WithValue(ctx, otelSpanKey, otelSpan)
 
 	return spans, ctx
 }
@@ -869,4 +831,76 @@ func InjectSpanContextIntoHTTPRequest(req *http.Request, spans *Spans) *http.Req
 	}
 
 	return req
+}
+
+// StartHttpServerTracerSpanWithHeader starts both Jaeger and OpenTelemetry spans for HTTP server requests
+func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (*Spans, context.Context) {
+	// Start Jaeger span using existing implementation
+	ctx, jaegerSpan := tracing.StartHttpServerTracerSpanWithHeader(ctx, operationName, headers)
+
+	// Start OpenTelemetry span
+	tracer := otel.Tracer("github.com/customeros/customeros")
+
+	// Extract context from headers for OpenTelemetry
+	carrier := propagation.HeaderCarrier(headers)
+	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+
+	// Start the span
+	ctx, otelSpan := tracer.Start(ctx, operationName)
+
+	// Create spans struct
+	spans := &Spans{
+		Jaeger: jaegerSpan,
+		OTel:   otelSpan,
+	}
+
+	// Log headers for both tracers
+	for key, values := range headers {
+		// Log to Jaeger
+		if jaegerSpan != nil {
+			jaegerSpan.LogFields(
+				log.String("request.header.key", key),
+				log.Object("request.header.value", values),
+			)
+		}
+		// Log to OpenTelemetry
+		if otelSpan != nil {
+			otelSpan.AddEvent("request.header."+key, trace.WithAttributes(
+				attribute.StringSlice("value", values),
+			))
+		}
+	}
+
+	// Store OpenTelemetry span in context
+	ctx = context.WithValue(ctx, otelSpanKey, otelSpan)
+
+	return spans, ctx
+}
+
+// GraphQLTracingEnhancer creates a middleware that adds tracing for GraphQL operations
+func GraphQLTracingEnhancer(ctx context.Context) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		operationName := "GraphQL." + tracing.ExtractGraphQLMethodName(c.Request)
+
+		// Start both Jaeger and OpenTelemetry spans
+		spans, ctxWithSpan := StartHttpServerTracerSpanWithHeader(
+			ctx,
+			operationName,
+			c.Request.Header,
+		)
+		defer spans.Finish()
+
+		// Tag as GraphQL component
+		TagComponentGraphQL(spans)
+		SetSpanKindServer(spans)
+
+		// Update request context
+		c.Request = c.Request.WithContext(ctxWithSpan)
+		c.Next()
+
+		// Add response status
+		if c.Writer.Status() >= 400 {
+			spans.TraceError(nil)
+		}
+	}
 }
