@@ -2,10 +2,8 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -27,60 +25,58 @@ func NewSlackSettingsRepository(db *gorm.DB) SlackSettingsRepository {
 }
 
 func (repo *slackSettingsRepository) Get(ctx context.Context, tenant string) (*postgres_entity.SlackSettingsEntity, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
+	spans, _ := telemetry.StartPostgresSpan(ctx, "SlackSettingsRepository.Get")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant)
 	var existing *postgres_entity.SlackSettingsEntity
 	err := repo.db.Find(&existing, "tenant_name = ?", tenant).Error
 
 	if err != nil {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if existing == nil {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else if existing.TenantName == "" {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(tracingLog.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return existing, nil
 }
 
 func (repo *slackSettingsRepository) Save(ctx context.Context, slackSettings postgres_entity.SlackSettingsEntity) (*postgres_entity.SlackSettingsEntity, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Save")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "SlackSettingsRepository.Save")
+	defer spans.Finish()
 
 	result := repo.db.Save(&slackSettings)
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		return nil, result.Error
 	}
 	return &slackSettings, nil
 }
 
 func (repo *slackSettingsRepository) Delete(ctx context.Context, tenant string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "SlackSettingsRepository.Delete")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant)
 
 	existing, err := repo.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = repo.db.Delete(&existing).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

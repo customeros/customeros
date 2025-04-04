@@ -6,11 +6,9 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/lib/pq"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -39,15 +37,14 @@ func NewWebSessionRepository(gormDb *gorm.DB) WebSessionRepository {
 }
 
 func (r *webSessionRepository) Create(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.Create")
+	defer spans.Finish()
+	spans.LogObjectAsJson("webSessionData", webSessionData)
 
 	var created postgres_entity.WebSession
 	err := r.gormDb.Create(&webSessionData).Scan(&created).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -55,9 +52,8 @@ func (r *webSessionRepository) Create(ctx context.Context, webSessionData postgr
 }
 
 func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.FindAll")
+	defer spans.Finish()
 
 	// Start with a base query
 	query := r.gormDb.Model(&postgres_entity.WebSession{})
@@ -86,19 +82,18 @@ func (r *webSessionRepository) FindAllActiveSessions(ctx context.Context, webSes
 	var results []postgres_entity.WebSession
 	err := query.Order("created_at DESC").Find(&results).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return results, nil
 }
 
 func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindSession")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.FindSession")
+	defer spans.Finish()
+	spans.LogObjectAsJson("webSessionData", webSessionData)
 	if lookbackPeriodInMins != nil {
-		span.LogFields(log.Int("lookbackPeriodInMins", *lookbackPeriodInMins))
+		spans.LogKV("lookbackPeriodInMins", *lookbackPeriodInMins)
 	}
 
 	query := r.gormDb.Where(&webSessionData).Order("last_activity DESC")
@@ -113,22 +108,21 @@ func (r *webSessionRepository) FindSession(ctx context.Context, webSessionData p
 	err := query.First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			span.LogFields(log.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.String("result.sessionId", result.ID))
+	spans.LogKV("result.sessionId", result.ID)
 	return &result, nil
 }
 
 func (r *webSessionRepository) FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLastNotification")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("tenant", tenant, "domain", domain)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.FindLastNotification")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant, "domain", domain)
 
 	var result postgres_entity.WebSession
 	err := r.gormDb.
@@ -139,21 +133,20 @@ func (r *webSessionRepository) FindLastNotification(ctx context.Context, tenant,
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			span.LogFields(log.String("result", "No record found"))
+			spans.LogKV("result", "No record found")
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.String("result", "Record found: "+result.ID))
+	spans.LogKV("result", "Record found: "+result.ID)
 	return &result, nil
 }
 
 func (r *webSessionRepository) FindLatestSessionWithDomainByIP(ctx context.Context, ipAddress string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLatestSessionWithDomainByIP")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.FindLatestSessionWithDomainByIP")
+	defer spans.Finish()
 
 	// Build the query with IP and ensure domain is not null
 	query := r.gormDb.Where("ip = ?", ipAddress).
@@ -165,23 +158,21 @@ func (r *webSessionRepository) FindLatestSessionWithDomainByIP(ctx context.Conte
 	err := query.First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			span.LogFields(log.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.String("result.sessionId", result.ID))
-	span.LogFields(log.String("result.domain", *result.Domain))
+	spans.LogKV("result.sessionId", result.ID)
+	spans.LogKV("result.domain", *result.Domain)
 	return &result, nil
 }
 
 func (r *webSessionRepository) UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateLastActivity")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, sessionID)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.UpdateLastActivity")
+	defer spans.Finish()
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.
@@ -194,7 +185,7 @@ func (r *webSessionRepository) UpdateLastActivity(ctx context.Context, sessionID
 		First(&updatedSession, "id = ?", sessionID).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -202,10 +193,9 @@ func (r *webSessionRepository) UpdateLastActivity(ctx context.Context, sessionID
 }
 
 func (r *webSessionRepository) SetSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionEnd")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, sessionID)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.SetSessionEnd")
+	defer spans.Finish()
+	spans.TagEntity(sessionID)
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.
@@ -219,7 +209,7 @@ func (r *webSessionRepository) SetSessionEnd(ctx context.Context, sessionID stri
 		First(&updatedSession, "id = ?", sessionID).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -227,10 +217,9 @@ func (r *webSessionRepository) SetSessionEnd(ctx context.Context, sessionID stri
 }
 
 func (r *webSessionRepository) SetOrganizationId(ctx context.Context, sessionID, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetOrganizationId")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, sessionID)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.SetOrganizationId")
+	defer spans.Finish()
+	spans.TagEntity(sessionID)
 
 	// Perform a single-column update on organization_id for the matching session
 	result := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -238,8 +227,7 @@ func (r *webSessionRepository) SetOrganizationId(ctx context.Context, sessionID,
 		Update("organization_id", &organizationId)
 
 	if result.Error != nil {
-		// Log the error with tracing and return it
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		return result.Error
 	}
 
@@ -247,11 +235,10 @@ func (r *webSessionRepository) SetOrganizationId(ctx context.Context, sessionID,
 }
 
 func (r *webSessionRepository) SetSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSessionPageViews")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("sessionID", sessionID, "tenant", tenant)
-	tracing.LogObjectAsJson(span, "pageViews", pageViews)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.SetSessionPageViews")
+	defer spans.Finish()
+	spans.LogKV("sessionID", sessionID, "tenant", tenant)
+	spans.LogObjectAsJson("pageViews", pageViews)
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -260,7 +247,7 @@ func (r *webSessionRepository) SetSessionPageViews(ctx context.Context, sessionI
 		First(&updatedSession).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -268,10 +255,9 @@ func (r *webSessionRepository) SetSessionPageViews(ctx context.Context, sessionI
 }
 
 func (r *webSessionRepository) SetSlackSentAt(ctx context.Context, sessionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetSlackSentAt")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, sessionID)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.SetSlackSentAt")
+	defer spans.Finish()
+	spans.TagEntity(sessionID)
 
 	// Perform a single-column update on sent_slack_notification for the matching session
 	result := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -279,8 +265,7 @@ func (r *webSessionRepository) SetSlackSentAt(ctx context.Context, sessionID str
 		Update("sent_slack_notification", utils.Now())
 
 	if result.Error != nil {
-		// Log the error with tracing and return it
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		return result.Error
 	}
 
@@ -288,9 +273,8 @@ func (r *webSessionRepository) SetSlackSentAt(ctx context.Context, sessionID str
 }
 
 func (r *webSessionRepository) SetVisitorIdentity(ctx context.Context, sessionID string, domain, email *string, emailType *enum.EmailType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.SetVisitorIdentity")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionRepository.SetVisitorIdentity")
+	defer spans.Finish()
 
 	// Start building the query
 	query := r.gormDb.Model(&postgres_entity.WebSession{}).
@@ -315,7 +299,7 @@ func (r *webSessionRepository) SetVisitorIdentity(ctx context.Context, sessionID
 	if len(updates) > 0 {
 		err := query.Updates(updates).Error
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
