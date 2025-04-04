@@ -98,7 +98,7 @@ func initLogger(cfg *config.Config) logger.Logger {
 
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 	if cfg.Jaeger.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		tracer, closer, err := telemetry.NewJaegerTracer(&cfg.Jaeger, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}

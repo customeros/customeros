@@ -14,7 +14,6 @@ import (
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -134,7 +133,7 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 
 	// Initialize Jaeger if enabled
 	if cfg.Common.Infrastructure.JaegerConfig.Enabled {
-		tracer, jaegerCloser, err := tracing.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
+		tracer, jaegerCloser, err := telemetry.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}

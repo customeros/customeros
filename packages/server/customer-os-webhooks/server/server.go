@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"os"
 	"os/signal"
 	"syscall"
@@ -48,7 +49,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Common.Infrastructure.JaegerConfig, server.log)
+	tracer, closer, err := telemetry.NewJaegerTracer(&server.cfg.Common.Infrastructure.JaegerConfig, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}

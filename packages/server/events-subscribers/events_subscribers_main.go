@@ -14,7 +14,6 @@ import (
 	common_agent_listeners "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -82,7 +81,7 @@ func (a *App) Initialize() error {
 
 func (a *App) initTracing() error {
 	if a.config.Common.Infrastructure.JaegerConfig.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&a.config.Common.Infrastructure.JaegerConfig, a.logger)
+		tracer, closer, err := telemetry.NewJaegerTracer(&a.config.Common.Infrastructure.JaegerConfig, a.logger)
 		if err != nil {
 			return fmt.Errorf("could not initialize jaeger tracer: %w", err)
 		}

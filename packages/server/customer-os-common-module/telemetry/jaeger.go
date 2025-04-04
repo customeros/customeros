@@ -1,11 +1,12 @@
-package tracing
+package telemetry
 
 import (
+	"io"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/log/zap"
-	"io"
 )
 
 type JaegerConfig struct {

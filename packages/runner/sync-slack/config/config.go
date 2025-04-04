@@ -2,11 +2,11 @@ package config
 
 import (
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	cronConfig "github.com/customeros/customeros/packages/runner/sync-slack/cron/config"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/joho/godotenv"
 	"log"
 )
 
@@ -14,7 +14,7 @@ type Config struct {
 	CommonConfig commonConfig.CommonConfig
 
 	Logger             logger.Config
-	Jaeger             tracing.JaegerConfig
+	Jaeger             telemetry.JaegerConfig
 	Cron               cronConfig.Config
 	RawDataStoreDBName string `env:"RAW_DATA_STORE_DB_NAME,required" envDefault:"destination"`
 }
