@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type CommonConfig struct {
@@ -20,7 +19,7 @@ type InfrastructureConfig struct {
 	AzureOAuthConfig    AzureOAuthConfig
 	RabbitMQConfig      RabbitMQConfig
 	OpensearchConfig    OpensearchConfig
-	JaegerConfig        tracing.JaegerConfig
+	JaegerConfig        telemetry.JaegerConfig
 	OpenTelemetryConfig telemetry.OpenTelemetryConfig
 	LoggerConfig        logger.Config
 }

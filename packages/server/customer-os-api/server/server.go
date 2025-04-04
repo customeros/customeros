@@ -78,7 +78,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.App.Observability.Jaeger, server.log)
+	tracer, closer, err := telemetry.NewJaegerTracer(&server.cfg.App.Observability.Jaeger, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}

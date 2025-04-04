@@ -7,7 +7,6 @@ import (
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/joho/godotenv"
 
@@ -21,7 +20,7 @@ type Config struct {
 
 type CommonConfig struct {
 	Logger         logger.Config
-	Jaeger         tracing.JaegerConfig
+	Jaeger         telemetry.JaegerConfig
 	OpenTelemetry  telemetry.OpenTelemetryConfig
 	RabbitMQConfig commonconf.RabbitMQConfig
 	Postgres       commonconf.PostgresConfig
@@ -83,7 +82,7 @@ type GraphQLConfig struct {
 }
 
 type ObservabilityConfig struct {
-	Jaeger        tracing.JaegerConfig
+	Jaeger        telemetry.JaegerConfig
 	Metrics       metrics.Config
 	OpenTelemetry telemetry.OpenTelemetryConfig
 }

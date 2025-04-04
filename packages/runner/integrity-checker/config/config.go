@@ -8,14 +8,13 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
 	Neo4j         commonConfig.Neo4jConfig
 	Logger        logger.Config
-	Jaeger        tracing.JaegerConfig
+	Jaeger        telemetry.JaegerConfig
 	OpenTelemetry telemetry.OpenTelemetryConfig
 	Cron          cronconfig.Config
 

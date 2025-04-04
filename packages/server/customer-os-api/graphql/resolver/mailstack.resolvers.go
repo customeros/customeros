@@ -14,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -65,12 +66,14 @@ func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.
 
 // MailstackDomainPurchaseSuggestions is the resolver for the mailstack_DomainPurchaseSuggestions field.
 func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, domain string) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackDomainPurchaseSuggestions", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.domain", domain)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.MailstackDomainPurchaseSuggestions", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogKV("request.domain", domain)
 
 	tenant := common.GetTenantFromContext(ctx)
+
+	// remove all spaces from domain
+	domain = strings.ReplaceAll(domain, " ", "")
 
 	// Strip TLD if present
 	if strings.Contains(domain, ".") {
@@ -79,10 +82,14 @@ func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, 
 
 	// Call service to get domain recommendations
 	statusCode, errorMsg, recommendations, err := r.Services.CommonServices.MailstackService.RecommendDomain(ctx, tenant, domain)
+	if err != nil {
+		spans.TraceError(err)
+	}
 	if err != nil || statusCode != http.StatusOK {
 		if errorMsg != "" {
 			graphql.AddErrorf(ctx, errorMsg)
 		} else {
+			spans.TraceError(errors.New("Failed to get domain recommendations"))
 			graphql.AddErrorf(ctx, "Failed to get domain recommendations")
 		}
 		return nil, nil
