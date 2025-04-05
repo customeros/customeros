@@ -7,9 +7,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -32,9 +31,8 @@ func NewWebhooksRepository(gormDb *gorm.DB) WebhooksRepository {
 }
 
 func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebhooksRepository.Create")
+	defer spans.Finish()
 
 	var created postgres_entity.Webhooks
 	now := utils.Now()
@@ -49,6 +47,7 @@ func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity
             AND enabled = TRUE
         `, now, webhook.Integration, webhook.Tenant).Error
 		if err != nil {
+			spans.TraceError(err)
 			return err
 		}
 
@@ -76,7 +75,7 @@ func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity
 		).Scan(&created).Error
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -84,14 +83,13 @@ func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity
 }
 
 func (r *webhooksRepository) FindAll(ctx context.Context) (*[]postgres_entity.Webhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebhooksRepository.FindAll")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set in context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -101,7 +99,7 @@ func (r *webhooksRepository) FindAll(ctx context.Context) (*[]postgres_entity.We
 		Order("created_at DESC").
 		Find(&webhooks).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -109,15 +107,14 @@ func (r *webhooksRepository) FindAll(ctx context.Context) (*[]postgres_entity.We
 }
 
 func (r *webhooksRepository) Find(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Find")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebhooksRepository.Find")
+	defer spans.Finish()
 
 	if webhook.Tenant == "" {
 		webhook.Tenant = common.GetTenantFromContext(ctx)
 		if webhook.Tenant == "" {
 			err := errors.New("Tenant not set in context")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -135,7 +132,7 @@ func (r *webhooksRepository) Find(ctx context.Context, webhook postgres_entity.W
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -143,9 +140,8 @@ func (r *webhooksRepository) Find(ctx context.Context, webhook postgres_entity.W
 }
 
 func (r *webhooksRepository) FindLastRotationCount(ctx context.Context, integration enum.Source) (int, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.FindLastRotationCount")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebhooksRepository.FindLastRotationCount")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -162,29 +158,28 @@ func (r *webhooksRepository) FindLastRotationCount(ctx context.Context, integrat
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return 0, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return 0, err
 	}
 	return webhook.RotationCount, nil
 }
 
 func (r *webhooksRepository) Deactivate(ctx context.Context, webhook postgres_entity.Webhooks) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebhooksRepository.Update")
+	defer spans.Finish()
 
 	if webhook.Tenant == "" {
 		webhook.Tenant = common.GetTenantFromContext(ctx)
 		if webhook.Tenant == "" {
 			err := errors.New("Tenant not set in context")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return false, err
 		}
 	}
 
 	if webhook.WebhookPath == "" {
 		err := errors.New("Webhook path is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -196,7 +191,7 @@ func (r *webhooksRepository) Deactivate(ctx context.Context, webhook postgres_en
 		})
 
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		return false, result.Error
 	}
 
