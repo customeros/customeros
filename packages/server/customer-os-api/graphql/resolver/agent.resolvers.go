@@ -12,20 +12,19 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // AgentSave is the resolver for the agent_Save field.
 func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AgentSave", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AgentSave", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	buildAgentFields := func(input model.AgentSaveInput) data_fields.AgentFields {
 		return data_fields.AgentFields{
@@ -97,7 +96,7 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		agentType := enummapper.MapAgentTypeFromModel(*input.Type)
 		agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to create agent")
 			return nil, nil
 		}
@@ -118,7 +117,7 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		listeners,
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update agent")
 		return nil, nil
 	}
@@ -131,13 +130,12 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 
 // AgentDelete is the resolver for the agent_Delete field.
 func (r *mutationResolver) AgentDelete(ctx context.Context, id string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AgentDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AgentDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	err := r.Services.CommonServices.AgentService.DeleteAgent(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 	return true, nil
@@ -145,19 +143,18 @@ func (r *mutationResolver) AgentDelete(ctx context.Context, id string) (bool, er
 
 // Agents is the resolver for the agents field.
 func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Agents", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Agents", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	agentInfo, err := r.Services.CommonServices.AgentService.GetAgentInfo(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgents(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get agents")
 		return nil, nil
 	}
@@ -168,7 +165,7 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 		agent.Description = (*agentInfo)[agentEntity.Type].Description
 		metric, err := r.Services.CommonServices.AgentService.GetNorthStarMetricById(ctx, agent.ID, agentEntity.Type)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		agent.Metric = metric
@@ -178,30 +175,30 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 	// log agent ids in trace
 	agentIds := make([]string, 0, len(agents))
 	for i, agent := range agents {
-		tracing.LogObjectAsJson(span, fmt.Sprintf("result.agent.%d", i+1), agent)
+		spans.LogObjectAsJson(fmt.Sprintf("result.agent.%d", i+1), agent)
 		agentIds = append(agentIds, agent.ID)
 	}
-	span.LogFields(log.Int("result.count", len(agents)))
+	spans.LogKV("result.count", len(agents))
 
 	return agents, nil
 }
 
 // Agent is the resolver for the agent field.
 func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Agent", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("id", id)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Agent", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	agentInfo, err := r.Services.CommonServices.AgentService.GetAgentInfo(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	agentEntity, err := r.Services.CommonServices.AgentService.GetAgentById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get agent")
 		return nil, nil
 	}
@@ -210,27 +207,26 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 	agent.Description = (*agentInfo)[agentEntity.Type].Description
 	metric, err := r.Services.CommonServices.AgentService.GetNorthStarMetricById(ctx, agent.ID, agentEntity.Type)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	agent.Metric = metric
 
-	tracing.LogObjectAsJson(span, "result.agent", agent)
+	spans.LogObjectAsJson("result.agent", agent)
 
 	return agent, nil
 }
 
 // SlackChannelsWithBot is the resolver for the slackChannelsWithBot field.
 func (r *queryResolver) SlackChannelsWithBot(ctx context.Context) ([]*model.AgentSlackChannel, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.SlackChannelsWithBot", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.SlackChannelsWithBot", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	slackSettingsEntity, err := r.Services.Repositories.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get slack settings")
 		return nil, nil
 	}
@@ -241,7 +237,7 @@ func (r *queryResolver) SlackChannelsWithBot(ctx context.Context) ([]*model.Agen
 
 	slackChannels, err := r.Services.CommonServices.SlackService.ListSlackChannelsWithBot(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get slack channels")
 		return nil, nil
 	}

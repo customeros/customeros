@@ -20,28 +20,26 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	commonTracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	pkgerrors "github.com/pkg/errors"
 )
 
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get tags for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
 		return nil, nil
@@ -51,11 +49,11 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get job roles for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for contact %s", obj.ID)
 		return nil, nil
@@ -65,18 +63,19 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 
 // Organizations is the resolver for the organizations field.
 func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*commonmodel.SortBy) (*model.OrganizationPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Organizations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContactResolver.Organizations", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", obj.ID)
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
+	spans.LogKV("request.page", pagination.Page)
+	spans.LogKV("request.limit", pagination.Limit)
 	paginatedResult, err := r.Services.OrganizationService.GetOrganizationsForContact(ctx, obj.ID, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not fetch organizations for contact %s", obj.ID)
 		return nil, err
 	}
@@ -89,14 +88,11 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 
 // LatestOrganizationWithJobRole is the resolver for the latestOrganizationWithJobRole field.
 func (r *contactResolver) LatestOrganizationWithJobRole(ctx context.Context, obj *model.Contact) (*model.OrganizationWithJobRole, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.LatestOrganizationWithJobRole", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.contactID", obj.Metadata.ID)
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationWithJobRoleNillable, err := dataloader.For(ctx).GetLatestOrganizationWithJobRoleForContact(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching latest organization for contact %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching latest organization for contact %s", obj.Metadata.ID)
 		return nil, nil
@@ -113,11 +109,11 @@ func (r *contactResolver) LatestOrganizationWithJobRole(ctx context.Context, obj
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get phone numbers for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for contact %s", obj.ID)
 		return nil, nil
@@ -127,11 +123,11 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	emailEntities, err := dataloader.For(ctx).GetEmailsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get emails for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get emails for contact %s", obj.ID)
 		return nil, nil
@@ -141,14 +137,14 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 
 // PrimaryEmail is the resolver for the primaryEmail field.
 func (r *contactResolver) PrimaryEmail(ctx context.Context, obj *model.Contact) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.PrimaryEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.contactID", obj.Metadata.ID)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContactResolver.PrimaryEmail", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", obj.Metadata.ID)
 
 	emailEntityNillable, err := dataloader.For(ctx).GetPrimaryEmailForContact(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching primary email for contact %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching primary email for contact %s", obj.Metadata.ID)
 		return nil, nil
@@ -158,11 +154,11 @@ func (r *contactResolver) PrimaryEmail(ctx context.Context, obj *model.Contact) 
 
 // Locations is the resolver for the locations field.
 func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	locationEntities, err := dataloader.For(ctx).GetLocationsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get locations for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
 		return nil, err
@@ -172,11 +168,11 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 
 // Socials is the resolver for the socials field.
 func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	socialEntities, err := dataloader.For(ctx).GetSocialsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get socials for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", obj.ID)
 		return nil, nil
@@ -186,11 +182,11 @@ func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*m
 
 // ConnectedUsers is the resolver for the connectedUsers field.
 func (r *contactResolver) ConnectedUsers(ctx context.Context, obj *model.Contact) ([]*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntities, err := dataloader.For(ctx).GetUsersConnectedForContact(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get socials for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", obj.ID)
 		return nil, nil
@@ -200,10 +196,10 @@ func (r *contactResolver) ConnectedUsers(ctx context.Context, obj *model.Contact
 
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.CustomFields", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContactResolver.CustomFields", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", obj.ID)
 
 	var customFields []*model.CustomField
 	entityType := &model.CustomFieldEntityType{
@@ -218,14 +214,14 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 
 // Owner is the resolver for the owner field.
 func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Owner", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContactResolver.Owner", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", obj.ID)
 
 	owner, err := r.Services.CommonServices.UserService.GetContactOwner(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
 		return nil, err
 	}
@@ -237,11 +233,11 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 
 // Flows is the resolver for the flows field.
 func (r *contactResolver) Flows(ctx context.Context, obj *model.Contact) ([]*model.Flow, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetFlowsWithContact(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get flow  for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get flows for contact %s", obj.ID)
 		return nil, nil
@@ -251,17 +247,19 @@ func (r *contactResolver) Flows(ctx context.Context, obj *model.Contact) ([]*mod
 
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEvents", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID), log.Int("request.size", size), log.Object("request.types", timelineEventTypes))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContactResolver.TimelineEvents", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", obj.ID)
+	spans.LogKV("request.size", size)
+	spans.LogKV("request.types", timelineEventTypes)
 	if from != nil {
-		span.LogFields(log.Object("request.from", *from))
+		spans.LogKV("request.from", *from)
 	}
 
 	timelineEvents, err := r.Services.TimelineEventService.GetTimelineEventsForContact(ctx, obj.ID, from, size, timelineEventTypes)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to get timeline events for contact %s", obj.ID)
 		return nil, err
 	}
@@ -270,14 +268,15 @@ func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact
 
 // TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
 func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEventsTotalCount", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID), log.Object("request.types", timelineEventTypes))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContactResolver.TimelineEventsTotalCount", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", obj.ID)
+	spans.LogKV("request.types", timelineEventTypes)
 
 	count, err := r.Services.TimelineEventService.GetTimelineEventsTotalCountForContact(ctx, obj.ID, timelineEventTypes)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to get timeline events total count for contact %s", obj.ID)
 		return int64(0), err
 	}
@@ -286,10 +285,10 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	contactId, err := r.Services.ContactService.Create(ctx, &cosapi_interfaces.ContactCreateData{
 		ContactEntity:     mapper.MapContactInputToEntity(input),
@@ -300,28 +299,28 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		Source:            neo4jentity.DataSourceOpenline,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", *input.FirstName, *input.LastName)
 		return contactId, err
 	}
-	span.LogFields(log.String("response.contactID", contactId))
+	spans.LogKV("response.contactID", contactId)
 	return contactId, nil
 }
 
 // ContactCreateForOrganization is the resolver for the contact_CreateForOrganization field.
 func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateForOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-	span.LogKV("request.organizationID", organizationID)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreateForOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
+	spans.LogKV("request.organizationID", organizationID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Check organization exists
 	_, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Organization with id %s not found", organizationID)
 		return nil, err
 	}
@@ -329,7 +328,7 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 	// Create contact
 	contactId, err := r.ContactCreate(ctx, input)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create contact")
 		return nil, err
 	}
@@ -339,7 +338,7 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 		err = r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationID, "", "",
 			neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationID, contactId)
 			return nil, err
 		}
@@ -355,10 +354,10 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 
 // CustomerContactCreate is the resolver for the customer_contact_Create field.
 func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	return r.Services.ContactService.CustomerContactCreate(ctx, &cosapi_interfaces.CustomerContactCreateData{
 		ContactEntity: mapper.MapCustomerContactInputToEntity(input),
@@ -368,10 +367,10 @@ func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input mode
 
 // ContactCreateBulkByLinkedIn is the resolver for the contact_CreateBulkByLinkedIn field.
 func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, linkedInUrls []string, flowID *string) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByLinkedIn", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.linkedInUrls", linkedInUrls)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreateBulkByLinkedIn", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.linkedInUrls", linkedInUrls)
 
 	uniqueLinkedInUrls := utils.RemoveEmpties(linkedInUrls)
 	uniqueLinkedInUrls = utils.RemoveDuplicates(uniqueLinkedInUrls)
@@ -381,7 +380,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 	}
 	if len(uniqueLinkedInUrls) > 200 {
 		err := pkgerrors.Wrap(errors.New("maximum number of LinkedIn URLs exceeded"), "ContactCreateBulkByLinkedIn")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Maximum number of LinkedIn URLs exceeded")
 		return uniqueLinkedInUrls, err
 	}
@@ -391,7 +390,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
 		if err != nil || flowEntity == nil {
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			graphql.AddErrorf(ctx, "Invalid flow id")
 			return uniqueLinkedInUrls, nil
@@ -414,7 +413,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 			} else if utils.IfNotNilString(flowID) != "" {
 				_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 				}
 			}
 		}
@@ -422,7 +421,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 		if flowID != nil {
 			flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
@@ -458,16 +457,16 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 		failedLinkedInUrls = append(failedLinkedInUrls, item)
 	}
 
-	span.LogFields(log.String("response.failedLinkedInUrls", strings.Join(failedLinkedInUrls, ", ")))
+	spans.LogKV("response.failedLinkedInUrls", strings.Join(failedLinkedInUrls, ", "))
 	return failedLinkedInUrls, nil
 }
 
 // ContactCreateBulkByEmail is the resolver for the contact_CreateBulkByEmail field.
 func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails []string, flowID *string) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.emails", emails)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreateBulkByEmail", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.emails", emails)
 
 	uniqueEmails := utils.RemoveEmpties(emails)
 	uniqueEmails = utils.RemoveDuplicates(uniqueEmails)
@@ -477,7 +476,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 	}
 	if len(uniqueEmails) > 200 {
 		err := pkgerrors.Wrap(errors.New("maximum number of emails exceeded"), "ContactCreateBulkByEmail")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Maximum number of emails exceeded")
 		return uniqueEmails, err
 	}
@@ -487,7 +486,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
 		if err != nil || flowEntity == nil {
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			graphql.AddErrorf(ctx, "Invalid flow id")
 			return uniqueEmails, nil
@@ -510,7 +509,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 			} else if utils.IfNotNilString(flowID) != "" {
 				_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 				}
 			}
 		}
@@ -518,7 +517,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 		if flowID != nil {
 			flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
@@ -554,16 +553,16 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 		failedEmails = append(failedEmails, item)
 	}
 
-	span.LogFields(log.String("response.failedEmails", strings.Join(failedEmails, ", ")))
+	spans.LogKV("response.failedEmails", strings.Join(failedEmails, ", "))
 	return failedEmails, nil
 }
 
 // ContactCreateBulkByLinkedInV2 is the resolver for the contact_CreateBulkByLinkedInV2 field.
 func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, linkedInUrls []string, flowID *string) (*model.CreateContactBulkResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByLinkedIn", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.linkedInUrls", linkedInUrls)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreateBulkByLinkedIn", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.linkedInUrls", linkedInUrls)
 
 	uniqueLinkedInUrls := utils.RemoveEmpties(linkedInUrls)
 	uniqueLinkedInUrls = utils.RemoveDuplicates(uniqueLinkedInUrls)
@@ -573,7 +572,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 	}
 	if len(uniqueLinkedInUrls) > 200 {
 		err := pkgerrors.Wrap(errors.New("maximum number of LinkedIn URLs exceeded"), "ContactCreateBulkByLinkedIn")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Maximum number of LinkedIn URLs exceeded")
 		return nil, err
 	}
@@ -583,7 +582,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
 		if err != nil || flowEntity == nil {
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			graphql.AddErrorf(ctx, "Invalid flow id")
 			return nil, nil
@@ -610,7 +609,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 				if utils.IfNotNilString(flowID) != "" {
 					_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 					}
 				}
 			}
@@ -619,7 +618,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 		if flowID != nil {
 			flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
@@ -661,7 +660,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 		successIds = append(successIds, item)
 	}
 
-	span.LogFields(log.String("response.failedLinkedInUrls", strings.Join(failedLinkedInUrls, ", ")))
+	spans.LogKV("response.failedLinkedInUrls", strings.Join(failedLinkedInUrls, ", "))
 	return &model.CreateContactBulkResponse{
 		CreatedIds:   successIds,
 		FailedInputs: failedLinkedInUrls,
@@ -670,10 +669,10 @@ func (r *mutationResolver) ContactCreateBulkByLinkedInV2(ctx context.Context, li
 
 // ContactCreateBulkByEmailV2 is the resolver for the contact_CreateBulkByEmailV2 field.
 func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, emails []string, flowID *string) (*model.CreateContactBulkResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateBulkByEmailV2", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.emails", emails)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactCreateBulkByEmailV2", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.emails", emails)
 
 	uniqueEmails := utils.RemoveEmpties(emails)
 	uniqueEmails = utils.RemoveDuplicates(uniqueEmails)
@@ -683,7 +682,7 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 	}
 	if len(uniqueEmails) > 200 {
 		err := pkgerrors.Wrap(errors.New("maximum number of emails exceeded"), "ContactCreateBulkByEmail")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Maximum number of emails exceeded")
 		return nil, err
 	}
@@ -693,7 +692,7 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 		flowEntity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, utils.IfNotNilString(flowID))
 		if err != nil || flowEntity == nil {
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			graphql.AddErrorf(ctx, "Invalid flow id")
 			return nil, err
@@ -720,7 +719,7 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 				if utils.IfNotNilString(flowID) != "" {
 					_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, utils.IfNotNilString(flowID), contactId, commonmodel.CONTACT)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 					}
 				}
 			}
@@ -729,7 +728,7 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 		if flowID != nil {
 			flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, *flowID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return
 			}
 
@@ -771,7 +770,7 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 		successIds = append(successIds, item)
 	}
 
-	span.LogFields(log.String("response.failedEmails", strings.Join(failedEmails, ", ")))
+	spans.LogKV("response.failedEmails", strings.Join(failedEmails, ", "))
 	return &model.CreateContactBulkResponse{
 		CreatedIds:   successIds,
 		FailedInputs: failedEmails,
@@ -780,38 +779,38 @@ func (r *mutationResolver) ContactCreateBulkByEmailV2(ctx context.Context, email
 
 // ContactUpdate is the resolver for the contact_Update field.
 func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	contactId, err := r.Services.CommonServices.ContactService.Save(ctx, nil, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), false)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
 		return nil, nil
 	}
 
 	updatedContactEntity, err := r.Services.ContactService.GetById(ctx, contactId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact details not yet available. Contact id: %s", contactId)
 		return &model.Contact{ID: contactId}, nil
 	}
-	span.LogFields(log.String("response.contactID", contactId))
+	spans.LogKV("response.contactID", contactId)
 	return mapper.MapEntityToContact(updatedContactEntity), nil
 }
 
 // ContactHardDelete is the resolver for the contact_HardDelete field.
 func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactHardDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactHardDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
 
 	result, err := r.Services.ContactService.PermanentDelete(ctx, contactID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not hard delete contact %s", contactID)
 		return nil, err
 	}
@@ -822,15 +821,16 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 
 // ContactMerge is the resolver for the contact_Merge field.
 func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactMerge", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.primaryContactID", primaryContactID), log.Object("request.mergedContactIds", mergedContactIds))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactMerge", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.primaryContactID", primaryContactID)
+	spans.LogKV("request.mergedContactIds", mergedContactIds)
 
 	for _, mergedContactID := range mergedContactIds {
 		err := r.Services.ContactService.Merge(ctx, primaryContactID, mergedContactID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to merge contact %s into contact %s", mergedContactID, primaryContactID)
 			return nil, err
 		}
@@ -838,7 +838,7 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 
 	contactEntityPtr, err := r.Services.ContactService.GetById(ctx, primaryContactID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contact by id %s", primaryContactID)
 		return nil, err
 	}
@@ -847,24 +847,24 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 
 // ContactHide is the resolver for the contact_Hide field.
 func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactHide", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV(log.String("request.contactID", contactID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactHide", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
 	if err != nil || contactEntity == nil {
 		if err == nil {
 			err = fmt.Errorf("contact %s not found", contactID)
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact %s not found", contactID)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
 	err = r.Services.CommonServices.ContactService.HideContact(ctx, nil, contactID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error while hiding contact")
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -873,16 +873,15 @@ func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*
 
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
 func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddOrganizationByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactAddOrganizationByID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, input.ContactID, input.OrganizationID, "", "",
 		neo4jentity.DataSourceOpenline.String(), false, nil, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
 	}
@@ -893,7 +892,7 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 		if err == nil {
 			err = fmt.Errorf("contact %s not found", input.ContactID)
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact %s not found", input.ContactID)
 		return nil, nil
 	}
@@ -902,17 +901,17 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
 func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddNewLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactAddNewLocation", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonmodel.CONTACT, contactID, entity.SourceFields{
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error creating location for contact %s", contactID)
 		return nil, err
 	}
@@ -922,20 +921,21 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 // ContactRemoveLocation is the resolver for the contact_RemoveLocation field.
 func (r *mutationResolver) ContactRemoveLocation(ctx context.Context, contactID string, locationID string) (*model.Contact, error) {
 	r.log.Error("ContactRemoveLocation is Not Ready Yet")
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.locationID", locationID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactRemoveLocation", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.locationID", locationID)
 
 	err := r.Services.ContactService.RemoveLocation(ctx, contactID, locationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to remove location %s from user %s", locationID, contactID)
 		return nil, nil
 	}
 	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contact %s", contactID)
 		return nil, nil
 	}
@@ -944,11 +944,11 @@ func (r *mutationResolver) ContactRemoveLocation(ctx context.Context, contactID 
 
 // ContactAddSocial is the resolver for the contact_AddSocial field.
 func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddSocial", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.contactID", contactID)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactAddSocial", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.input", input)
 
 	socialId, err := r.Services.CommonServices.SocialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
 		Id:   contactID,
@@ -960,7 +960,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 			AppSource: utils.StringPtrFirstNonEmpty(input.AppSource, utils.StringPtr(constants.AppSourceCustomerOsApi)),
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to add social %s from contact %s", input.URL, contactID)
 		return nil, nil
 	}
@@ -972,18 +972,17 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 
 // ContactRemoveSocial is the resolver for the contact_RemoveSocial field.
 func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID string, socialID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveSocial", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.socialID", socialID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactRemoveSocial", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.socialID", socialID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	err := r.Services.Repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, tenant, contactID, commonmodel.NodeLabelContact, socialID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to remove social %s from contact %s", socialID, contactID)
 		return &model.ActionResponse{
 			Accepted: false,
@@ -997,26 +996,26 @@ func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID st
 
 // ContactFindWorkEmail is the resolver for the contact_FindWorkEmail field.
 func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID string, organizationID *string, domain *string, findMobileNumber *bool) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactFindWorkEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.contactID", contactID)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactFindWorkEmail", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	if organizationID != nil {
-		span.LogKV("request.organizationID", *organizationID)
+		spans.LogKV("request.organizationID", *organizationID)
 	}
 	if domain != nil {
-		span.LogKV("request.domain", *domain)
+		spans.LogKV("request.domain", *domain)
 	}
 	if findMobileNumber != nil {
-		span.LogFields(log.Bool("request.findMobileNumber", *findMobileNumber))
+		spans.LogKV("request.findMobileNumber", *findMobileNumber)
 	}
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
 	if err != nil || contactEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -1028,21 +1027,21 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	if organizationID != nil {
 		orgAndContactLinked, err := r.Services.Repositories.Neo4jRepositories.JobRoleReadRepository.ExistsForContactAndOrganization(ctx, common.GetTenantFromContext(ctx), contactID, *organizationID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Contact %s does not belong to organization %s", contactID, *organizationID)
 			return &model.ActionResponse{Accepted: false}, nil
 		}
 		if orgAndContactLinked {
 			organizationEntity, err = r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, *organizationID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				graphql.AddErrorf(ctx, "Organization with id %s not found", *organizationID)
 				return &model.ActionResponse{Accepted: false}, nil
 			}
 			orgName = organizationEntity.Name
 			domains, err := r.Services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{organizationEntity.ID})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				graphql.AddErrorf(ctx, "Failed to get domains for organization %s", *organizationID)
 				return &model.ActionResponse{Accepted: false}, nil
 			}
@@ -1056,7 +1055,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	if orgDomain == "" && organizationEntity == nil {
 		paginatedResult, err := r.Services.OrganizationService.GetOrganizationsForContact(ctx, contactID, 1, 1000, nil, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to get organizations for contact %s", contactID)
 			return &model.ActionResponse{Accepted: false}, nil
 		}
@@ -1064,7 +1063,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			for _, orgEntity := range *paginatedResult.Rows.(*neo4jentity.OrganizationEntities) {
 				domains, err := r.Services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{orgEntity.ID})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					graphql.AddErrorf(ctx, "Failed to get domains for organization %s", orgEntity.ID)
 					return &model.ActionResponse{Accepted: false}, nil
 				}
@@ -1082,14 +1081,14 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	}
 
 	if orgDomain == "" {
-		tracing.TraceErr(span, errors.New("cannot find email for contact without domain"))
+		spans.TraceError(errors.New("cannot find email for contact without domain"))
 		graphql.AddErrorf(ctx, "Missing domain for contact")
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
 	socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT, []string{contactID})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", contactID)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -1104,7 +1103,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	// Call events platform to find work email
 	_, betterContactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmailWithBetterContact(ctx, linkedInUrl, contactEntity.FirstName, contactEntity.LastName, orgName, utils.IfNotNilString(domain), false)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -1127,36 +1126,36 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		// mark contact as requested data from better contact
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), betterContactRequestID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		if utils.BoolDefaultIfNil(findMobileNumber, false) {
 			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId), betterContactRequestID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactRequestedAt), utils.NowPtr())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt))
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound))
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}
 		r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
@@ -1165,7 +1164,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 
 	phoneNumberEntities, err := r.Services.CommonServices.PhoneNumberService.GetAllForEntityTypeByIds(ctx, commonmodel.CONTACT, []string{contactID})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	currentPhoneNumbers := []string{}
 	for _, phoneNumberEntity := range *phoneNumberEntities {
@@ -1175,7 +1174,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 
 	emailEntities, err := r.Services.EmailService.GetAllForEntityTypeByIds(ctx, commonmodel.CONTACT, []string{contactID})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	var currentEmails []string
 	for _, emailEntity := range *emailEntities {
@@ -1197,7 +1196,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 					Id:   contactID,
 				})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			} else {
 				emailLinked = true
 			}
@@ -1212,7 +1211,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 				PhoneNumber: phoneNumber,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			} else {
 				phoneLinked = true
 			}
@@ -1227,7 +1226,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 				ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, contactEntity.FirstName, contactEntity.LastName),
 			})
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+			spans.TraceError(pkgerrors.Wrap(err, "failed to store billable event"))
 		}
 	}
 	if phoneLinked {
@@ -1237,24 +1236,24 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 				ReferenceData: fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, contactEntity.FirstName, contactEntity.LastName),
 			})
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+			spans.TraceError(pkgerrors.Wrap(err, "failed to store billable event"))
 		}
 	}
 
 	// update contact enrich properties for email
 	err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	if emailLinked {
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	} else {
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
@@ -1262,17 +1261,17 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	if utils.BoolDefaultIfNil(findMobileNumber, false) {
 		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		if phoneLinked {
 			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		} else {
 			err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}
 	}
@@ -1283,16 +1282,16 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 
 // ContactAddTag is the resolver for the contact_AddTag field.
 func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request", input))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error adding tag to organization")
 		return nil, nil
 	}
@@ -1302,10 +1301,10 @@ func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.Contac
 
 // ContactRemoveTag is the resolver for the contact_RemoveTag field.
 func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request", input))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContactRemoveTag", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -1316,7 +1315,7 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 			tagName := utils.IfNotNilString(input.Tag.Name)
 			tagEntity, err := r.Services.CommonServices.TagService.GetTagByEntityTypeAndName(ctx, commonmodel.CONTACT, tagName)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				graphql.AddErrorf(ctx, "Error removing tag from organization")
 				return &model.ActionResponse{Accepted: false}, nil
 			}
@@ -1325,14 +1324,14 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 	}
 
 	if tagId == "" {
-		tracing.TraceErr(span, errors.New("missing tag id"))
+		spans.TraceError(errors.New("missing tag id"))
 		graphql.AddErrorf(ctx, "Missing tag")
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
 	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, tagId, "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -1342,20 +1341,20 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Contact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", id)
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("missing contact input id"))
+		spans.TraceError(errors.New("missing contact input id"))
 		graphql.AddErrorf(ctx, "missing contact input id")
 		return nil, nil
 	}
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, id)
 	if err != nil || contactEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact with id %s not found", id)
 		return nil, err
 	}
@@ -1364,14 +1363,14 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*commonmodel.SortBy) (*model.ContactsPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contacts", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Contacts", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
+	spans.LogKV("request.page", pagination.Page)
+	spans.LogKV("request.limit", pagination.Limit)
 	paginatedResult, err := r.Services.ContactService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.ContactsPage{
 		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*neo4jentity.ContactEntities)),
@@ -1382,14 +1381,14 @@ func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Paginati
 
 // ContactByPhone is the resolver for the contactByPhone field.
 func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByPhone", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.email", e164))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ContactByPhone", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.email", e164)
 
 	contactEntity, err := r.Services.ContactService.GetFirstContactByPhoneNumber(ctx, e164)
 	if err != nil || contactEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)
 		return nil, err
 	}
@@ -1398,14 +1397,14 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 
 // ContactByEmail is the resolver for the contactByEmail field.
 func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.email", email))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ContactByEmail", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.email", email)
 
 	contactEntity, err := r.Services.CommonServices.ContactService.GetFirstContactByEmail(ctx, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contact by email %s", email)
 		return nil, err
 	}
@@ -1414,10 +1413,10 @@ func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*mode
 
 // ContactByLinkedIn is the resolver for the contact_ByLinkedIn field.
 func (r *queryResolver) ContactByLinkedIn(ctx context.Context, linkedInURL string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByLinkedIn", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.linkedInURL", linkedInURL)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ContactByLinkedIn", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.linkedInURL", linkedInURL)
 
 	socialEntity := neo4jentity.SocialEntity{
 		Url: linkedInURL,
@@ -1428,7 +1427,7 @@ func (r *queryResolver) ContactByLinkedIn(ctx context.Context, linkedInURL strin
 
 	_, existingContactId, err := r.Services.CommonServices.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInURL, "", "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to check contact by linkedin url %s", linkedInURL)
 		return nil, nil
 	}
@@ -1438,7 +1437,7 @@ func (r *queryResolver) ContactByLinkedIn(ctx context.Context, linkedInURL strin
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, existingContactId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contact by id %s", existingContactId)
 		return nil, nil
 	}
@@ -1448,10 +1447,10 @@ func (r *queryResolver) ContactByLinkedIn(ctx context.Context, linkedInURL strin
 
 // ContactExistsByLinkedIn is the resolver for the contact_ExistsByLinkedIn field.
 func (r *queryResolver) ContactExistsByLinkedIn(ctx context.Context, linkedInURL string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactExistsByLinkedIn", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.linkedInURL", linkedInURL)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ContactExistsByLinkedIn", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.linkedInURL", linkedInURL)
 
 	socialEntity := neo4jentity.SocialEntity{
 		Url: linkedInURL,
@@ -1462,7 +1461,7 @@ func (r *queryResolver) ContactExistsByLinkedIn(ctx context.Context, linkedInURL
 
 	contactFound, _, err := r.Services.CommonServices.ContactService.CheckContactExistsWithLinkedIn(ctx, linkedInURL, "", "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to check contact by linkedin url %s", linkedInURL)
 		return false, nil
 	}

@@ -11,19 +11,18 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 // SkuSave is the resolver for the sku_Save field.
 func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*model.Sku, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "SkuResolver.SkuSave", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "SkuResolver.SkuSave", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -33,14 +32,14 @@ func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*
 	if input.ID != nil && *input.ID != "" {
 		toStore, err = r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, *input.ID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to get skus")
 			return nil, err
 		}
 
 		if toStore == nil {
 			err := fmt.Errorf("sku with id %s not found", *input.ID)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to save sku")
 			return nil, err
 		}
@@ -56,14 +55,14 @@ func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*
 
 	sku, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Save(ctx, toStore)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get skus")
 		return nil, err
 	}
 
 	err = r.Services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return mapper.MapEntityToSku(sku), nil
@@ -71,36 +70,35 @@ func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*
 
 // SkuArchive is the resolver for the sku_Archive field.
 func (r *mutationResolver) SkuArchive(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "SkuResolver.SkuDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "SkuResolver.SkuDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	sku, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get skus")
 		return nil, err
 	}
 
 	if sku == nil {
 		err := fmt.Errorf("sku with id %s not found", id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to delete sku")
 		return nil, err
 	}
 
 	err = r.Services.CommonServices.PostgresRepositories.SkuRepository.Archive(ctx, tenant, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to delete sku")
 		return nil, err
 	}
 
 	err = r.Services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return &model.Result{Result: true}, nil
@@ -108,15 +106,14 @@ func (r *mutationResolver) SkuArchive(ctx context.Context, id string) (*model.Re
 
 // Skus is the resolver for the skus field.
 func (r *queryResolver) Skus(ctx context.Context) ([]*model.Sku, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "SkuResolver.Skus", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "SkuResolver.Skus", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	skuEntities, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.GetAll(ctx, tenant, utils.BoolPtr(false))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get skus")
 		return nil, err
 	}

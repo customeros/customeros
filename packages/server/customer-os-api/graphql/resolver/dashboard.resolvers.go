@@ -15,30 +15,29 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	model1 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // Organization is the resolver for the organization field.
 func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *model.DashboardCustomerMap) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "DashboardCustomerMapResolver.Organization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", obj.OrganizationID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "DashboardCustomerMapResolver.Organization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", obj.OrganizationID)
 
 	if obj.OrganizationID == "" {
-		tracing.TraceErr(span, errors.New("missing organization input id"))
+		spans.TraceError(errors.New("missing organization input id"))
 		graphql.AddErrorf(ctx, "Missing organization input id")
 		return nil, nil
 	}
 
 	organizationEntityPtr, err := dataloader.For(ctx).GetOrganization(ctx, obj.OrganizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", obj.OrganizationID)
 		return nil, nil
 	}
@@ -47,15 +46,15 @@ func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *mo
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
 func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) (*model.OrganizationPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewOrganizations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("pagination", pagination))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardViewOrganizations", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("pagination", pagination)
 	if where != nil {
-		tracing.LogObjectAsJson(span, "filter", *where)
+		spans.LogObjectAsJson("filter", *where)
 	}
 	if sort != nil {
-		tracing.LogObjectAsJson(span, "sort", *sort)
+		spans.LogObjectAsJson("sort", *sort)
 	}
 
 	paginatedResult, err := r.Services.DashboardService.GetDashboardViewOrganizationsData(ctx, cosapi_interfaces.DashboardViewOrganizationsRequest{
@@ -65,13 +64,13 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 		Sort:  sort,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, nil
 	}
 	countOrganizations, err := r.Services.OrganizationService.CountOrganizations(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, nil
 	}
@@ -86,15 +85,15 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 
 // DashboardViewRenewals is the resolver for the dashboardView_Renewals field.
 func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model1.SortBy) (*model.RenewalsPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewRenewals", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("pagination", pagination))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardViewRenewals", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("pagination", pagination)
 	if where != nil {
-		span.LogFields(log.Object("filter", *where))
+		spans.LogObjectAsJson("filter", *where)
 	}
 	if sort != nil {
-		span.LogFields(log.Object("sort", *sort))
+		spans.LogObjectAsJson("sort", *sort)
 	}
 
 	paginatedResult, err := r.Services.DashboardService.GetDashboardViewRenewalsData(ctx, cosapi_interfaces.DashboardViewRenewalsRequest{
@@ -104,13 +103,13 @@ func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination mo
 		Sort:  sort,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get renewals data")
 		return nil, nil
 	}
 	countContracts, err := r.Services.ContractService.CountContracts(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contracts count")
 		return nil, nil
 	}
@@ -125,13 +124,12 @@ func (r *queryResolver) DashboardViewRenewals(ctx context.Context, pagination mo
 
 // DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.
 func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardCustomerMap", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardCustomerMap", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	data, err := r.Services.DashboardService.GetDashboardCustomerMapData(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the customer map")
 		return nil, nil
 	}
@@ -141,21 +139,21 @@ func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.Dash
 
 // DashboardMRRPerCustomer is the resolver for the dashboard_MRRPerCustomer field.
 func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardMRRPerCustomer, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardMRRPerCustomer", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardMRRPerCustomer", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardMRRPerCustomerData(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the MRR per customer data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
@@ -165,21 +163,21 @@ func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *mod
 
 // DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
 func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardGrossRevenueRetention, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardGrossRevenueRetention", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardGrossRevenueRetention", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardGrossRevenueRetentionData(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the gross revenue retention data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
@@ -189,21 +187,21 @@ func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, peri
 
 // DashboardARRBreakdown is the resolver for the dashboard_ARRBreakdown field.
 func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardARRBreakdown, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardARRBreakdown", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardARRBreakdown", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardARRBreakdownData(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the arr breakdown data for period %s - %s", startTime, endTime)
 		return nil, nil
 	}
@@ -213,21 +211,21 @@ func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model
 
 // DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
 func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRevenueAtRisk", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardRevenueAtRisk", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardRevenueAtRiskData(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
@@ -237,21 +235,21 @@ func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, period *mode
 
 // DashboardRetentionRate is the resolver for the dashboard_RetentionRate field.
 func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRetentionRate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardRetentionRate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardRetentionRateData(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the retention rate data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
@@ -261,21 +259,21 @@ func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *mode
 
 // DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
 func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardNewCustomers", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardNewCustomers", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardNewCustomersData(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get new customers data for period %s - %s", period.Start.String(), period.End.String())
 		return nil, nil
 	}
@@ -285,21 +283,21 @@ func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model
 
 // DashboardTimeToOnboard is the resolver for the dashboard_TimeToOnboard field.
 func (r *queryResolver) DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardTimeToOnboard", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardTimeToOnboard", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardAverageTimeToOnboardPerMonth(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get time to onboard data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
@@ -309,21 +307,21 @@ func (r *queryResolver) DashboardTimeToOnboard(ctx context.Context, period *mode
 
 // DashboardOnboardingCompletion is the resolver for the dashboard_OnboardingCompletion field.
 func (r *queryResolver) DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardOnboardingCompletion", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("period", period))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DashboardOnboardingCompletion", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("period", period)
 
 	startTime, endTime, err := getPeriod(period, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get the data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
 	data, err := r.Services.DashboardService.GetDashboardOnboardingCompletionPerMonth(ctx, startTime, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get onboarding completion data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}

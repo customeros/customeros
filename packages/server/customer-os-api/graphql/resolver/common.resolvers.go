@@ -10,26 +10,25 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // AddTag is the resolver for the addTag field.
 func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.AddTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "CommonResolver.AddTag", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	tagId, err := r.Services.CommonServices.TagService.AddTagToEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")
 		return "", err
 	}
@@ -39,16 +38,15 @@ func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) 
 
 // RemoveTag is the resolver for the removeTag field.
 func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.RemoveTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request", input))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "CommonResolver.RemoveTag", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), input.TagID, "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")
 		return nil, nil
 	}
@@ -58,10 +56,9 @@ func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagI
 
 // FlagWrongField is the resolver for the flagWrongField field.
 func (r *mutationResolver) FlagWrongField(ctx context.Context, input model.FlagWrongFieldInput) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.FlagWrongField", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request", input))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "CommonResolver.FlagWrongField", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -74,7 +71,7 @@ func (r *mutationResolver) FlagWrongField(ctx context.Context, input model.FlagW
 			})
 
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Error flagging wrong industry")
 			return nil, err
 		}

@@ -9,18 +9,17 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // BillableInfo is the resolver for the billableInfo field.
 func (r *queryResolver) BillableInfo(ctx context.Context) (*model.TenantBillableInfo, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.BillableInfo", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.BillableInfo", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	result, err := r.Services.BillableService.GetBillableDetails(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch billable info")
 		return nil, nil
 	}

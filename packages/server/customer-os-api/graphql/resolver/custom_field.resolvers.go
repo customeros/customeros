@@ -11,21 +11,20 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // Template is the resolver for the template field.
 func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CustomFieldResolver.Template", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.customFieldID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "CustomFieldResolver.Template", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.customFieldID", obj.ID)
 
 	entity, err := r.Services.CustomFieldsTemplateService.FindLinkedWithCustomField(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contact template for custom field <%s>", obj.ID)
 		return nil, err
 	}
@@ -37,21 +36,21 @@ func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomFie
 
 // CustomFieldsMergeAndUpdateInContact is the resolver for the customFieldsMergeAndUpdateInContact field.
 func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldsMergeAndUpdateInContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.customFields", customFields)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldsMergeAndUpdateInContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.customFields", customFields)
 
 	err := r.Services.CustomFieldService.MergeAndUpdateCustomFieldsForContact(ctx, contactID, mapper.MapCustomFieldInputsToEntities(customFields))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge and update custom fields for contact %s", contactID)
 		return nil, err
 	}
 	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
 	if err != nil || contactEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
 		return nil, err
 	}
@@ -60,15 +59,15 @@ func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Conte
 
 // CustomFieldMergeToContact is the resolver for the customFieldMergeToContact field.
 func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldMergeToContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldMergeToContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.input", input)
 
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not add custom field <%s> to contact %s", utils.IfNotNilString(input.Name), contactID)
 		return nil, err
 	}
@@ -77,15 +76,15 @@ func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contac
 
 // CustomFieldUpdateInContact is the resolver for the customFieldUpdateInContact field.
 func (r *mutationResolver) CustomFieldUpdateInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldUpdateInContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldUpdateInContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.input", input)
 
 	result, err := r.Services.CustomFieldService.UpdateCustomFieldForContact(ctx, contactID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not update custom field <%s> in contact <%s>", input.ID, contactID)
 		return nil, err
 	}
@@ -94,14 +93,15 @@ func (r *mutationResolver) CustomFieldUpdateInContact(ctx context.Context, conta
 
 // CustomFieldDeleteFromContactByName is the resolver for the customFieldDeleteFromContactByName field.
 func (r *mutationResolver) CustomFieldDeleteFromContactByName(ctx context.Context, contactID string, fieldName string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldDeleteFromContactByName", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldName", fieldName))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldDeleteFromContactByName", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.fieldName", fieldName)
 
 	result, err := r.Services.CustomFieldService.DeleteByNameFromContact(ctx, contactID, fieldName)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove field <%s> from contact <%s>", fieldName, contactID)
 		return nil, err
 	}
@@ -112,14 +112,15 @@ func (r *mutationResolver) CustomFieldDeleteFromContactByName(ctx context.Contex
 
 // CustomFieldDeleteFromContactByID is the resolver for the customFieldDeleteFromContactById field.
 func (r *mutationResolver) CustomFieldDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldDeleteFromContactByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.customFieldID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldDeleteFromContactByID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.customFieldID", id)
 
 	result, err := r.Services.CustomFieldService.DeleteByIdFromContact(ctx, contactID, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove custom field <%s> from contact <%s>", id, contactID)
 		return nil, err
 	}

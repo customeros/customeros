@@ -14,13 +14,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // OpportunitySave is the resolver for the opportunity_save field.
@@ -65,16 +62,16 @@ func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.Oppo
 
 // OpportunityArchive is the resolver for the opportunity_Archive field.
 func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.OpportunityArchive", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	err := r.Services.CommonServices.OpportunityService.Archive(ctx, tenant, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return &model.ActionResponse{Accepted: false}, err
 	}
 
@@ -83,22 +80,22 @@ func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*
 
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
 func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, enummapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, input.RenewalAdjustedRate, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update opportunity renewal %s", input.OpportunityID)
 		return &model.Opportunity{ID: input.OpportunityID}, nil
 	}
 	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, input.OpportunityID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", input.OpportunityID)
 		return &model.Opportunity{ID: input.OpportunityID}, nil
 	}
@@ -108,24 +105,24 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 
 // OpportunityRenewalUpdateAllForOrganization is the resolver for the opportunityRenewal_UpdateAllForOrganization field.
 func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	if input.RenewalLikelihood != nil {
 		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, enummapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.RenewalAdjustedRate)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to update renewal opportunities for organization %s", input.OrganizationID)
 			return nil, nil
 		}
 	}
 	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, input.OrganizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching organization details. Organization id: %s", input.OrganizationID)
 		return nil, nil
 	}
@@ -135,11 +132,11 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 
 // Organization is the resolver for the organization field.
 func (r *opportunityResolver) Organization(ctx context.Context, obj *model.Opportunity) (*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForOpportunityOptional(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching organization for opportunity %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching organization for opportunity %s", obj.Metadata.ID)
 		return nil, nil
@@ -149,11 +146,11 @@ func (r *opportunityResolver) Organization(ctx context.Context, obj *model.Oppor
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForOpportunity(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching user creator for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user creator for opportunity %s", obj.ID)
 		return nil, nil
@@ -163,11 +160,11 @@ func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportun
 
 // Owner is the resolver for the owner field.
 func (r *opportunityResolver) Owner(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOpportunity(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching user owner for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user owner for opportunity %s", obj.ID)
 		return nil, nil
@@ -177,11 +174,11 @@ func (r *opportunityResolver) Owner(ctx context.Context, obj *model.Opportunity)
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Opportunity) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForOpportunity(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get external system for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for opportunity %s", obj.ID)
 		return nil, nil
@@ -191,11 +188,11 @@ func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Oppo
 
 // TaskIds is the resolver for the taskIds field.
 func (r *opportunityResolver) TaskIds(ctx context.Context, obj *model.Opportunity) ([]string, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetTasksForOpportunity(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get tasks for opportunity %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tasks for opportunity %s", obj.Metadata.ID)
 		return nil, nil
@@ -209,16 +206,16 @@ func (r *opportunityResolver) TaskIds(ctx context.Context, obj *model.Opportunit
 
 // Opportunity is the resolver for the opportunity field.
 func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Opportunity, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Opportunity", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.issueID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Opportunity", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.issueID", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, id)
 	if err != nil || opportunityEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Opportunity with id %s not found", id)
 		return nil, err
 	}
@@ -227,10 +224,10 @@ func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Oppo
 
 // OpportunitiesLinkedToOrganizations is the resolver for the opportunities_LinkedToOrganizations field.
 func (r *queryResolver) OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OpportunitiesLinkedToOrganizations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.pagination", pagination)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.OpportunitiesLinkedToOrganizations", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.pagination", pagination)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -239,7 +236,7 @@ func (r *queryResolver) OpportunitiesLinkedToOrganizations(ctx context.Context, 
 	}
 	paginatedResult, err := r.Services.CommonServices.OpportunityService.GetPaginatedOrganizationOpportunities(ctx, tenant, pagination.Page, pagination.Limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error while fetching opportunities")
 		return nil, err
 	}

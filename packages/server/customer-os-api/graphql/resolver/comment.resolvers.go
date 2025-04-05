@@ -12,17 +12,16 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *commentResolver) CreatedBy(ctx context.Context, obj *model.Comment) (*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserAuthorForComment(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching user author for comment %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user author for comment %s", obj.ID)
 		return nil, nil
@@ -32,11 +31,11 @@ func (r *commentResolver) CreatedBy(ctx context.Context, obj *model.Comment) (*m
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *commentResolver) ExternalLinks(ctx context.Context, obj *model.Comment) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForComment(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("failed to get external system for comment %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get external system for comment %s", obj.ID)
 		return nil, nil

@@ -12,20 +12,18 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // UIContacts is the resolver for the ui_contacts field.
 func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.ContactUIDetails, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIContacts", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("ids", fmt.Sprintf("%v", ids)))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UIContacts", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("ids", fmt.Sprintf("%v", ids))
 
 	mapResponse := map[string]*model.ContactUIDetails{}
 	for _, id := range ids {
@@ -56,14 +54,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContacts.GetContacts")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.UIContacts.GetContacts")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		contacts, err := r.Services.CommonServices.ContactService.GetContactsByIds(innerCtx, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -75,14 +72,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContacts.GetSocials")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.UIContacts.GetSocials")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(innerCtx, common.GetTenantFromContext(ctx), commonModel.CONTACT, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -102,14 +98,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContacts.GetTags")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.UIContacts.GetTags")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		tags, err := r.Services.CommonServices.TagService.GetTagsForContacts(innerCtx, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -121,14 +116,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContacts.GetPrimaryOrganizations")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.UIContacts.GetPrimaryOrganizations")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		primaryOrganizationsWithJobRole, err := r.Services.CommonServices.OrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(innerCtx, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -148,14 +142,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetLocations")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.ContactUIDetails.GetLocations")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		locations, err := r.Services.CommonServices.LocationService.GetAllForContacts(innerCtx, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -167,14 +160,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetPhoneNumbers")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.ContactUIDetails.GetPhoneNumbers")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		phoneNumbers, err := r.Services.CommonServices.PhoneNumberService.GetAllForEntityTypeByIds(innerCtx, commonModel.CONTACT, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -186,14 +178,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetEmails")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.ContactUIDetails.GetEmails")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		emails, err := r.Services.CommonServices.EmailService.GetAllEmailsForEntityIds(innerCtx, common.GetTenantFromContext(ctx), commonModel.CONTACT, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -205,14 +196,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetConnectedUsers")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.ContactUIDetails.GetConnectedUsers")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		userEntities, err := r.Services.CommonServices.UserService.GetUsersConnectedForContacts(innerCtx, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -224,14 +214,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetFlows")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.ContactUIDetails.GetFlows")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
-		flowEntities, err := r.Services.CommonServices.FlowService.FlowsGetListWithParticipant(ctx, ids, commonModel.CONTACT)
+		flowEntities, err := r.Services.CommonServices.FlowService.FlowsGetListWithParticipant(innerCtx, ids, commonModel.CONTACT)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -243,14 +232,13 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 	wg.Add(1)
 	go func(resp *map[string]*model.ContactUIDetails) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetJobRoles")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.ContactUIDetails.GetJobRoles")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
-		jobRoleEntities, err := r.Services.CommonServices.JobRoleService.GetAllForContacts(ctx, ids)
+		jobRoleEntities, err := r.Services.CommonServices.JobRoleService.GetAllForContacts(innerCtx, ids)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -263,7 +251,7 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 	wg.Wait()
 
 	if firstErr != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		telemetry.TraceErrorOnActiveSpan(ctx, firstErr)
 		r.log.Errorf("Failed to get contacts: %v", firstErr)
 		graphql.AddErrorf(ctx, "Failed to get contacts: %v", firstErr)
 		return nil, nil
@@ -279,9 +267,8 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 // UIContactsSearch is the resolver for the ui_contacts_search field.
 func (r *queryResolver) UIContactsSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonModel.SortBy) (*model.ContactSearchResult, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIContactsSearch", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UIContactsSearch", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -306,14 +293,13 @@ func (r *queryResolver) UIContactsSearch(ctx context.Context, limit *int, where 
 
 	wg.Add(1)
 	go func(resp *model.ContactSearchResult) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContactsSearch.SearchContacts")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.UIContactsSearch.SearchContacts")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, span)
 
 		contactSearchResponse, err := r.Services.Repositories.DashboardV2Repository.GetDashboardViewContactDataV2(innerCtx, tenant, *limit, where, sort)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -324,14 +310,13 @@ func (r *queryResolver) UIContactsSearch(ctx context.Context, limit *int, where 
 
 	wg.Add(1)
 	go func(resp *model.ContactSearchResult) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIContactsSearch.TotalAvailable")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.UIContactsSearch.TotalAvailable")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		totalAvailable, err := r.Services.Repositories.Neo4jRepositories.ContactReadRepository.CountByTenant(innerCtx, tenant)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -342,7 +327,7 @@ func (r *queryResolver) UIContactsSearch(ctx context.Context, limit *int, where 
 	wg.Wait()
 
 	if firstErr != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		spans.TraceError(firstErr)
 		r.log.Errorf("Failed to get contacts: %v", firstErr)
 		graphql.AddErrorf(ctx, "Failed to get contacts: %v", firstErr)
 		return nil, nil

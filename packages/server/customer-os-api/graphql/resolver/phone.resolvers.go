@@ -12,42 +12,39 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // PhoneNumberMergeToContact is the resolver for the phoneNumberMergeToContact field.
 func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
-	spanCtx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(spanCtx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberMergeToContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, neo4jentity.DataSourceOpenline)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge phone number %s", input.PhoneNumber)
 		return nil, err
 	}
 
 	err = r.Services.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, tenant, contactID, phoneNumberId, utils.IfNotNilString(input.Label, func() string { return input.Label.String() }), utils.IfNotNilBool(input.Primary))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to add phone number %s to contact %s", phoneNumberId, contactID)
 		return nil, err
 	}
 
 	phoneNumberEntity, err := r.Services.CommonServices.PhoneNumberService.GetById(ctx, phoneNumberId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch phone number details %s", input.PhoneNumber)
 		return nil, nil
 	}
@@ -57,11 +54,11 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 
 // PhoneNumberUpdateInContact is the resolver for the phoneNumberUpdateInContact field.
 func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberUpdateInContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.input", input)
 
 	var label *string
 	if input.Label != nil {
@@ -71,14 +68,14 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 
 	err := r.Services.CommonServices.PhoneNumberService.UpdatePhoneNumberFor(ctx, commonModel.CONTACT, contactID, input.ID, label, input.Primary)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not update phone number %s for contact %s", input.ID, contactID)
 		return nil, err
 	}
 
 	phoneNumberEntity, err := r.Services.CommonServices.PhoneNumberService.GetById(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch phone number details details %s", input.ID)
 		return nil, nil
 	}
@@ -88,14 +85,15 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 
 // PhoneNumberRemoveFromContactByE164 is the resolver for the phoneNumberRemoveFromContactByE164 field.
 func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByE164", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.e164", e164))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByE164", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.e164", e164)
 
 	result, err := r.Services.CommonServices.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, commonModel.CONTACT, contactID, e164)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove phone number by e164 %s from contact with id %s", e164, contactID)
 		return nil, err
 	}
@@ -106,14 +104,15 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Contex
 
 // PhoneNumberRemoveFromContactByID is the resolver for the phoneNumberRemoveFromContactById field.
 func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.phoneNumberID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.phoneNumberID", id)
 
 	result, err := r.Services.CommonServices.PhoneNumberService.DetachFromEntityById(ctx, commonModel.CONTACT, contactID, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove phone number by id %s from contact with id %s", id, contactID)
 		return nil, err
 	}
@@ -124,31 +123,30 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context,
 
 // PhoneNumberMergeToOrganization is the resolver for the phoneNumberMergeToOrganization field.
 func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, organizationID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
-	spanCtx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(spanCtx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.phoneNumberInput", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberMergeToOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogObjectAsJson("request.phoneNumberInput", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, neo4jentity.DataSourceOpenline)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge phone number %s", input.PhoneNumber)
 		return nil, err
 	}
 
 	err = r.Services.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, tenant, organizationID, phoneNumberId, utils.IfNotNilString(input.Label, func() string { return input.Label.String() }), utils.IfNotNilBool(input.Primary))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to add phone number %s to contact %s", phoneNumberId, organizationID)
 		return nil, err
 	}
 
 	phoneNumberEntity, err := r.Services.CommonServices.PhoneNumberService.GetById(ctx, phoneNumberId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch phone number details %s", input.PhoneNumber)
 		return nil, nil
 	}
@@ -158,11 +156,11 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 
 // PhoneNumberUpdateInOrganization is the resolver for the phoneNumberUpdateInOrganization field.
 func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberUpdateInOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogObjectAsJson("request.input", input)
 
 	var label *string
 	if input.Label != nil {
@@ -172,14 +170,14 @@ func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, 
 
 	err := r.Services.CommonServices.PhoneNumberService.UpdatePhoneNumberFor(ctx, commonModel.ORGANIZATION, organizationID, input.ID, label, input.Primary)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not update phone number %s for organization %s", input.ID, organizationID)
 		return nil, err
 	}
 
 	phoneNumberEntity, err := r.Services.CommonServices.PhoneNumberService.GetById(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch phone number details details %s", input.ID)
 		return nil, nil
 	}
@@ -189,14 +187,15 @@ func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, 
 
 // PhoneNumberRemoveFromOrganizationByE164 is the resolver for the phoneNumberRemoveFromOrganizationByE164 field.
 func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.Context, organizationID string, e164 string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByE164", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.e164", e164))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByE164", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogKV("request.e164", e164)
 
 	result, err := r.Services.CommonServices.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, commonModel.ORGANIZATION, organizationID, e164)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove phone number by e164 %s from user with id %s", e164, organizationID)
 		return nil, err
 	}
@@ -207,14 +206,15 @@ func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.C
 
 // PhoneNumberRemoveFromOrganizationByID is the resolver for the phoneNumberRemoveFromOrganizationById field.
 func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.phoneNumberID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogKV("request.phoneNumberID", id)
 
 	result, err := r.Services.CommonServices.PhoneNumberService.DetachFromEntityById(ctx, commonModel.ORGANIZATION, organizationID, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove phone number by id %s from organization with id %s", id, organizationID)
 		return nil, err
 	}
@@ -225,21 +225,21 @@ func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Con
 
 // PhoneNumberUpdate is the resolver for the phoneNumber_Update field.
 func (r *mutationResolver) PhoneNumberUpdate(ctx context.Context, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.PhoneNumberUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	phoneNumberId, err := r.Services.CommonServices.PhoneNumberService.Merge(ctx, input.PhoneNumber, neo4jentity.DataSourceOpenline)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge phone number %s", input.PhoneNumber)
 		return nil, err
 	}
 
 	phoneNumberEntity, err := r.Services.CommonServices.PhoneNumberService.GetById(ctx, phoneNumberId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch phone number details %s", input.PhoneNumber)
 		return nil, nil
 	}
@@ -249,11 +249,11 @@ func (r *mutationResolver) PhoneNumberUpdate(ctx context.Context, input model.Ph
 
 // Country is the resolver for the country field.
 func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumber) (*model.Country, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	countryEntityNillable, err := dataloader.For(ctx).GetCountryForPhoneNumber(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get country for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get country for phone number with id %s", obj.ID)
 		return nil, nil
@@ -263,11 +263,11 @@ func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumbe
 
 // Users is the resolver for the users field.
 func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntities, err := dataloader.For(ctx).GetUsersForPhoneNumber(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get users for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for phone number %s", obj.ID)
 		return nil, nil
@@ -277,11 +277,11 @@ func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber)
 
 // Contacts is the resolver for the contacts field.
 func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForPhoneNumber(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get contacts for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contacts for phone number %s", obj.ID)
 		return nil, nil
@@ -291,11 +291,11 @@ func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumb
 
 // Organizations is the resolver for the organizations field.
 func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForPhoneNumber(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get organizations for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organizations for phone number %s", obj.ID)
 		return nil, nil
@@ -305,14 +305,14 @@ func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.Phon
 
 // PhoneNumber is the resolver for the phoneNumber field.
 func (r *queryResolver) PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.PhoneNumber", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.phoneNumberID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.PhoneNumber", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.phoneNumberID", id)
 
 	phoneNumberEntity, err := r.Services.CommonServices.PhoneNumberService.GetById(ctx, id)
 	if err != nil || phoneNumberEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Filed getting phone number with id %s", id)
 		return nil, nil
 	}

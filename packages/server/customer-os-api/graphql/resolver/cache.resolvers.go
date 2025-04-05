@@ -10,8 +10,8 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // Version is the resolver for the version field.
@@ -21,9 +21,8 @@ func (r *queryResolver) Version(ctx context.Context) (float64, error) {
 
 // GlobalCache is the resolver for the global_Cache field.
 func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "GlobalCache.global_Cache", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "GlobalCache.global_Cache", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	response := &model.GlobalCache{}
 
@@ -33,7 +32,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed GlobalCache - find user by id")
 		return nil, nil
 	}
@@ -56,7 +55,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 		oauthTokenList, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, tenantName)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
 			return nil, nil
 		}
@@ -72,7 +71,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	_, _, mailboxes, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenantName, "", "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant mailboxes")
 		return nil, nil
 	}
@@ -86,7 +85,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	minARRForecastValue, maxARRForecastValue, err := r.Services.OrganizationService.GetMinMaxRenewalForecastArr(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get min max arr forecast")
 		return nil, nil
 	}
@@ -96,7 +95,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	contractsExistForTenant, err := r.Services.ContractService.ContractsExistForTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - contracts exist for tenant")
 		return nil, nil
 	}
@@ -105,7 +104,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	tenantSettings, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant billing profiles")
 		return nil, nil
 	}
@@ -113,7 +112,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	if tenantSettings != nil && tenantSettings.LogoRepositoryFileId != "" {
 		attachmentById, err := r.Services.CommonServices.AttachmentService.GetById(ctx, tenantSettings.LogoRepositoryFileId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant logo attachment by id")
 			return nil, nil
 		}
@@ -129,14 +128,14 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response.ContactCities, err = r.Services.CommonServices.Neo4jRepositories.ContactReadRepository.GetDistinctContactCities(ctx, tenantName)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get contact cities")
 		return nil, nil
 	}
 
 	response.ContactRegions, err = r.Services.CommonServices.Neo4jRepositories.ContactReadRepository.GetDistinctContactRegions(ctx, tenantName)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get contact cities")
 		return nil, nil
 	}
