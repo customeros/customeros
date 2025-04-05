@@ -13,19 +13,17 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // Organization is the resolver for the organization field.
 func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForJobRole(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get organization for job role %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organization for job role %s", obj.ID)
 		return nil, nil
@@ -35,11 +33,11 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 
 // Contact is the resolver for the contact field.
 func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*model.Contact, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	contactEntity, err := dataloader.For(ctx).GetContactForJobRole(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get contact for job role %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contact for job role %s", obj.ID)
 		return nil, nil
@@ -52,14 +50,15 @@ func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*mod
 
 // JobRoleDelete is the resolver for the jobRole_Delete field.
 func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.jobRoleID", roleID), log.String("request.contactID", contactID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.JobRoleDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.jobRoleID", roleID)
+	spans.LogKV("request.contactID", contactID)
 
 	result, err := r.Services.CommonServices.JobRoleService.DeleteJobRole(ctx, contactID, roleID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed remove job role %s from contact %s", roleID, contactID)
 		return nil, err
 	}
@@ -70,9 +69,8 @@ func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, 
 
 // JobRoleCreate is the resolver for the jobRole_Create field.
 func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.JobRoleCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	// TODO deprecated, remove
 
@@ -81,8 +79,8 @@ func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, 
 
 // JobRoleUpdate is the resolver for the jobRole_Update field.
 func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.JobRoleUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	// TODO deprecated, remove
 
@@ -91,10 +89,10 @@ func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, 
 
 // JobRoleSave is the resolver for the jobRole_Save field.
 func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleSave", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.JobRoleSave", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	jobRoleId, err := r.Services.CommonServices.JobRoleService.Save(ctx, nil, input.ID, input.ContactID, input.OrganizationID, data_fields.JobRoleFields{
 		StartedAt:   input.StartedAt,
@@ -105,7 +103,7 @@ func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRole
 		Company:     input.Company,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to save job role")
 		return "", err
 	}
@@ -115,14 +113,14 @@ func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRole
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *queryResolver) JobRoles(ctx context.Context, ids []string) ([]*model.JobRole, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.JobRoles", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.ids", fmt.Sprintf("%v", ids)))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.JobRoles", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.ids", fmt.Sprintf("%v", ids))
 
 	jobRoleEntities, err := r.Services.CommonServices.JobRoleService.GetJobRolesByIds(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get job roles")
 		return nil, err
 	}

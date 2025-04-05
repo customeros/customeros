@@ -14,19 +14,17 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // TaskSave is the resolver for the task_Save field.
 func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) (*model.Task, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TaskSave", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TaskSave", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	dataFields := data_fields.TaskFields{
 		Subject:         input.Subject,
@@ -40,14 +38,14 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 	}
 	taskId, err := r.Services.CommonServices.TaskService.Save(ctx, nil, input.ID, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to save task")
 		return nil, err
 	}
 
 	taskEntity, err := r.Services.CommonServices.TaskService.GetById(ctx, taskId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get task")
 		return nil, err
 	}
@@ -57,13 +55,12 @@ func (r *mutationResolver) TaskSave(ctx context.Context, input model.TaskInput) 
 
 // TaskArchive is the resolver for the task_Archive field.
 func (r *mutationResolver) TaskArchive(ctx context.Context, ids []string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TaskArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TaskArchive", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	err := r.Services.CommonServices.TaskService.HideAll(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to archive tasks")
 		return &model.ActionResponse{Accepted: false}, err
 	}
@@ -75,13 +72,12 @@ func (r *mutationResolver) TaskArchive(ctx context.Context, ids []string) (*mode
 
 // Tasks is the resolver for the tasks field.
 func (r *queryResolver) Tasks(ctx context.Context, ids []string) ([]*model.Task, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tasks", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Tasks", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	taskEntities, err := r.Services.CommonServices.TaskService.GetAllByIds(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get tasks")
 		return nil, err
 	}
@@ -91,9 +87,8 @@ func (r *queryResolver) Tasks(ctx context.Context, ids []string) ([]*model.Task,
 
 // TasksSearch is the resolver for the tasks_search field.
 func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonmodel.SortBy) (*model.TaskSearchResult, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TasksSearch", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.TasksSearch", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -121,14 +116,13 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 
 	wg.Add(1)
 	go func(resp *model.TaskSearchResult) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.TasksSearch.SearchTasks")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.TasksSearch.SearchTasks")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, span)
 
 		taskSearchResponse, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.SearchTasks(innerCtx, tenant, *limit, commonWhere, sort)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -139,14 +133,13 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 
 	wg.Add(1)
 	go func(resp *model.TaskSearchResult) {
-		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.TasksSearch.TotalAvailable")
-		defer innerSpan.Finish()
+		innerSpans, innerCtx := telemetry.StartSpan(ctx, "QueryResolver.TasksSearch.TotalAvailable")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
 
 		totalAvailable, err := r.Services.Repositories.Neo4jRepositories.TaskReadRepository.CountByTenant(innerCtx, tenant)
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -157,7 +150,7 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 	wg.Wait()
 
 	if firstErr != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		spans.TraceError(firstErr)
 		r.log.Errorf("Failed to get tasks: %v", firstErr)
 		graphql.AddErrorf(ctx, "Failed to get tasks: %v", firstErr)
 		return nil, nil
@@ -168,11 +161,11 @@ func (r *queryResolver) TasksSearch(ctx context.Context, limit *int, where *mode
 
 // Assignees is the resolver for the assignees field.
 func (r *taskResolver) Assignees(ctx context.Context, obj *model.Task) ([]string, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntities, err := dataloader.For(ctx).GetUsersAssigneesForTask(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get users for task %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for task %s", obj.ID)
 		return nil, nil
@@ -188,11 +181,11 @@ func (r *taskResolver) Assignees(ctx context.Context, obj *model.Task) ([]string
 
 // AuthorID is the resolver for the authorId field.
 func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntity, err := dataloader.For(ctx).GetUserCreatorForTask(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		graphql.AddErrorf(ctx, "Failed to get author")
 		return nil, nil
 	}
@@ -204,11 +197,11 @@ func (r *taskResolver) AuthorID(ctx context.Context, obj *model.Task) (*string, 
 
 // OpportunityIds is the resolver for the opportunityIds field.
 func (r *taskResolver) OpportunityIds(ctx context.Context, obj *model.Task) ([]string, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForTask(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get users for task %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for task %s", obj.ID)
 		return nil, nil

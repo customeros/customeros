@@ -12,20 +12,20 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/table_view"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go/log"
+
 	pkgerrors "github.com/pkg/errors"
 )
 
 // TableViewDefCreate is the resolver for the tableViewDef_Create field.
 func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TableViewDefCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
@@ -46,7 +46,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 	}
 	columnsJsonData, err := json.Marshal(columnsStruct)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create table view definition")
 		return nil, nil
 	}
@@ -69,7 +69,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, viewDefinition)
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		telemetry.TraceErrorOnActiveSpan(ctx, result.Error)
 		graphql.AddErrorf(ctx, "Failed to create table view definition")
 		return nil, nil
 	}
@@ -83,17 +83,17 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 
 // TableViewDefUpdate is the resolver for the tableViewDef_Update field.
 func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TableViewDefUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
 
 	id, err := strconv.ParseUint(input.ID, 10, 64)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update table view definition")
 		return nil, nil
 	}
@@ -114,7 +114,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	}
 	columnsJsonData, err := json.Marshal(columnsStruct)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create table view definition")
 		return nil, nil
 	}
@@ -136,7 +136,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	} else {
 		currentTableViewDef, err := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinition(ctx, tenant, id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to update table view definition")
 			return nil, nil
 		}
@@ -145,7 +145,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewDefinition(ctx, viewDefinition)
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		graphql.AddErrorf(ctx, "Failed to update table view definition")
 		graphql.AddError(ctx, result.Error)
 		return nil, nil
@@ -162,16 +162,16 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 
 // TableViewDefUpdateShared is the resolver for the tableViewDef_UpdateShared field.
 func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefSharedUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TableViewDefSharedUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	id, err := strconv.ParseUint(input.ID, 10, 64)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update table view shared definition")
 		return nil, nil
 	}
@@ -192,7 +192,7 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	}
 	columnsJsonData, err := json.Marshal(columnsStruct)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create table view shared definition")
 		return nil, nil
 	}
@@ -215,7 +215,7 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	} else {
 		currentTableViewDef, err := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinition(ctx, tenant, id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to update table view definition")
 			return nil, nil
 		}
@@ -224,7 +224,7 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewSharedDefinition(ctx, viewDefinition)
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		graphql.AddErrorf(ctx, "Failed to update table view shared definition")
 		graphql.AddError(ctx, result.Error)
 		return nil, nil
@@ -241,10 +241,10 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 
 // TableViewDefArchive is the resolver for the tableViewDef_Archive field.
 func (r *mutationResolver) TableViewDefArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TableViewDefArchive", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	idUint, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
@@ -252,7 +252,7 @@ func (r *mutationResolver) TableViewDefArchive(ctx context.Context, id string) (
 	}
 	err = r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.ArchiveTableViewDefinition(ctx, idUint)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, err.Error())
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -262,16 +262,15 @@ func (r *mutationResolver) TableViewDefArchive(ctx context.Context, id string) (
 
 // TableViewDefs is the resolver for the tableViewDefs field.
 func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TableViewDefs", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.TableViewDefs", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 	if result.Error != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(result.Error, "Failed to get table view definitions"))
+		spans.TraceError(result.Error)
 		graphql.AddErrorf(ctx, "Failed to get table view definitions")
 		return nil, nil
 	}
@@ -281,14 +280,14 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		// check if shared presets exist
 		hasSharedPreset := table_view.CheckSharedPresetsExist(tableViewDefinitions)
 
-		for _, def := range table_view.DefaultTableViewDefinitions(hasSharedPreset, span) {
+		for _, def := range table_view.DefaultTableViewDefinitions(hasSharedPreset) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
 		}
 		result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 		if result.Error != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(result.Error, "Failed to get table view definitions"))
+			spans.TraceError(pkgerrors.Wrap(result.Error, "Failed to get table view definitions"))
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
@@ -305,64 +304,64 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	for _, def := range tableViewDefinitions {
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) && !def.IsShared {
-			span.LogKV("customersTableId", def.ID)
+			spans.LogKV("customersTableId", def.ID)
 			customersFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeOrganizations) && !def.IsShared {
-			span.LogKV("organizationTableId", def.ID)
+			spans.LogKV("organizationTableId", def.ID)
 			organizationFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeTargets) && !def.IsShared {
-			span.LogKV("targetsTableId", def.ID)
+			spans.LogKV("targetsTableId", def.ID)
 			targetsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContacts) && !def.IsShared {
-			span.LogKV("contactsTableId", def.ID)
+			spans.LogKV("contactsTableId", def.ID)
 			contactsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContactsForTargetOrganizations) && !def.IsShared {
-			span.LogKV("contactsForTargetOrganizationsTableId", def.ID)
+			spans.LogKV("contactsForTargetOrganizationsTableId", def.ID)
 			contactsForTargetOrganizationsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunities) {
-			span.LogKV("opportunitiesTableId", def.ID)
+			spans.LogKV("opportunitiesTableId", def.ID)
 			opportunitiesFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunitiesRecords) && !def.IsShared {
-			span.LogKV("opportunitiesRecordsTableId", def.ID)
+			spans.LogKV("opportunitiesRecordsTableId", def.ID)
 			opportunitiesRecordsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContracts) && def.TableId == string(postgresEntity.TableIDTypeContracts) && !def.IsShared {
-			span.LogKV("contractsTableId", def.ID)
+			spans.LogKV("contractsTableId", def.ID)
 			contractsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeFlow) && def.TableId == string(postgresEntity.TableIDTypeFlowActions) && !def.IsShared {
-			span.LogKV("flowSequencesTableId", def.ID)
+			spans.LogKV("flowSequencesTableId", def.ID)
 			flowSequencesFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeFlowContacts) && !def.IsShared {
-			span.LogKV("flowContactsTableId", def.ID)
+			spans.LogKV("flowContactsTableId", def.ID)
 			flowContactsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypePastInvoices) && !def.IsShared {
-			span.LogKV("pastInvoicesTableId", def.ID)
+			spans.LogKV("pastInvoicesTableId", def.ID)
 			pastInvoicesFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypeUpcomingInvoices) && !def.IsShared {
-			span.LogKV("upcomingInvoicesTableId", def.ID)
+			spans.LogKV("upcomingInvoicesTableId", def.ID)
 			upcomingInvoiceFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeTasks) && def.TableId == string(postgresEntity.TableIDTypeTasks) && !def.IsShared {
-			span.LogKV("tasksTableId", def.ID)
+			spans.LogKV("tasksTableId", def.ID)
 			tasksFound = true
 		}
 	}
 
 	viewsUpdated := false
 	if !organizationFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionOrganization(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionOrganization()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for organizations"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for organizations"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -371,9 +370,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !customersFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionCustomers(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionCustomers()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for customers"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for customers"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -382,9 +381,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !targetsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionTargets(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionTargets()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for targets"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for targets"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -393,9 +392,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contactsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionContacts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionContacts()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for contacts"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for contacts"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -404,9 +403,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contactsForTargetOrganizationsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionTargetOrganizationsContacts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionTargetOrganizationsContacts()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for target organizations contacts"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for target organizations contacts"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -415,9 +414,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !opportunitiesFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionOpportunities(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionOpportunities()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for opportunities"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for opportunities"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -425,9 +424,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !opportunitiesRecordsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionOpportunitiesRecords(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionOpportunitiesRecords()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for opportunities records"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for opportunities records"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -436,9 +435,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contractsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionContracts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionContracts()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for contracts"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for contracts"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -447,9 +446,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !flowSequencesFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionFlows(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionFlows()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for flows"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for flows"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -458,9 +457,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !flowContactsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionFlowContacts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionFlowContacts()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for flow contacts"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for flow contacts"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -469,9 +468,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !pastInvoicesFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionPastInvoices(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionPastInvoices()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for past invoices"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for past invoices"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -480,9 +479,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !upcomingInvoiceFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionUpcomingInvoices(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionUpcomingInvoices()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for upcoming invoices"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for upcoming invoices"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -491,9 +490,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !tasksFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionTasks(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionTasks()
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for tasks"))
+			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for tasks"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -505,7 +504,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	if viewsUpdated {
 		updatedResult := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 		if result.Error != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(result.Error, "Failed to get table view definitions"))
+			spans.TraceError(pkgerrors.Wrap(result.Error, "Failed to get table view definitions"))
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
@@ -521,8 +520,8 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.ColumnsJson != "" {
 			err := json.Unmarshal([]byte(def.ColumnsJson), &currentColumns)
 			if err != nil {
-				span.LogFields(log.String("columnsJson", def.ColumnsJson))
-				tracing.TraceErr(span, pkgerrors.Wrapf(err, "Failed to unmarshal columnsJson for table view definition with ID: %d", def.ID))
+				spans.LogKV("columnsJson", def.ColumnsJson)
+				spans.TraceError(pkgerrors.Wrapf(err, "Failed to unmarshal columnsJson for table view definition with ID: %d", def.ID))
 			}
 		}
 
@@ -564,12 +563,12 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if removedColumnsFound || missingColumnsFound {
 			columnsJsonData, err := json.Marshal(currentColumns)
 			if err != nil {
-				tracing.TraceErr(span, pkgerrors.Wrapf(err, "Failed to marshal columnsJson for table view definition with ID: %d", def.ID))
+				spans.TraceError(pkgerrors.Wrapf(err, "Failed to marshal columnsJson for table view definition with ID: %d", def.ID))
 				graphql.AddErrorf(ctx, "Failed to get table view definition")
 			}
 			def.ColumnsJson = string(columnsJsonData)
 		}
 	}
 
-	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, span), nil
+	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, spans), nil
 }

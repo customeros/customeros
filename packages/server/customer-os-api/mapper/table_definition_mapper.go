@@ -4,20 +4,18 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
-func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, span opentracing.Span) *model.TableViewDef {
+func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, spans *telemetry.Spans) *model.TableViewDef {
 	var columnsStruct postgresEntity.Columns
 	err := json.Unmarshal([]byte(entity.ColumnsJson), &columnsStruct)
 	if err != nil {
-		span.LogFields(log.String("columnsJson", entity.ColumnsJson))
-		tracing.TraceErr(span, err)
+		spans.LogKV("columnsJson", entity.ColumnsJson)
+		spans.TraceError(err)
 	}
 
 	columns := make([]*model.ColumnView, 0, len(columnsStruct.Columns))
@@ -49,10 +47,10 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 	}
 }
 
-func MapTableViewDefinitionsToModel(entities []postgresEntity.TableViewDefinition, span opentracing.Span) []*model.TableViewDef {
+func MapTableViewDefinitionsToModel(entities []postgresEntity.TableViewDefinition, spans *telemetry.Spans) []*model.TableViewDef {
 	var tableViewDefs []*model.TableViewDef
 	for _, entity := range entities {
-		tableViewDefs = append(tableViewDefs, MapTableViewDefinitionToModel(entity, span))
+		tableViewDefs = append(tableViewDefs, MapTableViewDefinitionToModel(entity, spans))
 	}
 	return tableViewDefs
 }

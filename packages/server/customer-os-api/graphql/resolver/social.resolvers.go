@@ -11,25 +11,24 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // SocialUpdate is the resolver for the social_Update field.
 func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.SocialUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.SocialUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	socialEntity, err := r.Services.CommonServices.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))
 	if err != nil {
 		if errors.Is(err, coserrors.ErrOperationNotAllowed) {
 			graphql.AddErrorf(ctx, "Operation not allowed. Confirmed linked in url cannot be changed. Create a new social instead.")
 		} else {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to update social")
 		}
 		return nil, nil
@@ -39,14 +38,14 @@ func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialU
 
 // SocialRemove is the resolver for the social_Remove field.
 func (r *mutationResolver) SocialRemove(ctx context.Context, socialID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.SocialRemove", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.socialID", socialID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.SocialRemove", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.socialID", socialID)
 
 	err := r.Services.CommonServices.SocialService.PermanentlyDelete(ctx, common.GetTenantFromContext(ctx), socialID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to remove social")
 		return &model.Result{Result: false}, nil
 	}

@@ -10,20 +10,19 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *queryResolver) TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TimelineEvents", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.ids", ids))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.TimelineEvents", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.ids", ids)
 
 	timelineEvents, err := r.Services.TimelineEventService.GetTimelineEventsWithIds(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch timeline events")
 		return nil, nil
 	}

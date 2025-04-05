@@ -15,21 +15,19 @@ import (
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // ContractLineItemCreate is the resolver for the contractLineItem_Create field.
 func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractLineItemCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	data := cosapi_interfaces.ServiceLineItemCreateData{
 		ContractId:     input.ContractID,
@@ -58,26 +56,26 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 
 	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, data)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create service line item")
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: serviceLineItemId}}, err
 	}
 	createdServiceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Service line item details not yet available. Service line item id: %s", serviceLineItemId)
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: serviceLineItemId}}, nil
 	}
-	span.LogFields(log.String("response.serviceLineItemID", serviceLineItemId))
+	spans.LogKV("response.serviceLineItemID", serviceLineItemId)
 	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
 }
 
 // ContractLineItemNewVersion is the resolver for the contractLineItem_NewVersion field.
 func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input model.ServiceLineItemNewVersionInput) (*model.ServiceLineItem, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemNewVersion", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractLineItemNewVersion", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	data := cosapi_interfaces.ServiceLineItemNewVersionData{
 		Id:        utils.IfNotNilString(input.ID),
@@ -95,7 +93,7 @@ func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input
 
 	serviceLineItemId, err := r.Services.ServiceLineItemService.NewVersion(ctx, data)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to create new contract line item version")
 		graphql.AddError(ctx, err)
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(serviceLineItemId)}}, nil
@@ -103,7 +101,7 @@ func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input
 
 	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(serviceLineItemId))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", serviceLineItemId)
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, nil
 	}
@@ -113,10 +111,10 @@ func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input
 
 // ContractLineItemUpdate is the resolver for the contractLineItem_Update field.
 func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractLineItemUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	data := cosapi_interfaces.ServiceLineItemUpdateData{
 		Id:                      utils.IfNotNilString(input.ID),
@@ -141,14 +139,14 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 
 	err := r.Services.ServiceLineItemService.Update(ctx, data)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to update contract line item {%s}", utils.IfNotNilString(input.ID))
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, err
 	}
 
 	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, utils.IfNotNilString(input.ID))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching contract line item details. Contract line item id: {%s}", utils.IfNotNilString(input.ID))
 		return &model.ServiceLineItem{Metadata: &model.Metadata{ID: utils.IfNotNilString(input.ID)}}, nil
 	}
@@ -158,10 +156,10 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 
 // ContractLineItemClose is the resolver for the contractLineItem_Close field.
 func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemClose", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractLineItemClose", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	endedAt := input.EndedAt
 	if input.ServiceEnded != nil {
@@ -169,7 +167,7 @@ func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input mode
 	}
 	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, endedAt)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)
 		return input.ID, nil
 	}
@@ -178,14 +176,14 @@ func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input mode
 
 // ContractLineItemPause is the resolver for the contractLineItem_Pause field.
 func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemPause", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.id", id)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractLineItemPause", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "contract line item %s not found", id)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -196,7 +194,7 @@ func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string)
 
 	err = r.Services.CommonServices.ServiceLineItemService.Pause(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to pause contract line item")
 		r.log.Errorf("failed to pause contract line item %s", err.Error())
 		return &model.ActionResponse{Accepted: false}, nil
@@ -207,14 +205,14 @@ func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string)
 
 // ContractLineItemResume is the resolver for the contractLineItem_Resume field.
 func (r *mutationResolver) ContractLineItemResume(ctx context.Context, id string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemResume", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.id", id)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractLineItemResume", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "contract line item %s not found", id)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -225,7 +223,7 @@ func (r *mutationResolver) ContractLineItemResume(ctx context.Context, id string
 
 	err = r.Services.CommonServices.ServiceLineItemService.Resume(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to resume contract line item")
 		r.log.Errorf("failed to resume contract line item %s", err.Error())
 		return &model.ActionResponse{Accepted: false}, nil
@@ -236,14 +234,14 @@ func (r *mutationResolver) ContractLineItemResume(ctx context.Context, id string
 
 // ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.
 func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ServiceLineItemDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	deletionCompleted, err := r.Services.ServiceLineItemService.Delete(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to delete service line item %s", id)
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
@@ -252,20 +250,20 @@ func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string)
 
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ServiceLineItem", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.serviceLineItemID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ServiceLineItem", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.serviceLineItemID", id)
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("missing service line item input id"))
+		spans.TraceError(errors.New("missing service line item input id"))
 		graphql.AddErrorf(ctx, "Missing service line item input id")
 		return nil, nil
 	}
 
 	serviceLineItemEntityPtr, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get service line item by id %s", id)
 		return nil, err
 	}
@@ -274,9 +272,8 @@ func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.
 
 // Sku is the resolver for the sku field.
 func (r *serviceLineItemResolver) Sku(ctx context.Context, obj *model.ServiceLineItem) (*model.Sku, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ServiceLineItem.Sku", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ServiceLineItem.Sku", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -287,7 +284,7 @@ func (r *serviceLineItemResolver) Sku(ctx context.Context, obj *model.ServiceLin
 
 	skuEntity, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, *obj.SkuID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get sku by id %s", *obj.SkuID)
 		return nil, err
 	}
@@ -297,11 +294,11 @@ func (r *serviceLineItemResolver) Sku(ctx context.Context, obj *model.ServiceLin
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *serviceLineItemResolver) CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForServiceLineItem(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.Metadata.ID)
 		return nil, nil
@@ -311,11 +308,11 @@ func (r *serviceLineItemResolver) CreatedBy(ctx context.Context, obj *model.Serv
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *serviceLineItemResolver) ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForServiceLineItem(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get external system for service line item %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for service line item %s", obj.Metadata.ID)
 		return nil, nil
@@ -325,14 +322,14 @@ func (r *serviceLineItemResolver) ExternalLinks(ctx context.Context, obj *model.
 
 // InvoicingStatus is the resolver for the invoicing_status field.
 func (r *serviceLineItemResolver) InvoicingStatus(ctx context.Context, obj *model.ServiceLineItem) (*model.ServiceInvoicingStatus, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	if obj.BillingCycle != model.BilledTypeOnce {
 		return utils.ToPtr(model.ServiceInvoicingStatusReady), nil
 	}
 	invoices, err := dataloader.For(ctx).GetInvoicesForServiceLineItem(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get invoices for service line item %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get invoices for service line item %s", obj.Metadata.ID)
 		return nil, nil

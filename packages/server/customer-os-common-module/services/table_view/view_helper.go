@@ -4,90 +4,85 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/opentracing/opentracing-go/log"
-
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 // ColumnView represents a column in a table view with type and width.
-func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) []postgres_entity.TableViewDefinition {
-	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices(span)
+func DefaultTableViewDefinitions(hasSharedPresets bool) []postgres_entity.TableViewDefinition {
+	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	organizationsTableViewDefinition, err := DefaultTableViewDefinitionOrganization(span)
+	organizationsTableViewDefinition, err := DefaultTableViewDefinitionOrganization()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	customersTableViewDefinition, err := DefaultTableViewDefinitionCustomers(span)
+	customersTableViewDefinition, err := DefaultTableViewDefinitionCustomers()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	targetsTableViewDefinition, err := DefaultTableViewDefinitionTargets(span)
+	targetsTableViewDefinition, err := DefaultTableViewDefinitionTargets()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices(span)
+	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	contactsTableViewDefinition, err := DefaultTableViewDefinitionContacts(span)
+	contactsTableViewDefinition, err := DefaultTableViewDefinitionContacts()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	contactsForTargetOrganizations, err := DefaultTableViewDefinitionTargetOrganizationsContacts(span)
+	contactsForTargetOrganizations, err := DefaultTableViewDefinitionTargetOrganizationsContacts()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	opportunitiesTableViewDefinition, err := DefaultTableViewDefinitionOpportunities(span)
+	opportunitiesTableViewDefinition, err := DefaultTableViewDefinitionOpportunities()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	opportunitiesRecordsTableViewDefinition, err := DefaultTableViewDefinitionOpportunitiesRecords(span)
+	opportunitiesRecordsTableViewDefinition, err := DefaultTableViewDefinitionOpportunitiesRecords()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	contractsTableViewDefinition, err := DefaultTableViewDefinitionContracts(span)
+	contractsTableViewDefinition, err := DefaultTableViewDefinitionContracts()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	flowsTableViewDefinition, err := DefaultTableViewDefinitionFlows(span)
+	flowsTableViewDefinition, err := DefaultTableViewDefinitionFlows()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	flowContactsTableViewDefinition, err := DefaultTableViewDefinitionFlowContacts(span)
+	flowContactsTableViewDefinition, err := DefaultTableViewDefinitionFlowContacts()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	tasksTableViewDefinition, err := DefaultTableViewDefinitionTasks(span)
+	tasksTableViewDefinition, err := DefaultTableViewDefinitionTasks()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
@@ -110,15 +105,13 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) [
 		defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
 	}
 
-	span.LogFields(log.Int("defaultViewDefinitions.count", len(defaultViewDefinitions)))
 	return defaultViewDefinitions
 }
 
-func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionPastInvoices() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypePastInvoices)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -138,11 +131,10 @@ func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgres_ent
 	}, nil
 }
 
-func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionUpcomingInvoices() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeUpcomingInvoices)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -162,11 +154,10 @@ func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres
 	}, nil
 }
 
-func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionOrganization() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeOrganizations)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -186,11 +177,10 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgres_ent
 	}, nil
 }
 
-func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionCustomers() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeCustomers)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -210,11 +200,10 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgres_entity
 	}, nil
 }
 
-func DefaultTableViewDefinitionTargets(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionTargets() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeTargets)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -234,11 +223,10 @@ func DefaultTableViewDefinitionTargets(span opentracing.Span) (postgres_entity.T
 	}, nil
 }
 
-func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionContacts() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeContacts)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -258,11 +246,10 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgres_entity.
 	}, nil
 }
 
-func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionTargetOrganizationsContacts() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeContactsForTargetOrganizations)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -282,11 +269,10 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span
 	}, nil
 }
 
-func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionOpportunities() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeOpportunities)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -306,11 +292,10 @@ func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgres_en
 	}, nil
 }
 
-func DefaultTableViewDefinitionOpportunitiesRecords(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionOpportunitiesRecords() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeOpportunitiesRecords)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -330,11 +315,10 @@ func DefaultTableViewDefinitionOpportunitiesRecords(span opentracing.Span) (post
 	}, nil
 }
 
-func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionContracts() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeContracts)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -354,11 +338,10 @@ func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgres_entity
 	}, nil
 }
 
-func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionFlows() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeFlowActions)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -378,11 +361,10 @@ func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgres_entity.Tab
 	}, nil
 }
 
-func DefaultTableViewDefinitionFlowContacts(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionFlowContacts() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeFlowContacts)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -402,11 +384,10 @@ func DefaultTableViewDefinitionFlowContacts(span opentracing.Span) (postgres_ent
 	}, nil
 }
 
-func DefaultTableViewDefinitionFlowContactsV2(span opentracing.Span, flowId string) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionFlowContactsV2(flowId string) (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeFlowContacts)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
@@ -426,11 +407,10 @@ func DefaultTableViewDefinitionFlowContactsV2(span opentracing.Span, flowId stri
 	}, nil
 }
 
-func DefaultTableViewDefinitionTasks(span opentracing.Span) (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionTasks() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeTasks)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgres_entity.TableViewDefinition{}, err
 	}

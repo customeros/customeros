@@ -10,20 +10,19 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // GlobalOrganizationsSearch is the resolver for the globalOrganizations_Search field.
 func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTerm string, limit int) ([]*model.GlobalOrganization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSaveByGlobalOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.searchTern", searchTerm)
-	span.LogFields(log.Int("request.limit", limit))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.OrganizationSaveByGlobalOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.searchTern", searchTerm)
+	spans.LogKV("request.limit", limit)
 
 	if limit == 0 {
 		limit = 30
@@ -55,13 +54,13 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 	if searchTerm == "" {
 		globalOrganizationEntities, err = r.Services.Repositories.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, r.cfg.App.DefaultGlobalOrgPrimaryDomainsInSearch)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to get default global organizations")
 			return nil, err
 		}
 		additionalGlobalOrganizationEntities, err = r.Services.Repositories.PostgresRepositories.GlobalOrganizationRepository.Search(ctx, "", limit*10)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to get default global organizations")
 			return nil, err
 		}
@@ -69,7 +68,7 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 	} else {
 		globalOrganizationEntities, err = r.Services.Repositories.PostgresRepositories.GlobalOrganizationRepository.Search(ctx, searchTerm, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to search global organizations")
 			return nil, err
 		}
@@ -82,7 +81,7 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 	}
 	orgByDomainMap, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetActiveOrganizationIdsByDomain(ctx, common.GetTenantFromContext(ctx), primaryDomains)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	globalOrganizations := make([]*model.GlobalOrganization, 0, len(globalOrganizationEntities))

@@ -13,26 +13,23 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/google/uuid"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // Participants is the resolver for the participants field.
 func (r *flowResolver) Participants(ctx context.Context, obj *model.Flow) ([]*model.FlowParticipant, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Participants", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Participants", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := dataloader.For(ctx).GetFlowParticipantsForFlow(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		graphql.AddErrorf(ctx, "Failed to get flow contacts")
 		return nil, nil
 	}
@@ -41,13 +38,12 @@ func (r *flowResolver) Participants(ctx context.Context, obj *model.Flow) ([]*mo
 
 // Senders is the resolver for the senders field.
 func (r *flowResolver) Senders(ctx context.Context, obj *model.Flow) ([]*model.FlowSender, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Senders", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Senders", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := dataloader.For(ctx).GetFlowSendersForFlow(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		graphql.AddErrorf(ctx, "Failed to get flow senders")
 		return nil, nil
 	}
@@ -56,20 +52,19 @@ func (r *flowResolver) Senders(ctx context.Context, obj *model.Flow) ([]*model.F
 
 // Action is the resolver for the action field.
 func (r *flowActionExecutionResolver) Action(ctx context.Context, obj *model.FlowActionExecution) (*model.FlowAction, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Action", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Action", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	flowActionExecution, err := r.Services.CommonServices.FlowExecutionService.GetFlowActionExecutionById(ctx, obj.Metadata.ID)
 	if err != nil || flowActionExecution == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get flow action")
 		return nil, err
 	}
 
 	flowAction, err := r.Services.CommonServices.FlowService.FlowActionGetById(ctx, flowActionExecution.ActionId)
 	if err != nil || flowAction == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get flow action")
 		return nil, err
 	}
@@ -79,13 +74,12 @@ func (r *flowActionExecutionResolver) Action(ctx context.Context, obj *model.Flo
 
 // Contact is the resolver for the contact field.
 func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContact) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Contact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Contact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entity, err := r.Services.CommonServices.FlowService.FlowParticipantById(ctx, obj.Metadata.ID)
 	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -93,7 +87,7 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 	// TODO THIS IS NOT CORRECT
 	contactEntity, err := r.Services.ContactService.GetById(ctx, entity.EntityId)
 	if err != nil || contactEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -103,13 +97,12 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 
 // Executions is the resolver for the executions field.
 func (r *flowParticipantResolver) Executions(ctx context.Context, obj *model.FlowParticipant) ([]*model.FlowActionExecution, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Executions", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Executions", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := dataloader.For(ctx).GetExecutionsForParticipant(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		graphql.AddErrorf(ctx, "Failed to get flow action executions")
 		return nil, nil
 	}
@@ -119,13 +112,12 @@ func (r *flowParticipantResolver) Executions(ctx context.Context, obj *model.Flo
 
 // Flow is the resolver for the flow field.
 func (r *flowSenderResolver) Flow(ctx context.Context, obj *model.FlowSender) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flow", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Flow", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := dataloader.For(ctx).GetFlowsWithSender(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		graphql.AddErrorf(ctx, "Failed to get flow sender users")
 		return nil, nil
 	}
@@ -138,13 +130,12 @@ func (r *flowSenderResolver) Flow(ctx context.Context, obj *model.FlowSender) (*
 
 // User is the resolver for the user field.
 func (r *flowSenderResolver) User(ctx context.Context, obj *model.FlowSender) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Contacts", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.Contacts", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := dataloader.For(ctx).GetUserForFlowSenders(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		graphql.AddErrorf(ctx, "Failed to get flow sender users")
 		return nil, nil
 	}
@@ -153,24 +144,24 @@ func (r *flowSenderResolver) User(ctx context.Context, obj *model.FlowSender) (*
 
 // FlowChangeName is the resolver for the flow_ChangeName field.
 func (r *mutationResolver) FlowChangeName(ctx context.Context, id string, name string) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowChangeName", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowChangeName", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", id), log.String("name", name))
+	spans.LogKV("flowId", id)
+	spans.LogKV("name", name)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	flow, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, id)
 	if err != nil || flow == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
 
 	err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelFlow, id, "name", name)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -183,13 +174,12 @@ func (r *mutationResolver) FlowChangeName(ctx context.Context, id string, name s
 
 // FlowMerge is the resolver for the flow_Merge field.
 func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeInput) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowMerge", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowMerge", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	flow, err := r.Services.CommonServices.FlowService.FlowMerge(ctx, nil, mapper.MapFlowMergeInputToEntity(input))
 	if err != nil || flow == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -199,13 +189,12 @@ func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeI
 
 // FlowOn is the resolver for the flow_On field.
 func (r *mutationResolver) FlowOn(ctx context.Context, id string) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowOn", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowOn", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	e, err := r.Services.CommonServices.FlowService.FlowOn(ctx, id)
 	if err != nil || e == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -215,13 +204,12 @@ func (r *mutationResolver) FlowOn(ctx context.Context, id string) (*model.Flow, 
 
 // FlowOff is the resolver for the flow_Off field.
 func (r *mutationResolver) FlowOff(ctx context.Context, id string) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowOff", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowOff", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	e, err := r.Services.CommonServices.FlowService.FlowOff(ctx, id)
 	if err != nil || e == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -231,13 +219,12 @@ func (r *mutationResolver) FlowOff(ctx context.Context, id string) (*model.Flow,
 
 // FlowArchive is the resolver for the flow_Archive field.
 func (r *mutationResolver) FlowArchive(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowArchive", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	e, err := r.Services.CommonServices.FlowService.FlowArchive(ctx, id)
 	if err != nil || e == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
@@ -247,14 +234,13 @@ func (r *mutationResolver) FlowArchive(ctx context.Context, id string) (*model.R
 
 // FlowArchiveBulk is the resolver for the flow_ArchiveBulk field.
 func (r *mutationResolver) FlowArchiveBulk(ctx context.Context, ids []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowArchiveBulk", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowArchiveBulk", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	for _, id := range ids {
 		e, err := r.Services.CommonServices.FlowService.FlowArchive(ctx, id)
 		if err != nil || e == nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
 			return &model.Result{Result: false}, err
 		}
@@ -265,20 +251,19 @@ func (r *mutationResolver) FlowArchiveBulk(ctx context.Context, ids []string) (*
 
 // FlowParticipantAdd is the resolver for the flowParticipant_Add field.
 func (r *mutationResolver) FlowParticipantAdd(ctx context.Context, flowID string, entityID string, entityType commonModel.EntityType) (*model.FlowParticipant, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantAdd", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowParticipantAdd", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entity, err := r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flowID, entityID, entityType)
 	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
 
 	flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, flowID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -294,14 +279,13 @@ func (r *mutationResolver) FlowParticipantAdd(ctx context.Context, flowID string
 
 // FlowParticipantAddBulk is the resolver for the flowParticipant_AddBulk field.
 func (r *mutationResolver) FlowParticipantAddBulk(ctx context.Context, flowID string, entityIds []string, entityType commonModel.EntityType) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantAddBulk", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowParticipantAddBulk", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	for _, id := range entityIds {
 		entity, err := r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flowID, id, entityType)
 		if err != nil || entity == nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
 			return &model.Result{Result: false}, err
 		}
@@ -309,7 +293,7 @@ func (r *mutationResolver) FlowParticipantAddBulk(ctx context.Context, flowID st
 
 	flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, flowID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -325,27 +309,26 @@ func (r *mutationResolver) FlowParticipantAddBulk(ctx context.Context, flowID st
 
 // FlowParticipantDelete is the resolver for the flowParticipant_Delete field.
 func (r *mutationResolver) FlowParticipantDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowParticipantDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	flow, err := r.Services.CommonServices.FlowService.FlowGetByParticipantId(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
 
 	err = r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
 
 	flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, flow.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -361,13 +344,12 @@ func (r *mutationResolver) FlowParticipantDelete(ctx context.Context, id string)
 
 // FlowParticipantDeleteBulk is the resolver for the flowParticipant_DeleteBulk field.
 func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantDeleteBulk", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowParticipantDeleteBulk", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	flow, err := r.Services.CommonServices.FlowService.FlowGetByParticipantId(ctx, nil, id[0])
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
@@ -375,7 +357,7 @@ func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []s
 	for _, id := range id {
 		err := r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, nil, id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
 			return &model.Result{Result: false}, err
 		}
@@ -383,7 +365,7 @@ func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []s
 
 	flowsUpdated, err := r.Services.Repositories.Neo4jRepositories.FlowWriteRepository.UpdateFlowStatistics(ctx, nil, flow.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -399,13 +381,12 @@ func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []s
 
 // FlowSenderMerge is the resolver for the flowSender_Merge field.
 func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowID string, input model.FlowSenderMergeInput) (*model.FlowSender, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSenderMerge", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowSenderMerge", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entity, err := r.Services.CommonServices.FlowService.FlowSenderMerge(ctx, flowID, mapper.MapFlowActionMergeInputToEntity(input))
 	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -414,13 +395,12 @@ func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowID string, i
 
 // FlowSenderDelete is the resolver for the flowSender_Delete field.
 func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSenderDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowSenderDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	err := r.Services.CommonServices.FlowService.FlowSenderDelete(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
@@ -429,9 +409,8 @@ func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*mo
 
 // FlowEmailActionTest is the resolver for the flowEmailActionTest field.
 func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject string, bodyTemplate string, sendToEmailAddress string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowEmailActionTest", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowEmailActionTest", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -460,7 +439,7 @@ func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject stri
 		Content:      bp,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
 	}
@@ -470,14 +449,14 @@ func (r *mutationResolver) FlowEmailActionTest(ctx context.Context, subject stri
 
 // Flow is the resolver for the flow field.
 func (r *queryResolver) Flow(ctx context.Context, id string) (*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Flow", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Flow", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	entity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -486,13 +465,12 @@ func (r *queryResolver) Flow(ctx context.Context, id string) (*model.Flow, error
 
 // Flows is the resolver for the flows field.
 func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Flows", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Flows", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := r.Services.CommonServices.FlowService.FlowGetList(ctx)
 	if err != nil || entities == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to get flows")
 		return nil, err
 	}
@@ -501,13 +479,12 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 
 // FlowParticipant is the resolver for the flowParticipant field.
 func (r *queryResolver) FlowParticipant(ctx context.Context, id string) (*model.FlowParticipant, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipant", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowParticipant", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entity, err := r.Services.CommonServices.FlowService.FlowParticipantById(ctx, id)
 	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return nil, err
 	}
@@ -516,9 +493,8 @@ func (r *queryResolver) FlowParticipant(ctx context.Context, id string) (*model.
 
 // FlowEmailVariables is the resolver for the flow_emailVariables field.
 func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.EmailVariables", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.EmailVariables", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	contactVariables := make([]model.EmailVariableName, 0)
 	contactVariables = append(contactVariables, model.EmailVariableNameSenderFirstName)
@@ -539,15 +515,14 @@ func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailV
 
 // FlowTestEmailSender is the resolver for the flow_testEmailSender field.
 func (r *queryResolver) FlowTestEmailSender(ctx context.Context) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowTestEmailSender", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "FlowResolver.FlowTestEmailSender", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	testEmailAddress, err := r.Services.Repositories.Neo4jRepositories.EmailReadRepository.GetTestEmailForFlows(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "")
 		return "", err
 	}
@@ -555,20 +530,20 @@ func (r *queryResolver) FlowTestEmailSender(ctx context.Context) (string, error)
 	if testEmailAddress == "" {
 		err := r.Services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, common.GetUserEmailFromContext(ctx))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
 			return "", err
 		}
 
 		testEmailAddress, err = r.Services.Repositories.Neo4jRepositories.EmailReadRepository.GetTestEmailForFlows(ctx, tenant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
 			return "", err
 		}
 
 		if testEmailAddress == "" {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
 			return "", fmt.Errorf("test email address not found")
 		}

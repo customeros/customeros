@@ -12,10 +12,6 @@ import (
 	"net/http"
 )
 
-const (
-	SpanTagEntityId = tracing.SpanTagEntityId
-)
-
 type spanCtxKey struct{}
 
 var activeSpanCtxKey = spanCtxKey{}

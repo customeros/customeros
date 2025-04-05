@@ -792,7 +792,6 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 		s.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	if currentRenewalOpportunityDbNode != nil {
 		currentOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
 

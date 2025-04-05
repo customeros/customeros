@@ -278,7 +278,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		}
 
 		if isNew {
-			tvDef, err := table_view.DefaultTableViewDefinitionFlowContactsV2(span, toStore.Id)
+			tvDef, err := table_view.DefaultTableViewDefinitionFlowContactsV2(toStore.Id)
 			if err == nil {
 				tvDef.Tenant = tenant
 				result := s.postgres.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)

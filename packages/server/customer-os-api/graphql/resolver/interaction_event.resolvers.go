@@ -12,21 +12,19 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // InteractionSession is the resolver for the interactionSession field.
 func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	interactionSessionEntityNillable, err := dataloader.For(ctx).GetInteractionSessionForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get interaction session for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction session for interaction event %s", obj.ID)
 		return nil, nil
@@ -36,11 +34,11 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 
 // Issue is the resolver for the issue field.
 func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	issueEntityNillable, err := dataloader.For(ctx).GetIssueForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get issue for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get issue for interaction event %s", obj.ID)
 		return nil, nil
@@ -50,11 +48,11 @@ func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.Interac
 
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	meetingEntityNillable, err := dataloader.For(ctx).GetMeetingForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get meeting for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get meeting for interaction event %s", obj.ID)
 		return nil, nil
@@ -64,11 +62,11 @@ func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.Inter
 
 // SentBy is the resolver for the sentBy field.
 func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	participantEntities, err := dataloader.For(ctx).GetSentByParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get SentBy for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
@@ -78,11 +76,11 @@ func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.Intera
 
 // SentTo is the resolver for the sentTo field.
 func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	participantEntities, err := dataloader.For(ctx).GetSentToParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get SentTo for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
@@ -92,11 +90,11 @@ func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.Intera
 
 // RepliesTo is the resolver for the repliesTo field.
 func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get ReplyTo for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get ReplyTo for interaction event %s", obj.ID)
 		return nil, nil
@@ -109,11 +107,11 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 
 // Includes is the resolver for the includes field.
 func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get attachment entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for Interaction Event %s", obj.ID)
 		return nil, nil
@@ -123,11 +121,11 @@ func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.Inte
 
 // Actions is the resolver for the actions field.
 func (r *interactionEventResolver) Actions(ctx context.Context, obj *model.InteractionEvent) ([]*model.Action, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetActionsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get action entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get action entities for Interaction Event %s", obj.ID)
 		return nil, nil
@@ -137,11 +135,11 @@ func (r *interactionEventResolver) Actions(ctx context.Context, obj *model.Inter
 
 // ActionItems is the resolver for the actionItems field.
 func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetActionItemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get action items entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get action items entities for Interaction Event %s", obj.ID)
 		return nil, nil
@@ -151,11 +149,11 @@ func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.I
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *interactionEventResolver) ExternalLinks(ctx context.Context, obj *model.InteractionEvent) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get external system for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external systems for interaction event %s", obj.ID)
 		return nil, nil
@@ -165,11 +163,11 @@ func (r *interactionEventResolver) ExternalLinks(ctx context.Context, obj *model
 
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionSession(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get interaction events for interaction session %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction events for interaction session %s", obj.ID)
 		return nil, nil
@@ -179,11 +177,11 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 
 // AttendedBy is the resolver for the attendedBy field.
 func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForInteractionSession(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get AttendedBy for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
 		return nil, nil
@@ -193,10 +191,11 @@ func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.
 
 // InteractionEventLinkAttachment is the resolver for the interactionEvent_LinkAttachment field.
 func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionEventLinkAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.eventID", eventID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.InteractionEventLinkAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.eventID", eventID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -215,14 +214,14 @@ func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, e
 
 // InteractionEvent is the resolver for the interactionEvent field.
 func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.InteractionEvent", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.InteractionEvent", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.interactionEventID", id)
 
 	interactionEventEntity, err := r.Services.CommonServices.InteractionEventService.GetById(ctx, id)
 	if err != nil || interactionEventEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "InteractionEvent with id %s not found", id)
 		return nil, err
 	}

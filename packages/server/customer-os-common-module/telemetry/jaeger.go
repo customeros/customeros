@@ -1,6 +1,8 @@
 package telemetry
 
 import (
+	"github.com/99designs/gqlgen/graphql"
+	"golang.org/x/net/context"
 	"io"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -45,6 +47,10 @@ func initJaeger(jaegerConfig *JaegerConfig) *config.Configuration {
 	return cfg
 }
 
+type spanCtxKey struct{}
+
+var activeSpanCtxKey = spanCtxKey{}
+
 func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapCarrier {
 	textMapCarrier, err := InjectTextMapCarrier(spanCtx)
 	if err != nil {
@@ -59,4 +65,22 @@ func InjectTextMapCarrier(spanCtx opentracing.SpanContext) (opentracing.TextMapC
 		return nil, err
 	}
 	return m, nil
+}
+
+func ExtractSpanCtx(ctx context.Context) opentracing.SpanContext {
+	if ctx.Value(activeSpanCtxKey) != nil {
+		return ctx.Value(activeSpanCtxKey).(opentracing.SpanContext)
+	}
+	return nil
+}
+
+func EnrichCtxWithJaegerSpanForGraphQL(ctx context.Context, operationContext *graphql.OperationContext) context.Context {
+	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
+	if err != nil {
+		return ctx
+	}
+	if ExtractSpanCtx(ctx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, activeSpanCtxKey, spanCtx)
 }

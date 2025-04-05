@@ -15,22 +15,20 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // UserUpdateOnboardingDetails is the resolver for the user_UpdateOnboardingDetails field.
 func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdateOnboardingDetails", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.UserUpdateOnboardingDetails", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, data_fields.UserFields{
 		ShowOnboardingPage:               input.ShowOnboardingPage,
@@ -40,13 +38,13 @@ func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, inpu
 		OnboardingMailstackStepCompleted: input.OnboardingMailstackStepCompleted,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update onboarding details for user %s", input.ID)
 		return nil, nil
 	}
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
 		return nil, err
 	}
@@ -55,10 +53,10 @@ func (r *mutationResolver) UserUpdateOnboardingDetails(ctx context.Context, inpu
 
 // UserUpdate is the resolver for the user_Update field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpdateInput) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	userData := data_fields.UserFields{
 		ProfilePhotoUrl: input.ProfilePhotoURL,
@@ -72,21 +70,21 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpda
 	// Validate logged-in user can only update own user details
 	if common.GetUserIdFromContext(ctx) != input.ID {
 		err := errors.New("user can only update own user details")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "User can only update own user details")
 		return nil, err
 	}
 
 	_, err := r.Services.CommonServices.UserService.Save(ctx, nil, &input.ID, userData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
 		return nil, err
 	}
 
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "User with id %s not found", input.ID)
 		return nil, err
 	}
@@ -95,14 +93,13 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpda
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*commonModel.SortBy) (*model.UserPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Users", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Users", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
+	spans.LogKV("request.page", pagination.Page, "request.limit", pagination.Limit)
 	paginatedResult, err := r.Services.UserService.GetAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.UserPage{
 		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*neo4jentity.UserEntities)),
@@ -113,14 +110,14 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.User", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.User", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.userID", id)
 
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, id)
 	if err != nil || userEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "User with id %s not found", id)
 		return nil, err
 	}
@@ -129,14 +126,14 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 
 // UserByEmail is the resolver for the user_ByEmail field.
 func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UserByEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.email", email))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UserByEmail", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.email", email)
 
 	userEntity, err := r.Services.CommonServices.UserService.FindUserByEmail(ctx, email)
 	if err != nil || userEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "User with email %s not identified", email)
 		return nil, err
 	}
@@ -145,13 +142,12 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 
 // UserCurrent is the resolver for the user_Current field.
 func (r *queryResolver) UserCurrent(ctx context.Context) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UserCurrent", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UserCurrent", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, common.GetUserIdFromContext(ctx))
 	if err != nil || userEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "User with id %s not found", common.GetUserIdFromContext(ctx))
 		return nil, err
 	}
@@ -161,20 +157,20 @@ func (r *queryResolver) UserCurrent(ctx context.Context) (*model.User, error) {
 
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Roles", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "UserResolver.Roles", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.user", obj.ID)
 
 	return obj.Roles, nil
 }
 
 // Emails is the resolver for the emails field.
 func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Emails", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "UserResolver.Emails", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.user", obj.ID)
 
 	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, commonModel.USER, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
@@ -182,11 +178,11 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get phone numbers for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for user %s", obj.ID)
 		return nil, nil
@@ -196,22 +192,22 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 
 // Mailboxes is the resolver for the mailboxes field.
 func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Mailboxes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "UserResolver.Mailboxes", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.user", obj.ID)
 
 	mailboxes := make([]string, 0)
 	tenant := common.GetTenantFromContext(ctx)
 
 	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil
 	}
 
 	if statusCode != http.StatusOK {
-		tracing.TraceErr(span, fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
+		spans.TraceError(fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
 		return nil, nil
 	}
 
@@ -224,22 +220,22 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 
 // MailboxesV2 is the resolver for the mailboxesV2 field.
 func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*model.Mailbox, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.MailboxesV2", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "UserResolver.MailboxesV2", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.user", obj.ID)
 
 	mailboxes := make([]*model.Mailbox, 0)
 	tenant := common.GetTenantFromContext(ctx)
 
 	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil
 	}
 
 	if statusCode != http.StatusOK {
-		tracing.TraceErr(span, fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
+		spans.TraceError(fmt.Errorf("failed to get mailboxes, status code: %d", statusCode))
 		return nil, nil
 	}
 
@@ -255,7 +251,7 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 
 		userUsedInFlows, err := r.Services.Repositories.Neo4jRepositories.FlowSenderReadRepository.GetUsersUsedInFlows(ctx, []string{obj.ID})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed to get users used in flows")
 			return nil, err
 		}
@@ -272,14 +268,14 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 
 // HasLinkedInToken is the resolver for the hasLinkedInToken field.
 func (r *userResolver) HasLinkedInToken(ctx context.Context, obj *model.User) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.HasLinkedInToken", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "UserResolver.HasLinkedInToken", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.user", obj.ID)
 
 	activeLinkedinToken, err := r.Services.Repositories.PostgresRepositories.BrowserConfigRepository.GetForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get linkedin token for user %s", obj.ID)
 		return false, err
 	}
@@ -289,11 +285,11 @@ func (r *userResolver) HasLinkedInToken(ctx context.Context, obj *model.User) (b
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get job roles for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
 		return nil, nil
@@ -303,11 +299,11 @@ func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.
 
 // Calendars is the resolver for the calendars field.
 func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	calendarsForUser, err := dataloader.For(ctx).GetCalendarsForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get calendars for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
 		return nil, nil

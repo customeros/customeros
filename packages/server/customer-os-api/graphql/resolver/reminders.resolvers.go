@@ -11,20 +11,20 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // ReminderCreate is the resolver for the reminder_Create field.
 func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.ReminderInput) (*string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CreateReminder", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CreateReminder", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	id, err := r.Services.CommonServices.ReminderService.CreateReminder(ctx, common.GetTenantFromContext(ctx), input.UserID, input.OrganizationID, input.Content, input.DueDate)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create reminder")
 		return nil, nil
 	}
@@ -34,14 +34,14 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 
 // ReminderUpdate is the resolver for the reminder_Update field.
 func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.ReminderUpdateInput) (*string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UpdateReminder", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.UpdateReminder", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.CommonServices.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update reminder")
 		return nil, nil
 	}
@@ -51,14 +51,13 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 
 // Reminder is the resolver for the reminder field.
 func (r *queryResolver) Reminder(ctx context.Context, id string) (*model.Reminder, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Reminder", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Reminder", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.TagEntity(id)
 
 	reminderEntity, err := r.Services.CommonServices.ReminderService.GetReminderById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch reminder with id %s", id)
 		return nil, nil
 	}
@@ -72,14 +71,14 @@ func (r *queryResolver) Reminder(ctx context.Context, id string) (*model.Reminde
 
 // RemindersForOrganization is the resolver for the remindersForOrganization field.
 func (r *queryResolver) RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*model.Reminder, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.RemindersForOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, organizationID)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.RemindersForOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.TagEntity(organizationID)
 
 	reminderEntities, err := r.Services.CommonServices.ReminderService.RemindersForOrganization(ctx, organizationID, dismissed)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch reminders for organization with id %s", organizationID)
 		return nil, nil
 	}
@@ -94,13 +93,12 @@ func (r *queryResolver) RemindersForOrganization(ctx context.Context, organizati
 
 // Owner is the resolver for the owner field.
 func (r *reminderResolver) Owner(ctx context.Context, obj *model.Reminder) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ReminderResolver.Owner", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ReminderResolver.Owner", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	ownerEntity, err := r.Services.CommonServices.UserService.GetReminderOwner(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch user with id %s", obj.Metadata.ID)
 		return nil, nil
 	}

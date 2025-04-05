@@ -16,24 +16,22 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // ContractLineItems is the resolver for the contractLineItems field.
 func (r *contractResolver) ContractLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	serviceLineItemEntities, err := dataloader.For(ctx).GetServiceLineItemsForContract(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get service line items for contract %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get service line items for contract %s", obj.ID)
 		return nil, nil
@@ -43,11 +41,11 @@ func (r *contractResolver) ContractLineItems(ctx context.Context, obj *model.Con
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForContract(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
 		return nil, nil
@@ -57,11 +55,11 @@ func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get external system for contract %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for contract %s", obj.ID)
 		return nil, nil
@@ -71,11 +69,11 @@ func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contrac
 
 // Opportunities is the resolver for the opportunities field.
 func (r *contractResolver) Opportunities(ctx context.Context, obj *model.Contract) ([]*model.Opportunity, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForContract(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get opportunities for contract %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get opportunities for contract %s", obj.ID)
 		return nil, nil
@@ -85,14 +83,14 @@ func (r *contractResolver) Opportunities(ctx context.Context, obj *model.Contrac
 
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContractResolver.Owner", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contractID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "ContractResolver.Owner", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contractID", obj.ID)
 
 	owner, err := r.Services.CommonServices.UserService.GetContactOwner(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
 		return nil, err
 	}
@@ -104,11 +102,11 @@ func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*mod
 
 // Attachments is the resolver for the attachments field.
 func (r *contractResolver) Attachments(ctx context.Context, obj *model.Contract) ([]*model.Attachment, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	attachmentEntities, err := dataloader.For(ctx).GetAttachmentsForContract(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get attachments for contract %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachments for contract %s", obj.ID)
 		return nil, nil
@@ -118,11 +116,11 @@ func (r *contractResolver) Attachments(ctx context.Context, obj *model.Contract)
 
 // Invoices is the resolver for the invoices field.
 func (r *contractResolver) Invoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	invoiceEntities, err := dataloader.For(ctx).GetInvoicesForContract(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("failed to get invoices for contract %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get invoices for contract %s", obj.Metadata.ID)
 		return nil, nil
@@ -145,11 +143,11 @@ func (r *contractResolver) Invoices(ctx context.Context, obj *model.Contract) ([
 
 // UpcomingInvoices is the resolver for the upcomingInvoices field.
 func (r *contractResolver) UpcomingInvoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	invoiceEntities, err := dataloader.For(ctx).GetInvoicesForContract(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("failed to get upcoming invoices for contract %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get upcoming invoices for contract %s", obj.Metadata.ID)
 		return nil, nil
@@ -172,11 +170,11 @@ func (r *contractResolver) UpcomingInvoices(ctx context.Context, obj *model.Cont
 
 // Organization is the resolver for the organization field.
 func (r *contractResolver) Organization(ctx context.Context, obj *model.Contract) (*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntity, err := dataloader.For(ctx).GetOrganizationForContract(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching organization for contract %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching organization for contract %s", obj.Metadata.ID)
 		return nil, nil
@@ -186,11 +184,11 @@ func (r *contractResolver) Organization(ctx context.Context, obj *model.Contract
 
 // ServiceLineItems is the resolver for the serviceLineItems field.
 func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	serviceLineItemEntities, err := dataloader.For(ctx).GetServiceLineItemsForContract(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get service line items for contract %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get service line items for contract %s", obj.ID)
 		return nil, nil
@@ -200,10 +198,10 @@ func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Cont
 
 // ContractCreate is the resolver for the contract_Create field.
 func (r *mutationResolver) ContractCreate(ctx context.Context, input model.ContractInput) (*model.Contract, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	contractId, err := r.Services.ContractService.Create(ctx, &cosapi_interfaces.ContractCreateData{
 		Input:             input,
@@ -212,36 +210,36 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 		AppSource:         utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create contract")
 		return &model.Contract{ID: contractId}, err
 	}
 	createdContractEntity, err := r.Services.ContractService.GetById(ctx, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Contract details not yet available. Contract id: %s", contractId)
 		return &model.Contract{ID: contractId}, nil
 	}
-	span.LogFields(log.String("response.contractID", contractId))
+	spans.LogKV("response.contractID", contractId)
 	return mapper.MapEntityToContract(createdContractEntity), nil
 }
 
 // ContractUpdate is the resolver for the contract_Update field.
 func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.ContractUpdateInput) (*model.Contract, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.ContractService.Update(ctx, input)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update contract %s", input.ContractID)
 		return &model.Contract{ID: input.ContractID}, nil
 	}
 	contractEntity, err := r.Services.ContractService.GetById(ctx, input.ContractID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", input.ContractID)
 		return &model.Contract{ID: input.ContractID}, nil
 	}
@@ -251,14 +249,14 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 
 // ContractDelete is the resolver for the contract_Delete field.
 func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	deletionCompleted, err := r.Services.ContractService.SoftDeleteContract(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to delete contract %s", id)
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
@@ -267,20 +265,20 @@ func (r *mutationResolver) ContractDelete(ctx context.Context, id string) (*mode
 
 // ContractRenew is the resolver for the contract_Renew field.
 func (r *mutationResolver) ContractRenew(ctx context.Context, input model.ContractRenewalInput) (*model.Contract, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRenew", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractRenew", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.ContractService.RenewContract(ctx, input.ContractID, input.RenewalDate)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to renew contract %s", input.ContractID)
 		return &model.Contract{Metadata: &model.Metadata{ID: input.ContractID}}, nil
 	}
 	contractEntity, err := r.Services.ContractService.GetById(ctx, input.ContractID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", input.ContractID)
 		return &model.Contract{Metadata: &model.Metadata{ID: input.ContractID}}, nil
 	}
@@ -290,23 +288,24 @@ func (r *mutationResolver) ContractRenew(ctx context.Context, input model.Contra
 
 // ContractAddAttachment is the resolver for the contract_AddAttachment field.
 func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractAddAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contractID", contractID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractAddAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contractID", contractID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err := r.Services.ContractService.GetById(ctx, contractID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
 
 	_, err = r.Services.CommonServices.AttachmentService.GetById(ctx, attachmentID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching attachment details. Attachment id: %s", contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
@@ -319,7 +318,7 @@ func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to link attachment %s with contract %s", attachmentID, contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
@@ -329,23 +328,24 @@ func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID
 
 // ContractRemoveAttachment is the resolver for the contract_RemoveAttachment field.
 func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRemoveAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contractID", contractID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ContractRemoveAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contractID", contractID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err := r.Services.ContractService.GetById(ctx, contractID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
 
 	_, err = r.Services.CommonServices.AttachmentService.GetById(ctx, attachmentID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching attachment details. Attachment id: %s", contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
@@ -358,7 +358,7 @@ func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contrac
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to remove attachment %s from contract %s", attachmentID, contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
@@ -368,20 +368,20 @@ func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contrac
 
 // Contract is the resolver for the contract field.
 func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contract, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contract", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contractID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Contract", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contractID", id)
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("missing contract input id"))
+		spans.TraceError(errors.New("missing contract input id"))
 		graphql.AddErrorf(ctx, "Missing contract input id")
 		return nil, nil
 	}
 
 	contractEntityPtr, err := r.Services.ContractService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)
 		return nil, err
 	}
@@ -390,17 +390,17 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 
 // Contracts is the resolver for the contracts field.
 func (r *queryResolver) Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contracts", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.pagination", pagination)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Contracts", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.pagination", pagination)
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
 	paginatedResult, err := r.Services.ContractService.GetPaginatedContracts(ctx, pagination.Page, pagination.Limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error while fetching contracts")
 		return nil, err
 	}

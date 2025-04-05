@@ -12,18 +12,16 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // Tags is the resolver for the tags field.
 func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get tags for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for issue %s", obj.ID)
 		return nil, err
@@ -33,11 +31,11 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("failed to get interaction events for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get interaction events for issue %s", obj.ID)
 		return nil, nil
@@ -47,11 +45,11 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 
 // Comments is the resolver for the comments field.
 func (r *issueResolver) Comments(ctx context.Context, obj *model.Issue) ([]*model.Comment, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	commentEntities, err := dataloader.For(ctx).GetCommentsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("failed to get comments for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get comments for issue %s", obj.ID)
 		return nil, nil
@@ -61,11 +59,11 @@ func (r *issueResolver) Comments(ctx context.Context, obj *model.Issue) ([]*mode
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetExternalSystemsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get external system for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for issue %s", obj.ID)
 		return nil, nil
@@ -75,11 +73,11 @@ func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]
 
 // SubmittedBy is the resolver for the submittedBy field.
 func (r *issueResolver) SubmittedBy(ctx context.Context, obj *model.Issue) (model.IssueParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	issueParticipants, err := dataloader.For(ctx).GetSubmitterParticipantsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get submitter for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get submitter for issue %s", obj.ID)
 		return nil, nil
@@ -92,11 +90,11 @@ func (r *issueResolver) SubmittedBy(ctx context.Context, obj *model.Issue) (mode
 
 // ReportedBy is the resolver for the reportedBy field.
 func (r *issueResolver) ReportedBy(ctx context.Context, obj *model.Issue) (model.IssueParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	issueParticipants, err := dataloader.For(ctx).GetReporterParticipantsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get reporter for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get reporter for issue %s", obj.ID)
 		return nil, nil
@@ -109,11 +107,11 @@ func (r *issueResolver) ReportedBy(ctx context.Context, obj *model.Issue) (model
 
 // AssignedTo is the resolver for the assignedTo field.
 func (r *issueResolver) AssignedTo(ctx context.Context, obj *model.Issue) ([]model.IssueParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	issueParticipants, err := dataloader.For(ctx).GetAssigneeParticipantsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get assignees for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get assignees for issue %s", obj.ID)
 		return nil, nil
@@ -123,11 +121,11 @@ func (r *issueResolver) AssignedTo(ctx context.Context, obj *model.Issue) ([]mod
 
 // FollowedBy is the resolver for the followedBy field.
 func (r *issueResolver) FollowedBy(ctx context.Context, obj *model.Issue) ([]model.IssueParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	issueParticipants, err := dataloader.For(ctx).GetFollowerParticipantsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get followers for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get followers for issue %s", obj.ID)
 		return nil, nil
@@ -137,14 +135,14 @@ func (r *issueResolver) FollowedBy(ctx context.Context, obj *model.Issue) ([]mod
 
 // Issue is the resolver for the issue field.
 func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Issue", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.issueID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Issue", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.issueID", id)
 
 	issueEntity, err := r.Services.IssueService.GetById(ctx, id)
 	if err != nil || issueEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Issue with id %s not found", id)
 		return nil, err
 	}

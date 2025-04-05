@@ -10,20 +10,20 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // ExternalSystemCreate is the resolver for the externalSystem_Create field.
 func (r *mutationResolver) ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ExternalSystemCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.ExternalSystemCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.CommonServices.ExternalSystemService.MergeExternalSystem(ctx, common.GetTenantFromContext(ctx), input.Name)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge external system")
 		return "", err
 	}
@@ -32,13 +32,12 @@ func (r *mutationResolver) ExternalSystemCreate(ctx context.Context, input model
 
 // ExternalSystemInstances is the resolver for the externalSystemInstances field.
 func (r *queryResolver) ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ExternalSystemInstances", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ExternalSystemInstances", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	externalSystemEntities, err := r.Services.ExternalSystemService.GetAllExternalSystemInstances(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get external system instances")
 		return nil, err
 	}

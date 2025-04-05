@@ -379,7 +379,6 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *cosapi
 
 	result := &model.CustomerContact{}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	contactId, err := s.contact.Save(ctx, nil, nil,
 		data_fields.ContactFields{
 			FirstName:   utils.StringPtr(data.ContactEntity.FirstName),

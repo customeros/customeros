@@ -31,8 +31,6 @@ type Spans struct {
 
 type contextKey string
 
-const otelSpanKey contextKey = "otel_span"
-
 // Component tag constants
 const (
 	ComponentGraphQL    = "graphql"
@@ -56,6 +54,11 @@ const (
 	SpanKindClient   = "client"
 	SpanKindProducer = "producer"
 	SpanKindConsumer = "consumer"
+)
+
+// Context keys
+const (
+	otelSpanKey contextKey = "otel_span"
 )
 
 // SpanOptions defines options for span creation
@@ -920,4 +923,38 @@ func GetTraceIds(spans *Spans) (string, string) {
 		otelTraceId = spans.OTel.SpanContext().TraceID().String()
 	}
 	return jaegerTraceId, otelTraceId
+}
+
+// EnrichCtxWithSpanCtxForGraphQL enriches the provided context with both Jaeger and OpenTelemetry span contexts
+func EnrichCtxWithSpanCtxForGraphQL(ctx context.Context, operationContext *graphql.OperationContext) context.Context {
+	// Extract and enrich Jaeger span context
+	EnrichCtxWithJaegerSpanForGraphQL(ctx, operationContext)
+
+	// Extract and enrich OpenTelemetry span context
+	carrier := propagation.HeaderCarrier(operationContext.Headers)
+	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+
+	return ctx
+}
+
+// TraceErrorOnActiveSpan traces an error on both active Jaeger and OpenTelemetry spans from context
+func TraceErrorOnActiveSpan(ctx context.Context, err error) {
+	if err == nil {
+		return
+	}
+
+	// Trace error in Jaeger using the active span
+	if span := opentracing.SpanFromContext(ctx); span != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	// Trace error in OpenTelemetry using the active span
+	if span := trace.SpanFromContext(ctx); span.IsRecording() {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		span.SetAttributes(
+			attribute.String("event", "error"),
+			attribute.String("time", time.Now().Format(time.RFC3339)),
+		)
+	}
 }

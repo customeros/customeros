@@ -12,26 +12,23 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	opentracing "github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 )
 
 // MailstackGetPaymentIntent is the resolver for the mailstack_GetPaymentIntent field.
 func (r *mutationResolver) MailstackGetPaymentIntent(ctx context.Context, domains []string, usernames []string, amount float64) (*model.GetPaymentIntent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackGetPaymentIntent", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.domains", domains)
-	span.LogKV("request.usernames", usernames)
-	span.LogFields(tracingLog.Float64("request.amount", amount))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MailstackGetPaymentIntent", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.domains", domains)
+	spans.LogKV("request.usernames", usernames)
+	spans.LogKV("request.amount", amount)
 
 	stripeClientSecret, err := r.Services.CommonServices.MailstackService.GetPaymentIntent(ctx, domains, usernames, int64(amount))
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get payment intent")
 		graphql.AddErrorf(ctx, "Failed to get payment intent")
 		return nil, nil
@@ -44,18 +41,17 @@ func (r *mutationResolver) MailstackGetPaymentIntent(ctx context.Context, domain
 
 // MailstackRegisterBuyDomainsWithMailboxes is the resolver for the mailstack_RegisterBuyDomainsWithMailboxes field.
 func (r *mutationResolver) MailstackRegisterBuyDomainsWithMailboxes(ctx context.Context, test bool, paymentIntentID string, domains []string, usernames []string, amount float64, redirectWebsite *string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MailstackRegisterBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MailstackRegisterBuyDomainsWithMailboxes", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
-	span.LogKV("request.domains", domains)
-	span.LogKV("request.usernames", usernames)
-	span.LogKV("request.redirectWebsite", utils.IfNotNilString(redirectWebsite))
-	span.LogFields(tracingLog.Float64("request.amount", amount))
+	spans.LogKV("request.domains", domains)
+	spans.LogKV("request.usernames", usernames)
+	spans.LogKV("request.redirectWebsite", utils.IfNotNilString(redirectWebsite))
+	spans.LogKV("request.amount", amount)
 
 	err := r.Services.CommonServices.MailstackService.RegisterBuyDomainsWithMailboxes(ctx, test, paymentIntentID, domains, usernames, utils.IfNotNilString(redirectWebsite))
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to register buy domains with mailboxes")
 		graphql.AddErrorf(ctx, "Failed to register buy domains with mailboxes")
 		return &model.Result{Result: false}, nil
@@ -100,9 +96,8 @@ func (r *queryResolver) MailstackDomainPurchaseSuggestions(ctx context.Context, 
 
 // MailstackDomains is the resolver for the mailstack_Domains field.
 func (r *queryResolver) MailstackDomains(ctx context.Context) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackDomains", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.MailstackDomains", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -128,10 +123,10 @@ func (r *queryResolver) MailstackDomains(ctx context.Context) ([]string, error) 
 
 // MailstackCheckUnavailableDomains is the resolver for the mailstack_CheckUnavailableDomains field.
 func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, domains []string) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackCheckUnavailableDomains", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogKV("request.domain", domains)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.MailstackCheckUnavailableDomains", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.domain", domains)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -157,9 +152,8 @@ func (r *queryResolver) MailstackCheckUnavailableDomains(ctx context.Context, do
 
 // MailstackUniqueUsernames is the resolver for the mailstack_UniqueUsernames field.
 func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackUniqueUsernames", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.MailstackUniqueUsernames", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	var usernames []string
 
@@ -167,7 +161,7 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 
 	_, _, allMailboxes, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", "")
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get all mailboxes")
 		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
 		return nil, nil
@@ -182,12 +176,11 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 
 // MailstackMailboxes is the resolver for the mailstack_Mailboxes field.
 func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.MailstackMailboxesV2", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.MailstackMailboxesV2", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	userId := common.GetUserIdFromContext(ctx)
-	span.LogKV("request.userId", userId)
+	spans.LogKV("request.userId", userId)
 	isImpersonated := common.IsImpersonatedUserInContext(ctx)
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -198,11 +191,11 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 
 	statusCode, errMessage, mailboxes, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", requestUserId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil
 	}
 	if statusCode != http.StatusOK {
-		tracing.TraceErr(span, errors.New(errMessage))
+		spans.TraceError(errors.New(errMessage))
 		return nil, nil
 	}
 
@@ -220,7 +213,7 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 
 	oauthTokens, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get all mailboxes")
 		graphql.AddErrorf(ctx, "Failed to get all mailboxes")
 		return nil, nil
