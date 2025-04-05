@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
@@ -26,20 +25,19 @@ func NewCacheIPIdentifyRepository(gormDb *gorm.DB) CacheIPIdentifyRepository {
 }
 
 func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_entity.CacheIPIdentify) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "ipData", ipData)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "CacheSnitcherRepository.Create")
+	defer spans.Finish()
+	spans.LogObjectAsJson("ipData", ipData)
 
 	if ipData.IPAddress == "" {
 		err := errors.New("IP address missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err := r.db.Create(&ipData).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -47,10 +45,9 @@ func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_
 }
 
 func (r *cacheIPIdentifyRepository) FindByIP(ctx context.Context, ip string, cacheLookBackInDays int) (*postgres_entity.CacheIPIdentify, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.FindByIP")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("ip", ip, "cacheLookBackInDays", cacheLookBackInDays)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "CacheSnitcherRepository.FindByIP")
+	defer spans.Finish()
+	spans.LogKV("ip", ip, "cacheLookBackInDays", cacheLookBackInDays)
 
 	lookBackDate := time.Now().AddDate(0, 0, -cacheLookBackInDays)
 
@@ -62,12 +59,12 @@ func (r *cacheIPIdentifyRepository) FindByIP(ctx context.Context, ip string, cac
 		First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			span.LogKV("result.found", false)
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogKV("result.found", true)
+	spans.LogKV("result.found", true)
 	return &result, nil
 }

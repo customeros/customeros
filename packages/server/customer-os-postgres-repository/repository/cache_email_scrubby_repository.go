@@ -3,11 +3,9 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 	"time"
 )
@@ -30,10 +28,9 @@ func NewCacheEmailScrubbyRepository(gormDb *gorm.DB) CacheEmailScrubbyRepository
 }
 
 func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubby postgres_entity.CacheEmailScrubby) (*postgres_entity.CacheEmailScrubby, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.Save")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "cacheEmailScrubby", cacheEmailScrubby)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailScrubbyRepository.Save")
+	defer spans.Finish()
+	spans.LogObjectAsJson("cacheEmailScrubby", cacheEmailScrubby)
 
 	now := utils.Now()
 	cacheEmailScrubby.CreatedAt = now
@@ -47,10 +44,9 @@ func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubb
 }
 
 func (r *cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailScrubby, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetAllByEmail")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailScrubbyRepository.GetAllByEmail")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	var cacheEmailScrubbys []postgres_entity.CacheEmailScrubby
 	result := r.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").Find(&cacheEmailScrubbys)
@@ -63,10 +59,9 @@ func (r *cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email s
 }
 
 func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailScrubby, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetLatestByEmail")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailScrubbyRepository.GetLatestByEmail")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	var cacheEmailScrubby postgres_entity.CacheEmailScrubby
 	result := r.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").First(&cacheEmailScrubby)
@@ -75,6 +70,7 @@ func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, emai
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
 		} else {
+			spans.TraceError(result.Error)
 			return nil, result.Error
 		}
 	}
@@ -83,10 +79,10 @@ func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, emai
 }
 
 func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, email, status string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.SetStatus")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("email", email), log.String("status", status))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailScrubbyRepository.SetStatus")
+	defer spans.Finish()
+	spans.LogKV("email", email)
+	spans.LogKV("status", status)
 
 	result := r.db.WithContext(ctx).
 		Model(&postgres_entity.CacheEmailScrubby{}).
@@ -102,17 +98,16 @@ func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, email, stat
 
 	// If no records were affected, it's not considered an error
 	if result.RowsAffected == 0 {
-		span.LogFields(log.String("message", "No records found for the given email"))
+		spans.LogKV("message", "No records found for the given email")
 	}
 
 	return nil
 }
 
 func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id string) (*postgres_entity.CacheEmailScrubby, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.SetJustChecked")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailScrubbyRepository.SetJustChecked")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	var cacheEmailScrubby postgres_entity.CacheEmailScrubby
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
@@ -131,10 +126,10 @@ func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id str
 }
 
 func (r *cacheEmailScrubbyRepository) GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]postgres_entity.CacheEmailScrubby, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetToCheck")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("delayFromPreviousCheckInHours", delayFromPreviousCheckInHours), log.Int("limit", limit))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailScrubbyRepository.GetToCheck")
+	defer spans.Finish()
+	spans.LogKV("delayFromPreviousCheckInHours", delayFromPreviousCheckInHours)
+	spans.LogKV("limit", limit)
 
 	var cacheEmailScrubbys []postgres_entity.CacheEmailScrubby
 
@@ -148,6 +143,7 @@ func (r *cacheEmailScrubbyRepository) GetToCheck(ctx context.Context, delayFromP
 		Find(&cacheEmailScrubbys)
 
 	if result.Error != nil {
+		spans.TraceError(result.Error)
 		return nil, result.Error
 	}
 

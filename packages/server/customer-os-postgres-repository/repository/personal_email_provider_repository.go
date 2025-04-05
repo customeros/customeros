@@ -1,9 +1,8 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -21,15 +20,14 @@ func NewPersonalEmailProviderRepository(gormDb *gorm.DB) PersonalEmailProviderRe
 }
 
 func (repo *personalEmailProviderRepositoryImpl) GetPersonalEmailProviders(ctx context.Context) ([]postgres_entity.PersonalEmailProvider, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PersonalEmailProviderRepository.GetPersonalEmailProviders")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "PersonalEmailProviderRepository.GetPersonalEmailProviders")
+	defer spans.Finish()
 
 	var result []postgres_entity.PersonalEmailProvider
 	err := repo.gormDb.Find(&result).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

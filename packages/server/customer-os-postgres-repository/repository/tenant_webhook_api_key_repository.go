@@ -2,11 +2,9 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -26,9 +24,8 @@ func NewTenantWebhookApiKeyRepository(gormDb *gorm.DB) TenantWebhookApiKeyReposi
 }
 
 func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.CreateApiKey")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "TenantWebhookApiKeyRepository.CreateApiKey")
+	defer spans.Finish()
 
 	now := utils.Now()
 	apiKey := postgres_entity.TenantWebhookApiKey{
@@ -41,15 +38,15 @@ func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant
 
 	err := r.gormDb.Create(&apiKey).Error
 	if err != nil {
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *tenantWebhookApiKeyRepository) GetTenantForApiKey(ctx context.Context, apiKey string) (*postgres_entity.TenantWebhookApiKey, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.GetTenantWithApiKey")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "TenantWebhookApiKeyRepository.GetTenantWithApiKey")
+	defer spans.Finish()
 
 	// get record for api key or nil if not found
 	var apiKeyRecord postgres_entity.TenantWebhookApiKey
@@ -61,15 +58,15 @@ func (r *tenantWebhookApiKeyRepository) GetTenantForApiKey(ctx context.Context, 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
+		spans.TraceError(err)
 		return nil, err
 	}
 	return &apiKeyRecord, nil
 }
 
 func (r *tenantWebhookApiKeyRepository) GetFirstApiKeyForTenant(ctx context.Context, tenant string) (*postgres_entity.TenantWebhookApiKey, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant")
+	defer spans.Finish()
 
 	// get record for tenant or nil if not found
 	var apiKeyRecord postgres_entity.TenantWebhookApiKey
@@ -80,11 +77,12 @@ func (r *tenantWebhookApiKeyRepository) GetFirstApiKeyForTenant(ctx context.Cont
 		Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			span.LogFields(log.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return &apiKeyRecord, nil
 }

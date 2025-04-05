@@ -1,11 +1,9 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -35,50 +33,53 @@ func NewEnrichDetailsScrapInRepository(gormDb *gorm.DB) EnrichDetailsScrapInRepo
 }
 
 func (r enrichDetailsScrapInRepository) GetAllByParam1AndFlow(ctx context.Context, param string, flow postgres_entity.ScrapInFlow) ([]postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetAllByParam1AndFlow")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetAllByParam1AndFlow")
+	defer spans.Finish()
+	spans.LogKV("param", param)
+	spans.LogKV("flow", flow)
 
 	var data []postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND flow = ?", param, flow).Find(&data).Error
 	if err != nil {
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(data)))
+	spans.LogKV("result.count", len(data))
 
 	return data, nil
 }
 
 func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlow(ctx context.Context, param string, flow postgres_entity.ScrapInFlow) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow")
+	defer spans.Finish()
+	spans.LogKV("param", param)
+	spans.LogKV("flow", flow)
 
 	var data postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND flow = ?", param, flow).Order("created_at desc").First(&data).Error
 	if err != nil {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
-	span.LogFields(tracingLog.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return &data, nil
 }
 
 func (r enrichDetailsScrapInRepository) Create(ctx context.Context, data postgres_entity.EnrichDetailsScrapIn) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.Create")
+	defer spans.Finish()
+	spans.LogObjectAsJson("data", data)
 
 	data.CreatedAt = utils.Now()
 	data.UpdatedAt = utils.Now()
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -86,9 +87,9 @@ func (r enrichDetailsScrapInRepository) Create(ctx context.Context, data postgre
 }
 
 func (r enrichDetailsScrapInRepository) GetById(ctx context.Context, id uint64) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetById")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	var data postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("id = ?", id).First(&data).Error
@@ -96,6 +97,7 @@ func (r enrichDetailsScrapInRepository) GetById(ctx context.Context, id uint64) 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
@@ -103,9 +105,14 @@ func (r enrichDetailsScrapInRepository) GetById(ctx context.Context, id uint64) 
 }
 
 func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlow(ctx context.Context, param1, param2, param3, param4, param5 string, flow postgres_entity.ScrapInFlow) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow")
+	defer spans.Finish()
+	spans.LogKV("param1", param1)
+	spans.LogKV("param2", param2)
+	spans.LogKV("param3", param3)
+	spans.LogKV("param4", param4)
+	spans.LogKV("param5", param5)
+	spans.LogKV("flow", flow)
 
 	var data postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND param2 = ? AND param3 = ? AND param4 = ? AND param5 = ? AND flow = ?", param1, param2, param3, param4, param5, flow).Order("created_at desc").First(&data).Error
@@ -113,6 +120,7 @@ func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlow(ctx context.
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
@@ -120,9 +128,10 @@ func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlow(ctx context.
 }
 
 func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithPersonFound(ctx context.Context, param string, flow postgres_entity.ScrapInFlow) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithPersonFound")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithPersonFound")
+	defer spans.Finish()
+	spans.LogKV("param", param)
+	spans.LogKV("flow", flow)
 
 	var data postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND flow = ? AND person_found = ?", param, flow, true).Order("created_at desc").First(&data).Error
@@ -130,6 +139,7 @@ func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithPersonFound(
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
@@ -137,9 +147,10 @@ func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithPersonFound(
 }
 
 func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithCompanyFound(ctx context.Context, param string, flow postgres_entity.ScrapInFlow) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound")
+	defer spans.Finish()
+	spans.LogKV("param", param)
+	spans.LogKV("flow", flow)
 
 	var data postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND flow = ? AND person_found = ?", param, flow, true).Order("created_at desc").First(&data).Error
@@ -147,6 +158,7 @@ func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithCompanyFound
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
@@ -154,9 +166,14 @@ func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithCompanyFound
 }
 
 func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlowWithPersonFound(ctx context.Context, param1, param2, param3, param4, param5 string, flow postgres_entity.ScrapInFlow) (*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound")
+	defer spans.Finish()
+	spans.LogKV("param1", param1)
+	spans.LogKV("param2", param2)
+	spans.LogKV("param3", param3)
+	spans.LogKV("param4", param4)
+	spans.LogKV("param5", param5)
+	spans.LogKV("flow", flow)
 
 	var data postgres_entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND param2 = ? AND param3 = ? AND param4 = ? AND param5 = ? AND flow = ? AND person_found = ?", param1, param2, param3, param4, param5, flow, true).Order("created_at desc").First(&data).Error
@@ -164,6 +181,7 @@ func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlowWithPersonFou
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
@@ -171,9 +189,9 @@ func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlowWithPersonFou
 }
 
 func (r enrichDetailsScrapInRepository) GetToSyncIntoGlobalOrganizations(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetToSyncIntoGlobalOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetToSyncIntoGlobalOrganizations")
+	defer spans.Finish()
+	spans.LogKV("limit", limit)
 
 	// get records that has SyncedToGlobalOrgs = false or NULL, flow = ScrapInFlowCompanySearch or ScrapInFlowCompanyProfile, and CompanyFound = true
 	// ordered by created date ascending, limit by limit
@@ -184,30 +202,31 @@ func (r enrichDetailsScrapInRepository) GetToSyncIntoGlobalOrganizations(ctx con
 		Limit(limit).
 		Find(&data).Error
 	if err != nil {
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(data)))
+	spans.LogKV("result.count", len(data))
 
 	return data, nil
 }
 
 func (r enrichDetailsScrapInRepository) MarkSyncedToGlobalOrganizations(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.MarkSyncedToGlobalOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.MarkSyncedToGlobalOrganizations")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	err := r.db.Model(&postgres_entity.EnrichDetailsScrapIn{}).Where("id = ?", id).Update("synced_to_global_orgs", true).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r enrichDetailsScrapInRepository) GetToSyncIntoGlobalContacts(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsScrapIn, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetToSyncIntoGlobalContacts")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.GetToSyncIntoGlobalContacts")
+	defer spans.Finish()
+	spans.LogKV("limit", limit)
 
 	var data []*postgres_entity.EnrichDetailsScrapIn
 
@@ -218,23 +237,23 @@ func (r enrichDetailsScrapInRepository) GetToSyncIntoGlobalContacts(ctx context.
 		Limit(limit).
 		Find(&data).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(data)))
+	spans.LogKV("result.count", len(data))
 
 	return data, nil
 }
 
 func (r enrichDetailsScrapInRepository) MarkSyncedToGlobalContacts(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.MarkSyncedToGlobalContacts")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsScrapInRepository.MarkSyncedToGlobalContacts")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	err := r.db.Model(&postgres_entity.EnrichDetailsScrapIn{}).Where("id = ?", id).Update("synced_to_global_contacts", true).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

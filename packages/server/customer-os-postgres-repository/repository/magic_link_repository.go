@@ -2,10 +2,8 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -26,11 +24,9 @@ func NewMagicLinkRepository(db *gorm.DB) MagicLinkRepository {
 }
 
 func (r *magicLinkRepository) GetByEmail(ctx context.Context, email string) (*postgres_entity.MagicLink, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.GetByEmail")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	span.LogFields(tracingLog.String("email", email))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "MagicLinkRepository.GetByEmail")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	var result *postgres_entity.MagicLink
 	err := r.gormDb.
@@ -40,24 +36,22 @@ func (r *magicLinkRepository) GetByEmail(ctx context.Context, email string) (*po
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogFields(tracingLog.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 
 	return result, nil
 }
 
 func (r *magicLinkRepository) GetByCode(ctx context.Context, code string) (*postgres_entity.MagicLink, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.GetByCode")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	span.LogFields(tracingLog.String("code", code))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "MagicLinkRepository.GetByCode")
+	defer spans.Finish()
+	spans.LogKV("code", code)
 
 	var result *postgres_entity.MagicLink
 	err := r.gormDb.
@@ -67,24 +61,22 @@ func (r *magicLinkRepository) GetByCode(ctx context.Context, code string) (*post
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogFields(tracingLog.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 
 	return result, nil
 }
 
 func (r *magicLinkRepository) Create(ctx context.Context, input *postgres_entity.MagicLink) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	span.LogFields(tracingLog.Object("magicLink", input))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "MagicLinkRepository.Create")
+	defer spans.Finish()
+	spans.LogObjectAsJson("magicLink", input)
 
 	// Check if the mailbox already exists
 	var magicLink postgres_entity.MagicLink
@@ -93,7 +85,7 @@ func (r *magicLinkRepository) Create(ctx context.Context, input *postgres_entity
 		First(&magicLink).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -107,12 +99,12 @@ func (r *magicLinkRepository) Create(ctx context.Context, input *postgres_entity
 
 		err = r.gormDb.Create(&magicLink).Error
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	} else {
 		e := errors.New("magic link already exists by code")
-		tracing.TraceErr(span, e)
+		spans.TraceError(e)
 		return e
 	}
 
@@ -120,11 +112,9 @@ func (r *magicLinkRepository) Create(ctx context.Context, input *postgres_entity
 }
 
 func (r *magicLinkRepository) Delete(ctx context.Context, id string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	span.LogFields(tracingLog.Object("id", id))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "MagicLinkRepository.Delete")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	// Check if the mailbox already exists
 	var magicLink postgres_entity.MagicLink
@@ -133,19 +123,19 @@ func (r *magicLinkRepository) Delete(ctx context.Context, id string) error {
 		First(&magicLink).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if magicLink.ID == "" {
 		e := errors.New("magic link not found")
-		tracing.TraceErr(span, e)
+		spans.TraceError(e)
 		return e
 	}
 
 	err = r.gormDb.Delete(magicLink).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

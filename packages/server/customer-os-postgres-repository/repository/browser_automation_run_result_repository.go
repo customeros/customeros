@@ -1,9 +1,8 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -21,15 +20,14 @@ func NewBrowserAutomationRunResultRepository(gormDb *gorm.DB) BrowserAutomationR
 }
 
 func (repo *browserAutomationRunResultRepositoryImpl) Get(ctx context.Context, runId int) (*postgres_entity.BrowserAutomationsRunResult, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserAutomationRunRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "BrowserAutomationRunRepository.Get")
+	defer spans.Finish()
 
 	var result *postgres_entity.BrowserAutomationsRunResult
 	err := repo.gormDb.Where("run_id = ? ", runId).Find(&result).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

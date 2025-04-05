@@ -2,10 +2,9 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 	"time"
@@ -25,9 +24,8 @@ func NewCurrencyRateRepository(db *gorm.DB) CurrencyRateRepository {
 }
 
 func (r *currencyRateRepo) GetLatestCurrencyRate(ctx context.Context, currency string) (*postgres_entity.CurrencyRate, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CurrencyRateRepository.GetLatestCurrencyRate")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CurrencyRateRepository.GetLatestCurrencyRate")
+	defer spans.Finish()
 
 	var rate postgres_entity.CurrencyRate
 	err := r.db.
@@ -46,9 +44,8 @@ func (r *currencyRateRepo) GetLatestCurrencyRate(ctx context.Context, currency s
 }
 
 func (r *currencyRateRepo) SaveCurrencyRate(ctx context.Context, currency string, rate float64, date time.Time, source string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CurrencyRateRepository.SaveCurrencyRate")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CurrencyRateRepository.SaveCurrencyRate")
+	defer spans.Finish()
 
 	// Check if the currency rate already exists for the given currency and date
 	var existingRate postgres_entity.CurrencyRate
@@ -59,6 +56,7 @@ func (r *currencyRateRepo) SaveCurrencyRate(ctx context.Context, currency string
 		First(&existingRate).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		spans.TraceError(err)
 		return err
 	}
 

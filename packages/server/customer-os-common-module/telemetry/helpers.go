@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -903,4 +904,20 @@ func GraphQLTracingEnhancer(ctx context.Context) func(c *gin.Context) {
 			spans.TraceError(nil)
 		}
 	}
+}
+
+func GetTraceIds(spans *Spans) (string, string) {
+	if spans == nil {
+		return "", ""
+	}
+	jaegerTraceId := ""
+	otelTraceId := ""
+	if spans.Jaeger != nil {
+		tracingData := ExtractTextMapCarrier((spans.Jaeger).Context())
+		jaegerTraceId = strings.Split(tracingData["uber-trace-id"], ":")[0]
+	}
+	if spans.OTel != nil {
+		otelTraceId = spans.OTel.SpanContext().TraceID().String()
+	}
+	return jaegerTraceId, otelTraceId
 }

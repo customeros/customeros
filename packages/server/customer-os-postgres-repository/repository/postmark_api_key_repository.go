@@ -1,10 +1,9 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -23,9 +22,8 @@ func NewPostmarkApiKeyRepo(db *gorm.DB) *PostmarkApiKeyRepo {
 }
 
 func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(ctx context.Context, tenant string) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PostmarkApiKeyRepo.GetPostmarkApiKey")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "PostmarkApiKeyRepo.GetPostmarkApiKey")
+	defer spans.Finish()
 
 	var postmarkApiKeyEntity postgres_entity.PostmarkApiKey
 	err := r.db.
@@ -40,9 +38,8 @@ func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(ctx context.Context, tenant strin
 }
 
 func (r *PostmarkApiKeyRepo) CreateApiKey(ctx context.Context, apiKey postgres_entity.PostmarkApiKey) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PostmarkApiKeyRepo.CreateApiKey")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "PostmarkApiKeyRepo.CreateApiKey")
+	defer spans.Finish()
 
 	postmarkApiKeyEntity := postgres_entity.PostmarkApiKey{
 		TenantName: apiKey.TenantName,

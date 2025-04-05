@@ -2,13 +2,11 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
@@ -30,15 +28,14 @@ func NewWebTrackerEventsRepository(gormDb *gorm.DB) WebTrackerEventsRepository {
 }
 
 func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData postgres_entity.WebTrackerEvents) (*postgres_entity.WebTrackerEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "webTrackerData", webTrackerData)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebTrackerEventsRepository.Create")
+	defer spans.Finish()
+	spans.LogKV("webTrackerData", webTrackerData)
 
 	var created postgres_entity.WebTrackerEvents
 	err := r.gormDb.Create(&webTrackerData).Scan(&created).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -46,9 +43,8 @@ func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData 
 }
 
 func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData postgres_entity.WebTrackerEvents, cacheLookbackInDays *int) ([]postgres_entity.WebTrackerEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebTrackerEventsRepository.FindAll")
+	defer spans.Finish()
 
 	query := r.gormDb.Where(&webTrackerData).Order("created_at DESC")
 
@@ -61,7 +57,7 @@ func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData
 	var results []postgres_entity.WebTrackerEvents
 	err := query.Find(&results).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -69,10 +65,9 @@ func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData
 }
 
 func (r *webTrackerEventsRepository) FindEventsForPageVisit(ctx context.Context, sessionId, page string) ([]postgres_entity.WebTrackerEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindEventsForPageVisit")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("sessionId", sessionId, "page", page)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebTrackerEventsRepository.FindEventsForPageVisit")
+	defer spans.Finish()
+	spans.LogKV("sessionId", sessionId, "page", page)
 
 	if sessionId == "" {
 		return nil, errors.New("sessionId cannot be empty")
@@ -90,7 +85,7 @@ func (r *webTrackerEventsRepository) FindEventsForPageVisit(ctx context.Context,
 			pathname += "/"
 		}
 	}
-	span.LogKV("pathname", pathname)
+	spans.LogKV("pathname", pathname)
 
 	var results []postgres_entity.WebTrackerEvents
 	err := r.gormDb.
@@ -100,9 +95,9 @@ func (r *webTrackerEventsRepository) FindEventsForPageVisit(ctx context.Context,
 		Find(&results).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(results)))
+	spans.LogKV("result.count", len(results))
 	return results, nil
 }

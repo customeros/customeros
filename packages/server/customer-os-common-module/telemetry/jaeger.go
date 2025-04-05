@@ -44,3 +44,19 @@ func initJaeger(jaegerConfig *JaegerConfig) *config.Configuration {
 	}
 	return cfg
 }
+
+func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapCarrier {
+	textMapCarrier, err := InjectTextMapCarrier(spanCtx)
+	if err != nil {
+		return make(opentracing.TextMapCarrier)
+	}
+	return textMapCarrier
+}
+
+func InjectTextMapCarrier(spanCtx opentracing.SpanContext) (opentracing.TextMapCarrier, error) {
+	m := make(opentracing.TextMapCarrier)
+	if err := opentracing.GlobalTracer().Inject(spanCtx, opentracing.TextMap, m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}

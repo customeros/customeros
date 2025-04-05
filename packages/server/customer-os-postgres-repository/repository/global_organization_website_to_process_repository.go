@@ -2,11 +2,9 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
@@ -25,10 +23,9 @@ func NewGlobalOrganizationWebsiteToProcessRepository(gormDb *gorm.DB) GlobalOrga
 }
 
 func (r globalOrganizationWebsiteToProcessRepository) GetWebsitesToProcess(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganizationWebsiteToProcess, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.GetWebsitesToProcess")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("limit", limit)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "GlobalOrganizationWebsiteToProcessRepository.GetWebsitesToProcess")
+	defer spans.Finish()
+	spans.LogKV("limit", limit)
 
 	var data []*postgres_entity.GlobalOrganizationWebsiteToProcess
 	err := r.db.
@@ -40,16 +37,15 @@ func (r globalOrganizationWebsiteToProcessRepository) GetWebsitesToProcess(ctx c
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(data)))
+	spans.LogKV("result.count", len(data))
 
 	return data, nil
 }
 
 func (r globalOrganizationWebsiteToProcessRepository) MarkAsProcessed(ctx context.Context, id uint64, notes string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.MarkAsProcessed")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("id", id, "notes", notes)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "GlobalOrganizationWebsiteToProcessRepository.MarkAsProcessed")
+	defer spans.Finish()
+	spans.LogKV("id", id, "notes", notes)
 
 	err := r.db.Model(&postgres_entity.GlobalOrganizationWebsiteToProcess{}).
 		Where("id = ?", id).
@@ -66,10 +62,9 @@ func (r globalOrganizationWebsiteToProcessRepository) MarkAsProcessed(ctx contex
 }
 
 func (r globalOrganizationWebsiteToProcessRepository) AddWebsiteToProcess(ctx context.Context, website string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("website", website)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess")
+	defer spans.Finish()
+	spans.LogKV("website", website)
 
 	err := r.db.Create(&postgres_entity.GlobalOrganizationWebsiteToProcess{
 		Website: website,

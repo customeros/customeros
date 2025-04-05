@@ -2,11 +2,9 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -25,10 +23,9 @@ func NewCacheEmailValidationRepository(gormDb *gorm.DB) CacheEmailValidationRepo
 }
 
 func (r cacheEmailValidationRepository) Get(ctx context.Context, email string) (*postgres_entity.CacheEmailValidation, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailValidationRepository.Get")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	var cacheEmailValidation postgres_entity.CacheEmailValidation
 	result := r.db.WithContext(ctx).Where("email = ?", email).First(&cacheEmailValidation)
@@ -37,6 +34,7 @@ func (r cacheEmailValidationRepository) Get(ctx context.Context, email string) (
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
 		} else {
+			spans.TraceError(result.Error)
 			return nil, result.Error
 		}
 	}
@@ -45,10 +43,9 @@ func (r cacheEmailValidationRepository) Get(ctx context.Context, email string) (
 }
 
 func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailValidation postgres_entity.CacheEmailValidation) (*postgres_entity.CacheEmailValidation, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationRepository.Save")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "cacheEmailValidation", cacheEmailValidation)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailValidationRepository.Save")
+	defer spans.Finish()
+	spans.LogObjectAsJson("cacheEmailValidation", cacheEmailValidation)
 
 	var existingData postgres_entity.CacheEmailValidation
 	result := r.db.WithContext(ctx).Where("email = ?", cacheEmailValidation.Email).First(&existingData)
@@ -60,12 +57,12 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			cacheEmailValidation.CreatedAt = now
 			cacheEmailValidation.UpdatedAt = now
 			if err := r.db.WithContext(ctx).Save(&cacheEmailValidation).Error; err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to save cache email validation"))
+				spans.TraceError(errors.Wrap(err, "failed to save cache email validation"))
 				return nil, err
 			}
 		} else {
 			// Some other error occurred
-			tracing.TraceErr(span, result.Error)
+			spans.TraceError(result.Error)
 			return nil, result.Error
 		}
 	} else {
@@ -96,7 +93,7 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			"data":                  cacheEmailValidation.Data,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to update cache email validation"))
+			spans.TraceError(errors.Wrap(err, "failed to update cache email validation"))
 			return nil, err
 		}
 		cacheEmailValidation = existingData

@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -30,12 +29,11 @@ func NewCacheCrustDataRepository(db *gorm.DB) CacheCrustDataRepository {
 }
 
 func (r *cacheCrustDataRepository) Create(ctx context.Context, data postgres_entity.CacheCrustData) (*postgres_entity.CacheCrustData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataCacheRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "CrustDataCacheRepository.Create")
+	defer spans.Finish()
 
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create crust data cache"))
+		spans.TraceError(errors.Wrap(err, "failed to create crust data cache"))
 		return nil, err
 	}
 
@@ -43,16 +41,15 @@ func (r *cacheCrustDataRepository) Create(ctx context.Context, data postgres_ent
 }
 
 func (r *cacheCrustDataRepository) GetByCompanyAndTitle(ctx context.Context, company string, jobTitle string, ttl time.Duration) ([]*postgres_entity.CacheCrustData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataCacheRepository.GetByCompanyAndTitle")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "CrustDataCacheRepository.GetByCompanyAndTitle")
+	defer spans.Finish()
 
 	var result []*postgres_entity.CacheCrustData
 	if err := r.db.WithContext(ctx).
 		Where("request_company_domain = ? AND request_job_title = ?", company, jobTitle).
 		Where("created_at > ?", time.Now().Add(-ttl)).
 		Find(&result).Error; err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get crust data cache"))
+		spans.TraceError(errors.Wrap(err, "failed to get crust data cache"))
 		return nil, err
 	}
 

@@ -3,11 +3,9 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
@@ -25,10 +23,9 @@ func NewCacheEmailValidationDomainRepository(gormDb *gorm.DB) CacheEmailValidati
 }
 
 func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain string) (*postgres_entity.CacheEmailValidationDomain, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationDomainRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("domain", domain))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailValidationDomainRepository.Get")
+	defer spans.Finish()
+	spans.LogKV("domain", domain)
 
 	var cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain
 	result := r.db.WithContext(ctx).Where("domain = ?", domain).First(&cacheEmailValidationDomain)
@@ -45,10 +42,9 @@ func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain st
 }
 
 func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain) (*postgres_entity.CacheEmailValidationDomain, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationDomainRepository.Save")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "cacheEmailValidationDomain", cacheEmailValidationDomain)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailValidationDomainRepository.Save")
+	defer spans.Finish()
+	spans.LogObjectAsJson("cacheEmailValidationDomain", cacheEmailValidationDomain)
 
 	query := `
         INSERT INTO cache_email_validation_domain (
