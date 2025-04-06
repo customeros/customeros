@@ -11,6 +11,7 @@ volumes:
   prometheus_data:
   grafana_data:
   tempo_data:
+  nui_data:
 
 services:
   rabbitmq:
@@ -185,6 +186,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  nui:
+    image: ghcr.io/nats-nui/nui:latest
+    container_name: nats-ui
+    networks:
+      - openline
+    ports:
+      - "31311:31311"  # NUI Web UI port
+    environment:
+      - NATS_URL=nats://nats:4222
+    volumes:
+      - nui_data:/db
+    depends_on:
+      - nats
 
   neo4j:
     image: neo4j:latest
