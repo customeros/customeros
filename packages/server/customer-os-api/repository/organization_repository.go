@@ -4,17 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type OrganizationRepository interface {
@@ -48,7 +47,6 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext, database string)
 func (r *organizationRepository) CountCustomers(ctx context.Context, tenant string) (int64, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.CountCustomers")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -75,7 +73,6 @@ func (r *organizationRepository) CountCustomers(ctx context.Context, tenant stri
 func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetPaginatedOrganizations")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -128,7 +125,6 @@ func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, 
 func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetPaginatedOrganizationsForContact")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -183,7 +179,6 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.MergeOrganizationPropertiesInTx")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	_, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}),
@@ -227,7 +222,6 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.MergeOrganizationRelationsInTx")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	matchQuery := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}), " +
 		"(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(merged:Organization {id:$mergedOrganizationId})"
@@ -524,7 +518,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 func (r *organizationRepository) UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.UpdateMergedOrganizationLabelsInTx")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) " +
 		" SET org:MergedOrganization:%s " +
@@ -541,7 +534,6 @@ func (r *organizationRepository) UpdateMergedOrganizationLabelsInTx(ctx context.
 func (r *organizationRepository) GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetAllForEmails")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -569,7 +561,6 @@ func (r *organizationRepository) GetAllForEmails(ctx context.Context, tenant str
 func (r *organizationRepository) GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetAllForPhoneNumbers")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -597,7 +588,7 @@ func (r *organizationRepository) GetAllForPhoneNumbers(ctx context.Context, tena
 func (r *organizationRepository) GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetAllForJobRoles")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	spans.LogKV(log.String("jobRoleIds", fmt.Sprintf("%v", jobRoleIds)))
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:ROLE_IN]-(j:JobRole)
@@ -628,7 +619,6 @@ func (r *organizationRepository) GetAllForJobRoles(ctx context.Context, tenant s
 func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.RemoveOwner")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -658,7 +648,6 @@ func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organi
 func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetSuggestedMergePrimaryOrganizations")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[rel:SUGGESTED_MERGE]->(primaryOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 				WHERE org.id IN $organizationIds
@@ -688,7 +677,6 @@ func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx conte
 func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetMinMaxRenewalForecastArr")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
               RETURN min(o.renewalForecastArr) as min, max(o.renewalForecastArr) as max }
@@ -734,7 +722,7 @@ func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context
 func (r *organizationRepository) GetOrganizations(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetOrganizations")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	spans.LogKV(log.Object("ids", ids))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
