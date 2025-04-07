@@ -2,10 +2,9 @@ package repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 // TODO deprecate and remove all methods
@@ -26,9 +25,8 @@ func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext, database 
 }
 
 func (r *customFieldTemplateRepository) FindByCustomFieldId(ctx context.Context, customFieldId string) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.FindByCustomFieldId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldTemplateRepository.FindByCustomFieldId")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

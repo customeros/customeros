@@ -3,19 +3,18 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 	"strings"
 	"time"
 
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
@@ -96,12 +95,11 @@ func createStringCypherFilterWithValueOrEmpty(filter *model.FilterItem, property
 }
 
 func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
-	tracing.LogObjectAsJson(span, "where", where)
-	tracing.LogObjectAsJson(span, "sort", sort)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
+	defer spans.Finish()
+	spans.LogKV(log.Int("skip", skip), log.Int("limit", limit))
+	spans.LogObjectAsJson("where", where)
+	spans.LogObjectAsJson("sort", sort)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -272,7 +270,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
 
-	span.LogFields(log.String("countQuery", countQuery))
+	spans.LogKV("countQuery", countQuery)
 
 	countRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
@@ -496,8 +494,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	query += fmt.Sprintf(` RETURN distinct(o) `)
 	query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
-	span.LogFields(log.String("query", query))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV(log.String("query", query))
+	spans.LogObjectAsJson("params", params)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -518,12 +516,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 }
 
 func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.RecordsWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewRenewalData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
-	tracing.LogObjectAsJson(span, "where", where)
-	tracing.LogObjectAsJson(span, "sort", sort)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewRenewalData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Int("skip", skip), log.Int("limit", limit))
+	spans.LogObjectAsJson("where", where)
+	spans.LogObjectAsJson("sort", sort)
 
 	dbRecordsWithTotalCount := new(utils.RecordsWithTotalCount)
 
@@ -737,7 +735,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(contract))`)
 
-		span.LogFields(log.String("countQuery", countQuery))
+		spans.LogKV(log.String("countQuery", countQuery))
 
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
@@ -910,8 +908,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		query += fmt.Sprintf(` RETURN o, contract, op `)
 		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
-		span.LogFields(log.Object("query", query))
-		tracing.LogObjectAsJson(span, "params", params)
+		spans.LogKV(log.Object("query", query))
+		spans.LogObjectAsJson("params", params)
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -929,10 +927,10 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 }
 
 func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardNewCustomersData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardNewCustomersData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1011,9 +1009,8 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 }
 
 func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardCustomerMapData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardCustomerMapData")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1126,10 +1123,10 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 }
 
 func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardNewCustomersData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardNewCustomersData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1181,10 +1178,10 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 }
 
 func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardMRRPerCustomerData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardMRRPerCustomerData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1253,10 +1250,10 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 }
 
 func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardARRBreakdownData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1397,10 +1394,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 }
 
 func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(ctx context.Context, tenant, queryType string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownUpsellsAndDowngradesData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardARRBreakdownUpsellsAndDowngradesData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1504,10 +1501,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 }
 
 func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownRenewalsData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardARRBreakdownRenewalsData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1623,10 +1620,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 }
 
 func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Context, tenant string, date time.Time) (float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardARRBreakdownValueData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("date", date))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardARRBreakdownValueData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("date", date))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1690,10 +1687,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 }
 
 func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardRetentionRateContractsRenewalsData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardRetentionRateContractsRenewalsData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1786,10 +1783,10 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 }
 
 func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardRetentionRateContractsChurnedData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardRetentionRateContractsChurnedData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1865,10 +1862,10 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 }
 
 func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardAverageTimeToOnboardPerMonth")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardAverageTimeToOnboardPerMonth")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1917,8 +1914,8 @@ func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx conte
 		"startDate": startDate,
 		"endDate":   endDate,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV(log.String("cypher", cypher))
+	spans.LogObjectAsJson("params", params)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -1949,10 +1946,10 @@ func (r *dashboardRepository) GetDashboardAverageTimeToOnboardPerMonth(ctx conte
 }
 
 func (r *dashboardRepository) GetDashboardOnboardingCompletionPerMonth(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardOnboardingCompletionPerMonth")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardOnboardingCompletionPerMonth")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -2005,8 +2002,8 @@ WITH RANGE(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS mont
 		"startDate": startDate,
 		"endDate":   endDate,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV(log.String("cypher", cypher))
+	spans.LogObjectAsJson("params", params)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -2052,10 +2049,10 @@ func getCorrectValueType(valueToExtract any) float64 {
 }
 
 func (r *dashboardRepository) GetDashboardGRRData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardRetentionRateContractsRenewalsData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardRetentionRateContractsRenewalsData")
+	defer spans.Finish()
+
+	spans.LogKV(log.Object("startDate", startDate), log.Object("endDate", endDate))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

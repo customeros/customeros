@@ -3,12 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -40,9 +39,8 @@ func NewCustomFieldRepository(driver *neo4j.DriverWithContext, database string) 
 }
 
 func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.MergeCustomFieldToContactInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.MergeCustomFieldToContactInTx")
+	defer spans.Finish()
 
 	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
@@ -63,9 +61,8 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Contex
 }
 
 func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.MergeCustomFieldInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.MergeCustomFieldInTx")
+	defer spans.Finish()
 
 	var rel string
 	if obj.EntityType == model.CustomEntityTypeContact {
@@ -92,9 +89,8 @@ func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo
 }
 
 func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, contactId, templateId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx")
+	defer spans.Finish()
 
 	queryResult, err := tx.Run(ctx, `
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(c:Contact {id:$contactId}),
@@ -115,9 +111,8 @@ func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(ctx co
 }
 
 func (r *customFieldRepository) LinkWithCustomFieldTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId string, obj *model.CustomFieldEntityType, templateId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.LinkWithCustomFieldTemplateInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.LinkWithCustomFieldTemplateInTx")
+	defer spans.Finish()
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(c:%s {id:$Id}),
@@ -138,9 +133,8 @@ func (r *customFieldRepository) LinkWithCustomFieldTemplateInTx(ctx context.Cont
 }
 
 func (r *customFieldRepository) FindAll(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.FindAll")
+	defer spans.Finish()
 
 	var rel string
 	if obj.EntityType == model.CustomEntityTypeContact {
@@ -167,9 +161,8 @@ func (r *customFieldRepository) FindAll(ctx context.Context, session neo4j.Sessi
 }
 
 func (r *customFieldRepository) GetCustomFields(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.GetCustomFields")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.GetCustomFields")
+	defer spans.Finish()
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var rel string
@@ -197,9 +190,8 @@ func (r *customFieldRepository) GetCustomFields(ctx context.Context, session neo
 }
 
 func (r *customFieldRepository) DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.DeleteByIdFromContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.DeleteByIdFromContact")
+	defer spans.Finish()
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
@@ -217,9 +209,8 @@ func (r *customFieldRepository) DeleteByIdFromContact(ctx context.Context, sessi
 }
 
 func (r *customFieldRepository) DeleteByNameFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.DeleteByNameFromContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.DeleteByNameFromContact")
+	defer spans.Finish()
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
@@ -237,9 +228,8 @@ func (r *customFieldRepository) DeleteByNameFromContact(ctx context.Context, ses
 }
 
 func (r *customFieldRepository) UpdateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldRepository.UpdateForContactInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldRepository.UpdateForContactInTx")
+	defer spans.Finish()
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(
 		"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+

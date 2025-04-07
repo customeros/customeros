@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
 )
 
 type NoteDbNodeWithParentId struct {
@@ -44,9 +43,8 @@ func NewNoteRepository(driver *neo4j.DriverWithContext) NoteRepository {
 }
 
 func (r *noteRepository) GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetNotesForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "NoteRepository.GetNotesForMeetings")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -73,9 +71,8 @@ func (r *noteRepository) GetNotesForMeetings(ctx context.Context, tenant string,
 }
 
 func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.UpdateNote")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "NoteRepository.UpdateNote")
+	defer spans.Finish()
 
 	query := "MATCH (n:%s {id:$noteId}) " +
 		" SET 	n.content=$content, " +
@@ -100,9 +97,8 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 }
 
 func (r *noteRepository) CreateNoteForMeeting(ctx context.Context, tenant, meetingId string, entity *entity.NoteEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.CreateNoteForMeeting")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "NoteRepository.CreateNoteForMeeting")
+	defer spans.Finish()
 
 	params, query := r.createMeetingQueryAndParams(tenant, meetingId, entity)
 
@@ -120,9 +116,8 @@ func (r *noteRepository) CreateNoteForMeeting(ctx context.Context, tenant, meeti
 }
 
 func (r *noteRepository) CreateNoteForMeetingTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, meetingId string, entity *entity.NoteEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.CreateNoteForMeetingTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "NoteRepository.CreateNoteForMeetingTx")
+	defer spans.Finish()
 
 	params, query := r.createMeetingQueryAndParams(tenant, meetingId, entity)
 	result, err := tx.Run(ctx, query, params)
@@ -134,9 +129,8 @@ func (r *noteRepository) CreateNoteForMeetingTx(ctx context.Context, tx neo4j.Ma
 }
 
 func (r *noteRepository) Delete(ctx context.Context, tenant, noteId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "NoteRepository.Delete")
+	defer spans.Finish()
 
 	query := "MATCH (n:%s {id:$noteId}) DETACH DELETE n"
 
@@ -155,9 +149,8 @@ func (r *noteRepository) Delete(ctx context.Context, tenant, noteId string) erro
 }
 
 func (r *noteRepository) SetNoteCreator(ctx context.Context, tenant, userId, noteId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.SetNoteCreator")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "NoteRepository.SetNoteCreator")
+	defer spans.Finish()
 
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), " +
 		" (n:Note {id:$noteId})" +
