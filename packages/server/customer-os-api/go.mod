@@ -39,7 +39,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/net v0.38.0
-	golang.org/x/oauth2 v0.28.0
+	golang.org/x/oauth2 v0.29.0
 	golang.org/x/text v0.23.0
 	google.golang.org/api v0.224.0
 	gorm.io/gorm v1.25.12
