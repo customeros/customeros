@@ -20,7 +20,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/oauth2 v0.29.0
-	golang.org/x/text v0.23.0
+	golang.org/x/text v0.24.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
 	zgo.at/zcache v1.2.0
@@ -84,7 +84,7 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
