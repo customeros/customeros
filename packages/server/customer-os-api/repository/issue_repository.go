@@ -3,10 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -31,14 +30,13 @@ func NewIssueRepository(driver *neo4j.DriverWithContext, database string) IssueR
 }
 
 func (r *issueRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetAllForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueRepository.GetAllForInteractionEvents")
+	defer spans.Finish()
 
 	query := fmt.Sprintf(`MATCH (e:InteractionEvent_%s)-[:PART_OF]->(i:Issue) 
 		 WHERE e.id IN $ids 
 		 RETURN i, e.id`, tenant)
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -61,9 +59,8 @@ func (r *issueRepository) GetAllForInteractionEvents(ctx context.Context, tenant
 }
 
 func (r *issueRepository) GetSubmitterParticipantsForIssues(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetSubmitterParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueRepository.GetSubmitterParticipantsForIssues")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[:SUBMITTED_BY]->(p:User|Contact|Organization)
 			WHERE i.id IN $ids
@@ -72,7 +69,7 @@ func (r *issueRepository) GetSubmitterParticipantsForIssues(ctx context.Context,
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV(log.String("cypher", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -91,9 +88,8 @@ func (r *issueRepository) GetSubmitterParticipantsForIssues(ctx context.Context,
 }
 
 func (r *issueRepository) GetReporterParticipantsForIssues(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetReporterParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueRepository.GetReporterParticipantsForIssues")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[:REPORTED_BY]->(p:User|Contact|Organization)
 			WHERE i.id IN $ids
@@ -102,7 +98,7 @@ func (r *issueRepository) GetReporterParticipantsForIssues(ctx context.Context, 
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV(log.String("cypher", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -121,9 +117,8 @@ func (r *issueRepository) GetReporterParticipantsForIssues(ctx context.Context, 
 }
 
 func (r *issueRepository) GetAssigneeParticipantsForIssues(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetAssigneeParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueRepository.GetAssigneeParticipantsForIssues")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[:ASSIGNED_TO]->(p:User|Contact|Organization)
 			WHERE i.id IN $ids
@@ -132,7 +127,7 @@ func (r *issueRepository) GetAssigneeParticipantsForIssues(ctx context.Context, 
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV(log.String("cypher", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -151,9 +146,8 @@ func (r *issueRepository) GetAssigneeParticipantsForIssues(ctx context.Context, 
 }
 
 func (r *issueRepository) GetFollowerParticipantsForIssues(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetFollowerParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueRepository.GetFollowerParticipantsForIssues")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[:FOLLOWED_BY]->(p:User|Contact|Organization)
 			WHERE i.id IN $ids
@@ -162,7 +156,7 @@ func (r *issueRepository) GetFollowerParticipantsForIssues(ctx context.Context, 
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV(log.String("cypher", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)

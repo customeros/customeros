@@ -3,11 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -28,9 +27,8 @@ func NewActionItemRepository(driver *neo4j.DriverWithContext) ActionItemReposito
 }
 
 func (r *actionItemRepository) LinkWithInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, entityId, includedById string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionItemRepository.LinkWithInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ActionItemRepository.LinkWithInTx")
+	defer spans.Finish()
 
 	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById}) `, linkedWith, tenant)
 	query += fmt.Sprintf(`MATCH (a:ActionItem_%s {id:$entityId}) `, tenant)
@@ -42,14 +40,13 @@ func (r *actionItemRepository) LinkWithInTx(ctx context.Context, tx neo4j.Manage
 			"includedById": includedById,
 			"entityId":     entityId,
 		})
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *actionItemRepository) UnlinkWithTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, entityId, includedById string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionItemRepository.UnlinkWithTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ActionItemRepository.UnlinkWithTx")
+	defer spans.Finish()
 
 	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById})`, linkedWith, tenant)
 	query += `-[r:INCLUDES]->`
@@ -63,14 +60,13 @@ func (r *actionItemRepository) UnlinkWithTx(ctx context.Context, tx neo4j.Manage
 			"includedById": includedById,
 			"entityId":     entityId,
 		})
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *actionItemRepository) GetFor(ctx context.Context, tenant string, linkedWith LinkedWith, entityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.GetAttachmentsForXX")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AttachmentRepository.GetAttachmentsForXX")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -89,7 +85,7 @@ func (r *actionItemRepository) GetFor(ctx context.Context, tenant string, linked
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 	if err != nil {
 		return nil, err
 	}

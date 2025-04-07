@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -84,9 +83,8 @@ func (r *contactRepository) RemoveOwner(ctx context.Context, tx neo4j.ManagedTra
 }
 
 func (r *contactRepository) GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetPaginatedContacts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetPaginatedContacts")
+	defer spans.Finish()
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -131,9 +129,8 @@ func (r *contactRepository) GetPaginatedContacts(ctx context.Context, session ne
 }
 
 func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetPaginatedContactsForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetPaginatedContactsForOrganization")
+	defer spans.Finish()
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -186,9 +183,8 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Cont
 }
 
 func (r *contactRepository) Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.Delete")
+	defer spans.Finish()
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
@@ -209,16 +205,16 @@ func (r *contactRepository) Delete(ctx context.Context, session neo4j.SessionWit
 }
 
 func (r *contactRepository) GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllForJobRoles")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("jobRoleIds", fmt.Sprintf("%v", jobRoleIds)))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetAllForJobRoles")
+	defer spans.Finish()
+
+	spans.LogKV(log.String("jobRoleIds", fmt.Sprintf("%v", jobRoleIds)))
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole)
 				WHERE j.id IN $jobRoleIds
 				RETURN c, j.id`
 
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -240,9 +236,8 @@ func (r *contactRepository) GetAllForJobRoles(ctx context.Context, tenant string
 }
 
 func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactsForPhoneNumber")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetContactsForPhoneNumber")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -268,9 +263,8 @@ func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenan
 }
 
 func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContactPropertiesInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.MergeContactPropertiesInTx")
+	defer spans.Finish()
 
 	_, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(primary:Contact {id:$primaryContactId}),
@@ -295,9 +289,8 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 }
 
 func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContactRelationsInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.MergeContactRelationsInTx")
+	defer spans.Finish()
 
 	matchQuery := "MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(primary:Contact {id:$primaryContactId}), " +
 		"(t)<-[:CONTACT_BELONGS_TO_TENANT]-(merged:Contact {id:$mergedContactId})"
@@ -523,9 +516,8 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 }
 
 func (r *contactRepository) UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.UpdateMergedContactLabelsInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.UpdateMergedContactLabelsInTx")
+	defer spans.Finish()
 
 	query := "MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}) " +
 		" SET c:MergedContact:%s " +
@@ -540,9 +532,8 @@ func (r *contactRepository) UpdateMergedContactLabelsInTx(ctx context.Context, t
 }
 
 func (r *contactRepository) GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetAllForEmails")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetAllForEmails")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -568,9 +559,8 @@ func (r *contactRepository) GetAllForEmails(ctx context.Context, tenant string, 
 }
 
 func (r *contactRepository) GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetAllForPhoneNumbers")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetAllForPhoneNumbers")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -596,9 +586,8 @@ func (r *contactRepository) GetAllForPhoneNumbers(ctx context.Context, tenant st
 }
 
 func (r *contactRepository) Archive(ctx context.Context, tenant, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.Archive")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.Archive")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -625,9 +614,8 @@ func (r *contactRepository) Archive(ctx context.Context, tenant, contactId strin
 }
 
 func (r *contactRepository) RestoreFromArchive(ctx context.Context, tenant, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.RestoreFromArchive")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.RestoreFromArchive")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -655,9 +643,8 @@ func (r *contactRepository) RestoreFromArchive(ctx context.Context, tenant, cont
 }
 
 func (r *contactRepository) GetBillableContactStats(ctx context.Context) (*neo4j.Record, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetBillableContactStats")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetBillableContactStats")
+	defer spans.Finish()
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 			OPTIONAL MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact) 
@@ -671,7 +658,7 @@ RETURN sum(white_orgs) AS whiteOrgs, sum(white_contacts) AS whiteContacts, sum(g
 	params := map[string]any{
 		"tenant": common.GetTenantFromContext(ctx),
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	spans.LogKV(log.String("query", query), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -686,16 +673,15 @@ RETURN sum(white_orgs) AS whiteOrgs, sum(white_contacts) AS whiteContacts, sum(g
 }
 
 func (r *contactRepository) GetById(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetById")
+	defer spans.Finish()
 
 	query := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}) RETURN c`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	spans.LogKV(log.String("query", query), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

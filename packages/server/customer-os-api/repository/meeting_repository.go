@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
 )
@@ -38,9 +37,8 @@ func NewMeetingRepository(driver *neo4j.DriverWithContext) MeetingRepository {
 }
 
 func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *neo4jentity.MeetingEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.Create")
+	defer spans.Finish()
 
 	query := "MERGE (m:Meeting_%s {id:randomUUID()}) " +
 		" ON CREATE SET m:Meeting, " +
@@ -79,9 +77,8 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 }
 
 func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType model.EntityType, relation entity.MeetingRelation) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.LinkWithParticipantInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.LinkWithParticipantInTx")
+	defer spans.Finish()
 
 	query := ""
 	switch entityType {
@@ -108,9 +105,8 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 }
 
 func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType model.EntityType, relation entity.MeetingRelation) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.UnlinkParticipantInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.UnlinkParticipantInTx")
+	defer spans.Finish()
 
 	query := ""
 	switch entityType {
@@ -137,9 +133,8 @@ func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.
 }
 
 func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.GetParticipantsForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.GetParticipantsForMeetings")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -167,9 +162,8 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 }
 
 func (r *meetingRepository) GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.GetMeetingForInteractionEvent")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.GetMeetingForInteractionEvent")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -203,9 +197,8 @@ func (r *meetingRepository) GetMeetingForInteractionEvent(ctx context.Context, t
 }
 
 func (r *meetingRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *neo4jentity.MeetingEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.Update")
+	defer spans.Finish()
 
 	query, params := r.createQueryAndParams(tenant, entity)
 
@@ -275,14 +268,13 @@ func (r *meetingRepository) createQueryAndParams(tenant string, entity *neo4jent
 }
 
 func (r *meetingRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.GetAllForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.GetAllForInteractionEvents")
+	defer spans.Finish()
 
 	query := fmt.Sprintf(`MATCH (e:InteractionEvent_%s)-[:PART_OF]->(m:Meeting) 
 		 WHERE e.id IN $ids 
 		 RETURN m, e.id`, tenant)
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -305,9 +297,8 @@ func (r *meetingRepository) GetAllForInteractionEvents(ctx context.Context, tena
 }
 
 func (r *meetingRepository) GetPaginatedMeetings(ctx context.Context, session neo4j.SessionWithContext, externalSystemID string, externalID *string, tenant, userEmail string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.GetPaginatedMeetings")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MeetingRepository.GetPaginatedMeetings")
+	defer spans.Finish()
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
