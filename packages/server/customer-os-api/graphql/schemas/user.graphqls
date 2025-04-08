@@ -1,13 +1,19 @@
 extend type Query {
-    users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
-    user(id: ID!): User!
-    user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER]) @hasTenant
-    user_Current: User! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
+  user(id: ID!): User!
+  user_ByEmail(email: String!): User!
+    @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER])
+    @hasTenant
+  user_Current: User! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-    user_UpdateOnboardingDetails(input: UserOnboardingDetailsInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_Update(input: UserUpdateInput): User! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  user_UpdateOnboardingDetails(input: UserOnboardingDetailsInput!): User!
+    @hasRole(roles: [ADMIN, OWNER])
+    @hasTenant
+  user_Update(input: UserUpdateInput): User!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
 }
 
 """
@@ -15,65 +21,64 @@ Describes the User of customerOS.  A user is the person who logs into the Openli
 **A `return` object**
 """
 type User {
+  """
+  The unique ID associated with the customerOS user.
+  **Required**
+  """
+  id: ID!
 
-    """
-    The unique ID associated with the customerOS user.
-    **Required**
-    """
-    id: ID!
+  """
+  The first name of the customerOS user.
+  **Required**
+  """
+  firstName: String!
 
-    """
-    The first name of the customerOS user.
-    **Required**
-    """
-    firstName: String!
+  """
+  The last name of the customerOS user.
+  **Required**
+  """
+  lastName: String!
+  name: String
+  internal: Boolean! #our internal users like customer support
+  bot: Boolean! #not a human user
+  test: Boolean! #test user
+  timezone: String
+  profilePhotoUrl: String
 
-    """
-    The last name of the customerOS user.
-    **Required**
-    """
-    lastName: String!
-    name: String
-    internal: Boolean! #our internal users like customer support
-    bot: Boolean! #not a human user
-    test: Boolean! #test user
-    timezone: String
-    profilePhotoUrl: String
+  roles: [Role!]! @goField(forceResolver: true)
 
-    roles: [Role!]! @goField(forceResolver: true)
+  """
+  All email addresses associated with a user in customerOS.
+  **Required.  If no values it returns an empty array.**
+  """
+  emails: [Email!] @goField(forceResolver: true)
+  phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
+  mailboxes: [String!]! @goField(forceResolver: true) # @deprecated
+  mailboxesV2: [MailstackMailbox!]! @goField(forceResolver: true)
+  hasLinkedInToken: Boolean! @goField(forceResolver: true)
+  onboarding: UserOnboardingDetails!
 
-    """
-    All email addresses associated with a user in customerOS.
-    **Required.  If no values it returns an empty array.**
-    """
-    emails: [Email!] @goField(forceResolver: true)
-    phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
-    mailboxes: [String!]! @goField(forceResolver: true) # @deprecated
-    mailboxesV2: [Mailbox!]! @goField(forceResolver: true)
-    hasLinkedInToken: Boolean! @goField(forceResolver: true)
-    onboarding: UserOnboardingDetails!
+  """
+  Timestamp of user creation.
+  **Required**
+  """
+  createdAt: Time!
+  updatedAt: Time!
 
-    """
-    Timestamp of user creation.
-    **Required**
-    """
-    createdAt: Time!
-    updatedAt: Time!
+  jobRoles: [JobRole!]! @goField(forceResolver: true)
+  calendars: [Calendar!]! @goField(forceResolver: true)
 
-    jobRoles: [JobRole!]! @goField(forceResolver: true)
-    calendars: [Calendar!]! @goField(forceResolver: true)
-
-    source: DataSource!
-    sourceOfTruth: DataSource! @deprecated
-    appSource: String!
+  source: DataSource!
+  sourceOfTruth: DataSource! @deprecated
+  appSource: String!
 }
 
 type UserOnboardingDetails {
-    showOnboardingPage:                 Boolean!
-    onboardingInboundStepCompleted:     Boolean!
-    onboardingOutboundStepCompleted:    Boolean!
-    onboardingCrmStepCompleted:         Boolean!
-    onboardingMailstackStepCompleted:   Boolean!
+  showOnboardingPage: Boolean!
+  onboardingInboundStepCompleted: Boolean!
+  onboardingOutboundStepCompleted: Boolean!
+  onboardingCrmStepCompleted: Boolean!
+  onboardingMailstackStepCompleted: Boolean!
 }
 
 """
@@ -81,24 +86,23 @@ Specifies how many pages of `User` information has been returned in the query re
 **A `return` object.**
 """
 type UserPage implements Pages {
+  """
+  A `User` entity in customerOS.
+  **Required.  If no values it returns an empty array.**
+  """
+  content: [User!]!
 
-    """
-    A `User` entity in customerOS.
-    **Required.  If no values it returns an empty array.**
-    """
-    content: [User!]!
+  """
+  Total number of pages in the query response.
+  **Required.**
+  """
+  totalPages: Int!
 
-    """
-    Total number of pages in the query response.
-    **Required.**
-    """
-    totalPages: Int!
-
-    """
-    Total number of elements in the query response.
-    **Required.**
-    """
-    totalElements: Int64!
+  """
+  Total number of elements in the query response.
+  **Required.**
+  """
+  totalElements: Int64!
 }
 
 """
@@ -106,58 +110,56 @@ Describes the User of customerOS.  A user is the person who logs into the Openli
 **A `create` object.**
 """
 input UserInput {
+  """
+  The first name of the customerOS user.
+  **Required**
+  """
+  firstName: String!
 
-    """
-    The first name of the customerOS user.
-    **Required**
-    """
-    firstName: String!
+  """
+  The last name of the customerOS user.
+  **Required**
+  """
+  lastName: String!
+  name: String
+  timezone: String
+  profilePhotoUrl: String
 
-    """
-    The last name of the customerOS user.
-    **Required**
-    """
-    lastName: String!
-    name: String
-    timezone: String
-    profilePhotoUrl: String
+  """
+  The email address of the customerOS user.
+  **Required**
+  """
+  email: EmailInput!
 
-    """
-    The email address of the customerOS user.
-    **Required**
-    """
-    email: EmailInput!
+  """
+  The name of the app performing the create.
+  **Optional**
+  """
+  appSource: String
 
-    """
-    The name of the app performing the create.
-    **Optional**
-    """
-    appSource: String
-
-    """
-    The Job Roles of the user.
-    **Optional**
-    """
-    jobRoles: [JobRoleInput!]
-
+  """
+  The Job Roles of the user.
+  **Optional**
+  """
+  jobRoles: [JobRoleInput!]
 }
 
 input UserUpdateInput {
-    id:                 ID!
-    name:               String
-    profilePhotoUrl:    String
+  id: ID!
+  name: String
+  profilePhotoUrl: String
 }
 
 input UserOnboardingDetailsInput {
-    id: ID!
-    showOnboardingPage:                 Boolean
-    onboardingInboundStepCompleted:     Boolean
-    onboardingOutboundStepCompleted:    Boolean
-    onboardingCrmStepCompleted:         Boolean
-    onboardingMailstackStepCompleted:   Boolean
+  id: ID!
+  showOnboardingPage: Boolean
+  onboardingInboundStepCompleted: Boolean
+  onboardingOutboundStepCompleted: Boolean
+  onboardingCrmStepCompleted: Boolean
+  onboardingMailstackStepCompleted: Boolean
 }
 
 type CustomerUser {
-    id: ID!
-    jobRole: CustomerJobRole!
+  id: ID!
+  jobRole: CustomerJobRole!
 }

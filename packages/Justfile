@@ -1,7 +1,7 @@
 # Common module paths
-server_modules := "server/customer-os-postgres-repository server/customer-os-common-module server/events-subscribers server/customer-os-api server/customer-os-neo4j-repository server/customer-os-webhooks server/mailsherpa-api server/mailstack"
+server_modules := "server/customer-os-postgres-repository server/customer-os-common-module server/events-subscribers server/customer-os-api server/customer-os-neo4j-repository server/customer-os-webhooks server/mailsherpa-api"
 
-runner_modules := "runner/customer-os-data-upkeeper runner/sync-gmail-raw runner/sync-gmail runner/sync-customer-os-data runner/sync-slack runner/customer-os-dedup runner/integrity-checker"
+runner_modules := "runner/customer-os-data-upkeeper runner/sync-customer-os-data runner/sync-slack runner/integrity-checker"
 
 bin_dir := "bin"
 
@@ -89,7 +89,7 @@ clean:
 	rm -rf *.log
 	rm -rf *.pid
 
-generate-api:
+gen-api:
     cd ./server/customer-os-api && go run github.com/99designs/gqlgen generate
 
 jaeger:

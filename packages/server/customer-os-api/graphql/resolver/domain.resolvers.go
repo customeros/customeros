@@ -6,12 +6,12 @@ package resolver
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 )

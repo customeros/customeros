@@ -1,0 +1,25 @@
+type EmailThread {
+  id: String!
+  userId: String!
+  mailboxId: String!
+  subject: String!
+  summary: String!
+  isViewed: Boolean!
+  isDone: Boolean!
+  lastSender: String!
+  lastSenderDomain: String!
+  lastMessageAt: Time
+}
+
+type EmailThreadConnection implements Connection {
+  edges: [EmailThread!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+extend type Query {
+  getAllThreads(
+    userId: String!
+    pagination: PaginationInput
+  ): EmailThreadConnection!
+}

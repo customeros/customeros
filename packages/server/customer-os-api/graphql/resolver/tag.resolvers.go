@@ -12,7 +12,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-
 	pkgerrors "github.com/pkg/errors"
 )
 
