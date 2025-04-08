@@ -382,11 +382,11 @@
         },
         {
           "name": "Service line item price is not of type float",
-          "query": "MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.price) <> 'FLOAT' RETURN count(sli) as cnt"
+          "query": "MATCH (sli:ServiceLineItem) WHERE NOT (sli.price >= 0.0 OR sli.price <= 0.0) RETURN count(sli) AS cnt"
         },
         {
           "name": "Service line item quantity is not of type integer",
-          "query": "MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.quantity) <> 'INTEGER' RETURN count(sli)"
+          "query": "MATCH (sli:ServiceLineItem) WHERE NOT (sli.quantity % 1 = 0) RETURN count(sli)"
         },
         {
           "name": "Service line items with missing end date",
