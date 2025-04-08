@@ -5,19 +5,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
-
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
-const CACHE_LOOKBACK_DAYS = 30
+const (
+	CACHE_LOOKBACK_DAYS = 30
+	MAX_RESPONSE_SIZE   = 1 * 1024 * 1024 // 1MB
+	HTTP_TIMEOUT        = 30 * time.Second
+)
 
 func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfaces.SnitcherResponse, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.GetSnitcherData")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.IPIdentity")
 	defer spans.Finish()
 
 	spans.LogKV("ip", ip)
@@ -26,6 +30,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 	results, err := s.postgres.CacheIPIdentifyRepository.FindByIP(ctx, ip, CACHE_LOOKBACK_DAYS)
 	if err != nil {
 		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to check cache: %w", err)
 	}
 
 	if results != nil && results.SnitcherData != "" && results.Domain != "" {
@@ -41,7 +46,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 	snitcherResponse, respString, err := s.callSnitcher(ctx, ip)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, err
+		return nil, fmt.Errorf("failed to call snitcher: %w", err)
 	}
 
 	// Store response
@@ -55,7 +60,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 	err = s.postgres.CacheIPIdentifyRepository.Create(ctx, snitcherData)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to store response: %v", err)
+		return nil, fmt.Errorf("failed to store response: %w", err)
 	}
 
 	return snitcherResponse, nil
@@ -74,14 +79,16 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 		return nil, nil, err
 	}
 
-	// Create HTTP client
-	client := &http.Client{}
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: HTTP_TIMEOUT,
+	}
 
-	// Create POST request
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.SnitcherConfig.Url, ip), nil)
+	// Create POST request with context
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.SnitcherConfig.Url, ip), nil)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("failed to create POST request: %v", err)
+		return nil, nil, fmt.Errorf("failed to create POST request: %w", err)
 	}
 
 	// Set headers
@@ -92,13 +99,15 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 	resp, err := client.Do(req)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("failed to perform POST request: %v", err)
+		return nil, nil, fmt.Errorf("failed to perform POST request: %w", err)
 	}
 	defer resp.Body.Close()
-	responseBody, err := io.ReadAll(resp.Body)
+
+	// Read response with size limit
+	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, MAX_RESPONSE_SIZE))
 	if err != nil {
 		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("failed to read response body: %v", err)
+		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// Check status code
@@ -108,34 +117,35 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 		return nil, nil, fmt.Errorf("snitcher API returned non-200 status code: %d", resp.StatusCode)
 	}
 
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, responseBody); err != nil {
-		return nil, nil, fmt.Errorf("error compacting json: %w", err)
-	}
-	responseString := buf.String()
-
-	snitcherData, err := buildSnitcherResponse(ctx, responseBody)
+	// Validate and compact JSON
+	validatedAndCompacted, err := validateAndCompactJSON(responseBody)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("faild to parse snitcher response: %v", err)
+		spans.LogKV("error.invalid.json.response", string(responseBody))
+		return nil, nil, fmt.Errorf("failed to process JSON response: %w", err)
 	}
 
-	spans.LogKV("result.rawSnitcherResponse", string(responseBody))
-	spans.LogObjectAsJson("result.snitcherData", snitcherData)
-	return snitcherData, &responseString, nil
-}
-
-func buildSnitcherResponse(ctx context.Context, responseBody []byte) (*interfaces.SnitcherResponse, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.buildSnitcherResponse")
-	defer spans.Finish()
-
-	// Parse the JSON request body
+	// Parse the response
 	var snitcherResponse interfaces.SnitcherResponse
 	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
 		spans.TraceError(err)
-		spans.LogKV("snitcherResponseBody", string(responseBody))
-		return nil, fmt.Errorf("failed to unmarshal response body: %v", err)
+		spans.LogKV("error.parsing.json.response", string(responseBody))
+		return nil, nil, fmt.Errorf("failed to parse snitcher response: %w", err)
 	}
 
-	return &snitcherResponse, nil
+	spans.LogObjectAsJson("result.snitcherData", snitcherResponse)
+	return &snitcherResponse, &validatedAndCompacted, nil
+}
+
+func validateAndCompactJSON(data []byte) (string, error) {
+	if !json.Valid(data) {
+		return "", fmt.Errorf("invalid JSON")
+	}
+
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to compact JSON: %w", err)
+	}
+
+	return buf.String(), nil
 }
