@@ -4,29 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"strings"
-
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 var knowIpDataBadResponseMessages = []string{"is a reserved IP address"}
 
 func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentity.IPDataResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IpIntelligenceService.LookupIp")
-	defer span.Finish()
-	span.LogFields(log.String("ip", ip))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IpIntelligenceService.LookupIp")
+	defer spans.Finish()
+	spans.LogKV("ip", ip)
 
 	cachedIpData, err := s.postgres.CacheIpDataRepository.Get(ctx, ip)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
+		spans.TraceError(errors.Wrap(err, "failed to get cache data"))
 		return nil, err
 	}
 	var data *postgresentity.IPDataResponseBody
@@ -34,13 +30,13 @@ func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentit
 	if cachedIpData == nil || cachedIpData.UpdatedAt.AddDate(0, 0, s.cfg.External.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
 		// get data from IPData
 		if data, err = s.askIpData(ctx, ip); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get IPData"))
+			spans.TraceError(errors.Wrap(err, "failed to get IPData"))
 			return nil, err
 		}
 		// save to db
 		dataAsString, err := json.Marshal(data)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal data"))
 			return nil, err
 		}
 		s.postgres.CacheIpDataRepository.Save(ctx, postgresentity.CacheIpData{
@@ -51,7 +47,7 @@ func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentit
 		// unmarshal cached data
 		data = &postgresentity.IPDataResponseBody{}
 		if err = json.Unmarshal([]byte(cachedIpData.Data), data); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal cache data"))
+			spans.TraceError(errors.Wrap(err, "failed to unmarshal cache data"))
 			s.log.Error("failed to unmarshal cached data", err)
 			return nil, err
 		}
@@ -63,13 +59,13 @@ func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentit
 }
 
 func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresentity.IPDataResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IpIntelligenceService.askIpData")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IpIntelligenceService.askIpData")
+	defer spans.Finish()
 
 	// validate if IPData is configured
 	if s.cfg.External.IpDataConfig.ApiKey == "" || s.cfg.External.IpDataConfig.ApiUrl == "" {
 		err := errors.New("IPData is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("IPData is not configured")
 		return nil, err
 	}
@@ -80,7 +76,7 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 	// Create IPData request
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.External.IpDataConfig.ApiUrl, ip, s.cfg.External.IpDataConfig.ApiKey), nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create GET request for IPData"))
+		spans.TraceError(errors.Wrap(err, "failed to create GET request for IPData"))
 		return nil, err
 	}
 
@@ -91,14 +87,14 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 	resp, err := client.Do(req)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "failed to perform GET request for IPData")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		spans.TraceError(errors.Wrap(err, "failed to read response body"))
 		return nil, err
 	}
 
@@ -113,15 +109,15 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 			}
 		}
 		if !knownBadResponse {
-			span.LogFields(log.String("response.body", string(responseBody)))
-			tracing.TraceErr(span, errors.Errorf("IPData returned status code %d", resp.StatusCode))
+			spans.LogKV("response.body", string(responseBody))
+			spans.TraceError(errors.Errorf("IPData returned status code %d", resp.StatusCode))
 		}
 	}
 
 	// Parse the JSON request body
 	var ipDataResponseBody postgresentity.IPDataResponseBody
 	if err = json.Unmarshal(responseBody, &ipDataResponseBody); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal response body"))
 		return nil, err
 	}
 	ipDataResponseBody.StatusCode = resp.StatusCode

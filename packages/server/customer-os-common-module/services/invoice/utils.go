@@ -3,6 +3,7 @@ package invoice
 import (
 	"bytes"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -12,17 +13,16 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
 func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData map[string]interface{}) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FillInvoiceHtmlTemplate")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FillInvoiceHtmlTemplate")
+	defer spans.Finish()
 
 	// Read template from the embedded FS.
 	templateContent, err := Templates.ReadFile("pdf_template/index.html")
@@ -60,8 +60,8 @@ func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData 
 }
 
 func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}) (*[]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ConvertInvoiceHtmlToPdf")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ConvertInvoiceHtmlToPdf")
+	defer spans.Finish()
 	// This is doing a request like this:
 	//curl \
 	//--request POST 'http://localhost:11006/forms/chromium/convert/html' \
@@ -82,27 +82,27 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	// 1. Add the invoice HTML file (already created and filled in tmpFile).
 	invoiceHtmlFile, err := utils.GetFileByName(tmpFile.Name())
 	if err != nil {
-		tracing.TraceErr(span, fmt.Errorf("getFileByName: %w", err))
+		spans.TraceError(fmt.Errorf("getFileByName: %w", err))
 		return nil, fmt.Errorf("getFileByName: %w", err)
 	}
 	err = addMultipartFile(writer, invoiceHtmlFile, "index.html")
 	if err != nil {
-		tracing.TraceErr(span, fmt.Errorf("addMultipartFile index.html: %w", err))
+		spans.TraceError(fmt.Errorf("addMultipartFile index.html: %w", err))
 		return nil, fmt.Errorf("addMultipartFile index.html: %w", err)
 	}
 
 	// 2. Add provider logo if available
 	if providerLogoRepositoryFileId, ok := invoiceData["ProviderLogoRepositoryFileId"].(string); ok && providerLogoRepositoryFileId != "" {
-		file, metadata, err := downloadProviderLogoAsTempFile(ctx, fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, span)
+		file, metadata, err := downloadProviderLogoAsTempFile(ctx, fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, *spans)
 		if err != nil {
-			tracing.TraceErr(span, fmt.Errorf("downloadProviderLogoAsTempFile: %w", err))
+			spans.TraceError(fmt.Errorf("downloadProviderLogoAsTempFile: %w", err))
 			return nil, fmt.Errorf("downloadProviderLogoAsTempFile: %w", err)
 		}
 
 		fileExtension := GetFileExtensionFromMetadata(metadata)
 		err = addMultipartFile(writer, file, "provider-logo"+fileExtension)
 		if err != nil {
-			tracing.TraceErr(span, fmt.Errorf("addMultipartFile provider-logo%s: %w", fileExtension, err))
+			spans.TraceError(fmt.Errorf("addMultipartFile provider-logo%s: %w", fileExtension, err))
 			return nil, fmt.Errorf("addMultipartFile provider-logo%s: %w", fileExtension, err)
 		}
 	}
@@ -126,7 +126,7 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	for _, rf := range resourceFiles {
 		err = addEmbeddedResourceFile(writer, rf.FileName, rf.PartName)
 		if err != nil {
-			tracing.TraceErr(span, fmt.Errorf("addEmbeddedResourceFile %s: %w", rf.FileName, err))
+			spans.TraceError(fmt.Errorf("addEmbeddedResourceFile %s: %w", rf.FileName, err))
 			return nil, fmt.Errorf("addEmbeddedResourceFile %s: %w", rf.FileName, err)
 		}
 	}
@@ -145,7 +145,7 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	for _, ff := range formFields {
 		err = addMultipartValue(writer, ff.Value, ff.FieldName)
 		if err != nil {
-			tracing.TraceErr(span, fmt.Errorf("addMultipartValue %s: %w", ff.FieldName, err))
+			spans.TraceError(fmt.Errorf("addMultipartValue %s: %w", ff.FieldName, err))
 			return nil, fmt.Errorf("addMultipartValue %s: %w", ff.FieldName, err)
 		}
 	}
@@ -153,14 +153,14 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	// Close the multipart writer to flush the buffer.
 	err = writer.Close()
 	if err != nil {
-		tracing.TraceErr(span, fmt.Errorf("writer.Close: %w", err))
+		spans.TraceError(fmt.Errorf("writer.Close: %w", err))
 		return nil, fmt.Errorf("writer.Close: %w", err)
 	}
 
 	// Create the HTTP request.
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		tracing.TraceErr(span, fmt.Errorf("http.NewRequest: %w", err))
+		spans.TraceError(fmt.Errorf("http.NewRequest: %w", err))
 		return nil, fmt.Errorf("http.NewRequest: %w", err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -169,22 +169,22 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pd
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, fmt.Errorf("client.Do: %w", err))
+		spans.TraceError(fmt.Errorf("client.Do: %w", err))
 		return nil, fmt.Errorf("client.Do: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Check for a successful status code.
 	if resp.StatusCode != http.StatusOK {
-		span.LogFields(log.String("status_code", resp.Status))
-		tracing.TraceErr(span, fmt.Errorf("unexpected status code %v", resp.StatusCode))
+		spans.LogKV("status_code", resp.Status)
+		spans.TraceError(fmt.Errorf("unexpected status code %v", resp.StatusCode))
 		return nil, fmt.Errorf("unexpected status code %v", resp.StatusCode)
 	}
 
 	// Read the response body (the PDF bytes)
 	pdfBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, fmt.Errorf("io.ReadAll: %w", err))
+		spans.TraceError(fmt.Errorf("io.ReadAll: %w", err))
 		return nil, fmt.Errorf("io.ReadAll: %w", err)
 	}
 
@@ -209,19 +209,19 @@ func addEmbeddedResourceFile(writer *multipart.Writer, fileName, partName string
 	return nil
 }
 
-func downloadProviderLogoAsTempFile(ctx context.Context, fileService interfaces.FileService, tenant, repositoryFileId string, span opentracing.Span) (*os.File, *interfaces.File, error) {
+func downloadProviderLogoAsTempFile(ctx context.Context, fileService interfaces.FileService, tenant, repositoryFileId string, spans telemetry.Spans) (*os.File, *interfaces.File, error) {
 	fileMetadata, err := fileService.GetById(ctx, repositoryFileId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "fileService.GetById"))
+		spans.TraceError(errors.Wrap(err, "fileService.GetById"))
 		return nil, nil, err
 	}
 	if fileMetadata == nil {
-		tracing.TraceErr(span, errors.Errorf("File with id %v not found", repositoryFileId))
+		spans.TraceError(errors.Errorf("File with id %v not found", repositoryFileId))
 		return nil, nil, errors.Errorf("File with id %v not found", repositoryFileId)
 	}
 	fileBytes, err := fileService.GetFileBytes(ctx, repositoryFileId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "fileService.GetFileBytes"))
+		spans.TraceError(errors.Wrap(err, "fileService.GetFileBytes"))
 		return nil, nil, err
 	}
 

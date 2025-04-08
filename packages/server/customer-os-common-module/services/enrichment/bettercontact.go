@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"strings"
@@ -12,11 +14,9 @@ import (
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/forPelevin/gomoji"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -47,9 +47,9 @@ type BetterContactData struct {
 }
 
 func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *postgres_entity.BetterContactResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.FindWorkEmailWithBetterContact")
-	defer span.Finish()
-	span.LogFields(
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.FindWorkEmailWithBetterContact")
+	defer spans.Finish()
+	spans.LogFields(
 		log.String("linkedInUrl", linkedInUrl),
 		log.String("firstName", firstName),
 		log.String("lastName", lastName),
@@ -60,7 +60,7 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 	// validate if bettercontact is configured
 	if s.config.BetterContactConfig.ApiKey == "" || s.config.BetterContactConfig.Url == "" {
 		err := errors.New("bettercontact is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("bettercontact is not configured")
 		return "", "", nil, err
 	}
@@ -87,7 +87,7 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 
 	detailsBetterContactList, err := s.postgres.EnrichDetailsBetterContactRepository.GetByRequestParams(ctx, linkedInUrl, firstName, lastName, companyName, companyDomain, enrichPhoneNumber, BetterContactTTL)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
+		spans.TraceError(errors.Wrap(err, "failed to get better contact details"))
 		return "", "", nil, err
 	}
 
@@ -100,13 +100,13 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 			var responseBody postgres_entity.BetterContactResponseBody
 			err := json.Unmarshal([]byte(existingBetterContactData.Response), &responseBody)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", "", nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 			}
-			span.LogFields(log.String("result.bettercontact_request_id", existingBetterContactData.RequestID))
+			spans.LogKV("result.bettercontact_request_id", existingBetterContactData.RequestID)
 			return existingBetterContactData.ID, existingBetterContactData.RequestID, &responseBody, nil
 		} else if existingBetterContactData.RequestID != "" {
-			span.LogFields(log.String("result.bettercontact_request_id", existingBetterContactData.RequestID))
+			spans.LogKV("result.bettercontact_request_id", existingBetterContactData.RequestID)
 			return existingBetterContactData.ID, existingBetterContactData.RequestID, nil, nil
 		}
 	}
@@ -129,7 +129,7 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 	// Marshal request body to JSON
 	requestBody, err := json.Marshal(requestBodyDtls)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal bettercontact request body"))
+		spans.TraceError(errors.Wrap(err, "failed to marshal bettercontact request body"))
 		return "", "", nil, err
 	}
 
@@ -139,7 +139,7 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 	// Create POST request
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s?api_key=%s", s.config.BetterContactConfig.Url, s.config.BetterContactConfig.ApiKey), bytes.NewBuffer(requestBody))
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create bettercontact POST request"))
+		spans.TraceError(errors.Wrap(err, "failed to create bettercontact POST request"))
 		return "", "", nil, err
 	}
 
@@ -149,7 +149,7 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 	// Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform bettercontact POST request"))
+		spans.TraceError(errors.Wrap(err, "failed to perform bettercontact POST request"))
 		return "", "", nil, err
 	}
 	defer resp.Body.Close()
@@ -157,23 +157,23 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 	// Decode response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		span.LogKV("response_body", string(body))
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read bettercontact response body"))
+		spans.LogKV("response_body", string(body))
+		spans.TraceError(errors.Wrap(err, "failed to read bettercontact response body"))
 		return "", "", nil, err
 	}
 
 	var responseBody BetterContactResponseBody
 	err = json.Unmarshal(body, &responseBody)
 	if err != nil {
-		span.LogKV("response_body", string(body))
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode bettercontact response body"))
+		spans.LogKV("response_body", string(body))
+		spans.TraceError(errors.Wrap(err, "failed to decode bettercontact response body"))
 		return "", "", nil, err
 	}
 
 	if responseBody.ID == "" {
-		span.LogKV("response_body", string(body))
+		spans.LogKV("response_body", string(body))
 		err = errors.New("missing bettercontact response id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", "", nil, err
 	}
 
@@ -188,10 +188,10 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 		Request:            string(requestBody),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", "", nil, err
 	}
 
-	span.LogFields(log.String("result.bettercontact_request_id", responseBody.ID))
+	spans.LogKV("result.bettercontact_request_id", responseBody.ID)
 	return dbRecord.ID, responseBody.ID, nil, nil
 }

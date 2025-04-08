@@ -2,19 +2,20 @@ package interaction_session
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -29,15 +30,15 @@ func NewInteractionSessionService(neo4j *neoRepo.Repositories) interfaces.Intera
 }
 
 func (s *interactionSessionService) GetById(ctx context.Context, id string) (*neo4jentity.InteractionSessionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionService.GetById")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionSessionService.GetById")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
 	byId, err := s.neo4j.CommonReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id, commonModel.NodeLabelInteractionSession)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -74,9 +75,8 @@ func (s *interactionSessionService) GetInteractionSessionsForInteractionEvents(c
 }
 
 func (s *interactionSessionService) Create(ctx context.Context, newInteractionSession *neo4jentity.InteractionSessionEntity) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionSessionService.Create")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
@@ -84,14 +84,14 @@ func (s *interactionSessionService) Create(ctx context.Context, newInteractionSe
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		id, err := s.CreateInTx(ctx, tx, newInteractionSession)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		return id, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -112,21 +112,20 @@ func (s *interactionSessionService) Create(ctx context.Context, newInteractionSe
 }
 
 func (s *interactionSessionService) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, data *neo4jentity.InteractionSessionEntity) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionService.CreateInTx")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionSessionService.CreateInTx")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	interactionSessionId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelInteractionSession)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	err = s.neo4j.InteractionSessionWriteRepository.CreateInTx(ctx, tx, common.GetTenantFromContext(ctx), interactionSessionId, *data)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

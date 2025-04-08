@@ -3,13 +3,14 @@ package email
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -20,7 +21,7 @@ import (
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -62,15 +63,15 @@ func (s *emailService) IsInitialized() bool {
 }
 
 func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields interfaces.EmailFields, linkWith *common_srv.LinkWith) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.Merge")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", emailFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.Merge")
+	defer spans.Finish()
 
-	tracing.LogObjectAsJson(span, "linkWith", linkWith)
+	spans.LogObjectAsJson("input", emailFields)
+
+	spans.LogObjectAsJson("linkWith", linkWith)
 
 	if common.GetTenantFromContext(ctx) == "" {
-		tracing.TraceErr(span, errors.New("tenant is missing in context"))
+		spans.TraceError(errors.New("tenant is missing in context"))
 	}
 
 	if tenant == "" {
@@ -92,7 +93,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 		// check if email already exists
 		emailId, err = s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, emailFields.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -100,7 +101,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 		if emailId == "" {
 			emailId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, commonmodel.NodeLabelEmail)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			err = s.neo4j.EmailWriteRepository.CreateEmail(ctx, txWithPostCommit.Tx, tenant, emailId, neo4jrepository.EmailCreateFields{
@@ -109,7 +110,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 				Source:    emailFields.Source,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 
@@ -117,7 +118,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 				// send email event to rabbit mq
 				err = s.events.Publisher.PublishFanoutEvent(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message AddEmailEvent"))
 				}
 				return nil
 			})
@@ -126,7 +127,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 		if linkWith != nil && linkWith.Id != "" && linkWith.Type != "" {
 			err = s.linkEmail(ctx, txWithPostCommit, emailId, emailFields.Email, emailFields.AppSource, emailFields.Primary, *linkWith)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return &emailId, err
 			}
 		}
@@ -134,26 +135,26 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.String("result.emailId", emailId))
+	spans.LogKV("result.emailId", emailId)
 
 	return &emailId, nil
 }
 
 func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, previousEmail string, emailFields interfaces.EmailFields, linkWith common_srv.LinkWith) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.ReplaceEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", emailFields)
-	span.LogKV("previousEmail", previousEmail)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.ReplaceEmail")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", emailFields)
+	spans.LogKV("previousEmail", previousEmail)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -161,17 +162,17 @@ func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils
 	// check if linkWith is valid
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+		spans.TraceError(errors.Wrap(err, "failed to check linked entity exists"))
 		return nil, err
 	}
 	if !exists {
 		err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if previousEmail == emailFields.Email {
-		span.LogFields(log.Bool("email.same", true))
+		spans.LogFields(log.Bool("email.same", true))
 		return nil, nil
 	}
 
@@ -179,18 +180,18 @@ func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils
 	if linkWith.Type == commonmodel.CONTACT {
 		emailUsed, existingContactId, err := s.contact.CheckContactExistsWithEmail(ctx, emailFields.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if emailUsed && existingContactId != linkWith.Id {
-			span.LogFields(log.String("result.error", fmt.Sprintf("email %s already used by contact %s", emailFields.Email, existingContactId)))
+			spans.LogKV("result.error", fmt.Sprintf("email %s already used by contact %s", emailFields.Email, existingContactId))
 			err = coserrors.ErrEmailUsed
 			return nil, err
 		}
 	} else if linkWith.Type == commonmodel.ORGANIZATION {
 		emailUsed, existingOrganizationId, err := s.org.CheckOrganizationExistsWithEmail(ctx, emailFields.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if emailUsed && existingOrganizationId != linkWith.Id {
@@ -204,13 +205,13 @@ func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils
 		if previousEmail != "" {
 			err = s.UnlinkEmail(ctx, txWithPostCommit, previousEmail, emailFields.AppSource, linkWith)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to unlink email"))
+				spans.TraceError(errors.Wrap(err, "failed to unlink email"))
 			}
 		}
 
 		emailId, err = s.Merge(ctx, txWithPostCommit, tenant, emailFields, &linkWith)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to merge email"))
+			spans.TraceError(errors.Wrap(err, "failed to merge email"))
 		}
 		return nil, err
 	})
@@ -219,23 +220,23 @@ func (s *emailService) ReplaceEmail(ctx context.Context, txWithPostCommit *utils
 }
 
 func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, emailId, email, appSource string, primary bool, linkWith common_srv.LinkWith) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.LinkEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.LinkEmail")
+	defer spans.Finish()
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	if linkWith.Id == "" {
-		tracing.TraceErr(span, errors.New("linkWith id is required"))
+		spans.TraceError(errors.New("linkWith id is required"))
 		return errors.New("linkWith id is required")
 	}
 	if linkWith.Type == "" {
-		tracing.TraceErr(span, errors.New("linkWith type is required"))
+		spans.TraceError(errors.New("linkWith type is required"))
 		return errors.New("linkWith type is required")
 	}
 
@@ -248,22 +249,22 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 		// check linked entity exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+			spans.TraceError(errors.Wrap(err, "failed to check linked entity exists"))
 			return nil, err
 		}
 		if !exists {
 			err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		// check if email is already linked to entity, if so, skip linking
 		alreadyLinked, err := s.neo4j.EmailReadRepository.IsLinkedToEntityByEmailAddress(ctx, txWithPostCommit.Tx, tenant, emailId, linkWith.Id, linkWith.Type)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to check if email is already linked to entity"))
+			spans.TraceError(errors.Wrap(err, "failed to check if email is already linked to entity"))
 		}
 		if alreadyLinked {
-			span.LogFields(log.Bool("email.alreadyLinked", true))
+			spans.LogFields(log.Bool("email.alreadyLinked", true))
 			return nil, nil
 		}
 
@@ -271,17 +272,17 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 		if linkWith.Type == commonmodel.CONTACT {
 			emailUsed, existingContactId, err := s.contact.CheckContactExistsWithEmail(ctx, email)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			if emailUsed && existingContactId != linkWith.Id {
-				span.LogFields(log.String("result.error", fmt.Sprintf("email %s already used by contact %s", email, existingContactId)))
+				spans.LogKV("result.error", fmt.Sprintf("email %s already used by contact %s", email, existingContactId))
 				return nil, coserrors.ErrEmailUsed
 			}
 		} else if linkWith.Type == commonmodel.ORGANIZATION {
 			emailUsed, existingOrganizationId, err := s.org.CheckOrganizationExistsWithEmail(ctx, email)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			if emailUsed && existingOrganizationId != linkWith.Id {
@@ -294,14 +295,14 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 			// if contact has no emails yet, set this one as primary
 			dbResults, err := s.neo4j.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, commonmodel.CONTACT, []string{linkWith.Id})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to get all emails for contact"))
+				spans.TraceError(errors.Wrap(err, "failed to get all emails for contact"))
 			} else if len(dbResults) == 0 {
-				span.LogFields(log.Bool("firstEmailForContact", true))
+				spans.LogFields(log.Bool("firstEmailForContact", true))
 				primary = true
 			}
 			err = s.neo4j.EmailWriteRepository.LinkWithContact(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, emailId, primary)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			// reset contact enrich attempts
@@ -309,17 +310,17 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 		case commonmodel.USER.String():
 			err = s.neo4j.EmailWriteRepository.LinkWithUser(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, emailId, primary)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithUser"))
+				spans.TraceError(errors.Wrap(err, "EmailWriteRepository.LinkWithUser"))
 				return nil, err
 			}
 		case commonmodel.ORGANIZATION.String():
 			err = s.neo4j.EmailWriteRepository.LinkWithOrganization(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, emailId, primary)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithOrganization"))
+				spans.TraceError(errors.Wrap(err, "EmailWriteRepository.LinkWithOrganization"))
 				return nil, err
 			}
 		default:
-			tracing.TraceErr(span, errors.New("unsupported linkWith type "+linkWith.Type.String()))
+			spans.TraceError(errors.New("unsupported linkWith type " + linkWith.Type.String()))
 			return nil, errors.New("unsupported linkWith type " + linkWith.Type.String())
 		}
 
@@ -327,7 +328,7 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 			// publish event to rabbit mq
 			err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email, primary))
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message AddEmailEvent"))
 			}
 
 			// publish completion event for linked entity
@@ -338,19 +339,19 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email, appSource string, linkWith common_srv.LinkWith) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UnlinkEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.UnlinkEmail")
+	defer spans.Finish()
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -362,23 +363,23 @@ func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	if linkWith.Id == "" {
-		tracing.TraceErr(span, errors.New("linkWith id is required"))
+		spans.TraceError(errors.New("linkWith id is required"))
 		return errors.New("linkWith id is required")
 	}
 	if linkWith.Type == "" {
-		tracing.TraceErr(span, errors.New("linkWith type is required"))
+		spans.TraceError(errors.New("linkWith type is required"))
 		return errors.New("linkWith type is required")
 	}
 
 	// check linked entity exists
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+		spans.TraceError(errors.Wrap(err, "failed to check linked entity exists"))
 		return err
 	}
 	if !exists {
 		err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -387,24 +388,24 @@ func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.
 		case commonmodel.CONTACT.String():
 			err = s.neo4j.EmailWriteRepository.UnlinkFromContact(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, email)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
+				spans.TraceError(errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
 				return nil, err
 			}
 		case commonmodel.USER.String():
 			err = s.neo4j.EmailWriteRepository.UnlinkFromUser(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, email)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
+				spans.TraceError(errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
 				return nil, err
 			}
 
 		case commonmodel.ORGANIZATION.String():
 			err = s.neo4j.EmailWriteRepository.UnlinkFromOrganization(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, email)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
+				spans.TraceError(errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
 				return nil, err
 			}
 		default:
-			tracing.TraceErr(span, errors.New("unsupported linkWith type "+linkWith.Type.String()))
+			spans.TraceError(errors.New("unsupported linkWith type " + linkWith.Type.String()))
 			return nil, errors.New("unsupported linkWith type " + linkWith.Type.String())
 		}
 
@@ -412,7 +413,7 @@ func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.
 			// publish event to rabbit mq
 			err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
 			}
 
 			// publish event for completion
@@ -424,21 +425,21 @@ func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (s *emailService) DeleteOrphanEmail(ctx context.Context, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DeleteOrphanEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, emailId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.DeleteOrphanEmail")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -446,47 +447,47 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, emailId string) er
 	// check if email exists by id
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonmodel.NodeLabelEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email exists by id"))
+		spans.TraceError(errors.Wrap(err, "failed to check if email exists by id"))
 		return err
 	}
 	if !exists {
 		err = errors.Errorf("email with id %s not found", emailId)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// check if email is orphan
 	isOrphan, err := s.neo4j.EmailReadRepository.IsOrphanEmail(ctx, tenant, emailId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email is orphan"))
+		spans.TraceError(errors.Wrap(err, "failed to check if email is orphan"))
 		return err
 	}
 	if !isOrphan {
 		err = errors.Errorf("email with id %s is not orphan", emailId)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// delete email node
 	err = s.neo4j.EmailWriteRepository.DeleteOrphanEmail(ctx, tenant, emailId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to delete orphan email"))
+		spans.TraceError(errors.Wrap(err, "failed to delete orphan email"))
 		return err
 	}
 
 	// check if email exists by id
 	exists, err = s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonmodel.NodeLabelEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email exists by id"))
+		spans.TraceError(errors.Wrap(err, "failed to check if email exists by id"))
 		return err
 	}
 	if exists {
-		span.LogFields(log.Bool("result.deleted", false))
+		spans.LogFields(log.Bool("result.deleted", false))
 	} else {
-		span.LogFields(log.Bool("result.deleted", true))
+		spans.LogFields(log.Bool("result.deleted", true))
 		err = s.events.Publisher.PublishFanoutEvent(ctx, emailId, commonmodel.EMAIL, dto.Delete{})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish event Delete"))
+			spans.TraceError(errors.Wrap(err, "unable to publish event Delete"))
 		}
 	}
 
@@ -494,13 +495,12 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, emailId string) er
 }
 
 func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllEmailsForEntityIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.GetAllEmailsForEntityIds")
+	defer spans.Finish()
 
 	emailNodes, err := s.neo4j.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, entityType, entityIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -516,42 +516,42 @@ func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant stri
 }
 
 func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity common_srv.LinkWith) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.SetPrimary")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.SetPrimary")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	if forEntity.Id == "" {
-		tracing.TraceErr(span, errors.New("forEntity id is required"))
+		spans.TraceError(errors.New("forEntity id is required"))
 		return errors.New("forEntity id is required")
 	}
 	if forEntity.Type == "" {
-		tracing.TraceErr(span, errors.New("forEntity type is required"))
+		spans.TraceError(errors.New("forEntity type is required"))
 		return errors.New("forEntity type is required")
 	}
 
 	// check linked entity exists
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), forEntity.Id, forEntity.Type.Neo4jLabel())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+		spans.TraceError(errors.Wrap(err, "failed to check linked entity exists"))
 		return err
 	}
 	if !exists {
 		err = errors.Errorf("linked entity %s with id %s not found", forEntity.Type.String(), forEntity.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = s.neo4j.EmailWriteRepository.SetPrimaryForEntity(ctx, common.GetTenantFromContext(ctx), forEntity.Id, email, forEntity.Type)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -561,35 +561,35 @@ func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity c
 }
 
 func (s *emailService) GetPrimaryEmailForEntityId(ctx context.Context, entityType commonmodel.EntityType, entityId string) (*neo4jentity.EmailEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetPrimaryEmailForEntityId")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.Object("entityId", entityId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.GetPrimaryEmailForEntityId")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(), "entityId", entityId)
 
 	emailNodes, err := s.neo4j.EmailReadRepository.GetPrimaryEmailNodesForLinkedEntityIds(ctx, common.GetTenantFromContext(ctx), entityType, []string{entityId})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if len(emailNodes) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogFields(log.Bool("result.found", true))
 	return mapper.MapDbNodeToEmailEntity(emailNodes[0].Node), nil
 }
 
 func (s *emailService) GetPrimaryEmailsForEntityIds(ctx context.Context, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetPrimaryEmailsForEntityIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.Object("entityIds", entityIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.GetPrimaryEmailsForEntityIds")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(), "entityIds", entityIds)
 
 	emailNodes, err := s.neo4j.EmailReadRepository.GetPrimaryEmailNodesForLinkedEntityIds(ctx, common.GetTenantFromContext(ctx), entityType, entityIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -603,15 +603,15 @@ func (s *emailService) GetPrimaryEmailsForEntityIds(ctx context.Context, entityT
 }
 
 func (s *emailService) UpdateEmailValidationDetails(ctx context.Context, emailId string, validationFields data_fields.EmailValidationFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UpdateEmailValidationDetails")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, emailId)
-	tracing.LogObjectAsJson(span, "validationFields", validationFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.UpdateEmailValidationDetails")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
+	spans.LogObjectAsJson("validationFields", validationFields)
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -619,34 +619,34 @@ func (s *emailService) UpdateEmailValidationDetails(ctx context.Context, emailId
 	if validationFields.Domain != "" {
 		err = s.domainService.MergeDomain(ctx, nil, validationFields.Domain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
 	err = s.neo4j.EmailWriteRepository.EmailValidated(ctx, tenant, emailId, validationFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (s *emailService) RequestEmailValidation(ctx context.Context, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.RequestEmailValidation")
-	defer span.Finish()
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, emailId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.RequestEmailValidation")
+	defer spans.Finish()
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = s.events.Publisher.PublishFanoutEvent(ctx, emailId, commonmodel.EMAIL, dto.RequestValidateEmail{})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error publishing email validation request"))
+		spans.TraceError(errors.Wrap(err, "Error publishing email validation request"))
 	}
 	return err
 }

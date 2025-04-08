@@ -2,19 +2,19 @@ package agent
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/BurntSushi/toml"
 	"github.com/aws/aws-sdk-go/aws"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -80,14 +80,13 @@ func NewAgentRegistryService(
 }
 
 func (r *agentRegistryService) SyncRegistry(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.SyncRegistry")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "agentRegistryService.SyncRegistry")
+	defer spans.Finish()
 
 	// get list of all agent config files from S3
 	agentConfigFiles, err := r.getAgentConfigFiles(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -95,7 +94,7 @@ func (r *agentRegistryService) SyncRegistry(ctx context.Context) error {
 	for _, file := range agentConfigFiles {
 		err = r.processAgentConfigFile(ctx, file)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 	}
@@ -104,28 +103,27 @@ func (r *agentRegistryService) SyncRegistry(ctx context.Context) error {
 }
 
 func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filename string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.processAgentConfigFile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentRegistryService.processAgentConfigFile")
+	defer spans.Finish()
 
 	agentConfig, err := r.getAgentConfig(ctx, filename)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	agentType, err := enum.GetAgentType(agentConfig.Agent.Type)
 	if err != nil {
-		span.LogKV("agentType", agentConfig.Agent.Type)
-		tracing.TraceErr(span, errors.Wrap(err, "Not a valid agent type"))
+		spans.LogKV("agentType", agentConfig.Agent.Type)
+		spans.TraceError(errors.Wrap(err, "Not a valid agent type"))
 		return err
 	}
 
 	scope, err := enum.GetAgentScope(agentConfig.Agent.Scope)
 	if err != nil {
-		span.LogKV("agentScope", agentConfig.Agent.Scope)
+		spans.LogKV("agentScope", agentConfig.Agent.Scope)
 		err := errors.New("Not a valid agent scope")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -161,7 +159,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 	// Check if agent already exists in DB
 	existingAgent, err := r.postgresRepositories.AgentRegistryRepository.FindByType(ctx, dbAgent.Type)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -169,7 +167,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		// Create new agent with plays
 		_, err = r.postgresRepositories.AgentRegistryRepository.Create(ctx, dbAgent, plays)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	} else {
@@ -177,7 +175,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		dbAgent.ID = existingAgent.ID
 		_, err = r.postgresRepositories.AgentRegistryRepository.Update(ctx, dbAgent, plays)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -186,21 +184,19 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 }
 
 func (r *agentRegistryService) getAgentConfigFiles(ctx context.Context) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.getAgentConfigFile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentRegistryService.getAgentConfigFile")
+	defer spans.Finish()
 
 	return r.s3client.ListFiles(ctx, BUCKET)
 }
 
 func (r *agentRegistryService) getAgentConfig(ctx context.Context, filename string) (*Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.getAgentConfig")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentRegistryService.getAgentConfig")
+	defer spans.Finish()
 
 	file, err := r.s3client.Download(ctx, BUCKET, filename)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -208,14 +204,13 @@ func (r *agentRegistryService) getAgentConfig(ctx context.Context, filename stri
 }
 
 func (r *agentRegistryService) loadAgentConfig(ctx context.Context, file string) (*Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.loadAgentConfig")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentRegistryService.loadAgentConfig")
+	defer spans.Finish()
 
 	var agent Agent
 	_, err := toml.Decode(file, &agent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

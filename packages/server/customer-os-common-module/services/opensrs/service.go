@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/smtp"
 	"strings"
 	"text/template"
@@ -13,14 +14,13 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type openSRSService struct {
@@ -43,8 +43,8 @@ func (s *openSRSService) SetMailstackService(mailstack interfaces.MailstackServi
 }
 
 func (s *openSRSService) SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpenSrsService.Reply")
-	defer span.Finish()
+	spans, _ := telemetry.StartServiceSpan(ctx, "OpenSrsService.Reply")
+	defer spans.Finish()
 
 	// Define the SMTP server details
 	smtpHost := "mail.hostedemail.com"
@@ -54,13 +54,13 @@ func (s *openSRSService) SendEmail(ctx context.Context, request *postgres_entity
 
 	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, request.From)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if mailboxRecord == nil {
 		err = errors.New("mailbox not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -111,7 +111,7 @@ Content-Type: text/html; charset=UTF-8
 
 	plainText, err := HTMLToPlainText(request.Content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -150,13 +150,13 @@ Content-Type: text/html; charset=UTF-8
 
 	tmpl, err := template.New("email").Parse(messageTemplate)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	var msgBuffer bytes.Buffer
 	if err := tmpl.Execute(&msgBuffer, data); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -179,7 +179,7 @@ Content-Type: text/html; charset=UTF-8
 		[]byte(msg),
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

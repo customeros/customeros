@@ -3,14 +3,15 @@ package social
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -22,7 +23,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -51,10 +52,10 @@ func (s *socialService) IsInitialized() bool {
 }
 
 func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllForEntities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("linkedEntityType", string(linkedEntityType)), log.Object("linkedEntityIds", linkedEntityIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.GetAllForEntities")
+	defer spans.Finish()
+
+	spans.LogKV("linkedEntityType", string(linkedEntityType), "linkedEntityIds", linkedEntityIds)
 
 	socials, err := s.neo4j.SocialReadRepository.GetAllForEntities(ctx, tenant, linkedEntityType, linkedEntityIds)
 	if err != nil {
@@ -70,11 +71,11 @@ func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, li
 }
 
 func (s *socialService) GetAllLinkedinForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllLinkedinForEntities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.GetAllLinkedinForEntities")
+	defer spans.Finish()
 
-	span.LogFields(log.String("linkedEntityType", string(linkedEntityType)), log.Object("linkedEntityIds", linkedEntityIds))
+	spans.LogKV("linkedEntityType", string(linkedEntityType))
+	spans.LogKV("linkedEntityIds", linkedEntityIds)
 
 	socials, err := s.neo4j.SocialReadRepository.GetAllLinkedinForEntities(ctx, tenant, linkedEntityType, linkedEntityIds)
 	if err != nil {
@@ -90,14 +91,13 @@ func (s *socialService) GetAllLinkedinForEntities(ctx context.Context, tenant st
 }
 
 func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.Update")
+	defer spans.Finish()
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -105,7 +105,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 	// get current social entity
 	socialDbNode, err := s.neo4j.SocialReadRepository.GetById(ctx, tenant, socialEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -122,7 +122,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 	// update social in DB
 	updatedSocialNode, err := s.neo4j.SocialWriteRepository.Update(ctx, tenant, socialEntity.Id, socialEntity.Url, alias, externalId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to update social"))
+		spans.TraceError(errors.Wrap(err, "failed to update social"))
 		return nil, err
 	}
 
@@ -140,7 +140,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 	// get linked entities
 	linkedEntities, err := s.neo4j.CommonReadRepository.GetDbNodesLinkedTo(ctx, tenant, socialEntity.Id, model.SOCIAL.Neo4jLabel(), "HAS")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	// notify linked entities updated.
 	for _, linkedEntity := range linkedEntities {
@@ -154,7 +154,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 				SocialUrl: socialEntity.Url,
 			})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForContact"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message UpdateSocialForContact"))
 			}
 			if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 				s.events.Publisher.PublishNotification(ctx, tenant, id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
@@ -165,7 +165,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 				SocialUrl: socialEntity.Url,
 			})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForOrganization"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message UpdateSocialForOrganization"))
 			}
 
 			if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
@@ -178,33 +178,33 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 }
 
 func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.PermanentlyDelete")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, socialId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.PermanentlyDelete")
+	defer spans.Finish()
+
+	spans.TagEntity(socialId)
 
 	// get linked entities
 	// TODO get linked entities to send update events to rabbit and eventstore
 
 	err := s.neo4j.SocialWriteRepository.PermanentlyDelete(ctx, tenant, socialId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to permanently delete social"))
+		spans.TraceError(errors.Wrap(err, "failed to permanently delete social"))
 		return err
 	}
 
 	err = s.events.Publisher.PublishFanoutEvent(ctx, socialId, model.SOCIAL, dto.Delete{})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteSocial"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message DeleteSocial"))
 	}
 
 	return err
 }
 
 func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith common_srv.LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.AddSocialToEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.AddSocialToEntity")
+	defer spans.Finish()
+
+	spans.LogFields(
 		log.String("linkWith.id", linkWith.Id),
 		log.String("linkWith.type", string(linkWith.Type)),
 		log.String("socialEntity.url", socialEntity.Url))
@@ -212,7 +212,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -220,20 +220,20 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 	// validate social url
 	if socialEntity.Url == "" {
 		err = errors.New("social url is required")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	// Check if entity already has this social URL
 	existingSocials, err := s.GetAllForEntities(ctx, tenant, linkWith.Type, []string{linkWith.Id})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to check existing socials"))
+		spans.TraceError(errors.Wrap(err, "failed to check existing socials"))
 		return "", err
 	}
 
 	for _, existing := range *existingSocials {
 		if existing.Url == socialEntity.Url {
-			span.LogFields(log.String("result", "social url already exists for entity"))
+			spans.LogKV("result", "social url already exists for entity")
 			return existing.Id, nil
 		}
 	}
@@ -244,18 +244,18 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		// validate linked entity exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+			spans.TraceError(errors.Wrap(err, "failed to check linked entity exists"))
 			return nil, err
 		}
 		if !exists {
 			err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		// prepare social url
 		socialUrl := normalizeSocialUrl(socialEntity.Url)
-		span.LogFields(log.String("socialUrl.normalized", socialUrl))
+		spans.LogKV("socialUrl.normalized", socialUrl)
 
 		// Check linked in not used by another entity
 		if socialEntity.IsLinkedin() {
@@ -267,16 +267,16 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 				}
 				orgsDbNodes, err := s.neo4j.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, socialUrl, alias, socialEntity.ExternalId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return "", err
 				}
 				if len(orgsDbNodes) > 0 {
 					if orgsDbNodes[0].Props["id"] == linkWith.Id {
 						// social already linked to organization
-						span.LogFields(log.Bool("result.alreadyLinked", true))
+						spans.LogFields(log.Bool("result.alreadyLinked", true))
 						return "", nil
 					} else {
-						span.LogFields(log.String("result.error", fmt.Sprintf("linkedin url %s already used by organization %s", socialUrl, orgsDbNodes[0].Props["id"])))
+						spans.LogKV("result.error", fmt.Sprintf("linkedin url %s already used by organization %s", socialUrl, orgsDbNodes[0].Props["id"]))
 						err = coserrors.ErrLinkedInUsed
 						return "", err
 					}
@@ -284,16 +284,16 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 			} else if linkWith.Type == model.CONTACT {
 				linkedInUsed, existingContactId, err := s.contact.CheckContactExistsWithLinkedIn(ctx, socialUrl, socialEntity.Alias, socialEntity.ExternalId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return "", err
 				}
 				if linkedInUsed {
 					if existingContactId == linkWith.Id {
 						// social already linked to contact
-						span.LogFields(log.Bool("result.alreadyLinked", true))
+						spans.LogFields(log.Bool("result.alreadyLinked", true))
 						return "", nil
 					} else {
-						span.LogFields(log.String("result.error", fmt.Sprintf("linkedin url %s already used by contact %s", socialUrl, existingContactId)))
+						spans.LogKV("result.error", fmt.Sprintf("linkedin url %s already used by contact %s", socialUrl, existingContactId))
 						err = coserrors.ErrLinkedInUsed
 						return "", err
 					}
@@ -303,13 +303,13 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 			// check if social with same url not linked to same entity, duplicate check
 			socialsDbNodes, err := s.neo4j.SocialReadRepository.GetAllForEntities(ctx, tenant, linkWith.Type, []string{linkWith.Id})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			for _, socialDbNode := range socialsDbNodes {
 				entity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
 				if entity.Url == socialUrl {
 					// social already linked to entity
-					span.LogFields(log.Bool("result.alreadyLinked", true))
+					spans.LogFields(log.Bool("result.alreadyLinked", true))
 					return "", nil
 				}
 			}
@@ -325,7 +325,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 				return "", err
 			}
 		}
-		tracing.TagEntity(span, socialId)
+		spans.TagEntity(socialId)
 
 		// save social to neo4j
 		data := neo4j_repository.SocialFields{
@@ -342,7 +342,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		}
 		err = s.neo4j.SocialWriteRepository.MergeSocialForEntity(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel(), data)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -366,7 +366,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 					FollowerCount: socialEntity.FollowersCount,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateSocial"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateSocial"))
 				}
 			}
 			return nil
@@ -381,7 +381,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 					SocialUrl: socialUrl,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message AddSocialToContact"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			case model.ORGANIZATION:
@@ -390,7 +390,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 					Social:   socialUrl,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
@@ -404,10 +404,10 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 }
 
 func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith common_srv.LinkWith, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.RemoveSocialFromEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.RemoveSocialFromEntity")
+	defer spans.Finish()
+
+	spans.LogFields(
 		log.String("linkWith.id", linkWith.Id),
 		log.String("linkWith.type", string(linkWith.Type)),
 		log.String("socialEntity.id", socialId))
@@ -415,7 +415,7 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -423,7 +423,7 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 	// get social entity
 	socialEntity, err := s.GetById(ctx, socialId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get social entity"))
+		spans.TraceError(errors.Wrap(err, "failed to get social entity"))
 		return err
 	}
 
@@ -431,19 +431,19 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 		// validate linked entity exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+			spans.TraceError(errors.Wrap(err, "failed to check linked entity exists"))
 			return nil, err
 		}
 		if !exists {
 			err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		// neo query to remove social from entity
 		err = s.neo4j.SocialWriteRepository.RemoveSocialForEntityById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel(), socialId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to remove social from entity"))
+			spans.TraceError(errors.Wrap(err, "failed to remove social from entity"))
 			return nil, err
 		}
 
@@ -456,7 +456,7 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 					Social:   socialEntity.Url,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveSocialFromContact"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message RemoveSocialFromContact"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			case model.ORGANIZATION:
@@ -465,7 +465,7 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 					Social:   socialEntity.Url,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveSocialFromOrganization"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message RemoveSocialFromOrganization"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
@@ -491,15 +491,15 @@ func normalizeSocialUrl(url string) string {
 }
 
 func (s *socialService) GetById(ctx context.Context, socialId string) (*neo4jentity.SocialEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, socialId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SocialService.GetById")
+	defer spans.Finish()
+
+	spans.TagEntity(socialId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)

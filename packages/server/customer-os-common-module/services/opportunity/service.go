@@ -3,6 +3,8 @@ package opportunity
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -10,8 +12,7 @@ import (
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -25,7 +26,7 @@ import (
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/contract"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -67,17 +68,13 @@ func (s *opportunityService) IsInitialized() bool {
 }
 
 func (s *opportunityService) GetById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("opportunityId", opportunityId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.GetById")
+	defer spans.Finish()
 
-	if common.GetTenantFromContext(ctx) == "" {
-		tracing.TagTenant(span, tenant)
-	}
+	spans.LogKV("opportunityId", opportunityId)
 
 	if opportunityDbNode, err := s.neo4j.OpportunityReadRepository.GetOpportunityById(ctx, tx, tenant, opportunityId); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("opportunity with id {%s} not found", opportunityId))
 		return nil, wrappedErr
 	} else {
@@ -86,10 +83,10 @@ func (s *opportunityService) GetById(ctx context.Context, tx *neo4j.ManagedTrans
 }
 
 func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, tenant string, contractIDs []string) (*neo4jentity.OpportunityEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contractIDs", contractIDs))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.GetOpportunitiesForContracts")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("contractIDs", contractIDs))
 
 	opportunities, err := s.neo4j.OpportunityReadRepository.GetForContracts(ctx, tenant, contractIDs)
 	if err != nil {
@@ -105,10 +102,10 @@ func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, t
 }
 
 func (s *opportunityService) GetOpportunitiesForOrganizations(ctx context.Context, tenant string, organizationIds []string) (*neo4jentity.OpportunityEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.GetOpportunitiesForOrganizations")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("organizationIds", organizationIds))
 
 	opportunities, err := s.neo4j.OpportunityReadRepository.GetForOrganizations(ctx, tenant, organizationIds)
 	if err != nil {
@@ -124,10 +121,10 @@ func (s *opportunityService) GetOpportunitiesForOrganizations(ctx context.Contex
 }
 
 func (s *opportunityService) GetOpportunitiesForTasks(ctx context.Context, taskIds []string) (*neo4jentity.OpportunityEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForTasks")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.GetOpportunitiesForTasks")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("taskIds", taskIds)
 
 	opportunities, err := s.neo4j.OpportunityReadRepository.GetForTasks(ctx, common.GetTenantFromContext(ctx), taskIds)
 	if err != nil {
@@ -143,10 +140,10 @@ func (s *opportunityService) GetOpportunitiesForTasks(ctx context.Context, taskI
 }
 
 func (s *opportunityService) GetPaginatedOrganizationOpportunities(ctx context.Context, tenant string, page int, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetPaginatedOrganizationOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.GetPaginatedOrganizationOpportunities")
+	defer spans.Finish()
+
+	spans.LogKV("page", page, "limit", limit)
 
 	paginatedResult := utils.Pagination{
 		Limit: limit,
@@ -169,9 +166,8 @@ func (s *opportunityService) GetPaginatedOrganizationOpportunities(ctx context.C
 }
 
 func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, input *data_fields.OpportunityFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CreateRenewalOpportunity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.CreateRenewalOpportunity")
+	defer spans.Finish()
 
 	input.InternalType = utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal)
 
@@ -179,15 +175,15 @@ func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, txWit
 }
 
 func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, input *data_fields.OpportunityFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("input", input))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.Save")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("input", input))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -200,12 +196,12 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	if utils.IfNotNilString(id) == "" {
 		if utils.IfNotNilString(input.OrganizationId) == "" && !input.IsRenewal() {
 			err := fmt.Errorf("(OpportunityService.Save) organizationId and opportunityId and contractId are empty")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if utils.IfNotNilString(input.ContractId) == "" && input.IsRenewal() {
 			err := fmt.Errorf("(OpportunityService.Save) contractId and opportunityId and contractId are empty")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
@@ -213,19 +209,19 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	if input.OrganizationId != nil {
 		existsById, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *input.OrganizationId, commonModel.NodeLabelOrganization)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if !existsById {
 			err := fmt.Errorf("(OpportunityService.Save) organization with id {%s} not found", *input.OrganizationId)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 
 		// set default values if not provided
 		if input.CreatedAt == nil || input.CreatedAt.IsZero() {
@@ -247,7 +243,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		if input.Currency == nil || utils.IfNotNilString(input.Currency.String()) == "" {
 			tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 			input.Currency = utils.ToPtr(tenantSettings.BaseCurrency)
@@ -276,13 +272,13 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			// check if active renewal opportunity already exists for this contract
 			opportunityDbNode, err := s.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, utils.IfNotNilString(input.ContractId))
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 			if opportunityDbNode != nil {
 				opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 				if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
-					span.LogFields(log.String("result", "active renewal opportunity already exists, skip creation"))
+					spans.LogKV("result", "active renewal opportunity already exists, skip creation")
 					s.log.Infof("active renewal opportunity already exists for contract %s", utils.IfNotNilString(input.ContractId))
 					return "", nil
 				}
@@ -291,23 +287,23 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 
 		generatedId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelOpportunity)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		opportunityId = generatedId
 
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 		opportunityId = utils.IfNotNilString(id)
 
 		existing, err = s.GetById(ctx, nil, tenant, opportunityId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if existing == nil {
 			err := fmt.Errorf("(OpportunityService.Save) opportunity with id {%s} not found", opportunityId)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -333,28 +329,28 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		amountChanged = input.Amount != nil && existing.Amount != utils.IfNotNilFloat64(input.Amount)
 	}
 
-	tracing.TagEntity(span, opportunityId)
+	spans.TagEntity(opportunityId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		newRenewalOpportunityCreated := false
 		if createFlow && input.IsRenewal() {
 			newRenewalOpportunityCreated, err = s.neo4j.OpportunityWriteRepository.CreateRenewal(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
 				return nil, err
 			}
 		} else if !createFlow && existing.IsRenewal() {
 			err = s.neo4j.OpportunityWriteRepository.UpdateRenewal(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
 				return nil, err
 			}
 		} else {
 			err = s.neo4j.OpportunityWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 		}
@@ -368,7 +364,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 				ToEntityType:   commonModel.OPPORTUNITY,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 		}
@@ -377,14 +373,14 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			if utils.IfNotNilString(input.OwnerId) != "" {
 				err = s.neo4j.OpportunityWriteRepository.ReplaceOwner(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input.OwnerId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, err
 				}
 			} else {
 				if existing != nil {
 					err = s.neo4j.OpportunityWriteRepository.RemoveOwner(ctx, txWithPostCommit.Tx, tenant, opportunityId)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, err
 					}
 				}
@@ -395,13 +391,13 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			if utils.IfNotNilString(input.InternalStage) == neo4jenum.OpportunityInternalStageClosedWon.String() {
 				err := s.CloseWon(ctx, txWithPostCommit, tenant, opportunityId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, err
 				}
 			} else if utils.IfNotNilString(input.InternalStage) == neo4jenum.OpportunityInternalStageClosedLost.String() {
 				err := s.CloseLost(ctx, txWithPostCommit, tenant, opportunityId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, err
 				}
 			}
@@ -412,7 +408,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			if newRenewalOpportunityCreated {
 				err = s.contract.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, utils.IfNotNilString(input.ContractId))
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
 					return nil
 				}
@@ -425,14 +421,14 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			if !createFlow && existing.IsRenewal() {
 				contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByOpportunityId(ctx, tenant, opportunityId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
 				}
 				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 				organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
 					return nil
 				}
@@ -442,7 +438,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 				if likelihoodChanged {
 					err = s.organization.UpdateRenewalSummary(ctx, organizationEntity.ID)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("Error while updating renewal summary for organization %s: %s", organizationEntity.ID, err.Error())
 					}
 				}
@@ -455,7 +451,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 					userName := ""
 					userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 					}
 					if userDbNode != nil {
 						userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
@@ -471,7 +467,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 					}
 					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, commonModel.CONTRACT, enum.ActionRenewalLikelihoodUpdated, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("error while creating action for opportunity %s: %s", opportunityId, err.Error())
 					}
 				}
@@ -479,30 +475,30 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 				if (likelihoodChanged || adjustedRateChanged) && !amountChanged {
 					err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
 						return nil
 					}
 				} else if amountChanged {
-					s.updateOrganizationArr(ctx, tenant, opportunityId, span)
+					s.updateOrganizationArr(ctx, tenant, opportunityId, *spans)
 				}
 				if input.RenewedAt != nil {
 					err = s.organization.UpdateRenewalSummary(ctx, organizationEntity.ID)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("Error while updating renewal summary for organization %s: %s", organizationEntity.ID, err.Error())
 					}
 
 					err = s.contract.UpdateActiveRenewalOpportunityLikelihood(ctx, tenant, contractEntity.Id)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractEntity.Id, err.Error())
 					}
 
 					// refresh contract status
 					err = s.contract.RefreshContractStatus(ctx, contractEntity.Id)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("RefreshContractStatus failed: %s", err.Error())
 					}
 				}
@@ -514,13 +510,13 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			if createFlow {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, opportunityId, commonModel.OPPORTUNITY, dto.CreateOpportunity{*input})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOpportunity"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateOpportunity"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
 			} else {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, opportunityId, commonModel.OPPORTUNITY, dto.UpdateOpportunity{*input})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOpportunity"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateOpportunity"))
 				}
 				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 					s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
@@ -533,7 +529,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -541,20 +537,20 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 }
 
 func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, opportunityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseWon")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.CloseWon")
+	defer spans.Finish()
+
+	spans.TagEntity(opportunityId)
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		opportunityEntity, err := s.GetById(ctx, txWithPostCommit.Tx, tenant, opportunityId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if opportunityEntity == nil {
 			err = fmt.Errorf("opportunity not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -566,7 +562,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 		// Set opportunity as closed won
 		err = s.neo4j.OpportunityWriteRepository.CloseWon(ctx, txWithPostCommit.Tx, tenant, opportunityId, utils.Now())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -576,7 +572,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 				ExternalStage: utils.StringPtr(""),
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 		}
@@ -585,7 +581,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 		if opportunityEntity.IsNBO() {
 			organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			if organizationDbNode != nil {
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
@@ -596,7 +592,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 						Stage:        utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer.DefaultStage()),
 					})
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, err
 					}
 				}
@@ -609,7 +605,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 				// get contract id for opportunity
 				contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByOpportunityId(ctx, tenant, opportunityId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return err
 				}
 				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
@@ -618,7 +614,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 					ContractId: utils.StringPtr(contractEntity.Id),
 				})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return err
 				}
 			}
@@ -638,19 +634,19 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 }
 
 func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, opportunityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseLost")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.CloseLost")
+	defer spans.Finish()
+
+	spans.TagEntity(opportunityId)
 
 	opportunityEntity, err := s.GetById(ctx, nil, tenant, opportunityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if opportunityEntity == nil {
 		err = fmt.Errorf("opportunity not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -662,14 +658,14 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		err := s.neo4j.OpportunityWriteRepository.CloseLost(ctx, txWithPostCommit.Tx, tenant, opportunityId, utils.Now())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
 				return nil
 			}
@@ -679,10 +675,10 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 			if opportunityEntity.IsRenewal() {
 				err = s.organization.UpdateRenewalSummary(ctx, organizationEntity.ID)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while updating renewal summary for organization %s: %s", organizationEntity.ID, err.Error())
 				}
-				s.updateOrganizationArr(ctx, tenant, opportunityId, span)
+				s.updateOrganizationArr(ctx, tenant, opportunityId, *spans)
 			}
 
 			// clean external stage
@@ -692,7 +688,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 						ExternalStage: utils.ToPtr(""),
 					})
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("error in UpdateOpportunity: %v", err.Error())
 					}
 				}
@@ -705,7 +701,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 						Stage: utils.ToPtr(neo4jenum.Target),
 					})
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 					}
 				}
 			}
@@ -720,7 +716,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -728,31 +724,31 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 }
 
 func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Archive")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.Archive")
+	defer spans.Finish()
+
+	spans.TagEntity(opportunityId)
 
 	opportunity, err := s.GetById(ctx, nil, tenant, opportunityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if opportunity == nil {
 		err = fmt.Errorf("opportunity not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		err = errors.New("Renewal opportunity cannot be archived")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = s.neo4j.OpportunityWriteRepository.Archive(ctx, tenant, opportunityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -762,22 +758,22 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 }
 
 func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.RolloutRenewalOpportunity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityService.RolloutRenewalOpportunity")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
@@ -788,7 +784,7 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 
 	currentRenewalOpportunityDbNode, err := s.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Failed getting renewal opportunity for contract"))
+		spans.TraceError(errors.Wrap(err, "Failed getting renewal opportunity for contract"))
 		s.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
 
@@ -797,7 +793,7 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 
 		err = s.CloseWon(ctx, nil, tenant, currentOpportunity.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("CloseWinOpportunity failed: %s", err.Error())
 			return err
 		}
@@ -812,7 +808,7 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 
 	_, err = s.neo4j.ActionWriteRepository.Create(ctx, tenant, contractId, commonModel.CONTRACT, enum.ActionContractRenewed, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
 	}
 
@@ -821,11 +817,11 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 	return nil
 }
 
-func (s *opportunityService) updateOrganizationArr(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
+func (s *opportunityService) updateOrganizationArr(ctx context.Context, tenant, opportunityId string, spans telemetry.Spans) {
 	// if amount changed, recalculate organization combined ARR forecast
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
 		return
 	}
@@ -836,7 +832,7 @@ func (s *opportunityService) updateOrganizationArr(ctx context.Context, tenant, 
 
 	err = s.neo4j.OrganizationWriteRepository.UpdateArr(ctx, tenant, organization.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
 	}
 }

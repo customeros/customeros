@@ -1,15 +1,12 @@
 package mail
 
 import (
-	"context"
-
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -77,10 +74,4 @@ func (p *mailService) SetOrganizationService(org interfaces.OrganizationService)
 
 func (p *mailService) IsInitialized() bool {
 	return utils.IsInitialized(p)
-}
-
-func (p *mailService) initializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	return span, ctx
 }

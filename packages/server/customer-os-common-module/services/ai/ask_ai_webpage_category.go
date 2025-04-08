@@ -3,23 +3,21 @@ package ai
 import (
 	"context"
 	"fmt"
-
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 func (s *aiService) AskAIForWebpageCategory(ctx context.Context, request interfaces.AskAIRequest) (enum.WebpageCategory, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForWebpageCategory")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAIForWebpageCategory")
+	defer spans.Finish()
+	spans.LogObjectAsJson("requestParams", request)
 
 	// validate input
 	err := s.validateAIRequest(ctx, &request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -47,7 +45,7 @@ func (s *aiService) AskAIForWebpageCategory(ctx context.Context, request interfa
 		if err != nil {
 			lastError = err
 			if !s.IsRetryable(err) {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return emptyValue, err
 			}
 			continue
@@ -76,6 +74,6 @@ func (s *aiService) AskAIForWebpageCategory(ctx context.Context, request interfa
 
 	// If we get here, all retries failed
 	err = fmt.Errorf("webpage category validation failed after %d attempts: %w", *request.Retries, lastError)
-	tracing.TraceErr(span, err)
+	spans.TraceError(err)
 	return emptyValue, err
 }

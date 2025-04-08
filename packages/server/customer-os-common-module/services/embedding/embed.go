@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"time"
-
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -63,13 +62,12 @@ func (s *embeddingService) newEmbeddingRecord(contentType enum.EmbeddingContentT
 }
 
 func (s *embeddingService) GetEmbedding(ctx context.Context, content string, task enum.EmbeddingTask) ([]float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embedWebpageSegment")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "embeddingService.embedWebpageSegment")
+	defer spans.Finish()
 
 	embedding, err := s.embed(ctx, task, []string{content})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if embedding == nil {
@@ -85,9 +83,8 @@ func (s *embeddingService) GetEmbedding(ctx context.Context, content string, tas
 }
 
 func (s *embeddingService) embed(ctx context.Context, task enum.EmbeddingTask, input []string) (*EmbeddingResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.embed")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "embeddingService.embed")
+	defer spans.Finish()
 
 	if s.config.ApiKey == "" {
 		return nil, errors.New("Jina API key not set")
@@ -104,13 +101,13 @@ func (s *embeddingService) embed(ctx context.Context, task enum.EmbeddingTask, i
 
 	resp, err := s.postRequest(ctx, body, EmbeddingURL)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	parsedResponse, err := s.parseEmbeddingResponse(ctx, resp)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -118,9 +115,8 @@ func (s *embeddingService) embed(ctx context.Context, task enum.EmbeddingTask, i
 }
 
 func (s *embeddingService) getEmbeddingByIndex(ctx context.Context, response *EmbeddingResponse, index int) ([]float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "getEmbeddingByIndex")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "getEmbeddingByIndex")
+	defer spans.Finish()
 
 	if index < 0 || index >= len(response.Data) {
 		return nil, fmt.Errorf("embedding index %d out of range (0-%d)", index, len(response.Data)-1)
@@ -129,9 +125,8 @@ func (s *embeddingService) getEmbeddingByIndex(ctx context.Context, response *Em
 }
 
 func (s *embeddingService) parseEmbeddingResponse(ctx context.Context, response string) (*EmbeddingResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.parseEmbeddingResponse")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "embeddingService.parseEmbeddingResponse")
+	defer spans.Finish()
 
 	var data EmbeddingResponse
 	err := json.Unmarshal([]byte(response), &data)

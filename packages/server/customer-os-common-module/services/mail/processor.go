@@ -3,26 +3,25 @@ package mail
 import (
 	"context"
 	"fmt"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, email string, source string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.GetOrganizationIdForEmail")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.GetOrganizationIdForEmail")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	if email == "" {
 		return "", nil
@@ -36,14 +35,14 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 	emailId, err := s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, nil, tenant, email)
 	if err != nil {
 		err = errors.Wrap(err, "failed to get email id for email")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if emailId != "" {
 		contactByEmail, err := s.contact.GetFirstContactByEmail(ctx, email)
 		if err != nil {
 			err := errors.Wrap(err, "failed to get contact by email")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -51,7 +50,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 			orgsForContact, err := s.org.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{contactByEmail.Id})
 			if err != nil {
 				err := errors.Wrap(err, "failed to get primary organizations with job role for contacts")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 
@@ -148,7 +147,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 		return organizationId, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+		spans.TraceError(errors.Wrap(err, "failed to get email id for email"))
 		return "", err
 	}
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,15 +17,14 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -72,15 +73,14 @@ func (s *flowExecutionService) IsInitialized() bool {
 }
 
 func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*neo4j_entity.FlowActionExecutionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowActionExecutionById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.GetFlowActionExecutionById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowActionExecution", flowActionExecution))
+	spans.LogKV("flowActionExecution", flowActionExecution)
 
 	node, err := s.neo4j.FlowActionExecutionReadRepository.GetById(ctx, flowActionExecution)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -88,13 +88,12 @@ func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, f
 }
 
 func (s *flowExecutionService) GetFlowExecutionSettingsForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) (*neo4j_entity.FlowExecutionSettingsEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowExecutionSettingsForEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.GetFlowExecutionSettingsForEntity")
+	defer spans.Finish()
 
 	node, err := s.neo4j.FlowExecutionSettingsReadRepository.GetForEntity(ctx, tx, flowId, entityId, entityType.String())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -102,11 +101,10 @@ func (s *flowExecutionService) GetFlowExecutionSettingsForEntity(ctx context.Con
 }
 
 func (s *flowExecutionService) GetFlowRequirements(ctx context.Context, flowId string) (*interfaces.FlowComputeParticipantsRequirementsInput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowRequirements")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.GetFlowRequirements")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId))
+	spans.LogKV("flowId", flowId)
 
 	requirements := interfaces.FlowComputeParticipantsRequirementsInput{
 		PrimaryEmailRequired:      false,
@@ -115,7 +113,7 @@ func (s *flowExecutionService) GetFlowRequirements(ctx context.Context, flowId s
 
 	flowActions, err := s.flow.FlowActionGetList(ctx, []string{flowId})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -132,13 +130,12 @@ func (s *flowExecutionService) GetFlowRequirements(ctx context.Context, flowId s
 }
 
 func (s *flowExecutionService) GetFlowActionExecutionsForParticipantWithActionType(ctx context.Context, entityId string, entityType model.EntityType, actionType neo4j_entity.FlowActionType) ([]*neo4j_entity.FlowActionExecutionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowActionExecutionsForParticipantWithActionType")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.GetFlowActionExecutionsForParticipantWithActionType")
+	defer spans.Finish()
 
 	nodes, err := s.neo4j.FlowActionExecutionReadRepository.GetForEntityWithActionType(ctx, entityId, entityType, actionType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -151,28 +148,27 @@ func (s *flowExecutionService) GetFlowActionExecutionsForParticipantWithActionTy
 }
 
 func (s *flowExecutionService) UpdateAllParticipantsFlowRequirements(ctx context.Context, flowId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateAllParticipantsFlowRequirements")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.UpdateAllParticipantsFlowRequirements")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId))
+	spans.LogKV("flowId", flowId)
 
 	flowParticipants, err := s.flow.FlowParticipantGetList(ctx, []string{flowId})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	flowRequirements, err := s.GetFlowRequirements(ctx, flowId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	for _, v := range *flowParticipants {
 		err := s.UpdateParticipantFlowRequirements(ctx, nil, &v, flowRequirements)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
@@ -180,11 +176,11 @@ func (s *flowExecutionService) UpdateAllParticipantsFlowRequirements(ctx context
 }
 
 func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, participant *neo4j_entity.FlowParticipantEntity, requirements *interfaces.FlowComputeParticipantsRequirementsInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requirements", requirements)
-	tracing.LogObjectAsJson(span, "participant", participant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requirements", requirements)
+	spans.LogObjectAsJson("participant", participant)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -250,8 +246,8 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements.postCommit")
-			defer span.Finish()
+			spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements.postCommit")
+			defer spans.Finish()
 
 			s.events.Publisher.PublishNotification(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 
@@ -262,20 +258,19 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 	})
 	if err != nil {
 		err := errors.Wrap(err, "failed to execute write in transaction with post commit actions")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
-	span.LogFields(log.String("result.participant.status", string(participant.Status)))
+	spans.LogKV("result.participant.status", string(participant.Status))
 	participant.Status = status
 
 	return nil
 }
 
 func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowId string, flowParticipant *neo4j_entity.FlowParticipantEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleFlow")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.ScheduleFlow")
+	defer spans.Finish()
 
 	now := utils.Now()
 
@@ -306,11 +301,11 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 
 		flowExecutions, err := s.GetFlowActionExecutionsForParticipant(ctx, txWithPostCommit.Tx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
-		span.LogFields(log.Int("flowExecutionsCount", len(flowExecutions)))
+		spans.LogKV("flowExecutionsCount", len(flowExecutions))
 
 		if len(flowExecutions) == 0 {
 			startAction, err := s.flow.FlowActionGetStart(ctx, flowId)
@@ -337,7 +332,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 			lastActionExecution := flowExecutions[len(flowExecutions)-1]
 			lastActionExecutedAt := lastActionExecution.ScheduledAt
 
-			span.LogFields(log.String("lastActionExecution.Status", string(lastActionExecution.Status)))
+			spans.LogKV("lastActionExecution.Status", string(lastActionExecution.Status))
 
 			if lastActionExecution.Status != neo4j_entity.FlowActionExecutionStatusSuccess {
 				return nil, nil
@@ -356,7 +351,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 			flowParticipant.Status = neo4j_entity.FlowParticipantStatusInProgress
 			_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, flowParticipant)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 
 			for _, nextAction := range nextActions {
@@ -384,7 +379,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -392,14 +387,13 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 }
 
 func (s *flowExecutionService) GetFlowActionExecutionsForParticipants(ctx context.Context, flowParticipantIds []string) (*neo4j_entity.FlowActionExecutionEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowActionExecutionsForParticipants")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.GetFlowActionExecutionsForParticipants")
+	defer spans.Finish()
 
 	// get executions for contact
 	nodes, err := s.neo4j.FlowActionExecutionReadRepository.GetForParticipants(ctx, flowParticipantIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -414,14 +408,13 @@ func (s *flowExecutionService) GetFlowActionExecutionsForParticipants(ctx contex
 }
 
 func (s *flowExecutionService) GetFlowActionExecutionsForParticipant(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*neo4j_entity.FlowActionExecutionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetFlowActionExecutionsForParticipant")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.GetFlowActionExecutionsForParticipant")
+	defer spans.Finish()
 
 	// get executions for contact
 	nodes, err := s.neo4j.FlowActionExecutionReadRepository.GetForEntity(ctx, tx, flowId, entityId, entityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -434,16 +427,16 @@ func (s *flowExecutionService) GetFlowActionExecutionsForParticipant(ctx context
 }
 
 func (s *flowExecutionService) scheduleNextAction(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowId string, flowParticipant *neo4j_entity.FlowParticipantEntity, scheduleAt time.Time, nextAction neo4j_entity.FlowActionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleNextAction")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("flowId", flowId))
-	tracing.LogObjectAsJson(span, "flowParticipant", flowParticipant)
-	tracing.LogObjectAsJson(span, "nextAction", nextAction)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.scheduleNextAction")
+	defer spans.Finish()
+
+	spans.LogKV("flowId", flowId)
+	spans.LogObjectAsJson("flowParticipant", flowParticipant)
+	spans.LogObjectAsJson("nextAction", nextAction)
 
 	// participant should be ready or in progress to schedule the next action
 	if flowParticipant.Status != neo4j_entity.FlowParticipantStatusReady && flowParticipant.Status != neo4j_entity.FlowParticipantStatusInProgress {
-		tracing.TraceErr(span, fmt.Errorf("participant is not ready, current status: %s", flowParticipant.Status))
+		spans.TraceError(fmt.Errorf("participant is not ready, current status: %s", flowParticipant.Status))
 		return nil
 	}
 
@@ -454,22 +447,21 @@ func (s *flowExecutionService) scheduleNextAction(ctx context.Context, txWithPos
 		return s.scheduleSendLinkedInConnection(ctx, txWithPostCommit, flowId, flowParticipant, scheduleAt, nextAction)
 	default:
 		err := errors.New("unsupported action type")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 }
 
 func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowId string, flowParticipant *neo4j_entity.FlowParticipantEntity, scheduleAt time.Time, nextAction neo4j_entity.FlowActionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleEmailAction")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.scheduleEmailAction")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// 1. Get the mailbox for contact or associate the best available mailbox
 	flowExecutionSettings, err := s.GetFlowExecutionSettingsForEntity(ctx, txWithPostCommit.Tx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -480,7 +472,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 		// 2. select the mailbox with the fastest response time
 		flowSenders, err := s.flow.FlowSenderGetList(ctx, []string{flowId})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -494,19 +486,19 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 
 			statusCode, errMsg, mailboxes, err := s.mailstack.GetMailboxes(ctx, tenant, "", *flowActionSender.UserId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 			if statusCode != http.StatusOK {
 				err = errors.New(errMsg)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
 			for _, mailbox := range mailboxes {
 				scheduledAt, err := s.neo4j.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, txWithPostCommit.Tx, mailbox.Email)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return err
 				}
 
@@ -525,26 +517,26 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 		}
 
 		if fastestMailbox == "" {
-			tracing.TraceErr(span, errors.New("No mailbox available"))
+			spans.TraceError(errors.New("No mailbox available"))
 			return errors.New("No mailbox available")
 		}
 
 		mailbox, err := s.mailstack.GetByMailbox(ctx, tenant, fastestMailbox)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
 		flowExecutionSettings, err = s.upsertFlowExecutionSettings(ctx, txWithPostCommit.Tx, tenant, flowId, flowParticipant, &fastestMailbox, &mailbox.UserId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	workingSchedule, err := s.postgres.UserWorkingScheduleRepository.GetForUser(ctx, tenant, *flowExecutionSettings.UserId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -555,7 +547,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 	// 2. Schedule the email action
 	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, txWithPostCommit.Tx, *flowExecutionSettings.Mailbox, scheduleAt, workingSchedule)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -572,14 +564,14 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 		Status:          neo4j_entity.FlowActionExecutionStatusScheduled,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	flowParticipant.Status = neo4j_entity.FlowParticipantStatusScheduled
 	_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, flowParticipant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -587,9 +579,8 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, txWithPo
 }
 
 func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowId string, flowParticipant *neo4j_entity.FlowParticipantEntity, scheduleAt time.Time, nextAction neo4j_entity.FlowActionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleSendLinkedInConnection")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.scheduleSendLinkedInConnection")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -599,7 +590,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 
 	flowSenders, err := s.flow.FlowSenderGetList(ctx, []string{flowId})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -611,7 +602,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 
 		activeLinkedinToken, err := s.postgres.BrowserConfigRepository.GetForUser(ctx, *flowSender.UserId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -620,7 +611,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 		}
 	}
 
-	span.LogFields(log.String("senderIds", strings.Join(senderIds, ",")))
+	spans.LogKV("senderIds", strings.Join(senderIds, ","))
 
 	if len(senderIds) == 0 {
 		return errors.New("No LinkedIn sender available")
@@ -634,15 +625,15 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 	for _, senderId := range senderIds {
 		isLinkedWith, err := s.neo4j.CommonReadRepository.IsLinkedWith(ctx, tenant, flowParticipant.EntityId, model.CONTACT, model.CONNECTED_WITH.String(), senderId, model.USER)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
+			spans.TraceError(errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
 			return err
 		}
 
 		if isLinkedWith {
-			span.LogFields(log.String("process", senderId+" is already connected with the contact"))
+			spans.LogKV("process", senderId+" is already connected with the contact")
 			id, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowActionExecution)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
@@ -661,19 +652,19 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 				Status:          neo4j_entity.FlowActionExecutionStatusSkipped,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
 			_, err = s.upsertFlowExecutionSettings(ctx, txWithPostCommit.Tx, tenant, flowId, flowParticipant, nil, &senderId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
 			err = s.ScheduleFlow(ctx, txWithPostCommit, flowId, flowParticipant)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
@@ -683,7 +674,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 
 	socials, err := s.social.GetAllForEntities(ctx, tenant, model.CONTACT, []string{flowParticipant.EntityId})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -701,7 +692,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 			if strings.Contains(social.Url, "linkedin.com") {
 				requestSent, err := s.neo4j.LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl(ctx, txWithPostCommit.Tx, tenant, senderId, social.Url)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return err
 				}
 
@@ -715,10 +706,10 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 
 		// if there is a linkedin request sent already to one of the socials for the contact
 		if requestSentAlready {
-			span.LogFields(log.String("process", "linkedin request sent already by user "+senderId+" to: "+socialUrl))
+			spans.LogKV("process", "linkedin request sent already by user "+senderId+" to: "+socialUrl)
 			id, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowActionExecution)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
@@ -738,13 +729,13 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 				Status:          neo4j_entity.FlowActionExecutionStatusInProgress,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
 			_, err = s.upsertFlowExecutionSettings(ctx, txWithPostCommit.Tx, tenant, flowId, flowParticipant, nil, &senderId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
@@ -764,14 +755,14 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 	}
 
 	// if there is no linkedin request sent already to one of the socials for the contact
-	span.LogFields(log.String("process", "no linkedin request sent already"))
+	spans.LogKV("process", "no linkedin request sent already")
 	fastestUserId := ""
 	fastestUserAt := time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	for _, senderId := range senderIds {
 		lastScheduledNode, err := s.neo4j.LinkedinConnectionRequestReadRepository.GetLastScheduledForUser(ctx, txWithPostCommit.Tx, senderId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -793,13 +784,13 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 
 	_, err = s.upsertFlowExecutionSettings(ctx, txWithPostCommit.Tx, tenant, flowId, flowParticipant, nil, &fastestUserId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	workingSchedule, err := s.postgres.UserWorkingScheduleRepository.GetForUser(ctx, tenant, fastestUserId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -810,7 +801,7 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 	// 2. Schedule the email action
 	actualScheduleAt, err := s.getFirstAvailableSlotForLinkedinConnection(ctx, txWithPostCommit.Tx, fastestUserId, scheduleAt, workingSchedule)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -827,13 +818,13 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 		Status:          neo4j_entity.FlowActionExecutionStatusScheduled,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	id, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelLinkedinConnectionRequest)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	err = s.neo4j.LinkedinConnectionRequestWriteRepository.Save(ctx, txWithPostCommit.Tx, &neo4j_entity.LinkedinConnectionRequest{
@@ -846,14 +837,14 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 		Status:       neo4j_entity.LinkedinConnectionRequestStatusPending,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	flowParticipant.Status = neo4j_entity.FlowParticipantStatusScheduled
 	_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, txWithPostCommit.Tx, flowParticipant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -861,20 +852,19 @@ func (s *flowExecutionService) scheduleSendLinkedInConnection(ctx context.Contex
 }
 
 func (s *flowExecutionService) upsertFlowExecutionSettings(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, flowId string, participant *neo4j_entity.FlowParticipantEntity, mailbox, userId *string) (*neo4j_entity.FlowExecutionSettingsEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.upsertFlowExecutionSettings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.upsertFlowExecutionSettings")
+	defer spans.Finish()
 
 	flowExecutionSettings, err := s.GetFlowExecutionSettingsForEntity(ctx, tx, flowId, participant.EntityId, participant.EntityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if flowExecutionSettings == nil {
 		id, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowExecutionSettings)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		flowExecutionSettings = &neo4j_entity.FlowExecutionSettingsEntity{
@@ -896,7 +886,7 @@ func (s *flowExecutionService) upsertFlowExecutionSettings(ctx context.Context, 
 
 	node, err := s.neo4j.FlowExecutionSettingsWriteRepository.Merge(ctx, tx, flowExecutionSettings)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -904,22 +894,21 @@ func (s *flowExecutionService) upsertFlowExecutionSettings(ctx context.Context, 
 }
 
 func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, scheduleAt time.Time, workingSchedule []*postgres_entity.UserWorkingSchedule) (*time.Time, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, mailbox)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// Get the last scheduled execution for this mailbox
 	lastScheduledExecutionNode, err := s.neo4j.FlowActionExecutionReadRepository.GetLastScheduledForMailbox(ctx, tx, mailbox)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -934,7 +923,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	for {
 		emailsScheduledInDay, err := s.neo4j.FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay(ctx, tx, mailbox, utils.StartOfDayInUTC(possibleScheduledAt), utils.EndOfDayInUTC(possibleScheduledAt))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -960,14 +949,13 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 }
 
 func (s *flowExecutionService) getFirstAvailableSlotForLinkedinConnection(ctx context.Context, tx *neo4j.ManagedTransaction, userId string, scheduleAt time.Time, workingSchedule []*postgres_entity.UserWorkingSchedule) (*time.Time, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForLinkedinConnection")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.getFirstAvailableSlotForLinkedinConnection")
+	defer spans.Finish()
 
 	// Get the last scheduled execution for this mailbox
 	lastScheduledNode, err := s.neo4j.LinkedinConnectionRequestReadRepository.GetLastScheduledForUser(ctx, tx, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -982,7 +970,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForLinkedinConnection(ctx co
 	for {
 		requestsScheduledInDay, err := s.neo4j.LinkedinConnectionRequestReadRepository.CountRequestsPerUserPerDay(ctx, tx, userId, utils.StartOfDayInUTC(possibleScheduledAt), utils.EndOfDayInUTC(possibleScheduledAt))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -1015,15 +1003,14 @@ func maxTime(a, b time.Time) time.Time {
 }
 
 func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, input *neo4j_entity.FlowActionExecutionEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.storeNextActionExecutionEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.storeNextActionExecutionEntity")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	id, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowActionExecution)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -1031,7 +1018,7 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 
 	_, err = s.neo4j.FlowActionExecutionWriteRepository.Merge(ctx, tx, input)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -1039,10 +1026,10 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 }
 
 func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, scheduledActionExecution *neo4j_entity.FlowActionExecutionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ProcessActionExecution")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "scheduledActionExecution", scheduledActionExecution)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.ProcessActionExecution")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("scheduledActionExecution", scheduledActionExecution)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -1072,7 +1059,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		// check if the participant meets flow requirements
 		flowRequirements, err := s.GetFlowRequirements(ctx, scheduledActionExecution.FlowId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -1105,40 +1092,40 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			}
 
 			if existingEmail == nil {
-				span.LogFields(log.Bool("process.existingEmail", true))
+				spans.LogFields(log.Bool("process.existingEmail", true))
 
 				mailbox, err := s.mailstack.GetByMailbox(ctx, tenant, *scheduledActionExecution.Mailbox)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to get mailbox by mailbox"))
+					spans.TraceError(errors.Wrap(err, "failed to get mailbox by mailbox"))
 					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
 				}
 
 				if mailbox == nil {
-					tracing.TraceErr(span, errors.New("Mailbox not found in database"))
+					spans.TraceError(errors.New("Mailbox not found in database"))
 					return nil, errors.New("mailbox not found in database")
 				}
 
 				primaryEmail, err := s.email.GetPrimaryEmailForEntityId(ctx, participant.EntityType, participant.EntityId)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to get primary email for entity id"))
+					spans.TraceError(errors.Wrap(err, "failed to get primary email for entity id"))
 					return nil, errors.Wrap(err, "failed to get primary email for entity id")
 				}
 
 				if primaryEmail == nil {
-					tracing.TraceErr(span, errors.New("Primary email not found"))
+					spans.TraceError(errors.New("Primary email not found"))
 					return nil, errors.New("primary email not found")
 				}
 
 				toEmail := primaryEmail.RawEmail
-				span.LogFields(log.String("process.toEmail", toEmail))
+				spans.LogKV("process.toEmail", toEmail)
 
 				subjectTemplate := utils.IfNotNilString(currentAction.Data.Subject)
 				bodyTemplate := utils.IfNotNilString(currentAction.Data.BodyTemplate)
 
-				span.LogFields(log.Bool("process.bodyTemplate.available", bodyTemplate != ""))
-				span.LogFields(log.Bool("process.subjectTemplate.available", subjectTemplate != ""))
+				spans.LogFields(log.Bool("process.bodyTemplate.available", bodyTemplate != ""))
+				spans.LogFields(log.Bool("process.subjectTemplate.available", subjectTemplate != ""))
 
-				span.LogFields(log.String("process.scheduledActionExecution.EntityType", scheduledActionExecution.EntityType.String()))
+				spans.LogKV("process.scheduledActionExecution.EntityType", scheduledActionExecution.EntityType.String())
 				if scheduledActionExecution.EntityType == model.CONTACT {
 					contactNode, err := s.neo4j.ContactReadRepository.GetContact(ctx, tenant, scheduledActionExecution.EntityId)
 					if err != nil {
@@ -1216,23 +1203,23 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 					parentEmailAction, err := s.getEmailActionToReply(ctx, scheduledActionExecution.ActionId)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, errors.Wrap(err, "failed to get email action to reply")
 					}
 
 					if parentEmailAction == nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, errors.New("no parent email action found")
 					}
 
 					parentEmailExecution, err := s.neo4j.FlowActionExecutionReadRepository.GetExecution(ctx, scheduledActionExecution.FlowId, parentEmailAction.Id, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, errors.Wrap(err, "failed to get execution")
 					}
 
 					if parentEmailExecution == nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, errors.New("no parent email execution found")
 					}
 
@@ -1240,12 +1227,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 					parentEmailSent, err := s.postgres.EmailMessageRepository.GetByProducer(ctx, tenant, parentEmail.Id, model.NodeLabelFlowActionExecution)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, errors.Wrap(err, "failed to get email by producer")
 					}
 
 					if parentEmailSent == nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, errors.New("no parent email sent found")
 					}
 
@@ -1255,12 +1242,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				}
 
 				txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-					span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ProcessActionExecution.PostCommitAction.StoreEmailMessage")
-					defer span.Finish()
+					spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.ProcessActionExecution.PostCommitAction.StoreEmailMessage")
+					defer spans.Finish()
 
 					err = s.postgres.EmailMessageRepository.Store(ctx, tenant, emailMessage)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return errors.Wrap(err, "failed to store email message")
 					}
 
@@ -1269,30 +1256,30 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			}
 		} else if currentAction.Data.Action == neo4j_entity.FlowActionTypeLinkedinConnectionRequest {
 			if scheduledActionExecution.SocialUrl == nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, errors.New("social url not found")
 			}
 
 			if scheduledActionExecution.UserId == nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, errors.New("user id not found")
 			}
 
 			linkedinTokens, err := s.postgres.BrowserConfigRepository.GetForUser(ctx, *scheduledActionExecution.UserId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, errors.Wrap(err, "failed to get linkedin tokens for user")
 			}
 
 			if linkedinTokens == nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, errors.New("linkedin tokens not found")
 			}
 
 			payload := map[string]interface{}{"profileUrl": *scheduledActionExecution.SocialUrl}
 			payloadBytes, err := json.Marshal(payload)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, errors.Wrap(err, "failed to marshal payload")
 			}
 
@@ -1307,12 +1294,12 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			}
 
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-				span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ProcessActionExecution.PostCommitAction.SendLinkedInConnection")
-				defer span.Finish()
+				spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.ProcessActionExecution.PostCommitAction.SendLinkedInConnection")
+				defer spans.Finish()
 
 				err = s.postgres.BrowserAutomationRunRepository.Add(ctx, sendLinkedInConnection)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return errors.Wrap(err, "failed to store email message")
 				}
 
@@ -1326,20 +1313,20 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 		_, err = s.neo4j.FlowActionExecutionWriteRepository.Merge(ctx, txWithPostCommit.Tx, scheduledActionExecution)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, errors.Wrap(err, "failed to merge flow action execution")
 		}
 
 		err = s.ScheduleFlow(ctx, txWithPostCommit, scheduledActionExecution.FlowId, participant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, errors.Wrap(err, "failed to schedule flow")
 		}
 
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 
 		participant.Status = neo4j_entity.FlowParticipantStatusError
 		_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, nil, participant)
@@ -1349,7 +1336,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		return err
 	}
 
-	span.LogFields(log.Bool("addBillableEvent", addBillableEvent))
+	spans.LogFields(log.Bool("addBillableEvent", addBillableEvent))
 	if addBillableEvent {
 		_, err = s.postgres.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgres_entity.BillableEventFlowActionExecuted,
 			postgres_repository.BillableEventDetails{
@@ -1357,7 +1344,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				ReferenceData: fmt.Sprintf("FlowActionExecutionId: %s", scheduledActionExecution.Id),
 			})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+			spans.TraceError(errors.Wrap(err, "failed to store billable event"))
 		}
 	}
 
@@ -1365,9 +1352,8 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 }
 
 func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, actionId string) (*neo4j_entity.FlowActionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getEmailActionToReply")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowExecutionService.getEmailActionToReply")
+	defer spans.Finish()
 
 	var previous *neo4j_entity.FlowActionEntity
 

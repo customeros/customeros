@@ -2,14 +2,12 @@ package currency
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type currencyService struct {
@@ -23,11 +21,10 @@ func NewCurrencyService(postgres *postgresRepository.Repositories) interfaces.Cu
 }
 
 func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency string) (float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CurrencyService.GetRate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.String("fromCurrency", fromCurrency))
-	span.LogFields(log.String("toCurrency", toCurrency))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CurrencyService.GetRate")
+	defer spans.Finish()
+	spans.LogKV("fromCurrency", fromCurrency)
+	spans.LogKV("toCurrency", toCurrency)
 
 	// Note, currency rates keep currencies from USD to other currencies
 
@@ -37,7 +34,7 @@ func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency 
 	if fromCurrency != "" && fromCurrency != neo4jenum.CurrencyUSD.String() {
 		rate, err := c.postgres.CurrencyRateRepository.GetLatestCurrencyRate(ctx, fromCurrency)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return 1, err
 		}
 		if rate != nil {
@@ -49,7 +46,7 @@ func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency 
 	if toCurrency != "" && toCurrency != neo4jenum.CurrencyUSD.String() {
 		rate, err := c.postgres.CurrencyRateRepository.GetLatestCurrencyRate(ctx, toCurrency)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return 1, err
 		}
 		if rate != nil {
@@ -61,12 +58,11 @@ func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency 
 }
 
 func (c *currencyService) GetAmountInCurrency(ctx context.Context, amount float64, fromCurrency, toCurrency string) (float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CurrencyService.GetAmountInCurrency")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.Float64("amount", amount))
-	span.LogFields(log.String("fromCurrency", fromCurrency))
-	span.LogFields(log.String("toCurrency", toCurrency))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CurrencyService.GetAmountInCurrency")
+	defer spans.Finish()
+	spans.LogKV("amount", amount)
+	spans.LogKV("fromCurrency", fromCurrency)
+	spans.LogKV("toCurrency", toCurrency)
 
 	if amount == 0 {
 		return 0, nil
@@ -74,7 +70,7 @@ func (c *currencyService) GetAmountInCurrency(ctx context.Context, amount float6
 
 	rate, err := c.GetRate(ctx, fromCurrency, toCurrency)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return 0, err
 	}
 

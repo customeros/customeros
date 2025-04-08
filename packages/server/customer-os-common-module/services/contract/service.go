@@ -3,6 +3,8 @@ package contract
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
@@ -11,8 +13,7 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -24,7 +25,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -59,13 +60,13 @@ func (s *contractService) IsInitialized() bool {
 }
 
 func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4jentity.ContractEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	if contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr
 	} else {
@@ -74,15 +75,15 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4
 }
 
 func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.ContractSaveFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -92,10 +93,10 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 		contractId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContract)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		// set default fields for create flow
@@ -114,7 +115,7 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 			if utils.IfNotNilString(dataFields.OrganizationId) != "" {
 				organizationEntity, err := s.organization.GetById(ctx, tenant, utils.IfNotNilString(dataFields.OrganizationId))
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to get organization"))
+					spans.TraceError(errors.Wrap(err, "unable to get organization"))
 					s.log.Errorf("unable to get organization: %s", err.Error())
 					return "", err
 				}
@@ -122,18 +123,18 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 			}
 		}
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 		contractId = *id
 
 		// validate contract exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, contractId, model.NodeLabelContract)
 		if err != nil || !exists {
 			err = errors.New("contract not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
-	tracing.TagEntity(span, contractId)
+	spans.TagEntity(contractId)
 
 	var beforeUpdateContractEntity *neo4jentity.ContractEntity
 
@@ -142,7 +143,7 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 		if createFlow {
 			err := s.neo4j.ContractWriteRepository.CreateForOrganization(ctx, txWithPostCommit.Tx, tenant, contractId, dataFields)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 
@@ -157,7 +158,7 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 				}
 				err = s.neo4j.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, contractId, model.NodeLabelContract, externalSystemData)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
 					return "", err
 				}
@@ -165,14 +166,14 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 		} else {
 			contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return contractId, err
 			}
 			beforeUpdateContractEntity = neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 			err = s.neo4j.ContractWriteRepository.UpdateContract(ctx, txWithPostCommit.Tx, tenant, contractId, dataFields)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 
@@ -187,7 +188,7 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 				}
 				err = s.neo4j.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, contractId, model.NodeLabelContract, externalSystemData)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
 					return "", err
 				}
@@ -199,13 +200,13 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 			if createFlow {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{ContractSaveFields: dataFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContract"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateContract"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
 			} else {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{ContractSaveFields: dataFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateContract"))
 				}
 				if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
 					s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
@@ -216,13 +217,13 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 			if createFlow {
 				err = s.postCreateContract(ctx, tenant, contractId, dataFields)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
 				}
 			} else {
 				err = s.postUpdateContract(ctx, tenant, contractId, beforeUpdateContractEntity)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
 				}
 				if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
@@ -235,7 +236,7 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -243,15 +244,15 @@ func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWi
 }
 
 func (s *contractService) SoftDelete(ctx context.Context, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.SoftDelete")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.SoftDelete")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -259,7 +260,7 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 	// fetch organization of the contract
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
 		return nil
 	}
@@ -271,20 +272,20 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 
 	err = s.neo4j.ContractWriteRepository.SoftDelete(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while deleting contract %s: %s", contractId, err.Error())
 		return err
 	}
 
 	err = s.organization.UpdateRenewalSummary(ctx, organization.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while updating renewal summary for organization %s: %s", organization.ID, err.Error())
 	}
 
 	err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 		return err
 	}
@@ -295,14 +296,13 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 }
 
 func (s *contractService) postCreateContract(ctx context.Context, tenant, contractId string, dataFields data_fields.ContractSaveFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.postCreateContract")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.postCreateContract")
+	defer spans.Finish()
+	spans.TagEntity(contractId)
 
 	_, _, err := s.updateStatus(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
 	}
 
@@ -313,7 +313,7 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 			AppSource:  dataFields.AppSource,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("CreateRenewalOpportunity failed: %s", err.Error())
 		}
 	}
@@ -322,27 +322,26 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 }
 
 func (s *contractService) postUpdateContract(ctx context.Context, tenant string, contractId string, beforeUpdateContractEntity *neo4jentity.ContractEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.postCreateContract")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.postCreateContract")
+	defer spans.Finish()
+	spans.TagEntity(contractId)
 
 	_, statusChanged, err := s.updateStatus(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
 	}
 
 	if statusChanged {
 		err = s.updateOrganizationRelationship(ctx, tenant, contractId, statusChanged)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
 		}
 	}
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	afterUpdateContractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
@@ -350,12 +349,12 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 	if beforeUpdateContractEntity.LengthInMonths > 0 && afterUpdateContractEntity.LengthInMonths == 0 {
 		err = s.neo4j.ContractWriteRepository.SuspendActiveRenewalOpportunity(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while suspending renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
 		organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
 			return nil
 		}
@@ -367,13 +366,13 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 
 		err = s.organization.UpdateRenewalSummary(ctx, organization.ID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while updating renewal summary for organization %s: %s", organization.ID, err.Error())
 		}
 
 		err = s.neo4j.OrganizationWriteRepository.UpdateArr(ctx, tenant, organization.ID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
 		}
 
@@ -381,13 +380,13 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 		if beforeUpdateContractEntity.LengthInMonths == 0 && afterUpdateContractEntity.LengthInMonths > 0 {
 			err = s.neo4j.ContractWriteRepository.ActivateSuspendedRenewalOpportunity(ctx, tenant, contractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
 			}
 		}
 		err = s.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
 	}
@@ -398,21 +397,20 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 
 	err = s.UpdateActiveRenewalOpportunityLikelihood(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
 	return nil
 }
 
 func (s *contractService) updateStatus(ctx context.Context, tenant, contractId string) (string, bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateStatus")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.updateStatus")
+	defer spans.Finish()
+	spans.TagEntity(contractId)
 
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return "", false, err
 	}
@@ -420,7 +418,7 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 
 	status, err := s.deriveContractStatus(ctx, tenant, *contractEntity)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while deriving contract %s status: %s", contractId, err.Error())
 		return "", false, err
 	}
@@ -429,7 +427,7 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 	if statusChanged {
 		err = s.neo4j.ContractWriteRepository.UpdateStatus(ctx, tenant, contractId, status)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
 			return "", false, err
 		}
@@ -438,7 +436,7 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 
 		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.ChangeStatusForContract{Status: status})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ChangeStatusForContract"))
+			spans.TraceError(errors.Wrap(err, "unable to publish message ChangeStatusForContract"))
 		}
 	}
 
@@ -446,26 +444,26 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 }
 
 func (s *contractService) deriveContractStatus(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.deriveContractStatus")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.deriveContractStatus")
+	defer spans.Finish()
 
 	now := utils.Now()
 
 	// If endedAt is not nil and is in the past, the contract is considered Ended.
 	if contractEntity.IsEnded() {
-		span.LogFields(log.String("result.status", neo4jenum.ContractStatusEnded.String()))
+		spans.LogKV("result.status", neo4jenum.ContractStatusEnded.String())
 		return neo4jenum.ContractStatusEnded.String(), nil
 	}
 
 	// check if contract is draft
 	if !contractEntity.Approved {
-		span.LogFields(log.String("result.status", neo4jenum.ContractStatusDraft.String()))
+		spans.LogKV("result.status", neo4jenum.ContractStatusDraft.String())
 		return neo4jenum.ContractStatusDraft.String(), nil
 	}
 
 	// Check contract is scheduled
 	if contractEntity.ServiceStartedAt == nil || contractEntity.ServiceStartedAt.After(now) {
-		span.LogFields(log.String("result.status", neo4jenum.ContractStatusScheduled.String()))
+		spans.LogKV("result.status", neo4jenum.ContractStatusScheduled.String())
 		return neo4jenum.ContractStatusScheduled.String(), nil
 	}
 
@@ -474,28 +472,27 @@ func (s *contractService) deriveContractStatus(ctx context.Context, tenant strin
 		// fetch active renewal opportunity for the contract
 		opportunityDbNode, err := s.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if opportunityDbNode != nil {
 			opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 			if opportunityEntity.RenewalDetails.RenewedAt != nil && opportunityEntity.RenewalDetails.RenewedAt.Before(now) {
-				span.LogFields(log.String("result.status", neo4jenum.ContractStatusLive.String()))
+				spans.LogKV("result.status", neo4jenum.ContractStatusLive.String())
 				return neo4jenum.ContractStatusOutOfContract.String(), nil
 			}
 		}
 	}
 
 	// Otherwise, the contract is considered Live.
-	span.LogFields(log.String("result.status", neo4jenum.ContractStatusLive.String()))
+	spans.LogKV("result.status", neo4jenum.ContractStatusLive.String())
 	return neo4jenum.ContractStatusLive.String(), nil
 }
 
 func (s *contractService) updateOrganizationRelationship(ctx context.Context, tenant, contractId string, statusChanged bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateOrganizationRelationship")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId), log.Bool("statusChanged", statusChanged))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.UpdateOrganizationRelationship")
+	defer spans.Finish()
+	spans.LogKV("contractId", contractId, "statusChanged", statusChanged)
 
 	if !statusChanged {
 		return nil
@@ -504,7 +501,7 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 	// get contract
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return err
 	}
@@ -513,7 +510,7 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 	// get organization for contract
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
 		return err
 	}
@@ -522,7 +519,7 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 	// get all contracts for organization
 	orgContracts, err := s.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{orgEntity.ID})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting contracts for organization %s: %s", orgEntity.ID, err.Error())
 		return err
 	}
@@ -547,13 +544,13 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 				Stage:        utils.ToPtr(neo4jenum.Target),
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("UpdateOrganization failed: %s", err.Error())
 				return errors.Wrap(err, "UpdateOrganization")
 			}
 			err = s.organization.UpdateDerivedData(ctx, orgEntity.ID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("UpdateDerivedData failed: %s", err.Error())
 			}
 		}
@@ -562,13 +559,13 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 	return nil
 }
 
-func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant, contractId string, span opentracing.Span) {
+func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant, contractId string, spans telemetry.Spans) {
 	// TODO temporary not eligible for all contracts
 	return
 
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 	if contractDbNode == nil {
@@ -579,7 +576,7 @@ func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant,
 	if contractEntity.IsEligibleToStartOnboarding() {
 		organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while getting organization for contract %s: %s", contractEntity.Id, err.Error())
 			return
 		}
@@ -592,17 +589,16 @@ func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant,
 			Status:             utils.ToPtr(neo4jenum.OnboardingStatusNotStarted),
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("UpdateOnboardingStatus failed: %v", err.Error())
 		}
 	}
 }
 
 func (s *contractService) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateActiveRenewalOpportunityRenewDateAndArr")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.updateActiveRenewalOpportunityRenewDateAndArr")
+	defer spans.Finish()
+	spans.LogKV("contractId", contractId)
 
 	contract, renewalOpportunity, done := s.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
 	if done {
@@ -611,22 +607,22 @@ func (s *contractService) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx cont
 
 	err := s.updateRenewalOpportunityRenewedAt(ctx, tenant, contract, renewalOpportunity)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
-	err = s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+	err = s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, *spans)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	return nil
 }
 
 func (s *contractService) UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateActiveRenewalOpportunityArr")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.UpdateActiveRenewalOpportunityArr")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -634,23 +630,22 @@ func (s *contractService) UpdateActiveRenewalOpportunityArr(ctx context.Context,
 	if done {
 		return nil
 	}
-	err := s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+	err := s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, *spans)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	return nil
 }
 
 func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*neo4jentity.ContractEntity, *neo4jentity.OpportunityEntity, bool) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.assertContractAndRenewalOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.assertContractAndRenewalOpportunity")
+	defer spans.Finish()
+	spans.LogKV("contractId", contractId)
 
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
@@ -663,7 +658,7 @@ func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Contex
 
 	currentRenewalOpportunityDbNode, err := s.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
@@ -675,11 +670,11 @@ func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Contex
 				ContractId: &contractId,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("CreateRenewalOpportunity command failed: %v", err.Error())
 				return nil, nil, true
 			}
-			span.LogFields(log.Bool("renewal opportunity create requested", true))
+			spans.LogFields(log.Bool("renewal opportunity create requested", true))
 		}
 		return nil, nil, true
 	}
@@ -690,13 +685,12 @@ func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Contex
 }
 
 func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context, tenant string, contractEntity *neo4jentity.ContractEntity, renewalOpportunityEntity *neo4jentity.OpportunityEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateRenewalOpportunityRenewedAt")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.updateRenewalOpportunityRenewedAt")
+	defer spans.Finish()
 
 	if renewalOpportunityEntity == nil {
 		err := fmt.Errorf("renewalOpportunityEntity is nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 
@@ -704,7 +698,7 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	if contractEntity.IsEnded() {
 		err := s.opportunity.CloseLost(ctx, nil, tenant, renewalOpportunityEntity.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("CloseLooseOpportunity failed: %s", err.Error())
 			return errors.Wrap(err, "CloseLooseOpportunity")
 		}
@@ -718,7 +712,7 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	startRenewalDateCalculation := contractEntity.ServiceStartedAt
 	previousClosedWonRenewalDbNode, err := s.neo4j.OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	if previousClosedWonRenewalDbNode != nil {
@@ -727,20 +721,20 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 			startRenewalDateCalculation = previousRenewalOpportunityEntity.RenewalDetails.RenewedAt
 		}
 	}
-	span.LogFields(log.Object("startRenewalDateCalculation", startRenewalDateCalculation))
+	spans.LogFields(log.Object("startRenewalDateCalculation", startRenewalDateCalculation))
 
 	// Calculate until first future date if auto-renew is enabled or renewal is approved
 	calculateUntilFirstFutureDate := contractEntity.AutoRenew
-	span.LogFields(log.Bool("calculateUntilFirstFutureDate", calculateUntilFirstFutureDate))
+	spans.LogFields(log.Bool("calculateUntilFirstFutureDate", calculateUntilFirstFutureDate))
 
 	renewedAt := calculateNextCycleDate(startRenewalDateCalculation, contractEntity.LengthInMonths, calculateUntilFirstFutureDate)
-	span.LogFields(log.Object("result.renewedAt", renewedAt))
+	spans.LogFields(log.Object("result.renewedAt", renewedAt))
 	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
 		_, err = s.opportunity.Save(ctx, nil, &renewalOpportunityEntity.Id, &data_fields.OpportunityFields{
 			RenewedAt: renewedAt,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("UpdateRenewalOpportunityNextCycleDate failed: %s", err.Error())
 			return err
 		}
@@ -749,16 +743,16 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	return nil
 }
 
-func (s *contractService) updateRenewalArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *neo4jentity.OpportunityEntity, span opentracing.Span) error {
+func (s *contractService) updateRenewalArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *neo4jentity.OpportunityEntity, spans telemetry.Spans) error {
 	// if contract already ended, return
 	if contract.IsEnded() {
-		span.LogFields(log.Bool("contract ended", true))
+		spans.LogFields(log.Bool("contract ended", true))
 		return nil
 	}
 
-	maxArr, err := s.calculateMaxArr(ctx, tenant, contract, renewalOpportunity, span)
+	maxArr, err := s.calculateMaxArr(ctx, tenant, contract, renewalOpportunity, spans)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while calculating ARR for contract %s: %s", contract.Id, err.Error())
 		return nil
 	}
@@ -770,7 +764,7 @@ func (s *contractService) updateRenewalArr(ctx context.Context, tenant string, c
 		MaxAmount: &maxArr,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("UpdateOpportunity failed: %s", err.Error())
 		return err
 	}
@@ -778,13 +772,13 @@ func (s *contractService) updateRenewalArr(ctx context.Context, tenant string, c
 	return nil
 }
 
-func (s *contractService) calculateMaxArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *neo4jentity.OpportunityEntity, span opentracing.Span) (float64, error) {
+func (s *contractService) calculateMaxArr(ctx context.Context, tenant string, contract *neo4jentity.ContractEntity, renewalOpportunity *neo4jentity.OpportunityEntity, spans telemetry.Spans) (float64, error) {
 	var arr float64
 
 	// Fetch service line items for the contract from the database
 	sliDbNodes, err := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, tenant, contract.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return 0, err
 	}
 	serviceLineItems := neo4jentity.ServiceLineItemEntities{}
@@ -793,13 +787,13 @@ func (s *contractService) calculateMaxArr(ctx context.Context, tenant string, co
 		serviceLineItems = append(serviceLineItems, *sli)
 	}
 
-	span.LogFields(log.Int("service line items count", len(serviceLineItems)))
+	spans.LogKV("service line items count", len(serviceLineItems))
 	for _, sli := range serviceLineItems {
 		if sli.IsEnded() {
-			span.LogFields(log.Bool(fmt.Sprintf("service line item {%s} ended", sli.ID), true))
+			spans.LogFields(log.Bool(fmt.Sprintf("service line item {%s} ended", sli.ID), true))
 			continue
 		}
-		span.LogFields(log.Object(fmt.Sprintf("service line item {%s}:", sli.ID), sli))
+		spans.LogFields(log.Object(fmt.Sprintf("service line item {%s}:", sli.ID), sli))
 		annualPrice := float64(0)
 		if sli.Billed == neo4jenum.BilledTypeAnnually {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
@@ -810,14 +804,14 @@ func (s *contractService) calculateMaxArr(ctx context.Context, tenant string, co
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
 			annualPrice *= 4
 		}
-		span.LogFields(log.Float64(fmt.Sprintf("service line item {%s} added ARR value:", sli.ID), annualPrice))
+		spans.LogKV(fmt.Sprintf("service line item {%s} added ARR value:", sli.ID), annualPrice)
 		// Add to total ARR
 		arr += annualPrice
 	}
 
 	// Adjust with end date
 	if contract.EndedAt != nil {
-		span.LogFields(log.Bool("ARR prorated with contract end date", true))
+		spans.LogFields(log.Bool("ARR prorated with contract end date", true))
 		arr = prorateArr(arr, monthsUntilContractEnd(utils.Now(), *contract.EndedAt))
 	}
 
@@ -840,11 +834,10 @@ type ActionStatusMetadata struct {
 }
 
 func (s *contractService) createActionForStatusChange(ctx context.Context, tenant, contractId, status, contractName string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createActionForStatusChange")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.createActionForStatusChange")
+	defer spans.Finish()
 	var name string
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId), log.String("status", status), log.String("contractName", contractName))
+	spans.LogKV("contractId", contractId, "status", status, "contractName", contractName)
 
 	// if status is not one of the predefined statuses, return
 	if status != string(neo4jenum.ContractStatusLive) &&
@@ -878,26 +871,25 @@ func (s *contractService) createActionForStatusChange(ctx context.Context, tenan
 	}
 	metadata, err := utils.ToJson(actionStatusMetadata)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
 		return
 	}
 	_, err = s.neo4j.ActionWriteRepository.Create(ctx, tenant, contractId, model.CONTRACT, enum.ActionContractStatusUpdated, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
 	}
 }
 
 func (s *contractService) UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateActiveRenewalOpportunityLikelihood")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.UpdateActiveRenewalOpportunityLikelihood")
+	defer spans.Finish()
+	spans.LogKV("contractId", contractId)
 
 	opportunityDbNode, err := s.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 		return err
 	}
@@ -907,7 +899,7 @@ func (s *contractService) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	}
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return err
 	}
@@ -937,7 +929,7 @@ func (s *contractService) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 			RenewalAdjustedRate: &renewalAdjustedRate,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("UpdateRenewalOpportunity failed: %s", err.Error())
 			return errors.Wrap(err, "UpdateRenewalOpportunity")
 		}
@@ -991,57 +983,57 @@ func monthsUntilContractEnd(start, end time.Time) int {
 }
 
 func (s *contractService) RefreshContractStatus(ctx context.Context, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RefreshContractStatus")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.RefreshContractStatus")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	status, statusChanged, err := s.updateStatus(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
 		return err
 	}
-	span.LogFields(log.String("result.status", status))
-	span.LogFields(log.Bool("result.statusChanged", statusChanged))
+	spans.LogKV("result.status", status)
+	spans.LogFields(log.Bool("result.statusChanged", statusChanged))
 
 	if statusChanged {
 		err = s.updateOrganizationRelationship(ctx, tenant, contractId, statusChanged)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
 		}
 
 		contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 		s.createActionForStatusChange(ctx, tenant, contractId, status, contractEntity.Name)
 
-		s.startOnboardingIfEligible(ctx, tenant, contractId, span)
+		s.startOnboardingIfEligible(ctx, tenant, contractId, *spans)
 		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	if status == neo4jenum.ContractStatusEnded.String() {
 		err = s.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
 
 		err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 		}
 	}
@@ -1050,15 +1042,15 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, contractId 
 }
 
 func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RecalculateContractLtv")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.RecalculateContractLtv")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -1066,13 +1058,13 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 	// Get all invoices for the contract
 	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetAllForContracts(ctx, tenant, []string{contractId})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
@@ -1096,7 +1088,7 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 	if contractEntity.Ltv != truncatedLtv {
 		err = s.neo4j.ContractWriteRepository.SetLtv(ctx, tenant, contractId, truncatedLtv)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
 			return err
 		}
@@ -1104,7 +1096,7 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 		// get organization for contract
 		organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
 			return nil
 		}
@@ -1114,14 +1106,14 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 		if organizationEntity.ID != "" {
 			err = s.organization.UpdateDerivedData(ctx, organizationEntity.ID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error while updating organization %s ltv: %s", organizationEntity.ID, err.Error())
 			}
 		}
 
 		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{Ltv: &truncatedLtv})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
+			spans.TraceError(errors.Wrap(err, "unable to publish message UpdateContract"))
 		}
 
 		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
@@ -1130,10 +1122,10 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 }
 
 func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.ContractEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIDs", organizationIDs))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractsForOrganizations")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("organizationIDs", organizationIDs))
 
 	contracts, err := s.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
@@ -1149,10 +1141,10 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 }
 
 func (s *contractService) GetContractForInvoice(ctx context.Context, invoiceId string) (*neo4jentity.ContractEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractForInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("invoiceId", invoiceId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractForInvoice")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, common.GetTenantFromContext(ctx), invoiceId)
 	if err != nil {
@@ -1160,7 +1152,7 @@ func (s *contractService) GetContractForInvoice(ctx context.Context, invoiceId s
 	}
 	if contractDbNode == nil {
 		err = errors.New("contract not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return neo4jmapper.MapDbNodeToContractEntity(contractDbNode), nil

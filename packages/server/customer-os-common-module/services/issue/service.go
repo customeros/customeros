@@ -2,11 +2,12 @@ package issue
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -17,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -46,15 +47,15 @@ func (s *issueService) IsInitialized() bool {
 }
 
 func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, issueFields data_fields.IssueFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "issueFields", issueFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("issueFields", issueFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -64,7 +65,7 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 
 		// prepare missing fields
 		if issueFields.CreatedAt == nil || issueFields.CreatedAt.IsZero() {
@@ -82,7 +83,7 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *issueFields.ReportedByOrganizationId, model.NodeLabelOrganization)
 			if err != nil || !exists {
 				err = errors.New("reported by organization not found")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -91,7 +92,7 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *issueFields.SubmittedByOrganizationId, model.NodeLabelOrganization)
 			if err != nil || !exists {
 				err = errors.New("submitted by organization not found")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -100,29 +101,29 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *issueFields.SubmittedByUserId, model.NodeLabelUser)
 			if err != nil || !exists {
 				err = errors.New("submitted by user not found")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
 
 		issueId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelIssue)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 		issueId = *id
 
 		// validate issue exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
 		if err != nil || !exists {
 			err = errors.New("issue not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
-	tracing.TagEntity(span, issueId)
+	spans.TagEntity(issueId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
@@ -152,18 +153,18 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 				if utils.IfNotNilString(issueFields.ReportedByOrganizationId) != "" {
 					err := s.org.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
+						spans.TraceError(errors.Wrap(err, "unable to request refresh last touchpoint"))
 					}
 				}
 				err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateIssue"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
 			} else {
 				err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateIssue"))
 				}
 				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 					s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
@@ -175,29 +176,29 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if createFlow {
-		span.LogFields(log.Bool("response.issueCreated", true))
+		spans.LogFields(log.Bool("response.issueCreated", true))
 	} else {
-		span.LogFields(log.Bool("response.issueUpdated", true))
+		spans.LogFields(log.Bool("response.issueUpdated", true))
 	}
 
 	return issueId, nil
 }
 
 func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.AddUserAssignee")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("userId", userId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.AddUserAssignee")
+	defer spans.Finish()
+
+	spans.LogKV("userId", userId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -206,16 +207,16 @@ func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *ut
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
 	if err != nil || !exists {
 		err = errors.New("issue not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
-	tracing.TagEntity(span, issueId)
+	spans.TagEntity(issueId)
 
 	// validate user exists
 	exists, err = s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
 	if err != nil || !exists {
 		err = errors.New("user not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -229,7 +230,7 @@ func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *ut
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.AddUserAssigneeToIssue{UserID: userId})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddUserAssigneeToIssue"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message AddUserAssigneeToIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
@@ -240,7 +241,7 @@ func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *ut
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -248,15 +249,15 @@ func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *ut
 }
 
 func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.RemoveUserAssignee")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("userId", userId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.RemoveUserAssignee")
+	defer spans.Finish()
+
+	spans.LogKV("userId", userId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -265,16 +266,16 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit 
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
 	if err != nil || !exists {
 		err = errors.New("issue not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
-	tracing.TagEntity(span, issueId)
+	spans.TagEntity(issueId)
 
 	// validate user exists
 	exists, err = s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
 	if err != nil || !exists {
 		err = errors.New("user not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -288,7 +289,7 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.RemoveUserAssigneeFromIssue{UserID: userId})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveUserAssigneeFromIssue"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message RemoveUserAssigneeFromIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
@@ -299,7 +300,7 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit 
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -307,15 +308,15 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit 
 }
 
 func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.AddUserFollower")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("userId", userId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.AddUserFollower")
+	defer spans.Finish()
+
+	spans.LogKV("userId", userId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -324,16 +325,16 @@ func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *ut
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
 	if err != nil || !exists {
 		err = errors.New("issue not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
-	tracing.TagEntity(span, issueId)
+	spans.TagEntity(issueId)
 
 	// validate user exists
 	exists, err = s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
 	if err != nil || !exists {
 		err = errors.New("user not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -347,7 +348,7 @@ func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *ut
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.AddUserFollowerToIssue{UserID: userId})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddUserFollowerToIssue"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message AddUserFollowerToIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
@@ -358,7 +359,7 @@ func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *ut
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -366,15 +367,15 @@ func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *ut
 }
 
 func (s *issueService) RemoveUserFollower(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.RemoveUserFollower")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("userId", userId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.RemoveUserFollower")
+	defer spans.Finish()
+
+	spans.LogKV("userId", userId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -383,16 +384,16 @@ func (s *issueService) RemoveUserFollower(ctx context.Context, txWithPostCommit 
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
 	if err != nil || !exists {
 		err = errors.New("issue not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
-	tracing.TagEntity(span, issueId)
+	spans.TagEntity(issueId)
 
 	// validate user exists
 	exists, err = s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
 	if err != nil || !exists {
 		err = errors.New("user not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -406,7 +407,7 @@ func (s *issueService) RemoveUserFollower(ctx context.Context, txWithPostCommit 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.RemoveUserFollowerFromIssue{UserID: userId})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveUserFollowerFromIssue"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message RemoveUserFollowerFromIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
@@ -417,7 +418,7 @@ func (s *issueService) RemoveUserFollower(ctx context.Context, txWithPostCommit 
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

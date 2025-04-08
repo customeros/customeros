@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -15,12 +16,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 )
 
@@ -37,9 +37,8 @@ func NewQuickbooksService(qbConfig *config.QuickbooksConfig, postgres *postgres_
 }
 
 func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId string, requestData url.Values) (*postgres_entity.QuickbooksSettingsEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.getAuthToken")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.getAuthToken")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -48,7 +47,7 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 
 	request, err := http.NewRequest("POST", "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer", nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	request.Body = ioutil.NopCloser(strings.NewReader(requestBody))
@@ -61,7 +60,7 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -69,7 +68,7 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 	// Read and print the response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -77,7 +76,7 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 	var quickbooksResponse interfaces.OauthQuickbooksResponse
 	err = json.Unmarshal(body, &quickbooksResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -86,7 +85,7 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 
 		qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -108,35 +107,34 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 
 		stored, err := s.postgres.QuickbooksSettingsRepository.Save(ctx, entity)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		return stored, nil
 	} else {
-		span.LogFields(log.Object("error", *quickbooksResponse.Error))
+		spans.LogKV("error", *quickbooksResponse.Error)
 
-		tracing.TraceErr(span, fmt.Errorf("error: %s", *quickbooksResponse.Error))
+		spans.TraceError(fmt.Errorf("error: %s", *quickbooksResponse.Error))
 		return nil, fmt.Errorf("error: %s", *quickbooksResponse.Error)
 	}
 }
 
 func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.RevokeAccess")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.RevokeAccess")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Retrieve QuickBooks settings for the tenant
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
 		err = errors.New("QuickBooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -144,7 +142,7 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 	token := qbSettings.AccessToken
 	if token == "" {
 		err := fmt.Errorf("no access token available for tenant %s", tenant)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -156,7 +154,7 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 
 	req, err := http.NewRequestWithContext(ctx, "POST", revokeURL, strings.NewReader(requestBody))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to create revoke request: %w", err)
 	}
 
@@ -170,30 +168,30 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to send revoke request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to read revoke response: %w", err)
 	}
 
-	span.LogFields(log.String("quickbooks.response", string(bodyBytes)))
+	spans.LogKV("quickbooks.response", string(bodyBytes))
 
 	// Check for a successful response
 	if resp.StatusCode != http.StatusOK {
 		errMsg := fmt.Sprintf("revoke quickbooks request returned status %d", resp.StatusCode)
-		tracing.TraceErr(span, fmt.Errorf(errMsg))
+		spans.TraceError(fmt.Errorf(errMsg))
 	}
 
 	// http.StatusBadRequest is returned when revoking access from already removed app
 	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusBadRequest {
 		err = s.postgres.QuickbooksSettingsRepository.Delete(ctx, tenant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -202,30 +200,29 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 }
 
 func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName string, archived bool, price float64) (*interfaces.QuickbooksSaveProductResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveProduct")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("productName", productName), log.Bool("archived", archived), log.Float64("price", price), log.String("id", id))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.SaveProduct")
+	defer spans.Finish()
+
+	spans.LogKV("productName", productName, "archived", archived, "price", price, "id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbSettings.SalesAccountId == "" {
 		salesAccountId, err := s.GetAccountIdByName(ctx, "CustomerOS Sales")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -233,7 +230,7 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 			qbSettings.SalesAccountId = salesAccountId
 			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *qbSettings)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 		} else {
@@ -245,21 +242,21 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 
 			qbAccountResponse, err := s.performRequest(ctx, qbSettings, salesAccountUrl, "POST", salesAccountRequest, true)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 
 			var qbAccount interfaces.QuickbooksSaveAccountResponse
 			err = json.Unmarshal(qbAccountResponse, &qbAccount)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 
 			qbSettings.SalesAccountId = qbAccount.Account.Id
 			_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *qbSettings)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 		}
@@ -272,13 +269,13 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		productByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", qbSettings.RealmId, id)
 		qbProductResponse, err := s.performRequest(ctx, qbSettings, productByIdUrl, "GET", nil, true)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		err = json.Unmarshal(qbProductResponse, &qbProduct)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -295,7 +292,7 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		jsonBytes, _ := json.Marshal(qbProduct.Item)
 		err = json.Unmarshal(jsonBytes, &qbSaveProductRequest)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	} else {
@@ -313,14 +310,14 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item", qbSettings.RealmId)
 	qbResponse, err := s.performRequest(ctx, qbSettings, requestUrl, "POST", qbSaveProductRequest, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	var qbProductResponse interfaces.QuickbooksSaveProductResponse
 	err = json.Unmarshal(qbResponse, &qbProductResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -328,37 +325,36 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 }
 
 func (s *quickbooksService) GetProduct(ctx context.Context, id string) (*interfaces.QuickbooksGetProductResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.GetProduct")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.GetProduct")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	requestUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/item/%s", qbSettings.RealmId, id)
 	resp, err := s.performRequest(ctx, qbSettings, requestUrl, "GET", nil, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	var quickbooksResponse interfaces.QuickbooksGetProductResponse
 	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -366,20 +362,20 @@ func (s *quickbooksService) GetProduct(ctx context.Context, id string) (*interfa
 }
 
 func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName string) (*interfaces.QuickbooksSaveCustomerResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveCustomer")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.SaveCustomer")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -393,7 +389,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 
 	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/customer", "POST", request, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -401,12 +397,12 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 	var quickbooksResponse interfaces.QuickbooksSaveCustomerResponse
 	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if quickbooksResponse.Fault != nil {
-		span.LogFields(log.Object("error", quickbooksResponse.Fault))
+		spans.LogObjectAsJson("error", quickbooksResponse.Fault)
 		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
 	}
 
@@ -415,26 +411,24 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 
 func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerId, invoiceNumber string, invoiceDate, dueDate time.Time, invoiceEmail string,
 	lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveInvoice")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.SaveInvoice")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(
-		log.String("quickbooksCustomerId", quickbooksCustomerId),
-		log.String("invoiceNumber", invoiceNumber),
-		log.Object("invoiceDate", invoiceDate),
-		log.Object("dueDate", dueDate),
-		log.String("invoiceEmail", invoiceEmail))
+	spans.LogKV("quickbooksCustomerId", quickbooksCustomerId)
+	spans.LogKV("invoiceNumber", invoiceNumber)
+	spans.LogKV("invoiceDate", invoiceDate.Format("2006-01-02"))
+	spans.LogKV("dueDate", dueDate.Format("2006-01-02"))
+	spans.LogKV("invoiceEmail", invoiceEmail)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -453,7 +447,7 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerI
 
 	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/invoice", "POST", request, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -461,12 +455,12 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerI
 	var quickbooksResponse interfaces.QuickbooksSaveInvoiceResponse
 	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if quickbooksResponse.Fault != nil {
-		span.LogFields(log.Object("error", quickbooksResponse.Fault))
+		spans.LogObjectAsJson("error", quickbooksResponse.Fault)
 		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
 	}
 
@@ -474,20 +468,20 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerI
 }
 
 func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.VoidInvoice")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.VoidInvoice")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -499,14 +493,14 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 		invoiceByIdUrl := fmt.Sprintf(s.qbConfig.Url+"/v3/company/%s/invoice/%s", qbSettings.RealmId, invoiceId)
 		qbInvoiceResponse, err := s.performRequest(ctx, qbSettings, invoiceByIdUrl, "GET", request, true)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
 		var qbInvoice interfaces.QuickbooksGetInvoiceResponse
 		err = json.Unmarshal(qbInvoiceResponse, &qbInvoice)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -515,7 +509,7 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 
 	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/invoice?operation=void", "POST", request, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -523,12 +517,12 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 	var quickbooksResponse interfaces.QuickbooksSaveInvoiceResponse
 	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if quickbooksResponse.Fault != nil {
-		span.LogFields(log.Object("error", quickbooksResponse.Fault))
+		spans.LogObjectAsJson("error", quickbooksResponse.Fault)
 		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
 	}
 
@@ -536,23 +530,22 @@ func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (
 }
 
 func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceId, invoiceNumber string, totalAmount float64, paymentIncomeAccountName string) (*interfaces.QuickbooksSavePaymentResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.PayInvoice")
-	defer span.Finish()
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.TagEntity(span, invoiceId)
-	span.LogFields(log.String("paymentIncomeAccountName", paymentIncomeAccountName))
-	span.LogFields(log.String("totalAmount", fmt.Sprintf("%f", totalAmount)))
-	span.LogFields(log.String("invoiceNumber", invoiceNumber))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.PayInvoice")
+	defer spans.Finish()
+	spans.TagEntity(invoiceId)
+	spans.LogKV("paymentIncomeAccountName", paymentIncomeAccountName)
+	spans.LogKV("totalAmount", fmt.Sprintf("%f", totalAmount))
+	spans.LogKV("invoiceNumber", invoiceNumber)
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -579,7 +572,7 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 	if paymentIncomeAccountName != "" {
 		accountId, err := s.GetAccountIdByName(ctx, paymentIncomeAccountName)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		} else if accountId != "" {
 			request["DepositToAccountRef"] = map[string]interface{}{
 				"value": accountId,
@@ -589,7 +582,7 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 
 	resp, err := s.performRequest(ctx, qbSettings, s.qbConfig.Url+"/v3/company/"+qbSettings.RealmId+"/payment", "POST", request, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -597,12 +590,12 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 	var quickbooksResponse interfaces.QuickbooksSavePaymentResponse
 	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if quickbooksResponse.Fault != nil {
-		span.LogFields(log.Object("error", quickbooksResponse.Fault))
+		spans.LogObjectAsJson("error", quickbooksResponse.Fault)
 		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
 	}
 
@@ -610,23 +603,23 @@ func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceI
 }
 
 func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *postgres_entity.QuickbooksSettingsEntity, requestUrl string, requestMethod string, requestBody map[string]interface{}, rerunOnTokenRefresh bool) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.performRequest")
-	defer span.Finish()
-	span.LogFields(log.String("requestUrl", requestUrl))
-	span.LogFields(log.String("requestMethod", requestMethod))
-	tracing.LogObjectAsJson(span, "requestBody", requestBody)
-	span.LogFields(log.Bool("rerunOnTokenRefresh", rerunOnTokenRefresh))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.performRequest")
+	defer spans.Finish()
+	spans.LogKV("requestUrl", requestUrl)
+	spans.LogKV("requestMethod", requestMethod)
+	spans.LogObjectAsJson("requestBody", requestBody)
+	spans.LogKV("rerunOnTokenRefresh", rerunOnTokenRefresh)
 
 	payload, err := json.Marshal(requestBody)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// Create a new HTTP request
 	req, err := http.NewRequest(requestMethod, requestUrl, bytes.NewBuffer(payload))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -639,7 +632,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *post
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -649,17 +642,17 @@ func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *post
 	// Read response body
 	bodyBytes, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.String("result.quickbooksBody", string(bodyBytes)))
+	spans.LogKV("result.quickbooksBody", string(bodyBytes))
 
 	// convert body to OauthSlackResponse
 	var quickbooksCheckFaultResponse interfaces.QuickbooksCheckFaultResponse
 	err = json.Unmarshal(bodyBytes, &quickbooksCheckFaultResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal response"))
 		return nil, err
 	}
 
@@ -673,7 +666,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *post
 
 			qbSettings, err = s.GetAndStoreAccessToken(ctx, qbSettings.RealmId, requestData)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 
@@ -683,7 +676,7 @@ func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *post
 			}
 		} else {
 			err = fmt.Errorf("error: %s", fault.Error[0].Message)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -692,15 +685,14 @@ func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *post
 }
 
 func (s *quickbooksService) QuickbooksConnected(ctx context.Context) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.QuickbooksConnected")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.QuickbooksConnected")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -708,23 +700,22 @@ func (s *quickbooksService) QuickbooksConnected(ctx context.Context) (bool, erro
 }
 
 func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.Time, journalLineItems []interfaces.QuickbooksJournalEntryLine) (*interfaces.QuickbooksJournalEntryResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveJournalEntry")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.SaveJournalEntry")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "journalLineItems", journalLineItems)
+	spans.LogObjectAsJson("journalLineItems", journalLineItems)
 
 	txnDateStr := txnDate.Format("2006/01/02")
-	span.LogFields(log.String("txnDate", txnDateStr))
+	spans.LogKV("txnDate", txnDateStr)
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if qbSettingsEntity == nil {
-		span.LogFields(log.String("error", "QuickBooks settings not found"))
+		spans.LogKV("error", "QuickBooks settings not found")
 		return nil, nil
 	}
 
@@ -740,7 +731,7 @@ func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.T
 	// Perform the request.
 	resp, err := s.performRequest(ctx, qbSettingsEntity, requestUrl, "POST", request, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -748,12 +739,12 @@ func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.T
 	var qbJournalEntryResponse interfaces.QuickbooksJournalEntryResponse
 	err = json.Unmarshal(resp, &qbJournalEntryResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbJournalEntryResponse.Fault != nil {
-		span.LogFields(log.Object("error", qbJournalEntryResponse.Fault))
+		spans.LogObjectAsJson("error", qbJournalEntryResponse.Fault)
 		return nil, fmt.Errorf("error: %s", qbJournalEntryResponse.Fault.Error[0].Message)
 	}
 
@@ -761,21 +752,20 @@ func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.T
 }
 
 func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.ZeroJournalEntry")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.ZeroJournalEntry")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("journalEntryId", journalEntryId))
+	spans.LogKV("journalEntryId", journalEntryId)
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
 		err = errors.New("Quickbooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -784,14 +774,14 @@ func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId
 	// Fetch the existing journal entry.
 	resp, err := s.performRequest(ctx, qbSettings, getURL, "GET", nil, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to fetch journal entry: %w", err)
 	}
 
 	var journalEntryResp interfaces.QuickbooksJournalEntryResponse
 	err = json.Unmarshal(resp, &journalEntryResp)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to unmarshal journal entry response: %w", err)
 	}
 
@@ -810,19 +800,19 @@ func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId
 	updateURL := fmt.Sprintf("%s/v3/company/%s/journalentry", s.qbConfig.Url, qbSettings.RealmId)
 	updateResp, err := s.performRequest(ctx, qbSettings, updateURL, "POST", updatePayload, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to update journal entry: %w", err)
 	}
 
 	var updateJournalEntryResp interfaces.QuickbooksJournalEntryResponse
 	err = json.Unmarshal(updateResp, &updateJournalEntryResp)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to unmarshal updated journal entry response: %w", err)
 	}
 
 	if updateJournalEntryResp.Fault != nil {
-		span.LogFields(log.Object("error", updateJournalEntryResp.Fault))
+		spans.LogObjectAsJson("error", updateJournalEntryResp.Fault)
 		return fmt.Errorf("error updating journal entry: %s", updateJournalEntryResp.Fault.Error[0].Message)
 	}
 
@@ -830,39 +820,38 @@ func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId
 }
 
 func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.GetAccountIdByName")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.GetAccountIdByName")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("accountName", accountName)
+	spans.LogKV("accountName", accountName)
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
 		err = errors.New("QuickBooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	normalizedAccountName := strings.ReplaceAll(accountName, " ", "+")
-	span.LogKV("normalizedAccountName", normalizedAccountName)
+	spans.LogKV("normalizedAccountName", normalizedAccountName)
 	// Construct the URL for querying the account by name.
 	queryURL := fmt.Sprintf("%s/v3/company/%s/query?query=select+Id+from+Account+where+Name='%s'", s.qbConfig.Url, qbSettings.RealmId, normalizedAccountName)
 	// Perform the request.
 	resp, err := s.performRequest(ctx, qbSettings, queryURL, "GET", nil, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to query account: %w", err)
 	}
 
 	var searchAccountResp interfaces.QuickbooksSearchAccountResponse
 	err = json.Unmarshal(resp, &searchAccountResp)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to unmarshal account response: %w", err)
 	}
 
@@ -874,26 +863,24 @@ func (s *quickbooksService) GetAccountIdByName(ctx context.Context, accountName 
 
 func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksCustomerId string,
 	quickbooksInvoiceId string, quickbooksJournalEntryId string, txnDate time.Time, totalAmount float64) (*interfaces.QuickbooksSavePaymentResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SavePaymentLinkingJournalEntryToInvoice")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.SavePaymentLinkingJournalEntryToInvoice")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(
-		log.String("quickbooksCustomerId", quickbooksCustomerId),
-		log.String("quickbooksInvoiceId", quickbooksInvoiceId),
-		log.String("quickbooksJournalEntryId", quickbooksJournalEntryId),
-		log.Float64("totalAmount", totalAmount),
-		log.Object("txnDate", txnDate))
+	spans.LogKV("quickbooksCustomerId", quickbooksCustomerId)
+	spans.LogKV("quickbooksInvoiceId", quickbooksInvoiceId)
+	spans.LogKV("quickbooksJournalEntryId", quickbooksJournalEntryId)
+	spans.LogKV("txnDate", txnDate.Format("2006-01-02"))
+	spans.LogKV("totalAmount", fmt.Sprintf("%f", totalAmount))
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
 		err = errors.New("QuickBooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -928,7 +915,7 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 	// Perform the request.
 	quickbooksResponse, err := s.performRequest(ctx, qbSettings, requestUrl, "POST", paymentData, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to save payment: %w", err)
 	}
 
@@ -936,12 +923,12 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 	var qbPaymentResponse interfaces.QuickbooksSavePaymentResponse
 	err = json.Unmarshal(quickbooksResponse, &qbPaymentResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if qbPaymentResponse.Fault != nil {
-		span.LogFields(log.Object("error", qbPaymentResponse.Fault))
+		spans.LogObjectAsJson("error", qbPaymentResponse.Fault)
 		return nil, fmt.Errorf("error: %s", qbPaymentResponse.Fault.Error[0].Message)
 	}
 
@@ -949,23 +936,22 @@ func (s *quickbooksService) SavePaymentLinkingJournalEntryToInvoice(ctx context.
 }
 
 func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.Context, quickbooksPaymentId, quickbooksCustomerId, quickbooksJournalEntryId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.ZeroPaymentLinkingJournalEntryToInvoice")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.ZeroPaymentLinkingJournalEntryToInvoice")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("quickbooksPaymentId", quickbooksPaymentId),
-		log.String("quickbooksCustomerId", quickbooksCustomerId),
-		log.String("quickbooksJournalEntryId", quickbooksJournalEntryId))
+	spans.LogKV("quickbooksPaymentId", quickbooksPaymentId)
+	spans.LogKV("quickbooksCustomerId", quickbooksCustomerId)
+	spans.LogKV("quickbooksJournalEntryId", quickbooksJournalEntryId)
 
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to retrieve QuickBooks settings for tenant %s: %w", tenant, err)
 	}
 	if qbSettings == nil {
 		err = errors.New("QuickBooks settings not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -973,7 +959,7 @@ func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.
 	getURL := fmt.Sprintf("%s/v3/company/%s/payment/%s", s.qbConfig.Url, qbSettings.RealmId, quickbooksPaymentId)
 	resp, err := s.performRequest(ctx, qbSettings, getURL, "GET", nil, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to fetch existing payment: %w", err)
 	}
 
@@ -981,7 +967,7 @@ func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.
 	var qbGetPaymentResp interfaces.QuickbooksGetPaymentResponse
 	err = json.Unmarshal(resp, &qbGetPaymentResp)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to unmarshal payment response: %w", err)
 	}
 
@@ -989,7 +975,7 @@ func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.
 	syncToken := qbGetPaymentResp.Payment.SyncToken
 	if syncToken == "" {
 		err = errors.New("no SyncToken found in payment record")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1019,7 +1005,7 @@ func (s *quickbooksService) ZeroPaymentLinkingJournalEntryToInvoice(ctx context.
 	// Perform the request.
 	_, err = s.performRequest(ctx, qbSettings, requestUrl, "POST", paymentData, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to save payment: %w", err)
 	}
 

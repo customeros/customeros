@@ -3,19 +3,17 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type webhookService struct {
@@ -41,25 +39,24 @@ func (w *webhookService) GetIntegration(s string) enum.Source {
 }
 
 func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.ValidateTenantId")
-	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
-	span.LogFields(log.String("tenantId", tenantId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebhookService.ValidateTenantId")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("tenantId", tenantId)
 
 	tenantFromDb, err := w.postgresRepositories.TenantRepository.GetTenantByHashId(ctx, tenantId)
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup tenant hashId for %s: %v", tenant, err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return tenantFromDb == tenant, nil
 }
 
 func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.Source, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("webhookPath", webhookPath))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebhookService.GetIntegrationFromWebhookPath")
+	defer spans.Finish()
+	spans.LogKV("webhookPath", webhookPath)
 
 	path := strings.Trim(webhookPath, "/")
 	webhook, err := w.postgresRepositories.WebhooksRepository.Find(ctx, postgres_entity.Webhooks{
@@ -68,7 +65,7 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 	})
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.SourceUnknown, err
 	}
 
@@ -78,7 +75,7 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 
 	if !webhook.Enabled {
 		err = fmt.Errorf("Webhook is disabled: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.SourceUnknown, err
 	}
 
@@ -86,9 +83,8 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 }
 
 func (w *webhookService) GetWebhookForIntegration(ctx context.Context, integration enum.Source) (*postgres_entity.Webhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetWebhookForIntegration")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebhookService.GetWebhookForIntegration")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {

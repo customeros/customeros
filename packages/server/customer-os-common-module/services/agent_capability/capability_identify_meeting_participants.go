@@ -2,15 +2,16 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -75,25 +76,24 @@ func (c *IdentifyMeetingParticipantsCapability) ValidateInput(input IdentifyMeet
 }
 
 func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyMeetingParticipantsInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, IdentifyMeetingParticipantsOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyMeetingParticipantsCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyMeetingParticipantsCapability.Execute")
+	defer spans.Finish()
 
 	result := IdentifyMeetingParticipantsOutput{}
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// check each email to determine if they belong to tenant or external participant
 	workspaceDomains, err := c.workspaceService.GetWorkspaceDomainsForTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -106,6 +106,6 @@ func (c *IdentifyMeetingParticipantsCapability) Execute(ctx context.Context, exe
 		}
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

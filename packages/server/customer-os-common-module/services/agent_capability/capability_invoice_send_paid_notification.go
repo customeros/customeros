@@ -2,14 +2,14 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type SendPaidNotificationCapability struct {
@@ -70,31 +70,31 @@ type SendPaidNotificationInput struct {
 type SendPaidNotificationOutput struct{}
 
 func (c *SendPaidNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendPaidNotificationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendPaidNotificationOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendPaidNotificationCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendPaidNotificationCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := SendPaidNotificationOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	invoice, err := c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if invoice == nil {
 		err := errors.New("invoice not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if invoice.DryRun {
@@ -103,10 +103,10 @@ func (c *SendPaidNotificationCapability) Execute(ctx context.Context, executionC
 
 	err = c.invoiceService.SendPaidInvoiceNotification(ctx, invoice.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionCompleted, result, err // failed send invoice email is not a blocker, since a new attempt will be made automatically by cron
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

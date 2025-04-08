@@ -3,24 +3,21 @@ package webscraper
 import (
 	"bufio"
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func (s *webscraperService) linksToCrawl(ctx context.Context, content string, workspaceDomains []string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.linksToCrawl")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "webscraperService.linksToCrawl")
+	defer spans.Finish()
 
 	var urls []string
 
 	webpages, err := s.postgresRepositories.ScrapedWebpageRepository.GetAllWebpagesByPrimaryDomains(ctx, workspaceDomains)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if webpages == nil {

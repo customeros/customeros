@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 	"strings"
@@ -13,12 +14,10 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -49,10 +48,10 @@ var (
 )
 
 func (s *webscraperService) Scrape(ctx context.Context, url string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.Scrape")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("url", url))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebscraperService.Scrape")
+	defer spans.Finish()
+
+	spans.LogKV("url", url)
 
 	url = strings.TrimSuffix(url, "/")
 	url = strings.TrimSuffix(url, "#")
@@ -63,7 +62,7 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	// check cache
 	cachedData, err := s.checkCache(ctx, url, WebpageScrapeTTLInDays)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if cachedData != "" {
@@ -75,15 +74,15 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 	if err != nil {
 		switch err {
 		case ErrPaymentRequired:
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", nil
 
 		case ErrUnprocessable:
-			span.LogKV("error", ErrUnprocessable)
+			spans.LogKV("error", ErrUnprocessable)
 			return "", err
 
 		default:
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
@@ -97,7 +96,7 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 			Error:         ErrUnprocessable.Error(),
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		return "", nil
@@ -110,7 +109,7 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 			Error:         ErrUnprocessable.Error(),
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		return "", nil
@@ -123,7 +122,7 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 			Error:         "no content",
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		return "", nil
@@ -138,7 +137,7 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 		Links:         links,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -146,9 +145,8 @@ func (s *webscraperService) Scrape(ctx context.Context, url string) (string, err
 }
 
 func (s *webscraperService) ProcessWebContent(ctx context.Context, content string) (string, []string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.postProcessWebContent")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebscraperService.postProcessWebContent")
+	defer spans.Finish()
 
 	// extract links and save
 	sections := strings.Split(content, "Links/Buttons:")
@@ -160,29 +158,28 @@ func (s *webscraperService) ProcessWebContent(ctx context.Context, content strin
 	content = s.processMarkdownWebpage(sections[0])
 	links := s.extractLinks(sections[1])
 
-	span.LogFields(log.Int("result.links.count", len(links)))
-	span.LogFields(log.String("result.content", content))
-	tracing.LogObjectAsJson(span, "result.links", links)
+	spans.LogKV("result.links.count", len(links))
+	spans.LogKV("result.content", content)
+	spans.LogObjectAsJson("result.links", links)
 	return content, links
 }
 
 func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.fetchPage")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebscraperService.fetchPage")
+	defer spans.Finish()
 
 	if s.config.ApiKey == "" {
 		err := errors.New("jina API key not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	requestUrl := s.config.Url + url
-	span.LogKV("requestUrl", requestUrl)
+	spans.LogKV("requestUrl", requestUrl)
 
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -198,7 +195,7 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -213,7 +210,7 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 
 		default:
 			err = fmt.Errorf("error code: %d", resp.StatusCode)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
@@ -221,7 +218,7 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		err = fmt.Errorf("error reading response body: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -229,13 +226,12 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 }
 
 func (s *webscraperService) checkCache(ctx context.Context, url string, cacheTTL int) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.checkCache")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "webscraperService.checkCache")
+	defer spans.Finish()
 
 	record, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, cacheTTL)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if record == nil || record.Content == "" {
@@ -252,7 +248,7 @@ func (s *webscraperService) checkCache(ctx context.Context, url string, cacheTTL
 			Links:         links,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}

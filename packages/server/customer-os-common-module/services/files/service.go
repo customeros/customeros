@@ -8,6 +8,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -30,8 +32,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -39,7 +40,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -64,15 +65,14 @@ func NewFileService(log logger.Logger, cfg *config.FileStoreConfig, neo4j *neo4j
 }
 
 func (s *fileService) GetById(ctx context.Context, id string) (*interfaces.File, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.GetById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("fileId", id))
+	spans.LogKV("fileId", id)
 
 	attachment, err := s.attachmentService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		spans.TraceError(errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
 
@@ -80,13 +80,12 @@ func (s *fileService) GetById(ctx context.Context, id string) (*interfaces.File,
 }
 
 func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*interfaces.File, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.UploadSingleFile")
+	defer spans.Finish()
 
-	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileId))
+	spans.LogKV("basePath", basePath, "fileId", fileId)
 	if multipartFileHeader != nil {
-		span.LogFields(log.String("fileName", multipartFileHeader.Filename), log.Int64("size", multipartFileHeader.Size))
+		spans.LogKV("fileName", multipartFileHeader.Filename, "size", multipartFileHeader.Size)
 	}
 
 	if fileId == "" {
@@ -95,20 +94,20 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 
 	fileName, err := storeMultipartFileToTemp(ctx, fileId, multipartFileHeader)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error storing multipart file to temp"))
+		spans.TraceError(errors.Wrap(err, "Error storing multipart file to temp"))
 		return nil, err
 	}
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error opening file"))
+		spans.TraceError(errors.Wrap(err, "Error opening file"))
 		return nil, err
 	}
 	defer file.Close()
 
 	headBytes, err := utils.GetFileTypeHeadFromMultipart(file)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting file type head"))
+		spans.TraceError(errors.Wrap(err, "Error getting file type head"))
 		return nil, err
 	}
 
@@ -117,14 +116,14 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 	if strings.HasSuffix(strings.ToLower(multipartFileHeader.Filename), ".csv") {
 		// Detect the MIME type using the file content
 		mimeType := http.DetectContentType(headBytes)
-		span.LogFields(log.String("mimeType", mimeType))
+		spans.LogKV("mimeType", mimeType)
 
 		acceptedMimeTypesForCsv := []string{"text/csv", "application/octet-stream", "text/plain; charset=utf-8", "text/plain; charset=us-ascii", "text/plain"}
 
 		// Validate if the detected MIME type is "text/csv"
 		if !utils.Contains(acceptedMimeTypesForCsv, mimeType) {
 			err = errors.New("Invalid mime type for CSV")
-			tracing.TraceErr(span, errors.Wrap(err, "Unexpected file type"))
+			spans.TraceError(errors.Wrap(err, "Unexpected file type"))
 			s.log.Error("Unexpected file type")
 			// return nil, err
 		}
@@ -132,13 +131,13 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 	} else {
 		fileType, err = utils.GetFileType(headBytes)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error getting file type"))
+			spans.TraceError(errors.Wrap(err, "Error getting file type"))
 			return nil, err
 		}
 
 		if fileType == filetype.Unknown {
 			err = errors.New("Unknown file type")
-			tracing.TraceErr(span, errors.Wrap(err, "Unknown file type"))
+			spans.TraceError(errors.Wrap(err, "Unknown file type"))
 			s.log.Error("Unknown multipartFile type")
 			return nil, err
 		}
@@ -156,13 +155,13 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 
 		cloudflareApi, err := cloudflare.NewWithAPIToken(s.cfg.CloudflareImageUploadApiKey)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error creating cloudflare api"))
+			spans.TraceError(errors.Wrap(err, "Error creating cloudflare api"))
 			return nil, err
 		}
 
 		open, err := os.Open(fileName)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error opening file"))
+			spans.TraceError(errors.Wrap(err, "Error opening file"))
 			return nil, err
 		}
 
@@ -174,7 +173,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 			RequireSignedURLs: true,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to cdn"))
+			spans.TraceError(errors.Wrap(err, "Error uploading file to cdn"))
 			return nil, err
 		}
 
@@ -183,7 +182,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		spans.TraceError(errors.Wrap(err, "Error creating aws session"))
 		s.log.Fatal(err)
 	}
 
@@ -198,11 +197,11 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 	}
 	err = uploadFileToS3(ctx, s.cfg, session, basePath, fileId+"."+extension, multipartFileHeader)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
+		spans.TraceError(errors.Wrap(err, "Error uploading file to s3"))
 		s.log.Fatal(err)
 	}
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
+		spans.TraceError(errors.Wrap(err, "Error uploading file to s3"))
 		return nil, err
 	}
 
@@ -210,7 +209,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 
 	created, err := s.attachmentService.Create(ctx, &attachmentEntity)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating attachment"))
+		spans.TraceError(errors.Wrap(err, "Error creating attachment"))
 		return nil, err
 	}
 
@@ -218,25 +217,24 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 }
 
 func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginContext *gin.Context, inline bool) (*interfaces.File, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.DownloadSingleFile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.DownloadSingleFile")
+	defer spans.Finish()
 
-	span.LogFields(log.String("fileId", id), log.Bool("inline", inline))
+	spans.LogKV("fileId", id, "inline", inline)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	attachment, err := s.attachmentService.GetById(ctx, id)
 	byId := MapAttachmentResponseToFileEntity(attachment)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		spans.TraceError(errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
-	tracing.LogObjectAsJson(span, "attachment", attachment)
+	spans.LogObjectAsJson("attachment", attachment)
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		spans.TraceError(errors.Wrap(err, "Error creating aws session"))
 		log.Error(err)
 		ginContext.AbortWithError(http.StatusInternalServerError, err)
 	}
@@ -247,7 +245,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginCont
 
 	extension := filepath.Ext(attachment.FileName)
 	if extension == "" {
-		tracing.TraceErr(span, errors.New("No file extension found"))
+		spans.TraceError(errors.New("No file extension found"))
 		fmt.Println("No file extension found.")
 	} else {
 		extension = extension[1:]
@@ -257,13 +255,13 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginCont
 	// Get the object metadata to determine the file size and ETag
 	bucket := s.cfg.AWS.Bucket
 	key := tenant + byId.BasePath + "/" + attachment.Id + "." + extension
-	span.LogFields(log.String("bucket", bucket), log.String("key", key))
+	spans.LogKV("bucket", bucket, "key", key)
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting object metadata"))
+		spans.TraceError(errors.Wrap(err, "Error getting object metadata"))
 		ginContext.AbortWithError(http.StatusInternalServerError, err)
 		return nil, err
 	}
@@ -316,7 +314,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginCont
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting object"))
+		spans.TraceError(errors.Wrap(err, "Error getting object"))
 		// Handle error
 		s.log.Errorf("Error getting object: %v", err)
 		ginContext.AbortWithError(http.StatusInternalServerError, err)
@@ -330,25 +328,24 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginCont
 }
 
 func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFileBytes")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.GetFileBytes")
+	defer spans.Finish()
 
-	span.LogFields(log.String("attachmentId", attachmentId))
+	spans.LogKV("attachmentId", attachmentId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	attachment, err := s.attachmentService.GetById(ctx, attachmentId)
 	byId := MapAttachmentResponseToFileEntity(attachment)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		spans.TraceError(errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
-	tracing.LogObjectAsJson(span, "attachment", attachment)
+	spans.LogObjectAsJson("attachment", attachment)
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		spans.TraceError(errors.Wrap(err, "Error creating aws session"))
 		log.Error(err)
 		return nil, err
 	}
@@ -357,7 +354,7 @@ func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[
 
 	extension := filepath.Ext(attachment.FileName)
 	if extension == "" {
-		tracing.TraceErr(span, errors.New("No file extension found"))
+		spans.TraceError(errors.New("No file extension found"))
 		fmt.Println("No file extension found.")
 	} else {
 		extension = extension[1:]
@@ -367,13 +364,13 @@ func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[
 	// Get the object metadata to determine the file size and ETag
 	bucket := s.cfg.AWS.Bucket
 	key := tenant + byId.BasePath + "/" + attachment.Id + "." + extension
-	span.LogFields(log.String("bucket", bucket), log.String("key", key))
+	spans.LogKV("bucket", bucket, "key", key)
 	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting object metadata"))
+		spans.TraceError(errors.Wrap(err, "Error getting object metadata"))
 		return nil, err
 	}
 
@@ -387,7 +384,7 @@ func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting object"))
+		spans.TraceError(errors.Wrap(err, "Error getting object"))
 		// Handle error
 		s.log.Errorf("Error getting object: %v", err)
 		return nil, err
@@ -396,7 +393,7 @@ func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[
 	// get file bytes
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error reading file bytes"))
+		spans.TraceError(errors.Wrap(err, "Error reading file bytes"))
 		return nil, err
 	}
 
@@ -404,21 +401,20 @@ func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[
 }
 
 func (s *fileService) Base64Image(ctx context.Context, id string) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.Base64Image")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.Base64Image")
+	defer spans.Finish()
 
-	span.LogFields(log.String("fileId", id))
+	spans.LogKV("fileId", id)
 
 	attachment, err := s.attachmentService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		spans.TraceError(errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		spans.TraceError(errors.Wrap(err, "Error creating aws session"))
 		s.log.Error(err)
 	}
 
@@ -435,7 +431,7 @@ func (s *fileService) Base64Image(ctx context.Context, id string) (*string, erro
 			Key:    aws.String(attachment.Id),
 		})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error downloading file"))
+		spans.TraceError(errors.Wrap(err, "Error downloading file"))
 		return nil, err
 	}
 
@@ -463,20 +459,19 @@ func (s *fileService) Base64Image(ctx context.Context, id string) (*string, erro
 }
 
 func uploadFileToS3(ctx context.Context, cfg *config.FileStoreConfig, session *awsSes.Session, basePath, fileId string, multipartFile *multipart.FileHeader) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.uploadFileToS3")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.uploadFileToS3")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileId))
+	spans.LogKV("basePath", basePath, "fileId", fileId)
 	if multipartFile != nil {
-		span.LogFields(log.String("fileName", multipartFile.Filename), log.Int64("size", multipartFile.Size))
+		spans.LogKV("fileName", multipartFile.Filename, "size", multipartFile.Size)
 	}
 
 	fileStream, err := multipartFile.Open()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error opening file"))
+		spans.TraceError(errors.Wrap(err, "Error opening file"))
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
@@ -487,7 +482,7 @@ func uploadFileToS3(ctx context.Context, cfg *config.FileStoreConfig, session *a
 		ContentLength: aws.Int64(0),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error putting object"))
+		spans.TraceError(errors.Wrap(err, "Error putting object"))
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
@@ -505,33 +500,32 @@ func uploadFileToS3(ctx context.Context, cfg *config.FileStoreConfig, session *a
 }
 
 func storeMultipartFileToTemp(ctx context.Context, fileId string, multipartFileHeader *multipart.FileHeader) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.storeMultipartFileToTemp")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.storeMultipartFileToTemp")
+	defer spans.Finish()
 
-	span.LogFields(log.String("fileId", fileId))
+	spans.LogKV("fileId", fileId)
 
 	file, err := os.CreateTemp("", fileId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating temp file"))
+		spans.TraceError(errors.Wrap(err, "Error creating temp file"))
 		return "", err
 	}
 	src, err := multipartFileHeader.Open()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error opening multipart file"))
+		spans.TraceError(errors.Wrap(err, "Error opening multipart file"))
 		return "", err
 	}
 	defer src.Close()
 
 	_, err = io.Copy(file, src)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error copying file"))
+		spans.TraceError(errors.Wrap(err, "Error copying file"))
 		return "", err
 	}
 
 	err = file.Close()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error closing file"))
+		spans.TraceError(errors.Wrap(err, "Error closing file"))
 		return "", err
 	}
 
@@ -567,17 +561,16 @@ func generateSignedURL(imageDeliveryURL, key string) string {
 }
 
 func (s *fileService) GetFilePublicUrl(ctx context.Context, fileId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFilePublicUrl")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.GetFilePublicUrl")
+	defer spans.Finish()
 
-	span.LogKV("fileId", fileId)
+	spans.LogKV("fileId", fileId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	attachmentDbNode, err := s.neo4j.AttachmentReadRepository.GetById(ctx, tenant, fileId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		spans.TraceError(errors.Wrap(err, "Error getting attachment by id"))
 		return "", err
 	}
 	attachmentEntity := neo4jmapper.MapDbNodeToAttachmentEntity(attachmentDbNode)
@@ -588,9 +581,9 @@ func (s *fileService) GetFilePublicUrl(ctx context.Context, fileId string) (stri
 	// generate public url and store it
 	extension := filepath.Ext(attachmentEntity.FileName)
 	if extension == "" {
-		span.LogKV("message", "No file extension found.")
+		spans.LogKV("message", "No file extension found.")
 	} else {
-		span.LogKV("extension", extension)
+		spans.LogKV("extension", extension)
 		extension = extension[1:]
 	}
 	awsBucket := aws.String(s.cfg.AWS.Bucket)
@@ -599,7 +592,7 @@ func (s *fileService) GetFilePublicUrl(ctx context.Context, fileId string) (stri
 	// Initialize the S3 service client
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		spans.TraceError(errors.Wrap(err, "Error creating aws session"))
 		s.log.Fatal(err)
 	}
 	svc := s3.New(session)
@@ -614,37 +607,36 @@ func (s *fileService) GetFilePublicUrl(ctx context.Context, fileId string) (stri
 	expiration := 7 * 24 * time.Hour // 7 days
 	publicUrl, err := req.Presign(expiration)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error presigning request"))
+		spans.TraceError(errors.Wrap(err, "Error presigning request"))
 		return "", fmt.Errorf("failed to presign request: %v", err)
 	}
 
 	// set public url and expiration time
 	err = s.neo4j.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonmodel.ATTACHMENT.Neo4jLabel(), fileId, string(neo4jentity.AttachmentPropertyPublicUrl), publicUrl)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error updating attachment public url"))
+		spans.TraceError(errors.Wrap(err, "Error updating attachment public url"))
 	}
 
 	// set expiration time to 6 days and 23 hours
 	expiredAt := utils.Now().Add(7 * 24 * time.Hour).Add(-1 * time.Hour)
 	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.ATTACHMENT.Neo4jLabel(), fileId, string(neo4jentity.AttachmentPropertyPublicUrlExpiresAt), &expiredAt)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error updating attachment public url expiration time"))
+		spans.TraceError(errors.Wrap(err, "Error updating attachment public url expiration time"))
 	}
 
 	return publicUrl, nil
 }
 
 func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*interfaces.File, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFileBytesDirect")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileID), log.String("fileName", fileName))
-	span.LogFields(log.Int("contentSize", len(*content)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.UploadSingleFileBytesDirect")
+	defer spans.Finish()
+
+	spans.LogKV("basePath", basePath, "fileId", fileID, "fileName", fileName)
 
 	// validate aws s3 configuration
 	if s.cfg.AWS.Region == "" || s.cfg.AWS.Bucket == "" {
 		err := errors.New("AWS S3 configuration is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -670,7 +662,7 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 	fileType := filetype.Unknown
 	var err error
 	mimeType := http.DetectContentType(headBytes)
-	span.LogFields(log.String("result.mimeType", mimeType))
+	spans.LogKV("result.mimeType", mimeType)
 
 	// check if file type is csv from file name
 	if strings.HasSuffix(strings.ToLower(fileName), ".csv") {
@@ -678,7 +670,7 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 		// Validate if the detected MIME type is "text/csv"
 		if !utils.Contains(acceptedMimeTypesForCsv, mimeType) {
 			err = errors.New("Invalid mime type for CSV")
-			tracing.TraceErr(span, errors.Wrap(err, "Unexpected file type"))
+			spans.TraceError(errors.Wrap(err, "Unexpected file type"))
 			s.log.Error("Unexpected file type")
 			// return nil, err
 		}
@@ -686,14 +678,14 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 	} else {
 		fileType, err = utils.GetFileType(headBytes)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error getting file type"))
+			spans.TraceError(errors.Wrap(err, "Error getting file type"))
 			return nil, err
 		}
 	}
 
 	if fileType == filetype.Unknown {
 		err = errors.New("Unknown file type")
-		tracing.TraceErr(span, errors.Wrap(err, "Unknown file type"))
+		spans.TraceError(errors.Wrap(err, "Unknown file type"))
 		s.log.Error("Unknown multipartFile type")
 		return nil, err
 	}
@@ -711,7 +703,7 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 	if cdn && s.canUploadToCDN(fileType) {
 		cdnURL, err := s.uploadToCloudflareCDN(ctx, fileID, *content)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to CDN"))
+			spans.TraceError(errors.Wrap(err, "Error uploading file to CDN"))
 			return nil, err
 		}
 		// If you need signed URLs:
@@ -723,7 +715,7 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 	//    (No temp file needed, just wrap your bytes in an io.Reader)
 	awsSession, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating AWS session"))
+		spans.TraceError(errors.Wrap(err, "Error creating AWS session"))
 		return nil, err
 	}
 
@@ -749,7 +741,7 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 		ServerSideEncryption: aws.String("AES256"),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error putting object to S3"))
+		spans.TraceError(errors.Wrap(err, "Error putting object to S3"))
 		return nil, err
 	}
 	s.log.Infof("Successfully uploaded file to S3 key: %s", s3Key)
@@ -757,7 +749,7 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 	// 7) Create the attachment record in Neo4j / Postgres (via `attachmentService`)
 	createdAttachment, err := s.attachmentService.Create(ctx, &attachmentEntity)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating attachment DB record"))
+		spans.TraceError(errors.Wrap(err, "Error creating attachment DB record"))
 		return nil, err
 	}
 
@@ -774,13 +766,13 @@ func (s *fileService) canUploadToCDN(fileType types.Type) bool {
 }
 
 func (s *fileService) uploadToCloudflareCDN(ctx context.Context, fileID string, data []byte) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.uploadToCloudflareCDN")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FileService.uploadToCloudflareCDN")
+	defer spans.Finish()
 
 	// validate cloudflare configuration
 	if s.cfg.CloudflareImageUploadApiKey == "" || s.cfg.CloudflareImageUploadAccountId == "" || s.cfg.CloudflareImageUploadSignKey == "" {
 		err := errors.New("Cloudflare configuration is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

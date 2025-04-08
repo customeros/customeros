@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -11,12 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -40,30 +38,27 @@ func NewMediaService(postgres *postgres_repository.Repositories) interfaces.Medi
 // DownloadImageToS3 downloads an image from a URL directly to an S3 bucket
 // using the existing S3Client implementation
 func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MediaService.DownloadImageToS3")
-	defer span.Finish()
-	span.LogFields(
-		tracingLog.String("url", imageURL),
-		tracingLog.String("bucket", bucketName),
-		tracingLog.String("key", s3FilePath),
-	)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MediaService.DownloadImageToS3")
+	defer spans.Finish()
+	spans.LogKV("url", imageURL)
+	spans.LogKV("bucket", bucketName)
+	spans.LogKV("key", s3FilePath)
 
 	if imageURL == "" {
 		err := errors.New("imageURL cannot be empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if s3FilePath == "" {
 		err := errors.New("s3FilePath cannot be empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	// Get the image from the URL
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(tracingLog.Error(err))
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -77,15 +72,14 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(tracingLog.Error(err))
+		spans.TraceError(err)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	// Check if request was successful
 	if resp.StatusCode != http.StatusOK {
-		span.LogFields(tracingLog.Int("response.statusCode", resp.StatusCode))
+		spans.LogKV("response.statusCode", resp.StatusCode)
 		switch {
 		case resp.StatusCode == http.StatusNotFound:
 			return "", coserrors.ErrResourceNotFound
@@ -93,14 +87,14 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 			return "", coserrors.ErrResourceForbidden
 		default:
 			err := errors.New("failed to download image")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
 
 	// Get content type from response headers
 	contentType := resp.Header.Get("Content-Type")
-	span.LogFields(tracingLog.String("content_type", contentType))
+	spans.LogKV("content_type", contentType)
 
 	// Check if s3FilePath already has an extension
 	extension := filepath.Ext(s3FilePath)
@@ -109,10 +103,8 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 		newExt := detectExtension(contentType, imageURL)
 		if newExt != "" {
 			s3FilePath = s3FilePath + newExt
-			span.LogFields(
-				tracingLog.String("detected_extension", newExt),
-				tracingLog.String("updated_key", s3FilePath),
-			)
+			spans.LogKV("detected_extension", newExt)
+			spans.LogKV("updated_key", s3FilePath)
 		}
 	}
 
@@ -140,8 +132,7 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 		ContentType: aws.String(contentType),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(tracingLog.Error(err))
+		spans.TraceError(err)
 		return "", err
 	}
 

@@ -2,9 +2,10 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -12,7 +13,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type ApplyTagToCompanyCapability struct {
@@ -81,18 +81,17 @@ func (c *ApplyTagToCompanyCapability) ValidateInput(input ApplyTagToCompanyInput
 }
 
 func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagToCompanyInput, ApplyTagToCompanyConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ApplyTagCapability.Execute")
+	defer spans.Finish()
 
 	result := NoOutput{}
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -105,23 +104,22 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 
 	err := c.applyTag(ctx, entityType, entityID, executionContainer.ConfigData.TagName.Value)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *ApplyTagToCompanyCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.applyTag")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ApplyTagCapability.applyTag")
+	defer spans.Finish()
 
 	// check if tag exists
 	tagEntity, err := c.tagService.GetTagByEntityTypeAndName(ctx, entityType, tagName)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -133,14 +131,14 @@ func (c *ApplyTagToCompanyCapability) applyTag(ctx context.Context, entityType m
 		}
 		tagEntity, err = c.tagService.Save(ctx, nil, &input)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	_, err = c.tagService.AddTagToEntity(ctx, nil, common.GetTenantFromContext(ctx), entityId, entityType, tagEntity.Id, "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

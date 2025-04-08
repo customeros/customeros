@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"sort"
 	"strings"
 	"time"
@@ -10,7 +11,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -19,7 +20,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -109,27 +110,27 @@ type AnalyzeWebSessionOutput struct {
 }
 
 func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AnalyzeWebSessionInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, AnalyzeWebSessionOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := AnalyzeWebSessionOutput{}
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// update session with organization id
 	err := c.postgresRepositories.WebSessionRepository.SetOrganizationId(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -138,33 +139,33 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 		ID: executionContainer.InputData.WebSessionID,
 	}, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if session == nil {
 		err := errors.New("cannot identify session")
-		span.LogKV("sessionId", executionContainer.InputData.WebSessionID)
-		tracing.TraceErr(span, err)
+		spans.LogKV("sessionId", executionContainer.InputData.WebSessionID)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if len(session.UniquePageViews) == 0 {
 		err := errors.New("no page views to analyze")
-		span.LogKV("sessionId", executionContainer.InputData.WebSessionID)
-		tracing.TraceErr(span, err)
+		spans.LogKV("sessionId", executionContainer.InputData.WebSessionID)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// analyze session
 	result, err = c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
 	// determine if a new company visit
 	isNewCompany, err := c.isNewCompanyVisit(ctx, executionContainer.InputData.Domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
@@ -172,18 +173,18 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	// build timeline event
 	timelineMessage, err := c.buildTimelineMessage(ctx, result)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
 	// write event to timeline
 	err = c.writeSessionToTimeline(ctx, executionContainer.InputData.OrganizationID, timelineMessage)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
@@ -216,9 +217,8 @@ const (
 )
 
 func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sessisonId, page, domain string) (PageVisit, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.processPageVisit")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.processPageVisit")
+	defer spans.Finish()
 
 	url := page
 	if !strings.HasPrefix(page, "http") {
@@ -234,7 +234,7 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 	// get session events
 	events, err := c.postgresRepositories.WebTrackerEventsRepository.FindEventsForPageVisit(ctx, sessisonId, page)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visit, err
 	}
 
@@ -268,7 +268,7 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 		case "identify":
 			email, err := event.VisitorEmail()
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				continue
 			}
 			emailValidate := mailvalidate.ValidateEmailSyntax(email)
@@ -301,12 +301,12 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 
 	content, err := c.webscraperService.Scrape(ctx, page)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	pageCategory, err := c.webscraperService.ClassifyWebpageCategory(ctx, page, &content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visit, err
 	}
 	visit.PageCategory = pageCategory
@@ -318,14 +318,14 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 
 	contentStage, err := c.webscraperService.ClassifyContentStage(ctx, page, &content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visit, err
 	}
 	visit.StageSignal = contentStage
 
 	pageTopics, err := c.webscraperService.ClassifyWebpageTopics(ctx, page, &content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visit, err
 	}
 	visit.Topics = pageTopics
@@ -334,9 +334,8 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 }
 
 func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.writeSessionToTimeline")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.writeSessionToTimeline")
+	defer spans.Finish()
 
 	actionType := enum.ActionGeneric
 	metadata := "web_session"
@@ -350,23 +349,22 @@ func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context
 
 	_, err := c.actionService.CreateActionForOrganization(ctx, nil, orgID, action)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.sessionAnalytics")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.sessionAnalytics")
+	defer spans.Finish()
 
 	session, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
 		ID:     sessionID,
 		Tenant: common.GetTenantFromContext(ctx),
 	}, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return AnalyzeWebSessionOutput{}, err
 	}
 	if session == nil {
@@ -388,7 +386,7 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 
 	sessionDuration, err := c.calculateSessionDuration(ctx, session)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return AnalyzeWebSessionOutput{}, err
 	}
 
@@ -404,13 +402,12 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 }
 
 func (c *AnalyzeWebSessionCapability) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.calculateSessionDuration")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.calculateSessionDuration")
+	defer spans.Finish()
 
 	if session.EndTime == nil || session.EndTime.IsZero() {
 		err := errors.New("Session EndTime not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -428,17 +425,16 @@ func (c *AnalyzeWebSessionCapability) calculateSessionDuration(ctx context.Conte
 }
 
 func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, domain string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewCompanyVisit")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.isNewCompanyVisit")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	if tenant == "" || domain == "" {
 		err := errors.New("neither tenant or domain can be nil")
-		tracing.TraceErr(span, err)
-		span.LogKV("tenant", tenant)
-		span.LogKV("domain", domain)
+		spans.TraceError(err)
+		spans.LogKV("tenant", tenant)
+		spans.LogKV("domain", domain)
 		return false, err
 	}
 
@@ -447,14 +443,14 @@ func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, dom
 		Domain:   &domain,
 		IsActive: false,
 	}
-	span.LogKV("isActive", "false")
+	spans.LogKV("isActive", "false")
 
 	results, err := c.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
-	span.LogKV("recordsReturned", len(results))
+	spans.LogKV("recordsReturned", len(results))
 
 	if len(results) == 0 {
 		return true, nil
@@ -463,17 +459,16 @@ func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, dom
 }
 
 func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, visitorId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewWebsiteVisitor")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.isNewWebsiteVisitor")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	if tenant == "" || visitorId == "" {
 		err := errors.New("neither tenant or visitorID can be nil")
-		tracing.TraceErr(span, err)
-		span.LogKV("tenant", tenant)
-		span.LogKV("visitorID", visitorId)
+		spans.TraceError(err)
+		spans.LogKV("tenant", tenant)
+		spans.LogKV("visitorID", visitorId)
 		return false, err
 	}
 
@@ -484,7 +479,7 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 
 	results, err := c.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -495,9 +490,8 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 }
 
 func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, analysis AnalyzeWebSessionOutput) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.buildTimelineMessage")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnalyzeWebSessionCapability.buildTimelineMessage")
+	defer spans.Finish()
 
 	// Build base message
 	var baseMessage string

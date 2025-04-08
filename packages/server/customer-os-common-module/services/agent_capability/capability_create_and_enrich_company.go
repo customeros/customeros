@@ -2,11 +2,11 @@ package agent_capability
 
 import (
 	"context"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
@@ -16,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -92,26 +92,26 @@ type CreateOrganizationOutput struct {
 }
 
 func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateOrganizationInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateOrganizationOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CreateOrganizationCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := CreateOrganizationOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, executionContainer.InputData.Domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 	if isWorkspaceDomain {
@@ -119,19 +119,19 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 			AgentExecutionId: executionContainer.AgentExecutionID,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
-		span.LogFields(log.Bool("result.skip", true))
+		spans.LogFields(log.Bool("result.skip", true))
 		result.IsWorkspaceDomain = true
-		tracing.LogObjectAsJson(span, "result", result)
+		spans.LogObjectAsJson("result", result)
 		return enum.CapabilityExecutionCompleted, result, nil
 	}
 
 	// Check if the domain is already linked to an organization
 	organizationEntity, err := c.organizationService.GetOrganizationByDomain(ctx, executionContainer.InputData.Domain, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
@@ -150,25 +150,24 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionCon
 			Domains: []string{executionContainer.InputData.Domain},
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return enum.CapabilityExecutionRetry, result, err
 		}
 	}
 
 	err = c.publishCompanyIdentifiedEvent(ctx, executionContainer.AgentExecutionID, orgID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	result.OrganizationID = orgID
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *CreateOrganizationCapability) publishCompanyIdentifiedEvent(ctx context.Context, agentExecutionID, orgId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.publishCompanyIdentifiedEvent")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CreateOrganizationCapability.publishCompanyIdentifiedEvent")
+	defer spans.Finish()
 
 	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.CompanyIdentified{
 		AgentExecutionId: agentExecutionID,

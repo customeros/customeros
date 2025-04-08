@@ -3,11 +3,11 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -16,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -67,20 +67,20 @@ func (l *CompanyIdentifiedListener) ExecutingAgents() []enum.AgentType {
 }
 
 func (l *CompanyIdentifiedListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyIdentifiedListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CompanyIdentifiedListener.Handle")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	data, err := events.DecodeEventData[dto.CompanyIdentified](ctx, event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -88,14 +88,14 @@ func (l *CompanyIdentifiedListener) Handle(ctx context.Context, baseEvent any) e
 	if data.AgentExecutionId != "" {
 		err = l.handleGoalAchieved(ctx, data.AgentExecutionId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 	}
 
 	err = l.handleExecution(ctx, data.AgentExecutionId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		errs = multierr.Append(errs, err)
 	}
 
@@ -103,13 +103,12 @@ func (l *CompanyIdentifiedListener) Handle(ctx context.Context, baseEvent any) e
 }
 
 func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyIdentifiedListener.handleExecution")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CompanyIdentifiedListener.handleExecution")
+	defer spans.Finish()
 
 	activeAgents := l.lookupActiveAgents(ctx)
 	if len(activeAgents) == 0 {
-		span.LogFields(log.String("result", "no active agents found"))
+		spans.LogKV("result", "no active agents found")
 		return nil
 	}
 
@@ -121,7 +120,7 @@ func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID s
 		IsActive:       false,
 	}, &lookbackInMins)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -142,12 +141,12 @@ func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID s
 
 		initialParams, err := utils.StructToMap(message)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 	}
@@ -156,30 +155,30 @@ func (l *CompanyIdentifiedListener) handleExecution(ctx context.Context, orgID s
 }
 
 func (l *CompanyIdentifiedListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyIdentifiedListener.handleGoalAchieved")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	span.LogFields(log.String("agentExecutionId", agentExecutionId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CompanyIdentifiedListener.handleGoalAchieved")
+	defer spans.Finish()
+
+	spans.LogKV("agentExecutionId", agentExecutionId)
 
 	var agentExecution *postgres_entity.AgentExecution
 	var err error
 
 	agentExecution, err = l.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 
 	}
 	if agentExecution == nil {
 		err = fmt.Errorf("agent execution not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// update execution with goal achieved
 	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, utils.TruePtr())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -187,13 +186,12 @@ func (l *CompanyIdentifiedListener) handleGoalAchieved(ctx context.Context, agen
 }
 
 func (l *CompanyIdentifiedListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyIdentifiedListener.lookupActiveAgents")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CompanyIdentifiedListener.lookupActiveAgents")
+	defer spans.Finish()
 
 	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	return agents

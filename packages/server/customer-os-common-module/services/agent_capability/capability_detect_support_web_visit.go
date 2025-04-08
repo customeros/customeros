@@ -2,9 +2,9 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -12,7 +12,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -96,18 +96,17 @@ func (c *DetectSupportWebVisitCapability) ValidateInput(input DetectSupportWebVi
 }
 
 func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[DetectSupportWebVisitInput, DetectSupportWebVisitConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DetectSupportWebVisitCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DetectSupportWebVisitCapability.Execute")
+	defer spans.Finish()
 
 	result := NoOutput{}
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -116,14 +115,14 @@ func (c *DetectSupportWebVisitCapability) Execute(ctx context.Context, execution
 			// throw event
 			err := c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationId, model.ORGANIZATION, dto.CompanyNeedsHelp{})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return enum.CapabilityExecutionError, result, err
 			}
 			return enum.CapabilityExecutionError, result, nil
 		}
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 

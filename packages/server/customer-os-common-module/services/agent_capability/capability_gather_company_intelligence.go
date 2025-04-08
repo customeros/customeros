@@ -3,17 +3,17 @@ package agent_capability
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+
 	"strconv"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type GatherCompanyIntelligenceCapability struct {
@@ -98,26 +98,26 @@ func (c *GatherCompanyIntelligenceCapability) ValidateInput(input GatherCompanyI
 }
 
 func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GatherCompanyIntilligenceInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, GatherCompanyIntelligenceOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GatherCompanyIntelligenceCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GatherCompanyIntelligenceCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	result := GatherCompanyIntelligenceOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// get all company context
 	primaryDomain, err := c.organizationService.GetPrimaryDomainByOrgID(ctx, executionContainer.InputData.OrganizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if primaryDomain == "" {
@@ -125,11 +125,11 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 	}
 	company, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if company == nil {
-		span.LogFields(log.String("result", "Company not set in global orgs"))
+		spans.LogKV("result", "Company not set in global orgs")
 		return enum.CapabilityExecutionRetry, result, errors.New("company not set in global orgs")
 	}
 

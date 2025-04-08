@@ -3,25 +3,23 @@ package ai
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
-
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 func (s *aiService) AskAIForWebpageTopics(ctx context.Context, request interfaces.AskAIRequest) ([]data_fields.Topic, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForWebpageTopics")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAIForWebpageTopics")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requestParams", request)
 
 	err := s.validateAIRequest(ctx, &request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -73,7 +71,7 @@ Please respond ONLY with valid JSON matching this schema:
 		if err != nil {
 			lastError = err
 			if !s.IsRetryable(err) {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			continue
@@ -98,7 +96,7 @@ Please respond ONLY with valid JSON matching this schema:
 	// If we've exhausted all retries, return the last error
 	if lastError != nil {
 		err := fmt.Errorf("webpage topics validation failed after %d attempts: %w", *request.Retries, lastError)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

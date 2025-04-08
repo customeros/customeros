@@ -6,15 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type embeddingService struct {
@@ -34,21 +32,20 @@ func NewEmbeddingService(config *config.JinaConfig, aiService interfaces.AIServi
 var ErrPaymentRequired = errors.New("Jina balance requires topup")
 
 func (s *embeddingService) postRequest(ctx context.Context, body any, url string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "embeddingService.postRequest")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "embeddingService.postRequest")
+	defer spans.Finish()
 
 	authorization := "Bearer " + s.config.ApiKey
 
 	jsonReqBody, err := json.Marshal(body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonReqBody))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -58,7 +55,7 @@ func (s *embeddingService) postRequest(ctx context.Context, body any, url string
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -70,14 +67,14 @@ func (s *embeddingService) postRequest(ctx context.Context, body any, url string
 
 		default:
 			err = fmt.Errorf("error code: %d", resp.StatusCode)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
 	responseStr := string(bodyBytes)

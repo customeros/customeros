@@ -3,6 +3,7 @@ package location
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -10,8 +11,7 @@ import (
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
@@ -25,7 +25,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -120,10 +120,9 @@ func (s *locationService) GetAllForOrganizations(ctx context.Context, organizati
 }
 
 func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*data_fields.LocationFields, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.ExtractAndEnrichLocation")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("address", address))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "LocationEventHandler.ExtractAndEnrichLocation")
+	defer spans.Finish()
+	spans.LogKV("address", address)
 
 	if strings.TrimSpace(address) == "" {
 		return nil, errors.New("address is empty")
@@ -132,7 +131,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	// Step 1: Check if mapping exists
 	locationMapping, err := s.postgres.AiLocationMappingRepository.GetLatestLocationMappingByInput(ctx, address)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get location mapping"))
+		spans.TraceError(errors.Wrap(err, "failed to get location mapping"))
 	}
 	if locationMapping != nil {
 		var location data_fields.LocationFields
@@ -140,7 +139,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		if err == nil {
 			return &location, nil
 		} else {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location response from postgres"))
+			spans.TraceError(errors.Wrap(err, "failed to unmarshal location response from postgres"))
 		}
 	}
 
@@ -151,7 +150,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		Prompt: &prompt,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get AI response"))
+		spans.TraceError(errors.Wrap(err, "failed to get AI response"))
 		s.log.Errorf("Error invoking AI: %s", err.Error())
 		return nil, err
 	}
@@ -162,7 +161,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	var location data_fields.LocationFields
 	err = json.Unmarshal([]byte(*aiResult), &location)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal location"))
 		return nil, err
 	}
 
@@ -173,7 +172,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	}
 	err = s.postgres.AiLocationMappingRepository.AddLocationMapping(ctx, *locationMapping)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to store location mapping"))
+		spans.TraceError(errors.Wrap(err, "failed to store location mapping"))
 		s.log.Errorf("Error storing location mapping: %v", err)
 	}
 
@@ -181,16 +180,16 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 }
 
 func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, locationFields data_fields.LocationFields, linkWith *common_srv.LinkWith) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "locationFields", locationFields)
-	tracing.LogObjectAsJson(span, "linkWith", linkWith)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "LocationService.Create")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("locationFields", locationFields)
+	spans.LogObjectAsJson("linkWith", linkWith)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -199,14 +198,14 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 	if linkWith != nil {
 		if !linkWith.IsContact() && !linkWith.IsOrganization() {
 			err = errors.New("unsupported linkWith type")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		// validate contact exists
 		if linkWith.IsContact() {
 			_, err = s.contact.GetContactById(ctx, linkWith.Id)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -214,7 +213,7 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 		if linkWith.IsOrganization() {
 			_, err = s.org.GetById(ctx, tenant, linkWith.Id)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -234,7 +233,7 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 	// generate location id
 	locationId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelLocation)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -261,7 +260,7 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			innerErr := s.events.Publisher.PublishFanoutEvent(ctx, locationId, model.CONTACT, dto.CreateLocation{locationFields})
 			if innerErr != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateLocation"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message CreateLocation"))
 			}
 
 			if linkWith != nil {
@@ -273,7 +272,7 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

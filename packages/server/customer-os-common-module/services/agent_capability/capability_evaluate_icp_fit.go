@@ -4,16 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strconv"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const MinICPCompanyExamples = 5
@@ -129,21 +127,21 @@ type ICPAnswer struct {
 }
 
 func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (enum.CapabilityExecutionStatus, EvaluateICPFitOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EvaluateICPFitCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	result := EvaluateICPFitOutput{
 		IcpFit: enum.IcpNotSet,
 	}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -152,7 +150,7 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	// build prompt
 	systemPrompt, content, err := c.buildPrompts(ctx, executionContainer)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -164,11 +162,11 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		OutputFormat: enum.AIOutputJson,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to ask AI"))
+		spans.TraceError(errors.Wrap(err, "failed to ask AI"))
 		if answer != nil {
-			span.LogFields(log.String("result.answer", *answer))
+			spans.LogKV("result.answer", *answer)
 		} else {
-			span.LogFields(log.String("result.answer", "nil"))
+			spans.LogKV("result.answer", "nil")
 		}
 		return enum.CapabilityExecutionError, result, err
 	}
@@ -176,7 +174,7 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	// parse answer
 	parsedAnswer, err := c.parseAnswer(ctx, *answer)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -186,21 +184,20 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 	} else {
 		result.IcpFit = enum.IcpNotFit
 	}
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *EvaluateICPFitCapability) buildPrompts(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.buildPrompts")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EvaluateICPFitCapability.buildPrompts")
+	defer spans.Finish()
 
 	company := executionContainer.InputData
 
 	homepage, err := c.webscraperService.Scrape(ctx, company.PrimaryDomain)
 	if err != nil {
-		span.LogKV("scapeResults", "none")
+		spans.LogKV("scapeResults", "none")
 		homepage = ""
 	}
 
@@ -255,9 +252,8 @@ Important:
 }
 
 func (c *EvaluateICPFitCapability) parseAnswer(ctx context.Context, answer string) (*ICPAnswer, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.parseAnswer")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EvaluateICPFitCapability.parseAnswer")
+	defer spans.Finish()
 
 	var result ICPAnswer
 	err := json.Unmarshal([]byte(answer), &result)

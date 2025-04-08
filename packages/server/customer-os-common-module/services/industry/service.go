@@ -3,17 +3,15 @@ package industry
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type industryService struct {
@@ -29,10 +27,10 @@ func NewIndustryService(log logger.Logger, neo4j *neo4j_repository.Repositories)
 }
 
 func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organizationIds []string) (*neo4j_entity.IndustryEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetAllForOrganizationIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationIds", fmt.Sprintf("%v", organizationIds)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IndustryService.GetAllForOrganizationIds")
+	defer spans.Finish()
+
+	spans.LogKV("organizationIds", fmt.Sprintf("%v", organizationIds))
 
 	industryDbNodes, err := s.neo4j.IndustryReadRepository.GetAllForOrganizationIds(ctx, common.GetTenantFromContext(ctx), organizationIds)
 	if err != nil {
@@ -49,14 +47,14 @@ func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organiza
 
 // Returns the industry entity by code, nil if not found
 func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4j_entity.IndustryEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetByCode")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("code", code))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IndustryService.GetByCode")
+	defer spans.Finish()
+
+	spans.LogKV("code", code)
 
 	industryDbNode, err := s.neo4j.IndustryReadRepository.GetByCode(ctx, code)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if industryDbNode == nil {
@@ -67,10 +65,10 @@ func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4j_en
 }
 
 func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*neo4j_entity.IndustryEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetClosestByCode")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("code", code))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IndustryService.GetClosestByCode")
+	defer spans.Finish()
+
+	spans.LogKV("code", code)
 
 	queryCode := code
 	// If the code is not found, strip the last character and try again until found or empty
@@ -80,7 +78,7 @@ func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*n
 		}
 		industryEntity, err := s.GetByCode(ctx, queryCode)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if industryEntity != nil {
@@ -93,9 +91,8 @@ func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*n
 }
 
 func (s *industryService) GetInUseIndustries(ctx context.Context) (*neo4j_entity.IndustryEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetInUseIndustries")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IndustryService.GetInUseIndustries")
+	defer spans.Finish()
 
 	industryDbNodes, err := s.neo4j.IndustryReadRepository.GetInUseIndustries(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {

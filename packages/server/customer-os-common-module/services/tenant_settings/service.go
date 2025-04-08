@@ -3,12 +3,11 @@ package tenant_settings
 import (
 	"context"
 	"fmt"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -18,7 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -37,13 +36,12 @@ func NewTenantSettingsService(log logger.Logger, neo4j *neo4j_repository.Reposit
 }
 
 func (s *tenantSettingsService) GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetTenantSettings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.GetTenantSettings")
+	defer spans.Finish()
 
 	dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -51,14 +49,12 @@ func (s *tenantSettingsService) GetTenantSettings(ctx context.Context) (*neo4jen
 }
 
 func (s *tenantSettingsService) GetTenantSettingsForTenant(ctx context.Context, tenant string) (*neo4jentity.TenantSettingsEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetTenantSettingsForTenant")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.GetTenantSettingsForTenant")
+	defer spans.Finish()
 
 	dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -66,15 +62,15 @@ func (s *tenantSettingsService) GetTenantSettingsForTenant(ctx context.Context, 
 }
 
 func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFields data_fields.TenantSettingsFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.UpdateTenantSettings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.UpdateTenantSettings")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -87,7 +83,7 @@ func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFi
 	// update tenant settings in neo4j
 	err = s.neo4j.TenantWriteRepository.UpdateTenantSettings(ctx, tenant, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Unable to update tenant settings", err)
 		return err
 	}
@@ -95,20 +91,19 @@ func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFi
 	// send event to RabbitMQ
 	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantSettings{dataFields})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTenantSettings"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message UpdateTenantSettings"))
 	}
 
 	return nil
 }
 
 func (s *tenantSettingsService) GetTenantBillingProfiles(ctx context.Context) (*neo4jentity.TenantBillingProfileEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetTenantBillingProfiles")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.GetTenantBillingProfiles")
+	defer spans.Finish()
 
 	dbNodes, err := s.neo4j.TenantReadRepository.GetTenantBillingProfiles(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("GetTenantBillingProfiles: %w", err)
 	}
 
@@ -121,14 +116,14 @@ func (s *tenantSettingsService) GetTenantBillingProfiles(ctx context.Context) (*
 }
 
 func (s *tenantSettingsService) GetTenantBillingProfile(ctx context.Context, id string) (*neo4jentity.TenantBillingProfileEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetTenantBillingProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.GetTenantBillingProfile")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	dbNode, err := s.neo4j.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("GetTenantBillingProfile: %w", err)
 	}
 
@@ -136,13 +131,12 @@ func (s *tenantSettingsService) GetTenantBillingProfile(ctx context.Context, id 
 }
 
 func (s *tenantSettingsService) GetDefaultTenantBillingProfile(ctx context.Context) (*neo4jentity.TenantBillingProfileEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetDefaultTenantBillingProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.GetDefaultTenantBillingProfile")
+	defer spans.Finish()
 
 	tenantBillingProfiles, err := s.GetTenantBillingProfiles(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("GetDefaultTenantBillingProfile: %w", err)
 	}
 	if tenantBillingProfiles == nil || len(*tenantBillingProfiles) == 0 {
@@ -153,15 +147,15 @@ func (s *tenantSettingsService) GetDefaultTenantBillingProfile(ctx context.Conte
 }
 
 func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataFields data_fields.BankAccountFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.CreateBankAccount")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.CreateBankAccount")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -169,7 +163,7 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 	// generate new id
 	bankAccountId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelBankAccount)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	dataFields.ID = bankAccountId
@@ -184,7 +178,7 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 
 	err = s.neo4j.BankAccountWriteRepository.CreateBankAccount(ctx, tenant, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Unable to create bank account", err)
 		return "", err
 	}
@@ -192,22 +186,22 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 	// send event to RabbitMQ
 	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateBankAccount{dataFields})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateBankAccount"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message CreateBankAccount"))
 	}
 
 	return bankAccountId, nil
 }
 
 func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccountId string, dataFields data_fields.BankAccountFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.UpdateBankAccount")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.UpdateBankAccount")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -221,15 +215,15 @@ func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccou
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
 	if err != nil || !exists {
 		err = errors.New("bank account not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	dataFields.ID = bankAccountId
-	tracing.TagEntity(span, bankAccountId)
+	spans.TagEntity(bankAccountId)
 
 	err = s.neo4j.BankAccountWriteRepository.UpdateBankAccount(ctx, tenant, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Unable to create bank account", err)
 		return err
 	}
@@ -237,21 +231,20 @@ func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccou
 	// send event to RabbitMQ
 	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateBankAccount{dataFields})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateBankAccount"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message UpdateBankAccount"))
 	}
 
 	return nil
 }
 
 func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccountId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.DeleteBankAccount")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.DeleteBankAccount")
+	defer spans.Finish()
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -260,14 +253,14 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
 	if err != nil || !exists {
 		err = errors.New("bank account not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
-	tracing.TagEntity(span, bankAccountId)
+	spans.TagEntity(bankAccountId)
 
 	err = s.neo4j.BankAccountWriteRepository.DeleteBankAccount(ctx, tenant, bankAccountId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Unable to delete bank account", err)
 		return err
 	}
@@ -275,22 +268,22 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	// send event to RabbitMQ
 	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: bankAccountId})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteBankAccount"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message DeleteBankAccount"))
 	}
 
 	return nil
 }
 
 func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, dataFields data_fields.TenantBillingProfileFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.CreateTenantBillingProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.CreateTenantBillingProfile")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -298,11 +291,11 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	// generate new id
 	profileId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelTenantBillingProfile)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	dataFields.ID = profileId
-	tracing.TagEntity(span, profileId)
+	spans.TagEntity(profileId)
 
 	// set default fields
 	if dataFields.AppSource == nil {
@@ -315,7 +308,7 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	// save to db
 	err = s.neo4j.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenant, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Unable to create bank account", err)
 		return "", err
 	}
@@ -323,22 +316,22 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	// send event to RabbitMQ
 	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateTenantBillingProfile{dataFields})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateTenantBillingProfile"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message CreateTenantBillingProfile"))
 	}
 
 	return profileId, nil
 }
 
 func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, profileId string, dataFields data_fields.TenantBillingProfileFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.UpdateTenantBillingProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.UpdateTenantBillingProfile")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -352,15 +345,15 @@ func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, 
 	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, profileId, model.NodeLabelTenantBillingProfile)
 	if err != nil || !exists {
 		err = errors.New("tenant billing profile not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	dataFields.ID = profileId
-	tracing.TagEntity(span, profileId)
+	spans.TagEntity(profileId)
 
 	err = s.neo4j.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenant, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error("Unable to create bank account", err)
 		return err
 	}
@@ -368,7 +361,7 @@ func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, 
 	// send event to RabbitMQ
 	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantBillingProfile{dataFields})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTenantBillingProfile"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message UpdateTenantBillingProfile"))
 	}
 
 	return nil
