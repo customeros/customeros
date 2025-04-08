@@ -219,13 +219,13 @@ func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string
 }
 
 // MailboxesV2 is the resolver for the mailboxesV2 field.
-func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*model.Mailbox, error) {
+func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*model.MailstackMailbox, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "UserResolver.MailboxesV2", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 
 	spans.LogKV("request.user", obj.ID)
 
-	mailboxes := make([]*model.Mailbox, 0)
+	mailboxes := make([]*model.MailstackMailbox, 0)
 	tenant := common.GetTenantFromContext(ctx)
 
 	statusCode, _, mb, err := r.Services.CommonServices.MailstackService.GetMailboxes(ctx, tenant, "", obj.ID)
@@ -240,7 +240,7 @@ func (r *userResolver) MailboxesV2(ctx context.Context, obj *model.User) ([]*mod
 	}
 
 	for _, mailbox := range mb {
-		mb := model.Mailbox{
+		mb := model.MailstackMailbox{
 			Provider:           model.MailboxProviderMailstack,
 			Mailbox:            mailbox.Email,
 			RampUpCurrent:      40,

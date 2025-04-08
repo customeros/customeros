@@ -16,7 +16,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/table_view"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-
 	pkgerrors "github.com/pkg/errors"
 )
 

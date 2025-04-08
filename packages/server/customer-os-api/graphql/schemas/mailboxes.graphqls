@@ -1,0 +1,82 @@
+enum MailboxProvider {
+  google_workspace
+  outlook
+  mailstack
+  generic
+}
+
+enum EmailSecurity {
+  none
+  ssl
+  tls
+}
+
+enum MailboxConnectionStatus {
+  active
+  not_active
+}
+
+## Input types
+input MailboxInput {
+  id: String
+  provider: MailboxProvider! ## Not updatable
+  emailAddress: String! ## Not updatable
+  senderId: String
+  inboundEnabled: Boolean
+  outboundEnabled: Boolean
+  imapConfig: ImapConfigInput
+  smtpConfig: SmtpConfigInput
+  replyToAddress: String
+  syncFolders: [String]
+}
+
+input ImapConfigInput {
+  imapServer: String
+  imapPort: Int
+  imapUsername: String
+  imapPassword: String
+  imapSecurity: EmailSecurity
+}
+
+input SmtpConfigInput {
+  smtpServer: String
+  smtpPort: Int
+  smtpUsername: String
+  smtpPassword: String
+  smtpSecurity: EmailSecurity
+}
+
+## Output types
+type Mailbox {
+  id: String!
+  provider: MailboxProvider!
+  emailAddress: String!
+  senderId: String
+  inboundEnabled: Boolean!
+  outboundEnabled: Boolean!
+  replyToAddress: String
+  connectionStatus: MailboxConnectionStatus!
+  lastConnectionCheck: Time!
+  connectionErrorMessage: String
+}
+
+type ImapConfig {
+  imapServer: String
+  imapPort: Int
+  imapUsername: String
+  imapPassword: String
+  imapSecurity: EmailSecurity
+}
+
+type SmtpConfig {
+  smtpServer: String
+  smtpPort: Int
+  smtpUsername: String
+  smtpPassword: String
+  smtpSecurity: EmailSecurity
+}
+
+extend type Mutation {
+  addMailbox(input: MailboxInput!): Mailbox!
+  updateMailbox(id: String!, input: MailboxInput!): Mailbox!
+}

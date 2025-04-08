@@ -1,35 +1,48 @@
 extend type Query {
-    mailstack_DomainPurchaseSuggestions(domain: String!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #suggest domains based on a domain
-    mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #domains owned by tenant
-    mailstack_CheckUnavailableDomains(domains: [String!]!): [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #check if a domain is still available
-
-    mailstack_UniqueUsernames: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #unique usernames from mailboxes
-    mailstack_Mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #mailboxes owned by user
+  mailstack_DomainPurchaseSuggestions(domain: String!): [String!]!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant #suggest domains based on a domain
+  mailstack_Domains: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant #domains owned by tenant
+  mailstack_CheckUnavailableDomains(domains: [String!]!): [String!]!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant #check if a domain is still available
+  mailstack_UniqueUsernames: [String!]!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant #unique usernames from mailboxes
+  mailstack_Mailboxes: [MailstackMailbox!]!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant #mailboxes owned by user
 }
 
 extend type Mutation {
-    mailstack_GetPaymentIntent(domains: [String!]!, usernames: [String!]!, amount: Float!): GetPaymentIntent! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailstack_RegisterBuyDomainsWithMailboxes(test: Boolean!, paymentIntentId: String!, domains: [String!]!, usernames: [String!]!, amount: Float!, redirectWebsite: String): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  mailstack_GetPaymentIntent(
+    domains: [String!]!
+    usernames: [String!]!
+    amount: Float!
+  ): GetPaymentIntent! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  mailstack_RegisterBuyDomainsWithMailboxes(
+    test: Boolean!
+    paymentIntentId: String!
+    domains: [String!]!
+    usernames: [String!]!
+    amount: Float!
+    redirectWebsite: String
+  ): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-type Mailbox {
-    provider:           MailboxProvider!
-    mailbox:            String!
-    usedInFlows:        Boolean!
+type MailstackMailbox {
+  provider: MailboxProvider!
+  mailbox: String!
+  usedInFlows: Boolean!
 
-    rampUpRate:         Int!
-    rampUpMax:          Int!
-    rampUpCurrent:      Int!
+  rampUpRate: Int!
+  rampUpMax: Int!
+  rampUpCurrent: Int!
 
-    needsManualRefresh: Boolean!
+  needsManualRefresh: Boolean!
 }
 
 type GetPaymentIntent {
-    clientSecret:       String!
+  clientSecret: String!
 }
 
-enum MailboxProvider {
-    GOOGLE
-    MICROSOFT
-    MAILSTACK
-}

@@ -13,6 +13,12 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
+type Connection interface {
+	IsConnection()
+	GetPageInfo() *PageInfo
+	GetTotalCount() int
+}
+
 type InteractionEventParticipant interface {
 	IsInteractionEventParticipant()
 }
@@ -1080,6 +1086,18 @@ type Email struct {
 	Organizations []*Organization `json:"organizations"`
 }
 
+type EmailAttachment struct {
+	ID          string `json:"id"`
+	Filename    string `json:"filename"`
+	ContentType string `json:"contentType"`
+	URL         string `json:"url"`
+}
+
+type EmailBody struct {
+	Text *string `json:"text,omitempty"`
+	HTML *string `json:"html,omitempty"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
@@ -1091,6 +1109,22 @@ type EmailInput struct {
 	// **Required.**
 	Primary   *bool   `json:"primary,omitempty"`
 	AppSource *string `json:"appSource,omitempty"`
+}
+
+type EmailMessage struct {
+	ID              string         `json:"id"`
+	ThreadID        string         `json:"threadId"`
+	MailboxID       string         `json:"mailboxId"`
+	Direction       EmailDirection `json:"direction"`
+	From            string         `json:"from"`
+	FromName        string         `json:"fromName"`
+	To              []string       `json:"to"`
+	Cc              []string       `json:"cc,omitempty"`
+	Bcc             []string       `json:"bcc,omitempty"`
+	Subject         string         `json:"subject"`
+	Body            string         `json:"body"`
+	AttachmentCount int            `json:"attachmentCount"`
+	ReceivedAt      time.Time      `json:"receivedAt"`
 }
 
 type EmailParticipant struct {
@@ -1125,6 +1159,35 @@ type EmailRelationUpdateInput struct {
 	// Deprecated
 	Email *string `json:"email,omitempty"`
 }
+
+type EmailResult struct {
+	EmailID string      `json:"emailId"`
+	Status  EmailStatus `json:"status"`
+	Error   *string     `json:"error,omitempty"`
+}
+
+type EmailThread struct {
+	ID               string     `json:"id"`
+	UserID           string     `json:"userId"`
+	MailboxID        string     `json:"mailboxId"`
+	Subject          string     `json:"subject"`
+	Summary          string     `json:"summary"`
+	IsViewed         bool       `json:"isViewed"`
+	IsDone           bool       `json:"isDone"`
+	LastSender       string     `json:"lastSender"`
+	LastSenderDomain string     `json:"lastSenderDomain"`
+	LastMessageAt    *time.Time `json:"lastMessageAt,omitempty"`
+}
+
+type EmailThreadConnection struct {
+	Edges      []*EmailThread `json:"edges"`
+	PageInfo   *PageInfo      `json:"pageInfo"`
+	TotalCount int            `json:"totalCount"`
+}
+
+func (EmailThreadConnection) IsConnection()               {}
+func (this EmailThreadConnection) GetPageInfo() *PageInfo { return this.PageInfo }
+func (this EmailThreadConnection) GetTotalCount() int     { return this.TotalCount }
 
 type EmailUpdateAddressInput struct {
 	ID    string `json:"id"`
@@ -1365,6 +1428,22 @@ type GlobalOrganization struct {
 	IconURL        string   `json:"iconUrl"`
 	Domains        []string `json:"domains"`
 	OrganizationID *string  `json:"organizationId,omitempty"`
+}
+
+type ImapConfig struct {
+	ImapServer   *string        `json:"imapServer,omitempty"`
+	ImapPort     *int           `json:"imapPort,omitempty"`
+	ImapUsername *string        `json:"imapUsername,omitempty"`
+	ImapPassword *string        `json:"imapPassword,omitempty"`
+	ImapSecurity *EmailSecurity `json:"imapSecurity,omitempty"`
+}
+
+type ImapConfigInput struct {
+	ImapServer   *string        `json:"imapServer,omitempty"`
+	ImapPort     *int           `json:"imapPort,omitempty"`
+	ImapUsername *string        `json:"imapUsername,omitempty"`
+	ImapPassword *string        `json:"imapPassword,omitempty"`
+	ImapSecurity *EmailSecurity `json:"imapSecurity,omitempty"`
 }
 
 type Industry struct {
@@ -1782,6 +1861,32 @@ type LogEntryUpdateInput struct {
 }
 
 type Mailbox struct {
+	ID                     string                  `json:"id"`
+	Provider               MailboxProvider         `json:"provider"`
+	EmailAddress           string                  `json:"emailAddress"`
+	SenderID               *string                 `json:"senderId,omitempty"`
+	InboundEnabled         bool                    `json:"inboundEnabled"`
+	OutboundEnabled        bool                    `json:"outboundEnabled"`
+	ReplyToAddress         *string                 `json:"replyToAddress,omitempty"`
+	ConnectionStatus       MailboxConnectionStatus `json:"connectionStatus"`
+	LastConnectionCheck    time.Time               `json:"lastConnectionCheck"`
+	ConnectionErrorMessage *string                 `json:"connectionErrorMessage,omitempty"`
+}
+
+type MailboxInput struct {
+	ID              *string          `json:"id,omitempty"`
+	Provider        MailboxProvider  `json:"provider"`
+	EmailAddress    string           `json:"emailAddress"`
+	SenderID        *string          `json:"senderId,omitempty"`
+	InboundEnabled  *bool            `json:"inboundEnabled,omitempty"`
+	OutboundEnabled *bool            `json:"outboundEnabled,omitempty"`
+	ImapConfig      *ImapConfigInput `json:"imapConfig,omitempty"`
+	SMTPConfig      *SMTPConfigInput `json:"smtpConfig,omitempty"`
+	ReplyToAddress  *string          `json:"replyToAddress,omitempty"`
+	SyncFolders     []*string        `json:"syncFolders,omitempty"`
+}
+
+type MailstackMailbox struct {
 	Provider           MailboxProvider `json:"provider"`
 	Mailbox            string          `json:"mailbox"`
 	UsedInFlows        bool            `json:"usedInFlows"`
@@ -2415,6 +2520,13 @@ type OrganizationWithJobRole struct {
 	JobRole      *JobRole      `json:"jobRole"`
 }
 
+type PageInfo struct {
+	HasNextPage     bool    `json:"hasNextPage"`
+	HasPreviousPage bool    `json:"hasPreviousPage"`
+	StartCursor     *string `json:"startCursor,omitempty"`
+	EndCursor       *string `json:"endCursor,omitempty"`
+}
+
 type PageView struct {
 	ID             string     `json:"id"`
 	StartedAt      time.Time  `json:"startedAt"`
@@ -2449,6 +2561,11 @@ type Pagination struct {
 	// The maximum number of results in the response.
 	// **Required.**
 	Limit int `json:"limit"`
+}
+
+type PaginationInput struct {
+	Offset *int `json:"offset,omitempty"`
+	Limit  *int `json:"limit,omitempty"`
 }
 
 type PhoneNumber struct {
@@ -2569,6 +2686,21 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
+type SendEmailInput struct {
+	MailboxID     *string    `json:"mailboxId,omitempty"`
+	FromAddress   string     `json:"fromAddress"`
+	FromName      *string    `json:"fromName,omitempty"`
+	ToAddresses   []string   `json:"toAddresses"`
+	CcAddresses   []string   `json:"ccAddresses,omitempty"`
+	BccAddresses  []string   `json:"bccAddresses,omitempty"`
+	ReplyTo       *string    `json:"replyTo,omitempty"`
+	Subject       string     `json:"subject"`
+	Body          *EmailBody `json:"body"`
+	AttachmentIds []string   `json:"attachmentIds,omitempty"`
+	ScheduleFor   *time.Time `json:"scheduleFor,omitempty"`
+	TrackClicks   *bool      `json:"trackClicks,omitempty"`
+}
+
 type ServiceLineItem struct {
 	Metadata        *Metadata               `json:"metadata"`
 	BillingCycle    BilledType              `json:"billingCycle"`
@@ -2677,6 +2809,22 @@ func (this SlackChannelPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this SlackChannelPage) GetTotalElements() int64 { return this.TotalElements }
+
+type SMTPConfig struct {
+	SMTPServer   *string        `json:"smtpServer,omitempty"`
+	SMTPPort     *int           `json:"smtpPort,omitempty"`
+	SMTPUsername *string        `json:"smtpUsername,omitempty"`
+	SMTPPassword *string        `json:"smtpPassword,omitempty"`
+	SMTPSecurity *EmailSecurity `json:"smtpSecurity,omitempty"`
+}
+
+type SMTPConfigInput struct {
+	SMTPServer   *string        `json:"smtpServer,omitempty"`
+	SMTPPort     *int           `json:"smtpPort,omitempty"`
+	SMTPUsername *string        `json:"smtpUsername,omitempty"`
+	SMTPPassword *string        `json:"smtpPassword,omitempty"`
+	SMTPSecurity *EmailSecurity `json:"smtpSecurity,omitempty"`
+}
 
 type Social struct {
 	Metadata       *Metadata  `json:"metadata"`
@@ -3016,6 +3164,14 @@ type TestInput struct {
 	ListParam   []*string `json:"listParam,omitempty"`
 }
 
+type ThreadMetadata struct {
+	ID             string        `json:"id"`
+	Summary        string        `json:"summary"`
+	Participants   []string      `json:"participants"`
+	HasAttachments bool          `json:"hasAttachments"`
+	Attachments    []*Attachment `json:"attachments,omitempty"`
+}
+
 type TimeRange struct {
 	// The start time of the time range.
 	// **Required.**
@@ -3049,7 +3205,7 @@ type User struct {
 	Emails           []*Email               `json:"emails,omitempty"`
 	PhoneNumbers     []*PhoneNumber         `json:"phoneNumbers"`
 	Mailboxes        []string               `json:"mailboxes"`
-	MailboxesV2      []*Mailbox             `json:"mailboxesV2"`
+	MailboxesV2      []*MailstackMailbox    `json:"mailboxesV2"`
 	HasLinkedInToken bool                   `json:"hasLinkedInToken"`
 	Onboarding       *UserOnboardingDetails `json:"onboarding"`
 	// Timestamp of user creation.
@@ -4127,6 +4283,47 @@ func (e EmailDeliverable) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type EmailDirection string
+
+const (
+	EmailDirectionInbound  EmailDirection = "inbound"
+	EmailDirectionOutbound EmailDirection = "outbound"
+)
+
+var AllEmailDirection = []EmailDirection{
+	EmailDirectionInbound,
+	EmailDirectionOutbound,
+}
+
+func (e EmailDirection) IsValid() bool {
+	switch e {
+	case EmailDirectionInbound, EmailDirectionOutbound:
+		return true
+	}
+	return false
+}
+
+func (e EmailDirection) String() string {
+	return string(e)
+}
+
+func (e *EmailDirection) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailDirection(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailDirection", str)
+	}
+	return nil
+}
+
+func (e EmailDirection) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 // Describes the type of email address (WORK, PERSONAL, etc).
 // **A `return` object.
 type EmailLabel string
@@ -4171,6 +4368,98 @@ func (e *EmailLabel) UnmarshalGQL(v any) error {
 }
 
 func (e EmailLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EmailSecurity string
+
+const (
+	EmailSecurityNone EmailSecurity = "none"
+	EmailSecuritySsl  EmailSecurity = "ssl"
+	EmailSecurityTLS  EmailSecurity = "tls"
+)
+
+var AllEmailSecurity = []EmailSecurity{
+	EmailSecurityNone,
+	EmailSecuritySsl,
+	EmailSecurityTLS,
+}
+
+func (e EmailSecurity) IsValid() bool {
+	switch e {
+	case EmailSecurityNone, EmailSecuritySsl, EmailSecurityTLS:
+		return true
+	}
+	return false
+}
+
+func (e EmailSecurity) String() string {
+	return string(e)
+}
+
+func (e *EmailSecurity) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailSecurity(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailSecurity", str)
+	}
+	return nil
+}
+
+func (e EmailSecurity) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EmailStatus string
+
+const (
+	EmailStatusReceived  EmailStatus = "received"
+	EmailStatusQueued    EmailStatus = "queued"
+	EmailStatusScheduled EmailStatus = "scheduled"
+	EmailStatusSent      EmailStatus = "sent"
+	EmailStatusFailed    EmailStatus = "failed"
+	EmailStatusBounced   EmailStatus = "bounced"
+)
+
+var AllEmailStatus = []EmailStatus{
+	EmailStatusReceived,
+	EmailStatusQueued,
+	EmailStatusScheduled,
+	EmailStatusSent,
+	EmailStatusFailed,
+	EmailStatusBounced,
+}
+
+func (e EmailStatus) IsValid() bool {
+	switch e {
+	case EmailStatusReceived, EmailStatusQueued, EmailStatusScheduled, EmailStatusSent, EmailStatusFailed, EmailStatusBounced:
+		return true
+	}
+	return false
+}
+
+func (e EmailStatus) String() string {
+	return string(e)
+}
+
+func (e *EmailStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailStatus", str)
+	}
+	return nil
+}
+
+func (e EmailStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -4732,23 +5021,66 @@ func (e LastTouchpointType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type MailboxConnectionStatus string
+
+const (
+	MailboxConnectionStatusActive    MailboxConnectionStatus = "active"
+	MailboxConnectionStatusNotActive MailboxConnectionStatus = "not_active"
+)
+
+var AllMailboxConnectionStatus = []MailboxConnectionStatus{
+	MailboxConnectionStatusActive,
+	MailboxConnectionStatusNotActive,
+}
+
+func (e MailboxConnectionStatus) IsValid() bool {
+	switch e {
+	case MailboxConnectionStatusActive, MailboxConnectionStatusNotActive:
+		return true
+	}
+	return false
+}
+
+func (e MailboxConnectionStatus) String() string {
+	return string(e)
+}
+
+func (e *MailboxConnectionStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MailboxConnectionStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MailboxConnectionStatus", str)
+	}
+	return nil
+}
+
+func (e MailboxConnectionStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type MailboxProvider string
 
 const (
-	MailboxProviderGoogle    MailboxProvider = "GOOGLE"
-	MailboxProviderMicrosoft MailboxProvider = "MICROSOFT"
-	MailboxProviderMailstack MailboxProvider = "MAILSTACK"
+	MailboxProviderGoogleWorkspace MailboxProvider = "google_workspace"
+	MailboxProviderOutlook         MailboxProvider = "outlook"
+	MailboxProviderMailstack       MailboxProvider = "mailstack"
+	MailboxProviderGeneric         MailboxProvider = "generic"
 )
 
 var AllMailboxProvider = []MailboxProvider{
-	MailboxProviderGoogle,
-	MailboxProviderMicrosoft,
+	MailboxProviderGoogleWorkspace,
+	MailboxProviderOutlook,
 	MailboxProviderMailstack,
+	MailboxProviderGeneric,
 }
 
 func (e MailboxProvider) IsValid() bool {
 	switch e {
-	case MailboxProviderGoogle, MailboxProviderMicrosoft, MailboxProviderMailstack:
+	case MailboxProviderGoogleWorkspace, MailboxProviderOutlook, MailboxProviderMailstack, MailboxProviderGeneric:
 		return true
 	}
 	return false

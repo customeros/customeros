@@ -175,7 +175,7 @@ func (r *queryResolver) MailstackUniqueUsernames(ctx context.Context) ([]string,
 }
 
 // MailstackMailboxes is the resolver for the mailstack_Mailboxes field.
-func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbox, error) {
+func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.MailstackMailbox, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.MailstackMailboxesV2", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 
@@ -199,9 +199,9 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 		return nil, nil
 	}
 
-	var response []*model.Mailbox
+	var response []*model.MailstackMailbox
 	for _, mailbox := range mailboxes {
-		response = append(response, &model.Mailbox{
+		response = append(response, &model.MailstackMailbox{
 			Provider:           model.MailboxProviderMailstack,
 			Mailbox:            mailbox.Email,
 			RampUpCurrent:      40,
@@ -224,7 +224,7 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 			continue
 		}
 
-		v2 := model.Mailbox{
+		v2 := model.MailstackMailbox{
 			Mailbox:            oauthToken.EmailAddress,
 			RampUpCurrent:      40,
 			RampUpMax:          40,
@@ -233,9 +233,9 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailbo
 		}
 
 		if oauthToken.Provider == "google" {
-			v2.Provider = model.MailboxProviderGoogle
+			v2.Provider = model.MailboxProviderGoogleWorkspace
 		} else {
-			v2.Provider = model.MailboxProviderMicrosoft
+			v2.Provider = model.MailboxProviderOutlook
 		}
 
 		response = append(response, &v2)

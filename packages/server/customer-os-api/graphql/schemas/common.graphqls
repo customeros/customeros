@@ -2,39 +2,63 @@ type Mutation
 type Query
 
 extend type Mutation {
-    addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+  addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  removeTag(input: RemoveTagInput!): Result
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
 
-    flagWrongField(input: FlagWrongFieldInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+  flagWrongField(input: FlagWrongFieldInput!): Result
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
 }
 
 input AddTagInput {
-    entityId: ID!
-    entityType: EntityType!
-    tag: TagIdOrNameInput!
+  entityId: ID!
+  entityType: EntityType!
+  tag: TagIdOrNameInput!
 }
 
 input RemoveTagInput {
-    entityId: ID!
-    entityType: EntityType!
-    tagId: ID!
+  entityId: ID!
+  entityType: EntityType!
+  tagId: ID!
 }
 
 enum EntityType {
-    ORGANIZATION
-    OPPORTUNITY
-    CONTACT
-    LOG_ENTRY
-    ISSUE
-    CONTRACT
+  ORGANIZATION
+  OPPORTUNITY
+  CONTACT
+  LOG_ENTRY
+  ISSUE
+  CONTRACT
 }
 
 input FlagWrongFieldInput {
-    entityId: ID!
-    entityType: EntityType!
-    field: FlagWrongFields!
+  entityId: ID!
+  entityType: EntityType!
+  field: FlagWrongFields!
 }
 
 enum FlagWrongFields {
-    ORGANIZATION_INDUSTRY
+  ORGANIZATION_INDUSTRY
 }
+
+input PaginationInput {
+  offset: Int
+  limit: Int
+}
+
+# Standard pagination metadata
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Generic connection interface that specific connections can implement
+interface Connection {
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
