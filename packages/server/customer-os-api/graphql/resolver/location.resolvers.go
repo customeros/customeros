@@ -10,28 +10,28 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // LocationRemoveFromContact is the resolver for the location_RemoveFromContact field.
 func (r *mutationResolver) LocationRemoveFromContact(ctx context.Context, contactID string, locationID string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LocationRemoveFromContactByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.locationID", locationID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.LocationRemoveFromContactByID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.locationID", locationID)
 
 	err := r.Services.LocationService.DetachFromEntity(ctx, commonModel.CONTACT, contactID, locationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not detach location %s from contact %s", locationID, contactID)
 		return nil, nil
 	}
 	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not get contact %s", contactID)
 		return nil, nil
 	}
@@ -40,22 +40,23 @@ func (r *mutationResolver) LocationRemoveFromContact(ctx context.Context, contac
 
 // LocationRemoveFromOrganization is the resolver for the location_RemoveFromOrganization field.
 func (r *mutationResolver) LocationRemoveFromOrganization(ctx context.Context, organizationID string, locationID string) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LocationRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.locationID", locationID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.LocationRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogKV("request.locationID", locationID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	err := r.Services.LocationService.DetachFromEntity(ctx, commonModel.ORGANIZATION, organizationID, locationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not detach location %s from organization %s", locationID, organizationID)
 		return nil, nil
 	}
 	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not get organization %s", organizationID)
 		return nil, nil
 	}
@@ -64,14 +65,14 @@ func (r *mutationResolver) LocationRemoveFromOrganization(ctx context.Context, o
 
 // LocationUpdate is the resolver for the location_Update field.
 func (r *mutationResolver) LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LocationUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.LocationUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	locationEntity, err := r.Services.LocationService.Update(ctx, *mapper.MapLocationUpdateInputToEntity(&input))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update location")
 		return nil, err
 	}

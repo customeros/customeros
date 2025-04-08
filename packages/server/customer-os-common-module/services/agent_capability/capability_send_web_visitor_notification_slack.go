@@ -3,19 +3,20 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -133,26 +134,26 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	result := NoOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// check if notification should be suppressed
 	skip, err := c.skipNotification(ctx, executionContainer.InputData.Domain, executionContainer.ConfigData.CooldownHours.Value)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 	if skip {
@@ -161,12 +162,12 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 
 	message, err := c.buildWebVisitorSlackNotification(ctx, executionContainer.InputData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 	if message == nil || *message == "" {
 		err = errors.New("Failed to build slack notification message")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionRetry, result, err
 	}
 
@@ -182,13 +183,13 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 
 	status, output, err := c.sendSlackNotificationCapability.Execute(ctx, newExecutionContainer)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return status, output, err
 	}
 	if status == enum.CapabilityExecutionCompleted {
 		err = c.postgresRepositories.WebSessionRepository.SetSlackSentAt(ctx, executionContainer.InputData.WebSessionID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
@@ -196,71 +197,70 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int64) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.skipNotification")
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	defer span.Finish()
-	span.LogFields(log.String("domain", domain), log.Int64("cooldownInHrs", cooldownInHrs))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendWebVisitorSlackNotificationCapability.skipNotification")
+	defer spans.Finish()
+
+	spans.LogKV("domain", domain, "cooldownInHrs", cooldownInHrs)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return true, err
 	}
 
 	// don't send if from workspace domain
 	isWorkspaceDomain, err := c.workspaceService.IsWorkspaceDomain(ctx, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return true, nil
 	}
 	if isWorkspaceDomain {
-		span.LogFields(log.Bool("result.skip", true))
+		spans.LogFields(log.Bool("result.skip", true))
 		return true, nil
 	}
 
 	// determine last notification from this domain
 	lastNotification, err := c.postgresRepositories.WebSessionRepository.FindLastNotification(ctx, tenant, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.skip", false))
+		spans.TraceError(err)
+		spans.LogFields(log.Bool("result.skip", false))
 		return false, nil
 	}
 
 	if lastNotification == nil || lastNotification.SentSlackNotification == nil {
-		span.LogFields(log.Bool("result.skip", false))
+		spans.LogFields(log.Bool("result.skip", false))
 		return false, nil
 	}
 
 	// determine how long since last notification
 	hoursSinceLastNotification := time.Since(*lastNotification.SentSlackNotification).Hours()
 	if hoursSinceLastNotification < float64(cooldownInHrs) {
-		span.LogFields(log.Bool("result.skip", true))
+		spans.LogFields(log.Bool("result.skip", true))
 		return true, nil
 	}
 
-	span.LogFields(log.Bool("result.skip", false))
+	spans.LogFields(log.Bool("result.skip", false))
 	return false, nil
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) buildWebVisitorSlackNotification(
 	ctx context.Context, data SendWebVisitorSlackNotificationInput,
 ) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.buildWebVisitorSlackNotification")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendWebVisitorSlackNotificationCapability.buildWebVisitorSlackNotification")
+	defer spans.Finish()
 
 	// get org data from global org table
 	globalOrg, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, data.Domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if globalOrg == nil {
 		err = c.postgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, data.Domain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 

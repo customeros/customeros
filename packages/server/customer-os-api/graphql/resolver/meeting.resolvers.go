@@ -16,22 +16,20 @@ import (
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	api_meeting "github.com/customeros/customeros/packages/server/customer-os-api/services/meeting"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // AttendedBy is the resolver for the attendedBy field.
 func (r *meetingResolver) AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get participants for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for meeting %s", obj.ID)
 		return nil, nil
@@ -41,11 +39,11 @@ func (r *meetingResolver) AttendedBy(ctx context.Context, obj *model.Meeting) ([
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *meetingResolver) CreatedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	participantEntities, err := dataloader.For(ctx).GetCreatedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get participants for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for meeting %s", obj.ID)
 		return nil, nil
@@ -55,11 +53,11 @@ func (r *meetingResolver) CreatedBy(ctx context.Context, obj *model.Meeting) ([]
 
 // Includes is the resolver for the includes field.
 func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*model.Attachment, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForMeeting(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get attachment entities for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, nil
@@ -69,11 +67,11 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	notesForMeeting, err := dataloader.For(ctx).GetNotesForMeeting(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get notes for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)
 		return nil, nil
@@ -83,11 +81,11 @@ func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*mode
 
 // Events is the resolver for the events field.
 func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForMeeting(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get interaction events for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction events for meeting %s", obj.ID)
 		return nil, nil
@@ -97,16 +95,16 @@ func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*mo
 
 // Recording is the resolver for the recording field.
 func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MeetingResolver.Recording", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MeetingResolver.Recording", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", obj.ID)
 
 	recording := commonModel.RECORDING
 	entities, err := r.Services.CommonServices.AttachmentService.GetFor(ctx, commonModel.MEETING, &recording, []string{obj.ID})
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		tracing.TraceErr(span, err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, err
 	}
@@ -121,11 +119,11 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 
 // ExternalSystem is the resolver for the externalSystem field.
 func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	externalSystemForMeeting, err := dataloader.For(ctx).GetExternalSystemsForMeeting(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get external systems for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)
 		return nil, nil
@@ -135,10 +133,10 @@ func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting
 
 // MeetingCreate is the resolver for the meeting_Create field.
 func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.meeting", meeting)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.meeting", meeting)
 
 	meetingEntity, err := r.Services.MeetingService.Create(ctx,
 		&cosapi_interfaces.MeetingCreateData{
@@ -149,7 +147,7 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 			ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(meeting.ExternalSystem),
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "failed to create meeting")
 		return nil, err
 	}
@@ -159,11 +157,11 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 
 // MeetingUpdate is the resolver for the meeting_Update field.
 func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID))
-	tracing.LogObjectAsJson(span, "request.meeting", meeting)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogObjectAsJson("request.meeting", meeting)
 
 	input := &cosapi_interfaces.MeetingUpdateData{
 		MeetingEntity:     mapper.MapMeetingInputToEntity(&meeting),
@@ -173,7 +171,7 @@ func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, 
 	input.MeetingEntity.Id = meetingID
 	meetingEntity, err := r.Services.MeetingService.Update(ctx, input)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update meeting")
 		return nil, err
 	}
@@ -183,11 +181,11 @@ func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, 
 
 // MeetingLinkAttendedBy is the resolver for the meeting_LinkAttendedBy field.
 func (r *mutationResolver) MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingLinkAttendedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID))
-	tracing.LogObjectAsJson(span, "request.participant", participant)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingLinkAttendedBy", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogObjectAsJson("request.participant", participant)
 
 	err := r.Services.MeetingService.LinkAttendedBy(ctx, meetingID, api_meeting.MapMeetingParticipantInputToParticipant(&participant))
 	if err != nil {
@@ -204,11 +202,11 @@ func (r *mutationResolver) MeetingLinkAttendedBy(ctx context.Context, meetingID 
 
 // MeetingUnlinkAttendedBy is the resolver for the meeting_UnlinkAttendedBy field.
 func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingUnlinkAttendedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID))
-	tracing.LogObjectAsJson(span, "request.participant", participant)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingUnlinkAttendedBy", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogObjectAsJson("request.participant", participant)
 
 	err := r.Services.MeetingService.UnlinkAttendedBy(ctx, meetingID, api_meeting.MapMeetingParticipantInputToParticipant(&participant))
 	if err != nil {
@@ -225,10 +223,11 @@ func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingI
 
 // MeetingLinkAttachment is the resolver for the meeting_LinkAttachment field.
 func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingLinkAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingLinkAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -240,14 +239,14 @@ func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID 
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
 
 	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -256,10 +255,11 @@ func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID 
 
 // MeetingUnlinkAttachment is the resolver for the meeting_UnlinkAttachment field.
 func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingUnlinkAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingUnlinkAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -271,14 +271,14 @@ func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingI
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
 
 	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -287,10 +287,11 @@ func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingI
 
 // MeetingLinkRecording is the resolver for the meeting_LinkRecording field.
 func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingLinkRecording", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingLinkRecording", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -302,14 +303,14 @@ func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID s
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
 
 	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -318,10 +319,11 @@ func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID s
 
 // MeetingUnlinkRecording is the resolver for the meeting_UnlinkRecording field.
 func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingUnlinkRecording", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingUnlinkRecording", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -333,14 +335,14 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
 
 	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -349,24 +351,24 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 
 // MeetingAddNewLocation is the resolver for the meeting_AddNewLocation field.
 func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingAddNewLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingAddNewLocation", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
 
 	_, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.MEETING, meetingID, entity.SourceFields{
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error creating location for meeting %s", meetingID)
 		return nil, err
 	}
 
 	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -375,23 +377,23 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 
 // MeetingAddNote is the resolver for the meeting_AddNote field.
 func (r *mutationResolver) MeetingAddNote(ctx context.Context, meetingID string, note *model.NoteInput) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingAddNote", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", meetingID))
-	tracing.LogObjectAsJson(span, "request.note", note)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.MeetingAddNote", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", meetingID)
+	spans.LogObjectAsJson("request.note", note)
 
 	noteEntity := mapper.MapNoteInputToEntity(note)
 
 	_, err := r.Services.NoteService.CreateNoteForMeeting(ctx, meetingID, noteEntity)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Error creating note for meeting %s", meetingID)
 		return nil, nil
 	}
 	meetingEntity, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Meeting with id %s not found", meetingID)
 		return nil, err
 	}
@@ -400,14 +402,14 @@ func (r *mutationResolver) MeetingAddNote(ctx context.Context, meetingID string,
 
 // Meeting is the resolver for the meeting field.
 func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Meeting", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.meetingID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Meeting", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.meetingID", id)
 
 	meetingEntity, err := r.Services.MeetingService.GetMeetingById(ctx, id)
 	if err != nil || meetingEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Meeting with id %s not found", id)
 		return nil, err
 	}
@@ -416,14 +418,14 @@ func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting,
 
 // ExternalMeetings is the resolver for the externalMeetings field.
 func (r *queryResolver) ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*commonModel.SortBy) (*model.MeetingsPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Meetings", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Meetings", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
+	spans.LogKV("request.page", pagination.Page)
+	spans.LogKV("request.limit", pagination.Limit)
 	paginatedResult, err := r.Services.MeetingService.FindAll(ctx, externalSystemID, externalID, pagination.Page, pagination.Limit, where, sort)
 	return &model.MeetingsPage{
 		Content:       mapper.MapEntitiesToMeetings(paginatedResult.Rows.(*neo4jentity.MeetingEntities)),

@@ -10,28 +10,27 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // CustomFieldTemplateSave is the resolver for the customFieldTemplate_Save field.
 func (r *mutationResolver) CustomFieldTemplateSave(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateSave", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldTemplateSave", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	customFieldTemplateId, err := r.Services.CommonServices.CustomFieldTemplateService.Save(ctx, input.ID, mapper.MapCustomFieldTemplateInputToSaveFields(input))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "error saving custom field template")
 		return nil, nil
 	}
 
 	customFieldTemplateEntity, err := r.Services.CommonServices.CustomFieldTemplateService.GetById(ctx, customFieldTemplateId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "error getting custom field template")
 		return nil, nil
 	}
@@ -41,14 +40,14 @@ func (r *mutationResolver) CustomFieldTemplateSave(ctx context.Context, input mo
 
 // CustomFieldTemplateDelete is the resolver for the customFieldTemplate_Delete field.
 func (r *mutationResolver) CustomFieldTemplateDelete(ctx context.Context, id string) (*bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.CustomFieldTemplateDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	err := r.Services.CommonServices.CustomFieldTemplateService.Delete(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "error deleting custom field template")
 		return nil, nil
 	}
@@ -58,13 +57,12 @@ func (r *mutationResolver) CustomFieldTemplateDelete(ctx context.Context, id str
 
 // CustomFieldTemplateList is the resolver for the customFieldTemplate_List field.
 func (r *queryResolver) CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.CustomFieldTemplateList", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CustomFieldTemplateList", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	entities, err := r.Services.CommonServices.CustomFieldTemplateService.GetAll(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "error getting custom field templates: %s", err.Error())
 		return nil, nil
 	}

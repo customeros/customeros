@@ -3,23 +3,21 @@ package ai
 import (
 	"context"
 	"fmt"
-
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 func (s *aiService) AskAIForIndustryCode(ctx context.Context, request interfaces.AskAIRequest) (*data_fields.IndustryCode, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForIndustryCode")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAIForIndustryCode")
+	defer spans.Finish()
+	spans.LogObjectAsJson("requestParams", request)
 
 	err := s.validateAIRequest(ctx, &request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -65,7 +63,7 @@ Please respond ONLY with valid JSON matching this schema:
 		if err != nil {
 			lastError = err
 			if !s.IsRetryable(err) {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			continue
@@ -90,7 +88,7 @@ Please respond ONLY with valid JSON matching this schema:
 	// If we've exhausted all retries, return the last error
 	if lastError != nil {
 		err := fmt.Errorf("industry code identification failed after %d attempts: %w", *request.Retries, lastError)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

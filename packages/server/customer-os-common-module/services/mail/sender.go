@@ -4,66 +4,67 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func (s *mailService) SendMail(ctx context.Context, emailMessage *postgres_entity.EmailMessage) error {
-	span, ctx := s.initializeTracing(ctx, "MailService.SendMail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.SendMail")
+	defer spans.Finish()
 
-	span.LogKV("emailMessage", emailMessage)
+	spans.LogKV("emailMessage", emailMessage)
 
 	oauthToken, err := s.getOAuthToken(ctx, emailMessage)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
-	if err := s.prepareEmailMessage(ctx, span, emailMessage); err != nil {
-		tracing.TraceErr(span, err)
+	if err := s.prepareEmailMessage(ctx, *spans, emailMessage); err != nil {
+		spans.TraceError(err)
 		return err
 	}
 
-	if err := s.sendEmailBasedOnProvider(ctx, span, emailMessage, oauthToken); err != nil {
-		tracing.TraceErr(span, err)
+	if err := s.sendEmailBasedOnProvider(ctx, *spans, emailMessage, oauthToken); err != nil {
+		spans.TraceError(err)
 		return err
 	}
 
-	return s.storeEmailMessage(ctx, span, emailMessage)
+	return s.storeEmailMessage(ctx, *spans, emailMessage)
 }
 
 func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTransaction, emailMessage *postgres_entity.EmailMessage) (*string, error) {
-	span, ctx := s.initializeTracing(ctx, "MailService.ProcessSentEmail")
-	span.LogFields(tracingLog.Object("emailMessage", emailMessage))
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.ProcessSentEmail")
+	defer spans.Finish()
+	spans.LogObjectAsJson("emailMessage", emailMessage)
 
 	id, err := utils.ExecuteWriteInTransaction(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return s.saveEmailInTx(ctx, tx, emailMessage, span)
+		return s.saveEmailInTx(ctx, tx, emailMessage, *spans)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	emailMessage.Status = postgres_entity.EmailMessageStatusProcessed
 	err = s.postgres.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to store email message: %v", err)
 	}
 
@@ -71,12 +72,12 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 }
 
 func (s *mailService) getOAuthToken(ctx context.Context, emailMessage *postgres_entity.EmailMessage) (*postgres_entity.OAuthTokenEntity, error) {
-	span, ctx := s.initializeTracing(ctx, "MailService.getOAuthToken")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.getOAuthToken")
+	defer spans.Finish()
 
-	span.LogFields(tracingLog.String("tenant", emailMessage.Tenant))
-	span.LogFields(tracingLog.String("provider", emailMessage.FromProvider))
-	span.LogFields(tracingLog.String("email", emailMessage.From))
+	spans.LogFields(tracingLog.String("tenant", emailMessage.Tenant))
+	spans.LogFields(tracingLog.String("provider", emailMessage.FromProvider))
+	spans.LogFields(tracingLog.String("email", emailMessage.From))
 
 	oauthToken, err := s.postgres.OAuthTokenRepository.GetByEmail(
 		ctx,
@@ -85,14 +86,14 @@ func (s *mailService) getOAuthToken(ctx context.Context, emailMessage *postgres_
 		emailMessage.From,
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	return oauthToken, nil
 }
 
-func (s *mailService) prepareEmailMessage(ctx context.Context, span opentracing.Span, emailMessage *postgres_entity.EmailMessage) error {
+func (s *mailService) prepareEmailMessage(ctx context.Context, spans telemetry.Spans, emailMessage *postgres_entity.EmailMessage) error {
 	uniqueInternalIdentifier := utils.GenerateRandomString(64)
 	emailMessage.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
@@ -100,10 +101,10 @@ func (s *mailService) prepareEmailMessage(ctx context.Context, span opentracing.
 		return nil
 	}
 
-	return s.handleReplyToEmail(ctx, span, emailMessage)
+	return s.handleReplyToEmail(ctx, spans, emailMessage)
 }
 
-func (s *mailService) handleReplyToEmail(ctx context.Context, span opentracing.Span, emailMessage *postgres_entity.EmailMessage) error {
+func (s *mailService) handleReplyToEmail(ctx context.Context, spans telemetry.Spans, emailMessage *postgres_entity.EmailMessage) error {
 	interactionEventNode, err := s.neo4j.CommonReadRepository.GetById(
 		ctx,
 		emailMessage.Tenant,
@@ -112,7 +113,7 @@ func (s *mailService) handleReplyToEmail(ctx context.Context, span opentracing.S
 	)
 	if err != nil {
 		err = fmt.Errorf("unable to handle reply to email: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -120,7 +121,7 @@ func (s *mailService) handleReplyToEmail(ctx context.Context, span opentracing.S
 	emailChannelData := neo4j_entity.EmailChannelData{}
 	if err := json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData); err != nil {
 		err = fmt.Errorf("unable to parse email channel data for %s", *emailMessage.ReplyTo)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -148,27 +149,27 @@ func (s *mailService) setReplyReferences(emailMessage *postgres_entity.EmailMess
 
 func (s *mailService) sendEmailBasedOnProvider(
 	ctx context.Context,
-	span opentracing.Span,
+	spans telemetry.Spans,
 	emailMessage *postgres_entity.EmailMessage,
 	oauthToken *postgres_entity.OAuthTokenEntity,
 ) error {
 	if oauthToken == nil {
-		return s.sendEmailViaOpenSrs(ctx, span, emailMessage)
+		return s.sendEmailViaOpenSrs(ctx, spans, emailMessage)
 	}
-	return s.sendEmailViaOAuth(ctx, span, emailMessage, oauthToken)
+	return s.sendEmailViaOAuth(ctx, spans, emailMessage, oauthToken)
 }
 
-func (s *mailService) sendEmailViaOpenSrs(ctx context.Context, span opentracing.Span, emailMessage *postgres_entity.EmailMessage) error {
+func (s *mailService) sendEmailViaOpenSrs(ctx context.Context, spans telemetry.Spans, emailMessage *postgres_entity.EmailMessage) error {
 	tenant := common.GetTenantFromContext(ctx)
 	mailbox, err := s.mailstack.GetByMailbox(ctx, tenant, emailMessage.From)
 	if err != nil {
 		err = fmt.Errorf("failed to get mailbox: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if mailbox == nil {
 		err = fmt.Errorf("mailbox not found for %s", emailMessage.From)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return s.opensrs.SendEmail(ctx, emailMessage)
@@ -176,13 +177,13 @@ func (s *mailService) sendEmailViaOpenSrs(ctx context.Context, span opentracing.
 
 func (s *mailService) sendEmailViaOAuth(
 	ctx context.Context,
-	span opentracing.Span,
+	spans telemetry.Spans,
 	emailMessage *postgres_entity.EmailMessage,
 	oauthToken *postgres_entity.OAuthTokenEntity,
 ) error {
 	if oauthToken.NeedsManualRefresh {
 		err := errors.New("oauth token needs manual refresh")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("oauth token needs manual refresh: %v", err)
 	}
 
@@ -196,39 +197,39 @@ func (s *mailService) sendEmailViaOAuth(
 	}
 }
 
-func (s *mailService) storeEmailMessage(ctx context.Context, span opentracing.Span, emailMessage *postgres_entity.EmailMessage) error {
+func (s *mailService) storeEmailMessage(ctx context.Context, spans telemetry.Spans, emailMessage *postgres_entity.EmailMessage) error {
 	emailMessage.Status = postgres_entity.EmailMessageStatusSent
 	emailMessage.SentAt = utils.TimePtr(utils.Now())
 
 	if err := s.postgres.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("failed to store email message: %v", err)
 	}
 	return nil
 }
 
-func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *postgres_entity.EmailMessage, span opentracing.Span) (any, error) {
+func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *postgres_entity.EmailMessage, spans telemetry.Spans) (any, error) {
 	tenant := common.GetTenantFromContext(ctx)
 
 	sessionID, err := s.getOrCreateInteractionSession(ctx, tx, tenant, emailMessage)
 	if err != nil {
 		err = fmt.Errorf("failed to get or create interaction session: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	participants := s.buildParticipantLists(emailMessage)
 
-	eventID, err := s.createInteractionEvent(ctx, tx, span, emailMessage, sessionID, participants)
+	eventID, err := s.createInteractionEvent(ctx, tx, spans, emailMessage, sessionID, participants)
 	if err != nil {
 		err = fmt.Errorf("failed to create interaction event: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	if err := s.linkEventToSession(ctx, tx, span, tenant, eventID, sessionID); err != nil {
+	if err := s.linkEventToSession(ctx, tx, spans, tenant, eventID, sessionID); err != nil {
 		err = fmt.Errorf("failed to link event to session: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -236,8 +237,8 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 }
 
 func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emailMessage *postgres_entity.EmailMessage) (string, error) {
-	span, ctx := s.initializeTracing(ctx, "MailService.getOrCreateInteractionSession")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.getOrCreateInteractionSession")
+	defer spans.Finish()
 
 	// Try to get existing session
 	sessionNode, err := s.neo4j.InteractionSessionReadRepository.GetByIdentifierAndChannel(
@@ -245,7 +246,7 @@ func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4
 	)
 	if err != nil {
 		err = fmt.Errorf("failed to get interaction session: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -263,13 +264,13 @@ func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4
 	})
 	if err != nil {
 		err = fmt.Errorf("failed to create transaction: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if sessionID == nil {
 		err := errors.New("session id is empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -320,7 +321,7 @@ func (s *mailService) buildParticipantLists(emailMessage *postgres_entity.EmailM
 func (s *mailService) createInteractionEvent(
 	ctx context.Context,
 	tx neo4j.ManagedTransaction,
-	span opentracing.Span,
+	spans telemetry.Spans,
 	emailMessage *postgres_entity.EmailMessage,
 	sessionID string,
 	participants *struct {
@@ -339,7 +340,7 @@ func (s *mailService) createInteractionEvent(
 	)
 	if err != nil {
 		err = fmt.Errorf("failed to build email channel data: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -364,7 +365,7 @@ func (s *mailService) createInteractionEvent(
 	})
 	if err != nil {
 		err = fmt.Errorf("failed to create interaction event: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -374,7 +375,7 @@ func (s *mailService) createInteractionEvent(
 func (s *mailService) linkEventToSession(
 	ctx context.Context,
 	tx neo4j.ManagedTransaction,
-	span opentracing.Span,
+	spans telemetry.Spans,
 	tenant string,
 	eventID *string,
 	sessionID string,
@@ -389,7 +390,7 @@ func (s *mailService) linkEventToSession(
 	})
 	if err != nil {
 		err = fmt.Errorf("failed to link interaction event with interaction session: %v", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil

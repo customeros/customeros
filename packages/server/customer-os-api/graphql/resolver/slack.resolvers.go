@@ -12,30 +12,29 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // SlackChannels is the resolver for the slack_Channels field.
 func (r *queryResolver) SlackChannels(ctx context.Context, pagination *model.Pagination) (*model.SlackChannelPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "SlackResolver.SlackChannels", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "SlackResolver.SlackChannels", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
 	if pagination != nil {
-		tracing.LogObjectAsJson(span, "request.pagination", pagination)
+		spans.LogObjectAsJson("request.pagination", pagination)
 	}
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
+	spans.LogKV("request.pagination.page", pagination.Page)
+	spans.LogKV("request.pagination.limit", pagination.Limit)
 
 	paginatedResult, err := r.Services.CommonServices.SlackService.GetPaginatedSlackChannels(ctx, common.GetTenantFromContext(ctx), pagination.Page, pagination.Limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get invoices")
 		return nil, err
 	}
@@ -48,11 +47,11 @@ func (r *queryResolver) SlackChannels(ctx context.Context, pagination *model.Pag
 
 // Organization is the resolver for the organization field.
 func (r *slackChannelResolver) Organization(ctx context.Context, obj *model.SlackChannel) (*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntity, err := dataloader.For(ctx).GetOrganizationForSlackChannel(ctx, obj.ChannelID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching organization with slack channel %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching organization with slack channel %s", obj.Metadata.ID)
 		return nil, nil

@@ -3,19 +3,18 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 	"strings"
 	"sync"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type DashboardV2Repository interface {
@@ -34,12 +33,12 @@ func NewDashboardV2Repository(driver *neo4j.DriverWithContext) DashboardV2Reposi
 }
 
 func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("limit", limit))
-	tracing.LogObjectAsJson(span, "where", where)
-	tracing.LogObjectAsJson(span, "sort", sort)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2")
+	defer spans.Finish()
+
+	spans.LogKV(log.Int("limit", limit))
+	spans.LogObjectAsJson("where", where)
+	spans.LogObjectAsJson("sort", sort)
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
 	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
@@ -573,13 +572,12 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 	wg.Add(1)
 	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2.CountQuery")
-		defer span.Finish()
+		innerSpans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2.CountQuery")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		tracing.LogObjectAsJson(span, "params", params)
-		span.LogFields(log.String("countQuery", countQuery))
+		innerSpans.LogObjectAsJson("params", params)
+		innerSpans.LogKV("countQuery", countQuery)
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
 		defer session.Close(ctx)
@@ -594,7 +592,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		})
 
 		if err != nil {
-			tracing.TraceErr(span, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -604,13 +602,12 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 	wg.Add(1)
 	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2.SelectQuery")
-		defer span.Finish()
+		innerSpans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewOrganizationDataV2.SelectQuery")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		tracing.LogObjectAsJson(span, "params", params)
-		span.LogFields(log.String("selectQuery", selectQuery))
+		innerSpans.LogObjectAsJson("params", params)
+		innerSpans.LogKV("selectQuery", selectQuery)
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
 		defer session.Close(ctx)
@@ -625,7 +622,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		})
 
 		if err != nil {
-			tracing.TraceErr(span, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -639,7 +636,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		return nil, firstErr
 	}
 
-	span.LogFields(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
+	spans.LogKV(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
 
 	return stringsWithTotalCount, nil
 }
@@ -730,12 +727,12 @@ func createBooleanFilter(filter *model.Filter, cypherFilter *utils.CypherFilter,
 }
 
 func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Context, tenant string, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.StringsWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactDataV2")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("limit", limit))
-	tracing.LogObjectAsJson(span, "where", where)
-	tracing.LogObjectAsJson(span, "sort", sort)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewContactDataV2")
+	defer spans.Finish()
+
+	spans.LogKV(log.Int("limit", limit))
+	spans.LogObjectAsJson("where", where)
+	spans.LogObjectAsJson("sort", sort)
 
 	contactFilterCypher, contactFilterParams := "", make(map[string]interface{})
 	linkedInFilterCypher, linkedInFilterParams := "", make(map[string]interface{})
@@ -1443,13 +1440,12 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 	wg.Add(1)
 	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
-		innerSpan, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactDataV2.CountQuery")
-		defer innerSpan.Finish()
+		innerSpans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewContactDataV2.CountQuery")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultServiceSpanTags(ctx, innerSpan)
 
-		tracing.LogObjectAsJson(innerSpan, "params", params)
-		innerSpan.LogFields(log.String("countQuery", countQuery))
+		innerSpans.LogObjectAsJson("params", params)
+		innerSpans.LogKV("countQuery", countQuery)
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
 		defer session.Close(ctx)
@@ -1464,7 +1460,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		})
 
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -1474,13 +1470,12 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 	wg.Add(1)
 	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
-		innerSpan, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactDataV2.SelectQuery")
-		defer innerSpan.Finish()
+		innerSpans, ctx := telemetry.StartNeo4jSpan(ctx, "DashboardRepository.GetDashboardViewContactDataV2.SelectQuery")
+		defer innerSpans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultServiceSpanTags(ctx, innerSpan)
 
-		tracing.LogObjectAsJson(innerSpan, "params", params)
-		innerSpan.LogFields(log.String("selectQuery", selectQuery))
+		innerSpans.LogObjectAsJson("params", params)
+		innerSpans.LogKV("selectQuery", selectQuery)
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
 		defer session.Close(ctx)
@@ -1495,7 +1490,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		})
 
 		if err != nil {
-			tracing.TraceErr(innerSpan, err)
+			innerSpans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -1509,7 +1504,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		return nil, firstErr
 	}
 
-	span.LogFields(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
+	spans.LogKV(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
 
 	return stringsWithTotalCount, nil
 }

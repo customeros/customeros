@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/Boostport/mjml-go"
@@ -12,10 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	novu "github.com/novuhq/go-novu/lib"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -63,14 +62,13 @@ func NewNovuService(apiKey string) interfaces.NovuService {
 }
 
 func (np *novuService) SendNotification(ctx context.Context, notification *interfaces.NovuNotification) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NovuService.SendNotification")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NovuService.SendNotification")
+	defer spans.Finish()
 
 	// validate if novu is configured
 	if np.novuApiKey == "" {
 		err := errors.New("novu is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -88,14 +86,14 @@ func (np *novuService) SendNotification(ctx context.Context, notification *inter
 
 	rawEmailTemplate, err := np.LoadEmailBody(ctx, workflowId, "mjml")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if rawEmailTemplate != "" {
 		htmlEmailTemplate, err := np.FillTemplate(workflowId, rawEmailTemplate, notification.TemplateData)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		payload["html"] = htmlEmailTemplate
@@ -118,7 +116,7 @@ func (np *novuService) SendNotification(ctx context.Context, notification *inter
 
 	_, err = np.NovuClient.EventApi.Trigger(ctx, workflowId, data)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -126,8 +124,8 @@ func (np *novuService) SendNotification(ctx context.Context, notification *inter
 }
 
 func (np *novuService) LoadEmailBody(ctx context.Context, workflowId, fileExtension string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NovuService.LoadEmailBody")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NovuService.LoadEmailBody")
+	defer spans.Finish()
 
 	fileName := np.GetFileName(workflowId, fileExtension)
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})

@@ -14,26 +14,25 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	pkgerrors "github.com/pkg/errors"
 )
 
 // Users is the resolver for the users field.
 func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get users for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for email %s", obj.ID)
 		return nil, nil
@@ -43,11 +42,11 @@ func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.U
 
 // Contacts is the resolver for the contacts field.
 func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get contacts for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contacts for email %s", obj.ID)
 		return nil, nil
@@ -57,11 +56,11 @@ func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*mode
 
 // Organizations is the resolver for the organizations field.
 func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get organizations for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organizations for email %s", obj.ID)
 		return nil, nil
@@ -71,11 +70,11 @@ func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]
 
 // EmailMergeToContact is the resolver for the emailMergeToContact field.
 func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.emailInput", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailMergeToContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogObjectAsJson("request.emailInput", input)
 
 	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		interfaces.EmailFields{
@@ -88,7 +87,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 			Id:   contactID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
@@ -100,7 +99,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
 		return nil, nil
 	}
@@ -109,10 +108,11 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 
 // EmailRemoveFromContact is the resolver for the EmailRemoveFromContact field.
 func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.email", email))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailRemoveFromContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.email", email)
 
 	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, nil, email, constants.AppSourceCustomerOsApi,
 		common_srv.LinkWith{
@@ -120,7 +120,7 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 			Id:   contactID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
 		return &model.Result{
 			Result: false,
@@ -134,11 +134,12 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 
 // EmailReplaceForContact is the resolver for the emailReplaceForContact field.
 func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID string, previousEmail *string, input model.EmailInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailReplaceForContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailReplaceForContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.previousEmail", utils.IfNotNilString(previousEmail))
+	spans.LogObjectAsJson("request.input", input)
 
 	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, nil,
 		utils.IfNotNilString(previousEmail),
@@ -152,7 +153,7 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 			Id:   contactID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to replace email %s", input.Email)
 		return nil, err
 	}
@@ -163,7 +164,7 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
 		return nil, nil
 	}
@@ -172,10 +173,11 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 
 // EmailSetPrimaryForContact is the resolver for the emailSetPrimaryForContact field.
 func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailSetPrimaryForContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.email", email))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailSetPrimaryForContact", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.contactID", contactID)
+	spans.LogKV("request.email", email)
 
 	err := r.Services.CommonServices.EmailService.SetPrimary(ctx, email,
 		common_srv.LinkWith{
@@ -183,7 +185,7 @@ func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contac
 			Id:   contactID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not set email %s as primary for contact %s", email, contactID)
 		return nil, nil
 	}
@@ -193,11 +195,11 @@ func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contac
 
 // EmailMergeToUser is the resolver for the emailMergeToUser field.
 func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailMergeToUser", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.userID", userID)
+	spans.LogObjectAsJson("request.input", input)
 
 	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		interfaces.EmailFields{
@@ -210,7 +212,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 			Id:   userID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
@@ -222,7 +224,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
 		return nil, nil
 	}
@@ -231,10 +233,11 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 
 // EmailRemoveFromUser is the resolver for the emailRemoveFromUser field.
 func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID string, email string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID), log.String("request.email", email))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailRemoveFromUser", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.userID", userID)
+	spans.LogKV("request.email", email)
 
 	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, nil, email, constants.AppSourceCustomerOsApi,
 		common_srv.LinkWith{
@@ -242,7 +245,7 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 			Id:   userID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", email, userID)
 		return &model.Result{
 			Result: false,
@@ -255,11 +258,12 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 
 // EmailReplaceForUser is the resolver for the emailReplaceForUser field.
 func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID string, previousEmail *string, input model.EmailInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailReplaceForUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailReplaceForUser", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.userID", userID)
+	spans.LogKV("request.previousEmail", utils.IfNotNilString(previousEmail))
+	spans.LogObjectAsJson("request.input", input)
 
 	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, nil,
 		utils.IfNotNilString(previousEmail),
@@ -273,7 +277,7 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 			Id:   userID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
@@ -285,7 +289,7 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
 		return nil, nil
 	}
@@ -294,11 +298,11 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 
 // EmailMergeToOrganization is the resolver for the emailMergeToOrganization field.
 func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organizationID string, input model.EmailInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailMergeToOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogObjectAsJson("request.input", input)
 
 	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		interfaces.EmailFields{
@@ -311,7 +315,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 			Id:   organizationID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
@@ -323,7 +327,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
 		return nil, nil
 	}
@@ -332,10 +336,11 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 
 // EmailRemoveFromOrganization is the resolver for the emailRemoveFromOrganization field.
 func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.email", email))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailRemoveFromOrganization", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogKV("request.email", email)
 
 	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, nil, email, constants.AppSourceCustomerOsApi,
 		common_srv.LinkWith{
@@ -343,7 +348,7 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 			Id:   organizationID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", email, organizationID)
 		return &model.Result{
 			Result: false,
@@ -357,11 +362,12 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 
 // EmailReplaceForOrganization is the resolver for the emailReplaceForOrganization field.
 func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, organizationID string, previousEmail *string, input model.EmailInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailReplaceForUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailReplaceForUser", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.organizationID", organizationID)
+	spans.LogKV("request.previousEmail", utils.IfNotNilString(previousEmail))
+	spans.LogObjectAsJson("request.input", input)
 
 	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, nil,
 		utils.IfNotNilString(previousEmail),
@@ -375,7 +381,7 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 			Id:   organizationID,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
@@ -387,7 +393,7 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
 		return nil, nil
 	}
@@ -396,14 +402,14 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 
 // EmailValidate is the resolver for the email_Validate field.
 func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailValidate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.EmailValidate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.emailID", id)
 
 	emailNode, err := r.Services.EmailService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to get email by id"))
+		spans.TraceError(pkgerrors.Wrap(err, "Failed to get email by id"))
 		graphql.AddErrorf(ctx, "Email not found by id: %s", id)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -414,7 +420,7 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 
 	err = r.Services.CommonServices.EmailService.RequestEmailValidation(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(err, "Error requesting email validation"))
+		spans.TraceError(pkgerrors.Wrap(err, "Error requesting email validation"))
 		r.log.Errorf("Error requesting email validation for %s: %s", id, err.Error())
 		graphql.AddErrorf(ctx, "Error requesting email validation for %s", id)
 		return &model.ActionResponse{Accepted: false}, nil
@@ -425,14 +431,14 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 
 // Email is the resolver for the email field.
 func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Email", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Email", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.emailID", id)
 
 	emailEntity, err := r.Services.EmailService.GetById(ctx, id)
 	if err != nil || emailEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed getting email with id %s", id)
 		return nil, nil
 	}
@@ -441,10 +447,10 @@ func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, err
 
 // EmailProfilePhoto is the resolver for the email_ProfilePhoto field.
 func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) ([]*model.EmailProfile, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EmailProfilePhoto", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.emails", emails)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.EmailProfilePhoto", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.emails", emails)
 
 	// lowercase all emails
 	lowercaseEmails := make([]string, len(emails))
@@ -473,7 +479,7 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 	// populate profile photo url for tenant users identified by emails
 	userEntities, err := r.Services.CommonServices.UserService.GetUsersByEmailAddresses(ctx, emails)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get users by emails")
 		return nil, nil
 	}
@@ -487,7 +493,7 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 	// populate profile photo url for tenant contacts identified by emails
 	contactEntities, err := r.Services.CommonServices.ContactService.GetContactsByEmailAddresses(ctx, emails)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contacts by emails")
 		return nil, nil
 	}
@@ -509,7 +515,7 @@ func (r *queryResolver) EmailProfilePhoto(ctx context.Context, emails []string) 
 	// get global contacts by emails
 	globalContactEntities, err := r.Services.CommonServices.GlobalContactService.GetGlobalContactsByEmailAddresses(ctx, emailsWithoutProfilePhoto)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get global contacts by emails")
 		return nil, nil
 	}

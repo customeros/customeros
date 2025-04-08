@@ -4,13 +4,12 @@ import (
 	"context"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type TEMPLATECapability struct {
@@ -65,26 +64,26 @@ type TEMPLATEOutput struct {
 }
 
 func (c *TEMPLATECapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[TEMPLATEInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, TEMPLATEOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TEMPLATECapability.Execute")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TEMPLATECapability.Execute")
+	defer spans.Finish()
+
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := TEMPLATEOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return false, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return false, result, err
 	}
 
 	// TODO implement execution here
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

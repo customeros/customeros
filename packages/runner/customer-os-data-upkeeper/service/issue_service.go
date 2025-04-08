@@ -5,7 +5,7 @@ import (
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -31,13 +31,12 @@ func (s *issueService) LinkUnthreadIssues() {
 	ctx, cancel := utils.GetLongLivedContext(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "IssueService.LinkUnthreadIssues")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "IssueService.LinkUnthreadIssues")
+	defer spans.Finish()
 
 	err := s.repositories.Neo4jRepositories.IssueWriteRepository.LinkUnthreadIssuesToOrganizationByGroupId(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error linking unthread issues to organization by group id: %s", err.Error())
 		return
 	}

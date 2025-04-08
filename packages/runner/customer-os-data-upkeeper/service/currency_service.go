@@ -5,7 +5,7 @@ import (
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
 	"io/ioutil"
@@ -35,14 +35,13 @@ func (c currencyService) GetCurrencyRatesECB() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "CurrencyService.GetCurrencyRatesECB")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "CurrencyService.GetCurrencyRatesECB")
+	defer spans.Finish()
 
 	// Make HTTP GET request to ECB API endpoint
 	resp, err := http.Get("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		c.log.Errorf("Error making HTTP request to ECB API: %s", err.Error())
 		return
 	}
@@ -51,7 +50,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 	// Read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		c.log.Errorf("Error reading response body: %s", err.Error())
 		return
 	}
@@ -73,7 +72,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 	var envelope Envelope
 	err = xml.Unmarshal(body, &envelope)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		c.log.Errorf("Error unmarshalling XML response: %s", err.Error())
 		return
 	}
@@ -81,7 +80,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 	// Extract date from response
 	date, err := time.Parse("2006-01-02", envelope.Cube.Cube.Time)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		c.log.Errorf("Error parsing date: %s", err.Error())
 		return
 	}
@@ -93,7 +92,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 			usdToEurRate = utils.TruncateFloat64(float64(1)/currency.Rate, 5)
 			err := c.repositories.PostgresRepositories.CurrencyRateRepository.SaveCurrencyRate(ctx, "EUR", usdToEurRate, date, "European Central Bank")
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.log.Errorf("Error saving currency rate: %s", err.Error())
 				return
 			}
@@ -106,7 +105,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 			usdToCurrency := utils.TruncateFloat64(usdToEurRate*currency.Rate, 5)
 			err := c.repositories.PostgresRepositories.CurrencyRateRepository.SaveCurrencyRate(ctx, currency.Currency, usdToCurrency, date, "European Central Bank")
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.log.Errorf("Error saving currency rate: %s", err.Error())
 			}
 		}

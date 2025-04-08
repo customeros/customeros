@@ -11,21 +11,20 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // NoteUpdate is the resolver for the note_Update field.
 func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.noteID", input.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NoteUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.noteID", input.ID)
 
 	result, err := r.Services.NoteService.UpdateNote(ctx, mapper.MapNoteUpdateInputToEntity(&input))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update note %s", input.ID)
 		return nil, err
 	}
@@ -34,14 +33,14 @@ func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdat
 
 // NoteDelete is the resolver for the note_Delete field.
 func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.noteID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NoteDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.noteID", id)
 
 	result, err := r.Services.NoteService.DeleteNote(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to delete note %s", id)
 		return nil, err
 	}
@@ -52,20 +51,21 @@ func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Re
 
 // NoteLinkAttachment is the resolver for the note_LinkAttachment field.
 func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteLinkAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NoteLinkAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.noteID", noteID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	err := r.Services.NoteService.NoteLinkAttachment(ctx, noteID, attachmentID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	byId, err := r.Services.NoteService.GetById(ctx, noteID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -74,10 +74,11 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 
 // NoteUnlinkAttachment is the resolver for the note_UnlinkAttachment field.
 func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteUnlinkAttachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NoteUnlinkAttachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.noteID", noteID)
+	spans.LogKV("request.attachmentID", attachmentID)
 
 	err := r.Services.NoteService.NoteUnlinkAttachment(ctx, noteID, attachmentID)
 	if err != nil {
@@ -86,7 +87,7 @@ func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID stri
 
 	byId, err := r.Services.NoteService.GetById(ctx, noteID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -95,14 +96,14 @@ func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID stri
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.CreatedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.noteID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "NoteResolver.CreatedBy", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.noteID", obj.ID)
 
 	creator, err := r.Services.CommonServices.UserService.GetNoteCreator(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get creator for note %s", obj.ID)
 		return nil, err
 	}
@@ -114,15 +115,15 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 
 // Includes is the resolver for the includes field.
 func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Includes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.noteID", obj.ID))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "NoteResolver.Includes", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.noteID", obj.ID)
 
 	includes := commonModel.INCLUDES
 	entities, err := r.Services.CommonServices.AttachmentService.GetFor(ctx, commonModel.NOTE, &includes, []string{obj.ID})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for note %s", obj.ID)
 		return nil, err
 	}

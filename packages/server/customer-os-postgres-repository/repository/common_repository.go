@@ -6,9 +6,7 @@ import (
 	"reflect"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -28,14 +26,14 @@ func NewCommonRepository(postgresDB *config.PostgresDB) CommonRepository {
 }
 
 func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, postgres_entityType interface{}, id any, propertyName string, newValue interface{}) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonRepository.UpdateProperty")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "CommonRepository.UpdateProperty")
+	defer spans.Finish()
 
-	span.LogFields(log.String("tenant", tenant))
-	span.LogFields(log.String("postgres_entityType", reflect.TypeOf(postgres_entityType).String()))
-	span.LogFields(log.String("id", fmt.Sprintf("%v", id)))
-	span.LogFields(log.String("propertyName", propertyName))
-	span.LogFields(log.String("newValue", fmt.Sprintf("%v", newValue)))
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("postgres_entityType", reflect.TypeOf(postgres_entityType).String())
+	spans.LogKV("id", fmt.Sprintf("%v", id))
+	spans.LogKV("propertyName", propertyName)
+	spans.LogKV("newValue", fmt.Sprintf("%v", newValue))
 
 	// Create a new instance of the postgres_entity type
 	postgres_entity := reflect.New(reflect.TypeOf(postgres_entityType)).Interface()
@@ -43,7 +41,7 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, po
 	// Fetch the postgres_entity by ID and tenant using context
 	query := r.postgresDB.GormDB.WithContext(ctx).Where("tenant = ? and id = ?", tenant, id).First(postgres_entity)
 	if err := query.Error; err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		if err == gorm.ErrRecordNotFound {
 			return fmt.Errorf("postgres_entity not found for tenant %s with id %v", tenant, id)
 		}
@@ -56,13 +54,13 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, po
 
 	if !field.IsValid() {
 		err := fmt.Errorf("property %s does not exist on postgres_entity", propertyName)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if !field.CanSet() {
 		err := fmt.Errorf("property %s cannot be set", propertyName)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -72,7 +70,7 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, po
 	// Save the updated postgres_entity with context
 	if err := r.postgresDB.GormDB.WithContext(ctx).Save(postgres_entity).Error; err != nil {
 		err := fmt.Errorf("failed to save updated postgres_entity: %w", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -80,9 +78,8 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, po
 }
 
 func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonRepository.PermanentlyDelete")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "CommonRepository.PermanentlyDelete")
+	defer spans.Finish()
 	asyncTablesWithTenantNameColumn := []string{
 		postgres_entity.OAuthTokenEntity{}.TableName(),
 	}
@@ -128,28 +125,28 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 
 	for _, tableName := range asyncTablesWithTenantNameColumn {
 		if err := r.postgresDB.AsyncGormDB.Exec("DELETE FROM "+tableName+" WHERE tenant_name = ?", tenant).Error; err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	for _, tableName := range asyncTablesWithTenantColumn {
 		if err := r.postgresDB.AsyncGormDB.Exec("DELETE FROM "+tableName+" WHERE tenant = ?", tenant).Error; err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	for _, tableName := range tableNamesWithTenantNameColumn {
 		if err := r.postgresDB.GormDB.Exec("DELETE FROM "+tableName+" WHERE tenant_name = ?", tenant).Error; err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	for _, tableName := range tableNamesWithTenantColumn {
 		if err := r.postgresDB.GormDB.Exec("DELETE FROM "+tableName+" WHERE tenant = ?", tenant).Error; err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}

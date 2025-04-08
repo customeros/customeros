@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"time"
@@ -12,11 +14,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 )
 
@@ -57,15 +58,15 @@ func NewCrustDataService(log logger.Logger,
 }
 
 func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain string, jobTitles []string) (*interfaces.CrustDataResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataService.SearchPeople")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("companyDomain", companyDomain))
-	tracing.LogObjectAsJson(span, "jobTitles", jobTitles)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CrustDataService.SearchPeople")
+	defer spans.Finish()
+
+	spans.LogKV("companyDomain", companyDomain)
+	spans.LogObjectAsJson("jobTitles", jobTitles)
 
 	if s.config.ApiKey == "" {
 		err := errors.New("crust data api key is not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err)
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain strin
 		// Check cache if record exists by companyDomain and jobTitle and ttl, call cache crust data repository
 		cachedRecords, err := s.postgres.CacheCrustDataRepository.GetByCompanyAndTitle(ctx, companyDomain, jobTitle, CacheCrustDataTTL)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Error(err)
 			return nil, err
 		}
@@ -84,7 +85,7 @@ func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain strin
 			for _, cachedRecord := range cachedRecords {
 				var crustDataResponse interfaces.CrustDataResponse
 				if err := json.Unmarshal([]byte(cachedRecord.Response), &crustDataResponse); err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Error(err)
 					return nil, err
 				}
@@ -94,14 +95,14 @@ func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain strin
 			// call crust data api
 			response, err := s.callCrustDataFilterByCompanyAndJobTitle(ctx, companyDomain, jobTitle, 1)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Error(err)
 				return nil, err
 			}
 			if response != "" {
 				var crustDataResponse interfaces.CrustDataResponse
 				if err := json.Unmarshal([]byte(response), &crustDataResponse); err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Error(err)
 					return nil, err
 				}
@@ -113,7 +114,7 @@ func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain strin
 					Response:             response,
 				})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Error(err)
 					return nil, err
 				}
@@ -129,10 +130,10 @@ func (s *crustDataService) SearchPeople(ctx context.Context, companyDomain strin
 }
 
 func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.Context, companyDomain string, jobTitle string, page int) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CrustDataService.callCrustDataFilterByCompanyAndJobTitle")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CrustDataService.callCrustDataFilterByCompanyAndJobTitle")
+	defer spans.Finish()
+
+	spans.LogFields(
 		log.String("companyDomain", companyDomain),
 		log.String("jobTitle", jobTitle),
 		log.Int("page", page),
@@ -157,14 +158,14 @@ func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.C
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", s.config.ApiUrl+"/screener/person/search", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
@@ -176,7 +177,7 @@ func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.C
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to make request: %w", err)
 	}
 	defer resp.Body.Close()
@@ -184,7 +185,7 @@ func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.C
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
 
@@ -196,7 +197,7 @@ func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.C
 		// Parse error response
 		var errorResp ErrorResponse
 		if err := json.Unmarshal(body, &errorResp); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", fmt.Errorf("failed to parse error response: %w", err)
 		}
 
@@ -206,14 +207,14 @@ func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.C
 		}
 
 		// For other 400 errors, return the error
-		span.LogFields(log.String("response.body", string(body)))
-		tracing.TraceErr(span, fmt.Errorf("API error: %s", errorResp.Error))
+		spans.LogKV("response.body", string(body))
+		spans.TraceError(fmt.Errorf("API error: %s", errorResp.Error))
 		return "", fmt.Errorf("API error: %s", errorResp.Error)
 	default:
-		span.SetTag("response.error_code", resp.StatusCode)
-		span.LogFields(log.String("response.body", string(body)))
+		spans.LogKV("response.error_code", resp.StatusCode)
+		spans.LogKV("response.body", string(body))
 		err := fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 }

@@ -2,13 +2,12 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type ManageCampaignExecutionCapability struct{}
@@ -62,21 +61,20 @@ func (c *ManageCampaignExecutionCapability) ValidateInput(input ManageCampaignEx
 }
 
 func (c *ManageCampaignExecutionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ManageCampaignExecutionInput, ManageCampaignExecutionConfig]) (enum.CapabilityExecutionStatus, ManageCampaignExecutionOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ManageCampaignExecutionCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ManageCampaignExecutionCapability.Execute")
+	defer spans.Finish()
 
 	result := ManageCampaignExecutionOutput{}
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

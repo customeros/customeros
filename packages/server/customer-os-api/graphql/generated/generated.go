@@ -13681,7 +13681,7 @@ extend type Mutation {
     admin_addWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
     admin_removeWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 
-    admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+    admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER, IMPERSONATED]) @hasTenant
     admin_tenant_AddDomainAsWorkspace(domain: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
     admin_tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
@@ -16630,6 +16630,7 @@ input OpportunitySaveInput {
     currency:            Currency
 
     ownerId:             ID
+    taskId:              ID
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {
@@ -63380,7 +63381,7 @@ func (ec *executionContext) _Mutation_admin_switchCurrentWorkspace(ctx context.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER", "IMPERSONATED"})
 			if err != nil {
 				var zeroVal bool
 				return zeroVal, err
@@ -118854,7 +118855,7 @@ func (ec *executionContext) unmarshalInputOpportunitySaveInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "opportunityId", "name", "amount", "internalType", "internalStage", "externalType", "externalStage", "estimatedClosedDate", "nextSteps", "likelihoodRate", "maxAmount", "currency", "ownerId"}
+	fieldsInOrder := [...]string{"organizationId", "opportunityId", "name", "amount", "internalType", "internalStage", "externalType", "externalStage", "estimatedClosedDate", "nextSteps", "likelihoodRate", "maxAmount", "currency", "ownerId", "taskId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -118959,6 +118960,13 @@ func (ec *executionContext) unmarshalInputOpportunitySaveInput(ctx context.Conte
 				return it, err
 			}
 			it.OwnerID = data
+		case "taskId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taskId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TaskID = data
 		}
 	}
 

@@ -2,16 +2,16 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type GenerateInvoiceCapability struct {
@@ -130,19 +130,19 @@ func (c *GenerateInvoiceCapability) ValidateInput(input GenerateInvoiceInput) er
 }
 
 func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GenerateInvoiceInput, GenerateInvoiceConfig]) (enum.CapabilityExecutionStatus, GenerateInvoiceOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GenerateInvoiceCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GenerateInvoiceCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	result := GenerateInvoiceOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -173,19 +173,19 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContai
 	}
 	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, executionContainer.InputData.ContractId, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	// load invoice after generation
 	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get invoice"))
+		spans.TraceError(errors.Wrap(err, "failed to get invoice"))
 	}
 	result.InvoiceId = invoiceId
 	if invoiceEntity != nil {
 		result.InvoiceNumber = invoiceEntity.Number
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

@@ -2,15 +2,15 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type CreateContactCapability struct {
@@ -73,27 +73,27 @@ type CreateContactOutput struct {
 }
 
 func (c *CreateContactCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateContactInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, CreateContactOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateContactCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CreateContactCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := CreateContactOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	for _, email := range executionContainer.InputData.ContactEmails {
 		contactExists, id, err := c.contactService.CheckContactExistsWithEmail(ctx, email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		if contactExists {
 			result.ContactIDs = append(result.ContactIDs, id)
@@ -101,11 +101,11 @@ func (c *CreateContactCapability) Execute(ctx context.Context, executionContaine
 		}
 		id, err = c.contactService.CreateContactByEmail(ctx, nil, email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		result.ContactIDs = append(result.ContactIDs, id)
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

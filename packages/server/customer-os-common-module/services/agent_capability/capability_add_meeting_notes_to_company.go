@@ -3,18 +3,19 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -96,20 +97,20 @@ type AddMeetingNotesToCompanyOutput struct {
 }
 
 func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AddMeetingNotesToCompanyInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, AddMeetingNotesToCompanyOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AddMeetingNotesToCompanyCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := AddMeetingNotesToCompanyOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -121,19 +122,18 @@ func (c *AddMeetingNotesToCompanyCapability) Execute(ctx context.Context, execut
 		if !utils.IsStringInSlice(email, executionContainer.InputData.MeetingParticipantEmailsTenant) {
 			created, err = c.processMeetingParticipant(ctx, email, timelineEvent, executionContainer.InputData, created)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx context.Context, email, timelineEvent string, input AddMeetingNotesToCompanyInput, created []string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.processMeetingParticipant")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AddMeetingNotesToCompanyCapability.processMeetingParticipant")
+	defer spans.Finish()
 
 	// get org by email
 	var (
@@ -143,7 +143,7 @@ func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx conte
 	)
 	ok, orgID, err = c.organizationService.CheckOrganizationExistsWithEmail(ctx, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return created, err
 	}
 	if !ok {
@@ -152,7 +152,7 @@ func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx conte
 			Domains: []string{validation.Domain},
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return created, err
 		}
 	}
@@ -170,16 +170,15 @@ func (c *AddMeetingNotesToCompanyCapability) processMeetingParticipant(ctx conte
 		Content:        &timelineEvent,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return append(created, orgID), err
 }
 
 func (c *AddMeetingNotesToCompanyCapability) createMarkdownTimelineEvent(ctx context.Context, input AddMeetingNotesToCompanyInput) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AddMeetingNotesToCompanyCapability.createMarkdownTimelineEvent")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AddMeetingNotesToCompanyCapability.createMarkdownTimelineEvent")
+	defer spans.Finish()
 
 	var b strings.Builder
 

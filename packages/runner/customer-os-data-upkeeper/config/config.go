@@ -7,7 +7,6 @@ import (
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/joho/godotenv"
 
 	cronconf "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron/config"
@@ -16,7 +15,7 @@ import (
 type CommonConfig struct {
 	Enrow             commonconf.EnrowConfig
 	Logger            logger.Config
-	Jaeger            tracing.JaegerConfig
+	Jaeger            telemetry.JaegerConfig
 	OpenTelemetry     telemetry.OpenTelemetryConfig
 	RabbitMQConfig    commonconf.RabbitMQConfig
 	ScrubbyIo         commonconf.ScrubbyIoConfig
@@ -42,6 +41,7 @@ type CommonConfig struct {
 	OpensearchConfig  commonconf.OpensearchConfig
 	TemporalConfig    commonconf.TemporalConfig
 	ScrapinConfig     commonconf.ScrapinConfig
+	SnitcherConfig    commonconf.SnitcherConfig
 }
 
 type AppConfig struct {
@@ -117,6 +117,7 @@ func Load() *Config {
 			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
 			TemporalConfig:      cmnCfg.TemporalConfig,
 			ScrapinConfig:       cmnCfg.ScrapinConfig,
+			SnitcherConfig:      cmnCfg.SnitcherConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,

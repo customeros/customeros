@@ -6,17 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -54,12 +53,12 @@ func NewAnthropicClient(cfg *config.AnthropicConfig) *AnthropicClient {
 }
 
 func (c *AnthropicClient) Invoke(ctx context.Context, request interfaces.AskAIRequest) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnthropicClient.Invoke")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AnthropicClient.Invoke")
+	defer spans.Finish()
 
 	if *request.Prompt == "" || request.Prompt == nil {
 		err := errors.New("content (user prompt) cannot be nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

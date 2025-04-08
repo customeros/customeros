@@ -10,18 +10,17 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	model1 "github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // IndustriesInUse is the resolver for the industries_InUse field.
 func (r *queryResolver) IndustriesInUse(ctx context.Context) ([]*model1.Industry, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.IndustriesInUse", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.IndustriesInUse", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	industryEntities, err := r.Services.CommonServices.IndustryService.GetInUseIndustries(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch industries")
 		return nil, err
 	}

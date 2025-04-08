@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,14 +14,13 @@ import (
 
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -41,10 +42,8 @@ type slackResponse struct {
 }
 
 func (s *slackService) GetSlackChannels(ctx context.Context, tenant string) ([]*postgresEntity.SlackChannel, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.GetSlackChannels")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, "service")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.GetSlackChannels")
+	defer spans.Finish()
 
 	nodes, err := s.postgresRepositories.SlackChannelRepository.GetSlackChannels(ctx, tenant)
 	if err != nil {
@@ -55,12 +54,10 @@ func (s *slackService) GetSlackChannels(ctx context.Context, tenant string) ([]*
 }
 
 func (s *slackService) GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.GetSlackChannels")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.Object("page", page))
-	span.LogFields(log.Object("limit", limit))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.GetSlackChannels")
+	defer spans.Finish()
+	spans.LogKV("page", page)
+	spans.LogKV("limit", limit)
 
 	channels, totalCount, err := s.postgresRepositories.SlackChannelRepository.GetPaginatedSlackChannels(ctx, tenant, page, limit)
 	if err != nil {
@@ -78,13 +75,11 @@ func (s *slackService) GetPaginatedSlackChannels(ctx context.Context, tenant str
 }
 
 func (s *slackService) StoreSlackChannel(ctx context.Context, tenant, source, channelId, channelName string, organizationId *string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.StoreSlackChannel")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.String("channelId", channelId))
-	span.LogFields(log.String("channelName", channelName))
-	span.LogFields(log.String("organizationId", utils.IfNotNilString(organizationId)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.StoreSlackChannel")
+	defer spans.Finish()
+	spans.LogKV("channelId", channelId)
+	spans.LogKV("channelName", channelName)
+	spans.LogKV("organizationId", utils.IfNotNilString(organizationId))
 
 	existing, err := s.postgresRepositories.SlackChannelRepository.GetSlackChannel(ctx, tenant, channelId)
 	if err != nil {
@@ -116,18 +111,17 @@ func (s *slackService) StoreSlackChannel(ctx context.Context, tenant, source, ch
 }
 
 func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks string, autoJoinSlackChannel bool) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "NotificationService.SendMessageFromBot")
-	defer span.Finish()
-	span.LogFields(log.String("channel", channel))
-	span.LogFields(log.Bool("autoJoinSlackChannel", autoJoinSlackChannel))
+	spans, _ := telemetry.StartServiceSpan(ctx, "NotificationService.SendMessageFromBot")
+	defer spans.Finish()
+	spans.LogKV("channel", channel)
+	spans.LogFields(log.Bool("autoJoinSlackChannel", autoJoinSlackChannel))
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
-	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	// Create HTTP client
 	client := &http.Client{}
@@ -142,16 +136,16 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 	// Marshal the request body
 	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
+		spans.TraceError(errors.Wrap(err, "failed to marshal request body"))
 		return fmt.Errorf("failed to marshal request body: %v", err)
 	}
 
-	span.LogFields(log.String("request.body", string(requestBodyBytes)))
+	spans.LogKV("request.body", string(requestBodyBytes))
 
 	// Create POST request
 	req, err := http.NewRequest("POST", "https://slack.com/api/chat.postMessage", bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create POST request"))
+		spans.TraceError(errors.Wrap(err, "failed to create POST request"))
 		return fmt.Errorf("failed to create POST request: %v", err)
 	}
 
@@ -159,10 +153,10 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 	// prepare bot key
 	slackSettings, err := s.postgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
+		spans.TraceError(errors.Wrap(err, "failed to get slack settings"))
 	}
 	if slackSettings == nil {
-		span.LogFields(log.String("skip", "slack settings not found"))
+		spans.LogKV("skip", "slack settings not found")
 		s.log.Warnf("slack settings not found for tenant %s", tenant)
 		return nil
 	} else {
@@ -174,7 +168,7 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 	if len(botApiKey) > 11 {
 		maskedBotApiKey = botApiKey[:8] + "..." + botApiKey[len(botApiKey)-3:]
 	}
-	span.LogFields(log.String("bot.api.key", maskedBotApiKey))
+	spans.LogKV("bot.api.key", maskedBotApiKey)
 
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
@@ -183,22 +177,22 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 	// Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform POST request"))
+		spans.TraceError(errors.Wrap(err, "failed to perform POST request"))
 		return fmt.Errorf("failed to perform POST request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		spans.TraceError(errors.Wrap(err, "failed to read response body"))
 		return fmt.Errorf("failed to read response body: %v", err)
 	}
 
-	span.LogFields(log.String("response.body", string(responseBody)))
+	spans.LogKV("response.body", string(responseBody))
 
 	var slackResp slackResponse
 	if err := json.Unmarshal(responseBody, &slackResp); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -207,13 +201,13 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 		if autoJoinSlackChannel && slackResp.Error == "not_in_channel" {
 			err = s.JoinSlackChannelsWithBot(ctx, channel)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 			return s.SendMessageFromBot(ctx, channel, blocks, false)
 		} else {
 			err := fmt.Errorf("slack API error: %s", slackResp.Error)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -222,13 +216,12 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 }
 
 func (s *slackService) GetSlackSettings(ctx context.Context, tenant string) (*interfaces.SlackSettingsResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.GetSlackSettings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.GetSlackSettings")
+	defer spans.Finish()
 
 	slackSettings, err := s.postgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -246,36 +239,34 @@ func (s *slackService) GetSlackSettings(ctx context.Context, tenant string) (*in
 }
 
 func (s *slackService) getBotToken(ctx context.Context) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.getBotToken")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.getBotToken")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	slackSettingsEntity, err := s.postgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if slackSettingsEntity == nil {
 		err := fmt.Errorf("slack settings not found for tenant %s", tenant)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
-	span.LogFields(log.String("result.AccessToken", utils.Mask(slackSettingsEntity.AccessToken)))
+	spans.LogKV("result.AccessToken", utils.Mask(slackSettingsEntity.AccessToken))
 	return slackSettingsEntity.AccessToken, nil
 }
 
 func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfaces.SlackChannelResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.ListSlackChannelsWithBot")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.ListSlackChannelsWithBot")
+	defer spans.Finish()
 
 	token, err := s.getBotToken(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -285,7 +276,7 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfac
 	// Build the HTTP request
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -297,7 +288,7 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfac
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -305,7 +296,7 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfac
 	// Parse the response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -315,14 +306,14 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfac
 		Error    string                            `json:"error"`
 	}
 	if err := json.Unmarshal(body, &result); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// Handle errors from Slack API
 	if !result.OK {
 		err := fmt.Errorf("slack API error: %s", result.Error)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -330,15 +321,14 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfac
 }
 
 func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.JoinSlackChannelsWithBot")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.JoinSlackChannelsWithBot")
+	defer spans.Finish()
 
-	span.LogFields(log.String("channelId", channelId))
+	spans.LogKV("channelId", channelId)
 
 	token, err := s.getBotToken(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -349,14 +339,14 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId s
 	payload := map[string]string{"channel": channelId}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Build the HTTP request
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -368,7 +358,7 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId s
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -376,20 +366,20 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId s
 	// Parse the response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	var slackResp slackResponse
 	if err := json.Unmarshal(body, &slackResp); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Handle errors from Slack API
 	if !slackResp.OK {
 		err := fmt.Errorf("slack API error: %s", slackResp.Error)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -397,15 +387,14 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId s
 }
 
 func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, channelId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.LeaveSlackChannelsWithBot")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SlackService.LeaveSlackChannelsWithBot")
+	defer spans.Finish()
 
-	span.LogFields(log.String("channelId", channelId))
+	spans.LogKV("channelId", channelId)
 
 	token, err := s.getBotToken(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -416,14 +405,14 @@ func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, channelId 
 	payload := map[string]string{"channel": channelId}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Build the HTTP request
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -442,7 +431,7 @@ func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, channelId 
 	// Parse the response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -451,14 +440,14 @@ func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, channelId 
 		Error string `json:"error"`
 	}
 	if err := json.Unmarshal(body, &result); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Handle errors from Slack API
 	if !result.OK {
 		err := fmt.Errorf("slack API error: %s", result.Error)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

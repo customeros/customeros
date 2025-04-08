@@ -3,13 +3,14 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -18,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -42,15 +43,15 @@ func (s *userService) SetMailstack(mailstack interfaces.MailstackService) {
 }
 
 func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, userFields data_fields.UserFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "userFields", userFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("userFields", userFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -60,16 +61,16 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 
 	if id == nil || *id == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 	}
 
 	if createFlow {
 		// generate id
 		userId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelUser)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -91,11 +92,11 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
 		if err != nil || !exists {
 			err = errors.New("user not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
-	tracing.TagEntity(span, userId)
+	spans.TagEntity(userId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		var innerErr error
@@ -119,12 +120,12 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 			if createFlow {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, userId, model.USER, dto.CreateUser{UserFields: userFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateUser"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateUser"))
 				}
 			} else {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, userId, model.USER, dto.UpdateUser{UserFields: userFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateUser"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateUser"))
 				}
 			}
 
@@ -134,26 +135,25 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if createFlow {
-		span.LogFields(log.Bool("response.userCreated", true))
+		spans.LogKV("response.userCreated", true)
 	} else {
-		span.LogFields(log.Bool("response.userUpdated", true))
+		spans.LogKV("response.userUpdated", true)
 	}
 	return userId, nil
 }
 
 func (s *userService) GetById(parentCtx context.Context, userId string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetById")
+	defer spans.Finish()
 
 	node, err := s.neo4j.UserReadRepository.GetUserById(ctx, common.GetContext(ctx).Tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -176,9 +176,8 @@ func (s *userService) GetAllUsersForTenant(ctx context.Context, tenant string) (
 }
 
 func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindFirstUserWithRolesByEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.FindFirstUserWithRolesByEmail")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -195,13 +194,12 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 }
 
 func (s *userService) GetContactOwner(parentCtx context.Context, contactId string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContactOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetContactOwner")
+	defer spans.Finish()
 
 	ownerDbNode, err := s.neo4j.UserReadRepository.GetOwnerForContact(ctx, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -209,13 +207,12 @@ func (s *userService) GetContactOwner(parentCtx context.Context, contactId strin
 }
 
 func (s *userService) GetNoteCreator(parentCtx context.Context, noteId string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetNoteCreator")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetNoteCreator")
+	defer spans.Finish()
 
 	userDbNode, err := s.neo4j.UserReadRepository.GetCreatorForNote(ctx, common.GetContext(ctx).Tenant, noteId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -223,9 +220,8 @@ func (s *userService) GetNoteCreator(parentCtx context.Context, noteId string) (
 }
 
 func (s *userService) GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersConnectedForContacts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetUsersConnectedForContacts")
+	defer spans.Finish()
 
 	users, err := s.neo4j.UserReadRepository.GetUsersConnectedForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
@@ -241,9 +237,8 @@ func (s *userService) GetUsersConnectedForContacts(ctx context.Context, contactI
 }
 
 func (s *userService) GetUsersByEmailIds(parentCtx context.Context, emailIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersByEmailIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUsersByEmailIds")
+	defer spans.Finish()
 
 	users, err := s.neo4j.UserReadRepository.GetUsersByEmailIds(ctx, common.GetTenantFromContext(ctx), emailIds)
 	if err != nil {
@@ -255,15 +250,15 @@ func (s *userService) GetUsersByEmailIds(parentCtx context.Context, emailIds []s
 		userEntity.DataloaderKey = v.LinkedNodeId
 		userEntities = append(userEntities, *userEntity)
 	}
-	span.LogFields(log.Int("result.count", len(userEntities)))
+	spans.LogKV("result.count", len(userEntities))
 	return &userEntities, nil
 }
 
 func (s *userService) GetUsersByEmailAddresses(parentCtx context.Context, emailAddresses []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersByEmailAddresses")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUsersByEmailAddresses")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("emailAddresses", emailAddresses)
 
 	users, err := s.neo4j.UserReadRepository.GetUsersByEmailAddresses(ctx, common.GetTenantFromContext(ctx), emailAddresses)
 	if err != nil {
@@ -275,14 +270,13 @@ func (s *userService) GetUsersByEmailAddresses(parentCtx context.Context, emailA
 		userEntity.DataloaderKey = v.LinkedNodeId
 		userEntities = append(userEntities, *userEntity)
 	}
-	span.LogFields(log.Int("result.count", len(userEntities)))
+	spans.LogKV("result.count", len(userEntities))
 	return &userEntities, nil
 }
 
 func (s *userService) GetUsersForPhoneNumbers(parentCtx context.Context, phoneNumberIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForPhoneNumbers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUsersForPhoneNumbers")
+	defer spans.Finish()
 
 	users, err := s.neo4j.UserReadRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
 	if err != nil {
@@ -298,10 +292,10 @@ func (s *userService) GetUsersForPhoneNumbers(parentCtx context.Context, phoneNu
 }
 
 func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, organizationIDs []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserOwnersForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIDs", organizationIDs))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUserOwnersForOrganizations")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("organizationIDs", organizationIDs))
 
 	users, err := s.neo4j.UserReadRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
@@ -317,10 +311,10 @@ func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, o
 }
 
 func (s *userService) GetUserOwnersForOpportunities(parentCtx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserOwnersForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("opportunityIds", opportunityIds))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUserOwnersForOpportunities")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("opportunityIds", opportunityIds))
 
 	users, err := s.neo4j.UserReadRepository.GetAllOwnersForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
 	if err != nil {
@@ -336,10 +330,10 @@ func (s *userService) GetUserOwnersForOpportunities(parentCtx context.Context, o
 }
 
 func (s *userService) GetUserCreatorsForOpportunities(parentCtx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("opportunityIds", opportunityIds))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("opportunityIds", opportunityIds))
 
 	users, err := s.neo4j.UserReadRepository.GetAllCreatorsForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
 	if err != nil {
@@ -355,10 +349,10 @@ func (s *userService) GetUserCreatorsForOpportunities(parentCtx context.Context,
 }
 
 func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Context, serviceLineItemIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("serviceLineItemIds", serviceLineItemIds))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("serviceLineItemIds", serviceLineItemIds))
 
 	users, err := s.neo4j.UserReadRepository.GetAllCreatorsForServiceLineItems(ctx, common.GetTenantFromContext(ctx), serviceLineItemIds)
 	if err != nil {
@@ -374,10 +368,10 @@ func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Conte
 }
 
 func (s *userService) GetUserCreatorsForTasks(ctx context.Context, taskIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserCreatorsForTasks")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetUserCreatorsForTasks")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("taskIds", taskIds)
 
 	users, err := s.neo4j.UserReadRepository.GetAllCreatorsForTasks(ctx, common.GetTenantFromContext(ctx), taskIds)
 	if err != nil {
@@ -393,10 +387,10 @@ func (s *userService) GetUserCreatorsForTasks(ctx context.Context, taskIds []str
 }
 
 func (s *userService) GetUserAssigneesForTasks(ctx context.Context, taskIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserCreatorsForTasks")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetUserCreatorsForTasks")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("taskIds", taskIds)
 
 	users, err := s.neo4j.UserReadRepository.GetAllAssigneesForTasks(ctx, common.GetTenantFromContext(ctx), taskIds)
 	if err != nil {
@@ -412,15 +406,14 @@ func (s *userService) GetUserAssigneesForTasks(ctx context.Context, taskIds []st
 }
 
 func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersWithMailboxes")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetUsersWithMailboxes")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, _, mailboxes, err := s.mailstack.GetMailboxes(ctx, tenant, "", "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -448,10 +441,10 @@ func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.U
 }
 
 func (s *userService) GetUserCreatorsForContracts(parentCtx context.Context, contractIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contractIds", contractIds))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUserCreatorsForContracts")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("contractIds", contractIds))
 
 	users, err := s.neo4j.UserReadRepository.GetAllCreatorsForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
 	if err != nil {
@@ -467,14 +460,14 @@ func (s *userService) GetUserCreatorsForContracts(parentCtx context.Context, con
 }
 
 func (s *userService) GetUserAuthorsForLogEntries(parentCtx context.Context, logEntryIDs []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserAuthorsForLogEntries")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("logEntryIDs", logEntryIDs))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUserAuthorsForLogEntries")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("logEntryIDs", logEntryIDs))
 
 	users, err := s.neo4j.UserReadRepository.GetAllAuthorsForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIDs)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	userEntities := make(neo4jentity.UserEntities, 0, len(users))
@@ -487,14 +480,14 @@ func (s *userService) GetUserAuthorsForLogEntries(parentCtx context.Context, log
 }
 
 func (s *userService) GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserAuthorsForComments")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("commentIds", commentIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetUserAuthorsForComments")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("commentIds", commentIds))
 
 	users, err := s.neo4j.UserReadRepository.GetAllAuthorsForComments(ctx, common.GetTenantFromContext(ctx), commentIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	userEntities := make(neo4jentity.UserEntities, 0, len(users))
@@ -507,14 +500,14 @@ func (s *userService) GetUserAuthorsForComments(ctx context.Context, commentIds 
 }
 
 func (s *userService) GetUserForFlowSenders(ctx context.Context, flowSenderIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserForFlowSenders")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("flowSenderIds", flowSenderIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetUserForFlowSenders")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("flowSenderIds", flowSenderIds))
 
 	users, err := s.neo4j.UserReadRepository.GetAllSendersForFlowSenders(ctx, common.GetTenantFromContext(ctx), flowSenderIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	userEntities := make(neo4jentity.UserEntities, 0, len(users))
@@ -527,10 +520,10 @@ func (s *userService) GetUserForFlowSenders(ctx context.Context, flowSenderIds [
 }
 
 func (s *userService) GetUsers(parentCtx context.Context, userIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("userIds", userIds))
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetUsers")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("userIds", userIds))
 
 	userDbNodes, err := s.neo4j.UserReadRepository.GetUsers(ctx, common.GetTenantFromContext(ctx), userIds)
 	if err != nil {
@@ -545,9 +538,8 @@ func (s *userService) GetUsers(parentCtx context.Context, userIds []string) (*ne
 }
 
 func (s *userService) GetAllOwnersForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetAllOwnersForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetAllOwnersForOrganizations")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -566,9 +558,8 @@ func (s *userService) GetAllOwnersForOrganizations(ctx context.Context, organiza
 }
 
 func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (*neo4jentity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetDistinctOrganizationOwners")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetDistinctOrganizationOwners")
+	defer spans.Finish()
 
 	dbNodes, err := s.neo4j.UserReadRepository.GetDistinctOrganizationOwners(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
@@ -584,13 +575,12 @@ func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (
 }
 
 func (s *userService) GetReminderOwner(ctx context.Context, reminderId string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetReminderOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetReminderOwner")
+	defer spans.Finish()
 
 	ownerDbNode, err := s.neo4j.UserReadRepository.GetOwnerForReminder(ctx, common.GetContext(ctx).Tenant, reminderId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -598,13 +588,12 @@ func (s *userService) GetReminderOwner(ctx context.Context, reminderId string) (
 }
 
 func (s *userService) GetContractOwner(parentCtx context.Context, contractId string) (*neo4jentity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContractOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.GetContractOwner")
+	defer spans.Finish()
 
 	ownerDbNode, err := s.neo4j.UserReadRepository.GetOwnerForContract(ctx, common.GetContext(ctx).Tenant, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

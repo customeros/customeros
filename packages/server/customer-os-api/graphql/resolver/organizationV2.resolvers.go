@@ -11,23 +11,21 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // UIOrganizations is the resolver for the ui_organizations field.
 func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIOrganizations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "ids", ids)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UIOrganizations", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("ids", ids)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -59,14 +57,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetOrganizations")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetOrganizations")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		organizations, err := r.Services.OrganizationService.GetOrganizations(ctx, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -78,14 +75,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetDomains")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetDomains")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		domains, err := r.Services.Repositories.Neo4jRepositories.DomainReadRepository.GetForOrganizations(ctx, tenant, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -106,14 +102,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetContracts")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetContracts")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		contracts, err := r.Services.Repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -125,14 +120,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetContacts")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetContacts")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		contacts, err := r.Services.Repositories.Neo4jRepositories.ContactReadRepository.GetActiveContactsForOrganizations(ctx, tenant, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -144,14 +138,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetSocials")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetSocials")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, tenant, commonModel.ORGANIZATION, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -163,14 +156,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetTags")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetTags")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		tags, err := r.Services.CommonServices.TagService.GetTagsForOrganizations(ctx, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -182,14 +174,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetLocations")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetLocations")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		locations, err := r.Services.CommonServices.LocationService.GetAllForOrganizations(ctx, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -201,14 +192,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetOwners")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetOwners")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		owners, err := r.Services.CommonServices.UserService.GetAllOwnersForOrganizations(ctx, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -220,14 +210,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetSubsidiaries")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetSubsidiaries")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		subsidiaries, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedSubOrganizations(ctx, tenant, ids, neo4jrepository.Relationship_Subsidiary)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -239,14 +228,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetParents")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetParents")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		parents, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedParentOrganizations(ctx, tenant, ids, neo4jrepository.Relationship_Subsidiary)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -259,14 +247,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 	wg.Add(1)
 	go func(resp *map[string]*model.OrganizationUIDetails) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetIndustries")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizations.GetIndustries")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		industries, err := r.Services.CommonServices.IndustryService.GetAllForOrganizationIds(ctx, ids)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -280,7 +267,7 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 	wg.Wait()
 
 	if firstErr != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		spans.TraceError(firstErr)
 		r.log.Errorf("Failed to get organizations: %w", firstErr)
 		graphql.AddErrorf(ctx, "Failed to get organizations: %w", firstErr)
 		return nil, nil
@@ -296,13 +283,13 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 // UIOrganizationsSearch is the resolver for the ui_organizations_search field.
 func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, where *model.Filter, sort *commonModel.SortBy) (*model.OrganizationSearchResult, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UIOrganizationsSearch", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "where", where)
-	tracing.LogObjectAsJson(span, "sort", sort)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UIOrganizationsSearch", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("where", where)
+	spans.LogObjectAsJson("sort", sort)
 	if limit != nil {
-		span.LogFields(log.Int("limit", *limit))
+		spans.LogKV("limit", *limit)
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -328,14 +315,13 @@ func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, w
 
 	wg.Add(1)
 	go func(resp *model.OrganizationSearchResult) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizationsSearch.SearchOrganizations")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizationsSearch.SearchOrganizations")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		organizationSearchResponse, err := r.Services.Repositories.DashboardV2Repository.GetDashboardViewOrganizationDataV2(ctx, tenant, *limit, where, sort)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -346,14 +332,13 @@ func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, w
 
 	wg.Add(1)
 	go func(resp *model.OrganizationSearchResult) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizationsSearch.TotalAvailable")
-		defer span.Finish()
+		spans, ctx := telemetry.StartSpan(ctx, "QueryResolver.UIOrganizationsSearch.TotalAvailable")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultResolverSpanTags(ctx, span)
 
 		totalAvailable, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.CountByTenant(ctx, tenant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -364,7 +349,7 @@ func (r *queryResolver) UIOrganizationsSearch(ctx context.Context, limit *int, w
 	wg.Wait()
 
 	if firstErr != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), firstErr)
+		spans.TraceError(firstErr)
 		r.log.Errorf("Failed to get organizations: %v", firstErr)
 		graphql.AddErrorf(ctx, "Failed to get organizations: %v", firstErr)
 		return nil, nil

@@ -22,15 +22,13 @@ import (
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/webscraper"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -80,15 +78,14 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.syncScrapinToGlobalOrganization")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.syncScrapinToGlobalOrganization")
+	defer spans.Finish()
 
 	limit := 50
 
 	records, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetToSyncIntoGlobalOrganizations(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to sync"))
+		spans.TraceError(errors.Wrap(err, "error getting records to sync"))
 		s.log.Errorf("Error getting records to sync: %s", err.Error())
 		return
 	}
@@ -105,14 +102,13 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 }
 
 func (s *globalOrganizationService) syncScrapinToGlobalOrganizationRecord(ctx context.Context, record *postgres_entity.EnrichDetailsScrapIn) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.syncScrapinToGlobalOrganizationRecord")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.syncScrapinToGlobalOrganizationRecord")
+	defer spans.Finish()
 
 	// mark record as synced initially to not process same record again, even if error occurs
 	err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.MarkSyncedToGlobalOrganizations(ctx, record.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
+		spans.TraceError(errors.Wrap(err, "error marking record as synced"))
 		s.log.Errorf("Error marking record as synced: %s", err.Error())
 		return
 	}
@@ -124,7 +120,7 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganizationRecord(ctx co
 	// unmarshal cached data
 	data := postgresentity.ScrapInResponseBody{}
 	if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin data"))
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin data"))
 		return
 	}
 
@@ -164,7 +160,7 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganizationRecord(ctx co
 	// if global organization already exists, update otherwise create
 	globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting global organization by primary domain"))
+		spans.TraceError(errors.Wrap(err, "error getting global organization by primary domain"))
 		s.log.Errorf("Error getting global organization by primary domain: %s", err.Error())
 		return
 	}
@@ -235,18 +231,18 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganizationRecord(ctx co
 		// create global organization
 		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
+			spans.TraceError(errors.Wrap(err, "error creating global organization"))
 			s.log.Errorf("Error creating global organization: %s", err.Error())
 			return
 		}
 		_, err := s.commonServices.WebscraperService.Scrape(ctx, "https://"+globalOrganization.PrimaryDomain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	} else {
 		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
+			spans.TraceError(errors.Wrap(err, "error updating global organization"))
 			s.log.Errorf("Error updating global organization: %s", err.Error())
 			return
 		}
@@ -257,15 +253,14 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.syncBrandfetchToGlobalOrganization")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.syncBrandfetchToGlobalOrganization")
+	defer spans.Finish()
 
 	limit := 50
 
 	records, err := s.commonServices.PostgresRepositories.EnrichDetailsBrandfetchRepository.GetToSyncIntoGlobalOrganizations(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to sync"))
+		spans.TraceError(errors.Wrap(err, "error getting records to sync"))
 		s.log.Errorf("Error getting records to sync: %s", err.Error())
 		return
 	}
@@ -282,14 +277,13 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 }
 
 func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx context.Context, record *postgres_entity.EnrichDetailsBrandfetch) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.syncBrandfetchToGlobalOrganizationRecord")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.syncBrandfetchToGlobalOrganizationRecord")
+	defer spans.Finish()
 
 	// mark record as synced initially to not process same record again, even if error occurs
 	err := s.commonServices.PostgresRepositories.EnrichDetailsBrandfetchRepository.MarkSyncedToGlobalOrganizations(ctx, record.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
+		spans.TraceError(errors.Wrap(err, "error marking record as synced"))
 		s.log.Errorf("Error marking record as synced: %s", err.Error())
 		return
 	}
@@ -301,7 +295,7 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx
 	// unmarshal cached data
 	data := postgresentity.BrandfetchResponseBody{}
 	if err = json.Unmarshal([]byte(record.Data), &data); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch data"))
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal brandfetch data"))
 		return
 	}
 
@@ -336,7 +330,7 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx
 
 	globalOrganization, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting global organization by primary domain"))
+		spans.TraceError(errors.Wrap(err, "error getting global organization by primary domain"))
 		s.log.Errorf("Error getting global organization by primary domain: %s", err.Error())
 		return
 	}
@@ -402,7 +396,7 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx
 		if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
 			_, scrapinResponse, err := s.commonServices.EnrichmentService.ScrapInCompanyProfile(ctx, link.Url)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error calling scrapin for company profile"))
+				spans.TraceError(errors.Wrap(err, "error calling scrapin for company profile"))
 				s.log.Errorf("Error calling scrapin for company profile: %s", err.Error())
 				continue
 			}
@@ -451,18 +445,18 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx
 		// create global organization
 		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
+			spans.TraceError(errors.Wrap(err, "error creating global organization"))
 			s.log.Errorf("Error creating global organization: %s", err.Error())
 			return
 		}
 		_, err := s.commonServices.WebscraperService.Scrape(ctx, "https://"+globalOrganization.PrimaryDomain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	} else {
 		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
+			spans.TraceError(errors.Wrap(err, "error updating global organization"))
 			s.log.Errorf("Error updating global organization: %s", err.Error())
 			return
 		}
@@ -470,7 +464,7 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganizationRecord(ctx
 	if len(otherSocials) > 0 {
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.AddOtherSocials(ctx, globalOrganization.PrimaryDomain, otherSocials)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error adding other socials"))
+			spans.TraceError(errors.Wrap(err, "error adding other socials"))
 			s.log.Errorf("Error adding other socials: %s", err.Error())
 		}
 	}
@@ -480,15 +474,14 @@ func (s *globalOrganizationService) ScrapinCompanyByWebsite() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapinCompanyByWebsite")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.ScrapinCompanyByWebsite")
+	defer spans.Finish()
 
 	limit := 10
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.GetWebsitesToProcess(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		spans.TraceError(errors.Wrap(err, "error getting records to process"))
 		s.log.Errorf("Error getting records to process: %s", err.Error())
 		return
 	}
@@ -510,7 +503,7 @@ func (s *globalOrganizationService) ScrapinCompanyByWebsite() {
 		// mark record as processed initially to not process same record again, even if error occurs
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.MarkAsProcessed(ctx, record.ID, notes)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marking record as synced"))
+			spans.TraceError(errors.Wrap(err, "error marking record as synced"))
 			s.log.Errorf("Error marking record as synced: %s", err.Error())
 			continue
 		}
@@ -522,32 +515,32 @@ func (s *globalOrganizationService) ScrapinCompanyByWebsite() {
 		// call scrapin for primary domain
 		err = s.callApiScrapinOrganization(ctx, primaryDomain)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error calling enrichment api"))
+			spans.TraceError(errors.Wrap(err, "error calling enrichment api"))
 			return
 		}
 	}
 }
 
 func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Context, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.callApiScrapinOrganization")
-	defer span.Finish()
-	span.LogKV("domain", domain)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.callApiScrapinOrganization")
+	defer spans.Finish()
+	spans.LogKV("domain", domain)
 
 	requestJSON, err := json.Marshal(EnrichOrganizationRequest{
 		Domain: domain,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		spans.TraceError(errors.Wrap(err, "failed to marshal request"))
 		return err
 	}
 	requestBody := []byte(string(requestJSON))
 	req, err := http.NewRequestWithContext(ctx, "GET", s.cfg.Common.Internal.CustomerOsApi.ApiUrl+"/scrapinOrganization", bytes.NewBuffer(requestBody))
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		spans.TraceError(errors.Wrap(err, "failed to create request"))
 		return err
 	}
 	// Inject span context into the HTTP request
-	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
+	req = telemetry.InjectSpanContextIntoHTTPRequest(req, spans)
 
 	// Set the request headers
 	req.Header.Set(security.ApiKeyHeader, s.cfg.Common.Internal.CustomerOsApi.ApiKey)
@@ -559,12 +552,12 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	// Make the HTTP request
 	response, err = client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		spans.TraceError(errors.Wrap(err, "failed to perform request"))
 		return err
 	}
 	defer response.Body.Close() // Ensures the body is closed only once
 
-	span.LogFields(log.Int("response.statusCode", response.StatusCode))
+	spans.LogKV("response.statusCode", response.StatusCode)
 
 	if response.StatusCode != http.StatusOK {
 		s.log.Errorf("Scrapin organization API response status code is : %d", response.StatusCode)
@@ -577,19 +570,18 @@ func (s *globalOrganizationService) ExtractWebpageLinks() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ExtractWebpageLinks")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.ExtractWebpageLinks")
+	defer spans.Finish()
 
 	limit := 100
 	webpages, err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.GetWebpagesWithoutLinks(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
+		spans.TraceError(errors.Wrap(err, "error getting records to scrape"))
 		return
 	}
 
 	if len(webpages) == 0 {
-		span.LogFields(log.Int("result.count", len(webpages)))
+		spans.LogKV("result.count", len(webpages))
 		return
 	}
 
@@ -608,9 +600,9 @@ func (s *globalOrganizationService) ExtractWebpageLinks() {
 			childCtx, childCancel := context.WithTimeout(ctx, 90*time.Second)
 			defer childCancel()
 
-			childSpan, childCtx := tracing.StartTracerSpan(childCtx, "GlobalOrganizationService.ExtractWebpageLinks")
+			childSpan, childCtx := telemetry.StartCronSpan(childCtx, "GlobalOrganizationService.ExtractWebpageLinks")
 			defer childSpan.Finish()
-			childSpan.LogFields(log.String("url", scrapedWebpage.Url))
+			childSpan.LogKV("url", scrapedWebpage.Url)
 
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore when done
@@ -618,11 +610,11 @@ func (s *globalOrganizationService) ExtractWebpageLinks() {
 			content, links := s.commonServices.WebscraperService.ProcessWebContent(childCtx, scrapedWebpage.Content)
 			err := s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetLinks(childCtx, scrapedWebpage.Url, links)
 			if err != nil {
-				tracing.TraceErr(childSpan, err)
+				childSpan.TraceError(err)
 			}
 			err = s.commonServices.PostgresRepositories.ScrapedWebpageRepository.SetContent(childCtx, scrapedWebpage.Url, content)
 			if err != nil {
-				tracing.TraceErr(childSpan, err)
+				childSpan.TraceError(err)
 			}
 		}(page)
 	}
@@ -635,29 +627,29 @@ func (s *globalOrganizationService) scrapeGlobalOrganization(ctx context.Context
 	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
 
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.scrapeGlobalOrganization")
-	defer span.Finish()
-	tracing.TagEntity(span, org.PrimaryDomain)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.scrapeGlobalOrganization")
+	defer spans.Finish()
+	spans.TagEntity(org.PrimaryDomain)
 
 	page := "https://" + org.PrimaryDomain
 	contents, err := s.commonServices.WebscraperService.Scrape(ctx, page)
 	if err != nil {
 		switch {
 		case errors.Is(err, webscraper.ErrUnprocessable):
-			span.LogKV("error", "Unprocessable content")
-			span.LogKV("url", page)
+			spans.LogKV("error", "Unprocessable content")
+			spans.LogKV("url", page)
 		default:
-			tracing.TraceErr(span, errors.Wrap(err, "error scraping global org primary domain"))
+			spans.TraceError(errors.Wrap(err, "error scraping global org primary domain"))
 		}
 
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(ctx, org.ID, enum.ScrapeError)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
+			spans.TraceError(errors.Wrap(err, "error updating global org scraped status"))
 		}
 	} else if contents == "" {
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(ctx, org.ID, enum.ScrapeError)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
+			spans.TraceError(errors.Wrap(err, "error updating global org scraped status"))
 		}
 	}
 
@@ -666,7 +658,7 @@ func (s *globalOrganizationService) scrapeGlobalOrganization(ctx context.Context
 		if org.ScrapeAttempt >= 5 {
 			err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Delete(ctx, org.ID)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error deleting global org"))
+				spans.TraceError(errors.Wrap(err, "error deleting global org"))
 			}
 		}
 	}
@@ -674,7 +666,7 @@ func (s *globalOrganizationService) scrapeGlobalOrganization(ctx context.Context
 	if contents != "" {
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetScrapeStatus(ctx, org.ID, enum.ScrapeCompleted)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global org scraped status"))
+			spans.TraceError(errors.Wrap(err, "error updating global org scraped status"))
 			return
 		}
 	}
@@ -684,14 +676,13 @@ func (s *globalOrganizationService) ScrapeGlobalOrgs() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.ScrapeGlobalOrgs")
+	defer spans.Finish()
 
 	limit := 100
 	orgs, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToScrape(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to scrape"))
+		spans.TraceError(errors.Wrap(err, "error getting records to scrape"))
 		return
 	}
 
@@ -730,9 +721,8 @@ func (s *globalOrganizationService) enrichIndustries() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustries")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.enrichIndustries")
+	defer spans.Finish()
 
 	limit := 30
 	hoursFromPreviousAttempt := 24
@@ -740,7 +730,7 @@ func (s *globalOrganizationService) enrichIndustries() {
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichIndustry(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		spans.TraceError(errors.Wrap(err, "error getting records to process"))
 		s.log.Errorf("Error getting records to process: %s", err.Error())
 		return
 	}
@@ -757,15 +747,14 @@ func (s *globalOrganizationService) enrichIndustries() {
 }
 
 func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.enrichIndustry")
+	defer spans.Finish()
+	spans.TagEntity(strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark globalOrganization as processed initially to not process same globalOrganization again, even if error occurs
 	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, globalOrganization.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking globalOrganization as processed"))
+		spans.TraceError(errors.Wrap(err, "error marking globalOrganization as processed"))
 		s.log.Errorf("Error marking globalOrganization as processed: %s", err.Error())
 		return
 	}
@@ -773,7 +762,7 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 	url := "https://" + globalOrganization.PrimaryDomain
 	scrapedPage, err := s.commonServices.WebscraperService.Scrape(ctx, url)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	// Construct the prompt
@@ -806,36 +795,36 @@ func (s *globalOrganizationService) enrichIndustry(ctx context.Context, globalOr
 		Retries:          utils.IntPtr(2),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		spans.TraceError(errors.Wrap(err, "error asking AI"))
 		return
 	}
 
-	span.LogFields(log.Float64("result.confidence", aiOutput.Confidence))
+	spans.LogKV("result.confidence", aiOutput.Confidence)
 
 	if aiOutput.Confidence < 0.5 {
 		return
 	}
 
-	span.LogFields(log.String("result.code", aiOutput.Code))
+	spans.LogKV("result.code", aiOutput.Code)
 
 	// get industry for organization
 	industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, aiOutput.Code)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
+		spans.TraceError(errors.Wrap(err, "error getting industry by code"))
 		s.log.Errorf("Error getting industry by code: %s", err.Error())
 		return
 	}
 
 	if industryEntity == nil {
-		span.LogFields(log.Bool("result.industryFound", false))
+		spans.LogKV("result.industryFound", false)
 		return
 	}
 
-	span.LogFields(log.Bool("result.industryFound", true))
+	spans.LogKV("result.industryFound", true)
 
 	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, globalOrganization.ID, industryEntity.Code, industryEntity.Name)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
+		spans.TraceError(errors.Wrap(err, "error setting industry"))
 		return
 	}
 }
@@ -844,9 +833,8 @@ func (s *globalOrganizationService) enrichDescriptions() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescriptions")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.enrichDescriptions")
+	defer spans.Finish()
 
 	limit := 30
 	hoursFromPreviousAttempt := 24
@@ -854,7 +842,7 @@ func (s *globalOrganizationService) enrichDescriptions() {
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichDescription(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		spans.TraceError(errors.Wrap(err, "error getting records to process"))
 		s.log.Errorf("Error getting records to process: %s", err.Error())
 		return
 	}
@@ -871,15 +859,14 @@ func (s *globalOrganizationService) enrichDescriptions() {
 }
 
 func (s *globalOrganizationService) enrichDescription(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescription")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.enrichDescription")
+	defer spans.Finish()
+	spans.TagEntity(strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark record as processed initially to not process same record again, even if error occurs
 	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkDescriptionEnrichRequested(ctx, globalOrganization.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+		spans.TraceError(errors.Wrap(err, "error marking record as processed"))
 		s.log.Errorf("Error marking record as processed: %s", err.Error())
 		return
 	}
@@ -887,7 +874,7 @@ func (s *globalOrganizationService) enrichDescription(ctx context.Context, globa
 	url := "https://" + globalOrganization.PrimaryDomain
 	pageContent, err := s.commonServices.WebscraperService.Scrape(ctx, url)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	// prepare Anthropic prompt
@@ -927,7 +914,7 @@ func (s *globalOrganizationService) enrichDescription(ctx context.Context, globa
 		OutputFormat:     enum.AIOutputJson,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		spans.TraceError(errors.Wrap(err, "error asking AI"))
 		return
 	}
 
@@ -935,11 +922,11 @@ func (s *globalOrganizationService) enrichDescription(ctx context.Context, globa
 		aiOutput.Description = utils.FirstNotEmptyString(globalOrganization.Description, globalOrganization.SourceDescription3, globalOrganization.SourceDescription1, globalOrganization.SourceDescription4, globalOrganization.SourceDescription2)
 	}
 
-	span.LogFields(log.String("result.description", aiOutput.Description))
+	spans.LogKV("result.description", aiOutput.Description)
 
 	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(ctx, globalOrganization.ID, aiOutput.Description)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error setting description"))
+		spans.TraceError(errors.Wrap(err, "error setting description"))
 		return
 	}
 }
@@ -948,9 +935,8 @@ func (s *globalOrganizationService) enrichNames() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichNames")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.enrichNames")
+	defer spans.Finish()
 
 	limit := 30
 	hoursFromPreviousAttempt := 24
@@ -958,7 +944,7 @@ func (s *globalOrganizationService) enrichNames() {
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichName(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		spans.TraceError(errors.Wrap(err, "error getting records to process"))
 		s.log.Errorf("Error getting records to process: %s", err.Error())
 		return
 	}
@@ -975,15 +961,14 @@ func (s *globalOrganizationService) enrichNames() {
 }
 
 func (s *globalOrganizationService) enrichName(ctx context.Context, globalOrganization *postgres_entity.GlobalOrganization) {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichName")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagEntity(span, strconv.FormatUint(globalOrganization.ID, 10))
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.enrichName")
+	defer spans.Finish()
+	spans.TagEntity(strconv.FormatUint(globalOrganization.ID, 10))
 
 	// mark record as processed initially to not process same record again, even if error occurs
 	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkNameEnrichRequested(ctx, globalOrganization.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+		spans.TraceError(errors.Wrap(err, "error marking record as processed"))
 		s.log.Errorf("Error marking record as processed: %s", err.Error())
 		return
 	}
@@ -1024,19 +1009,19 @@ func (s *globalOrganizationService) enrichName(ctx context.Context, globalOrgani
 		OutputFormat:     enum.AIOutputJson,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+		spans.TraceError(errors.Wrap(err, "error asking AI"))
 		return
 	}
 
-	span.LogFields(log.String("result.confidence", fmt.Sprintf("%f", aiOutput.Confidence)))
+	spans.LogKV("result.confidence", fmt.Sprintf("%f", aiOutput.Confidence))
 	if aiOutput.Confidence < 0.5 {
 		return
 	}
 
-	span.LogFields(log.String("result.name", aiOutput.Name))
+	spans.LogKV("result.name", aiOutput.Name)
 	err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetName(ctx, globalOrganization.ID, aiOutput.Name)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error setting name"))
+		spans.TraceError(errors.Wrap(err, "error setting name"))
 		return
 	}
 }
@@ -1045,16 +1030,15 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations")
+	defer spans.Finish()
 
 	limit := 500
 	daysFromPreviousSync := 1
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx, daysFromPreviousSync, limit)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		spans.TraceError(errors.Wrap(err, "error getting records to process"))
 		s.log.Errorf("Error getting records to process: %s", err.Error())
 		return
 	}
@@ -1071,15 +1055,15 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 }
 
 func (s *globalOrganizationService) syncGlobalOrganizationToTenantOrganizationRecord(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization) {
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.syncGlobalOrganizationToTenantOrganizationRecord")
-	defer span.Finish()
-	span.LogFields(log.Uint64("record.id", globalOrganization.ID), log.String("record.primaryDomain", globalOrganization.PrimaryDomain))
-	tracing.TagEntity(span, globalOrganization.PrimaryDomain)
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.syncGlobalOrganizationToTenantOrganizationRecord")
+	defer spans.Finish()
+	spans.TagEntity(strconv.FormatUint(globalOrganization.ID, 10))
+	spans.LogKV("record.id", globalOrganization.ID, "record.primaryDomain", globalOrganization.PrimaryDomain)
 
 	// mark record as processed initially to not process same record again, even if error occurs
 	err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(ctx, globalOrganization.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+		spans.TraceError(errors.Wrap(err, "error marking record as processed"))
 		s.log.Errorf("Error marking record as processed: %s", err.Error())
 		return
 	}
@@ -1087,7 +1071,7 @@ func (s *globalOrganizationService) syncGlobalOrganizationToTenantOrganizationRe
 	// Find organizations by domain across all tenants
 	tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(ctx, globalOrganization.PrimaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting organizations by domain"))
+		spans.TraceError(errors.Wrap(err, "error getting organizations by domain"))
 		s.log.Errorf("Error getting organizations by domain: %s", err.Error())
 		return
 	}
@@ -1102,12 +1086,11 @@ func (s *globalOrganizationService) syncGlobalOrganizationToTenantOrganizationRe
 }
 
 func (s *globalOrganizationService) syncOrganizationToTenant(ctx context.Context, globalOrganization *postgresentity.GlobalOrganization, tenantOrg neo4jrepository.TenantAndOrganizationId) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.syncOrganizationToTenant")
-	defer span.Finish()
+	spans, ctx := telemetry.StartCronSpan(ctx, "GlobalOrganizationService.syncOrganizationToTenant")
+	defer spans.Finish()
 	tenant := tenantOrg.Tenant
 	organizationId := tenantOrg.OrganizationId
-	tracing.TagTenant(span, tenant)
-	span.LogKV("industryNaicsCode", globalOrganization.IndustryNaicsCode, "description", globalOrganization.Description, "name", globalOrganization.Name)
+	spans.LogKV("industryNaicsCode", globalOrganization.IndustryNaicsCode, "description", globalOrganization.Description, "name", globalOrganization.Name)
 
 	// sync organization
 	dataFields := data_fields.OrganizationFields{}
@@ -1132,14 +1115,14 @@ func (s *globalOrganizationService) syncOrganizationToTenant(ctx context.Context
 	}
 	_, err := s.commonServices.OrganizationService.Save(ctx, nil, utils.StringPtr(organizationId), dataFields)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error syncing organization"))
+		spans.TraceError(errors.Wrap(err, "error syncing organization"))
 		s.log.Errorf("Error syncing organization: %s", err.Error())
 	}
 
 	// sync Linked In
 	socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, tenant, model.ORGANIZATION, []string{organizationId})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting social entities"))
+		spans.TraceError(errors.Wrap(err, "error getting social entities"))
 		s.log.Errorf("Error getting social entities: %s", err.Error())
 		return
 	}
@@ -1157,7 +1140,7 @@ func (s *globalOrganizationService) syncOrganizationToTenant(ctx context.Context
 			linkedInIdentifier := neo4jentity.SocialEntity{Url: globalOrganization.LinkedInUrl}.ExtractLinkedinCompanyIdentifierFromUrl()
 			orgsWithLinkedIn, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, linkedInIdentifier, globalOrganization.LinkedInAlias, linkedInIdentifier)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting organizations by linked in"))
+				spans.TraceError(errors.Wrap(err, "error getting organizations by linked in"))
 				s.log.Errorf("Error getting organizations by linked in: %s", err.Error())
 				return
 			}

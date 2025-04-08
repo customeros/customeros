@@ -6,12 +6,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -32,9 +31,8 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 }
 
 func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant string, entityType model.EntityType, entityId string, source entity.SourceFields) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.CreateLocationForEntity")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationRepository.CreateLocationForEntity")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -67,9 +65,8 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 }
 
 func (r *locationRepository) Update(ctx context.Context, tenant string, locationEntity neo4jentity.LocationEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationRepository.Update")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -134,9 +131,8 @@ func (r *locationRepository) Update(ctx context.Context, tenant string, location
 }
 
 func (r *locationRepository) RemoveRelationshipAndDeleteOrphans(ctx context.Context, entityType model.EntityType, entityId, locationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.RemoveRelationshipAndDeleteOrphans")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationRepository.RemoveRelationshipAndDeleteOrphans")
+	defer spans.Finish()
 
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(loc:Location {id:$locationId}),
 										(loc)<-[rel:ASSOCIATED_WITH]-(entity:%s {id:$entityId})
@@ -147,7 +143,7 @@ func (r *locationRepository) RemoveRelationshipAndDeleteOrphans(ctx context.Cont
 									WHERE NOT (node:Tenant)
 								}
 								DETACH DELETE loc`, entityType.Neo4jLabel()+"_"+common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)

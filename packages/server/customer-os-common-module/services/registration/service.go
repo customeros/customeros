@@ -3,6 +3,7 @@ package registration
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/http"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -21,7 +22,7 @@ import (
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -87,49 +88,48 @@ func (s *registrationService) IsInitialized() bool {
 }
 
 func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.PrepareDefaultTenantSetup")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("loggedInUserEmail", loggedInUserEmail)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.PrepareDefaultTenantSetup")
+	defer spans.Finish()
+
+	spans.LogKV("loggedInUserEmail", loggedInUserEmail)
 
 	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	testUser, err := s.ConfigureTestMailbox(ctx)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
 	}
 
 	if err = s.configureDefaultFlowData(ctx, testUser); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test flow data during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error configuring test flow data during tenant onboarding"))
 	}
 
 	if err = s.createPostmarkServer(ctx); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
 	}
 
 	if err = s.createDefaultAgents(ctx); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating default agents during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error creating default agents during tenant onboarding"))
 	}
 
 	return nil
 }
 
 func (s *registrationService) configureDefaultFlowData(ctx context.Context, testUser *interfaces.TestUserSetup) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.configureDefaultFlowData")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.configureDefaultFlowData")
+	defer spans.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	flowList, err := s.flow.FlowGetList(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -153,7 +153,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		Employees:    utils.Int64Ptr(int64(100)),
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error saving organization during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error saving organization during tenant onboarding"))
 		return err
 	}
 
@@ -162,7 +162,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		LastName:  utils.StringPtr("Example"),
 	}, false)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error saving contact during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error saving contact during tenant onboarding"))
 		return err
 	}
 
@@ -174,13 +174,13 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 			Type: model.CONTACT,
 		})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error saving email during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error saving email during tenant onboarding"))
 		return err
 	}
 
 	err = s.contact.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "Chief Testing Officer", "", "", true, utils.TimePtr(utils.Now()), nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error linking contact with organization during tenant onboarding"))
+		spans.TraceError(errors.Wrap(err, "Error linking contact with organization during tenant onboarding"))
 		return err
 	}
 
@@ -409,7 +409,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		Edges: "[{\"id\":\"etn-1-WAIT-3bcac2b1-dcd8-4472-829d-1f1a74142c1e\",\"source\":\"tn-1\",\"target\":\"WAIT-3bcac2b1-dcd8-4472-829d-1f1a74142c1e\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20}},{\"id\":\"eWAIT-3bcac2b1-dcd8-4472-829d-1f1a74142c1e-EMAIL_NEW-5bab768c-722c-4bf6-a315-8419f48013f0\",\"source\":\"WAIT-3bcac2b1-dcd8-4472-829d-1f1a74142c1e\",\"target\":\"EMAIL_NEW-5bab768c-722c-4bf6-a315-8419f48013f0\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20},\"data\":{\"isHovered\":false}},{\"id\":\"eEMAIL_NEW-5bab768c-722c-4bf6-a315-8419f48013f0-WAIT-24213077-fc7f-4726-bc6f-a73cc6c8beef\",\"source\":\"EMAIL_NEW-5bab768c-722c-4bf6-a315-8419f48013f0\",\"target\":\"WAIT-24213077-fc7f-4726-bc6f-a73cc6c8beef\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20}},{\"id\":\"eWAIT-24213077-fc7f-4726-bc6f-a73cc6c8beef-EMAIL_REPLY-663dfdf6-7a9c-48cc-8cad-8f8a70ec95dd\",\"source\":\"WAIT-24213077-fc7f-4726-bc6f-a73cc6c8beef\",\"target\":\"EMAIL_REPLY-663dfdf6-7a9c-48cc-8cad-8f8a70ec95dd\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20}},{\"id\":\"eEMAIL_REPLY-663dfdf6-7a9c-48cc-8cad-8f8a70ec95dd-WAIT-b4fd333b-6575-47d8-93b8-4c478b19b3fb\",\"source\":\"EMAIL_REPLY-663dfdf6-7a9c-48cc-8cad-8f8a70ec95dd\",\"target\":\"WAIT-b4fd333b-6575-47d8-93b8-4c478b19b3fb\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20}},{\"id\":\"eWAIT-b4fd333b-6575-47d8-93b8-4c478b19b3fb-EMAIL_REPLY-17f282b8-bd4d-47d2-9c6e-00add6b5114a\",\"source\":\"WAIT-b4fd333b-6575-47d8-93b8-4c478b19b3fb\",\"target\":\"EMAIL_REPLY-17f282b8-bd4d-47d2-9c6e-00add6b5114a\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20},\"data\":{\"isHovered\":false}},{\"id\":\"eEMAIL_REPLY-17f282b8-bd4d-47d2-9c6e-00add6b5114a-tn-2\",\"source\":\"EMAIL_REPLY-17f282b8-bd4d-47d2-9c6e-00add6b5114a\",\"target\":\"tn-2\",\"type\":\"baseEdge\",\"markerEnd\":{\"type\":\"arrow\",\"width\":20,\"height\":20},\"data\":{\"isHovered\":false}}]",
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -417,7 +417,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		UserId: &testUser.UserId,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -425,12 +425,11 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 }
 
 func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.ConfigureTestMailbox")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.ConfigureTestMailbox")
+	defer spans.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -444,17 +443,16 @@ func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*interf
 		return nil, err
 	}
 
-	span.LogKV("result.mailboxAddress", testUser.MailboxAddress)
+	spans.LogKV("result.mailboxAddress", testUser.MailboxAddress)
 	return testUser, nil
 }
 
 func (s *registrationService) createDefaultAgents(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.createDefaultAgents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.createDefaultAgents")
+	defer spans.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -463,26 +461,26 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 	//// get web visitor agents
 	//webVisitorAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
 	//if err != nil {
-	//	tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
+	//	spans.TraceError( errors.Wrap(err, "error getting web visitor agents"))
 	//	return err
 	//}
 	//if len(webVisitorAgents) == 0 {
 	//	_, err = s.agentService.CreateAgent(ctx, enum.AgentWebVisitorIdentifier)
 	//	if err != nil {
-	//		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
+	//		spans.TraceError( errors.Wrap(err, "error creating web visitor agent"))
 	//	}
 	//}
 
 	//// get icp qualification agents
 	//icpQualificationAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualifier})
 	//if err != nil {
-	//	tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
+	//	spans.TraceError( errors.Wrap(err, "error getting icp qualification agents"))
 	//	return err
 	//}
 	//if len(icpQualificationAgents) == 0 {
 	//	_, err = s.agentService.CreateAgent(ctx, enum.AgentICPQualifier)
 	//	if err != nil {
-	//		tracing.TraceErr(span, errors.Wrap(err, "error creating ICP qualification agent"))
+	//		spans.TraceError( errors.Wrap(err, "error creating ICP qualification agent"))
 	//	}
 	//}
 
@@ -490,30 +488,28 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 }
 
 func (s *registrationService) createPostmarkServer(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.createPostmarkServer")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.createPostmarkServer")
+	defer spans.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if err := s.postmark.CreateServerIfNotExists(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return nil
 }
 
 func (s *registrationService) SetupTestUser(ctx context.Context) (*interfaces.TestUserSetup, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.SetupTestUser")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.SetupTestUser")
+	defer spans.Finish()
 
 	existingTestUser, err := s.neo4j.UserReadRepository.FindTestUser(ctx)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "cannot find test user"))
+		spans.TraceError(errors.Wrap(err, "cannot find test user"))
 		return nil, err
 	}
 
@@ -525,21 +521,20 @@ func (s *registrationService) SetupTestUser(ctx context.Context) (*interfaces.Te
 			Test:      utils.BoolPtr(true),
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "cannot create test user"))
+			spans.TraceError(errors.Wrap(err, "cannot create test user"))
 			return nil, err
 		}
 	} else {
 		testUserId = mapper.MapDbNodeToUserEntity(existingTestUser).Id
 	}
 
-	span.LogKV("result.testUserId", testUserId)
+	spans.LogKV("result.testUserId", testUserId)
 	return &interfaces.TestUserSetup{UserId: testUserId}, nil
 }
 
 func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant string, testUser *interfaces.TestUserSetup) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.SetupTestMailbox")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.SetupTestMailbox")
+	defer spans.Finish()
 
 	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN))
 	testUser.MailboxAddress = mailboxAddress
@@ -551,18 +546,18 @@ func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant strin
 		Id:   testUser.UserId,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to setup test mailbox"))
+		spans.TraceError(errors.Wrap(err, "failed to setup test mailbox"))
 		return err
 	}
-	span.LogKV("result.testEmailId", testEmailId)
+	spans.LogKV("result.testEmailId", testEmailId)
 
-	return s.createMailboxIfNotExists(ctx, span, tenant, mailboxAddress)
+	return s.createMailboxIfNotExists(ctx, *spans, tenant, mailboxAddress)
 }
 
-func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span opentracing.Span, tenant, mailboxAddress string) error {
+func (s *registrationService) createMailboxIfNotExists(ctx context.Context, spans telemetry.Spans, tenant, mailboxAddress string) error {
 	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, mailboxAddress)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
+		spans.TraceError(errors.Wrap(err, "failed to get by mailbox"))
 		return err
 	}
 
@@ -576,26 +571,26 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			ForwardingTo:    []string{fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))},
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to add mailbox"))
+			spans.TraceError(errors.Wrap(err, "failed to add mailbox"))
 			return err
 		}
 
 		// Handle non-200 responses
 		if statusCode != http.StatusOK {
 			err = errors.New(errMsg)
-			tracing.TraceErr(span, errors.Wrap(err, "failed to add mailbox"))
+			spans.TraceError(errors.Wrap(err, "failed to add mailbox"))
 			return err
 		}
 
 		mailboxRecord, err = s.mailstack.GetByMailbox(ctx, tenant, strings.ToLower(tenant)+"@"+mailstack.TEST_MAILBOX_DOMAIN)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
+			spans.TraceError(errors.Wrap(err, "failed to get by mailbox"))
 			return err
 		}
 
 		err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}

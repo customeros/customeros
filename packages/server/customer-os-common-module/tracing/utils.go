@@ -18,7 +18,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
@@ -44,19 +43,6 @@ const (
 	SpanTagComponentAgentCapability    = "agentCapability"
 )
 
-func GraphQlTracingEnhancer(ctx context.Context) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, ExtractGraphQLMethodName(c.Request), c.Request.Header)
-		for k, v := range c.Request.Header {
-			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
-		}
-		defer span.Finish()
-		TagComponentRest(span)
-		c.Request = c.Request.WithContext(ctxWithSpan)
-		c.Next()
-	}
-}
-
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, endpoint, c.Request.Header)
@@ -64,7 +50,6 @@ func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) 
 			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
 		}
 		defer span.Finish()
-		TagComponentRest(span)
 		c.Request = c.Request.WithContext(ctxWithSpan)
 		c.Next()
 	}
@@ -101,27 +86,6 @@ func StartRabbitMQMessageTracerSpanWithHeader(ctx context.Context, operationName
 func StartTracerSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 	return serverSpan, opentracing.ContextWithSpan(ctx, serverSpan)
-}
-
-func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
-	if span != nil {
-		// Inject the span context into the gRPC request metadata.
-		textMapCarrier := make(opentracing.TextMapCarrier)
-		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, textMapCarrier)
-		if err == nil {
-			// Add the injected metadata to the gRPC context.
-			md, ok := metadata.FromOutgoingContext(ctx)
-			if !ok {
-				md = metadata.New(nil)
-			}
-			for key, val := range textMapCarrier {
-				md.Set(key, val)
-			}
-			ctx = metadata.NewOutgoingContext(ctx, md)
-			return ctx
-		}
-	}
-	return ctx
 }
 
 func InjectSpanContextIntoHTTPRequest(req *http.Request, span opentracing.Span) *http.Request {

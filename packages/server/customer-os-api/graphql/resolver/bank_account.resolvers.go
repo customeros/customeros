@@ -11,18 +11,17 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // BankAccountCreate is the resolver for the bankAccount_Create field.
 func (r *mutationResolver) BankAccountCreate(ctx context.Context, input *model.BankAccountCreateInput) (*model.BankAccount, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.BankAccountCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	dataFields := data_fields.BankAccountFields{
 		BankName:            input.BankName,
@@ -40,7 +39,7 @@ func (r *mutationResolver) BankAccountCreate(ctx context.Context, input *model.B
 	}
 	bankAccountId, err := r.Services.CommonServices.TenantSettingsService.CreateBankAccount(ctx, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create bank account")
 		return &model.BankAccount{Metadata: &model.Metadata{
 			ID: bankAccountId,
@@ -49,26 +48,26 @@ func (r *mutationResolver) BankAccountCreate(ctx context.Context, input *model.B
 
 	createdBankAccountEntity, err := r.Services.BankAccountService.GetTenantBankAccount(ctx, bankAccountId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Bank account not yet available.")
 		return &model.BankAccount{Metadata: &model.Metadata{
 			ID: bankAccountId,
 		}}, nil
 	}
-	span.LogFields(log.String("response.bankAccountId", bankAccountId))
+	spans.LogKV("response.bankAccountId", bankAccountId)
 	return mapper.MapEntityToBankAccount(createdBankAccountEntity), nil
 }
 
 // BankAccountUpdate is the resolver for the bankAccount_Update field.
 func (r *mutationResolver) BankAccountUpdate(ctx context.Context, input *model.BankAccountUpdateInput) (*model.BankAccount, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.BankAccountUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	if input.ID == "" {
 		err := errors.New("missing bank account id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Missing bank account id")
 		return nil, nil
 	}
@@ -90,14 +89,14 @@ func (r *mutationResolver) BankAccountUpdate(ctx context.Context, input *model.B
 
 	err := r.Services.CommonServices.TenantSettingsService.UpdateBankAccount(ctx, input.ID, dataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update bank account")
 		return nil, err
 	}
 
 	updatedBankAccountEntity, err := r.Services.BankAccountService.GetTenantBankAccount(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch bank account details")
 		return nil, nil
 	}
@@ -106,21 +105,21 @@ func (r *mutationResolver) BankAccountUpdate(ctx context.Context, input *model.B
 
 // BankAccountDelete is the resolver for the bankAccount_Delete field.
 func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.id", id)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.BankAccountDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.id", id)
 
 	if id == "" {
 		err := errors.New("missing bank account id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Missing bank account id")
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
 
 	err := r.Services.CommonServices.TenantSettingsService.DeleteBankAccount(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to delete bank account")
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
@@ -129,13 +128,12 @@ func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*m
 
 // BankAccounts is the resolver for the bankAccounts field.
 func (r *queryResolver) BankAccounts(ctx context.Context) ([]*model.BankAccount, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.BankAccounts", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.BankAccounts", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	bankAccountEntities, err := r.Services.BankAccountService.GetTenantBankAccounts(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch bank accounts")
 		return nil, err
 	}

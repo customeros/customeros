@@ -4,17 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -25,8 +30,6 @@ type Spans struct {
 }
 
 type contextKey string
-
-const otelSpanKey contextKey = "otel_span"
 
 // Component tag constants
 const (
@@ -53,6 +56,11 @@ const (
 	SpanKindConsumer = "consumer"
 )
 
+// Context keys
+const (
+	otelSpanKey contextKey = "otel_span"
+)
+
 // SpanOptions defines options for span creation
 type SpanOptions struct {
 	NewRoot bool
@@ -62,6 +70,53 @@ type SpanOptions struct {
 func WithNewRoot() SpanOptions {
 	return SpanOptions{
 		NewRoot: true,
+	}
+}
+
+// GetDefaultServiceSpanAttributes returns default attributes for service spans
+func getDefaultServiceSpanAttributes(ctx context.Context) []attribute.KeyValue {
+	attrs := []attribute.KeyValue{}
+
+	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
+		attrs = append(attrs, attribute.String("tenant", tenant))
+	}
+	if userID := common.GetUserIdFromContext(ctx); userID != "" {
+		attrs = append(attrs, attribute.String("user.id", userID))
+	}
+	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
+		attrs = append(attrs, attribute.String("user.email", userEmail))
+	}
+	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
+		attrs = append(attrs, attribute.String("app.source", appSource))
+	}
+
+	return attrs
+}
+
+// SetDefaultServiceSpanAttributes sets default attributes on an OpenTelemetry span
+func setDefaultServiceSpanAttributes(ctx context.Context, span trace.Span) {
+	if span == nil {
+		return
+	}
+	span.SetAttributes(getDefaultServiceSpanAttributes(ctx)...)
+}
+
+// SetDefaultJaegerSpanTags sets default tags on a Jaeger span
+func setDefaultJaegerSpanTags(ctx context.Context, span opentracing.Span) {
+	if span == nil {
+		return
+	}
+	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
+		span.SetTag("tenant", tenant)
+	}
+	if userID := common.GetUserIdFromContext(ctx); userID != "" {
+		span.SetTag("user.id", userID)
+	}
+	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
+		span.SetTag("user.email", userEmail)
+	}
+	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
+		span.SetTag("app.source", appSource)
 	}
 }
 
@@ -77,39 +132,21 @@ func StartSpan(ctx context.Context, operationName string, opts ...SpanOptions) (
 		jaegerSpan, ctx = opentracing.StartSpanFromContext(ctx, operationName)
 	}
 
-	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
-		jaegerSpan.SetTag("tenant", tenant)
-	}
-	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		jaegerSpan.SetTag("user_id", userID)
-	}
-	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
-		jaegerSpan.SetTag("user_email", userEmail)
-	}
-	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
-		jaegerSpan.SetTag("app_source", appSource)
-	}
+	setDefaultJaegerSpanTags(ctx, jaegerSpan)
 
 	// Start OpenTelemetry span
 	tracer := otel.Tracer("github.com/customeros/customeros")
-	var otelCtx context.Context
 	var otelSpan trace.Span
 	if len(opts) > 0 && opts[0].NewRoot {
 		// Force new trace by using WithNewRoot() option while keeping the context
-		otelCtx, otelSpan = tracer.Start(ctx, operationName, trace.WithNewRoot())
+		ctx, otelSpan = tracer.Start(ctx, operationName, trace.WithNewRoot())
 	} else {
-		otelCtx, otelSpan = tracer.Start(ctx, operationName)
+		ctx, otelSpan = tracer.Start(ctx, operationName)
 	}
 
-	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
-		otelSpan.SetAttributes(attribute.String("tenant", tenant))
-	}
-	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		otelSpan.SetAttributes(attribute.String("user_id", userID))
-	}
+	setDefaultServiceSpanAttributes(ctx, otelSpan)
 
-	// Store both spans in the context
-	ctx = otelCtx
+	// Store spans in context
 	ctx = context.WithValue(ctx, otelSpanKey, otelSpan)
 
 	return &Spans{
@@ -147,10 +184,25 @@ func StartCronSpan(ctx context.Context, operationName string, opts ...SpanOption
 	return spans, ctx
 }
 
-func StartGraphQLSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
+func StartGraphQLSpan(ctx context.Context, operationName string, gqlCtx *graphql.OperationContext, opts ...SpanOptions) (*Spans, context.Context) {
 	spans, ctx := StartSpan(ctx, operationName, opts...)
 	TagComponentGraphQL(spans)
 	SetSpanKindServer(spans)
+
+	// Add GraphQL operation details if available
+	if gqlCtx != nil {
+		if spans.Jaeger != nil {
+			spans.Jaeger.SetTag("graphql.operation.name", gqlCtx.OperationName)
+			spans.Jaeger.SetTag("graphql.operation.type", string(gqlCtx.Operation.Operation))
+		}
+		if spans.OTel != nil {
+			spans.OTel.SetAttributes(
+				attribute.String("graphql.operation.name", gqlCtx.OperationName),
+				attribute.String("graphql.operation.type", string(gqlCtx.Operation.Operation)),
+			)
+		}
+	}
+
 	return spans, ctx
 }
 
@@ -409,6 +461,18 @@ func (s *Spans) TagEntity(entityId string) {
 	}
 	if s.OTel != nil {
 		s.OTel.SetAttributes(attribute.String("entity.id", entityId))
+	}
+}
+
+func (s *Spans) TagTenant(tenant string) {
+	if s == nil || tenant == "" {
+		return
+	}
+	if s.Jaeger != nil {
+		tracing.TagTenant(s.Jaeger, tenant)
+	}
+	if s.OTel != nil {
+		s.OTel.SetAttributes(attribute.String("tenant", tenant))
 	}
 }
 
@@ -729,9 +793,7 @@ func RecoverAndLogMain(appLogger logger.Logger) {
 		defer span.End()
 
 		span.SetStatus(codes.Error, fmt.Sprintf("panic: %v", r))
-		span.SetAttributes(
-			attribute.String("event", "panic"),
-		)
+		span.SetAttributes(attribute.String("event", "panic"))
 
 		// Log error and stack as events
 		span.AddEvent("error", trace.WithAttributes(
@@ -745,27 +807,162 @@ func RecoverAndLogMain(appLogger logger.Logger) {
 	}
 }
 
-// GetDefaultServiceSpanAttributes returns default attributes for service spans
-func GetDefaultServiceSpanAttributes(ctx context.Context) []attribute.KeyValue {
-	attrs := []attribute.KeyValue{}
-
-	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
-		attrs = append(attrs, attribute.String("tenant", tenant))
-	}
-	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		attrs = append(attrs, attribute.String("user_id", userID))
-	}
-	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
-		attrs = append(attrs, attribute.String("user_email", userEmail))
+// InjectSpanContextIntoHTTPRequest injects both Jaeger and OpenTelemetry span contexts into an HTTP request
+func InjectSpanContextIntoHTTPRequest(req *http.Request, spans *Spans) *http.Request {
+	if spans == nil {
+		return req
 	}
 
-	return attrs
+	// Inject Jaeger span context
+	if spans.Jaeger != nil {
+		// Use existing tracing package's function for Jaeger
+		req = tracing.InjectSpanContextIntoHTTPRequest(req, spans.Jaeger)
+	}
+
+	// Inject OpenTelemetry span context
+	if spans.OTel != nil {
+		// Get the propagator from the global tracer provider
+		propagator := otel.GetTextMapPropagator()
+
+		// Create a carrier for the headers
+		carrier := propagation.HeaderCarrier(req.Header)
+
+		// Create a context with the span context
+		ctx := trace.ContextWithSpanContext(context.Background(), spans.OTel.SpanContext())
+
+		// Inject the span context into the carrier
+		propagator.Inject(ctx, carrier)
+	}
+
+	return req
 }
 
-// SetDefaultServiceSpanAttributes sets default attributes on a span
-func SetDefaultServiceSpanAttributes(ctx context.Context, span trace.Span) {
-	if span == nil {
+// StartHttpServerTracerSpanWithHeader starts both Jaeger and OpenTelemetry spans for HTTP server requests
+func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (*Spans, context.Context) {
+	// Start Jaeger span using existing implementation
+	ctx, jaegerSpan := tracing.StartHttpServerTracerSpanWithHeader(ctx, operationName, headers)
+
+	// Start OpenTelemetry span
+	tracer := otel.Tracer("github.com/customeros/customeros")
+
+	// Extract context from headers for OpenTelemetry
+	carrier := propagation.HeaderCarrier(headers)
+	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+
+	// Start the span
+	ctx, otelSpan := tracer.Start(ctx, operationName)
+
+	// Create spans struct
+	spans := &Spans{
+		Jaeger: jaegerSpan,
+		OTel:   otelSpan,
+	}
+
+	// Log headers for both tracers
+	for key, values := range headers {
+		// Log to Jaeger
+		if jaegerSpan != nil {
+			jaegerSpan.LogFields(
+				log.String("request.header.key", key),
+				log.Object("request.header.value", values),
+			)
+		}
+		// Log to OpenTelemetry
+		if otelSpan != nil {
+			otelSpan.AddEvent("request.header."+key, trace.WithAttributes(
+				attribute.StringSlice("value", values),
+			))
+		}
+	}
+
+	// Store OpenTelemetry span in context
+	ctx = context.WithValue(ctx, otelSpanKey, otelSpan)
+
+	return spans, ctx
+}
+
+// GraphQLTracingEnhancer creates a middleware that adds tracing for GraphQL operations
+func GraphQLTracingEnhancer(ctx context.Context) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		operationName := "GraphQL." + tracing.ExtractGraphQLMethodName(c.Request)
+
+		// Start both Jaeger and OpenTelemetry spans
+		spans, ctxWithSpan := StartHttpServerTracerSpanWithHeader(
+			ctx,
+			operationName,
+			c.Request.Header,
+		)
+		defer spans.Finish()
+
+		// Tag as GraphQL component
+		TagComponentGraphQL(spans)
+		SetSpanKindServer(spans)
+
+		// Update request context
+		c.Request = c.Request.WithContext(ctxWithSpan)
+		c.Next()
+
+		// Add response status
+		if c.Writer.Status() >= 400 {
+			spans.TraceError(nil)
+		}
+	}
+}
+
+func GetTraceIds(spans *Spans) (string, string) {
+	if spans == nil {
+		return "", ""
+	}
+	jaegerTraceId := ""
+	otelTraceId := ""
+	if spans.Jaeger != nil {
+		tracingData := ExtractTextMapCarrier((spans.Jaeger).Context())
+		jaegerTraceId = strings.Split(tracingData["uber-trace-id"], ":")[0]
+	}
+	if spans.OTel != nil {
+		otelTraceId = spans.OTel.SpanContext().TraceID().String()
+	}
+	return jaegerTraceId, otelTraceId
+}
+
+func TraceIdsAsString(spans *Spans) string {
+	if spans == nil {
+		return ""
+	}
+	jaegerTraceId, otelTraceId := GetTraceIds(spans)
+	return fmt.Sprintf("Jaeger Trace ID: %s, OpenTelemetry Trace ID: %s", jaegerTraceId, otelTraceId)
+}
+
+// EnrichCtxWithSpanCtxForGraphQL enriches the provided context with both Jaeger and OpenTelemetry span contexts
+func EnrichCtxWithSpanCtxForGraphQL(ctx context.Context, operationContext *graphql.OperationContext) context.Context {
+	// Extract and enrich Jaeger span context
+	EnrichCtxWithJaegerSpanForGraphQL(ctx, operationContext)
+
+	// Extract and enrich OpenTelemetry span context
+	carrier := propagation.HeaderCarrier(operationContext.Headers)
+	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+
+	return ctx
+}
+
+// TraceErrorOnActiveSpan traces an error on both active Jaeger and OpenTelemetry spans from context
+func TraceErrorOnActiveSpan(ctx context.Context, err error) {
+	if err == nil {
 		return
 	}
-	span.SetAttributes(GetDefaultServiceSpanAttributes(ctx)...)
+
+	// Trace error in Jaeger using the active span
+	if span := opentracing.SpanFromContext(ctx); span != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	// Trace error in OpenTelemetry using the active span
+	if span := trace.SpanFromContext(ctx); span.IsRecording() {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		span.SetAttributes(
+			attribute.String("event", "error"),
+			attribute.String("time", time.Now().Format(time.RFC3339)),
+		)
+	}
 }

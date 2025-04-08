@@ -2,10 +2,11 @@ package agent_listeners
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -65,26 +66,26 @@ func (l *StartInvoiceRun) ExecutingAgents() []enum.AgentType {
 }
 
 func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "StartInvoiceRun.Handle")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	data, err := events.DecodeEventData[dto.InvoiceContract](ctx, event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if data.ContractId == "" {
 		err := errors.New("missing contract id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -92,9 +93,8 @@ func (l *StartInvoiceRun) Handle(ctx context.Context, baseEvent any) error {
 }
 
 func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceContract) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.handleExecution")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "StartInvoiceRun.handleExecution")
+	defer spans.Finish()
 
 	activeAgents := l.lookupActiveAgents(ctx)
 	if activeAgents == nil || len(activeAgents) == 0 {
@@ -106,12 +106,12 @@ func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceC
 		// replaced route with generic mapping
 		initialParams, err := utils.StructToMap(data)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 		_, err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 	}
@@ -120,13 +120,12 @@ func (l *StartInvoiceRun) handleExecution(ctx context.Context, data dto.InvoiceC
 }
 
 func (l *StartInvoiceRun) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "StartInvoiceRun.lookupActiveAgents")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "StartInvoiceRun.lookupActiveAgents")
+	defer spans.Finish()
 
 	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	return agents

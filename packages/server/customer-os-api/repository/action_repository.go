@@ -3,14 +3,13 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -29,9 +28,8 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 }
 
 func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType model.EntityType, actionType enum.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ActionRepository.Create")
+	defer spans.Finish()
 
 	query := ""
 	switch entityType {
@@ -53,7 +51,7 @@ func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransacti
 
 	query += ` return a `
 
-	span.LogFields(log.String("query", query))
+	spans.LogKV(log.String("query", query))
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
 		map[string]interface{}{

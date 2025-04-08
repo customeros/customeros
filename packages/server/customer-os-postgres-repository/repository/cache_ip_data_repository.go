@@ -3,11 +3,9 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
@@ -25,10 +23,9 @@ func NewCacheIpDataRepository(gormDb *gorm.DB) CacheIpDataRepository {
 }
 
 func (r cacheIpDataRepository) Get(ctx context.Context, ip string) (*postgres_entity.CacheIpData, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpDataRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("ip", ip))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheIpDataRepository.Get")
+	defer spans.Finish()
+	spans.LogKV("ip", ip)
 
 	var cacheIpData postgres_entity.CacheIpData
 	result := r.db.WithContext(ctx).Where("ip = ?", ip).First(&cacheIpData)
@@ -45,10 +42,9 @@ func (r cacheIpDataRepository) Get(ctx context.Context, ip string) (*postgres_en
 }
 
 func (r cacheIpDataRepository) Save(ctx context.Context, cacheIpData postgres_entity.CacheIpData) (*postgres_entity.CacheIpData, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpDataRepository.Save")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "cacheIpData", cacheIpData)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheIpDataRepository.Save")
+	defer spans.Finish()
+	spans.LogObjectAsJson("cacheIpData", cacheIpData)
 
 	var existingData postgres_entity.CacheIpData
 	result := r.db.WithContext(ctx).Where("ip = ?", cacheIpData.Ip).First(&existingData)
@@ -72,6 +68,7 @@ func (r cacheIpDataRepository) Save(ctx context.Context, cacheIpData postgres_en
 			"data":       cacheIpData.Data,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
+			spans.TraceError(err)
 			return nil, err
 		}
 		cacheIpData = existingData

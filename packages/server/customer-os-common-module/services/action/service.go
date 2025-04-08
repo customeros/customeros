@@ -2,12 +2,10 @@ package action
 
 import (
 	"context"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -17,7 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -46,10 +44,10 @@ func (s *actionService) IsInitialized() bool {
 }
 
 func (s *actionService) GetActionsForNodes(ctx context.Context, entityType model.EntityType, ids []string) (*neo4j_entity.ActionEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionService.GetActionsForNodes")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ActionService.GetActionsForNodes")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(), "ids", ids)
 
 	records, err := s.neo4j.ActionReadRepository.GetFor(ctx, common.GetTenantFromContext(ctx), entityType, ids)
 	if err != nil {
@@ -67,16 +65,16 @@ func (s *actionService) GetActionsForNodes(ctx context.Context, entityType model
 }
 
 func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string, actionFields data_fields.ActionFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.CreateActionForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, organizationId)
-	tracing.LogObjectAsJson(span, "actionFields", actionFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.CreateActionForOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogObjectAsJson("actionFields", actionFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -97,7 +95,7 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 
 	actionId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelAction)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -116,7 +114,7 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.AddActionToOrganization{ActionFields: actionFields})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
@@ -125,7 +123,7 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

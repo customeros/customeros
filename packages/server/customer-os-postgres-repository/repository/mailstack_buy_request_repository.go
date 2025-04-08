@@ -2,12 +2,11 @@ package postgres_repository
 
 import (
 	"errors"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -30,16 +29,15 @@ func NewMailstackBuyRequestRepository(gormDb *gorm.DB) MailstackBuyRequestReposi
 }
 
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Context) ([]*postgres_entity.MailstackBuyRequest, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetList")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "MailstackBuyRequestRepository.GetList")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	var e []*postgres_entity.MailstackBuyRequest
 	err := repo.gormDb.Where("tenant = ?", tenant).Find(&e).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -47,11 +45,9 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Con
 }
 
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Context, id string) (*postgres_entity.MailstackBuyRequest, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "MailstackBuyRequestRepository.GetById")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -59,10 +55,10 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Con
 	err := repo.gormDb.Where("tenant = ? and id = ?", tenant, id).First(&e).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogFields(log.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -70,18 +66,16 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Con
 }
 
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequest) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.Store")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "MailstackBuyRequestRepository.Store")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	span.LogFields(log.String("input.domains", input.Domains), log.String("input.usernames", input.Usernames))
+	spans.LogObjectAsJson("input", input)
 
 	if input.Domains == "" || input.Usernames == "" {
-		span.LogFields(log.Object("input", input))
 		err := errors.New("params missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -94,7 +88,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Conte
 
 	err := repo.gormDb.Save(&input).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -102,18 +96,16 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Conte
 }
 
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*postgres_entity.MailstackBuyRequestDomain, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetDomains")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-
-	span.LogFields(log.String("mailstackBuyRequestId", mailstackBuyRequestId))
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "MailstackBuyRequestRepository.GetDomains")
+	defer spans.Finish()
+	spans.LogKV("mailstackBuyRequestId", mailstackBuyRequestId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	var e []*postgres_entity.MailstackBuyRequestDomain
 	err := repo.gormDb.Where("tenant = ? and mailstack_buy_request_id = ?", tenant, mailstackBuyRequestId).Find(&e).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -121,18 +113,15 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.
 }
 
 func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequestDomain) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.StoreDomain")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "MailstackBuyRequestRepository.StoreDomain")
+	defer spans.Finish()
+	spans.LogObjectAsJson("input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	span.LogKV("input.domain", input.Domain, "input.redirectWebsite", input.RedirectWebsite)
-
 	if input.Domain == "" || input.MailstackBuyRequestId == "" {
-		span.LogFields(log.Object("input", input))
 		err := errors.New("params missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -145,7 +134,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context
 
 	err := repo.gormDb.Save(&input).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

@@ -3,16 +3,16 @@ package agent_capability
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type IdentifyEmailParticipantsInput struct {
@@ -81,29 +81,29 @@ func (c *IdentifyEmailParticipantsCapability) ValidateInput(input IdentifyEmailP
 }
 
 func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyEmailParticipantsInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, IdentifyEmailParticipantsOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyEmailParticipantsCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyEmailParticipantsCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 	}
 
 	ingestEmailMessage, err := c.postgres.IngestEmailMessageRepository.GetEmail(ctx, executionContainer.InputData.EntityId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get email"))
+		spans.TraceError(errors.Wrap(err, "failed to get email"))
 		return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 	}
 
 	emailMessageData, err := c.mailService.LoadIngestEmailMessage(ctx, ingestEmailMessage)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to load email"))
+		spans.TraceError(errors.Wrap(err, "failed to load email"))
 		return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 	}
 
@@ -112,7 +112,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 	//process FROM email
 	fromOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, emailMessageData.Participants.From.Email, ingestEmailMessage.Provider)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+		spans.TraceError(errors.Wrap(err, "failed to get email id for email"))
 		return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 	}
 	if fromOrgId != "" {
@@ -123,7 +123,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 	for _, to := range emailMessageData.Participants.To {
 		toOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, to.Email, ingestEmailMessage.Provider)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+			spans.TraceError(errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 		}
 		if toOrgId != "" {
@@ -135,7 +135,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 	for _, cc := range emailMessageData.Participants.Cc {
 		ccOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, cc.Email, ingestEmailMessage.Provider)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+			spans.TraceError(errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 		}
 		if ccOrgId != "" {
@@ -147,7 +147,7 @@ func (c *IdentifyEmailParticipantsCapability) Execute(ctx context.Context, execu
 	for _, bcc := range emailMessageData.Participants.Bcc {
 		bccOrgId, err := c.mailService.GetOrganizationIdForEmail(ctx, nil, ingestEmailMessage.Tenant, bcc.Email, ingestEmailMessage.Provider)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get email id for email"))
+			spans.TraceError(errors.Wrap(err, "failed to get email id for email"))
 			return enum.CapabilityExecutionError, IdentifyEmailParticipantsOutput{}, err
 		}
 		if bccOrgId != "" {

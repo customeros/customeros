@@ -1,8 +1,7 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 
@@ -23,13 +22,12 @@ func NewAiLocationMappingRepository(gormDb *gorm.DB) AiLocationMappingRepository
 }
 
 func (r aiLocationMappingRepository) AddLocationMapping(ctx context.Context, aiLocationMapping postgres_entity.AiLocationMapping) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AiLocationMappingRepository.AddLocationMapping")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "AiLocationMappingRepository.AddLocationMapping")
+	defer spans.Finish()
 
 	err := r.gormDb.Create(&aiLocationMapping).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -37,9 +35,8 @@ func (r aiLocationMappingRepository) AddLocationMapping(ctx context.Context, aiL
 }
 
 func (r aiLocationMappingRepository) GetLatestLocationMappingByInput(ctx context.Context, input string) (*postgres_entity.AiLocationMapping, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AiLocationMappingRepository.GetLatestLocationMappingByInput")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "AiLocationMappingRepository.GetLatestLocationMappingByInput")
+	defer spans.Finish()
 
 	var aiLocationMapping postgres_entity.AiLocationMapping
 	err := r.gormDb.Where("input = ?", input).Order("created_at desc").First(&aiLocationMapping).Error
@@ -47,7 +44,7 @@ func (r aiLocationMappingRepository) GetLatestLocationMappingByInput(ctx context
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

@@ -10,17 +10,16 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // AttachmentCreate is the resolver for the attachment_Create field.
 func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AttachmentCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AttachmentCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	entity := mapper.MapAttachmentInputToEntity(&input)
 	entity.Source = neo4jentity.DataSourceOpenline
@@ -28,7 +27,7 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 	attachmentCreated, err := r.Services.CommonServices.AttachmentService.Create(ctx, entity)
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create Attachment")
 		return nil, err
 	}
@@ -38,14 +37,14 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 
 // Attachment is the resolver for the attachment field.
 func (r *queryResolver) Attachment(ctx context.Context, id string) (*model.Attachment, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Attachment", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.ID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Attachment", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.ID", id)
 
 	attachmentEntity, err := r.Services.CommonServices.AttachmentService.GetById(ctx, id)
 	if err != nil || attachmentEntity == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Attachment with id %s not found", id)
 		return nil, err
 	}

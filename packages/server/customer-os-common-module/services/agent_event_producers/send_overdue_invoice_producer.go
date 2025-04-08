@@ -9,7 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -44,16 +44,15 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "SendOverdueInvoiceProducer.Execute")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "SendOverdueInvoiceProducer.Execute")
+	defer spans.Finish()
 
 	referenceTime := utils.Now()
 
 	// Get all agents for cashflow guardian
 	agents, err := p.postgresRepository.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentCashflowGuardian})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 	if len(agents) == 0 {
@@ -83,7 +82,7 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 			var config agent_listeners.PastDueInvoiceConfig
 			err = listener.GetConfig(&config)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				break
 			}
 			overdueDays = int(config.OverdueDays.Value)
@@ -104,7 +103,7 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 
 			records, err := p.neo4jRepository.InvoiceReadRepository.GetInvoicesForPastDueNotifications(agentCtx, tenant, referenceTime, overdueDays, limit)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				p.log.Errorf("Error getting invoices for past due notifications: %s", err.Error())
 				return
 			}
@@ -120,16 +119,15 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 					Tenant:    tenant,
 					AppSource: constants.AppSourceUpkeeper,
 				})
-				recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "SendOverdueInvoiceProducer.Execute.Record")
-				defer recordSpan.Finish()
-				tracing.TagTenant(recordSpan, record.Tenant)
+				recordSpans, innerCtx := telemetry.StartServiceSpan(innerCtx, "SendOverdueInvoiceProducer.Execute.Record", telemetry.WithNewRoot())
+				defer recordSpans.Finish()
 
 				invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 
 				// Mark notification requested, to avoid double notifications
 				err = p.neo4jRepository.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelInvoice, invoice.Id, string(neo4j_entity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
 				if err != nil {
-					tracing.TraceErr(recordSpan, err)
+					recordSpans.TraceError(err)
 					continue
 				}
 
@@ -137,7 +135,7 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 					InvoiceId: invoice.Id,
 				})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "error publishing past due invoice event"))
+					spans.TraceError(errors.Wrap(err, "error publishing past due invoice event"))
 					continue
 				}
 			}

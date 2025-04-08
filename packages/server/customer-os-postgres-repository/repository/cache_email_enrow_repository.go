@@ -3,10 +3,8 @@ package postgres_repository
 import (
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -31,10 +29,9 @@ func NewCacheEmailEnrowRepository(gormDb *gorm.DB) CacheEmailEnrowRepository {
 }
 
 func (r cacheEmailEnrowRepository) RegisterRequest(ctx context.Context, record postgres_entity.CacheEmailEnrow) (*postgres_entity.CacheEmailEnrow, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.RegisterRequest")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "record", record)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailEnrowRepository.RegisterRequest")
+	defer spans.Finish()
+	spans.LogObjectAsJson("record", record)
 
 	now := utils.Now()
 	record.CreatedAt = now
@@ -47,12 +44,11 @@ func (r cacheEmailEnrowRepository) RegisterRequest(ctx context.Context, record p
 }
 
 func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, qualification, response string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.AddResponse")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("requestId", requestId)
-	span.LogKV("qualification", qualification)
-	span.LogKV("response", response)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailEnrowRepository.AddResponse")
+	defer spans.Finish()
+	spans.LogKV("requestId", requestId)
+	spans.LogKV("qualification", qualification)
+	spans.LogKV("response", response)
 
 	// Add response to the request with the given requestId, empty response and latest by created_at
 	err := r.db.
@@ -67,6 +63,7 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 			"updated_at":    utils.Now(),
 		}).Error
 	if err != nil {
+		spans.TraceError(err)
 		return err
 	}
 
@@ -74,10 +71,9 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 }
 
 func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailEnrow, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.GetAllByEmail")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("email", email)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailEnrowRepository.GetAllByEmail")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	var records []postgres_entity.CacheEmailEnrow
 	err := r.db.Where("email = ?", email).Order("created_at desc").Find(&records).Error
@@ -85,16 +81,15 @@ func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email stri
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(records)))
+	spans.LogKV("result.count", len(records))
 
 	return records, nil
 }
 
 func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailEnrow, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.GetLatestByEmail")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("email", email)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CacheEmailEnrowRepository.GetLatestByEmail")
+	defer spans.Finish()
+	spans.LogKV("email", email)
 
 	var data postgres_entity.CacheEmailEnrow
 	err := r.db.Where("email = ?", email).Order("created_at desc").First(&data).Error
@@ -102,6 +97,7 @@ func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email s
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		spans.TraceError(err)
 		return nil, err // Return other errors as usual
 	}
 
@@ -109,9 +105,8 @@ func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email s
 }
 
 func (r cacheEmailEnrowRepository) GetWithoutResponses(ctx context.Context) ([]*postgres_entity.CacheEmailEnrow, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
+	defer spans.Finish()
 
 	var postgres_entity []*postgres_entity.CacheEmailEnrow
 	err := r.db.
@@ -119,6 +114,10 @@ func (r cacheEmailEnrowRepository) GetWithoutResponses(ctx context.Context) ([]*
 		Where("created_at < ?", utils.Now().Add(-10*time.Minute)).
 		Limit(50).
 		Find(&postgres_entity).Error
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
 
-	return postgres_entity, err
+	return postgres_entity, nil
 }

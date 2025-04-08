@@ -2,14 +2,14 @@ package task
 
 import (
 	"context"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -18,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -45,15 +45,15 @@ func (s *taskService) IsInitialized() bool {
 }
 
 func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, taskFields data_fields.TaskFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "taskFields", taskFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("taskFields", taskFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -63,7 +63,7 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 
 		// prepare missing fields
 		if utils.IfNotNilString(taskFields.Source) == "" {
@@ -81,22 +81,22 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 
 		taskId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelTask)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 		taskId = *id
 
 		// validate task exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, taskId, model.NodeLabelTask)
 		if err != nil || !exists {
 			err = errors.New("task not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
-	tracing.TagEntity(span, taskId)
+	spans.TagEntity(taskId)
 
 	// validate assignees
 	if taskFields.AssigneeUserIds != nil {
@@ -104,12 +104,12 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 			// check if user exists
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, assigneeId, model.NodeLabelUser)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 			if !exists {
 				err = errors.Errorf("asignee user %s not found", assigneeId)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -120,12 +120,12 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 			// check if opportunity exists
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, opportunityId, model.NodeLabelOpportunity)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 			if !exists {
 				err = errors.Errorf("opportunity %s not found", opportunityId)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -166,13 +166,13 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 			if createFlow {
 				err := s.events.Publisher.PublishFanoutEvent(ctx, taskId, model.TASK, dto.CreateTask{taskFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateTask"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateTask"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, taskId, model.TASK, utils.NewEventCompletedDetails().WithCreate())
 			} else {
 				err := s.events.Publisher.PublishFanoutEvent(ctx, taskId, model.TASK, dto.UpdateTask{taskFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTask"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateTask"))
 				}
 				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 					s.events.Publisher.PublishNotification(ctx, tenant, taskId, model.TASK, utils.NewEventCompletedDetails().WithUpdate())
@@ -184,7 +184,7 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -192,15 +192,15 @@ func (s *taskService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 }
 
 func (s *taskService) HideAll(ctx context.Context, ids []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.HideAll")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "ids", ids)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.HideAll")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("ids", ids)
 
 	for _, id := range ids {
 		err := s.Hide(ctx, nil, id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -208,15 +208,15 @@ func (s *taskService) HideAll(ctx context.Context, ids []string) error {
 }
 
 func (s *taskService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.Hide")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, id)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.Hide")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -230,7 +230,7 @@ func (s *taskService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err := s.events.Publisher.PublishFanoutEvent(ctx, id, model.TASK, dto.Archive{})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message Archive"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message Archive"))
 			}
 			s.events.Publisher.PublishNotification(ctx, tenant, id, model.TASK, utils.NewEventCompletedDetails().WithDelete())
 			return nil
@@ -239,21 +239,21 @@ func (s *taskService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPo
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (s *taskService) GetById(ctx context.Context, id string) (*neo4jentity.TaskEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, id)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.GetById")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	dbNode, err := s.neo4j.TaskReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -261,15 +261,14 @@ func (s *taskService) GetById(ctx context.Context, id string) (*neo4jentity.Task
 }
 
 func (s *taskService) GetAllByIds(ctx context.Context, ids []string) (*neo4jentity.TaskEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetAllByIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.GetAllByIds")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	dbNodes, err := s.neo4j.TaskReadRepository.GetAllByIds(ctx, tenant, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -281,15 +280,14 @@ func (s *taskService) GetAllByIds(ctx context.Context, ids []string) (*neo4jenti
 }
 
 func (s *taskService) GetTasksForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.TaskEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskService.GetTasksForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.GetTasksForOpportunities")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	tasks, err := s.neo4j.TaskReadRepository.GetTasksForOpportunities(ctx, tenant, opportunityIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -300,4 +298,18 @@ func (s *taskService) GetTasksForOpportunities(ctx context.Context, opportunityI
 		taskEntities = append(taskEntities, *taskEntity)
 	}
 	return &taskEntities, nil
+}
+
+func (s *taskService) AssignToOpportunity(ctx context.Context, taskId, opportunityId string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TaskService.AssignToOpportunity")
+	defer spans.Finish()
+	spans.TagEntity(taskId)
+	spans.LogKV("opportunityId", opportunityId)
+
+	err := s.neo4j.TaskWriteRepository.AddOpportunity(ctx, nil, common.GetTenantFromContext(ctx), taskId, opportunityId)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+	return nil
 }

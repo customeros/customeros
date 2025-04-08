@@ -2,17 +2,17 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type IngestEmailInput struct {
@@ -85,33 +85,33 @@ func (c *IngestEmailCapability) ValidateInput(input IngestEmailInput) error {
 }
 
 func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IngestEmailInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IngestEmailCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
 	ingestEmailMessage, err := c.postgres.IngestEmailMessageRepository.GetEmail(ctx, executionContainer.InputData.EntityId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get email"))
+		spans.TraceError(errors.Wrap(err, "failed to get email"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if ingestEmailMessage == nil {
-		tracing.TraceErr(span, errors.New("email is nil"))
+		spans.TraceError(errors.New("email is nil"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
 	emailMessageData, err := c.mailService.LoadIngestEmailMessage(ctx, ingestEmailMessage)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to load email"))
+		spans.TraceError(errors.Wrap(err, "failed to load email"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
@@ -166,13 +166,13 @@ func (c *IngestEmailCapability) Execute(ctx context.Context, executionContainer 
 		indexName := "email-" + ingestEmailMessage.SentAt.Format("2006-01")
 		err := c.opensearch.UpsertDocument(ctx, indexName, &ingestEmailMessage.Id, osData)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to index document"))
+			spans.TraceError(errors.Wrap(err, "failed to index document"))
 		}
 	}
 
 	err = c.postgres.AgentExecutionRepository.GoalAchieved(ctx, executionContainer.AgentExecutionID, true, nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish ingest email event"))
+		spans.TraceError(errors.Wrap(err, "failed to publish ingest email event"))
 	}
 
 	return enum.CapabilityExecutionCompleted, NoOutput{}, nil

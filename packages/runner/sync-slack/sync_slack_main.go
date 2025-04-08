@@ -9,6 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/runner/sync-slack/logger"
 	"github.com/customeros/customeros/packages/runner/sync-slack/repository"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -97,7 +98,7 @@ func initLogger(cfg *config.Config) logger.Logger {
 
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 	if cfg.Jaeger.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		tracer, closer, err := telemetry.NewJaegerTracer(&cfg.Jaeger, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}

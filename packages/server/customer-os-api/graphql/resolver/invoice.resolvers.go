@@ -14,25 +14,24 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	model1 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
 // Organization is the resolver for the organization field.
 func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) (*model.Organization, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	organizationEntity, err := dataloader.For(ctx).GetOrganizationForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching organization for invoice %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching organization for invoice %s", obj.Metadata.ID)
 		return nil, nil
@@ -42,11 +41,11 @@ func (r *invoiceResolver) Organization(ctx context.Context, obj *model.Invoice) 
 
 // Contract is the resolver for the contract field.
 func (r *invoiceResolver) Contract(ctx context.Context, obj *model.Invoice) (*model.Contract, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	contractEntity, err := dataloader.For(ctx).GetContractForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("error fetching contract for invoice %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Error fetching contract for invoice %s", obj.Metadata.ID)
 		return nil, nil
@@ -56,11 +55,11 @@ func (r *invoiceResolver) Contract(ctx context.Context, obj *model.Invoice) (*mo
 
 // InvoiceLineItems is the resolver for the invoiceLineItems field.
 func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	entities, err := dataloader.For(ctx).GetInvoiceLinesForInvoice(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("failed to get invoice lines for invoice %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to fetch invoice lines for invoice %s", obj.Metadata.ID)
 		return nil, nil
@@ -70,9 +69,8 @@ func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoi
 
 // Sku is the resolver for the sku field.
 func (r *invoiceLineResolver) Sku(ctx context.Context, obj *model.InvoiceLine) (*model.Sku, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Invoice.Sku", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Invoice.Sku", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -83,7 +81,7 @@ func (r *invoiceLineResolver) Sku(ctx context.Context, obj *model.InvoiceLine) (
 
 	skuEntity, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, *obj.SkuID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get sku by id %s", *obj.SkuID)
 		return nil, err
 	}
@@ -93,11 +91,11 @@ func (r *invoiceLineResolver) Sku(ctx context.Context, obj *model.InvoiceLine) (
 
 // ContractLineItem is the resolver for the contractLineItem field.
 func (r *invoiceLineResolver) ContractLineItem(ctx context.Context, obj *model.InvoiceLine) (*model.ServiceLineItem, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+	ctx = telemetry.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	serviceLineItemEntity, err := dataloader.For(ctx).GetServiceLineItemForInvoiceLine(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		telemetry.TraceErrorOnActiveSpan(ctx, err)
 		r.log.Errorf("Failed to get contract line item for invoice line %s: %s", obj.Metadata.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contract line items for invoice line %s", obj.Metadata.ID)
 		return nil, nil
@@ -107,14 +105,14 @@ func (r *invoiceLineResolver) ContractLineItem(ctx context.Context, obj *model.I
 
 // InvoiceUpdate is the resolver for the invoice_Update field.
 func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.InvoiceUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.InvoiceService.UpdateInvoice(ctx, input)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to update invoice %s", input.ID)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: input.ID,
@@ -122,7 +120,7 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 	}
 	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", input.ID)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: input.ID,
@@ -134,14 +132,14 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 
 // InvoicePay is the resolver for the invoice_Pay field.
 func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.Invoice, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoicePay", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.InvoicePay", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -149,7 +147,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	}
 
 	if invoice.DryRun {
-		tracing.TraceErr(span, errors.New("invoice is a dry run"))
+		spans.TraceError(errors.New("invoice is a dry run"))
 		graphql.AddErrorf(ctx, "Invoice is a dry run")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -157,7 +155,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	}
 
 	if invoice.Status != neo4jenum.InvoiceStatusDue {
-		tracing.TraceErr(span, errors.New("invoice is not due"))
+		spans.TraceError(errors.New("invoice is not due"))
 		graphql.AddErrorf(ctx, "Invoice is not due")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -166,7 +164,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 
 	err = r.Services.CommonServices.InvoiceService.PayInvoice(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to pay invoice %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -174,7 +172,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	}
 	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -186,14 +184,14 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 
 // InvoiceVoid is the resolver for the invoice_Void field.
 func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.Invoice, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceVoid", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.InvoiceVoid", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch invoice %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -201,7 +199,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	}
 
 	if invoice.DryRun {
-		tracing.TraceErr(span, errors.New("invoice is a dry run"))
+		spans.TraceError(errors.New("invoice is a dry run"))
 		graphql.AddErrorf(ctx, "Invoice is a dry run")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -209,7 +207,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	}
 
 	if invoice.Status == neo4jenum.InvoiceStatusVoid {
-		tracing.TraceErr(span, errors.New("invoice is already void"))
+		spans.TraceError(errors.New("invoice is already void"))
 		graphql.AddErrorf(ctx, "Invoice is already void")
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -218,7 +216,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 
 	err = r.Services.CommonServices.InvoiceService.VoidInvoice(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to void invoice %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -226,7 +224,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	}
 	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -238,14 +236,14 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 
 // InvoiceRegeneratePDF is the resolver for the invoice_RegeneratePdf field.
 func (r *mutationResolver) InvoiceRegeneratePDF(ctx context.Context, id string) (*model.Invoice, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceRegeneratePDF", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.InvoiceRegeneratePDF", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.id", id)
 
 	err := r.Services.CommonServices.InvoiceService.RegenerateInvoicePdf(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to regenerate invoice pdf %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -253,7 +251,7 @@ func (r *mutationResolver) InvoiceRegeneratePDF(ctx context.Context, id string) 
 	}
 	invoiceEntity, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed fetching invoice details. Invoice id: %s", id)
 		return &model.Invoice{Metadata: &model.Metadata{
 			ID: id,
@@ -265,10 +263,10 @@ func (r *mutationResolver) InvoiceRegeneratePDF(ctx context.Context, id string) 
 
 // InvoiceSimulate is the resolver for the invoice_Simulate field.
 func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.InvoiceSimulateInput) ([]*model.InvoiceSimulate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceSimulate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.input", input))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "InvoiceResolver.InvoiceSimulate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	simulateInvoiceData := interfaces.SimulateInvoiceRequestData{
 		ContractId: input.ContractID,
@@ -292,7 +290,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 	nextInvoices, err := r.Services.CommonServices.InvoiceService.SimulateInvoice(ctx, &simulateInvoiceData)
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to simulate invoice")
 		return nil, err
 	}
@@ -319,7 +317,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 		if requestedCustomerDtls {
 			contract, err := r.Services.CommonServices.ContractService.GetById(ctx, input.ContractID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				graphql.AddErrorf(ctx, "Failed to get contract by id %s", input.ContractID)
 				return nil, err
 			}
@@ -339,13 +337,13 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 		if requestedProviderDtls {
 			tenantBillingProfile, err := r.Services.CommonServices.TenantSettingsService.GetDefaultTenantBillingProfile(ctx)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				graphql.AddErrorf(ctx, "Failed to get tenant billing profile")
 				return nil, err
 			}
 			tenantSettings, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				graphql.AddErrorf(ctx, "Failed to get tenant settings")
 				return nil, err
 			}
@@ -405,20 +403,20 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 
 // Invoice is the resolver for the invoice field.
 func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoice", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.invoiceID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "InvoiceResolver.Invoice", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.invoiceID", id)
 
 	if id == "" {
-		tracing.TraceErr(span, errors.New("missing invoice input id"))
+		spans.TraceError(errors.New("missing invoice input id"))
 		graphql.AddErrorf(ctx, "Missing invoice input id")
 		return nil, nil
 	}
 
 	invoiceEntityPtr, err := r.Services.CommonServices.InvoiceService.GetById(ctx, nil, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)
 		return nil, err
 	}
@@ -427,31 +425,32 @@ func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice,
 
 // Invoices is the resolver for the invoices field.
 func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) (*model.InvoicesPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.Invoices", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Invoices", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
 	if where != nil {
-		tracing.LogObjectAsJson(span, "request.where", where)
+		spans.LogObjectAsJson("request.where", where)
 	}
 	if sort != nil {
-		tracing.LogObjectAsJson(span, "request.sort", sort)
+		spans.LogObjectAsJson("request.sort", sort)
 	}
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
+	spans.LogKV("request.pagination.page", pagination.Page)
+	spans.LogKV("request.pagination.limit", pagination.Limit)
 
 	paginatedResult, err := r.Services.InvoiceService.GetInvoices(ctx, utils.IfNotNilString(organizationID), pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get invoices")
 		return nil, err
 	}
 
 	countInvoices, err := r.Services.InvoiceService.CountInvoices(ctx, common.GetTenantFromContext(ctx), utils.IfNotNilString(organizationID), where)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, nil
 	}
@@ -466,20 +465,20 @@ func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Paginati
 
 // InvoiceByNumber is the resolver for the invoice_ByNumber field.
 func (r *queryResolver) InvoiceByNumber(ctx context.Context, number string) (*model.Invoice, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceByNumber", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.invoiceNumber", number))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "InvoiceResolver.InvoiceByNumber", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.invoiceNumber", number)
 
 	if number == "" {
-		tracing.TraceErr(span, errors.New("missing invoice number"))
+		spans.TraceError(errors.New("missing invoice number"))
 		graphql.AddErrorf(ctx, "Missing invoice number")
 		return nil, nil
 	}
 
 	invoiceEntityPtr, err := r.Services.CommonServices.InvoiceService.GetByNumber(ctx, number)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get invoice by number %s", number)
 		return nil, err
 	}
@@ -494,15 +493,3 @@ func (r *Resolver) InvoiceLine() generated.InvoiceLineResolver { return &invoice
 
 type invoiceResolver struct{ *Resolver }
 type invoiceLineResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *queryResolver) InvoiceDownloadUpcoming(ctx context.Context) (*model.File, error) {
-	panic(fmt.Errorf("not implemented: InvoiceDownloadUpcoming - invoice_downloadUpcoming"))
-}
-*/

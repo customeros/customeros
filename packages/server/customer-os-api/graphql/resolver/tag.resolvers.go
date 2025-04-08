@@ -10,48 +10,48 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+
 	pkgerrors "github.com/pkg/errors"
 )
 
 // TagCreate is the resolver for the tag_Create field.
 func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TagCreate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	tagEntityInput := mapper.MapTagInputToEntity(input)
 	if tagEntityInput.EntityType.String() == "" {
 		err := pkgerrors.New("entity type is required")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Missing entity type")
 		return nil, nil
 	}
 
 	createdTag, err := r.Services.CommonServices.TagService.Save(ctx, nil, tagEntityInput)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to create tag %s", input.Name)
 		return nil, nil
 	}
 	response := mapper.MapEntityToTag(createdTag)
-	tracing.LogObjectAsJson(span, "response", response)
+	spans.LogObjectAsJson("response", response)
 	return response, nil
 }
 
 // TagUpdate is the resolver for the tag_Update field.
 func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TagUpdate", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request.input", input)
 
 	err := r.Services.CommonServices.TagService.Update(ctx, input.ID, input.Name, input.ColorCode)
 	if err != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to update tag"))
+		spans.TraceError(pkgerrors.Wrap(err, "failed to update tag"))
 		r.log.Errorf("failed to update tag: %s", err)
 		graphql.AddErrorf(ctx, "Failed to update tag %s", input.ID)
 		return nil, err
@@ -59,7 +59,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 
 	tagEntity, err := r.Services.CommonServices.TagService.GetById(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to fetch tag"))
+		spans.TraceError(pkgerrors.Wrap(err, "failed to fetch tag"))
 		r.log.Errorf("failed to fetch tag: %s", err)
 		graphql.AddErrorf(ctx, "Failed to fetch tag %s", input.ID)
 		return nil, err
@@ -70,14 +70,14 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 
 // TagDelete is the resolver for the tag_Delete field.
 func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.tagID", id))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TagDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.tagID", id)
 
 	result, err := r.Services.CommonServices.TagService.UnlinkAndDelete(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to delete tag %s", id)
 		return nil, err
 	}
@@ -88,13 +88,12 @@ func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Res
 
 // Tags is the resolver for the tags field.
 func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tags", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Tags", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tags, err := r.Services.CommonServices.TagService.GetAll(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch tags")
 		return nil, err
 	}
@@ -103,13 +102,12 @@ func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 
 // TagsByEntityType is the resolver for the tags_ByEntityType field.
 func (r *queryResolver) TagsByEntityType(ctx context.Context, entityType model.EntityType) ([]*model.Tag, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TagsByEntityType", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.TagsByEntityType", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	tagEntities, err := r.Services.CommonServices.TagService.GetTagsByEntityType(ctx, commonmodel.DecodeEntityType(entityType.String()))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to fetch tags for entity type %s", entityType)
 		return nil, nil
 	}

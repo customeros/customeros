@@ -3,6 +3,8 @@ package interaction_event
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -10,14 +12,13 @@ import (
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -45,12 +46,12 @@ func (s *interactionEventService) IsInitialized() bool {
 }
 
 func (s *interactionEventService) GetById(ctx context.Context, id string) (*neo4j_entity.InteractionEventEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetById")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetById")
+	defer spans.Finish()
 
 	byId, err := s.neo4j.CommonReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id, commonModel.NodeLabelInteractionEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -62,10 +63,10 @@ func (s *interactionEventService) GetById(ctx context.Context, id string) (*neo4
 }
 
 func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForInteractionSessions")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetInteractionEventsForInteractionSessions")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("ids", ids))
 
 	interactionEvents, err := s.neo4j.InteractionEventReadRepository.GetAllForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids, loadContent)
 	if err != nil {
@@ -81,10 +82,10 @@ func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx
 }
 
 func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Context, ids []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetInteractionEventsForMeetings")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("ids", ids))
 
 	interactionEvents, err := s.neo4j.InteractionEventReadRepository.GetAllForMeetings(ctx, common.GetTenantFromContext(ctx), ids, loadContent)
 	if err != nil {
@@ -100,14 +101,14 @@ func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Co
 }
 
 func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Context, issueIds []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetInteractionEventsForIssues")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("issueIds", issueIds))
 
 	interactionEvents, err := s.neo4j.InteractionEventReadRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds, loadContent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	interactionEventEntities := neo4j_entity.InteractionEventEntities{}
@@ -116,15 +117,15 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
 		interactionEventEntities = append(interactionEventEntities, *interactionEventEntity)
 	}
-	span.LogFields(log.Int("result count", len(interactionEventEntities)))
+	spans.LogKV("result count", len(interactionEventEntities))
 	return &interactionEventEntities, nil
 }
 
 func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4j_entity.InteractionEventParticipants, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentByParticipantsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetSentByParticipantsForInteractionEvents")
+	defer spans.Finish()
+
+	spans.LogKV("ids", ids)
 
 	records, err := s.neo4j.InteractionEventReadRepository.GetSentByFor(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
@@ -133,16 +134,16 @@ func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx 
 
 	interactionEventParticipants := s.convertDbNodesToInteractionEventParticipants(records)
 
-	span.LogFields(log.Int("result count", len(interactionEventParticipants)))
+	spans.LogKV("result count", len(interactionEventParticipants))
 
 	return &interactionEventParticipants, nil
 }
 
 func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4j_entity.InteractionEventParticipants, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentToParticipantsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetSentToParticipantsForInteractionEvents")
+	defer spans.Finish()
+
+	spans.LogKV("ids", ids)
 
 	records, err := s.neo4j.InteractionEventReadRepository.GetSentToFor(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
@@ -151,20 +152,20 @@ func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx 
 
 	interactionEventParticipants := s.convertDbNodesToInteractionEventParticipants(records)
 
-	span.LogFields(log.Int("result count", len(interactionEventParticipants)))
+	spans.LogKV("result count", len(interactionEventParticipants))
 
 	return &interactionEventParticipants, nil
 }
 
 func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetReplyToInteractionsEventForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.GetReplyToInteractionsEventForInteractionEvents")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("ids", ids))
 
 	records, err := s.neo4j.InteractionEventReadRepository.GetReplyToFor(ctx, common.GetTenantFromContext(ctx), ids, loadContent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -179,9 +180,8 @@ func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvent
 }
 
 func (s *interactionEventService) Create(ctx context.Context, data *interfaces.InteractionEventCreateData) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.Create")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.neo4j.Neo4jDriver)
 	defer session.Close(ctx)
@@ -191,7 +191,7 @@ func (s *interactionEventService) Create(ctx context.Context, data *interfaces.I
 		return interactionEventId, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -227,32 +227,31 @@ func (s *interactionEventService) Create(ctx context.Context, data *interfaces.I
 }
 
 func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, newInteractionEvent *interfaces.InteractionEventCreateData) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.createInteractionEventInDBTxWork")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.createInteractionEventInDBTxWork")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	interactionEventId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelInteractionEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	err = s.neo4j.InteractionEventWriteRepository.CreateInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.InteractionEventEntity)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if newInteractionEvent.SessionIdentifier != nil {
 		sessionExists, err := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, &tx, tenant, *newInteractionEvent.SessionIdentifier, commonModel.NodeLabelInteractionSession)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if !sessionExists {
-			tracing.TraceErr(span, errors.New("session not found"))
+			spans.TraceError(errors.New("session not found"))
 			return nil, errors.New("session not found")
 		}
 
@@ -265,7 +264,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			ToEntityType:           commonModel.INTERACTION_SESSION,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -275,18 +274,18 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			ExternalSystemId: newInteractionEvent.ExternalSystem.ExternalSystemId.String(),
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
 	if newInteractionEvent.MeetingIdentifier != nil {
 		meetingExists, err := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, &tx, tenant, *newInteractionEvent.MeetingIdentifier, commonModel.NodeLabelMeeting)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if !meetingExists {
-			tracing.TraceErr(span, errors.New("meeting not found"))
+			spans.TraceError(errors.New("meeting not found"))
 			return nil, errors.New("meeting not found")
 		}
 
@@ -299,18 +298,18 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			ToEntityType:           commonModel.MEETING,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
 	if newInteractionEvent.RepliesTo != nil {
 		parentExists, err := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, &tx, tenant, *newInteractionEvent.RepliesTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if !parentExists {
-			tracing.TraceErr(span, errors.New("parent not found"))
+			spans.TraceError(errors.New("parent not found"))
 			return nil, errors.New("parent not found")
 		}
 
@@ -322,7 +321,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			ToEntityType:   commonModel.INTERACTION_EVENT,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -330,7 +329,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 	for _, sentBy := range newInteractionEvent.SentBy {
 		err := s.linkInteractionEventParticipantInTx(ctx, tx, tenant, interactionEventId, sentBy, commonModel.SENT_BY, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -339,7 +338,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		relationshipType := "TO"
 		err := s.linkInteractionEventParticipantInTx(ctx, tx, tenant, interactionEventId, sentTo, commonModel.SENT_TO, &relationshipType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -348,7 +347,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		relationshipType := "CC"
 		err := s.linkInteractionEventParticipantInTx(ctx, tx, tenant, interactionEventId, sentCc, commonModel.SENT_TO, &relationshipType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -357,7 +356,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		relationshipType := "BCC"
 		err := s.linkInteractionEventParticipantInTx(ctx, tx, tenant, interactionEventId, sentBcc, commonModel.SENT_TO, &relationshipType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -366,9 +365,8 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 }
 
 func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId string, linkWIthData interfaces.InteractionEventParticipantData, relationship commonModel.EntityRelation, relationshipType *string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.linkInteractionEventParticipantInTx")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.linkInteractionEventParticipantInTx")
+	defer spans.Finish()
 
 	var linkWithId string
 	var linkWithLabel commonModel.EntityType
@@ -384,7 +382,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 
 		emailId, err := s.neo4j.EmailReadRepository.GetEmailIdIfExists(ctx, &tx, tenant, *linkWIthData.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -399,12 +397,12 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 				},
 				nil)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 
 			if createdEmailId == nil {
-				tracing.TraceErr(span, errors.New("failed to create email"))
+				spans.TraceError(errors.New("failed to create email"))
 				return errors.New("failed to create email")
 			}
 
@@ -416,7 +414,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 
 		phoneNumberId, err := s.neo4j.PhoneNumberReadRepository.GetPhoneNumberIdIfExists(ctx, tenant, *linkWIthData.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -426,7 +424,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 			// TODO create and use inTx method
 		}
 	} else {
-		tracing.TraceErr(span, errors.New("no link with data provided"))
+		spans.TraceError(errors.New("no link with data provided"))
 		return errors.New("no link with data provided")
 	}
 
@@ -447,7 +445,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 		ToEntityType:           linkWithLabel,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

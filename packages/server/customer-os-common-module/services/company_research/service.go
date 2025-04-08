@@ -4,15 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type companyResearchService struct {
@@ -42,34 +41,32 @@ const (
 )
 
 func (s *companyResearchService) GenerateIdealCustomerProfile(ctx context.Context, tenantDomain string, trainingWebsites []string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "icpService.GenerateIdealCustomerProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "icpService.GenerateIdealCustomerProfile")
+	defer spans.Finish()
 
 	return "", nil
 }
 
 func (s *companyResearchService) GenerateCompanyBriefForTenant(ctx context.Context) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "companyResearchService.GenerateCompanyBriefForTenant")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "companyResearchService.GenerateCompanyBriefForTenant")
+	defer spans.Finish()
 
 	domains, err := s.workspaceService.GetWorkspaceDomainsForTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	report, err := s.GenerateCompanyBrief(ctx, domains)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// save report to db
 	err = s.postgresRepositories.TenantRepository.SetCompanyReport(ctx, *report)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return report, err
 	}
 
@@ -77,16 +74,15 @@ func (s *companyResearchService) GenerateCompanyBriefForTenant(ctx context.Conte
 }
 
 func (s *companyResearchService) GenerateCompanyBrief(ctx context.Context, domains []string) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "companyResearchService.GenerateCompanyBrief")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "companyResearchService.GenerateCompanyBrief")
+	defer spans.Finish()
 
 	// crawl domains
 	for _, domain := range domains {
 		url := "https://" + domain
 		_, err := s.webscraperService.Crawl(ctx, url)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -94,14 +90,14 @@ func (s *companyResearchService) GenerateCompanyBrief(ctx context.Context, domai
 	// get all webpages
 	webpages, err := s.postgresRepositories.ScrapedWebpageRepository.GetAllWebpagesByPrimaryDomains(ctx, domains)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// generate company report
 	report, err := s.generateCompanyBrief(ctx, domains, webpages)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if report == nil {
@@ -112,9 +108,8 @@ func (s *companyResearchService) GenerateCompanyBrief(ctx context.Context, domai
 }
 
 func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domains []string, webpages []*postgres_entity.ScrapedWebpage) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "companyResearchService.generateCompanyBrief")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "companyResearchService.generateCompanyBrief")
+	defer spans.Finish()
 
 	chunks := s.buildDomainChunks(webpages)
 
@@ -122,7 +117,7 @@ func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domai
 	for _, domain := range domains {
 		globalOrgDetails, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, domain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
 		for i, chunk := range chunks[domain] {
@@ -133,7 +128,7 @@ func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domai
 				Prompt:       &prompt,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			intermediateReports = append(intermediateReports, *answer)
@@ -142,7 +137,7 @@ func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domai
 
 	report, err := s.buildFinalReport(ctx, intermediateReports)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if report == nil {
@@ -153,9 +148,8 @@ func (s *companyResearchService) generateCompanyBrief(ctx context.Context, domai
 }
 
 func (s *companyResearchService) buildFinalReport(ctx context.Context, analyses []string) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "companyResearchService.buildFinalReport")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "companyResearchService.buildFinalReport")
+	defer spans.Finish()
 
 	// Construct synthesis prompt
 	var sp strings.Builder
@@ -187,7 +181,7 @@ func (s *companyResearchService) buildFinalReport(ctx context.Context, analyses 
 		Prompt:       &prompt,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return report, nil

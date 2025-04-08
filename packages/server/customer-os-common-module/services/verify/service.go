@@ -3,10 +3,11 @@ package verify
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/nyaruka/phonenumbers"
-	"github.com/opentracing/opentracing-go"
+
 	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
 	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
 	"github.com/smartystreets/smartystreets-go-sdk/wireup"
@@ -14,7 +15,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type verifyService struct {
@@ -47,21 +47,21 @@ func NewVerifyService(
 }
 
 func (s *verifyService) ValidateEmail(ctx context.Context, email string) (*interfaces.ValidateEmailMailSherpaData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.ValidateEmail")
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "VerifyService.ValidateEmail")
+
+	defer spans.Finish()
 
 	if email == "" {
 		err := errors.New("email is empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.SetTag("email", email)
+	spans.LogKV("email", email)
 
 	// call mailsherpa
 	emailValidationData, err := s.ValidateEmailWithMailSherpa(ctx, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if emailValidationData == nil {
@@ -76,11 +76,11 @@ func (s *verifyService) ValidateEmail(ctx context.Context, email string) (*inter
 	// try Enrow
 	enrowData, err := s.ValidateEmailWithEnrow(ctx, email, false)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	if enrowData != "" {
-		span.LogKV("enrowResponse", enrowData)
+		spans.LogKV("enrowResponse", enrowData)
 		switch enrowData {
 		case "valid":
 			emailValidationData.EmailData.Deliverable = string(EmailDeliverableStatusDeliverable)
@@ -90,19 +90,19 @@ func (s *verifyService) ValidateEmail(ctx context.Context, email string) (*inter
 			// do nothing
 		default:
 			err := errors.New("unexpected Enrow response: " + enrowData)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
 	// try TrueInbox
 	trueInbox, err := s.ValidateEmailWithTrueinbox(ctx, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	if trueInbox == nil {
 		return emailValidationData, nil
 	}
-	span.LogKV("trueInboxResponse", trueInbox.Result)
+	spans.LogKV("trueInboxResponse", trueInbox.Result)
 	switch trueInbox.Result {
 	case "valid":
 		emailValidationData.EmailData.Deliverable = string(EmailDeliverableStatusDeliverable)
@@ -112,16 +112,16 @@ func (s *verifyService) ValidateEmail(ctx context.Context, email string) (*inter
 		// do nothing
 	default:
 		err := errors.New("unexpected TrueInbox response: " + enrowData)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return emailValidationData, nil
 }
 
 func (s *verifyService) isMailsherpaDataComplete(ctx context.Context, data *interfaces.ValidateEmailMailSherpaData) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.isMailsherpaDataComplete")
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "VerifyService.isMailsherpaDataComplete")
+
+	defer spans.Finish()
 
 	if data == nil {
 		return true
@@ -140,9 +140,9 @@ func (s *verifyService) isMailsherpaDataComplete(ctx context.Context, data *inte
 }
 
 func (s *verifyService) IdentifyCompanyDomain(ctx context.Context, ipAddress string) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.IsBot")
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "VerifyService.IsBot")
+
+	defer spans.Finish()
 
 	// lookup company in enrich details tracking table
 	data, err := s.postgres.EnrichDetailsTrackingRepository.GetByIP(ctx, ipAddress)
@@ -169,14 +169,14 @@ func (s *verifyService) IdentifyCompanyDomain(ctx context.Context, ipAddress str
 }
 
 func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*interfaces.IpThreats, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.Threats")
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	defer span.Finish()
-	span.LogKV("ipAddress", ipAddress)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "VerifyService.Threats")
+	defer spans.Finish()
+
+	spans.LogKV("ipAddress", ipAddress)
 
 	ipData, err := s.LookupIp(ctx, ipAddress)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

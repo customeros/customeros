@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -76,7 +78,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.App.Observability.Jaeger, server.log)
+	tracer, closer, err := telemetry.NewJaegerTracer(&server.cfg.App.Observability.Jaeger, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
@@ -162,7 +164,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// graphql routes
 	r.POST("/query",
-		tracing.GraphQlTracingEnhancer(ctx),
+		telemetry.GraphQLTracingEnhancer(ctx),
 		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Cfg.App.AppKey, security.WithCache(serviceContainer.Cache)),
 		tenantUserContextEnhancerMiddleware(serviceContainer.Repositories.Neo4jRepositories, security.WithCache(serviceContainer.Cache)),
 		server.graphqlHandler(serviceContainer))
@@ -171,7 +173,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	if server.cfg.App.GraphQL.PlaygroundEnabled {
 		r.GET("/playground", playgroundHandler())
 		r.GET("/admin/playground",
-			tracing.TracingEnhancer(ctx, "/admin"),
+			telemetry.GraphQLTracingEnhancer(ctx),
 			playgroundAdminHandler())
 	}
 
@@ -314,9 +316,6 @@ func (server *server) graphqlHandler(serviceContainer *cosapi_services.Services)
 		customCtx.AppSource = constants.AppSourceCustomerOsApi
 
 		graphqlOperationName := tracing.ExtractGraphQLMethodName(c.Request)
-
-		jaegar := tracing.TracingEnhancer(c, graphqlOperationName)
-		jaegar(c)
 
 		logMiddleware := loggerMiddleware(customCtx, graphqlOperationName)
 		logMiddleware(c)

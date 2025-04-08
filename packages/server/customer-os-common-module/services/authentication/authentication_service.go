@@ -6,14 +6,13 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
 )
 
 type authenticationService struct {
@@ -46,22 +45,21 @@ func (s *authenticationService) IsInitialized() bool {
 }
 
 func (a *authenticationService) CreateUserInTenant(ctx context.Context, txWithPostCommit *common_utils.TxWithPostCommit, tenant string, impersonating bool, authUserId, email, firstName, lastName string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationService.CreateUserInTenant")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AuthenticationService.CreateUserInTenant")
+	defer spans.Finish()
 
 	authenticatedUserInTenant, err := a.neo4j.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, tenant, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if authenticatedUserInTenant != nil && authenticatedUserInTenant.UserId != "" {
-		span.LogKV("user_already_exists", true)
+		spans.LogKV("user_already_exists", true)
 		return authenticatedUserInTenant.UserId, nil
 	}
 
-	span.LogKV("user_already_exists", false)
+	spans.LogKV("user_already_exists", false)
 
 	internal := false
 	roles := []string{"USER"}
@@ -124,7 +122,7 @@ func (a *authenticationService) CreateUserInTenant(ctx context.Context, txWithPo
 		return userId, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

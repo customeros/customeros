@@ -5,8 +5,7 @@ import (
 	"errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -25,18 +24,17 @@ func NewSlackChannelNotificationRepository(db *gorm.DB) SlackChannelNotification
 }
 
 func (r *slackChannelNotificationRepository) GetSlackChannel(c context.Context, workflow postgres_entity.SlackChannelNotificationWorkflow) (*postgres_entity.SlackChannelNotification, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "SlackChannelNotificationRepository.GetSlackChannels")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("workflow", workflow)
+	spans, ctx := telemetry.StartPostgresSpan(c, "SlackChannelNotificationRepository.GetSlackChannels")
+	defer spans.Finish()
+	spans.LogKV("workflow", workflow)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("tenant not set on context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	tracing.TagTenant(span, tenant)
+	spans.LogKV("tenant", tenant)
 
 	var e *postgres_entity.SlackChannelNotification
 	err := r.db.
@@ -47,7 +45,7 @@ func (r *slackChannelNotificationRepository) GetSlackChannel(c context.Context, 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

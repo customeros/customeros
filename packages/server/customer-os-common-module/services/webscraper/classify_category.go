@@ -4,34 +4,33 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func (s *webscraperService) ClassifyWebpageCategory(ctx context.Context, url string, pageContent *string) (enum.WebpageCategory, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.ClassifyWebpageCategory")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "webscraperService.ClassifyWebpageCategory")
+	defer spans.Finish()
 
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
 
 	if pageContent == nil {
 		webpage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if webpage == nil {
 			err := errors.New("webpage doesn't exist")
-			span.LogKV("url", url)
-			tracing.TraceErr(span, err)
+			spans.LogKV("url", url)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -43,7 +42,7 @@ func (s *webscraperService) ClassifyWebpageCategory(ctx context.Context, url str
 
 	globalOrg, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -77,14 +76,14 @@ func (s *webscraperService) ClassifyWebpageCategory(ctx context.Context, url str
 		OutputFormat:     enum.AIOutputText,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if category != "" {
 		err = s.postgresRepositories.ScrapedWebpageRepository.SetWebpageCategory(ctx, url, category)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 

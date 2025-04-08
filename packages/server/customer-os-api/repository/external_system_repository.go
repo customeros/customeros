@@ -3,10 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type ExternalSystemRepository interface {
@@ -24,9 +23,8 @@ func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystem
 }
 
 func (r *externalSystemRepository) LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeLabel string, externalSystem neo4jentity.ExternalSystemEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.LinkContactWithExternalSystemInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemRepository.LinkContactWithExternalSystemInTx")
+	defer spans.Finish()
 
 	query := "MATCH (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})," +
 		" (n:%s {id:$nodeId}) " +

@@ -3,23 +3,21 @@ package ai
 import (
 	"context"
 	"fmt"
-
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 func (s *aiService) AskAIForContentStage(ctx context.Context, request interfaces.AskAIRequest) (enum.CustomerJourneyStage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForContentStage")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAIForContentStage")
+	defer spans.Finish()
+	spans.LogObjectAsJson("requestParams", request)
 
 	// validate input
 	err := s.validateAIRequest(ctx, &request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -47,7 +45,7 @@ func (s *aiService) AskAIForContentStage(ctx context.Context, request interfaces
 		if err != nil {
 			lastError = err
 			if !s.IsRetryable(err) {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return emptyValue, err
 			}
 			continue
@@ -76,6 +74,6 @@ func (s *aiService) AskAIForContentStage(ctx context.Context, request interfaces
 
 	// If we get here, all retries failed
 	err = fmt.Errorf("customer journey stage validation failed after %d attempts: %w", *request.Retries, lastError)
-	tracing.TraceErr(span, err)
+	spans.TraceError(err)
 	return emptyValue, err
 }

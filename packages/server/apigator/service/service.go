@@ -7,6 +7,7 @@ import (
 
 	"github.com/coocood/freecache"
 	entities "github.com/customeros/customeros/packages/server/apigator/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jRepos "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
@@ -51,7 +52,11 @@ func (s *Service) SetContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
-func (s *Service) GetTenantByUser(username string) (string, error) {
+func (s *Service) GetTenantByUser(ctx context.Context, username string) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "Service.GetTenantByUser")
+	defer spans.Finish()
+	spans.LogKV("username", username)
+
 	var result string
 	var err error
 
@@ -60,6 +65,7 @@ func (s *Service) GetTenantByUser(username string) (string, error) {
 		retrieved, err := s.userRepo.GetCurrentTenantByUserEmail(s.ctx, username)
 		if err != nil {
 			err = fmt.Errorf("failed to get current tenant by user email: %w", err)
+			spans.TraceError(err)
 		}
 		if retrieved != "" {
 			result = retrieved
@@ -69,6 +75,7 @@ func (s *Service) GetTenantByUser(username string) (string, error) {
 		result = string(cached)
 	}
 
+	spans.LogKV("result", result)
 	return result, err
 }
 

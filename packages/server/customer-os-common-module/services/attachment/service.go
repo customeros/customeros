@@ -2,17 +2,17 @@ package attachment
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -27,21 +27,20 @@ func NewAttachmentService(neo4j *neo4j_repository.Repositories) interfaces.Attac
 }
 
 func (s *attachmentService) GetById(ctx context.Context, id string) (*neo4j_entity.AttachmentEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AttachmentService.GetById")
+	defer spans.Finish()
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	node, err := s.neo4j.AttachmentReadRepository.GetById(ctx, tenant, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -49,9 +48,8 @@ func (s *attachmentService) GetById(ctx context.Context, id string) (*neo4j_enti
 }
 
 func (s *attachmentService) GetFor(c context.Context, entityType model.EntityType, relation *model.EntityRelation, ids []string) (*neo4j_entity.AttachmentEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.GetFor")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(c, "AttachmentService.GetFor")
+	defer spans.Finish()
 
 	records, err := s.neo4j.AttachmentReadRepository.GetFor(ctx, common.GetTenantFromContext(ctx), entityType, relation, ids)
 	if err != nil {
@@ -69,9 +67,8 @@ func (s *attachmentService) GetFor(c context.Context, entityType model.EntityTyp
 }
 
 func (s *attachmentService) Create(c context.Context, record *neo4j_entity.AttachmentEntity) (*neo4j_entity.AttachmentEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(c, "AttachmentService.Create")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.neo4j.Neo4jDriver)
 	defer session.Close(ctx)
@@ -85,15 +82,14 @@ func (s *attachmentService) Create(c context.Context, record *neo4j_entity.Attac
 }
 
 func (s *attachmentService) createAttachmentInDBTxWork(c context.Context, newAttachment *neo4j_entity.AttachmentEntity) func(tx neo4j.ManagedTransaction) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.createAttachmentInDBTxWork")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(c, "AttachmentService.createAttachmentInDBTxWork")
+	defer spans.Finish()
 
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
 		dbNode, err := s.neo4j.AttachmentWriteRepository.Create(ctx, tx, tenant, newAttachment.Id, newAttachment.CdnUrl, newAttachment.BasePath, newAttachment.FileName, newAttachment.MimeType, newAttachment.Size, newAttachment.CreatedAt, newAttachment.Source, newAttachment.AppSource)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		return dbNode, nil

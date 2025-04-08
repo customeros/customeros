@@ -10,27 +10,25 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // AdminAddWorkspaceAccess is the resolver for the admin_addWorkspaceAccess field.
 func (r *mutationResolver) AdminAddWorkspaceAccess(ctx context.Context, authenticatedUserEmail string, tenant string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AdminAddWorkspaceAccess", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AdminAddWorkspaceAccess", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
-	span.LogKV("authenticatedUserEmail", authenticatedUserEmail)
-	span.LogKV("tenant", tenant)
+	spans.LogKV("authenticatedUserEmail", authenticatedUserEmail)
+	spans.LogKV("tenant", tenant)
 
 	authUserId := common.GetAuthUserIdFromContext(ctx)
 
 	authUser, err := r.Services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetAuthUser(ctx, authUserId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -51,7 +49,7 @@ func (r *mutationResolver) AdminAddWorkspaceAccess(ctx context.Context, authenti
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -60,16 +58,15 @@ func (r *mutationResolver) AdminAddWorkspaceAccess(ctx context.Context, authenti
 
 // AdminRemoveWorkspaceAccess is the resolver for the admin_removeWorkspaceAccess field.
 func (r *mutationResolver) AdminRemoveWorkspaceAccess(ctx context.Context, authenticatedUserEmail string, tenant string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AdminRemoveWorkspaceAccess", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AdminRemoveWorkspaceAccess", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
-	span.LogKV("authenticatedUserEmail", authenticatedUserEmail)
-	span.LogKV("tenant", tenant)
+	spans.LogKV("authenticatedUserEmail", authenticatedUserEmail)
+	spans.LogKV("tenant", tenant)
 
 	err := r.Services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.UnlinkAuthenticationUserWithTenant(ctx, nil, common.GetAuthUserIdFromContext(ctx), tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -78,14 +75,14 @@ func (r *mutationResolver) AdminRemoveWorkspaceAccess(ctx context.Context, authe
 
 // AdminSwitchCurrentWorkspace is the resolver for the admin_switchCurrentWorkspace field.
 func (r *mutationResolver) AdminSwitchCurrentWorkspace(ctx context.Context, switchToTenant string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AdminSwitchCurrentWorkspace", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("switchToTenant", switchToTenant))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AdminSwitchCurrentWorkspace", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("switchToTenant", switchToTenant)
 
 	err := r.Services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.SetCurrentTenant(ctx, nil, common.GetAuthUserIdFromContext(ctx), switchToTenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -94,15 +91,14 @@ func (r *mutationResolver) AdminSwitchCurrentWorkspace(ctx context.Context, swit
 
 // AdminTenantAddDomainAsWorkspace is the resolver for the admin_tenant_AddDomainAsWorkspace field.
 func (r *mutationResolver) AdminTenantAddDomainAsWorkspace(ctx context.Context, domain string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AdminTenantAddDomainAsWorkspace", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.AdminTenantAddDomainAsWorkspace", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
-	span.LogKV("domain", domain)
+	spans.LogKV("domain", domain)
 
 	err := r.Services.CommonServices.WorkspaceService.AddDomainAsWorkspace(ctx, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -111,14 +107,14 @@ func (r *mutationResolver) AdminTenantAddDomainAsWorkspace(ctx context.Context, 
 
 // AdminTenantHardDelete is the resolver for the admin_tenant_hardDelete field.
 func (r *mutationResolver) AdminTenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantHardDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.tenant", tenant), log.String("request.confirmTenant", confirmTenant))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TenantHardDelete", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("request.tenant", tenant, "request.confirmTenant", confirmTenant)
 
 	if tenant != confirmTenant {
 		err := errors.New("tenant name does not match the confirmation tenant name")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Tenant name does not match the confirmation tenant name")
 		return false, nil
 	}
@@ -132,15 +128,14 @@ func (r *mutationResolver) AdminTenantHardDelete(ctx context.Context, tenant str
 
 // TenantImpersonateList is the resolver for the tenant_impersonateList field.
 func (r *queryResolver) TenantImpersonateList(ctx context.Context) ([]*model.TenantImpersonateDetails, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantImpersonateList", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.TenantImpersonateList", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
 
 	authUserId := common.GetAuthUserIdFromContext(ctx)
 
 	tenants, err := r.Services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetTenantsForImpersonation(ctx, authUserId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

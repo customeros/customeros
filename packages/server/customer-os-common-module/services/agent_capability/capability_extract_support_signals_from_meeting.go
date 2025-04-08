@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type ExtractSupportSignalsFromMeetingCapability struct {
@@ -75,20 +75,20 @@ type ExtractSupportSignalsFromMeetingOutput struct {
 }
 
 func (c *ExtractSupportSignalsFromMeetingCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ExtractSupportSignalsFromMeetingInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, ExtractSupportSignalsFromMeetingOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExtractSupportSignalsFromMeetingCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExtractSupportSignalsFromMeetingCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := ExtractSupportSignalsFromMeetingOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -110,34 +110,33 @@ Important: Always provide your answer as valid JSON. If there is no help require
 		Prompt:       &executionContainer.InputData.MeetingContent,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if answer == nil {
 		err := errors.New("No answer from AI")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	result, err = c.parseAnswer(ctx, *answer)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *ExtractSupportSignalsFromMeetingCapability) parseAnswer(ctx context.Context, answer string) (ExtractSupportSignalsFromMeetingOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExtractSupportSignalsFromMeetingCapability.parseAnswer")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExtractSupportSignalsFromMeetingCapability.parseAnswer")
+	defer spans.Finish()
 
 	var result ExtractSupportSignalsFromMeetingOutput
 	err := json.Unmarshal([]byte(answer), &result)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return ExtractSupportSignalsFromMeetingOutput{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 

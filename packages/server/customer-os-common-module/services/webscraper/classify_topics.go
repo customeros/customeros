@@ -4,39 +4,37 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
-	"github.com/opentracing/opentracing-go/log"
-
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func (s *webscraperService) ClassifyWebpageTopics(ctx context.Context, url string, pageContent *string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebscraperService.ClassifyWebpageTopics")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("url", url))
-	tracing.LogObjectAsJson(span, "pageContent", pageContent)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebscraperService.ClassifyWebpageTopics")
+	defer spans.Finish()
+
+	spans.LogKV("url", url)
+	spans.LogObjectAsJson("pageContent", pageContent)
 
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(url))
 
 	if pageContent == nil {
 		webpage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if webpage == nil {
 			err := errors.New("webpage doesn't exist")
-			span.LogKV("url", url)
-			tracing.TraceErr(span, err)
+			spans.LogKV("url", url)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -46,7 +44,7 @@ func (s *webscraperService) ClassifyWebpageTopics(ctx context.Context, url strin
 
 	globalOrg, err := s.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -76,11 +74,11 @@ The confidence score should reflect how certain you are that the topic is releva
 		Retries:          &retries,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if topics == nil {
-		span.LogFields(log.String("result", "no topics returned"))
+		spans.LogKV("result", "no topics returned")
 		return nil, nil
 	}
 
@@ -88,10 +86,10 @@ The confidence score should reflect how certain you are that the topic is releva
 
 	err = s.postgresRepositories.ScrapedWebpageRepository.SetWebpageTopics(ctx, url, cleanTopics)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
-	tracing.LogObjectAsJson(span, "result.topics", cleanTopics)
+	spans.LogObjectAsJson("result.topics", cleanTopics)
 	return cleanTopics, nil
 }
 

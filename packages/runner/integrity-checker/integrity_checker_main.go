@@ -16,7 +16,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 )
@@ -92,7 +91,7 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 
 	// Initialize Jaeger if enabled
 	if cfg.Jaeger.Enabled {
-		tracer, jaegerCloser, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		tracer, jaegerCloser, err := telemetry.NewJaegerTracer(&cfg.Jaeger, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}

@@ -2,10 +2,8 @@ package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -27,15 +25,14 @@ func NewBrowserConfigRepository(gormDb *gorm.DB) BrowserConfigRepository {
 }
 
 func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]postgres_entity.BrowserConfig, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "BrowserConfigRepository.Get")
+	defer spans.Finish()
 
 	var result []postgres_entity.BrowserConfig
 	err := repo.gormDb.Where("session_status = 'VALID'").Find(&result).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -43,9 +40,8 @@ func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]postgres_en
 }
 
 func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId string) (*postgres_entity.BrowserConfig, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Get")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "BrowserConfigRepository.Get")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -57,7 +53,7 @@ func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId 
 	}
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -65,13 +61,11 @@ func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId 
 }
 
 func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *postgres_entity.BrowserConfig) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Merge")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "BrowserConfigRepository.Merge")
+	defer spans.Finish()
+	spans.LogObjectAsJson("input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
-
-	span.LogFields(tracingLog.Object("input", input))
 
 	// Check if the browserConfig already exists
 	var browserConfig postgres_entity.BrowserConfig
@@ -80,7 +74,7 @@ func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *postgres
 		First(&browserConfig).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -93,7 +87,7 @@ func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *postgres
 
 		err = r.gormDb.Create(&browserConfig).Error
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	} else {
@@ -102,7 +96,7 @@ func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *postgres
 
 		err = r.gormDb.Save(&browserConfig).Error
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}

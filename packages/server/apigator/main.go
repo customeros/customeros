@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/customeros/customeros/packages/server/apigator/config"
@@ -96,15 +99,26 @@ func initLogger(cfg *config.Config) logger.Logger {
 }
 
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
+	var closer io.Closer
+
+	// Initialize Jaeger if enabled
 	if cfg.Jaeger.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		tracer, jaegerCloser, err := telemetry.NewJaegerTracer(&cfg.Jaeger, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}
 		opentracing.SetGlobalTracer(tracer)
-		return closer
+		closer = jaegerCloser
 	}
-	return nil
+
+	// Initialize OpenTelemetry if enabled
+	if cfg.OpenTelemetry.Enabled {
+		if err := telemetry.InitOpenTelemetry(context.Background(), &cfg.OpenTelemetry); err != nil {
+			appLogger.Fatalf("Could not initialize OpenTelemetry: %v", err.Error())
+		}
+	}
+
+	return closer
 }
 
 func isIntrospectionQuery(req *http.Request) bool {
@@ -143,14 +157,16 @@ func validate(
 	appKey string,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "validate")
+		spans, ctx := telemetry.StartServiceSpan(c.Request.Context(), "validate")
 		service.SetContext(ctx)
 
-		spanFinished := false
+		traceErr := ""
 		defer func() {
-			if !spanFinished {
-				span.Finish()
+			if traceErr != "" {
+				err := errors.New(traceErr)
+				spans.TraceError(err)
 			}
+			spans.Finish()
 		}()
 
 		// ✅ Skip auth entirely for WebSocket upgrade requests
@@ -174,6 +190,13 @@ func validate(
 
 		var userDetails *entities.UserDetails
 
+		spans.LogKV(
+			INTERNAL_API_KEY_HEADER, internalApiKey,
+			TENANT_API_KEY_HEADER, tenantApiKey,
+			USERNAME_HEADER, username,
+			TENANT_HEADER, tenant,
+		)
+
 		if internalApiKey == "" && tenantApiKey == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Missing API key"))
 			return
@@ -187,23 +210,29 @@ func validate(
 		 */
 		if internalApiKey != "" {
 			if internalApiKey != appKey {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid API key"))
+				traceErr = "Invalid API Key"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				return
 			}
 			if username == "" {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Missing Username header"))
+				traceErr = "Missing Username header"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				return
 			}
 
-			foundTenant, err := service.GetTenantByUser(username)
+			foundTenant, err := service.GetTenantByUser(ctx, username)
 			if err != nil || foundTenant == "" {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Failed to authenticate user"))
+				traceErr = "Failed to authenticate user"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				c.Abort()
 				return
 			}
 
 			if tenant != "" && tenant != foundTenant {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid tenant"))
+				spans.LogKV("tenant", tenant)
+				spans.LogKV("foundTenant", foundTenant)
+				traceErr = "Invalid tenant"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				return
 			} else {
 				tenant = foundTenant
@@ -211,7 +240,8 @@ func validate(
 
 			foundUser, err := service.GetUserDetails(tenant, username)
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "User not found"))
+				traceErr = "User not found"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				return
 			}
 
@@ -225,13 +255,17 @@ func validate(
 			 */
 			foundTenant, err := service.GetTenantByApiKey(tenantApiKey)
 			if err != nil || foundTenant == "" {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid API key"))
+				traceErr = "Invalid API key"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				c.Abort()
 				return
 			}
 
 			if tenant != "" && tenant != foundTenant {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "Invalid tenant"))
+				spans.LogKV("tenant", tenant)
+				spans.LogKV("foundTenant", foundTenant)
+				traceErr = "Invalid tenant"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 				c.Abort()
 				return
 			} else {
@@ -242,7 +276,8 @@ func validate(
 				foundUser, err := service.GetUserDetails(foundTenant, username)
 
 				if err != nil || foundUser == nil {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", "User not found"))
+					traceErr = "User not found"
+					c.AbortWithStatusJSON(http.StatusUnauthorized, response.Payload("error", traceErr))
 					c.Abort()
 					return
 				}
@@ -259,7 +294,6 @@ func validate(
 		}
 
 		c.Next()
-		spanFinished = true
 	}
 }
 

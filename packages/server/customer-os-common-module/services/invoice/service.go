@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"os"
 	"sort"
@@ -15,6 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/dgrijalva/jwt-go"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -25,8 +28,7 @@ import (
 	"github.com/emersion/go-message/mail"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -39,7 +41,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	webhook "github.com/customeros/customeros/packages/server/customer-os-common-module/webhook_temporal"
 )
@@ -109,16 +111,16 @@ func (s *invoiceService) IsInitialized() bool {
 }
 
 func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contractId string, dataFields data_fields.InvoiceFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.InvoiceContract")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
-	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.InvoiceContract")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
+	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -127,21 +129,21 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 
 	contractEntity, err := s.contractService.GetById(ctx, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	// validate contract
 	if contractEntity == nil {
 		err := fmt.Errorf("contract not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	// validate input data
 	if !dataFields.DryRun && dataFields.TenantBillingProfile == nil {
 		err := fmt.Errorf("missing tenant billing profile")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	} else if dataFields.TenantBillingProfile == nil {
 		dataFields.FillWithSampleTenantBillingProfile()
@@ -154,14 +156,14 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	if dryRun == false {
 		if contractEntity.ContractStatus != neo4jenum.ContractStatusLive && contractEntity.ContractStatus != neo4jenum.ContractStatusOutOfContract {
 			err := fmt.Errorf("contract not live")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
 
 	if preview == true && dryRun == false {
 		err := fmt.Errorf("preview invoices should be dry run")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -170,7 +172,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	if currency == "" {
 		dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
@@ -180,7 +182,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	// prepare postpaid flag
 	dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
@@ -227,24 +229,24 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	}
 	if !contractReadyForInvoicingByDates {
 		err := fmt.Errorf("contract not ready for invoicing by dates")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	// generate invoice id
 	invoiceId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelInvoice)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
-	tracing.TagEntity(span, invoiceId)
+	spans.TagEntity(invoiceId)
 
 	// prepare invoice number
 	invoiceNumber := dataFields.InvoiceNumber
 	if invoiceNumber == "" && !offCycle {
 		filledInvoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, tenant, contractId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "GetFirstPreviewFilledInvoice"))
+			spans.TraceError(errors.Wrap(err, "GetFirstPreviewFilledInvoice"))
 		}
 		if filledInvoiceDbNode != nil {
 			filledInvoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(filledInvoiceDbNode)
@@ -334,12 +336,12 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		if !dryRun && invoiceEntity.TotalAmount < 0 {
 			err = fmt.Errorf("invoice %s total amount is negative %f", invoiceId, invoiceEntity.TotalAmount)
 			s.log.Errorf("Invoice %s total amount is negative %f", invoiceId, invoiceEntity.TotalAmount)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
 		// Step 6 - prepare invoice status
 		invoiceStatus := neo4jenum.InvoiceStatusDue
-		if len(invoiceLines) == 0 {
+		if len(invoiceLines) == 0 && !preview {
 			invoiceStatus = neo4jenum.InvoiceStatusEmpty
 		} else {
 			if dryRun && preview {
@@ -394,7 +396,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		for _, item := range invoiceLines {
 			invoiceLineId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelInvoiceLine)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 			invoiceLineData := neo4jrepository.InvoiceLineCreateFields{
@@ -470,7 +472,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			// dispatch invoice finalized event
 			err = s.DispatchInvoiceFinalizedEvent(ctx, invoiceEntityAfterFill, contractEntity, invoiceLineEntities, txWithPostCommit.Tx)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "dispatchInvoiceFinalizedEvent"))
+				spans.TraceError(errors.Wrap(err, "dispatchInvoiceFinalizedEvent"))
 				s.log.Errorf("Error while dispatching invoice finalized event for invoice %s: %s", invoiceEntityAfterFill.Id, err.Error())
 			}
 		}
@@ -496,13 +498,13 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			}
 			err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, createDto)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateInvoice"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message CreateInvoice"))
 			}
 
 			// finalized invoice event
 			err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceFinalized{})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message InvoiceFinalized"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message InvoiceFinalized"))
 			}
 
 			// invoice completion event for FE
@@ -511,13 +513,13 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			// internal slack notification
 			err = s.slackInvoiceFinalizedWebhook(ctx, tenant, invoiceEntityAfterFill)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to send slack webhook"))
+				spans.TraceError(errors.Wrap(err, "unable to send slack webhook"))
 			}
 
 			if !invoiceEntityAfterFill.OffCycle && !invoiceEntityAfterFill.DryRun {
 				err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 				}
 
@@ -550,20 +552,20 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 				}
 				_, err = s.InvoiceContract(ctx, nil, contractId, previewInvoiceFields)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while creating preview invoice for contract %s: %s", contractId, err.Error())
 				}
 			} else if preview && dryRun {
 				err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, invoiceId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 				}
 			}
 
 			err = s.contractService.RecalculateContractLtv(ctx, contractId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
 			}
 
@@ -573,7 +575,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invoicing failed"))
+		spans.TraceError(errors.Wrap(err, "invoicing failed"))
 		return "", err
 	}
 
@@ -581,10 +583,9 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 }
 
 func (s *invoiceService) slackInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice *neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.slackInvoiceFinalizedWebhook")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.slackInvoiceFinalizedWebhook")
+	defer spans.Finish()
+	spans.LogObjectAsJson("invoice", invoice)
 
 	if invoice.DryRun {
 		return nil
@@ -597,7 +598,7 @@ func (s *invoiceService) slackInvoiceFinalizedWebhook(ctx context.Context, tenan
 	// get organization linked to invoice
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -626,14 +627,14 @@ func (s *invoiceService) slackInvoiceFinalizedWebhook(ctx context.Context, tenan
 	}
 	defer resp.Body.Close()
 
-	span.LogFields(log.String("result.status", resp.Status))
+	spans.LogKV("result.status", resp.Status)
 
 	return nil
 }
 
 func (s *invoiceService) prepareInvoiceCycleEndDate(ctx context.Context, start time.Time, tenant string, contractEntity *neo4jentity.ContractEntity) time.Time {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.prepareInvoiceCycleEndDate")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.prepareInvoiceCycleEndDate")
+	defer spans.Finish()
 
 	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
 	if start.Day() == 1 {
@@ -651,13 +652,13 @@ func (s *invoiceService) prepareInvoiceCycleEndDate(ctx context.Context, start t
 		}
 	}
 	invoiceCycleEnd := nextStart.AddDate(0, 0, -1)
-	span.LogFields(log.Object("result.invoiceCycleEnd", invoiceCycleEnd))
+	spans.LogKV("result.invoiceCycleEnd", invoiceCycleEnd)
 	return invoiceCycleEnd
 }
 
 func (s *invoiceService) prepareInvoiceNumber(ctx context.Context, tenant string) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.prepareInvoiceNumber")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.prepareInvoiceNumber")
+	defer spans.Finish()
 
 	maxAttempts := 20
 	var invoiceNumber string
@@ -674,7 +675,7 @@ func (s *invoiceService) prepareInvoiceNumber(ctx context.Context, tenant string
 		}
 	}
 
-	span.LogFields(log.String("invoiceNumber", invoiceNumber))
+	spans.LogKV("invoiceNumber", invoiceNumber)
 	return invoiceNumber
 }
 
@@ -686,13 +687,13 @@ func (s *invoiceService) generateNewRandomInvoiceNumber() string {
 }
 
 func (s *invoiceService) GetById(ctx context.Context, tx *neo4j.ManagedTransaction, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetById")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	if invoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, tx, common.GetTenantFromContext(ctx), invoiceId); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Invoice with id {%s} not found", invoiceId))
 		return nil, wrappedErr
 	} else {
@@ -701,14 +702,14 @@ func (s *invoiceService) GetById(ctx context.Context, tx *neo4j.ManagedTransacti
 }
 
 func (s *invoiceService) GetByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetByIdAcrossAllTenants")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("invoiceId", invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetByIdAcrossAllTenants")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	invoiceDbNode, tenant, err := s.neo4j.InvoiceReadRepository.GetInvoiceByIdAcrossAllTenants(ctx, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting invoice by id"))
+		spans.TraceError(errors.Wrap(err, "error getting invoice by id"))
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Invoice with id {%s} not found", invoiceId))
 		return nil, "", wrappedErr
 	}
@@ -720,13 +721,13 @@ func (s *invoiceService) GetByIdAcrossAllTenants(ctx context.Context, invoiceId 
 }
 
 func (s *invoiceService) GetByNumber(ctx context.Context, number string) (*neo4jentity.InvoiceEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetByNumber")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("number", number))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetByNumber")
+	defer spans.Finish()
+
+	spans.LogKV("number", number)
 
 	if invoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetInvoiceByNumber(ctx, common.GetTenantFromContext(ctx), number); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Invoice with number {%s} not found", number))
 		return nil, wrappedErr
 	} else {
@@ -735,10 +736,10 @@ func (s *invoiceService) GetByNumber(ctx context.Context, number string) (*neo4j
 }
 
 func (s *invoiceService) GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoiceLinesForInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("invoiceIds", invoiceIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetInvoiceLinesForInvoices")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("invoiceIds", invoiceIds))
 
 	invoiceLines, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
 	if err != nil {
@@ -754,14 +755,14 @@ func (s *invoiceService) GetInvoiceLinesForInvoices(ctx context.Context, invoice
 }
 
 func (s *invoiceService) GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoicesForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contractIds", contractIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetInvoicesForContracts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("contractIds", contractIds)
 
 	invoices, err := s.neo4j.InvoiceReadRepository.GetAllForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	invoiceEntities := make(neo4jentity.InvoiceEntities, 0, len(invoices))
@@ -774,14 +775,14 @@ func (s *invoiceService) GetInvoicesForContracts(ctx context.Context, contractId
 }
 
 func (s *invoiceService) GetInvoicesForServiceLineItems(ctx context.Context, sliIds []string) (*neo4jentity.InvoiceEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoicesForServiceLineItems")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("sliIds", sliIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetInvoicesForServiceLineItems")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("sliIds", sliIds))
 
 	invoices, err := s.neo4j.InvoiceReadRepository.GetAllForServiceLineItems(ctx, common.GetTenantFromContext(ctx), sliIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	invoiceEntities := make(neo4jentity.InvoiceEntities, 0, len(invoices))
@@ -815,14 +816,14 @@ type SimulateInvoiceLine struct {
 }
 
 func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWithChanges *interfaces.SimulateInvoiceRequestData) ([]*interfaces.SimulateInvoiceResponseData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SimulateInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("simulateInvoicesWithChanges", simulateInvoicesWithChanges))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.SimulateInvoice")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("simulateInvoicesWithChanges", simulateInvoicesWithChanges))
 
 	if len(simulateInvoicesWithChanges.ServiceLines) == 0 {
 		err := fmt.Errorf("no invoice lines to simulate")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -830,14 +831,14 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// fetch existing contract and set the next invoice date
 	contract, err := s.contractService.GetById(ctx, simulateInvoicesWithChanges.ContractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -850,7 +851,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 	existingSlis, err := s.sli.GetServiceLineItemsForContract(ctx, contract.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	sliEntities := *existingSlis
@@ -910,7 +911,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 					// existing sli item - to check if there is any change in the sli item to decide if proration is needed
 					existingSli, err := s.sli.GetById(ctx, sliData.ServiceLineItemID)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, err
 					}
 
@@ -938,18 +939,18 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 				if prorationNeeded {
 
-					proratedInvoice, err := s.SimulateOffCycleInvoice(ctx, contract, &sliEntities, span)
+					proratedInvoice, err := s.SimulateOffCycleInvoice(ctx, contract, &sliEntities, *spans)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, err
 					}
 
 					response = append(response, proratedInvoice)
 
 					contract.NextInvoiceDate = utils.Ptr(proratedInvoice.Invoice.PeriodEndDate.AddDate(0, 0, 1))
-					onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &sliEntities, span)
+					onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &sliEntities, *spans)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, err
 					}
 
@@ -1020,9 +1021,9 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 			onCycleSliEntities = append(onCycleSliEntities, sliEntity)
 		}
 
-		onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &onCycleSliEntities, span)
+		onCycleInvoice, err := s.SimulateOnCycleInvoice(ctx, contract, &onCycleSliEntities, *spans)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -1032,13 +1033,13 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 	return response, nil
 }
 
-func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, span opentracing.Span) (*interfaces.SimulateInvoiceResponseData, error) {
+func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, spans telemetry.Spans) (*interfaces.SimulateInvoiceResponseData, error) {
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
 	var invoiceLines []*neo4jentity.InvoiceLineEntity
 
 	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1068,7 +1069,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 
 	invoiceEntity, invoiceLines, err = s.fillCycleInvoice(ctx, invoiceEntity, *sliEntities)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1095,13 +1096,13 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 	return onCycleInvoice, nil
 }
 
-func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, span opentracing.Span) (*interfaces.SimulateInvoiceResponseData, error) {
+func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, spans telemetry.Spans) (*interfaces.SimulateInvoiceResponseData, error) {
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
 	var invoiceLines []*neo4jentity.InvoiceLineEntity
 
 	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1155,7 +1156,7 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 
 	invoiceEntity, invoiceLines, err = s.FillOffCyclePrepaidInvoice(ctx, invoiceEntity, sliEntitiesForProration)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1183,10 +1184,10 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 }
 
 func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.NextInvoiceDryRun")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.NextInvoiceDryRun")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	invoiceFields := data_fields.InvoiceFields{
 		DryRun:  true,
@@ -1194,7 +1195,7 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 	}
 	invoiceId, err := s.InvoiceContract(ctx, nil, contractId, invoiceFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -1202,17 +1203,17 @@ func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId strin
 }
 
 func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.PayInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("invoiceId", invoiceId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.PayInvoice")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	err := s.UpdateInvoice(ctx, nil, invoiceId, neo4jrepository.InvoiceUpdateFields{
 		Status:       neo4jenum.InvoiceStatusPaid,
 		UpdateStatus: true,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
 	}
@@ -1221,17 +1222,17 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error
 }
 
 func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.VoidInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.VoidInvoice")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	err := s.UpdateInvoice(ctx, nil, invoiceId, neo4jrepository.InvoiceUpdateFields{
 		Status:       neo4jenum.InvoiceStatusVoid,
 		UpdateStatus: true,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
 	}
@@ -1240,9 +1241,9 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId string) erro
 }
 
 func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.fillCycleInvoice")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.fillCycleInvoice")
+	defer spans.Finish()
+	spans.TagEntity(invoiceEntity.Id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -1333,7 +1334,7 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			// Get all invoices for one time
 			invoices, err := s.GetInvoicesForServiceLineItems(ctx, []string{sliEntity.ID})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, nil, err
 			}
 			if invoices != nil && len(*invoices) > 0 {
@@ -1381,7 +1382,7 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			if sliEntity.SkuId != "" {
 				sku, err := s.postgresRepositories.SkuRepository.Get(ctx, tenant, sliEntity.SkuId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, nil, err
 				}
 				if sku != nil {
@@ -1395,11 +1396,11 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 		}
 		// if remained any unprocessed SLI log an error
 		err := errors.Errorf("Unprocessed SLI %s", sliEntity.ID)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error processing SLI during invoicing %s: %s", sliEntity.ID, err.Error())
 	}
 
-	span.LogFields(log.Object("result.ignored_SLIs", reasonForSliExcludedFromInvoicing))
+	spans.LogObjectAsJson("result.ignored_SLIs", reasonForSliExcludedFromInvoicing)
 
 	invoiceEntity.Amount = utils.RoundHalfUpFloat64(amount, 2)
 	invoiceEntity.Vat = utils.RoundHalfUpFloat64(vat, 2)
@@ -1410,10 +1411,9 @@ func (s *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *ne
 
 // Deprecated
 func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.FillOffCyclePrepaidInvoice")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.FillOffCyclePrepaidInvoice")
+	defer spans.Finish()
+	spans.TagEntity(invoiceEntity.Id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -1442,7 +1442,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 			}
 			ilDbNodeAndInvoiceId, err := s.neo4j.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, common.GetTenantFromContext(ctx), sliEntity.ParentID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", sliEntity.ParentID, err.Error())
 				return nil, nil, err
 			}
@@ -1462,7 +1462,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		sliByParentID[sliEntity.ParentID] = append(sliByParentID[sliEntity.ParentID], sliEntity)
 	}
 
-	span.LogFields(log.Int("result - amount of SLIs to process", len(filteredSliEntities)))
+	spans.LogKV("result - amount of SLIs to process", len(filteredSliEntities))
 
 	amount, vat := float64(0), float64(0)
 	var invoiceLines []*neo4jentity.InvoiceLineEntity
@@ -1479,13 +1479,13 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		}
 		// if no SLI is active on reference date, skip
 		if sliEntityToInvoice == nil {
-			span.LogFields(log.String("result - no active SLI for parent id", parentId))
+			spans.LogKV("result - no active SLI for parent id", parentId)
 			continue
 		}
 		// get invoice line for latest invoiced SLI per parent
 		ilDbNodeAndInvoiceId, err := s.neo4j.InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx, common.GetTenantFromContext(ctx), parentId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error getting latest invoice line for sli parent id {%s}: {%s}", parentId, err.Error())
 			return nil, nil, err
 		}
@@ -1505,7 +1505,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 			if ilDbNodeAndInvoiceId != nil {
 				previousInvoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, nil, common.GetTenantFromContext(ctx), ilDbNodeAndInvoiceId.LinkedNodeId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error getting invoice {%s}: {%s}", ilDbNodeAndInvoiceId.LinkedNodeId, err.Error())
 					return nil, nil, err
 				}
@@ -1524,7 +1524,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 			proratedSLIAmount := prorateAnnualSLIAmount(sliEntityToInvoice.StartedAt, invoiceEntity.PeriodEndDate, calculatedSLIAmountFor1Year)
 			proratedSLIAmount = utils.RoundHalfUpFloat64(proratedSLIAmount, 2)
 			finalSLIAmount = utils.RoundHalfUpFloat64(proratedSLIAmount-proratedInvoicedSLIAmount, 2)
-			span.LogFields(log.Float64(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount))
+			spans.LogKV(fmt.Sprintf("result - final amount for SLI with parent id %s", parentId), finalSLIAmount)
 			if finalSLIAmount <= 0 {
 				continue
 			}
@@ -1547,7 +1547,7 @@ func (s *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		if sliEntityToInvoice.SkuId != "" {
 			sku, err := s.postgresRepositories.SkuRepository.Get(ctx, tenant, sliEntityToInvoice.SkuId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, nil, err
 			}
 			if sku != nil {
@@ -1616,13 +1616,12 @@ func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float6
 }
 
 func (s *invoiceService) GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) (*neo4jentity.InvoiceEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetNonDryRunInvoicesForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetNonDryRunInvoicesForOrganization")
+	defer spans.Finish()
 
 	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1635,30 +1634,30 @@ func (s *invoiceService) GetNonDryRunInvoicesForOrganization(ctx context.Context
 }
 
 func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.UpdateInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
-	span.LogFields(log.String("invoiceId", invoiceId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.UpdateInvoice")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
+	spans.LogKV("invoiceId", invoiceId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	invoiceEntityBeforeUpdate, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 
 	err = s.validateStatusTransition(ctx, invoiceEntityBeforeUpdate.Status, data.Status)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1685,21 +1684,21 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 						DryRun:    invoiceEntityAfterUpdate.DryRun,
 					})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+						spans.TraceError(errors.Wrap(err, "PublishEvent"))
 						s.log.Errorf("Error from events processing: %s", err.Error())
 					}
 
 					// get contract for invoice to recalculate LTV
 					contractDbNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceId)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return err
 					}
 					contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 					err = s.contractService.RecalculateContractLtv(ctx, contractEntity.Id)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						s.log.Errorf("Error while updating contract %s ltv: %s", contractEntity.Id, err.Error())
 					}
 				} else if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusPaid {
@@ -1708,7 +1707,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 						DryRun:    invoiceEntityAfterUpdate.DryRun,
 					})
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+						spans.TraceError(errors.Wrap(err, "PublishEvent"))
 						s.log.Errorf("Error from events processing: %s", err.Error())
 					}
 				}
@@ -1726,12 +1725,12 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 						// dispatch invoice paid event
 						err = s.dispatchInvoicePaidEvent(ctx, tenant, *invoiceEntityAfterUpdate)
 						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "dispatchInvoicePaidEvent"))
+							spans.TraceError(errors.Wrap(err, "dispatchInvoicePaidEvent"))
 							s.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoiceId, err.Error())
 						} else {
 							err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceEntityAfterUpdate.Id, string(neo4jentity.InvoicePropertyPaidWebhookProcessedAt), utils.NowPtr())
 							if err != nil {
-								tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
+								spans.TraceError(errors.Wrap(err, "UpdateTimeProperty"))
 								s.log.Errorf("Error setting invoice paid webhook processed for invoice %s: %s", invoiceEntityAfterUpdate.Id, err.Error())
 							}
 						}
@@ -1754,7 +1753,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 
 			err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, updateDto)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateInvoice"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message UpdateInvoice"))
 			}
 
 			return nil
@@ -1763,7 +1762,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1771,20 +1770,19 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 }
 
 func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, previousStatus neo4jenum.InvoiceStatus, invoiceEntity neo4jentity.InvoiceEntity) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.createInvoiceAction")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("invoiceId", invoiceEntity.Id))
-	span.LogFields(log.String("previousStatus", previousStatus.String()))
-	span.LogFields(log.String("newStatus", invoiceEntity.Status.String()))
-	span.LogFields(log.Bool("dryRun", invoiceEntity.DryRun))
-	span.LogFields(log.Float64("totalAmount", invoiceEntity.TotalAmount))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.createInvoiceAction")
+	defer spans.Finish()
+	spans.LogKV("invoiceId", invoiceEntity.Id)
+	spans.LogKV("previousStatus", previousStatus.String())
+	spans.LogKV("newStatus", invoiceEntity.Status.String())
+	spans.LogKV("dryRun", invoiceEntity.DryRun)
+	spans.LogKV("totalAmount", invoiceEntity.TotalAmount)
 
 	if previousStatus == invoiceEntity.Status {
 		return
 	}
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
-		span.LogFields(log.String("result", "dry run or total amount is 0"))
+		spans.LogKV("result", "dry run or total amount is 0")
 		return
 	}
 
@@ -1813,7 +1811,7 @@ func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.Mana
 		actionType = enum.ActionInvoiceOverdue
 	}
 	if actionType == enum.ActionNA {
-		span.LogFields(log.String("result", "status not supported"))
+		spans.LogKV("result", "status not supported")
 		return
 	}
 	if invoiceEntity.Status == neo4jenum.InvoiceStatusDue {
@@ -1821,7 +1819,7 @@ func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.Mana
 	} else {
 		actionId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelAction)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 		actionFields := data_fields.ActionFields{
@@ -1833,16 +1831,16 @@ func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.Mana
 		err = s.neo4j.ActionWriteRepository.CreateV2(ctx, tx, tenant, actionId, invoiceEntity.Id, model.INVOICE, actionFields)
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
 	}
 }
 
 func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.sendPaidInvoiceNotification")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.sendPaidInvoiceNotification")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	tenant := common.GetTenantFromContext(ctx)
 	eventTriggeredByUser := common.GetUserIdFromContext(ctx) != ""
@@ -1868,25 +1866,25 @@ func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoic
 	// load contract
 	contractNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
+		spans.TraceError(errors.Wrap(err, "GetContractForInvoice"))
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
 		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
 	} else {
-		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		spans.TraceError(errors.New("contractNode is nil"))
 		return errors.New("contractNode is nil")
 	}
 
 	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
-		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
+		spans.TraceError(errors.New("contractEntity.InvoiceEmail is empty or invalid"))
 		return nil
 	}
 
 	// load tenant billing profile from neo4j
 	tenantSettingsDbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetTenantSettings"))
+		spans.TraceError(errors.Wrap(err, "GetTenantSettings"))
 		return err
 	}
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
@@ -1936,28 +1934,28 @@ func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoic
 
 	err = s.appendInvoiceFileToEmailAsAttachment(ctx, tenant, *invoiceEntity, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "appendInvoiceFileToEmailAsAttachment"))
+		spans.TraceError(errors.Wrap(err, "appendInvoiceFileToEmailAsAttachment"))
 		s.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
 	err = s.appendProviderLogoToEmail(ctx, tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "appendProviderLogoToEmail"))
+		spans.TraceError(errors.Wrap(err, "appendProviderLogoToEmail"))
 		s.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
 	err = s.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "appendCustomerOSLogoToEmail"))
+		spans.TraceError(errors.Wrap(err, "appendCustomerOSLogoToEmail"))
 		s.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
 	err = s.postmarkService.SendNotification(ctx, postmarkEmail, tenant)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "SendNotification"))
+		spans.TraceError(errors.Wrap(err, "SendNotification"))
 		s.log.Errorf("Error sending invoice paid notification for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -1965,7 +1963,7 @@ func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoic
 	// Request was successful
 	err = s.neo4j.InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt(ctx, tenant, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "SetPaidInvoiceNotificationSentAt"))
+		spans.TraceError(errors.Wrap(err, "SetPaidInvoiceNotificationSentAt"))
 		s.log.Errorf("Error setting invoice paid notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -1974,10 +1972,10 @@ func (s *invoiceService) SendPaidInvoiceNotification(ctx context.Context, invoic
 }
 
 func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.sendPaidInvoiceNotification")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.sendPaidInvoiceNotification")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -1998,7 +1996,7 @@ func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invo
 	// load invoice lines
 	invoiceLines, err := s.GetInvoiceLinesForInvoices(ctx, []string{invoiceId})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetInvoiceLinesForInvoices"))
+		spans.TraceError(errors.Wrap(err, "GetInvoiceLinesForInvoices"))
 		return err
 	}
 
@@ -2016,13 +2014,13 @@ func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invo
 
 	contractNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
+		spans.TraceError(errors.Wrap(err, "GetContractForInvoice"))
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
 		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
 	} else {
-		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		spans.TraceError(errors.New("contractNode is nil"))
 		return errors.New("contractNode is nil")
 	}
 
@@ -2057,21 +2055,21 @@ func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invo
 
 	err = s.appendProviderLogoToEmail(ctx, tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "appendProviderLogoToEmail"))
+		spans.TraceError(errors.Wrap(err, "appendProviderLogoToEmail"))
 		s.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
 	err = s.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "appendCustomerOSLogoToEmail"))
+		spans.TraceError(errors.Wrap(err, "appendCustomerOSLogoToEmail"))
 		s.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
 	err = s.postmarkService.SendNotification(ctx, postmarkEmail, tenant)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "SendNotification"))
+		spans.TraceError(errors.Wrap(err, "SendNotification"))
 		s.log.Errorf("Error sending invoice voided notification for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -2079,7 +2077,7 @@ func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invo
 	// Request was successful
 	err = s.neo4j.InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt(ctx, tenant, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "SetVoidInvoiceNotificationSentAt"))
+		spans.TraceError(errors.Wrap(err, "SetVoidInvoiceNotificationSentAt"))
 		s.log.Errorf("Error setting invoice void notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -2088,8 +2086,8 @@ func (s *invoiceService) SendVoidedInvoiceNotification(ctx context.Context, invo
 }
 
 func (s *invoiceService) appendCustomerOSLogoToEmail(ctx context.Context, postmarkEmail *interfaces.PostmarkEmail) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.appendCustomerOSLogoToEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.appendCustomerOSLogoToEmail")
+	defer spans.Finish()
 
 	logoData, err := Templates.ReadFile("pdf_template/customer-os-512.png")
 	if err != nil {
@@ -2107,8 +2105,8 @@ func (s *invoiceService) appendCustomerOSLogoToEmail(ctx context.Context, postma
 }
 
 func (s *invoiceService) appendProviderLogoToEmail(ctx context.Context, tenant, logoFileId string, postmarkEmail *interfaces.PostmarkEmail) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.appendProviderLogoToEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.appendProviderLogoToEmail")
+	defer spans.Finish()
 
 	if logoFileId == "" {
 		return nil
@@ -2124,7 +2122,7 @@ func (s *invoiceService) appendProviderLogoToEmail(ctx context.Context, tenant, 
 
 	fileBytes, err := s.fileService.GetFileBytes(ctx, logoFileId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -2144,13 +2142,13 @@ func isValidEmailSyntax(email string) bool {
 }
 
 func (s *invoiceService) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *interfaces.PostmarkEmail) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.appendInvoiceFileToEmailAsAttachment")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.appendInvoiceFileToEmailAsAttachment")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
 
 	fileInfo, err := s.fileService.GetById(ctx, invoice.RepositoryFileId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if fileInfo == nil {
@@ -2172,15 +2170,14 @@ func (s *invoiceService) appendInvoiceFileToEmailAsAttachment(ctx context.Contex
 }
 
 func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceService.dispatchInvoicePaidEvent")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
+	spans, _ := telemetry.StartServiceSpan(ctx, "InvoiceService.dispatchInvoicePaidEvent")
+	defer spans.Finish()
+	spans.LogObjectAsJson("invoice", invoice)
 
 	// get organization linked to invoice to build payload for webhook
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
+		spans.TraceError(errors.Wrap(err, "GetOrganizationByInvoiceId"))
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -2192,7 +2189,7 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 	// get contract linked to invoice to build payload for webhook
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractsForOrganizations"))
+		spans.TraceError(errors.Wrap(err, "GetContractsForOrganizations"))
 		s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -2208,7 +2205,7 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 	// get invoice line items linked to invoice to build payload for webhook
 	invoiceLineDbNodes, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, nil, tenant, invoice.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetAllForInvoice"))
+		spans.TraceError(errors.Wrap(err, "GetAllForInvoice"))
 		s.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -2230,7 +2227,7 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 		*s.cfg,
 	)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "DispatchWebhook"))
+		spans.TraceError(errors.Wrap(err, "DispatchWebhook"))
 		s.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -2244,19 +2241,19 @@ func (s *invoiceService) DispatchInvoiceFinalizedEvent(ctx context.Context,
 	invoiceLineEntities []*neo4jentity.InvoiceLineEntity,
 	tx *neo4j.ManagedTransaction) error {
 
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceService.DispatchInvoiceFinalizedEvent")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceEntity.Id)
+	spans, _ := telemetry.StartServiceSpan(ctx, "InvoiceService.DispatchInvoiceFinalizedEvent")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceEntity.Id)
 
 	if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedWebhookProcessedAt != nil {
-		span.LogFields(log.String("result", "invoice finalized webhook already processed"))
+		spans.LogKV("result", "invoice finalized webhook already processed")
 		return nil
 	}
 
 	err := s.neo4j.CommonWriteRepository.UpdateTimePropertyInTx(ctx, tx, common.GetTenantFromContext(ctx), model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting invoice finalized webhook processed"))
+		spans.TraceError(errors.Wrap(err, "Error setting invoice finalized webhook processed"))
 		s.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
 		return err
 	}
@@ -2268,7 +2265,7 @@ func (s *invoiceService) DispatchInvoiceFinalizedEvent(ctx context.Context,
 	// get organization linked to invoice to build payload for webhook
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, common.GetTenantFromContext(ctx), invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
+		spans.TraceError(errors.Wrap(err, "GetOrganizationByInvoiceId"))
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoiceEntity.Id, err.Error())
 		return err
 	}
@@ -2288,7 +2285,7 @@ func (s *invoiceService) DispatchInvoiceFinalizedEvent(ctx context.Context,
 		*s.cfg,
 	)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "DispatchWebhook"))
+		spans.TraceError(errors.Wrap(err, "DispatchWebhook"))
 		s.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceEntity.Id, err.Error())
 		return err
 	}
@@ -2300,11 +2297,10 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	invoiceEntity *neo4jentity.InvoiceEntity,
 	contractEntity *neo4jentity.ContractEntity,
 	invoiceLineEntities []*neo4jentity.InvoiceLineEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.generateInvoicePDF")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.generateInvoicePDF")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, invoiceEntity.Id)
+	spans.TagEntity(invoiceEntity.Id)
 
 	invoiceHasVat := false
 
@@ -2414,7 +2410,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	if invoiceEntity.Provider.LogoRepositoryFileId != "" {
 		fileMetadata, err := s.fileService.GetById(ctx, invoiceEntity.Provider.LogoRepositoryFileId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "GetFileMetadata"))
+			spans.TraceError(errors.Wrap(err, "GetFileMetadata"))
 			s.log.Errorf("Error getting file metadata for file %s: %s", invoiceEntity.Provider.LogoRepositoryFileId, err.Error())
 		} else {
 			dataForPdf["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
@@ -2424,7 +2420,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 	// fill the template with data and store it in temp
 	err = FillInvoiceHtmlTemplate(ctx, tmpInvoiceFile, dataForPdf)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "FillInvoiceHtmlTemplate"))
+		spans.TraceError(errors.Wrap(err, "FillInvoiceHtmlTemplate"))
 		return "", errors.Wrap(err, "FillInvoiceHtmlTemplate")
 	}
 
@@ -2441,7 +2437,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 			break
 		}
 		// Log the error and trace on failure
-		tracing.TraceErr(span, errors.Wrap(err, "ConvertInvoiceHtmlToPdf"))
+		spans.TraceError(errors.Wrap(err, "ConvertInvoiceHtmlToPdf"))
 		if attempt == maxAttempts {
 			return "", err
 		}
@@ -2463,7 +2459,7 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 
 	fileDTO, err := s.fileService.UploadSingleFileBytesDirect(ctx, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", pdfBytes, true)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
+		spans.TraceError(errors.Wrap(err, "UploadSingleFileBytes"))
 		return "", err
 	}
 
@@ -2475,16 +2471,16 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 }
 
 func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId string, allowPayLinkInEmail bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendInvoiceNotification")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
-	span.LogFields(log.Bool("allowPayLinkInEmail", allowPayLinkInEmail))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.SendInvoiceNotification")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
+	spans.LogKV("allowPayLinkInEmail", allowPayLinkInEmail)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -2492,19 +2488,19 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 	// load invoice entity
 	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if invoiceEntity == nil {
 		err = errors.New("invoiceEntity not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Do not send email if invoice is dry run or total amount is 0 or negative or invoice is not due or overdue or pending processing
 	invoiceStatusAllowedForPayNotification := invoiceEntity.IsDue() || invoiceEntity.IsOverdue() || invoiceEntity.IsPaymentProcessing()
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount <= float64(0) || !invoiceStatusAllowedForPayNotification {
-		span.LogFields(log.String("result", "skipped pay notification"))
+		spans.LogKV("result", "skipped pay notification")
 		return nil
 	}
 
@@ -2517,25 +2513,25 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 	var contractEntity neo4jentity.ContractEntity
 	contractNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
+		spans.TraceError(errors.Wrap(err, "GetContractForInvoice"))
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
 		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
 	} else {
-		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		spans.TraceError(errors.New("contractNode is nil"))
 		return errors.New("contractNode is nil")
 	}
 
 	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
-		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
+		spans.TraceError(errors.New("contractEntity.InvoiceEmail is empty or invalid"))
 		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
 	// Mark notification requested, to avoid double notifications
 	err = s.neo4j.InvoiceWriteRepository.MarkPayNotificationRequested(ctx, tenant, invoiceId, utils.Now())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error marking pay notification requested for invoice %s: %s", invoiceId, err.Error())
 	}
 
@@ -2586,7 +2582,7 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 	err = s.appendInvoiceFileToEmailAsAttachment(ctx, tenant, *invoiceEntity, &postmarkEmail)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendInvoiceFileToEmailAsAttachment")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		s.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return wrappedErr
 	}
@@ -2594,14 +2590,14 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 	err = s.appendProviderLogoToEmail(ctx, tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendProviderLogoToEmail")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		s.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
 		return wrappedErr
 	}
 
 	err = s.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendCustomerOSLogoToEmail"))
+		spans.TraceError(errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendCustomerOSLogoToEmail"))
 		s.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -2609,7 +2605,7 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 	err = s.postmarkService.SendNotification(ctx, postmarkEmail, tenant)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.SendNotification")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		s.log.Errorf("Error sending invoice pay request notification for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -2619,7 +2615,7 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 	// Request was successful
 	err = s.neo4j.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, tenant, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "SetPayInvoiceNotificationSentAt"))
+		spans.TraceError(errors.Wrap(err, "SetPayInvoiceNotificationSentAt"))
 		s.log.Errorf("Error setting invoice pay notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
@@ -2628,10 +2624,9 @@ func (s *invoiceService) SendInvoiceNotification(ctx context.Context, invoiceId 
 }
 
 func (s *invoiceService) createPayNotificationInvoiceAction(ctx context.Context, tenant string, invoiceEntity neo4jentity.InvoiceEntity) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.createPayNotificationInvoiceAction")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, invoiceEntity.Id)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.createPayNotificationInvoiceAction")
+	defer spans.Finish()
+	spans.TagEntity(invoiceEntity.Id)
 
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
 		return
@@ -2650,21 +2645,21 @@ func (s *invoiceService) createPayNotificationInvoiceAction(ctx context.Context,
 
 	_, err = s.neo4j.ActionWriteRepository.MergeByActionType(ctx, nil, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ActionWriteRepository.MergeByActionType"))
+		spans.TraceError(errors.Wrap(err, "ActionWriteRepository.MergeByActionType"))
 		s.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
 	}
 }
 
 func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendPayReminderInvoiceNotification")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.SendPayReminderInvoiceNotification")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -2675,18 +2670,18 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	// load invoice
 	invoiceNode, err := s.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, nil, tenant, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
+		spans.TraceError(errors.Wrap(err, "GetInvoice"))
 		return nil
 	}
 	if invoiceNode != nil {
 		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
-		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
+		spans.TraceError(errors.New("invoiceNode is nil"))
 		return nil
 	}
 
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount <= float64(0) || !invoiceEntity.IsOverdue() {
-		tracing.TraceErr(span, errors.New("remind invoice notification requested for not applicable invoice"))
+		spans.TraceError(errors.New("remind invoice notification requested for not applicable invoice"))
 		return nil
 	}
 
@@ -2698,25 +2693,25 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	// load contract
 	contractNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
+		spans.TraceError(errors.Wrap(err, "GetContractForInvoice"))
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
 		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
 	} else {
-		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		spans.TraceError(errors.New("contractNode is nil"))
 		return errors.New("contractNode is nil")
 	}
 
 	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
-		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
+		spans.TraceError(errors.New("contractEntity.InvoiceEmail is empty or invalid"))
 		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
 	}
 
 	// load tenant billing profile from neo4j
 	tenantSettingsDbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetTenantSettings"))
+		spans.TraceError(errors.Wrap(err, "GetTenantSettings"))
 		return err
 	}
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
@@ -2776,7 +2771,7 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	err = s.appendInvoiceFileToEmailAsAttachment(ctx, tenant, invoiceEntity, &postmarkEmail)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendInvoiceFileToEmailAsAttachment")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		s.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return wrappedErr
 	}
@@ -2784,14 +2779,14 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	err = s.appendProviderLogoToEmail(ctx, tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendProviderLogoToEmail")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		s.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
 		return wrappedErr
 	}
 
 	err = s.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendCustomerOSLogoToEmail"))
+		spans.TraceError(errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendCustomerOSLogoToEmail"))
 		s.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -2799,7 +2794,7 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	err = s.postmarkService.SendNotification(ctx, postmarkEmail, tenant)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.SendNotification")
-		tracing.TraceErr(span, wrappedErr)
+		spans.TraceError(wrappedErr)
 		s.log.Errorf("Error sending invoice remind request notification for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -2807,7 +2802,7 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	// Request was successful
 	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyLastRemindInvoiceNotificationSentAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
+		spans.TraceError(errors.Wrap(err, "UpdateTimeProperty"))
 		s.log.Errorf("Error setting invoice remind notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
@@ -2816,59 +2811,59 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 }
 
 func (s *invoiceService) AutopayInvoice(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.AutopayInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.AutopayInvoice")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	if s.cfg.IntegrationAppConfig.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
 		err := errors.New("InvoiceFinalizedUrl is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// load invoice
 	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// check if invoice can be auto-paid
 	if invoiceEntity.DryRun {
-		span.LogFields(log.String("result", "skipped autopay for dry run invoice"))
+		spans.LogKV("result", "skipped autopay for dry run invoice")
 		return nil
 	} else if invoiceEntity.TotalAmount == float64(0) {
-		span.LogFields(log.String("result", "skipped autopay for invoice with total amount of 0"))
+		spans.LogKV("result", "skipped autopay for invoice with total amount of 0")
 		return nil
 	} else if invoiceEntity.TotalAmount <= float64(0) {
-		span.LogFields(log.String("result", "skipped autopay for invoice with total amount negative"))
+		spans.LogKV("result", "skipped autopay for invoice with total amount negative")
 		return nil
 	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
-		span.LogFields(log.String("result", "skipped autopay for invoice not due or overdue"))
+		spans.LogKV("result", "skipped autopay for invoice not due or overdue")
 		return nil
 	} else if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt != nil {
-		span.LogFields(log.String("result", "skipped autopay for invoice already finalized"))
+		spans.LogKV("result", "skipped autopay for invoice already finalized")
 		return nil
 	}
 
 	err = s.integrationAppInvoiceFinalizedWebhook(ctx, tenant, *invoiceEntity)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error invoking invoice finalized webhook"))
+		spans.TraceError(errors.Wrap(err, "error invoking invoice finalized webhook"))
 		s.log.Errorf("error invoking invoice ready webhook for invoice %s: %s", invoiceEntity.Id, err.Error())
 	}
 
 	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyInvoiceFinalizedEventSentAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error updating invoice finalized sent at"))
+		spans.TraceError(errors.Wrap(err, "error updating invoice finalized sent at"))
 		s.log.Errorf("Error updating invoice finalized sent at for invoice %s: %s", invoiceEntity.Id, err.Error)
 		return err
 	}
@@ -2895,14 +2890,14 @@ type IntegrationAppInvoiceFinalizedEventBody struct {
 }
 
 func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.integrationAppInvoiceFinalizedWebhook")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.integrationAppInvoiceFinalizedWebhook")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
 
 	// get organization linked to invoice
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -2914,7 +2909,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 	// get contract linked to invoice
 	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
@@ -2931,7 +2926,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 
 	primaryStripeCustomerId, err := s.externalSystemService.GetPrimaryExternalId(ctx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting primary stripe customer id for contract %s: %s", contractEntity.Id, err.Error())
 	}
 
@@ -2991,48 +2986,48 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 }
 
 func (s *invoiceService) GenerateNewPaymentLink(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GenerateNewPaymentLink")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GenerateNewPaymentLink")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	if s.cfg.IntegrationAppConfig.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl == "" {
 		err := errors.New("GeneratePaymentLinkUrl is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// load invoice
 	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// check if invoice can be auto-paid
 	if invoiceEntity.DryRun {
-		span.LogFields(log.String("result", "skipped payment link generation, invoice is dry run"))
+		spans.LogKV("result", "skipped payment link generation, invoice is dry run")
 		return nil
 	} else if invoiceEntity.TotalAmount == 0 {
-		span.LogFields(log.String("result", "skipped payment link generation, invoice total amount is 0"))
+		spans.LogKV("result", "skipped payment link generation, invoice total amount is 0")
 		return nil
 	} else if !invoiceEntity.IsDue() && !invoiceEntity.IsOverdue() {
-		span.LogFields(log.String("result", "skipped payment link generation, invoice is not due or overdue"))
+		spans.LogKV("result", "skipped payment link generation, invoice is not due or overdue")
 		return nil
 	}
 
 	// get organization linked to invoice
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error getting organization for invoice %s: %s", invoiceEntity.Id, err.Error())
 		return err
 	}
@@ -3043,7 +3038,7 @@ func (s *invoiceService) GenerateNewPaymentLink(ctx context.Context, invoiceId s
 
 	primaryStripeCustomerId, err := s.externalSystemService.GetPrimaryExternalId(ctx, enum.SourceStripe.String(), organizationEntity.ID, model.ORGANIZATION)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
+		spans.TraceError(errors.Wrap(err, "Error fetching primary stripe customer ID"))
 	}
 
 	err = callIntegrationAppWithApiRequestForNewPaymentLink(ctx, s.cfg.IntegrationAppConfig.WorkspaceKey,
@@ -3054,10 +3049,10 @@ func (s *invoiceService) GenerateNewPaymentLink(ctx context.Context, invoiceId s
 }
 
 func (s *invoiceService) validateStatusTransition(ctx context.Context, fromStatus neo4jenum.InvoiceStatus, toStatus neo4jenum.InvoiceStatus) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.validateStatusTransition")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("fromStatus", fromStatus.String()), log.String("toStatus", toStatus.String()))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.validateStatusTransition")
+	defer spans.Finish()
+
+	spans.LogKV("fromStatus", fromStatus.String(), "toStatus", toStatus.String())
 
 	if fromStatus == toStatus {
 		return nil
@@ -3072,7 +3067,7 @@ func (s *invoiceService) validateStatusTransition(ctx context.Context, fromStatu
 
 	if !transitionAllowed {
 		err := errors.New("Invalid status transition")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -3093,11 +3088,10 @@ type ApiRequestCreatePaymentLinksInput struct {
 }
 
 func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key, secret, tenant, url, primaryStripeCustomerId string, invoice *neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "callIntegrationAppWithApiRequestForNewPaymentLink")
-	defer span.Finish()
-	span.LogKV("url", url)
-	span.LogKV("primaryStripeCustomerId", primaryStripeCustomerId)
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "callIntegrationAppWithApiRequestForNewPaymentLink")
+	defer spans.Finish()
+	spans.LogKV("url", url)
+	spans.LogKV("primaryStripeCustomerId", primaryStripeCustomerId)
 
 	SigningKey := []byte(secret)
 
@@ -3117,7 +3111,7 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 
 	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error converting amount to smallest currency unit"))
+		spans.TraceError(errors.Wrap(err, "Error converting amount to smallest currency unit"))
 		return err
 	}
 
@@ -3133,12 +3127,12 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 	}
 	payload, err := json.Marshal(input)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error marshalling input"))
+		spans.TraceError(errors.Wrap(err, "Error marshalling input"))
 		return err
 	}
 	req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating HTTP request"))
+		spans.TraceError(errors.Wrap(err, "Error creating HTTP request"))
 		return err
 	}
 
@@ -3147,20 +3141,19 @@ func callIntegrationAppWithApiRequestForNewPaymentLink(ctx context.Context, key,
 
 	_, err = http.DefaultClient.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
+		spans.TraceError(errors.Wrap(err, "Error calling integration app"))
 		return err
 	}
 	return nil
 }
 
 func (s *invoiceService) GetInvoicesByIds(ctx context.Context, ids []string) (*neo4jentity.InvoiceEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoicesByIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetInvoicesByIds")
+	defer spans.Finish()
 
 	// validate tenant
 	if err := common.ValidateTenant(ctx); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -3178,7 +3171,7 @@ func (s *invoiceService) GetInvoicesByIds(ctx context.Context, ids []string) (*n
 		chunk := ids[i:end]
 		invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetInvoicesByIds(ctx, tenant, chunk)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		// Map each DB node to an invoice entity and append to the final result
@@ -3192,15 +3185,15 @@ func (s *invoiceService) GetInvoicesByIds(ctx context.Context, ids []string) (*n
 }
 
 func (s *invoiceService) RegenerateInvoicePdf(ctx context.Context, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.RegenerateInvoicePdf")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, invoiceId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.RegenerateInvoicePdf")
+	defer spans.Finish()
+
+	spans.TagEntity(invoiceId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -3208,7 +3201,7 @@ func (s *invoiceService) RegenerateInvoicePdf(ctx context.Context, invoiceId str
 	// load invoice
 	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -3227,19 +3220,19 @@ func (s *invoiceService) RegenerateInvoicePdf(ctx context.Context, invoiceId str
 
 	contractEntity, err := s.contractService.GetContractForInvoice(ctx, invoiceEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	fileId, err := s.generateInvoicePDF(ctx, invoiceEntity, contractEntity, invoiceLineEntities)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	// save pdf file id
 	err = s.neo4j.InvoiceWriteRepository.InvoicePdfGenerated(ctx, nil, tenant, invoiceId, fileId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -3247,21 +3240,20 @@ func (s *invoiceService) RegenerateInvoicePdf(ctx context.Context, invoiceId str
 }
 
 func (s *invoiceService) GetUpcomingInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetUpcomingInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetUpcomingInvoices")
+	defer spans.Finish()
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetUpcomingInvoices(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -3271,5 +3263,33 @@ func (s *invoiceService) GetUpcomingInvoices(ctx context.Context) (*neo4jentity.
 		invoiceEntities = append(invoiceEntities, *invoiceEntity)
 	}
 
+	return &invoiceEntities, nil
+}
+
+func (s *invoiceService) GetAllNonDryRunInvoices(ctx context.Context) (*neo4jentity.InvoiceEntities, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetAllNonDryRunInvoices")
+	defer spans.Finish()
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	invoiceDbNodes, err := s.neo4j.InvoiceReadRepository.GetAllNonDryRunInvoices(ctx, tenant)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+
+	invoiceEntities := neo4jentity.InvoiceEntities{}
+	for _, invoiceNode := range invoiceDbNodes {
+		invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+		invoiceEntities = append(invoiceEntities, *invoiceEntity)
+	}
+
+	spans.LogKV("result.count", len(invoiceEntities))
 	return &invoiceEntities, nil
 }

@@ -5,18 +5,9 @@ import (
 
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-)
-
-type App string
-
-const (
-	CUSTOMER_OS_API      App = "customer-os-api"
-	CUSTOMER_OS_WEBHOOKS App = "customer-os-webhooks"
-	MAILSHEPRA_API       App = "mailsherpa-api"
 )
 
 const (
@@ -36,11 +27,11 @@ func ApiKeyCheckerHTTP(
 	}
 
 	return func(c *gin.Context) {
-		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ApiKeyCheckerHTTP")
+		spans, ctx := telemetry.StartSpan(c.Request.Context(), "ApiKeyCheckerHTTP")
 		spanFinished := false
 		defer func() {
 			if !spanFinished {
-				span.Finish()
+				spans.Finish()
 			}
 		}()
 
@@ -48,6 +39,7 @@ func ApiKeyCheckerHTTP(
 		tenantKh := c.GetHeader(TenantApiKeyHeader)
 		if kh != "" {
 			if appKey != kh {
+				spans.LogKV("result", "Invalid app API key")
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 					"status":    "error",
@@ -56,26 +48,30 @@ func ApiKeyCheckerHTTP(
 				c.Abort()
 				return
 			}
+			spans.LogKV("result", "Valid app API key")
+			tenant := c.GetHeader(TenantHeader)
+			c.Set(KEY_TENANT_NAME, tenant)
+			c.Set(KEY_USER_ROLES, []string{"USER"})
 			spanFinished = true
-			span.Finish()
+			spans.Finish()
 			c.Next()
 		} else if tenantKh != "" {
 			// Check if the API key matches the cached value
 			if config.cache != nil && config.cache.CheckTenantApiKey(tenantKh) {
 				// Valid API key found in cache
-				span.LogFields(log.Bool("cached", true))
+				spans.LogKV("result", "Valid tenant API key from cache")
 				if !spanFinished {
 					spanFinished = true
-					span.Finish()
+					spans.Finish()
 				}
 				c.Next()
 				return
 			}
-			span.LogFields(log.Bool("cached", false))
+			spans.LogKV("cached", false)
 
 			apiKey, err := tenantApiKeyRepo.GetTenantForApiKey(ctx, tenantKh)
 			if err != nil || apiKey == nil {
-
+				spans.LogKV("result", "Invalid tenant API key")
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 					"status":    "error",
@@ -86,7 +82,7 @@ func ApiKeyCheckerHTTP(
 			}
 
 			if !apiKey.Enabled {
-
+				spans.LogKV("result", "Disabled tenant API key")
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 					"status":    "error",
@@ -103,20 +99,20 @@ func ApiKeyCheckerHTTP(
 			c.Set(KEY_TENANT_NAME, apiKey.Tenant)
 			c.Set(KEY_USER_ROLES, []string{"USER"})
 
+			spans.LogKV("result", "Valid tenant API key")
 			if !spanFinished {
 				spanFinished = true
-				span.Finish()
+				spans.Finish()
 			}
 			c.Next()
 		} else {
 			// illegal request, terminate the current process
-
+			spans.LogKV("result", "Missing API key")
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 				"status":    "error",
 				"message":   "API key is required",
 			})
-			span.LogFields(log.String("result", "Missing api key"))
 			c.Abort()
 			return
 		}

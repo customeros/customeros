@@ -12,10 +12,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -45,16 +43,15 @@ func (s *tenantService) CheckOnboarding() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "TenantService.CheckOnboarding")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	spans, ctx := telemetry.StartCronSpan(ctx, "TenantService.CheckOnboarding")
+	defer spans.Finish()
 
 	limit := 50
 	delayFromLastCheckHours := 24
 
 	tenantDbNodes, err := s.commonServices.Neo4jRepositories.TenantReadRepository.GetTenantsForOnboardingCheck(ctx, limit, delayFromLastCheckHours)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting tenants for onboarding check"))
+		spans.TraceError(errors.Wrap(err, "error getting tenants for onboarding check"))
 		s.log.Errorf("Error getting tenants for onboarding check: %s", err.Error())
 		return
 	}
@@ -65,20 +62,20 @@ func (s *tenantService) CheckOnboarding() {
 
 	for _, tenantDbNode := range tenantDbNodes {
 		func(tenantDbNode *dbtype.Node) {
-			recordSpan, ctx := tracing.StartTracerSpan(ctx, "TenantService.CheckOnboarding.Record")
-			defer recordSpan.Finish()
+			recordSpans, ctx := telemetry.StartCronSpan(ctx, "TenantService.CheckOnboarding.Record")
+			defer recordSpans.Finish()
 
 			tenantEntity := neo4jmapper.MapDbNodeToTenantEntity(tenantDbNode)
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    tenantEntity.Name,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
-			tracing.TagTenant(recordSpan, tenantEntity.Name)
+			recordSpans.TagTenant(tenantEntity.Name)
 
 			// mark tenant as checked
 			err = s.commonServices.Neo4jRepositories.TenantWriteRepository.MarkOnboardingChecked(innerCtx, tenantEntity.Name)
 			if err != nil {
-				tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking tenant as checked"))
+				recordSpans.TraceError(errors.Wrap(err, "error marking tenant as checked"))
 				s.log.Errorf("Error marking tenant as checked: %s", err.Error())
 				return
 			}
@@ -91,68 +88,65 @@ func (s *tenantService) CheckOnboarding() {
 }
 
 func (s *tenantService) checkWebVisitorAgents(ctx context.Context, tenant string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.checkWebVisitorAgents")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartCronSpan(ctx, "TenantService.checkWebVisitorAgents")
+	defer spans.Finish()
 
 	// get web visitor agents
 	webVisitorAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
+		spans.TraceError(errors.Wrap(err, "error getting web visitor agents"))
 		s.log.Errorf("Error getting web visitor agents: %s", err.Error())
 		return
 	}
 
 	if len(webVisitorAgents) > 0 {
-		span.LogFields(log.Bool("result.onboarded", true))
+		spans.LogKV("result.onboarded", true)
 		return
 	}
 
 	// create web visitor agents
 	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentWebVisitorIdentifier)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
+		spans.TraceError(errors.Wrap(err, "error creating web visitor agent"))
 		s.log.Errorf("Error creating web visitor agents: %s", err.Error())
 	}
 }
 
 func (s *tenantService) checkIcpQualificationAgents(ctx context.Context, tenant string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.checkIcpQualificationAgents")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartCronSpan(ctx, "TenantService.checkIcpQualificationAgents")
+	defer spans.Finish()
 
 	// get icp qualification agents
 	icpQualificationAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualifier})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
+		spans.TraceError(errors.Wrap(err, "error getting icp qualification agents"))
 		s.log.Errorf("Error getting icp qualification agents: %s", err.Error())
 		return
 	}
 
 	if len(icpQualificationAgents) > 0 {
-		span.LogFields(log.Bool("result.onboarded", true))
+		spans.LogKV("result.onboarded", true)
 		return
 	}
 
 	// create icp qualification agents
 	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentICPQualifier)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error creating icp qualification agent"))
+		spans.TraceError(errors.Wrap(err, "error creating icp qualification agent"))
 		s.log.Errorf("Error creating icp qualification agents: %s", err.Error())
 	}
 }
 
 func (s *tenantService) checkTestMailbox(ctx context.Context, tenant string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.checkTestMailbox")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartCronSpan(ctx, "TenantService.checkTestMailbox")
+	defer spans.Finish()
+
+	// Skip if tenant has uppercase letters
 
 	// Skip if tenant has uppercase letters
 	if tenant != strings.ToLower(tenant) {
-		span.LogFields(log.Bool("result.skipped", true), log.String("reason", "tenant name was auto generated"))
+		spans.LogKV("result.skipped", true)
+		spans.LogKV("reason", "tenant name was auto generated")
 		return
 	}
 
@@ -161,7 +155,7 @@ func (s *tenantService) checkTestMailbox(ctx context.Context, tenant string) {
 	// Check if mailbox exists using GetMailboxes from mailstack service
 	statusCode, errMsg, mailboxes, err := s.commonServices.MailstackService.GetMailboxes(ctx, tenant, mailstack.TEST_MAILBOX_DOMAIN, "")
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get mailboxes"))
+		spans.TraceError(errors.Wrap(err, "failed to get mailboxes"))
 		s.log.Errorf("Error checking test mailbox: %s", err.Error())
 		return
 	}
@@ -169,7 +163,7 @@ func (s *tenantService) checkTestMailbox(ctx context.Context, tenant string) {
 	// Handle non-200 responses
 	if statusCode != http.StatusOK {
 		err = errors.New(errMsg)
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get mailboxes"))
+		spans.TraceError(errors.Wrap(err, "failed to get mailboxes"))
 		s.log.Errorf("Error checking test mailbox: %s", err.Error())
 		return
 	}
@@ -184,21 +178,21 @@ func (s *tenantService) checkTestMailbox(ctx context.Context, tenant string) {
 	}
 
 	if mailboxExists {
-		span.LogFields(log.Bool("result.exists", true))
+		spans.LogKV("result.exists", true)
 		return
 	}
 
 	testUserSetup, err := s.commonServices.RegistrationService.ConfigureTestMailbox(ctx)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to configure test mailbox"))
+		spans.TraceError(errors.Wrap(err, "failed to configure test mailbox"))
 		s.log.Errorf("Error configuring test mailbox: %s", err.Error())
 		return
 	}
 
 	if testUserSetup == nil {
-		span.LogFields(log.Bool("result.created", false))
+		spans.LogKV("result.created", false)
 		return
 	}
 
-	span.LogFields(log.Bool("result.created", true))
+	spans.LogKV("result.created", true)
 }

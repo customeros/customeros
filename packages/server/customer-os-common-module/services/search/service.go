@@ -3,13 +3,11 @@ package search
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
-
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type searchService struct {
@@ -31,14 +29,13 @@ func NewSearchService(
 }
 
 func (s *searchService) SearchWebsites(ctx context.Context, primaryDomain, query string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SearchService.HybridSearch")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SearchService.HybridSearch")
+	defer spans.Finish()
 
 	// Get embedding for the query
 	embeddedQuery, err := s.embeddingService.GetEmbedding(ctx, query, enum.EmbeddingQuery)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("error getting embedding for query: %w", err)
 	}
 
@@ -52,7 +49,7 @@ func (s *searchService) SearchWebsites(ctx context.Context, primaryDomain, query
 	}
 	results, err := s.opensearch.HybridSearch(ctx, search)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -61,9 +58,8 @@ func (s *searchService) SearchWebsites(ctx context.Context, primaryDomain, query
 }
 
 func (s *searchService) buildPromptContext(ctx context.Context, results []interfaces.HybridSearchResult) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SearchService.buildPromptContext")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SearchService.buildPromptContext")
+	defer spans.Finish()
 
 	var context strings.Builder
 	context.WriteString("Context:\n\n")
@@ -80,9 +76,8 @@ func (s *searchService) buildPromptContext(ctx context.Context, results []interf
 }
 
 func (s *searchService) getAnswer(ctx context.Context, query, context string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SearchService.getAnswer")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SearchService.getAnswer")
+	defer spans.Finish()
 
 	systemPrompt := fmt.Sprintf("I want you to answer the following question as directly as you can from the context provided.  The question I want you to answer is: %s.  Below is all the context you need to formulate your answer.  Again, please be as direct as possible in your response.  Avoid references to documents and avoid all preamble.", query)
 
@@ -95,7 +90,7 @@ func (s *searchService) getAnswer(ctx context.Context, query, context string) (s
 		OutputFormat:     enum.AIOutputText,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if answer == nil {

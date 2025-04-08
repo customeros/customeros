@@ -3,12 +3,11 @@ package workflow
 import (
 	"context"
 	"errors"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type FlowListenerEventRecord struct {
@@ -19,14 +18,13 @@ type FlowListenerEventRecord struct {
 }
 
 func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent enum.AgentListenerEvent) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateListener")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WorkflowService.ValidateListener")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("tenant not set on context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -35,20 +33,20 @@ func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent en
 
 //
 // func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent enum.FlowListenerEvent) (bool, error) {
-// 	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateListener")
-// 	defer span.Finish()
-// 	tracing.TagComponentService(span)
+// 	spans, ctx := telemetry.StartServiceSpan(ctx, "WorkflowService.ValidateListener")
+// 	defer spans.Finish()
+//
 //
 // 	tenant := common.GetTenantFromContext(ctx)
 // 	if tenant == "" {
 // 		err := errors.New("tenant not set on context")
-// 		tracing.TraceErr(span, err)
+// 		spans.TraceError( err)
 // 		return false, err
 // 	}
 //
 // 	events, err := w.services.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
 // 	if err != nil {
-// 		tracing.TraceErr(span, err)
+// 		spans.TraceError( err)
 // 		return false, err
 // 	}
 // 	for _, event := range *events {
@@ -60,14 +58,13 @@ func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent en
 // }
 
 func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowId string) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateFlowBelongsToTenant")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WorkflowService.ValidateFlowBelongsToTenant")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("tenant not set on context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -84,9 +81,8 @@ func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowI
 }
 
 func (w *workflowService) ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateEventType")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WorkflowService.ValidateEventType")
+	defer spans.Finish()
 
 	switch nodeType {
 	case enum.NodeFlowEnd, enum.NodeFlowWait:
@@ -109,9 +105,8 @@ func (w *workflowService) ValidateEventType(ctx context.Context, nodeType enum.F
 }
 
 func (w *workflowService) ValidateNodeType(ctx context.Context, nodeType string) (bool, *enum.FlowNodeType) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateNodeType")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WorkflowService.ValidateNodeType")
+	defer spans.Finish()
 
 	t, err := enum.GetFlowNodeType(nodeType)
 	if err != nil {
@@ -121,15 +116,14 @@ func (w *workflowService) ValidateNodeType(ctx context.Context, nodeType string)
 }
 
 func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId string, toNodeId string) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateTransition")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WorkflowService.ValidateTransition")
+	defer spans.Finish()
 
 	fromNode, err := w.postgres.FlowNodeRepository.Find(ctx, postgres_entity.FlowNode{
 		ID: fromNodeId,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -137,7 +131,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 		ID: toNodeId,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -148,7 +142,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 
 	if results == nil {
 		err = errors.New("invalid transition")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 	return true, nil

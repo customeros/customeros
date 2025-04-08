@@ -3,9 +3,8 @@ package postgres_repository
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
@@ -33,14 +32,14 @@ func NewApiBillableEventRepository(db *gorm.DB) ApiBillableEventRepository {
 
 // Register creates a new ApiBillableEvent and stores it in the database
 func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant string, event postgres_entity.BillableEvent, details BillableEventDetails) (*postgres_entity.ApiBillableEvent, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "BillableEventRepository.RegisterEvent")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("event", event)
-	span.LogKV("externalID", details.ExternalID)
-	span.LogKV("referenceData", details.ReferenceData)
-	span.LogKV("subtype", details.Subtype)
-	span.LogKV("source", details.Source)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "BillableEventRepository.RegisterEvent")
+	defer spans.Finish()
+
+	spans.LogKV("event", event)
+	spans.LogKV("externalID", details.ExternalID)
+	spans.LogKV("referenceData", details.ReferenceData)
+	spans.LogKV("subtype", details.Subtype)
+	spans.LogKV("source", details.Source)
 
 	// Construct the ApiBillableEvent postgres_entity
 	billableEvent := postgres_entity.ApiBillableEvent{
@@ -55,7 +54,7 @@ func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant s
 
 	err := r.gormDb.Create(&billableEvent).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to store billable event")
 	}
 

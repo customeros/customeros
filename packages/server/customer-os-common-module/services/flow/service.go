@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -11,8 +13,7 @@ import (
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -21,7 +22,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/table_view"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -50,13 +51,12 @@ func (s *flowService) IsInitialized() bool {
 }
 
 func (s *flowService) FlowGetList(ctx context.Context) (*neo4jentity.FlowEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetList")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowGetList")
+	defer spans.Finish()
 
 	nodes, err := s.neo4j.FlowReadRepository.GetList(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -66,20 +66,19 @@ func (s *flowService) FlowGetList(ctx context.Context) (*neo4jentity.FlowEntitie
 		entities = append(entities, *e)
 	}
 
-	span.LogFields(log.Int("result.count", len(entities)))
+	spans.LogKV("result.count", len(entities))
 	return &entities, nil
 }
 
 func (s *flowService) FlowGetById(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowGetById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	node, err := s.neo4j.FlowReadRepository.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -87,20 +86,19 @@ func (s *flowService) FlowGetById(ctx context.Context, id string) (*neo4jentity.
 }
 
 func (s *flowService) FlowGetByActionId(ctx context.Context, flowActionId string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetByActionId")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowGetByActionId")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowActionId", flowActionId))
+	spans.LogKV("flowActionId", flowActionId)
 
 	node, err := s.neo4j.FlowActionReadRepository.GetFlowByActionId(ctx, flowActionId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if node == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
@@ -108,20 +106,19 @@ func (s *flowService) FlowGetByActionId(ctx context.Context, flowActionId string
 }
 
 func (s *flowService) FlowGetByParticipantId(ctx context.Context, tx *neo4j.ManagedTransaction, flowParticipantId string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetByParticipantId")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowGetByParticipantId")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowParticipantId", flowParticipantId))
+	spans.LogKV("flowParticipantId", flowParticipantId)
 
 	node, err := s.neo4j.FlowReadRepository.GetWithParticipant(ctx, tx, flowParticipantId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if node == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
@@ -129,15 +126,14 @@ func (s *flowService) FlowGetByParticipantId(ctx context.Context, tx *neo4j.Mana
 }
 
 func (s *flowService) FlowsGetListWithParticipant(ctx context.Context, entityIds []string, entityType model.EntityType) (*neo4jentity.FlowEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowsGetListWithParticipant")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowsGetListWithParticipant")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("entityIds", entityIds), log.Object("entityType", entityType))
+	spans.LogFields(log.Object("entityIds", entityIds), log.Object("entityType", entityType))
 
 	data, err := s.neo4j.FlowReadRepository.GetFlowsForParticipants(ctx, entityIds, entityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -152,15 +148,14 @@ func (s *flowService) FlowsGetListWithParticipant(ctx context.Context, entityIds
 }
 
 func (s *flowService) FlowsGetListWithSender(ctx context.Context, senderIds []string) (*neo4jentity.FlowEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowsGetListWithSender")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowsGetListWithSender")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("senderIds", senderIds))
+	spans.LogFields(log.Object("senderIds", senderIds))
 
 	data, err := s.neo4j.FlowReadRepository.GetListWithSender(ctx, senderIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -175,9 +170,8 @@ func (s *flowService) FlowsGetListWithSender(ctx context.Context, senderIds []st
 }
 
 func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransaction, input *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowMerge")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowMerge")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	var err error
@@ -186,13 +180,13 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 	var nodesMap []map[string]interface{}
 	err = json.Unmarshal([]byte(input.Nodes), &nodesMap)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	var edgesMap []map[string]interface{}
 	err = json.Unmarshal([]byte(input.Edges), &edgesMap)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -216,7 +210,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 	if input.Id != "" {
 		flowEntity, err := s.FlowGetById(ctx, input.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -229,7 +223,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 	if input.Id != "" {
 		existing, err = s.FlowGetById(ctx, input.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -278,7 +272,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		}
 
 		if isNew {
-			tvDef, err := table_view.DefaultTableViewDefinitionFlowContactsV2(span, toStore.Id)
+			tvDef, err := table_view.DefaultTableViewDefinitionFlowContactsV2(toStore.Id)
 			if err == nil {
 				tvDef.Tenant = tenant
 				result := s.postgres.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
@@ -359,7 +353,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 						if e.Id == "" {
 							e.Id, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowAction)
 							if err != nil {
-								tracing.TraceErr(span, err)
+								spans.TraceError(err)
 								return nil, err
 							}
 						}
@@ -439,7 +433,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		return toStore, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -447,14 +441,14 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 
 	err = s.neo4j.FlowActionExecutionWriteRepository.RelinkWithActions(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// todo check if something is actually changed
 	err = s.events.Publisher.PublishFanoutEvent(ctx, e.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -524,9 +518,8 @@ func (s *flowService) FindStartNodes(graph *GraphTraversalIterative) []string {
 
 // TraverseBFS traverses the graph iteratively using BFS (Breadth-First Search)
 func (s *flowService) TraverseInputGraph(ctx context.Context, tx *neo4j.ManagedTransaction, graph *GraphTraversalIterative) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.TraverseBFS")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.TraverseBFS")
+	defer spans.Finish()
 
 	queue := s.FindStartNodes(graph)
 
@@ -553,7 +546,7 @@ func (s *flowService) TraverseInputGraph(ctx context.Context, tx *neo4j.ManagedT
 		// Process the current node and its edges (relationship batch)
 		err := s.ProcessNode(ctx, tx, graph, currentNode, nextNodes)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -562,9 +555,8 @@ func (s *flowService) TraverseInputGraph(ctx context.Context, tx *neo4j.ManagedT
 }
 
 func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransaction, graph *GraphTraversalIterative, nodeId string, batch []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.ProcessNode")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.ProcessNode")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -584,7 +576,7 @@ func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransact
 		}
 
 		if currentNodeInternalId == "" || nextNodeInternalId == "" {
-			tracing.TraceErr(span, errors.New("internal ids not found"))
+			spans.TraceError(errors.New("internal ids not found"))
 			return errors.New("internal ids not found")
 		}
 
@@ -596,7 +588,7 @@ func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransact
 			ToEntityType:   model.FLOW_ACTION,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -605,9 +597,8 @@ func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransact
 }
 
 func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowOn")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowOn")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -617,7 +608,7 @@ func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowE
 	}
 
 	if node == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
@@ -655,7 +646,7 @@ func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowE
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -663,9 +654,8 @@ func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowE
 }
 
 func (s *flowService) FlowOff(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowOff")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowOff")
+	defer spans.Finish()
 
 	node, err := s.neo4j.FlowReadRepository.GetById(ctx, id)
 	if err != nil {
@@ -673,7 +663,7 @@ func (s *flowService) FlowOff(ctx context.Context, id string) (*neo4jentity.Flow
 	}
 
 	if node == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
@@ -686,19 +676,19 @@ func (s *flowService) FlowOff(ctx context.Context, id string) (*neo4jentity.Flow
 	flow.Status = neo4jentity.FlowStatusOff
 	node, err = s.neo4j.FlowWriteRepository.Merge(ctx, nil, flow)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	err = s.neo4j.FlowActionExecutionWriteRepository.DeleteScheduledForFlow(ctx, flow.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	err = s.flowExecution.UpdateAllParticipantsFlowRequirements(ctx, flow.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -706,9 +696,8 @@ func (s *flowService) FlowOff(ctx context.Context, id string) (*neo4jentity.Flow
 }
 
 func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowArchive")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowArchive")
+	defer spans.Finish()
 
 	node, err := s.neo4j.FlowReadRepository.GetById(ctx, id)
 	if err != nil {
@@ -716,7 +705,7 @@ func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.
 	}
 
 	if node == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
@@ -729,26 +718,26 @@ func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.
 	flow.Status = neo4jentity.FlowStatusArchived
 	node, err = s.neo4j.FlowWriteRepository.Merge(ctx, nil, flow)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	err = s.neo4j.FlowActionExecutionWriteRepository.DeleteScheduledForFlow(ctx, flow.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	participantNodes, err := s.neo4j.FlowParticipantReadRepository.GetList(ctx, []string{flow.Id})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	for _, v := range participantNodes {
 		err = s.FlowParticipantDelete(ctx, nil, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*v.Node), "id"))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -757,15 +746,14 @@ func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.
 }
 
 func (s *flowService) FlowActionGetStart(ctx context.Context, flowId string) (*neo4jentity.FlowActionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionGetStart")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowActionGetStart")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId))
+	spans.LogKV("flowId", flowId)
 
 	node, err := s.neo4j.FlowActionReadRepository.GetStartAction(ctx, flowId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -773,15 +761,14 @@ func (s *flowService) FlowActionGetStart(ctx context.Context, flowId string) (*n
 }
 
 func (s *flowService) FlowActionGetNext(ctx context.Context, actionId string) ([]*neo4jentity.FlowActionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionGetNext")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowActionGetNext")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("actionId", actionId))
+	spans.LogFields(log.Object("actionId", actionId))
 
 	nodes, err := s.neo4j.FlowActionReadRepository.GetNext(ctx, actionId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -795,15 +782,14 @@ func (s *flowService) FlowActionGetNext(ctx context.Context, actionId string) ([
 }
 
 func (s *flowService) FlowActionGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowActionEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionGetList")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowActionGetList")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("flowIds", flowIds))
+	spans.LogFields(log.Object("flowIds", flowIds))
 
 	nodes, err := s.neo4j.FlowActionReadRepository.GetList(ctx, flowIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -818,15 +804,14 @@ func (s *flowService) FlowActionGetList(ctx context.Context, flowIds []string) (
 }
 
 func (s *flowService) FlowActionGetById(ctx context.Context, id string) (*neo4jentity.FlowActionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionGetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowActionGetById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	node, err := s.neo4j.FlowActionReadRepository.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -834,15 +819,14 @@ func (s *flowService) FlowActionGetById(ctx context.Context, id string) (*neo4je
 }
 
 func (s *flowService) FlowParticipantGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowParticipantEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantGetList")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantGetList")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("flowIds", flowIds))
+	spans.LogFields(log.Object("flowIds", flowIds))
 
 	nodes, err := s.neo4j.FlowParticipantReadRepository.GetList(ctx, flowIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -857,15 +841,14 @@ func (s *flowService) FlowParticipantGetList(ctx context.Context, flowIds []stri
 }
 
 func (s *flowService) FlowParticipantById(ctx context.Context, flowParticipantId string) (*neo4jentity.FlowParticipantEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowParticipantId", flowParticipantId))
+	spans.LogKV("flowParticipantId", flowParticipantId)
 
 	node, err := s.neo4j.FlowParticipantReadRepository.GetById(ctx, flowParticipantId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -873,15 +856,14 @@ func (s *flowService) FlowParticipantById(ctx context.Context, flowParticipantId
 }
 
 func (s *flowService) FlowParticipantByEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantByEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantByEntity")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
+	spans.LogKV("flowId", flowId, "entityId", entityId, "entityType", entityType.String())
 
 	identified, err := s.neo4j.FlowParticipantReadRepository.Identify(ctx, flowId, entityId, entityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -889,27 +871,26 @@ func (s *flowService) FlowParticipantByEntity(ctx context.Context, flowId, entit
 }
 
 func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantAdd")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantAdd")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	span.LogFields(log.String("flowId", flowId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
+	spans.LogKV("flowId", flowId, "entityId", entityId, "entityType", entityType.String())
 
 	flow, err := s.FlowGetById(ctx, flowId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if flow == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
 	identified, err := s.neo4j.FlowParticipantReadRepository.Identify(ctx, flowId, entityId, entityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -945,8 +926,8 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 			entity := mapper.MapDbNodeToFlowParticipantEntity(identified)
 
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-				span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
-				defer span.Finish()
+				spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
+				defer spans.Finish()
 
 				s.events.Publisher.PublishNotification(ctx, tenant, toStore.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithCreate())
 
@@ -982,8 +963,8 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				}
 			} else {
 				txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-					span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
-					defer span.Finish()
+					spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
+					defer spans.Finish()
 
 					flowRequirements, err := s.flowExecution.GetFlowRequirements(ctx, flowId)
 					if err != nil {
@@ -1002,7 +983,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 			return entity, nil
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -1013,32 +994,31 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 }
 
 func (s *flowService) FlowParticipantDelete(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowParticipantId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantDelete")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowParticipantDelete")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowParticipantId", flowParticipantId))
+	spans.LogKV("flowParticipantId", flowParticipantId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	flowParticipant, err := s.FlowParticipantById(ctx, flowParticipantId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if flowParticipant == nil {
-		tracing.TraceErr(span, errors.New("flow participant not found"))
+		spans.TraceError(errors.New("flow participant not found"))
 		return errors.New("flow participant not found")
 	}
 
 	flow, err := s.FlowGetByParticipantId(ctx, nil, flowParticipant.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if flow == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return errors.New("flow not found")
 	}
 
@@ -1087,7 +1067,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, txWithPostCommi
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1097,15 +1077,14 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, txWithPostCommi
 }
 
 func (s *flowService) FlowSenderGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowSenderEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderGetList")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowSenderGetList")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("flowIds", flowIds))
+	spans.LogFields(log.Object("flowIds", flowIds))
 
 	nodes, err := s.neo4j.FlowSenderReadRepository.GetList(ctx, flowIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1120,15 +1099,14 @@ func (s *flowService) FlowSenderGetList(ctx context.Context, flowIds []string) (
 }
 
 func (s *flowService) FlowSenderGetById(ctx context.Context, id string) (*neo4jentity.FlowSenderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderGetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowSenderGetById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	node, err := s.neo4j.FlowSenderReadRepository.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1136,19 +1114,19 @@ func (s *flowService) FlowSenderGetById(ctx context.Context, id string) (*neo4je
 }
 
 func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input *neo4jentity.FlowSenderEntity) (*neo4jentity.FlowSenderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderMerge")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowSenderMerge")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId), log.Object("input", input))
+	spans.LogObjectAsJson("input", input)
+	spans.LogKV("flowId", flowId)
 
 	flow, err := s.FlowGetById(ctx, flowId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if flow == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return nil, errors.New("flow not found")
 	}
 
@@ -1159,17 +1137,17 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 		toStore = &neo4jentity.FlowSenderEntity{}
 		toStore.Id, err = s.neo4j.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowSender)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	} else {
 		toStore, err = s.FlowSenderGetById(ctx, input.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if toStore == nil {
-			tracing.TraceErr(span, errors.New("flow sender not found"))
+			spans.TraceError(errors.New("flow sender not found"))
 			return nil, errors.New("flow sender not found")
 		}
 	}
@@ -1178,7 +1156,7 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 
 	node, err := s.neo4j.FlowSenderWriteRepository.Merge(ctx, toStore)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1191,7 +1169,7 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 			ToEntityType:   model.FLOW_SENDER,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -1205,7 +1183,7 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 		ToEntityType:   model.USER,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -1213,31 +1191,30 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 }
 
 func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderDelete")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.FlowSenderDelete")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowSenderId", flowSenderId))
+	spans.LogKV("flowSenderId", flowSenderId)
 
 	flowSender, err := s.FlowSenderGetById(ctx, flowSenderId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if flowSender == nil {
-		tracing.TraceErr(span, errors.New("flow sender not found"))
+		spans.TraceError(errors.New("flow sender not found"))
 		return errors.New("flow sender not found")
 	}
 
 	flowNode, err := s.neo4j.FlowSenderReadRepository.GetFlowBySenderId(ctx, flowSenderId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if flowNode == nil {
-		tracing.TraceErr(span, errors.New("flow not found"))
+		spans.TraceError(errors.New("flow not found"))
 		return errors.New("flow not found")
 	}
 
@@ -1253,7 +1230,7 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 		ToEntityType:   model.FLOW_SENDER,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1265,13 +1242,13 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 		ToEntityType:   model.USER,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = s.neo4j.FlowParticipantWriteRepository.Delete(ctx, nil, flowSender.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1279,9 +1256,9 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 }
 
 //func (s *flowService) GetFlowSequenceSenders(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error) {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceSenders")
-//	defer span.Finish()
-//	tracing.SetDefaultServiceSpanTags(ctx, span)
+//	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.GetFlowSequenceSenders")
+//	defer spans.Finish()
+//
 //
 //	pageResult := utils.Pagination{
 //		Page:  page,
@@ -1305,11 +1282,11 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 //}
 //
 //func (s *flowService) GetFlowSequenceSenderById(ctx context.Context, tenant, id string) (*neo4jentity.FlowActionSenderEntity, error) {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceSenderById")
-//	defer span.Finish()
-//	tracing.SetDefaultServiceSpanTags(ctx, span)
+//	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.GetFlowSequenceSenderById")
+//	defer spans.Finish()
 //
-//	span.LogFields(log.String("id", id))
+//
+//	spans.LogKV("id", id))
 //
 //	entity, err := s.services.PostgresRepositories.FlowSequenceSenderRepository.GetById(ctx, tenant, id)
 //	if err != nil {
@@ -1320,9 +1297,9 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 //}
 //
 //func (s *flowService) StoreFlowSequenceSender(ctx context.Context, tenant string, entity *neo4jentity.FlowActionSenderEntity) (*neo4jentity.FlowActionSenderEntity, error) {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlowSequenceSender")
-//	defer span.Finish()
-//	tracing.SetDefaultServiceSpanTags(ctx, span)
+//	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.StoreFlowSequenceSender")
+//	defer spans.Finish()
+//
 //
 //	entity, err := s.services.PostgresRepositories.FlowSequenceSenderRepository.Store(ctx, tenant, entity)
 //	if err != nil {
@@ -1333,11 +1310,11 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 //}
 //
 //func (s *flowService) DeleteFlowSequenceSender(ctx context.Context, tenant, id string) error {
-//	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlowSequenceSender")
-//	defer span.Finish()
-//	tracing.SetDefaultServiceSpanTags(ctx, span)
+//	spans, ctx := telemetry.StartServiceSpan(ctx, "FlowService.DeleteFlowSequenceSender")
+//	defer spans.Finish()
 //
-//	span.LogFields(log.String("id", id))
+//
+//	spans.LogKV("id", id))
 //
 //	err := s.services.PostgresRepositories.FlowSequenceSenderRepository.Delete(ctx, tenant, id)
 //	if err != nil {

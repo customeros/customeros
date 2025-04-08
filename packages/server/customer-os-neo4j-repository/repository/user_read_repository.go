@@ -16,13 +16,13 @@ import (
 )
 
 type AuthenticatedUserInTenant struct {
-	Tenant              string
-	AuthenticatedUserId string
-	UserId              string
-	UserFirstname       string
-	UserLastname        string
-	UserPrimaryEmail    string
-	Roles               []string
+	Tenant              string   `json:"tenant"`
+	AuthenticatedUserId string   `json:"authenticatedUserId"`
+	UserId              string   `json:"userId"`
+	UserFirstname       string   `json:"userFirstname"`
+	UserLastname        string   `json:"userLastname"`
+	UserPrimaryEmail    string   `json:"userPrimaryEmail"`
+	Roles               []string `json:"roles"`
 }
 
 type UserReadRepository interface {
@@ -314,7 +314,8 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 	cypher := `MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
 				WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
 				WITH COALESCE(au.currentTenant, au.defaultTenant) as tenant
-				WHERE tenant IS NOT NULL RETURN tenant`
+				WHERE tenant IS NOT NULL 
+				RETURN tenant`
 	params := map[string]interface{}{
 		"email": strings.ToLower(email),
 	}
@@ -379,9 +380,8 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(records.([]*neo4j.Record))))
+	span.LogKV("result.count", len(records.([]*neo4j.Record)))
 	if len(records.([]*neo4j.Record)) > 0 {
-		tenant := records.([]*neo4j.Record)[0].Values[0].(string)
 		authenticatedUserId := records.([]*neo4j.Record)[0].Values[1].(string)
 		userId := records.([]*neo4j.Record)[0].Values[2].(string)
 		roleList, ok := records.([]*neo4j.Record)[0].Values[3].([]interface{})
@@ -391,12 +391,14 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		} else {
 			roles = u.toStringList(roleList)
 		}
-		return &AuthenticatedUserInTenant{
+		output := AuthenticatedUserInTenant{
 			Tenant:              tenant,
 			AuthenticatedUserId: authenticatedUserId,
 			UserId:              userId,
 			Roles:               roles,
-		}, nil
+		}
+		tracing.LogObjectAsJson(span, "result", output)
+		return &output, nil
 	} else {
 		return nil, nil
 	}
