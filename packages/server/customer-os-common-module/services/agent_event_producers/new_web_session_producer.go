@@ -3,11 +3,10 @@ package agent_producers
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"sort"
 	"strings"
 	"time"
-
-	
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -54,9 +53,8 @@ func (s *NewWebSessionProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.ProcessWebSessions")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.ProcessWebSessions")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	// find timed out page exit events
 	pageExitSessions, err := s.findTimedOutPageExitEvents(ctx)
@@ -92,9 +90,8 @@ func (s *NewWebSessionProducer) Execute() {
 }
 
 func (s *NewWebSessionProducer) findTimedOutPageExitEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.findTimedOutPageExitEvents")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.findTimedOutPageExitEvents")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	lookback := WebSessionTimeoutPageExit
 	query := postgres_entity.WebSession{
@@ -105,9 +102,8 @@ func (s *NewWebSessionProducer) findTimedOutPageExitEvents(ctx context.Context) 
 }
 
 func (s *NewWebSessionProducer) findTimedOutActiveEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.findTimedOutActiveEvents")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.findTimedOutActiveEvents")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	activeEvents := []string{
 		enum.WebTrackerPageView.String(),
@@ -131,14 +127,13 @@ func (s *NewWebSessionProducer) findTimedOutActiveEvents(ctx context.Context) ([
 		activeSessions = append(activeSessions, sessions...)
 	}
 
-	spans.LogKV("result.count", len(activeSessions)))
+	spans.LogKV("result.count", len(activeSessions))
 	return activeSessions, nil
 }
 
 func (s *NewWebSessionProducer) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.closeSessions")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.closeSessions")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	if len(sessions) == 0 {
 		spans.LogKV("result", "no_sessions_to_process")
@@ -162,10 +157,8 @@ func (s *NewWebSessionProducer) closeSessions(ctx context.Context, sessions []po
 }
 
 func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, session postgres_entity.WebSession) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.processClosedSession")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.processClosedSession")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	if session.ID == "" {
 		err := errors.New("SessionID cannot be empty")
@@ -240,11 +233,9 @@ type IdentifiedVisitor struct {
 }
 
 func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, page string, endTime time.Time) (IdentifiedVisitor, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.processPageView")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.processPageView")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	spans.LogKV("sessionId", sessionId), log.String("page", page), log.String("endTime", endTime.String()))
+	spans.LogKV("sessionId", sessionId, "page", page, "endTime", endTime.String())
 
 	visitor := IdentifiedVisitor{}
 
