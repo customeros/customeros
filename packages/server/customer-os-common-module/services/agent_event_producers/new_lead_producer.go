@@ -2,6 +2,8 @@ package agent_producers
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -55,9 +57,8 @@ func (p *NewLeadProducer) Execute() {
 	limit := 100
 	delayFromPreviousCheckRequestInMinutes := 24 * 60 // 24 hours
 
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewLeadProducer.NewLeads")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewLeadProducer.NewLeads")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	// get active icp agents
 	icpAgents, err := p.postgresRepository.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, p.subscribedAgents())
@@ -93,9 +94,8 @@ func (p *NewLeadProducer) Execute() {
 }
 
 func (p *NewLeadProducer) processLeads(ctx context.Context, record neo4j_repository.TenantAndOrganizationId) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NewLeadProducer.processsLeads")
+	spans, ctx := telemetry.StartCronSpan(ctx, "NewLeadProducer.processsLeads")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 		Tenant:    record.Tenant,

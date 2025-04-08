@@ -8,6 +8,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -45,9 +48,8 @@ func (p *InvoiceProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceProducer.Execute")
+	spans, ctx := telemetry.StartCronSpan(ctx, "InvoiceProducer.Execute")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	referenceTime := utils.Now()
 
@@ -153,7 +155,6 @@ func (p *InvoiceProducer) Execute() {
 func (p *InvoiceProducer) isReadyForInvoicing(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity, postpaid bool) bool {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceProducer.isReadyForInvoicing")
 	defer spans.Finish()
-	tracing.TagTenant(span, tenant)
 	spans.LogFields(log.Bool("postpaid", postpaid))
 
 	// prepare and validate dates

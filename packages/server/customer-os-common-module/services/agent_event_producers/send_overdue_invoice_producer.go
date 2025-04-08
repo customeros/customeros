@@ -9,7 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -44,9 +44,8 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	spans, ctx := telemetry.StartServiceSpan(ctx, "SendOverdueInvoiceProducer.Execute")
+	spans, ctx := telemetry.StartCronSpan(ctx, "SendOverdueInvoiceProducer.Execute")
 	defer spans.Finish()
-	tracing.TagComponentCronJob(span)
 
 	referenceTime := utils.Now()
 
@@ -120,16 +119,15 @@ func (p *SendOverdueInvoiceProducer) Execute() {
 					Tenant:    tenant,
 					AppSource: constants.AppSourceUpkeeper,
 				})
-				recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "SendOverdueInvoiceProducer.Execute.Record")
-				defer recordSpan.Finish()
-				tracing.TagTenant(recordSpan, record.Tenant)
+				recordSpans, innerCtx := telemetry.StartServiceSpan(innerCtx, "SendOverdueInvoiceProducer.Execute.Record", telemetry.WithNewRoot())
+				defer recordSpans.Finish()
 
 				invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 
 				// Mark notification requested, to avoid double notifications
 				err = p.neo4jRepository.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelInvoice, invoice.Id, string(neo4j_entity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
 				if err != nil {
-					tracing.TraceErr(recordSpan, err)
+					recordSpans.TraceError(err)
 					continue
 				}
 
