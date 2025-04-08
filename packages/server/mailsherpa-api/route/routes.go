@@ -15,6 +15,7 @@ import (
 )
 
 func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cfg *config.Config, logger logger.Logger) {
+	r.GET("/", healthCheckHandler)
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 	validateEmail(ctx, r, services, cfg, logger)

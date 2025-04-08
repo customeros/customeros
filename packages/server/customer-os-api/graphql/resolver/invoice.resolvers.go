@@ -425,7 +425,7 @@ func (r *queryResolver) Invoice(ctx context.Context, id string) (*model.Invoice,
 
 // Invoices is the resolver for the invoices field.
 func (r *queryResolver) Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) (*model.InvoicesPage, error) {
-	spans, ctx := telemetry.StartGraphQLSpan(ctx, "InvoiceResolver.Invoices", graphql.GetOperationContext(ctx))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.Invoices", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 
 	if where != nil {
