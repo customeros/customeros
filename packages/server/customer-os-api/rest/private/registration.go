@@ -10,9 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	common_enum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -35,7 +32,9 @@ import (
 	googleOauth "google.golang.org/api/oauth2/v2"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
 )
 
 func RML(s *cosapi_services.Services) gin.HandlerFunc {
@@ -269,14 +268,13 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	if signInRequest.Tenant == "" {
 
 		_, err = common_utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, services.CommonServices.Neo4jRepositories.Neo4jDriver, services.CommonServices.Neo4jRepositories.Database, nil, func(txWithPostCommit *common_utils.TxWithPostCommit) (any, error) {
-
-			//authentication
+			// authentication
 			authIdAndProviderNode, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthIdAndProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
 			if err != nil {
 				return nil, err
 			}
 
-			//auth with the same provider found
+			// auth with the same provider found
 			if authIdAndProviderNode != nil {
 				authProps := common_utils.GetPropsFromNode(*authIdAndProviderNode)
 				authId = common_utils.GetStringPropOrEmpty(authProps, "id")
@@ -295,7 +293,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					Tenant: currentTenant,
 				})
 			} else {
-				//auth with different provider found. link back to the same user and add new auth
+				// auth with different provider found. link back to the same user and add new auth
 				authNodes, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthId(ctx, signInRequest.LoggedInEmail)
 				if err != nil {
 					return nil, err
@@ -341,9 +339,9 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				return nil, fmt.Errorf("authId found but authUserId not found")
 			}
 
-			//auth doesn't exist at all
+			// auth doesn't exist at all
 			if authId == "" {
-				//create auth + user
+				// create auth + user
 				authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
 					AuthId:     signInRequest.LoggedInEmail,
 					Provider:   signInRequest.Provider,
@@ -365,7 +363,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			span.LogKV("authId", authId)
 			span.LogKV("authUserId", authUserId)
 
-			//tenant
+			// tenant
 			tenants, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetTenants(ctx, authUserId)
 			if err != nil {
 				return nil, err
@@ -462,7 +460,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				}
 			}
 
-			//user in tenant
+			// user in tenant
 			userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -717,9 +715,9 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		log.Printf("parsed json: %v", revokeRequest)
 
 		workspaceProvider := ""
-		if revokeRequest.MailboxProvider == model.MailboxProviderGoogle.String() {
+		if revokeRequest.MailboxProvider == model.MailboxProviderGoogleWorkspace.String() {
 			workspaceProvider = common_enum.WorkspaceProviderGoogle.String()
-		} else if revokeRequest.MailboxProvider == model.MailboxProviderMicrosoft.String() {
+		} else if revokeRequest.MailboxProvider == model.MailboxProviderOutlook.String() {
 			workspaceProvider = common_enum.WorkspaceProviderAzure.String()
 		}
 
