@@ -122,6 +122,9 @@ services:
     container_name: otel-collector
     networks:
       - openline
+    depends_on:
+      tempo:
+        condition: service_healthy
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./provision/otel-collector-config.yaml:/etc/otel-collector-config.yaml
@@ -178,6 +181,7 @@ services:
       - "--trace=false"
     volumes:
       - nats_data:/data
+      - ./provision/nats-config.conf:/nats-config.conf
     environment:
       - NATS_SERVER_NAME=nats
     healthcheck:
