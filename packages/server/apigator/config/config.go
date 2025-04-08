@@ -14,5 +14,6 @@ type Config struct {
 	PostgresAsyncConfig config.PostgresAsyncConfig
 	Neo4jConfig         config.Neo4jConfig
 	Jaeger              telemetry.JaegerConfig
+	OpenTelemetry       telemetry.OpenTelemetryConfig
 	Logger              logger.Config
 }

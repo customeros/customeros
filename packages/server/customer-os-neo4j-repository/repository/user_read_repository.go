@@ -314,7 +314,8 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 	cypher := `MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
 				WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
 				WITH COALESCE(au.currentTenant, au.defaultTenant) as tenant
-				WHERE tenant IS NOT NULL RETURN tenant`
+				WHERE tenant IS NOT NULL 
+				RETURN tenant`
 	params := map[string]interface{}{
 		"email": strings.ToLower(email),
 	}
