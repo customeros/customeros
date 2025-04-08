@@ -3,25 +3,24 @@ package ai
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
-
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func (s *aiService) AskAIForString(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAIForString")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAIForString")
+	defer spans.Finish()
+	spans.LogObjectAsJson("requestParams", request)
 
 	// Validate the request and set default values
 	err := s.validateAIRequest(ctx, &request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -79,13 +78,13 @@ Please try again with a valid response.`,
 
 		// If error is not retryable, exit immediately
 		if err != nil && !s.IsRetryable(err) {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
 
 	// We've exhausted all retries
 	finalErr := fmt.Errorf("AskAI failed after %d attempts: %w", *request.Retries, lastError)
-	tracing.TraceErr(span, finalErr)
+	spans.TraceError(finalErr)
 	return nil, finalErr
 }

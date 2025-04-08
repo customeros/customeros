@@ -2,14 +2,12 @@ package agent_capability
 
 import (
 	"context"
-
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type ValidateEmailDeliverabilityCapability struct{}
@@ -63,22 +61,22 @@ func (c *ValidateEmailDeliverabilityCapability) ValidateInput(input ValidateEmai
 }
 
 func (c *ValidateEmailDeliverabilityCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ValidateEmailDeliverabilityInput, ValidateEmailDeliverabilityConfig]) (enum.CapabilityExecutionStatus, ValidateEmailDeliverabilityOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ValidateEmailDeliverabilityCapability.Execute")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ValidateEmailDeliverabilityCapability.Execute")
+	defer spans.Finish()
+
+	spans.TagTenant(common.GetTenantFromContext(ctx))
 
 	result := ValidateEmailDeliverabilityOutput{}
 
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }

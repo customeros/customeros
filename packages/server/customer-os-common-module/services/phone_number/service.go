@@ -2,6 +2,7 @@ package phone_number
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -9,15 +10,14 @@ import (
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -34,10 +34,10 @@ func NewPhoneNumberService(neo4j *neo4j_repository.Repositories, events *events.
 }
 
 func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber string, source neo4jentity.DataSource) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.CreatePhoneNumber")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("phoneNumber", phoneNumber))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.CreatePhoneNumber")
+	defer spans.Finish()
+
+	spans.LogKV("phoneNumber", phoneNumber)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -46,14 +46,14 @@ func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber string, sour
 
 	existingPhoneNumber, err := s.GetByPhoneNumber(ctx, phoneNumber)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if existingPhoneNumber == nil {
 		phoneNumberId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelPhoneNumber)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -68,7 +68,7 @@ func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber string, sour
 
 		err = s.neo4j.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, tenant, phoneNumberId, data)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	} else {
@@ -79,10 +79,10 @@ func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber string, sour
 }
 
 func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType commonModel.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetAllForEntityTypeByIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.GetAllForEntityTypeByIds")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(), "ids", ids)
 
 	phoneNumbers, err := s.neo4j.PhoneNumberReadRepository.GetAllForLinkedEntityIds(ctx, common.GetTenantFromContext(ctx), entityType, ids)
 	if err != nil {
@@ -100,28 +100,28 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 }
 
 func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType commonModel.EntityType, entityId string, phoneId string, label *string, primary *bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.UpdatePhoneNumberFor")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", string(entityType)), log.String("entityId", entityId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.UpdatePhoneNumberFor")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", string(entityType), "entityId", entityId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	phoneNumberEntity, err := s.GetById(ctx, phoneId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	existsById, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, entityId, entityType.Neo4jLabel())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if !existsById {
 		err = errors.New("Entity not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -134,7 +134,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 	}
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -144,10 +144,10 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 }
 
 func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumber string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.DetachFromEntityByPhoneNumber")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.DetachFromEntityByPhoneNumber")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(), "entityId", entityId)
 
 	err := s.neo4j.PhoneNumberWriteRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumber)
 
@@ -162,10 +162,10 @@ func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, 
 }
 
 func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumberId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.DetachFromEntityById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId), log.String("phoneNumberId", phoneNumberId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.DetachFromEntityById")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(), "entityId", entityId, "phoneNumberId", phoneNumberId)
 
 	err := s.neo4j.PhoneNumberWriteRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
 
@@ -180,10 +180,10 @@ func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityTyp
 }
 
 func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) (*neo4jentity.PhoneNumberEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("phoneNumberId", phoneNumberId)
 
 	phoneNumberNode, err := s.neo4j.PhoneNumberReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), phoneNumberId)
 	if err != nil {
@@ -193,14 +193,14 @@ func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) 
 }
 
 func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.PhoneNumberEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetByPhoneNumber")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("phoneNumber", phoneNumber))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PhoneNumberService.GetByPhoneNumber")
+	defer spans.Finish()
+
+	spans.LogKV("phoneNumber", phoneNumber)
 
 	phoneNumberNode, err := s.neo4j.PhoneNumberReadRepository.GetByPhoneNumber(ctx, common.GetTenantFromContext(ctx), phoneNumber)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberNode), nil

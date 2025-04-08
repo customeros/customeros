@@ -3,6 +3,7 @@ package mail
 import (
 	"context"
 	"encoding/json"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"regexp"
 	"slices"
 	"sort"
@@ -11,23 +12,21 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/emersion/go-message/mail"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 func (l *mailService) LoadIngestEmailMessage(ctx context.Context, ingestEmailMessage *postgres_entity.IngestEmailMessage) (interfaces.EmailMessageData, error) {
-	span, ctx := l.initializeTracing(ctx, "MailService.LoadIngestEmailMessage")
-	defer span.Finish()
-	span.LogFields(tracingLog.Object("ingestEmailMessage", ingestEmailMessage))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.LoadIngestEmailMessage")
+	defer spans.Finish()
+	spans.LogObjectAsJson("ingestEmailMessage", ingestEmailMessage)
 
 	email := interfaces.EmailMessageData{}
 
 	headers := make(map[string]string)
 	err := json.Unmarshal([]byte(ingestEmailMessage.Headers), &headers)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return email, err
 	}
 
@@ -50,10 +49,10 @@ func (l *mailService) LoadIngestEmailMessage(ctx context.Context, ingestEmailMes
 	email.Participants.ReplyTo = []interfaces.EmailParticipant{l.parseEmailAndName(email.Headers.ReplyTo)}
 	l.getAllEmails(&email.Participants)
 
-	span.LogKV("result.From", email.Participants.From)
-	span.LogKV("result.To", email.Participants.To)
-	span.LogKV("result.Cc", email.Participants.Cc)
-	span.LogKV("result.Bcc", email.Participants.Bcc)
+	spans.LogKV("result.From", email.Participants.From)
+	spans.LogKV("result.To", email.Participants.To)
+	spans.LogKV("result.Cc", email.Participants.Cc)
+	spans.LogKV("result.Bcc", email.Participants.Bcc)
 
 	return email, nil
 }

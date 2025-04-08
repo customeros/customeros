@@ -2,17 +2,18 @@ package contact
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -62,15 +63,15 @@ func (l *LinkedInContact) ConvertLinkedinSalesUrlToPublic() {
 }
 
 func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithLinkedIn")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("url", url, "alias", alias, "externalId", externalId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.CheckContactExistsWithLinkedIn")
+	defer spans.Finish()
+
+	spans.LogKV("url", url, "alias", alias, "externalId", externalId)
 
 	linkedIn := NewLinkedInContact(url, alias, externalId)
 	err := linkedIn.Validate()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, "", err
 	}
 
@@ -82,7 +83,7 @@ func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url
 		linkedIn.ExternalID,
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, "", err
 	}
 
@@ -95,22 +96,22 @@ func (s *contactService) CheckContactExistsWithLinkedIn(ctx context.Context, url
 }
 
 func (s *contactService) CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string, options ...common_srv.ServiceOptions) (string, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactByLinkedIn")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("linkedInUrl", linkedInUrl)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.CreateContactByLinkedIn")
+	defer spans.Finish()
+
+	spans.LogKV("linkedInUrl", linkedInUrl)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", "", err
 	}
 
 	linkedin := NewLinkedInContact(linkedInUrl, "", "")
 	err = linkedin.Validate()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", "", err
 	}
 
@@ -123,10 +124,10 @@ func (s *contactService) CreateContactByLinkedIn(ctx context.Context, txWithPost
 }
 
 func (s *contactService) handleExistingLinkedinContactCheck(ctx context.Context, linkedin *LinkedInContact, txWithPostCommit *utils.TxWithPostCommit, options ...common_srv.ServiceOptions) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.handleExistingLinkedinContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "linkedinContact", &linkedin)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.handleExistingLinkedinContact")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("linkedinContact", &linkedin)
 
 	exists, existingID, err := s.CheckContactExistsWithLinkedIn(ctx, linkedin.Url, linkedin.Alias, "")
 	if err != nil || !exists {

@@ -3,6 +3,8 @@ package contact
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
@@ -12,8 +14,7 @@ import (
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/customeros/mailsherpa/emailparser"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -25,7 +26,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -80,10 +81,10 @@ func (s *contactService) IsInitialized() bool {
 }
 
 func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactWithOrganizationByEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.CreateContactWithOrganizationByEmail")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	contactId := ""
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
@@ -113,7 +114,7 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -121,17 +122,17 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 }
 
 func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool, options ...common_srv.ServiceOptions) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "contactFields", contactFields)
-	span.LogFields(log.Bool("updateOnlyIfEmpty", updateOnlyIfEmpty))
-	tracing.LogObjectAsJson(span, "options", options)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("contactFields", contactFields)
+	spans.LogFields(log.Bool("updateOnlyIfEmpty", updateOnlyIfEmpty))
+	spans.LogObjectAsJson("options", options)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -141,12 +142,12 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 
 		// generate id
 		contactId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
@@ -166,18 +167,18 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			contactFields.Hide = utils.BoolPtr(false)
 		}
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 
 		contactId = *id
 		// validate contact exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, contactId, model.NodeLabelContact)
 		if err != nil || !exists {
 			err = errors.New("contact not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
-	tracing.TagEntity(span, contactId)
+	spans.TagEntity(contactId)
 
 	// Clean and update contact names if not updated manually
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
@@ -208,7 +209,7 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			if createFlow {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.CreateContact{contactFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateContact"))
 				}
 				if common_srv.PublishCompletedEvents(options...) {
 					s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
@@ -216,7 +217,7 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			} else {
 				err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.UpdateContact{contactFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateContact"))
 				}
 				if common_srv.PublishCompletedEvents(options...) && common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 					s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
@@ -229,28 +230,28 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if createFlow {
-		span.LogFields(log.Bool("result.contactCreated", true))
+		spans.LogFields(log.Bool("result.contactCreated", true))
 	} else {
-		span.LogFields(log.Bool("result.contactUpdated", true))
+		spans.LogFields(log.Bool("result.contactUpdated", true))
 	}
 	return contactId, nil
 }
 
 func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.HideContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, contactId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.HideContact")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -259,19 +260,19 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(true)}
 		err = s.neo4j.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to save contact"))
+			spans.TraceError(errors.Wrap(err, "unable to save contact"))
 			s.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
 			return nil, err
 		}
 
 		err = s.neo4j.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, txWithPostCommit.Tx, tenant, contactId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
+			spans.TraceError(errors.Wrap(err, "unable to refresh contact count by contact id"))
 		}
 
 		flowsWithContact, err := s.flow.FlowsGetListWithParticipant(ctx, []string{contactId}, model.CONTACT)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -279,13 +280,13 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 			for _, v := range *flowsWithContact {
 				flowParticipant, err := s.flow.FlowParticipantByEntity(ctx, v.Id, contactId, model.CONTACT)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, err
 				}
 
 				err = s.flow.FlowParticipantDelete(ctx, txWithPostCommit, flowParticipant.Id)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return nil, err
 				}
 			}
@@ -294,7 +295,7 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message HideContact"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message HideContact"))
 			}
 
 			s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithDelete())
@@ -303,7 +304,7 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -311,15 +312,15 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 }
 
 func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.ShowContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, contactId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.ShowContact")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -328,19 +329,19 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 		contactFields := data_fields.ContactFields{Hide: utils.BoolPtr(false)}
 		err = s.neo4j.ContactWriteRepository.SaveContactInTx(ctx, txWithPostCommit.Tx, tenant, contactId, contactFields, false)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to save contact"))
+			spans.TraceError(errors.Wrap(err, "unable to save contact"))
 			s.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
 			return nil, err
 		}
 		err = s.neo4j.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, txWithPostCommit.Tx, tenant, contactId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
+			spans.TraceError(errors.Wrap(err, "unable to refresh contact count by contact id"))
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.ShowContact{})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ShowContact"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message ShowContact"))
 			}
 
 			s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
@@ -351,7 +352,7 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -359,22 +360,22 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 }
 
 func (s *contactService) GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, contactId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.GetContactById")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	contactDbNode, err := s.neo4j.ContactReadRepository.GetContact(ctx, tenant, contactId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("error while getting contact %s: %s", contactId, err.Error())
 		return nil, err
 	}
@@ -383,22 +384,22 @@ func (s *contactService) GetContactById(ctx context.Context, contactId string) (
 }
 
 func (s *contactService) GetContactsByIds(ctx context.Context, contactIds []string) ([]*neo4jentity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsByIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactIds", fmt.Sprintf("%v", contactIds)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.GetContactsByIds")
+	defer spans.Finish()
+
+	spans.LogKV("contactIds", fmt.Sprintf("%v", contactIds))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	contactDbNodes, err := s.neo4j.ContactReadRepository.GetContacts(ctx, tenant, contactIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("error while getting contacts %s", err.Error())
 		return nil, err
 	}
@@ -412,22 +413,22 @@ func (s *contactService) GetContactsByIds(ctx context.Context, contactIds []stri
 }
 
 func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.LinkContactWithOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, contactId)
-	span.LogFields(log.String("organizationId", organizationId), log.String("jobTitle", jobTitle), log.String("description", description), log.Bool("primary", primary))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.LinkContactWithOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
+	spans.LogKV("organizationId", organizationId, "jobTitle", jobTitle, "description", description, "primary", primary)
 	if startedAt != nil {
-		span.LogFields(log.Object("startedAt", startedAt))
+		spans.LogFields(log.Object("startedAt", startedAt))
 	}
 	if endedAt != nil {
-		span.LogFields(log.Object("endedAt", endedAt))
+		spans.LogFields(log.Object("endedAt", endedAt))
 	}
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -438,7 +439,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 		exists, innerErr := s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, contactId, model.NodeLabelContact)
 		if innerErr != nil || !exists {
 			innerErr = errors.New("contact not found")
-			tracing.TraceErr(span, innerErr)
+			spans.TraceError(innerErr)
 			return nil, innerErr
 		}
 
@@ -446,7 +447,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 		exists, innerErr = s.neo4j.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, organizationId, model.NodeLabelOrganization)
 		if innerErr != nil || !exists {
 			innerErr = errors.New("organization not found")
-			tracing.TraceErr(span, innerErr)
+			spans.TraceError(innerErr)
 			return nil, innerErr
 		}
 
@@ -469,7 +470,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 
 		_, innerErr = s.jobrole.Save(ctx, txWithPostCommit, nil, utils.StringPtr(contactId), utils.StringPtr(organizationId), jobRoleData)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to link contact with organization"))
+			spans.TraceError(errors.Wrap(err, "unable to link contact with organization"))
 			return nil, innerErr
 		}
 
@@ -485,7 +486,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 
 		err = s.neo4j.OrganizationWriteRepository.RefreshContactCountByOrgId(ctx, txWithPostCommit.Tx, tenant, organizationId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by organization id"))
+			spans.TraceError(errors.Wrap(err, "unable to refresh contact count by organization id"))
 		}
 
 		// reset contact enrich attempts
@@ -508,11 +509,11 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 
 			innerErr = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dtoData)
 			if innerErr != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))
 			}
 			innerErr = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dtoData)
 			if innerErr != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for organization"))
+				spans.TraceError(errors.Wrap(err, "unable to publish message AddContactToOrganization for organization"))
 			}
 			return nil
 		})
@@ -520,7 +521,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -528,8 +529,8 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 }
 
 func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CheckContactExistsWithEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.CheckContactExistsWithEmail")
+	defer spans.Finish()
 
 	if email == "" {
 		return false, "", nil
@@ -542,7 +543,7 @@ func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email 
 
 	contacts, err := s.neo4j.ContactReadRepository.GetContactsWithEmail(ctx, common.GetTenantFromContext(ctx), email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, "", err
 	}
 	contactId := ""
@@ -553,15 +554,15 @@ func (s *contactService) CheckContactExistsWithEmail(ctx context.Context, email 
 }
 
 func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string, options ...common_srv.ServiceOptions) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactByEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.CreateContactByEmail")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -569,50 +570,50 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 	// check email is valid
 	if email == "" {
 		err = errors.New("email is required")
-		span.LogKV("response.error", err.Error())
+		spans.LogKV("response.error", err.Error())
 		return "", err
 	}
 	mailvalidate := mailsherpa.ValidateEmailSyntax(email)
 	if !mailvalidate.IsValid {
 		err = errors.New("email is not valid")
-		span.LogKV("response.error", err.Error())
+		spans.LogKV("response.error", err.Error())
 		return "", err
 	}
 	if mailvalidate.IsRoleAccount {
 		err = errors.New("email is role account")
-		span.LogKV("response.error", err.Error())
+		spans.LogKV("response.error", err.Error())
 		return "", err
 	}
 	if mailvalidate.IsSystemGenerated {
 		err = errors.New("email is system generated")
-		span.LogKV("response.error", err.Error())
+		spans.LogKV("response.error", err.Error())
 		return "", err
 	}
 
 	// Reject contact creation if email is already used by another contact, return existing contact id
 	emailAlreadyUsed, existingContactId, err := s.CheckContactExistsWithEmail(ctx, email)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to check contact exists by email"))
+		spans.TraceError(errors.Wrap(err, "unable to check contact exists by email"))
 		return "", err
 	}
 	if emailAlreadyUsed {
 		contactByEmailEntity, err := s.GetContactById(ctx, existingContactId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to get contact by id"))
+			spans.TraceError(errors.Wrap(err, "unable to get contact by id"))
 			return "", err
 		}
 		_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 			if contactByEmailEntity.IsHidden() {
 				err = s.ShowContact(ctx, txWithPostCommit, existingContactId)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to show contact"))
+					spans.TraceError(errors.Wrap(err, "unable to show contact"))
 					return "", err
 				}
 			} else {
 				// just update contact' updatedAt
 				err = s.neo4j.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelContact, existingContactId)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "error on updating contact updatedAt"))
+					spans.TraceError(errors.Wrap(err, "error on updating contact updatedAt"))
 				}
 				txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 					if common_srv.PublishCompletedEvents(options...) {
@@ -634,7 +635,7 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 		contactFields := data_fields.ContactFields{}
 		parsedEmail, innerErr := emailparser.Parse(email)
 		if innerErr != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to parse email"))
+			spans.TraceError(errors.Wrap(err, "failed to parse email"))
 		}
 		if parsedEmail.FirstName != "" {
 			contactFields.FirstName = utils.StringPtr(utils.CleanName(parsedEmail.FirstName))
@@ -645,7 +646,7 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 
 		createdContactId, innerErr = s.Save(ctx, txWithPostCommit, nil, contactFields, false, options...)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to create contact"))
+			spans.TraceError(errors.Wrap(err, "failed to create contact"))
 			return "", innerErr
 		}
 
@@ -654,12 +655,12 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 			Type: model.CONTACT,
 		})
 		if innerErr != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to add email to contact"))
+			spans.TraceError(errors.Wrap(err, "failed to add email to contact"))
 		}
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create contact and link with email"))
+		spans.TraceError(errors.Wrap(err, "failed to create contact and link with email"))
 		return createdContactId, err
 	}
 
@@ -667,17 +668,17 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 }
 
 func (s *contactService) SetPrimaryJobRole(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string, primaryOrganizationId *string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.SetPrimaryJobRole")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, contactId)
-	span.LogFields(log.String("primaryOrganizationId", utils.IfNotNilString(primaryOrganizationId)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.SetPrimaryJobRole")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
+	spans.LogKV("primaryOrganizationId", utils.IfNotNilString(primaryOrganizationId))
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// get job roles with org id for contact
 		jobRolesWithOrgId, err := s.neo4j.JobRoleReadRepository.GetAllForContactWithOrganizationId(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), contactId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -745,7 +746,7 @@ func (s *contactService) SetPrimaryJobRole(ctx context.Context, txWithPostCommit
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -753,10 +754,10 @@ func (s *contactService) SetPrimaryJobRole(ctx context.Context, txWithPostCommit
 }
 
 func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetFirstContactByEmail")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.GetFirstContactByEmail")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	email = strings.TrimSpace(email)
 	if email == "" {
@@ -765,7 +766,7 @@ func (s *contactService) GetFirstContactByEmail(ctx context.Context, email strin
 
 	contactDbNodes, err := s.neo4j.ContactReadRepository.GetContactsWithEmail(ctx, common.GetContext(ctx).Tenant, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if len(contactDbNodes) == 0 {
@@ -775,13 +776,13 @@ func (s *contactService) GetFirstContactByEmail(ctx context.Context, email strin
 }
 
 func (s *contactService) TouchContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.TouchContact")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.TouchContact")
+	defer spans.Finish()
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -793,21 +794,21 @@ func (s *contactService) TouchContact(ctx context.Context, txWithPostCommit *uti
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (s *contactService) GetContactsByEmailAddresses(ctx context.Context, emailAddresses []string) (*neo4jentity.ContactEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsByEmailAddresses")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContactService.GetContactsByEmailAddresses")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("emailAddresses", emailAddresses)
 
 	contacts, err := s.neo4j.ContactReadRepository.GetContactsByEmailAddresses(ctx, common.GetTenantFromContext(ctx), emailAddresses)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -817,6 +818,6 @@ func (s *contactService) GetContactsByEmailAddresses(ctx context.Context, emailA
 		contactEntity.DataloaderKey = contact.LinkedNodeId
 		contactEntities = append(contactEntities, *contactEntity)
 	}
-	span.LogFields(log.Int("result.count", len(contactEntities)))
+	spans.LogKV("result.count", len(contactEntities))
 	return &contactEntities, nil
 }

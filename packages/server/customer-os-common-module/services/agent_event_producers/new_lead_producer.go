@@ -6,7 +6,7 @@ import (
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -16,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -55,14 +55,14 @@ func (p *NewLeadProducer) Execute() {
 	limit := 100
 	delayFromPreviousCheckRequestInMinutes := 24 * 60 // 24 hours
 
-	span, ctx := tracing.StartTracerSpan(ctx, "NewLeadProducer.NewLeads")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewLeadProducer.NewLeads")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	// get active icp agents
 	icpAgents, err := p.postgresRepository.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, p.subscribedAgents())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 	var tenants []string
@@ -71,13 +71,13 @@ func (p *NewLeadProducer) Execute() {
 	}
 
 	if len(tenants) == 0 {
-		span.LogKV("message", "No active icp agents found")
+		spans.LogKV("message", "No active icp agents found")
 		return
 	}
 
 	records, err := p.neo4jRepository.OrganizationReadRepository.GetOrganizationsForIcpCheck(ctx, tenants, limit, delayFromPreviousCheckRequestInMinutes)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -93,8 +93,8 @@ func (p *NewLeadProducer) Execute() {
 }
 
 func (p *NewLeadProducer) processLeads(ctx context.Context, record neo4j_repository.TenantAndOrganizationId) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadProducer.processsLeads")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewLeadProducer.processsLeads")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
@@ -118,32 +118,32 @@ func (p *NewLeadProducer) processLeads(ctx context.Context, record neo4j_reposit
 		return
 	}
 	if len(globalOrgs) == 0 {
-		span.LogKV("message", "Organization is not a global organization")
+		spans.LogKV("message", "Organization is not a global organization")
 		return
 	}
 	// precheck if global organziation has required fields
 	for _, globalOrg := range globalOrgs {
 		if globalOrg.Description == "" {
-			span.LogKV("message", "Global organization has no description")
+			spans.LogKV("message", "Global organization has no description")
 			return
 		}
 		if globalOrg.EmployeeCount == 0 {
-			span.LogKV("message", "Global organization has no employee count")
+			spans.LogKV("message", "Global organization has no employee count")
 			return
 		}
 		if globalOrg.IndustryNaicsName == "" {
-			span.LogKV("message", "Global organization has no industry naics name")
+			spans.LogKV("message", "Global organization has no industry naics name")
 			return
 		}
 		if globalOrg.CountryA2 == "" {
-			span.LogKV("message", "Global organization has no country a2")
+			spans.LogKV("message", "Global organization has no country a2")
 			return
 		}
 	}
 
 	err = p.events.Publisher.PublishFanoutEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.NewLead{})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error publishing new lead event"))
+		spans.TraceError(errors.Wrap(err, "error publishing new lead event"))
 		return
 	}
 }

@@ -2,18 +2,12 @@ package globalcontacts
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/pkg/errors"
 )
 
@@ -30,39 +24,38 @@ func NewGlobalContactService(log logger.Logger, postgres *postgres_repository.Re
 }
 
 func (s *globalContactService) findExistingContact(ctx context.Context, contact *postgres_entity.GlobalContact) (*postgres_entity.GlobalContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.findExistingContact")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GlobalContactService.findExistingContact")
+	defer spans.Finish()
 
 	var existingContact *postgres_entity.GlobalContact
 	var err error
 
 	if contact.PrimaryDomain != "" {
 		// If primary domain is present, first try to find by domain combinations
-		span.LogFields(tracingLog.String("search_mode", "with_primary_domain"))
+		spans.LogKV("search_mode", "with_primary_domain")
 
 		// Try LinkedIn identifier + primary domain
 		if contact.LinkedInIdentifier != "" {
-			span.LogFields(tracingLog.String("search_by", "linkedin_and_domain"))
+			spans.LogKV("search_by", "linkedin_and_domain")
 			existingContact, err = s.postgres.GlobalContactRepository.GetByLinkedInIdentifierAndDomain(ctx, contact.LinkedInIdentifier, contact.PrimaryDomain)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting contact by LinkedIn identifier and domain"))
+				spans.TraceError(errors.Wrap(err, "error getting contact by LinkedIn identifier and domain"))
 				return nil, err
 			}
 		} else if contact.WorkEmail != "" {
 			// Try work email + primary domain
-			span.LogFields(tracingLog.String("search_by", "work_email_and_domain"))
+			spans.LogKV("search_by", "work_email_and_domain")
 			existingContact, err = s.postgres.GlobalContactRepository.GetByWorkEmailAndDomain(ctx, contact.WorkEmail, contact.PrimaryDomain)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting contact by work email and domain"))
+				spans.TraceError(errors.Wrap(err, "error getting contact by work email and domain"))
 				return nil, err
 			}
 		} else if contact.PersonalEmail != "" {
 			// Try personal email + primary domain
-			span.LogFields(tracingLog.String("search_by", "personal_email_and_domain"))
+			spans.LogKV("search_by", "personal_email_and_domain")
 			existingContact, err = s.postgres.GlobalContactRepository.GetByPersonalEmailAndDomain(ctx, contact.PersonalEmail, contact.PrimaryDomain)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error getting contact by personal email and domain"))
+				spans.TraceError(errors.Wrap(err, "error getting contact by personal email and domain"))
 				return nil, err
 			}
 		}
@@ -125,9 +118,8 @@ func (s *globalContactService) updateContactFields(existing *postgres_entity.Glo
 }
 
 func (s *globalContactService) SaveContact(ctx context.Context, contact *postgres_entity.GlobalContact) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.SaveContact")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GlobalContactService.SaveContact")
+	defer spans.Finish()
 
 	// Try to find existing contact using various identifiers
 	existingContact, err := s.findExistingContact(ctx, contact)
@@ -141,14 +133,14 @@ func (s *globalContactService) SaveContact(ctx context.Context, contact *postgre
 
 		_, err = s.postgres.GlobalContactRepository.Update(ctx, existingContact)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error updating global contact"))
+			spans.TraceError(errors.Wrap(err, "error updating global contact"))
 			return err
 		}
 	} else {
 		// Create new contact
 		_, err = s.postgres.GlobalContactRepository.Create(ctx, contact)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating global contact"))
+			spans.TraceError(errors.Wrap(err, "error creating global contact"))
 			return err
 		}
 	}
@@ -157,14 +149,12 @@ func (s *globalContactService) SaveContact(ctx context.Context, contact *postgre
 }
 
 func (s *globalContactService) SetWorkEmail(ctx context.Context, id uint64, workEmail string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.SetWorkEmail")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.TagEntity(span, strconv.FormatUint(id, 10))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GlobalContactService.SetWorkEmail")
+	defer spans.Finish()
 
 	contact, err := s.postgres.GlobalContactRepository.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting contact by id"))
+		spans.TraceError(errors.Wrap(err, "error getting contact by id"))
 		return err
 	}
 
@@ -172,7 +162,7 @@ func (s *globalContactService) SetWorkEmail(ctx context.Context, id uint64, work
 
 	_, err = s.postgres.GlobalContactRepository.Update(ctx, contact)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error updating global contact"))
+		spans.TraceError(errors.Wrap(err, "error updating global contact"))
 		return err
 	}
 
@@ -180,46 +170,46 @@ func (s *globalContactService) SetWorkEmail(ctx context.Context, id uint64, work
 }
 
 func (s *globalContactService) GetGlobalContactsByLinkedIn(ctx context.Context, linkedIn string) ([]*postgres_entity.GlobalContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.GetGlobalContactsByLinkedIn")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	span.LogFields(tracingLog.String("linkedIn", linkedIn))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GlobalContactService.GetGlobalContactsByLinkedIn")
+	defer spans.Finish()
+
+	spans.LogKV("linkedIn", linkedIn)
 
 	if linkedIn == "" {
-		span.LogFields(tracingLog.Int("result.count", 0))
+		spans.LogKV("result.count", 0)
 		return nil, nil
 	}
 
 	contacts, err := s.postgres.GlobalContactRepository.GetByLinkedInIdentifier(ctx, linkedIn)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting contacts by linkedin identifier"))
+		spans.TraceError(errors.Wrap(err, "error getting contacts by linkedin identifier"))
 		return nil, err
 	}
 
 	if len(contacts) == 0 {
 		contacts, err = s.postgres.GlobalContactRepository.GetByLinkedInAlias(ctx, linkedIn)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting contacts by linkedin alias"))
+			spans.TraceError(errors.Wrap(err, "error getting contacts by linkedin alias"))
 			return nil, err
 		}
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	spans.LogKV("result.count", len(contacts))
 	return contacts, nil
 }
 
 func (s *globalContactService) GetGlobalContactsByEmailAddresses(ctx context.Context, emailAddresses []string) ([]*postgres_entity.GlobalContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalContactService.GetGlobalContactsByEmailAddresses")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GlobalContactService.GetGlobalContactsByEmailAddresses")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("emailAddresses", emailAddresses)
 
 	contacts, err := s.postgres.GlobalContactRepository.GetGlobalContactsByEmailAddresses(ctx, emailAddresses)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting contacts by email addresses"))
+		spans.TraceError(errors.Wrap(err, "error getting contacts by email addresses"))
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(contacts)))
+	spans.LogKV("result.count", len(contacts))
 	return contacts, nil
 }

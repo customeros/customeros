@@ -2,16 +2,12 @@ package emailing
 
 import (
 	"context"
-
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type emailingService struct {
@@ -27,15 +23,13 @@ func NewEmailingService(log logger.Logger, postgres *postgres_repository.Reposit
 }
 
 func (s emailingService) GenerateEmailSpyPixelUrl(ctx context.Context, tenant, publicUrl, uniqueMessageId, campaign, recipientId string, trackOpens bool) (url string, mid string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailingService.GenerateEmailSpyPixelUrl")
-	defer span.Finish()
-	span.SetTag("tenant", tenant)
-	span.LogFields(
-		tracingLog.String("publicUrl", publicUrl),
-		tracingLog.String("uniqueMessageId", uniqueMessageId),
-		tracingLog.String("campaign", campaign),
-		tracingLog.String("recipientId", recipientId),
-		tracingLog.Bool("trackOpens", trackOpens))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailingService.GenerateEmailSpyPixelUrl")
+	defer spans.Finish()
+	spans.LogKV("publicUrl", publicUrl)
+	spans.LogKV("uniqueMessageId", uniqueMessageId)
+	spans.LogKV("campaign", campaign)
+	spans.LogKV("recipientId", recipientId)
+	spans.LogKV("trackOpens", trackOpens)
 
 	mid = uniqueMessageId
 	if mid == "" {
@@ -52,7 +46,7 @@ func (s emailingService) GenerateEmailSpyPixelUrl(ctx context.Context, tenant, p
 		RecipientId:   recipientId,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error creating email lookup: %v", err)
 		return "", "", err
 	}
@@ -61,16 +55,14 @@ func (s emailingService) GenerateEmailSpyPixelUrl(ctx context.Context, tenant, p
 }
 
 func (s emailingService) GenerateEmailLinkUrl(ctx context.Context, tenant, publicUrl, redirectUrl, uniqueMessageId, campaign, recipientId string, trackClicks bool) (url string, mid string, lid string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailingService.GenerateEmailLinkUrl")
-	defer span.Finish()
-	span.SetTag("tenant", tenant)
-	span.LogFields(
-		tracingLog.String("publicUrl", publicUrl),
-		tracingLog.String("redirectUrl", redirectUrl),
-		tracingLog.String("uniqueMessageId", uniqueMessageId),
-		tracingLog.String("campaign", campaign),
-		tracingLog.String("recipientId", recipientId),
-		tracingLog.Bool("trackClicks", trackClicks))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailingService.GenerateEmailLinkUrl")
+	defer spans.Finish()
+	spans.LogKV("publicUrl", publicUrl)
+	spans.LogKV("redirectUrl", redirectUrl)
+	spans.LogKV("uniqueMessageId", uniqueMessageId)
+	spans.LogKV("campaign", campaign)
+	spans.LogKV("recipientId", recipientId)
+	spans.LogKV("trackClicks", trackClicks)
 
 	mid = uniqueMessageId
 	if mid == "" {
@@ -91,7 +83,7 @@ func (s emailingService) GenerateEmailLinkUrl(ctx context.Context, tenant, publi
 		TrackerDomain: publicUrl,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error creating email lookup: %v", err)
 		return "", "", "", err
 	}
@@ -100,15 +92,13 @@ func (s emailingService) GenerateEmailLinkUrl(ctx context.Context, tenant, publi
 }
 
 func (s emailingService) GenerateEmailUnsubscribeUrl(ctx context.Context, tenant, publicUrl, unsubscribeUrl, uniqueMessageId, campaign, recipientId string) (url string, mid string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailingService.GenerateEmailUnsubscribeUrl")
-	defer span.Finish()
-	span.SetTag("tenant", tenant)
-	span.LogFields(
-		tracingLog.String("publicUrl", publicUrl),
-		tracingLog.String("unsubscribeUrl", unsubscribeUrl),
-		tracingLog.String("uniqueMessageId", uniqueMessageId),
-		tracingLog.String("campaign", campaign),
-		tracingLog.String("recipientId", recipientId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailingService.GenerateEmailUnsubscribeUrl")
+	defer spans.Finish()
+	spans.LogKV("publicUrl", publicUrl)
+	spans.LogKV("unsubscribeUrl", unsubscribeUrl)
+	spans.LogKV("uniqueMessageId", uniqueMessageId)
+	spans.LogKV("campaign", campaign)
+	spans.LogKV("recipientId", recipientId)
 
 	mid = uniqueMessageId
 	if mid == "" {
@@ -125,7 +115,7 @@ func (s emailingService) GenerateEmailUnsubscribeUrl(ctx context.Context, tenant
 		RecipientId:    recipientId,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error creating email lookup: %v", err)
 		return "", "", err
 	}

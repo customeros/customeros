@@ -1,23 +1,22 @@
 package mail
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 // TODO parse SMTP status code from message/deliver-status
 // and classify bounced email as hard or soft bounce
 func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emailData *interfaces.EmailMessageData) interfaces.HeaderAnalysis {
-	span, ctx := a.initializeTracing(ctx, "MailService.ProcessEmailCheck")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailService.ProcessEmailCheck")
+	defer spans.Finish()
 
 	analysis := interfaces.HeaderAnalysis{
 		ProcessEmail: true, // Default to processing
@@ -29,8 +28,8 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 			analysis.ProcessEmail = false
 			analysis.SkipReason = "INVALID FROM EMAIL ADDRESS FORMAT"
 
-			span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
-			span.LogFields(log.String("reason", analysis.SkipReason))
+			spans.LogKV("process_email", analysis.ProcessEmail)
+			spans.LogKV("reason", analysis.SkipReason)
 
 			return analysis
 		}
@@ -53,8 +52,8 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 			analysis.BouncedEmails = emailData.Headers.XFailedRecepients
 		}
 
-		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
-		span.LogFields(log.String("reason", analysis.SkipReason))
+		spans.LogKV("process_email", analysis.ProcessEmail)
+		spans.LogKV("reason", analysis.SkipReason)
 
 		return analysis
 	}
@@ -64,8 +63,8 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.ProcessEmail = false
 		analysis.SkipReason = "WARMING"
 
-		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
-		span.LogFields(log.String("reason", analysis.SkipReason))
+		spans.LogKV("process_email", analysis.ProcessEmail)
+		spans.LogKV("reason", analysis.SkipReason)
 
 		return analysis
 	}
@@ -77,8 +76,8 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
 
-		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
-		span.LogFields(log.String("reason", analysis.SkipReason))
+		spans.LogKV("process_email", analysis.ProcessEmail)
+		spans.LogKV("reason", analysis.SkipReason)
 
 		return analysis
 	}
@@ -91,8 +90,8 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.SkipReason = reason
 	}
 
-	span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
-	span.LogFields(log.String("reason", analysis.SkipReason))
+	spans.LogKV("process_email", analysis.ProcessEmail)
+	spans.LogKV("reason", analysis.SkipReason)
 
 	return analysis
 }

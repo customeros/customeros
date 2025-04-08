@@ -5,18 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type DeepseekClient struct {
@@ -36,20 +35,20 @@ func NewDeepseekClient(cfg *config.DeepseekConfig) *DeepseekClient {
 }
 
 func (c *DeepseekClient) AskDeepseek(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DeepseekClient.AskDeepseek")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DeepseekClient.AskDeepseek")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("request", request)
 
 	if request.Model != enum.AIModelDeepseekChat {
 		err := errors.New("model not a deepseek model")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if request.Prompt == nil {
 		err := errors.New("prompt cannot be nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

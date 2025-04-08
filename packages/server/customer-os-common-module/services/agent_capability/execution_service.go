@@ -3,14 +3,13 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -23,10 +22,10 @@ func NewAgentCapabilityExecutionService() interfaces.AgentCapabilityExecutionSer
 func (f *agentCapabilityExecutionService) Execute(
 	ctx context.Context, executionContainer interfaces.ExecutionContainer,
 ) (enum.CapabilityExecutionStatus, map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.Execute")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("capabilityType", executionContainer.Capability.Type.String()))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentCapabilityExecutionService.Execute")
+	defer spans.Finish()
+
+	spans.LogKV("capabilityType", executionContainer.Capability.Type.String())
 
 	switch executionContainer.Capability.Type {
 
@@ -312,19 +311,18 @@ func (f *agentCapabilityExecutionService) Execute(
 
 	default:
 		err := fmt.Errorf("capability %s not configured", executionContainer.Capability.Type.String())
-		span.LogKV("capability", executionContainer.Capability.Type)
-		tracing.TraceErr(span, err)
+		spans.LogKV("capability", executionContainer.Capability.Type)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, nil, err
 	}
 }
 
 func (f *agentCapabilityExecutionService) handleGetTypedExecutorError(ctx context.Context, capability enum.AgentCapability) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.handleGetTypedExecutorError")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentCapabilityExecutionService.handleGetTypedExecutorError")
+	defer spans.Finish()
 
 	err := fmt.Errorf("failed to get typed executor for %s", capability.String())
-	tracing.TraceErr(span, err)
+	spans.TraceError(err)
 	return err
 }
 
@@ -333,22 +331,22 @@ func executeCapability[I, O, C any](
 	cap interfaces.AgentCapability[I, O, C],
 	executionContainer interfaces.ExecutionContainer,
 ) (enum.CapabilityExecutionStatus, map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityExecutionService.executeCapability")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("capabilityType", executionContainer.Capability.Type.String()))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentCapabilityExecutionService.executeCapability")
+	defer spans.Finish()
+
+	spans.LogKV("capabilityType", executionContainer.Capability.Type.String())
 
 	input := cap.NewInput()
 	err := utils.MapToStruct(executionContainer.ExecutionParams, &input)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, nil, err
 	}
 
 	config := cap.NewConfig()
 	err = executionContainer.Capability.GetConfig(&config)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, nil, err
 	}
 
@@ -368,7 +366,7 @@ func executeCapability[I, O, C any](
 		return enum.CapabilityExecutionCompleted, results, nil
 
 	case enum.CapabilityExecutionError:
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, nil, err
 
 	case enum.CapabilityExecutionStop:
@@ -383,7 +381,7 @@ func executeCapability[I, O, C any](
 
 	default:
 		err = fmt.Errorf("unexpected capability execution status {%s}", capabilityExecutionStatus.String())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, nil, err
 	}
 }

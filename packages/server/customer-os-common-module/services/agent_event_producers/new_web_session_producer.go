@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go/log"
+	
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
@@ -23,7 +23,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -54,14 +54,14 @@ func (s *NewWebSessionProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	span, ctx := tracing.StartTracerSpan(ctx, "NewWebSessionProducer.ProcessWebSessions")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.ProcessWebSessions")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	// find timed out page exit events
 	pageExitSessions, err := s.findTimedOutPageExitEvents(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -69,7 +69,7 @@ func (s *NewWebSessionProducer) Execute() {
 	if pageExitSessions != nil {
 		err = s.closeSessions(ctx, pageExitSessions)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 	}
@@ -77,7 +77,7 @@ func (s *NewWebSessionProducer) Execute() {
 	// find timed out active events
 	activeSessions, err := s.findTimedOutActiveEvents(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -85,15 +85,15 @@ func (s *NewWebSessionProducer) Execute() {
 	if activeSessions != nil {
 		err = s.closeSessions(ctx, activeSessions)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 	}
 }
 
 func (s *NewWebSessionProducer) findTimedOutPageExitEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.findTimedOutPageExitEvents")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.findTimedOutPageExitEvents")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	lookback := WebSessionTimeoutPageExit
@@ -105,8 +105,8 @@ func (s *NewWebSessionProducer) findTimedOutPageExitEvents(ctx context.Context) 
 }
 
 func (s *NewWebSessionProducer) findTimedOutActiveEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.findTimedOutActiveEvents")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.findTimedOutActiveEvents")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	activeEvents := []string{
@@ -125,23 +125,23 @@ func (s *NewWebSessionProducer) findTimedOutActiveEvents(ctx context.Context) ([
 
 		sessions, err := s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		activeSessions = append(activeSessions, sessions...)
 	}
 
-	span.LogFields(log.Int("result.count", len(activeSessions)))
+	spans.LogKV("result.count", len(activeSessions)))
 	return activeSessions, nil
 }
 
 func (s *NewWebSessionProducer) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.closeSessions")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.closeSessions")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	if len(sessions) == 0 {
-		span.LogKV("result", "no_sessions_to_process")
+		spans.LogKV("result", "no_sessions_to_process")
 		return nil
 	}
 
@@ -153,7 +153,7 @@ func (s *NewWebSessionProducer) closeSessions(ctx context.Context, sessions []po
 		})
 		err := s.processClosedSession(innerCtx, session)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 	}
@@ -162,14 +162,14 @@ func (s *NewWebSessionProducer) closeSessions(ctx context.Context, sessions []po
 }
 
 func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, session postgres_entity.WebSession) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "NewWebSessionProducer.processClosedSession")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.processClosedSession")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	if session.ID == "" {
 		err := errors.New("SessionID cannot be empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -177,18 +177,18 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 	endTime := session.LastActivity
 	closedSession, err := s.postgresRepositories.WebSessionRepository.SetSessionEnd(ctx, session.ID, endTime)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if closedSession == nil {
 		err := errors.New("closedSession is nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	pageViews, err := s.processUniquePageViews(ctx, session.Tenant, session.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -197,7 +197,7 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 	for _, page := range pageViews {
 		visitor, err := s.processPageView(ctx, session.ID, page, endTime)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			continue
 		}
 		if identifiedVisitor.Domain == "" && visitor.Domain != "" {
@@ -219,14 +219,14 @@ func (s *NewWebSessionProducer) processClosedSession(ctx context.Context, sessio
 	if identifiedVisitor.Domain != "" || identifiedVisitor.Email != "" {
 		err := s.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, session.ID, &identifiedVisitor.Domain, &identifiedVisitor.Email, &identifiedVisitor.EmailType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
 	err = s.events.Publisher.PublishFanoutEvent(ctx, session.ID, model.WEB_SESSION, dto.NewWebSession{})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -240,18 +240,18 @@ type IdentifiedVisitor struct {
 }
 
 func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, page string, endTime time.Time) (IdentifiedVisitor, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.processPageView")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.processPageView")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("sessionId", sessionId), log.String("page", page), log.String("endTime", endTime.String()))
+	spans.LogKV("sessionId", sessionId), log.String("page", page), log.String("endTime", endTime.String()))
 
 	visitor := IdentifiedVisitor{}
 
 	// get session events
 	events, err := s.postgresRepositories.WebTrackerEventsRepository.FindEventsForPageVisit(ctx, sessionId, page)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visitor, err
 	}
 
@@ -298,7 +298,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		case "identify":
 			email, err := event.VisitorEmail()
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				continue
 			}
 			if email == "" {
@@ -331,14 +331,14 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 	// save pagevisit to db
 	_, err = s.postgresRepositories.WebSessionPageVisitRepository.Create(ctx, visit)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visitor, err
 	}
 
 	// check to see if webpage has been scraped
 	scrapedPage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return visitor, err
 	}
 
@@ -347,7 +347,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 	case scrapedPage == nil:
 		err := s.scrapeAndClassifyWebpage(ctx, url)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return visitor, err
 		}
 		return visitor, nil
@@ -356,7 +356,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		if scrapedPage.Category == "" {
 			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &scrapedPage.Content)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return visitor, err
 			}
 		}
@@ -365,7 +365,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 	case scrapedPage.Content == "":
 		err := s.scrapeAndClassifyWebpage(ctx, url)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return visitor, err
 		}
 		return visitor, nil
@@ -374,7 +374,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		if scrapedPage.Category == "" {
 			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &scrapedPage.Content)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return visitor, err
 			}
 		}
@@ -382,7 +382,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		if scrapedPage.ContentStage == "" {
 			_, err = s.webscraperService.ClassifyContentStage(ctx, url, &scrapedPage.Content)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return visitor, err
 			}
 		}
@@ -390,7 +390,7 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 		if len(scrapedPage.Topics) == 0 {
 			_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page, &scrapedPage.Content)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return visitor, err
 			}
 		}
@@ -399,19 +399,18 @@ func (s *NewWebSessionProducer) processPageView(ctx context.Context, sessionId, 
 }
 
 func (s *NewWebSessionProducer) scrapeAndClassifyWebpage(ctx context.Context, url string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.scrapeAndClassifyWebpage")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.scrapeAndClassifyWebpage")
+	defer spans.Finish()
 
 	content, err := s.webscraperService.Scrape(ctx, url)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -421,22 +420,21 @@ func (s *NewWebSessionProducer) scrapeAndClassifyWebpage(ctx context.Context, ur
 
 	_, err = s.webscraperService.ClassifyContentStage(ctx, url, &content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	_, err = s.webscraperService.ClassifyWebpageTopics(ctx, url, &content)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (s *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tenant, sessionID string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionProducer.getUniquePageViews")
-	defer span.Finish()
-	tracing.TagComponentService(span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.getUniquePageViews")
+	defer spans.Finish()
 
 	session, err := s.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, postgres_entity.WebTrackerEvents{
 		SessionID: sessionID,
@@ -467,7 +465,7 @@ func (s *NewWebSessionProducer) processUniquePageViews(ctx context.Context, tena
 	// strore in db
 	_, err = s.postgresRepositories.WebSessionRepository.SetSessionPageViews(ctx, sessionID, tenant, uniquePages)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Unable to update websession with unique page views"))
+		spans.TraceError(errors.Wrap(err, "Unable to update websession with unique page views"))
 	}
 
 	return uniquePages, nil

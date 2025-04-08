@@ -925,6 +925,14 @@ func GetTraceIds(spans *Spans) (string, string) {
 	return jaegerTraceId, otelTraceId
 }
 
+func TraceIdsAsString(spans *Spans) string {
+	if spans == nil {
+		return ""
+	}
+	jaegerTraceId, otelTraceId := GetTraceIds(spans)
+	return fmt.Sprintf("Jaeger Trace ID: %s, OpenTelemetry Trace ID: %s", jaegerTraceId, otelTraceId)
+}
+
 // EnrichCtxWithSpanCtxForGraphQL enriches the provided context with both Jaeger and OpenTelemetry span contexts
 func EnrichCtxWithSpanCtxForGraphQL(ctx context.Context, operationContext *graphql.OperationContext) context.Context {
 	// Extract and enrich Jaeger span context

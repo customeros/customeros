@@ -2,15 +2,15 @@ package webscraper
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -24,14 +24,13 @@ func (s *webscraperService) Crawl(ctx context.Context, startUrl string) ([]strin
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
-	span, ctx := opentracing.StartSpanFromContext(ctx, "webscraperService.Crawl")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "webscraperService.Crawl")
+	defer spans.Finish()
 
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(utils.ExtractDomain(startUrl))
 	if primaryDomain == "" {
 		err := errors.New("Not a valid domain")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -87,10 +86,10 @@ func (s *webscraperService) crawlRecursive(
 	}
 
 	// Create span for this URL
-	span, ctx := opentracing.StartSpanFromContext(ctx, "crawlRecursive")
-	defer span.Finish()
-	span.SetTag("url", url)
-	span.SetTag("depth", depth)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "crawlRecursive")
+	defer spans.Finish()
+	spans.LogKV("url", url)
+	spans.LogKV("depth", depth)
 
 	// Scrape current URL
 	content, err := s.Scrape(ctx, url)
@@ -108,7 +107,7 @@ func (s *webscraperService) crawlRecursive(
 	// Get new links
 	links, err := s.linksToCrawl(ctx, content, workspaceDomains)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 

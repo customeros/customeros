@@ -2,10 +2,11 @@ package markdown_event
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -15,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -34,15 +35,15 @@ func NewMarkdownEventService(log logger.Logger, neo4j *neo4j_repository.Reposito
 }
 
 func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, input data_fields.MarkdownEventFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MarkdownEventService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MarkdownEventService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", input)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -52,7 +53,7 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 
 	if id == nil || *id == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 
 		// prepare missing fields
 		if input.CreatedAt == nil || input.CreatedAt.IsZero() {
@@ -68,26 +69,26 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 		// check mandatory fields
 		if utils.IfNotNilString(input.OrganizationId) == "" {
 			err = errors.New("organizationId is required")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		// validate organization exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, utils.IfNotNilString(input.OrganizationId), model.NodeLabelOrganization)
 		if err != nil || !exists {
 			err = errors.New("organization not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 
 		markdownEventId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelMarkdownEvent)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	} else {
 		return "", errors.New("update not supported")
 	}
-	tracing.TagEntity(span, markdownEventId)
+	spans.TagEntity(markdownEventId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
@@ -112,7 +113,7 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 				// historify markdown event
 				err = s.events.Publisher.PublishFanoutEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, input)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateContact"))
 				}
 
 				// send event completed for organization for refresh
@@ -125,12 +126,12 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if createFlow {
-		span.LogFields(log.Bool("response.logEntryCreated", true))
+		spans.LogFields(log.Bool("response.logEntryCreated", true))
 	}
 	return markdownEventId, nil
 }

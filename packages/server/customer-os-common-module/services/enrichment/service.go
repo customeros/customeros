@@ -3,13 +3,14 @@ package enrichment
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/biter777/countries"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
@@ -17,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -67,14 +68,14 @@ func NewEnrichmentService(
 }
 
 func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.PersonSearch) (*uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.EnrichPerson")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "person", person)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.EnrichPerson")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("person", person)
 
 	if strings.TrimSpace(person.Email) == "" && strings.TrimSpace(person.Domain) == "" && strings.TrimSpace(person.LinkedinURL) == "" {
 		err := errors.New("missing email, domain, and linkedinURL")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil, err
 	}
 
@@ -85,7 +86,7 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 	if linkedInUrl != "" {
 		recordId, personData, err := s.ScrapInPersonProfile(ctx, linkedInUrl)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 		if personData != nil {
@@ -98,20 +99,19 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 		ctx, person.Email, person.FirstName, person.LastName, person.Domain, person.CompanyName,
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		errs = multierr.Append(errs, err)
 	}
 	return &recordID, response, nil
 }
 
 func (s *enrichmentService) FetchEnrichOrganizationData(ctx context.Context, domain, linkedinURL *string) (*interfaces.OrganizationData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.FetchEnrichOrganizationData")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.FetchEnrichOrganizationData")
+	defer spans.Finish()
 
 	if domain == nil && linkedinURL == nil {
 		err := errors.New("missing linkedinURL or domain")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -121,7 +121,7 @@ func (s *enrichmentService) FetchEnrichOrganizationData(ctx context.Context, dom
 	if linkedinURL != nil {
 		_, results, err := s.ScrapInCompanyProfile(ctx, *linkedinURL)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 		scrapinResults = results
@@ -131,7 +131,7 @@ func (s *enrichmentService) FetchEnrichOrganizationData(ctx context.Context, dom
 	if scrapinResults == nil && domain != nil {
 		_, results, err := s.ScrapInSearchCompany(ctx, *domain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 		scrapinResults = results
@@ -140,7 +140,7 @@ func (s *enrichmentService) FetchEnrichOrganizationData(ctx context.Context, dom
 	// Brandfetch
 	brandfetchResults, err := s.GetBrandfetchByDomain(ctx, *domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		errs = multierr.Append(errs, err)
 	}
 

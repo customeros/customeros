@@ -2,11 +2,12 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -15,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -98,34 +99,34 @@ type IdentifyWebsiteVisitorOutput struct {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, IdentifyWebsiteVisitorOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	result := IdentifyWebsiteVisitorOutput{}
 
 	// Validate input and config
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// Get web session
 	webSession, err := c.getWebSession(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// Check if identity already set
 	identityStatus, err := c.processExistingIdentity(ctx, webSession, executionContainer.AgentExecutionID, &result)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
@@ -137,27 +138,26 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 	// Check if we have identifiable information from other sessions with the same IP
 	identityFromIPStatus, err := c.tryIdentifyFromIPHistory(ctx, webSession, executionContainer.AgentExecutionID, &result)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	// Return if we found identity from IP history
 	if identityFromIPStatus != nil {
-		tracing.LogObjectAsJson(span, "result", result)
+		spans.LogObjectAsJson("result", result)
 		return *identityFromIPStatus, result, nil
 	}
 
 	// Attempt to identify using third-party enrichment services
 	status, output, err := c.tryIdentifyFromEnrichment(ctx, webSession, executionContainer.AgentExecutionID, &result)
-	tracing.LogObjectAsJson(span, "result", output)
+	spans.LogObjectAsJson("result", output)
 	return status, output, err
 }
 
 // getWebSession retrieves the web session with the given ID
 func (c *IdentifyWebsiteVisitorCapability) getWebSession(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.getWebSession")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.getWebSession")
+	defer spans.Finish()
 
 	webSession, err := c.postgresRepositories.WebSessionRepository.FindSession(ctx, postgres_entity.WebSession{
 		ID:     sessionID,
@@ -182,9 +182,8 @@ func (c *IdentifyWebsiteVisitorCapability) processExistingIdentity(
 	agentExecutionID string,
 	result *IdentifyWebsiteVisitorOutput,
 ) (*enum.CapabilityExecutionStatus, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.processExistingIdentity")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.processExistingIdentity")
+	defer spans.Finish()
 
 	// Check if identity already set
 	identitySet, primaryDomain, err := c.isIdentitySetOnWebSession(ctx, *websession)
@@ -237,9 +236,8 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromIPHistory(
 	agentExecutionID string,
 	result *IdentifyWebsiteVisitorOutput,
 ) (*enum.CapabilityExecutionStatus, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromIPHistory")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromIPHistory")
+	defer spans.Finish()
 
 	// Find session with same IP that has domain information
 	identifiedSession, err := c.postgresRepositories.WebSessionRepository.FindLatestSessionWithDomainByIP(ctx, websession.IP)
@@ -284,9 +282,8 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
 	agentExecutionID string,
 	result *IdentifyWebsiteVisitorOutput,
 ) (enum.CapabilityExecutionStatus, IdentifyWebsiteVisitorOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromEnrichment")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.tryIdentifyFromEnrichment")
+	defer spans.Finish()
 
 	// Try to identify IP via 3rd parties
 	domain, err := c.identifyIP(ctx, websession.IP)
@@ -336,9 +333,8 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
 
 // isIdentitySetOnWebSession checks if identity information is already set on the web session
 func (c *IdentifyWebsiteVisitorCapability) isIdentitySetOnWebSession(ctx context.Context, websession postgres_entity.WebSession) (bool, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.isIdentitySetOnWebSession")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.isIdentitySetOnWebSession")
+	defer spans.Finish()
 
 	if websession.Domain == nil || *websession.Domain == "" {
 		return false, "", nil
@@ -350,7 +346,7 @@ func (c *IdentifyWebsiteVisitorCapability) isIdentitySetOnWebSession(ctx context
 	if primaryDomain != *websession.Domain {
 		err := c.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, websession.ID, &primaryDomain, nil, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
@@ -359,9 +355,8 @@ func (c *IdentifyWebsiteVisitorCapability) isIdentitySetOnWebSession(ctx context
 
 // publishWebVisitorIdentifiedEvent publishes an event indicating a visitor was identified
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorIdentifiedEvent")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorIdentifiedEvent")
+	defer spans.Finish()
 
 	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorIdentified{
 		AgentExecutionId: agentExecutionID,
@@ -370,9 +365,8 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx 
 
 // publishWebVisitorNotIdentifiedEvent publishes an event indicating a visitor was not identified
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorNotIdentifiedEvent")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorNotIdentifiedEvent")
+	defer spans.Finish()
 
 	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{
 		AgentExecutionId: agentExecutionID,
@@ -381,25 +375,25 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(c
 
 // identifyIP attempts to identify a company domain from an IP address using enrichment services
 func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (primaryDomain string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	span.LogKV("ipAddress", ipAddress)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
+	defer spans.Finish()
+
+	spans.LogKV("ipAddress", ipAddress)
 
 	snitcherData, err := c.enrichmentService.IPIdentity(ctx, ipAddress)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", errors.Wrap(err, "failed to get IP identity")
 	}
 
 	if snitcherData == nil || snitcherData.Company == nil || snitcherData.Company.Domain == "" {
-		span.LogKV("result.domain_found", false)
+		spans.LogKV("result.domain_found", false)
 		return "", nil
 	}
-	span.LogKV("result.snitcher_domain", snitcherData.Company.Domain)
+	spans.LogKV("result.snitcher_domain", snitcherData.Company.Domain)
 
 	_, _, primaryDomain = c.domainService.CheckDomainWithMailsherpa(ctx, snitcherData.Company.Domain)
 
-	span.LogKV("result.domain", primaryDomain)
+	spans.LogKV("result.domain", primaryDomain)
 	return primaryDomain, nil
 }

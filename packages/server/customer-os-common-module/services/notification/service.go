@@ -2,13 +2,12 @@ package notification
 
 import (
 	"context"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type notificationService struct {
@@ -26,13 +25,12 @@ func NewNotificationService(log logger.Logger, postgresRepo *postgres_repository
 }
 
 func (s *notificationService) NotifySlackChannel(ctx context.Context, channelID string, message string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NotificationService.NotifySlackChannel")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NotificationService.NotifySlackChannel")
+	defer spans.Finish()
 
 	err := s.slackService.SendMessageFromBot(ctx, channelID, message, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

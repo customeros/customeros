@@ -3,6 +3,7 @@ package postmark
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/Boostport/mjml-go"
@@ -13,14 +14,13 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/mrz1836/postmark"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -62,18 +62,18 @@ func NewPostmarkService(postmarkConfig *config.PostmarkConfig, postgres *postgre
 }
 
 func (s *postmarkService) getPostmarkClient(ctx context.Context, tenant string) (*postmark.Client, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.getPostmarkClient")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.getPostmarkClient")
+	defer spans.Finish()
 
 	p := s.postgres.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
 	if p.Error != nil {
-		tracing.TraceErr(span, p.Error)
+		spans.TraceError(p.Error)
 		return nil, p.Error
 	}
 
 	if p.Result == nil {
 		err := errors.New("postmark api key not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -83,38 +83,37 @@ func (s *postmarkService) getPostmarkClient(ctx context.Context, tenant string) 
 }
 
 func (s *postmarkService) SendNotification(ctx context.Context, postmarkEmail interfaces.PostmarkEmail, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.SendNotification")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "postmarkEmail", postmarkEmail)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.SendNotification")
+	defer spans.Finish()
+	spans.LogObjectAsJson("postmarkEmail", postmarkEmail)
 
 	if postmarkEmail.From == "" {
 		err := errors.New("missing from email address")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	postmarkClient, err := s.getPostmarkClient(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	htmlContent, err := s.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "mjml", postmarkEmail.TemplateData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	htmlContent, err = s.convertMjmlToHtml(ctx, htmlContent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	textContent, err := s.LoadEmailContent(ctx, postmarkEmail.WorkflowId, "txt", postmarkEmail.TemplateData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -147,7 +146,7 @@ func (s *postmarkService) SendNotification(ctx context.Context, postmarkEmail in
 	_, err = postmarkClient.SendEmail(ctx, email)
 	if err != nil {
 		wrappedError := fmt.Errorf("(postmarkClient.SendEmail) error: %s", err.Error())
-		tracing.TraceErr(span, wrappedError)
+		spans.TraceError(wrappedError)
 		return err
 	}
 
@@ -155,12 +154,12 @@ func (s *postmarkService) SendNotification(ctx context.Context, postmarkEmail in
 }
 
 func (s *postmarkService) LoadEmailContent(ctx context.Context, workflowId, fileExtension string, templateData map[string]string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.LoadEmailContent")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.LoadEmailContent")
+	defer spans.Finish()
 
 	rawEmailTemplate, err := s.LoadEmailBody(ctx, workflowId, fileExtension)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -195,8 +194,8 @@ func (s *postmarkService) getFileName(workflowId, fileExtension string) string {
 }
 
 func (s *postmarkService) LoadEmailBody(ctx context.Context, workflowId, fileExtension string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.LoadEmailBody")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.LoadEmailBody")
+	defer spans.Finish()
 
 	fileName := s.getFileName(workflowId, fileExtension)
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
@@ -229,13 +228,13 @@ func (s *postmarkService) FillTemplate(template string, replace map[string]strin
 }
 
 func (s *postmarkService) convertMjmlToHtml(ctx context.Context, filledTemplate string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.convertMjmlToHtml")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.convertMjmlToHtml")
+	defer spans.Finish()
 
 	html, err := mjml.ToHTML(ctx, filledTemplate)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", fmt.Errorf("(PostmarkService.Template) error: %s", mjmlError.Message)
 	}
 
@@ -243,14 +242,13 @@ func (s *postmarkService) convertMjmlToHtml(ctx context.Context, filledTemplate 
 }
 
 func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.CreateServerIfNotExists")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.CreateServerIfNotExists")
+	defer spans.Finish()
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -258,53 +256,53 @@ func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
 	// validate postmark is configured
 	if s.postmarkConfig == nil {
 		err := errors.New("postmark not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if s.postmarkConfig.Url == "" {
 		err := errors.New("postmark url not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if s.postmarkConfig.AccountApiKey == "" {
 		err := errors.New("postmark api key not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	postmarkServerName := strings.ToLower(tenant)
 	inboundWebhookURL := s.postmarkConfig.DefaultInboundStreamWebhook
 	inboundForwardingDomain := postmarkServerName + ".customeros.ai"
-	span.LogKV("postmarkServerName", postmarkServerName)
-	span.LogKV("inboundWebhookURL", inboundWebhookURL)
-	span.LogKV("inboundForwardingDomain", inboundForwardingDomain)
+	spans.LogKV("postmarkServerName", postmarkServerName)
+	spans.LogKV("inboundWebhookURL", inboundWebhookURL)
+	spans.LogKV("inboundForwardingDomain", inboundForwardingDomain)
 
 	apiClient := NewPostmarkAPIClient(s.postmarkConfig.Url, s.postmarkConfig.AccountApiKey)
 
 	// check if server already exists
 	existingServerDetails, err := apiClient.GetServerByName(ctx, postmarkServerName)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	if existingServerDetails != nil {
-		tracing.LogObjectAsJson(span, "existingServerDetails", existingServerDetails)
+		spans.LogObjectAsJson("existingServerDetails", existingServerDetails)
 	}
 
 	if existingServerDetails == nil {
 		serverResponse, err := apiClient.CreateServer(ctx, postmarkServerName, inboundWebhookURL, inboundForwardingDomain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
-		tracing.LogObjectAsJson(span, "createdServerResponse", serverResponse)
+		spans.LogObjectAsJson("createdServerResponse", serverResponse)
 	}
 
 	return nil
 }
 
 func (np *postmarkService) DeleteServer(ctx context.Context, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.DeleteServer")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "PostmarkService.DeleteServer")
+	defer spans.Finish()
 
 	// TODO implement me
 

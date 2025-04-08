@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,11 +13,9 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -29,14 +28,14 @@ type ScrapInSearchRequestParams struct {
 }
 
 func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.ScrapInPersonProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("linkedInUrl", linkedInUrl))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.ScrapInPersonProfile")
+	defer spans.Finish()
+
+	spans.LogKV("linkedInUrl", linkedInUrl)
 
 	latestEnrichDetailsScrapInRecord, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, linkedInUrl, postgres_entity.ScrapInFlowPersonProfile)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+		spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 		return 0, nil, err
 	}
 
@@ -58,23 +57,23 @@ func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUr
 	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinPersonProfile(ctx, linkedInUrl); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
+			spans.TraceError(errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
 
-		traceIfCreditsDepleting(data, span)
+		traceIfCreditsDepleting(data, *spans)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal data"))
 			return 0, nil, err
 		}
 		paramsAsString, err := json.Marshal(ScrapInSearchRequestParams{
 			LinkedInUrl: linkedInUrl,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal params"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal params"))
 		}
 		dbRecord, err := s.postgres.EnrichDetailsScrapInRepository.Create(ctx, postgres_entity.EnrichDetailsScrapIn{
 			Param1:        linkedInUrl,
@@ -86,7 +85,7 @@ func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUr
 			Success:       data.Success,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to save scrapin data in db"))
+			spans.TraceError(errors.Wrap(err, "failed to save scrapin data in db"))
 		}
 		if dbRecord != nil {
 			recordId = dbRecord.ID
@@ -96,7 +95,7 @@ func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUr
 		// unmarshal cached data
 		unmarshalledData := postgres_entity.ScrapInResponseBody{}
 		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+			spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
 		data = &unmarshalledData
@@ -106,13 +105,13 @@ func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUr
 	if data == nil || data.Person == nil {
 		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithPersonFound(ctx, linkedInUrl, postgres_entity.ScrapInFlowPersonProfile)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to extract cached scrapin data"))
+			spans.TraceError(errors.Wrap(err, "failed to extract cached scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithPersonFound != nil {
 			unmarshalledData := postgres_entity.ScrapInResponseBody{}
 			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithPersonFound.Data), &unmarshalledData); err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+				spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
 			data = &unmarshalledData
@@ -124,22 +123,22 @@ func (s *enrichmentService) ScrapInPersonProfile(ctx context.Context, linkedInUr
 }
 
 func (s *enrichmentService) callScrapinPersonProfile(ctx context.Context, linkedInUrl string) (*postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callScrapinPersonProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("linkedInUrl", linkedInUrl))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.callScrapinPersonProfile")
+	defer spans.Finish()
+
+	spans.LogKV("linkedInUrl", linkedInUrl)
 
 	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
 		err := errors.New("ScrapIn URL not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("ScrapIn URL not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
 	scrapInApiKey := s.config.ScrapinConfig.ApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Scrapin Api key not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -150,17 +149,17 @@ func (s *enrichmentService) callScrapinPersonProfile(ctx context.Context, linked
 
 	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/profile" + "?" + params.Encode())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
+		spans.TraceError(errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
-	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
+	spans.LogKV("scrapin.statusCode", scrapinStatusCode)
 
 	var scrapinResponse postgres_entity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-		span.LogFields(log.String("response.body", string(body)))
+		spans.TraceError(errors.Wrap(err, "json.Unmarshal"))
+		spans.LogKV("response.body", string(body))
 		s.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -169,19 +168,18 @@ func (s *enrichmentService) callScrapinPersonProfile(ctx context.Context, linked
 }
 
 func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firstName, lastName, domain, companyName string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.ScrapInSearchPerson")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(
-		log.String("email", email),
-		log.String("firstName", firstName),
-		log.String("lastName", lastName),
-		log.String("domain", domain),
-		log.String("companyName", companyName))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.ScrapInSearchPerson")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
+	spans.LogKV("firstName", firstName)
+	spans.LogKV("lastName", lastName)
+	spans.LogKV("domain", domain)
+	spans.LogKV("companyName", companyName)
 
 	latestEnrichDetailsScrapInRecord, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow(ctx, email, firstName, lastName, domain, companyName, postgres_entity.ScrapInFlowPersonSearch)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+		spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 		return 0, nil, err
 	}
 
@@ -203,16 +201,16 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinPersonSearch(ctx, email, firstName, lastName, domain, companyName); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
+			spans.TraceError(errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
 
-		traceIfCreditsDepleting(data, span)
+		traceIfCreditsDepleting(data, *spans)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal data"))
 			return 0, nil, err
 		}
 		paramsAsString, err := json.Marshal(ScrapInSearchRequestParams{
@@ -222,7 +220,7 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 			CompanyDomain: domain,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal params"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal params"))
 		}
 		dbRecord, err := s.postgres.EnrichDetailsScrapInRepository.Create(ctx, postgres_entity.EnrichDetailsScrapIn{
 			Param1:        email,
@@ -237,7 +235,7 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 			Success:       data.Success,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to save scrapin data in db"))
+			spans.TraceError(errors.Wrap(err, "failed to save scrapin data in db"))
 		}
 		if dbRecord != nil {
 			recordId = dbRecord.ID
@@ -247,7 +245,7 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 		// unmarshal cached data
 		unmarshalledData := postgres_entity.ScrapInResponseBody{}
 		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+			spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
 		data = &unmarshalledData
@@ -257,13 +255,13 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 	if data == nil || data.Person == nil {
 		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound(ctx, email, firstName, lastName, domain, companyName, postgres_entity.ScrapInFlowPersonSearch)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+			spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithPersonFound != nil {
 			unmarshalledData := postgres_entity.ScrapInResponseBody{}
 			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithPersonFound.Data), &unmarshalledData); err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+				spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
 			data = &unmarshalledData
@@ -309,8 +307,8 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 			}
 		}
 		if !matchFound {
-			span.LogFields(log.String("inputPrimaryDomains", fmt.Sprintf("%v", inputPrimaryDomains)), log.String("outputPrimaryDomains", fmt.Sprintf("%v", outputPrimaryDomains)))
-			span.LogKV("result.error", "Person identified does not match with input params")
+			spans.LogKV("inputPrimaryDomains", fmt.Sprintf("%v", inputPrimaryDomains), "outputPrimaryDomains", fmt.Sprintf("%v", outputPrimaryDomains))
+			spans.LogKV("result.error", "Person identified does not match with input params")
 			return 0, nil, nil
 		}
 	}
@@ -319,22 +317,22 @@ func (s *enrichmentService) ScrapInSearchPerson(ctx context.Context, email, firs
 }
 
 func (s *enrichmentService) callScrapinPersonSearch(ctx context.Context, email, firstName, lastName, domain, companyName string) (*postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callScrapinPersonSearch")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("email", email, "firstName", firstName, "lastName", lastName, "domain", domain, "companyName", companyName)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.callScrapinPersonSearch")
+	defer spans.Finish()
+
+	spans.LogKV("email", email, "firstName", firstName, "lastName", lastName, "domain", domain, "companyName", companyName)
 
 	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
 		err := errors.New("ScrapIn URL not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("ScrapIn URL not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
 	scrapInApiKey := s.config.ScrapinConfig.ApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Scrapin Api key not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -357,17 +355,17 @@ func (s *enrichmentService) callScrapinPersonSearch(ctx context.Context, email, 
 
 	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment" + "?" + params.Encode())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
+		spans.TraceError(errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
-	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
+	spans.LogKV("scrapin.statusCode", scrapinStatusCode)
 
 	var scrapinResponse postgres_entity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-		span.LogFields(log.String("response.body", string(body)))
+		spans.TraceError(errors.Wrap(err, "json.Unmarshal"))
+		spans.LogKV("response.body", string(body))
 		s.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -376,14 +374,14 @@ func (s *enrichmentService) callScrapinPersonSearch(ctx context.Context, email, 
 }
 
 func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInUrl string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.ScrapInCompanyProfile")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("linkedInUrl", linkedInUrl))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.ScrapInCompanyProfile")
+	defer spans.Finish()
+
+	spans.LogKV("linkedInUrl", linkedInUrl)
 
 	latestEnrichDetailsScrapInRecord, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, linkedInUrl, postgres_entity.ScrapInFlowCompanyProfile)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+		spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 		return 0, nil, err
 	}
 
@@ -405,23 +403,23 @@ func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInU
 	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinCompanyProfile(ctx, linkedInUrl); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
+			spans.TraceError(errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
 
-		traceIfCreditsDepleting(data, span)
+		traceIfCreditsDepleting(data, *spans)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal data"))
 			return 0, nil, err
 		}
 		paramsAsString, err := json.Marshal(ScrapInSearchRequestParams{
 			LinkedInUrl: linkedInUrl,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal params"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal params"))
 		}
 		dbRecord, err := s.postgres.EnrichDetailsScrapInRepository.Create(ctx, postgres_entity.EnrichDetailsScrapIn{
 			Param1:        linkedInUrl,
@@ -433,7 +431,7 @@ func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInU
 			Success:       data.Success,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to save scrapin data in db"))
+			spans.TraceError(errors.Wrap(err, "failed to save scrapin data in db"))
 		}
 		if dbRecord != nil {
 			recordId = dbRecord.ID
@@ -443,7 +441,7 @@ func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInU
 		// unmarshal cached data
 		unmarshalledData := postgres_entity.ScrapInResponseBody{}
 		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+			spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
 		data = &unmarshalledData
@@ -453,13 +451,13 @@ func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInU
 	if data == nil || data.Company == nil {
 		latestEnrichDetailsScrapInRecordWithCompanyFound, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound(ctx, linkedInUrl, postgres_entity.ScrapInFlowCompanyProfile)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+			spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithCompanyFound != nil {
 			unmarshalledData := postgres_entity.ScrapInResponseBody{}
 			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithCompanyFound.Data), &unmarshalledData); err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+				spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
 			data = &unmarshalledData
@@ -471,21 +469,21 @@ func (s *enrichmentService) ScrapInCompanyProfile(ctx context.Context, linkedInU
 }
 
 func (s *enrichmentService) callScrapinCompanyProfile(ctx context.Context, linkedInUrl string) (*postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.callScrapinCompanyProfile")
-	defer span.Finish()
-	span.LogFields(log.String("linkedInUrl", linkedInUrl))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ScrapInService.callScrapinCompanyProfile")
+	defer spans.Finish()
+	spans.LogKV("linkedInUrl", linkedInUrl)
 
 	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
 		err := errors.New("ScrapIn URL not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("ScrapIn URL not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
 	scrapInApiKey := s.config.ScrapinConfig.ApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Scrapin Api key not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -496,17 +494,17 @@ func (s *enrichmentService) callScrapinCompanyProfile(ctx context.Context, linke
 
 	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/company" + "?" + params.Encode())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
+		spans.TraceError(errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
-	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
+	spans.LogKV("scrapin.statusCode", scrapinStatusCode)
 
 	var scrapinResponse postgres_entity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-		span.LogFields(log.String("response.body", string(body)))
+		spans.TraceError(errors.Wrap(err, "json.Unmarshal"))
+		spans.LogKV("response.body", string(body))
 		s.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -515,13 +513,13 @@ func (s *enrichmentService) callScrapinCompanyProfile(ctx context.Context, linke
 }
 
 func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain string) (uint64, *postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinService.ScrapInSearchCompany")
-	defer span.Finish()
-	span.LogFields(log.String("domain", domain))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ScrapinService.ScrapInSearchCompany")
+	defer spans.Finish()
+	spans.LogKV("domain", domain)
 
 	latestEnrichDetailsScrapInRecord, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, domain, postgres_entity.ScrapInFlowCompanySearch)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+		spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 		return 0, nil, err
 	}
 
@@ -543,23 +541,23 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinCompanySearch(ctx, domain); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
+			spans.TraceError(errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
 
-		traceIfCreditsDepleting(data, span)
+		traceIfCreditsDepleting(data, *spans)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal data"))
 			return 0, nil, err
 		}
 		paramsAsString, err := json.Marshal(ScrapInSearchRequestParams{
 			CompanyDomain: domain,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal params"))
+			spans.TraceError(errors.Wrap(err, "failed to marshal params"))
 		}
 		dbRecord, err := s.postgres.EnrichDetailsScrapInRepository.Create(ctx, postgres_entity.EnrichDetailsScrapIn{
 			Param1:        domain,
@@ -571,7 +569,7 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 			Success:       data.Success,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to save scrapin data in db"))
+			spans.TraceError(errors.Wrap(err, "failed to save scrapin data in db"))
 		}
 		if dbRecord != nil {
 			recordId = dbRecord.ID
@@ -581,7 +579,7 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 		// unmarshal cached data
 		unmarshalledData := postgres_entity.ScrapInResponseBody{}
 		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+			spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
 		data = &unmarshalledData
@@ -591,13 +589,13 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 	if data == nil || data.Company == nil {
 		latestEnrichDetailsScrapInRecordWithCompanyFound, err := s.postgres.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound(ctx, domain, postgres_entity.ScrapInFlowCompanySearch)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+			spans.TraceError(errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithCompanyFound != nil {
 			unmarshalledData := postgres_entity.ScrapInResponseBody{}
 			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithCompanyFound.Data), &unmarshalledData); err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
+				spans.TraceError(errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
 			data = &unmarshalledData
@@ -614,7 +612,7 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 				if outputIsPrimary {
 					outputPrimaryDomain = utils.ExtractDomain(data.Company.WebsiteUrl)
 				}
-				span.LogFields(log.String("result.inputPrimaryDomain", inputPrimaryDomain), log.String("result.outputPrimaryDomain", outputPrimaryDomain))
+				spans.LogKV("result.inputPrimaryDomain", inputPrimaryDomain, "result.outputPrimaryDomain", outputPrimaryDomain)
 				if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
 					return latestEnrichDetailsScrapInRecordWithCompanyFound.ID, data, nil
 				}
@@ -635,11 +633,11 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 		if outputIsPrimary {
 			outputPrimaryDomain = utils.ExtractDomain(data.Company.WebsiteUrl)
 		}
-		span.LogKV("result.inputPrimaryDomain", inputPrimaryDomain, "outputPrimaryDomain", outputPrimaryDomain)
+		spans.LogKV("result.inputPrimaryDomain", inputPrimaryDomain, "outputPrimaryDomain", outputPrimaryDomain)
 		if inputPrimaryDomain != "" && inputPrimaryDomain == outputPrimaryDomain {
 			return recordId, data, nil
 		} else {
-			span.LogKV("result.info", fmt.Sprintf("Scrapin retuned different company domain, expected: %s, got: %s", inputPrimaryDomain, outputPrimaryDomain))
+			spans.LogKV("result.info", fmt.Sprintf("Scrapin retuned different company domain, expected: %s, got: %s", inputPrimaryDomain, outputPrimaryDomain))
 		}
 	}
 
@@ -647,14 +645,14 @@ func (s *enrichmentService) ScrapInSearchCompany(ctx context.Context, domain str
 }
 
 func (s *enrichmentService) callScrapinCompanySearch(ctx context.Context, domain string) (*postgres_entity.ScrapInResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.callScrapinCompanySearch")
-	defer span.Finish()
-	span.LogKV("domain", domain)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ScrapInService.callScrapinCompanySearch")
+	defer spans.Finish()
+	spans.LogKV("domain", domain)
 
 	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
 		err := errors.New("ScrapIn URL not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("ScrapIn URL not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -662,7 +660,7 @@ func (s *enrichmentService) callScrapinCompanySearch(ctx context.Context, domain
 	scrapInApiKey := s.config.ScrapinConfig.ApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Scrapin Api key not set")
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -674,17 +672,17 @@ func (s *enrichmentService) callScrapinCompanySearch(ctx context.Context, domain
 
 	scrapinStatusCode, body, err := makeScrapInHTTPRequest(scrapinUrl)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
+		spans.TraceError(errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
-	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
+	spans.LogKV("scrapin.statusCode", scrapinStatusCode)
 
 	var scrapinResponse postgres_entity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-		span.LogFields(log.String("response.body", string(body)))
+		spans.TraceError(errors.Wrap(err, "json.Unmarshal"))
+		spans.LogKV("response.body", string(body))
 		s.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 		return &postgres_entity.ScrapInResponseBody{}, err
 	}
@@ -724,13 +722,13 @@ func makeScrapInHTTPRequest(url string) (int, []byte, error) {
 	return statusCode, body, err
 }
 
-func traceIfCreditsDepleting(data *postgres_entity.ScrapInResponseBody, span opentracing.Span) {
+func traceIfCreditsDepleting(data *postgres_entity.ScrapInResponseBody, spans telemetry.Spans) {
 	if data != nil {
 		if data.CreditsLeft > 0 && data.CreditsLeft < 50 {
-			tracing.TraceErr(span, errors.New(fmt.Sprintf("ScrapIn credits are depleting, only %d credits left", data.CreditsLeft)))
+			spans.TraceError(errors.New(fmt.Sprintf("ScrapIn credits are depleting, only %d credits left", data.CreditsLeft)))
 		}
 		if data.RateLimitLeft > 0 && data.RateLimitLeft < 50 {
-			tracing.TraceErr(span, errors.New(fmt.Sprintf("ScrapIn rate limit is depleting, only %d requests left", data.RateLimitLeft)))
+			spans.TraceError(errors.New(fmt.Sprintf("ScrapIn rate limit is depleting, only %d requests left", data.RateLimitLeft)))
 		}
 	}
 }

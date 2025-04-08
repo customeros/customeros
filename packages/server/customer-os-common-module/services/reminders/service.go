@@ -3,20 +3,20 @@ package reminders
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"time"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -33,22 +33,20 @@ func NewReminderService(neo4j *neo4j_repository.Repositories, novu interfaces.No
 }
 
 func (s *reminderService) CreateReminder(ctx context.Context, tenant, userId, organizationId, content string, dueDate time.Time) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.CreateReminder")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("userId", userId), log.String("organizationId", organizationId), log.String("content", content), log.String("dueDate", dueDate.String()))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ReminderService.CreateReminder")
+	defer spans.Finish()
 
 	tenant = common.GetTenantFromContext(ctx)
 
 	reminderId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelReminder)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	err = s.neo4j.ReminderWriteRepository.CreateReminder(ctx, tenant, reminderId, userId, organizationId, content, utils.Now(), dueDate)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -56,10 +54,10 @@ func (s *reminderService) CreateReminder(ctx context.Context, tenant, userId, or
 }
 
 func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId string, content *string, dueDate *time.Time, dismissed, sent *bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.UpdateReminder")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, reminderId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ReminderService.UpdateReminder")
+	defer spans.Finish()
+
+	spans.TagEntity(reminderId)
 
 	tenant = common.GetTenantFromContext(ctx)
 
@@ -88,7 +86,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId
 
 	err := s.neo4j.ReminderWriteRepository.UpdateReminder(ctx, tenant, reminderId, updateData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -96,13 +94,13 @@ func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId
 }
 
 func (s *reminderService) GetReminderById(ctx context.Context, id string) (*neo4jentity.ReminderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.GetReminderById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ReminderService.GetReminderById")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	if reminderDbNode, err := s.neo4j.ReminderReadRepository.GetReminderById(ctx, id); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Reminder with id {%s} not found", id))
 		return nil, wrappedErr
 	} else {
@@ -111,20 +109,20 @@ func (s *reminderService) GetReminderById(ctx context.Context, id string) (*neo4
 }
 
 func (s *reminderService) RemindersForOrganization(ctx context.Context, organizationID string, dismissed *bool) ([]*neo4jentity.ReminderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.RemindersForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, organizationID)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ReminderService.RemindersForOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationID)
 
 	reminderDbNodes, err := s.neo4j.ReminderReadRepository.GetRemindersOrderByDueDateAsc(ctx, organizationID, dismissed)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	reminderEntities := make([]*neo4jentity.ReminderEntity, 0, len(reminderDbNodes))
 	if len(reminderDbNodes) == 0 {
-		span.LogFields(log.String("Warning", fmt.Sprintf("Reminders for organization with id {%s} not found", organizationID)))
+		spans.LogKV("Warning", fmt.Sprintf("Reminders for organization with id {%s} not found", organizationID))
 		return reminderEntities, nil
 	}
 	for _, v := range reminderDbNodes {
@@ -134,22 +132,22 @@ func (s *reminderService) RemindersForOrganization(ctx context.Context, organiza
 }
 
 func (s *reminderService) SendNotification(ctx context.Context, reminderId, fronteraPublicPath string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderService.SendNotification")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, reminderId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ReminderService.SendNotification")
+	defer spans.Finish()
+
+	spans.TagEntity(reminderId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	reminder, err := s.GetReminderById(ctx, reminderId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
-	err = s.notificationProviderSendEmail(ctx, span, fronteraPublicPath, novu.WorkflowReminderNotificationEmail, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant, reminder.CreatedAt)
+	err = s.notificationProviderSendEmail(ctx, *spans, fronteraPublicPath, novu.WorkflowReminderNotificationEmail, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant, reminder.CreatedAt)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -157,7 +155,7 @@ func (s *reminderService) SendNotification(ctx context.Context, reminderId, fron
 
 	//err = s.notificationProviderSendInAppNotification(ctx, span, WorkflowReminderInAppNotification, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant)
 	//if err != nil {
-	//	tracing.TraceErr(span, err)
+	//	spans.TraceError( err)
 	//	return err
 	//}
 
@@ -170,7 +168,7 @@ func (s *reminderService) SendNotification(ctx context.Context, reminderId, fron
 
 func (s *reminderService) notificationProviderSendEmail(
 	ctx context.Context,
-	span opentracing.Span,
+	spans telemetry.Spans,
 	fronteraPublicPath string,
 	workflowId string,
 	userId string,
@@ -182,13 +180,13 @@ func (s *reminderService) notificationProviderSendEmail(
 	// target user email
 	emailDbNode, err := s.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var email neo4jentity.EmailEntity
 	if emailDbNode == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		err = errors.New("email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendEmail")
 	}
@@ -196,7 +194,7 @@ func (s *reminderService) notificationProviderSendEmail(
 	// target user
 	userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var user neo4jentity.UserEntity
@@ -206,7 +204,7 @@ func (s *reminderService) notificationProviderSendEmail(
 	// Organization
 	orgDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
 	}
 	var org neo4jentity.OrganizationEntity
@@ -257,7 +255,7 @@ func (s *reminderService) notificationProviderSendEmail(
 // ////////////////////////////////////////////////////////////////////////
 func (h *reminderService) notificationProviderSendInAppNotification(
 	ctx context.Context,
-	span opentracing.Span,
+	spans telemetry.Spans,
 	workflowId string,
 	userId string,
 	content string,
@@ -267,13 +265,13 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	// target user email
 	emailDbNode, err := h.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var email neo4jentity.EmailEntity
 	if emailDbNode == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		err = errors.New("email db node not found")
 		return errors.Wrap(err, "h.notificationProviderSendEmail")
 	}
@@ -281,7 +279,7 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	// target user
 	userDbNode, err := h.neo4j.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var user neo4jentity.UserEntity
@@ -291,7 +289,7 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	// Organization
 	orgDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
 	}
 	var org neo4jentity.OrganizationEntity

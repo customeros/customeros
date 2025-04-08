@@ -4,18 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type opensearchService struct {
@@ -76,18 +76,18 @@ func (c *opensearchService) getClientForIndex(indexName string) (*opensearch.Cli
 
 // IndexDocument indexes a single document
 func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string, documentId *string, document interface{}) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpensearchService.UpsertDocument")
-	defer span.Finish()
+	spans, _ := telemetry.StartServiceSpan(ctx, "OpensearchService.UpsertDocument")
+	defer spans.Finish()
 
 	if c == nil {
 		err := errors.New("Opensearch service is not initialized")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	client, err := c.getClientForIndex(indexName)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to select opensearch client"))
+		spans.TraceError(errors.Wrap(err, "unable to select opensearch client"))
 		return err
 	}
 	if client == nil {
@@ -112,13 +112,13 @@ func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string
 
 	res, err := req.Do(ctx, client)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
-		tracing.TraceErr(span, fmt.Errorf("error indexing document: %s", res.String()))
+		spans.TraceError(fmt.Errorf("error indexing document: %s", res.String()))
 		return fmt.Errorf("error indexing document: %s", res.String())
 	}
 
@@ -127,13 +127,12 @@ func (c *opensearchService) UpsertDocument(ctx context.Context, indexName string
 
 // HybridSearch performs both vector and keyword search and combines the results
 func (c *opensearchService) HybridSearch(ctx context.Context, searchParams interfaces.HybridSearchRequest) ([]interfaces.HybridSearchResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "opensearchService.hybridSearch")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "opensearchService.hybridSearch")
+	defer spans.Finish()
 
 	if c.aiClient == nil {
 		err := fmt.Errorf("opensearch client is nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -235,7 +234,7 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 	// Convert query to JSON
 	jsonBody, err := json.Marshal(searchBody)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("error marshaling search query: %w", err)
 	}
 
@@ -247,14 +246,14 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 
 	res, err := req.Do(ctx, c.aiClient)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("error executing search: %w", err)
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
 		err = fmt.Errorf("search error: %s", res.String())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -273,7 +272,7 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&searchResult); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("error parsing search response: %w", err)
 	}
 
@@ -289,9 +288,8 @@ func (c *opensearchService) HybridSearch(ctx context.Context, searchParams inter
 }
 
 func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "opensearchService.EmbeddingsIndexCheck")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "opensearchService.EmbeddingsIndexCheck")
+	defer spans.Finish()
 
 	mapping := `{
       "mappings": {
@@ -366,9 +364,8 @@ func (c *opensearchService) EmbeddingsIndexCheck(ctx context.Context, indexName 
 }
 
 func (c *opensearchService) LLMObservabilityIndexCheck(ctx context.Context, indexName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensearchService.LLMObservabilityIndexCheck")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpensearchService.LLMObservabilityIndexCheck")
+	defer spans.Finish()
 
 	mapping := `{
       "mappings": {
@@ -424,9 +421,9 @@ func (c *opensearchService) LLMObservabilityIndexCheck(ctx context.Context, inde
 }
 
 func (c *opensearchService) AgentExecutionObservabilityIndexCheck(ctx context.Context, indexName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensearchService.AgentExecutionObservabilityIndexCheck")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpensearchService.AgentExecutionObservabilityIndexCheck")
+	defer spans.Finish()
+
 	mapping := `{
       "mappings": {
         "properties": {
@@ -474,20 +471,20 @@ func (c *opensearchService) AgentExecutionObservabilityIndexCheck(ctx context.Co
 }
 
 func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, mapping string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "opensearchService.ensureIndexExists")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("indexName", indexName)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "opensearchService.ensureIndexExists")
+	defer spans.Finish()
+
+	spans.LogKV("indexName", indexName)
 
 	if c == nil {
 		err := errors.New("Opensearch service is not initialized")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	client, err := c.getClientForIndex(indexName)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to select opensearch client"))
+		spans.TraceError(errors.Wrap(err, "unable to select opensearch client"))
 		return err
 	}
 	if client == nil {
@@ -501,14 +498,14 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 	}
 	existsRes, err := existsReq.Do(ctx, client)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("error checking if index exists: %w", err)
 	}
 
 	// Guard against nil response
 	if existsRes == nil {
 		err := fmt.Errorf("received nil response when checking if index exists")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -525,14 +522,14 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 		}
 		createRes, err := createReq.Do(ctx, client)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return fmt.Errorf("error creating index: %w", err)
 		}
 
 		// Guard against nil response
 		if createRes == nil {
 			err := fmt.Errorf("received nil response when creating index")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -546,7 +543,7 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 			errorMsg := fmt.Sprintf("failed to create index, status: %d, response: %s",
 				createRes.StatusCode, string(responseBody))
 			err := fmt.Errorf(errorMsg)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}

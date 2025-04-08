@@ -7,14 +7,13 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"time"
@@ -45,8 +44,8 @@ func (p *SendInvoiceProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "SendInvoiceProducer.Execute")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendInvoiceProducer.Execute")
+	defer spans.Finish()
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
@@ -65,7 +64,7 @@ func (p *SendInvoiceProducer) Execute() {
 
 		records, err := p.neo4jRepository.InvoiceReadRepository.GetInvoicesForPayNotifications(ctx, minutesFromCreation, minutesFromLastAttempt, lookBackWindowDays, limit)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			p.log.Errorf("Error getting invoices for pay notifications: %v", err)
 			return
 		}
@@ -86,7 +85,7 @@ func (p *SendInvoiceProducer) Execute() {
 			// mark pay notification requested
 			err = p.neo4jRepository.InvoiceWriteRepository.MarkPayNotificationRequested(innerCtx, record.Tenant, invoice.Id, utils.Now())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				p.log.Errorf("Error marking invoice %s as pay notification requested: %s", invoice.Id, err.Error())
 				return
 			}
@@ -99,10 +98,10 @@ func (p *SendInvoiceProducer) Execute() {
 }
 
 func (p *SendInvoiceProducer) isReadyForInvoicing(ctx context.Context, tenant string, contractEntity neo4jentity.ContractEntity, postpaid bool) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceProducer.isReadyForInvoicing")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendInvoiceProducer.isReadyForInvoicing")
+	defer spans.Finish()
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Bool("postpaid", postpaid))
+	spans.LogFields(log.Bool("postpaid", postpaid))
 
 	// prepare and validate dates
 	var invoicePeriodStart, invoicePeriodEnd time.Time
@@ -124,8 +123,8 @@ func (p *SendInvoiceProducer) isReadyForInvoicing(ctx context.Context, tenant st
 }
 
 func (p *SendInvoiceProducer) prepareInvoiceCycleEndDate(ctx context.Context, start time.Time, tenant string, contractEntity neo4jentity.ContractEntity) time.Time {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceProducer.prepareInvoiceCycleEndDate")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendInvoiceProducer.prepareInvoiceCycleEndDate")
+	defer spans.Finish()
 
 	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
 	if start.Day() == 1 {
@@ -143,6 +142,6 @@ func (p *SendInvoiceProducer) prepareInvoiceCycleEndDate(ctx context.Context, st
 		}
 	}
 	invoiceCycleEnd := nextStart.AddDate(0, 0, -1)
-	span.LogFields(log.Object("result.invoiceCycleEnd", invoiceCycleEnd))
+	spans.LogFields(log.Object("result.invoiceCycleEnd", invoiceCycleEnd))
 	return invoiceCycleEnd
 }

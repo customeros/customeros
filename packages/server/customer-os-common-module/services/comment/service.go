@@ -2,11 +2,12 @@ package comment
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -17,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -36,15 +37,15 @@ func NewCommentService(log logger.Logger, neo4j *neoRepo.Repositories, events *e
 }
 
 func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, commentFields data_fields.CommentFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "commentFields", commentFields)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CommentService.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("commentFields", commentFields)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -54,7 +55,7 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
-		span.LogKV("flow", "create")
+		spans.LogKV("flow", "create")
 
 		// prepare missing fields
 		if commentFields.CreatedAt == nil || commentFields.CreatedAt.IsZero() {
@@ -72,7 +73,7 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *commentFields.CommentedIssueId, model.NodeLabelIssue)
 			if err != nil || !exists {
 				err = errors.New("commented issue not found")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -81,29 +82,29 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *commentFields.AuthorUserId, model.NodeLabelUser)
 			if err != nil || !exists {
 				err = errors.New("author user not found")
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
 
 		commentId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelIssue)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	} else {
-		span.LogKV("flow", "update")
+		spans.LogKV("flow", "update")
 		commentId = *id
 
 		// validate comment exists
 		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, commentId, model.NodeLabelComment)
 		if err != nil || !exists {
 			err = errors.New("comment not found")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
-	tracing.TagEntity(span, commentId)
+	spans.TagEntity(commentId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
@@ -132,13 +133,13 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			if createFlow {
 				err := s.events.Publisher.PublishFanoutEvent(ctx, commentId, model.COMMENT, dto.CreateComment{commentFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateComment"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message CreateComment"))
 				}
 				s.events.Publisher.PublishNotification(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithCreate())
 			} else {
 				err := s.events.Publisher.PublishFanoutEvent(ctx, commentId, model.COMMENT, dto.UpdateComment{commentFields})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateComment"))
+					spans.TraceError(errors.Wrap(err, "unable to publish message UpdateComment"))
 				}
 				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 					s.events.Publisher.PublishNotification(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithUpdate())
@@ -150,14 +151,14 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if createFlow {
-		span.LogFields(log.Bool("response.commentCreated", true))
+		spans.LogFields(log.Bool("response.commentCreated", true))
 	} else {
-		span.LogFields(log.Bool("response.commentCreated", true))
+		spans.LogFields(log.Bool("response.commentCreated", true))
 	}
 
 	return commentId, nil

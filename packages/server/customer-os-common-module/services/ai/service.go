@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
 	"github.com/google/generative-ai-go/genai"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"google.golang.org/api/option"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -18,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -52,14 +53,14 @@ func NewAIService(
 const MaxAttempts = 3
 
 func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAI")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAI")
+	defer spans.Finish()
+	spans.LogObjectAsJson("requestParams", request)
 
 	// Validate the request and set default values
 	err := s.validateAIRequest(ctx, &request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -113,10 +114,10 @@ func (s *aiService) AskAI(ctx context.Context, request interfaces.AskAIRequest) 
 }
 
 func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.AskAIRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.validateAIRequest")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.validateAIRequest")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requestParams", request)
 
 	if request.Prompt == nil {
 		return errors.New("prompt cannot be empty")
@@ -178,11 +179,11 @@ Remember: NEVER return incomplete JSON. If you need more tokens, make the respon
 }
 
 func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAIWithRetry")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askAIWithRetry")
+	defer spans.Finish()
+	spans.LogObjectAsJson("requestParams", request)
 
-	llmTracker := s.newObservabilityContainer(ctx, span, request)
+	llmTracker := s.newObservabilityContainer(ctx, *spans, request)
 
 	var result *string
 	var err error
@@ -196,7 +197,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 
 		result, err = s.askAnthropic(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
@@ -204,7 +205,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 	case enum.AIModelDeepseekChat:
 		result, err = s.askDeepseek(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
@@ -219,7 +220,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 
 		result, err = s.askGroq(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
@@ -229,7 +230,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 		enum.AIModelGeminiLite:
 		result, err = s.askGemini(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.trackError(ctx, llmTracker, err)
 			return nil, err
 		}
@@ -240,7 +241,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 	}
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.trackError(ctx, llmTracker, err)
 		return nil, err
 	}
@@ -253,11 +254,11 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 		answer := strings.TrimPrefix(*result, `"""`)
 		answer = strings.TrimSuffix(answer, `"""`)
 		processedResult = &answer
-		span.LogFields(log.String("result.plain", answer))
+		spans.LogKV("result.plain", answer)
 
 	case enum.AIOutputJson:
 		processedResult = s.extractJsonFromAiResponse(result)
-		span.LogFields(
+		spans.LogFields(
 			log.String("result.plain", utils.IfNotNilString(result)),
 			log.String("result.json", utils.IfNotNilString(processedResult)),
 		)
@@ -265,7 +266,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, request interfaces.AskAI
 	default:
 		// For unknown formats, return the original result
 		processedResult = result
-		span.LogFields(log.String("result.plain", utils.IfNotNilString(*result)))
+		spans.LogKV("result.plain", utils.IfNotNilString(*result))
 	}
 
 	return processedResult, nil
@@ -288,20 +289,20 @@ func (s *aiService) extractJsonFromAiResponse(result *string) *string {
 }
 
 func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservability, aiError error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackError")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "llm", llmTracker)
+	spans, _ := telemetry.StartServiceSpan(ctx, "AIService.trackError")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("llm", llmTracker)
 
 	if s.opensearchService == nil {
 		err := errors.New("opensearch service is not initialized")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
 	if llmTracker == nil || llmTracker.RequestID == "" {
 		err := errors.New("llm observability container cannot be nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 	if llmTracker.RequestID == "" {
@@ -311,7 +312,7 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
 	err := s.opensearchService.LLMObservabilityIndexCheck(ctx, index)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -319,26 +320,26 @@ func (s *aiService) trackError(ctx context.Context, llmTracker *dto.LLMObservabi
 	llmTracker.ErrorMessage = aiError.Error()
 	err = s.opensearchService.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 }
 
 func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObservability, result *string) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "AIService.trackSuccess")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "llm", llmTracker)
+	spans, _ := telemetry.StartServiceSpan(ctx, "AIService.trackSuccess")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("llm", llmTracker)
 
 	if s.opensearchService == nil {
 		err := errors.New("opensearch service is not initialized")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
 	if llmTracker == nil {
 		err := errors.New("llm observability container cannot be nil")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 	if llmTracker.RequestID == "" {
@@ -348,7 +349,7 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 	index := fmt.Sprintf("llm-%s", utils.CurrentMonth())
 	err := s.opensearchService.LLMObservabilityIndexCheck(ctx, index)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 
@@ -360,12 +361,12 @@ func (s *aiService) trackSuccess(ctx context.Context, llmTracker *dto.LLMObserva
 
 	err = s.opensearchService.UpsertDocument(ctx, index, &llmTracker.RequestID, llmTracker)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 }
 
-func (s *aiService) newObservabilityContainer(ctx context.Context, span opentracing.Span, request interfaces.AskAIRequest) *dto.LLMObservability {
+func (s *aiService) newObservabilityContainer(ctx context.Context, spans telemetry.Spans, request interfaces.AskAIRequest) *dto.LLMObservability {
 	return &dto.LLMObservability{
 		RequestID:    utils.GenerateNanoIdWithPrefix("llm", 16),
 		RequestType:  request.RequestType.String(),
@@ -373,28 +374,28 @@ func (s *aiService) newObservabilityContainer(ctx context.Context, span opentrac
 		UserID:       common.GetUserIdFromContext(ctx),
 		Tenant:       common.GetTenantFromContext(ctx),
 		Model:        request.Model.String(),
-		TraceID:      utils.GetTraceIDFromSpan(span),
+		TraceID:      telemetry.TraceIdsAsString(&spans),
 		SystemPrompt: utils.IfNotNilString(request.SystemPrompt),
 		Prompt:       utils.IfNotNilString(request.Prompt),
 	}
 }
 
 func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGemini")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askGemini")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requestParams", request)
 
 	if s.geminiConfig.ApiKey == "" {
 		err := s.NewErrorNoRetry("Gemini API key not set", nil)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(s.geminiConfig.ApiKey))
 	if err != nil {
 		err := s.NewErrorNoRetry("cannot initiate Gemini client", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	defer client.Close()
@@ -434,7 +435,7 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 	resp, err := session.SendMessage(ctx, genai.Text(*request.Prompt))
 	if err != nil {
 		err = s.NewRetryableError("Could not ask Gemini", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -457,21 +458,21 @@ func (s *aiService) askGemini(ctx context.Context, request interfaces.AskAIReque
 }
 
 func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askDeepseek")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askDeepseek")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requestParams", request)
 
 	if s.deepseekConfig.ApiKey == "" {
 		err := s.NewErrorNoRetry("Deepseek API key not set", nil)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err)
 		return nil, err
 	}
 
 	if s.deepseekConfig.Url == "" {
 		err := s.NewErrorNoRetry("Deepseek URL not set", nil)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err)
 		return nil, err
 	}
@@ -480,7 +481,7 @@ func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIReq
 	response, err := client.AskDeepseek(ctx, request)
 	if err != nil {
 		err = s.NewErrorNoRetry("Unable to initiate Deepseek client", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -493,14 +494,14 @@ func (s *aiService) askDeepseek(ctx context.Context, request interfaces.AskAIReq
 }
 
 func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAnthropic")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askAnthropic")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requestParams", request)
 
 	if s.anthropicConfig.ApiKey == "" || s.anthropicConfig.ApiPath == "" {
 		err := s.NewErrorNoRetry("Anthropic API key or path not set", nil)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -509,7 +510,7 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 	response, err := client.Invoke(ctx, request)
 	if err != nil {
 		err = s.NewErrorNoRetry("Unable to initiate Anthropic client", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -518,19 +519,19 @@ func (s *aiService) askAnthropic(ctx context.Context, request interfaces.AskAIRe
 		return nil, err
 	}
 
-	span.LogFields(log.String("response", response))
+	spans.LogKV("response", response)
 	return &response, nil
 }
 
 func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askGroq")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "requestParams", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askGroq")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("requestParams", request)
 
 	if s.groqConfig.ApiKey == "" || s.groqConfig.Url == "" {
 		err := s.NewErrorNoRetry("Groq API Key or URL not set", nil)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -539,13 +540,13 @@ func (s *aiService) askGroq(ctx context.Context, request interfaces.AskAIRequest
 	response, err := client.Invoke(ctx, request)
 	if err != nil {
 		err = s.NewErrorNoRetry("Unable to initiate Groq client", err)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if response == "" {
 		err = s.NewRetryableError("Empty response from Groq", nil)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

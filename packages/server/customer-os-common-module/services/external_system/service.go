@@ -2,12 +2,12 @@ package externalsystem
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -15,7 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -34,11 +34,10 @@ func NewExternalSystemService(log logger.Logger, neo4j *neo4j_repository.Reposit
 }
 
 func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant, externalSystem string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.MergeExternalSystem")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemService.MergeExternalSystem")
+	defer spans.Finish()
 
-	span.LogFields(log.String("externalSystem", externalSystem))
+	spans.LogKV("externalSystem", externalSystem)
 
 	if externalSystem == "" {
 		return nil
@@ -46,29 +45,29 @@ func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant,
 
 	err := s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, nil, tenant, externalSystem, externalSystem)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (s *externalSystemService) SetPrimaryExternalId(ctx context.Context, externalSystem, externalId string, linkWith common_srv.LinkWith) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.SetPrimaryExternalId")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemService.SetPrimaryExternalId")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Create external system if it doesn't exist
 	err := s.MergeExternalSystem(ctx, tenant, externalSystem)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Set primary external id
 	err = s.neo4j.ExternalSystemWriteRepository.SetPrimaryExternalId(ctx, tenant, externalSystem, externalId, linkWith.Type.Neo4jLabel(), linkWith.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -80,10 +79,10 @@ func (s *externalSystemService) SetPrimaryExternalId(ctx context.Context, extern
 }
 
 func (s *externalSystemService) GetExternalSystemsForEntities(ctx context.Context, ids []string, entityType model.EntityType) (*neo4jentity.ExternalSystemEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetExternalSystemsForEntities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemService.GetExternalSystemsForEntities")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("ids", ids))
 
 	dbRecords, err := s.neo4j.ExternalSystemReadRepository.GetFor(ctx, common.GetTenantFromContext(ctx), ids, entityType.Neo4jLabel())
 	if err != nil {
@@ -100,14 +99,14 @@ func (s *externalSystemService) GetExternalSystemsForEntities(ctx context.Contex
 }
 
 func (s *externalSystemService) GetPrimaryExternalId(ctx context.Context, externalSystem, linkedWithId string, linkedWithEntityType model.EntityType) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetPrimaryExternalId")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("linkedWithId", linkedWithId), log.String("linkedWithEntityType", linkedWithEntityType.String()))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemService.GetPrimaryExternalId")
+	defer spans.Finish()
+
+	spans.LogKV("externalSystem", externalSystem, "linkedWithId", linkedWithId, "linkedWithEntityType", linkedWithEntityType.String())
 
 	externalSystemEntities, err := s.GetExternalSystemsForEntities(ctx, []string{linkedWithId}, linkedWithEntityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

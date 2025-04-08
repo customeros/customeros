@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -10,8 +12,7 @@ import (
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
@@ -21,7 +22,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -44,9 +45,9 @@ func NewDomainService(log logger.Logger, cache *caches.Cache, postgres *postgres
 }
 
 func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.GetPrimaryDomainForOrganizationWebsite")
-	defer span.Finish()
-	span.LogKV("websiteUrl", websiteUrl)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.GetPrimaryDomainForOrganizationWebsite")
+	defer spans.Finish()
+	spans.LogKV("websiteUrl", websiteUrl)
 
 	websiteUrl = strings.ToLower(websiteUrl)
 
@@ -55,12 +56,12 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 	}
 
 	if s.IsKnownCompanyHostingUrl(ctx, websiteUrl) {
-		span.LogFields(log.Bool("isKnownCompanyHostingUrl", true))
+		spans.LogFields(log.Bool("isKnownCompanyHostingUrl", true))
 		return ""
 	}
 
 	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(websiteUrl)
-	span.LogFields(log.Bool("isPrimary", isPrimary), log.String("primaryDomain", primaryDomain))
+	spans.LogFields(log.Bool("isPrimary", isPrimary), log.String("primaryDomain", primaryDomain))
 
 	if primaryDomain == "" {
 		return ""
@@ -74,15 +75,15 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 		return ""
 	}
 
-	span.LogKV("result.primaryDomain", primaryDomain)
+	spans.LogKV("result.primaryDomain", primaryDomain)
 
 	return primaryDomain
 }
 
 func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.IsKnownCompanyHostingUrl")
-	defer span.Finish()
-	span.LogKV("website", website)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.IsKnownCompanyHostingUrl")
+	defer spans.Finish()
+	spans.LogKV("website", website)
 
 	website = strings.ToLower(website)
 
@@ -94,24 +95,24 @@ func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website st
 			continue
 		}
 		if strings.HasPrefix(website, pattern) || strings.Contains(website, "."+pattern) || strings.Contains(website, "/"+pattern) {
-			span.LogFields(log.String("result.pattern", pattern))
-			span.LogFields(log.Bool("result", true))
+			spans.LogKV("result.pattern", pattern)
+			spans.LogFields(log.Bool("result", true))
 			return true
 		}
 	}
-	span.LogFields(log.Bool("result", false))
+	spans.LogFields(log.Bool("result", false))
 	return false
 }
 
 func (s *domainService) getKnownOrganizationHostingUrlPatterns(ctx context.Context) []string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.getKnownOrganizationHostingUrlPatterns")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.getKnownOrganizationHostingUrlPatterns")
+	defer spans.Finish()
 
 	urlPatterns := s.cache.GetOrganizationWebsiteHostingUrlPatters()
 	if len(urlPatterns) == 0 {
 		dbUrlPatterns, err := s.postgres.OranizationWebsiteHostingPlatformRepository.GetAllUrlPatterns(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error while getting known organization hosting url patterns: %v", err)
 			return []string{}
 		}
@@ -124,25 +125,25 @@ func (s *domainService) getKnownOrganizationHostingUrlPatterns(ctx context.Conte
 		}
 		s.cache.SetOrganizationWebsiteHostingUrlPatters(urlPatterns)
 	}
-	span.LogFields(log.Int("result.count", len(urlPatterns)))
+	spans.LogKV("result.count", len(urlPatterns))
 	return urlPatterns
 }
 
 func (s *domainService) GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.DomainEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.GetAllDomainsForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationIds", strings.Join(organizationIds, ",")))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.GetAllDomainsForOrganizations")
+	defer spans.Finish()
+
+	spans.LogKV("organizationIds", strings.Join(organizationIds, ","))
 
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	domainsDbResponse, err := s.neo4j.DomainReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	domainEntities := neo4jentity.DomainEntities{}
@@ -155,27 +156,27 @@ func (s *domainService) GetAllDomainsForOrganizations(ctx context.Context, organ
 }
 
 func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.UpdateDomainPrimaryDetails")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, domain)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.UpdateDomainPrimaryDetails")
+	defer spans.Finish()
+
+	spans.TagEntity(domain)
 
 	domain = strings.ToLower(strings.TrimSpace(domain))
 
 	// check if domain exists
 	domainNode, err := s.neo4j.DomainReadRepository.GetDomain(ctx, nil, domain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error while getting domain"))
+		spans.TraceError(errors.Wrap(err, "Error while getting domain"))
 		return err
 	}
 	if domainNode == nil {
 		err = errors.New("Domain not found: " + domain)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	accessible, isPrimary, primaryDomain := s.CheckDomainWithMailsherpa(ctx, domain)
-	span.LogFields(log.Bool("result.mailsherpa.isPrimary", isPrimary), log.String("result.mailsherpa.primaryDomain", primaryDomain), log.Bool("result.mailsherpa.accessible", accessible))
+	spans.LogFields(log.Bool("result.mailsherpa.isPrimary", isPrimary), log.String("result.mailsherpa.primaryDomain", primaryDomain), log.Bool("result.mailsherpa.accessible", accessible))
 	if primaryDomain != "" {
 		if !utils.IsValidDomain(primaryDomain) {
 			primaryDomain = ""
@@ -189,7 +190,7 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 	err = s.neo4j.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary, accessible)
 	if err != nil {
 		// Log the error in tracing
-		tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
+		spans.TraceError(errors.Wrap(err, "Error while setting primary details asynchronously"))
 	}
 
 	_ = s.events.Publisher.PublishFanoutEvent(ctx, domain, model.DOMAIN, dto.UpdateDomain{Primary: isPrimary, PrimaryDomain: primaryDomain, Accessible: accessible})
@@ -199,17 +200,17 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 		err = s.MergeDomain(ctx, nil, primaryDomain)
 		if err != nil {
 			// Log the error during domain merging
-			tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain"))
+			spans.TraceError(errors.Wrap(err, "Error while merging primary domain"))
 		}
 	}
 	return nil
 }
 
 func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.MergeDomain")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("domain", domain)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.MergeDomain")
+	defer spans.Finish()
+
+	spans.LogKV("domain", domain)
 
 	domain = strings.ToLower(strings.TrimSpace(domain))
 
@@ -219,7 +220,7 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 
 	if !utils.IsValidDomain(domain) {
 		err := errors.New("Invalid domain: " + domain)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -242,7 +243,7 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 				// read domain from neo4j
 				domainEntity, err := s.GetDomain(ctx, domain)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error while getting domain"))
+					spans.TraceError(errors.Wrap(err, "Error while getting domain"))
 					return nil
 				}
 
@@ -250,7 +251,7 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 				if domainEntity.IsPrimary == nil {
 					err = s.UpdateDomainPrimaryDetails(ctx, domain)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "Error while checking and updating domain primary"))
+						spans.TraceError(errors.Wrap(err, "Error while checking and updating domain primary"))
 					}
 				}
 			}
@@ -260,7 +261,7 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -268,14 +269,14 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 }
 
 func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jentity.DomainEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.GetDomain")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, domain)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.GetDomain")
+	defer spans.Finish()
+
+	spans.TagEntity(domain)
 
 	domainDbNode, err := s.neo4j.DomainReadRepository.GetDomain(ctx, nil, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainDbNode)
@@ -283,15 +284,15 @@ func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jent
 }
 
 func (s *domainService) IsAcceptedDomainForOrganization(ctx context.Context, domain string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.IsAcceptedDomainForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, domain)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.IsAcceptedDomainForOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(domain)
 
 	personalEmailProviders := s.cache.GetPersonalEmailProviders()
 	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
 		err := fmt.Errorf("personal email providers not loaded")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false
 	}
 

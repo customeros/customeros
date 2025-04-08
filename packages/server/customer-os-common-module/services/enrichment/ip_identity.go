@@ -5,29 +5,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 const CACHE_LOOKBACK_DAYS = 30
 
 func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfaces.SnitcherResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.GetSnitcherData")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("ip", ip)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.GetSnitcherData")
+	defer spans.Finish()
+
+	spans.LogKV("ip", ip)
 
 	// check caching
 	results, err := s.postgres.CacheIPIdentifyRepository.FindByIP(ctx, ip, CACHE_LOOKBACK_DAYS)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	if results != nil && results.SnitcherData != "" && results.Domain != "" {
@@ -42,7 +40,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 	// call snitcher
 	snitcherResponse, respString, err := s.callSnitcher(ctx, ip)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -56,7 +54,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 
 	err = s.postgres.CacheIPIdentifyRepository.Create(ctx, snitcherData)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to store response: %v", err)
 	}
 
@@ -64,15 +62,15 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 }
 
 func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*interfaces.SnitcherResponse, *string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callSnitcher")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("ip", ip)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.callSnitcher")
+	defer spans.Finish()
+
+	spans.LogKV("ip", ip)
 
 	// validate if snitcher is configured
 	if s.config.SnitcherConfig.ApiKey == "" || s.config.SnitcherConfig.Url == "" {
 		err := fmt.Errorf("snitcher is not configured")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil, err
 	}
 
@@ -82,7 +80,7 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 	// Create POST request
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.SnitcherConfig.Url, ip), nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil, fmt.Errorf("failed to create POST request: %v", err)
 	}
 
@@ -93,20 +91,20 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 	// Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil, fmt.Errorf("failed to perform POST request: %v", err)
 	}
 	defer resp.Body.Close()
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil, fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	// Check status code
-	span.LogFields(log.Int("response.statusCode", resp.StatusCode))
+	spans.LogKV("response.statusCode", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
-		span.LogKV("result.rawSnitcherResponse", string(responseBody))
+		spans.LogKV("result.rawSnitcherResponse", string(responseBody))
 		return nil, nil, fmt.Errorf("snitcher API returned non-200 status code: %d", resp.StatusCode)
 	}
 
@@ -118,24 +116,24 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 
 	snitcherData, err := buildSnitcherResponse(ctx, responseBody)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, nil, fmt.Errorf("faild to parse snitcher response: %v", err)
 	}
 
-	span.LogKV("result.rawSnitcherResponse", string(responseBody))
-	tracing.LogObjectAsJson(span, "result.snitcherData", snitcherData)
+	spans.LogKV("result.rawSnitcherResponse", string(responseBody))
+	spans.LogObjectAsJson("result.snitcherData", snitcherData)
 	return snitcherData, &responseString, nil
 }
 
 func buildSnitcherResponse(ctx context.Context, responseBody []byte) (*interfaces.SnitcherResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.buildSnitcherResponse")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.buildSnitcherResponse")
+	defer spans.Finish()
+
 	// Parse the JSON request body
 	var snitcherResponse interfaces.SnitcherResponse
 	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.String("snitcherResponseBody", string(responseBody)))
+		spans.TraceError(err)
+		spans.LogKV("snitcherResponseBody", string(responseBody))
 		return nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 	}
 

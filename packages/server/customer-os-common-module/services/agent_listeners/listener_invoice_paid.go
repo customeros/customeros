@@ -2,6 +2,7 @@ package agent_listeners
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
@@ -11,10 +12,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
 )
 
 type InvoicePaidListener struct {
@@ -64,32 +64,32 @@ func (l *InvoicePaidListener) ExecutingAgents() []enum.AgentType {
 }
 
 func (l *InvoicePaidListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicePaidListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoicePaidListener.Handle")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	data, err := events.DecodeEventData[dto.InvoicePaid](ctx, event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if data.InvoiceID == "" {
 		err := errors.New("missing invoice id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	activeAgents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	if len(activeAgents) == 0 {
@@ -101,13 +101,13 @@ func (l *InvoicePaidListener) Handle(ctx context.Context, baseEvent any) error {
 	for _, agent := range activeAgents {
 		initialParams, err := utils.StructToMap(data)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 			continue
 		}
 		agentExecutionId, err := l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams, nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			errs = multierr.Append(errs, err)
 		}
 		agentExecutionIds = append(agentExecutionIds, agentExecutionId)
@@ -117,7 +117,7 @@ func (l *InvoicePaidListener) Handle(ctx context.Context, baseEvent any) error {
 		for _, agentExecutionId := range agentExecutionIds {
 			err := l.postgresRepositories.AgentExecutionRepository.GoalAchieved(ctx, agentExecutionId, true, utils.StringPtr(data.InvoiceID))
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to mark agent execution as goal achieved"))
+				spans.TraceError(errors.Wrap(err, "failed to mark agent execution as goal achieved"))
 			}
 		}
 	}

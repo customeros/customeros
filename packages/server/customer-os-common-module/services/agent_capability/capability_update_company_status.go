@@ -2,19 +2,19 @@ package agent_capability
 
 import (
 	"context"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -93,17 +93,17 @@ func (c *UpdateCompanyStatusCapability) ValidateInput(input UpdateCompanyStatusI
 }
 
 func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[UpdateCompanyStatusInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, NoOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UpdateCompanyStatusCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("executionContainer", executionContainer)
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
@@ -112,40 +112,40 @@ func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionCo
 	case executionContainer.InputData.IcpFit == enum.IcpIsFit:
 		err = c.processICPFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return enum.CapabilityExecutionError, NoOutput{}, err
 		}
 
 	case executionContainer.InputData.IcpFit == enum.IcpNotFit:
 		err = c.processICPNotAFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return enum.CapabilityExecutionError, NoOutput{}, err
 		}
 
 	default:
 		err = errors.New("Not implemented yet")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, NoOutput{}, err
 	}
 
 	err = c.postgres.AgentExecutionRepository.GoalAchieved(ctx, executionContainer.AgentExecutionID, true, nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish ignore email event"))
+		spans.TraceError(errors.Wrap(err, "failed to publish ignore email event"))
 	}
 
 	return enum.CapabilityExecutionCompleted, NoOutput{}, nil
 }
 
 func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organizationID string, reasons []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.processICPFit")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.TagEntity(span, organizationID)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UpdateCompanyStatusCapability.processICPFit")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
 		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
@@ -154,17 +154,17 @@ func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organ
 		IcpFitReasons: &reasons,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, organizationID string, reasons []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.processICPNotAFit")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.TagEntity(span, organizationID)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UpdateCompanyStatusCapability.processICPNotAFit")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
 		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipNotAFit),
@@ -173,7 +173,7 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 		IcpFitReasons: &reasons,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil

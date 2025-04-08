@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/url"
 	"strings"
@@ -18,8 +19,7 @@ import (
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	mimemail "github.com/emersion/go-message/mail"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -33,7 +33,6 @@ import (
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type googleService struct {
@@ -51,10 +50,9 @@ func NewGoogleService(cfg *config.GoogleOAuthConfig, postgresRepositories *postg
 }
 
 func (s *googleService) GetGmailService(ctx context.Context, username, tenant string) (*gmail.Service, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailService")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("username", username))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.GetGmailService")
+	defer spans.Finish()
+	spans.LogKV("username", username)
 
 	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmail(ctx, tenant, commonenum.SourceGmail.String(), username)
 	if err != nil {
@@ -80,8 +78,8 @@ func (s *googleService) GetGmailService(ctx context.Context, username, tenant st
 }
 
 func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, tokenEntity postgresEntity.OAuthTokenEntity) (*gmail.Service, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailServiceWithOauthToken")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.GetGmailServiceWithOauthToken")
+	defer spans.Finish()
 
 	oauth2Config := &oauth2.Config{
 		ClientID:     s.cfg.ClientId,
@@ -91,13 +89,13 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 
 	accessToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.AccessToken)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	refreshToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.RefreshToken)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -115,12 +113,12 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 		if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
 			err := s.postgres.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			return nil, fmt.Errorf("token is invalid and marked for manual refresh")
 		} else if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -128,17 +126,17 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 
 			accessToken, err = postgresEntity.EncryptToken(s.cfg.EncryptionKey, newToken.AccessToken)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 
 			refreshToken, err = postgresEntity.EncryptToken(s.cfg.EncryptionKey, newToken.RefreshToken)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 
 			_, err := s.postgres.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, accessToken, refreshToken, newToken.Expiry)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 		}
@@ -149,12 +147,12 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
 		err := s.postgres.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
 	} else if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -170,19 +168,19 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 			// Handle 401 Unauthorized error
 			err3 := s.postgres.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err3 != nil {
-				tracing.TraceErr(span, errors.Wrap(err3, "failed to mark token for manual refresh"))
+				spans.TraceError(errors.Wrap(err3, "failed to mark token for manual refresh"))
 				return nil, err3
 			}
 			return nil, fmt.Errorf("token is invalid and marked for manual refresh")
 
 		case errors.As(err2, &urlErr):
 			// Handle URL error (e.g., network issues)
-			tracing.TraceErr(span, errors.Wrap(urlErr, "network error occurred"))
+			spans.TraceError(errors.Wrap(urlErr, "network error occurred"))
 			return nil, fmt.Errorf("network error occurred: %w", urlErr)
 
 		default:
 			// Handle any other errors
-			tracing.TraceErr(span, errors.Wrap(err2, "unexpected error occurred"))
+			spans.TraceError(errors.Wrap(err2, "unexpected error occurred"))
 			return nil, fmt.Errorf("unexpected error occurred: %w", err2)
 		}
 	}
@@ -191,8 +189,8 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 }
 
 func (s *googleService) ReadEmails(ctx context.Context, batchSize int64, importState *postgresEntity.IngestEmailImportState) ([]*postgresEntity.EmailRawData, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.ReadEmails")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.ReadEmails")
+	defer spans.Finish()
 
 	var results []*postgresEntity.EmailRawData
 
@@ -327,19 +325,19 @@ func (s *googleService) ReadEmailFromGoogle(gmailService *gmail.Service, usernam
 }
 
 func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.EmailMessage) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.SendEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.SendEmail")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	gSrv, err := s.GetGmailService(ctx, request.From, tenant)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
 
 	if gSrv == nil {
-		tracing.TraceErr(span, errors.New("unable to build a gmail service with service account or auth token"))
+		spans.TraceError(errors.New("unable to build a gmail service with service account or auth token"))
 		return err
 	}
 
@@ -378,10 +376,10 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 	threadId := ""
 
 	if request.ReplyTo != nil {
-		span.LogFields(log.String("replyTo", *request.ReplyTo))
+		spans.LogKV("replyTo", *request.ReplyTo)
 		interactionEventNode, err := s.neo4j.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
@@ -389,7 +387,7 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 		emailChannelData := neo4j_entity.EmailChannelData{}
 		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
 		}
 
@@ -398,19 +396,19 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 
 		interactionSessionNode, err := s.neo4j.InteractionSessionReadRepository.GetForInteractionEvent(ctx, tenant, *request.ReplyTo)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
 		if interactionSessionNode == nil {
-			tracing.TraceErr(span, errors.New("interaction session not found"))
+			spans.TraceError(errors.New("interaction session not found"))
 			return errors.New("interaction session not found")
 		}
 
 		interactionSession := neo4jmapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode)
 
 		if interactionSession != nil && interactionSession.Identifier != "" {
-			span.LogFields(log.String("threadId", interactionSession.Identifier))
+			spans.LogKV("threadId", interactionSession.Identifier)
 			threadId = interactionSession.Identifier
 		}
 	}
@@ -418,21 +416,21 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 	// Create a new mail writer
 	mw, err := mimemail.CreateWriter(&b, h)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// Create a text part
 	tw, err := mw.CreateInline()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	var th mimemail.InlineHeader
 	th.Set("Content-Type", "text/html")
 	w, err := tw.CreatePart(th)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	io.WriteString(w, request.Content)
@@ -452,7 +450,7 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 
 	result, err := gSrv.Users.Messages.Send("me", msgToSend).Do()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -460,7 +458,7 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 
 	generatedMessage, err := gSrv.Users.Messages.Get("me", result.Id).Do()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	for _, header := range generatedMessage.Payload.Headers {

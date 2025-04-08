@@ -2,17 +2,16 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type SendInvoiceViaEmailCapability struct {
@@ -75,31 +74,31 @@ type SendInvoiceViaEmailInput struct {
 type SendInvoiceViaEmailOutput struct{}
 
 func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendInvoiceViaEmailInput, postgres_entity.NoConfig]) (enum.CapabilityExecutionStatus, SendInvoiceViaEmailOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceViaEmailCapability.Execute")
-	defer span.Finish()
-	tracing.SetDefaultAgentCapabilitySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
-	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendInvoiceViaEmailCapability.Execute")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", executionContainer.InputData)
+	spans.LogObjectAsJson("config", executionContainer.ConfigData)
 
 	result := SendInvoiceViaEmailOutput{}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		spans.TraceError(errors.Wrap(err, "invalid input"))
 		return enum.CapabilityExecutionError, result, err
 	}
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		spans.TraceError(errors.Wrap(err, "invalid config"))
 		return enum.CapabilityExecutionError, result, err
 	}
 
 	invoice, err := c.invoiceService.GetById(ctx, nil, executionContainer.InputData.InvoiceID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if invoice == nil {
 		err := errors.New("invoice not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionError, result, err
 	}
 	if invoice.DryRun {
@@ -108,41 +107,41 @@ func (c *SendInvoiceViaEmailCapability) Execute(ctx context.Context, executionCo
 
 	paymentEnabled, err := c.isPaymentCapabilityEnabled(ctx, executionContainer.AgentExecutionID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	if paymentEnabled {
 		err = c.invoiceService.GenerateNewPaymentLink(ctx, executionContainer.InputData.InvoiceID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			// Do not stop capability execution if payment link generation fails
 		}
 	}
 
 	err = c.invoiceService.SendInvoiceNotification(ctx, executionContainer.InputData.InvoiceID, paymentEnabled)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return enum.CapabilityExecutionCompleted, result, err // failed send invoice email is not a blocker, since a new attempt will be made automatically by cron
 	}
 
-	tracing.LogObjectAsJson(span, "result", result)
+	spans.LogObjectAsJson("result", result)
 	return enum.CapabilityExecutionCompleted, result, nil
 }
 
 func (c *SendInvoiceViaEmailCapability) isPaymentCapabilityEnabled(ctx context.Context, agentExecutionId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendInvoiceViaEmailCapability.isPaymentCapabilityEnabled")
-	defer span.Finish()
-	span.LogFields(log.String("agentExecutionId", agentExecutionId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SendInvoiceViaEmailCapability.isPaymentCapabilityEnabled")
+	defer spans.Finish()
+	spans.LogKV("agentExecutionId", agentExecutionId)
 
 	// get agent id from execution
 	agentExecution, err := c.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 	if agentExecution == nil || utils.IfNotNilString(agentExecution.AgentID) == "" {
 		err := errors.New("agent execution not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 	agentId := utils.IfNotNilString(agentExecution.AgentID)
@@ -150,12 +149,12 @@ func (c *SendInvoiceViaEmailCapability) isPaymentCapabilityEnabled(ctx context.C
 	// get agent
 	agent, err := c.postgresRepositories.AgentRepository.GetById(ctx, agentId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 	if agent == nil {
 		err := errors.New("agent not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 

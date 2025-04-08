@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strconv"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -23,7 +24,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -61,18 +62,17 @@ func NewAgentService(
 }
 
 func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAgentById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.GetAgentById")
+	defer spans.Finish()
 
 	agent, err := a.postgresRepositories.AgentRepository.GetById(ctx, agentID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if agent == nil {
 		err := errors.New("agent not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 			continue // Skip if executor not found
 		}
 		if err := a.mergeDefaultConfig(&agent.Capabilities[i], executor); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			continue
 		}
 	}
@@ -142,13 +142,12 @@ func (a *agentService) mergeDefaultConfig(capability *postgresentity.Capability,
 }
 
 func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAllAgentsByTenant")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.GetAllAgentsByTenant")
+	defer spans.Finish()
 
 	agents, err := a.postgresRepositories.AgentRepository.GetAll(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -160,7 +159,7 @@ func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agen
 				continue // Skip if executor not found
 			}
 			if err := a.mergeDefaultConfig(&agent.Capabilities[i], executor); err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				continue
 			}
 		}
@@ -170,26 +169,25 @@ func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agen
 }
 
 func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgresentity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgent")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.CreateAgent")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("tenant not found in context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	// get config from registry
 	agentRegistry, err := a.postgresRepositories.AgentRegistryRepository.FindByType(ctx, agentType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if agentRegistry == nil {
 		err := errors.New("no agent found in agent repository")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -197,12 +195,12 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	if agentRegistry.IsUnique {
 		agents, err := a.postgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{agentType})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if len(agents) > 0 {
 			err := errors.New("agent already exists")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
@@ -230,17 +228,17 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		// get default config for each capability
 		capabilityType, err := enum.GetAgentCapability(registryCapability)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		executor, err := a.agentCapabilities.GetExecutor(capabilityType)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		defaultCapability, err := a.createDefaultCapability(ctx, capabilityType, executor.Name(), i+1)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -254,17 +252,17 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	for _, registryListener := range agentRegistry.ListenerEvents {
 		listenerEvent, err := enum.GetAgentListener(registryListener)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		listenerHandler, err := a.agentListeners.GetListener(listenerEvent)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		defaultListener, err := a.createDefaultListener(ctx, listenerEvent, listenerHandler.Name(), position)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		position++
@@ -276,10 +274,10 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	tracing.TagEntity(span, newAgent.ID)
+	spans.TagEntity(newAgent.ID)
 
 	// publish agent created event
 	err = a.events.Publisher.PublishFanoutEvent(ctx, newAgent.ID, model.AGENT, dto.CreateAgent{
@@ -296,28 +294,26 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		RegistryID:   newAgent.RegistryID,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message CreateAgent"))
 	}
 
 	return newAgent, nil
 }
 
 func (a *agentService) DeleteAgent(ctx context.Context, agentId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.DeleteAgent")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.DeleteAgent")
+	defer spans.Finish()
 
 	return a.postgresRepositories.AgentRepository.Delete(ctx, agentId)
 }
 
 func (r *agentService) GetAgentInfo(ctx context.Context) (*map[enum.AgentType]interfaces.AgentInfo, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.GetAgentInfo")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentRegistryService.GetAgentInfo")
+	defer spans.Finish()
 
 	agentRegistry, err := r.postgresRepositories.AgentRegistryRepository.FindAll(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -333,13 +329,12 @@ func (r *agentService) GetAgentInfo(ctx context.Context) (*map[enum.AgentType]in
 }
 
 func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID string, agentType enum.AgentType) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetNorthStarMetricById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.GetNorthStarMetricById")
+	defer spans.Finish()
 
 	registryAgent, err := a.postgresRepositories.AgentRegistryRepository.FindByType(ctx, agentType)
 	if err != nil || registryAgent == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -347,7 +342,7 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 	case enum.AgentCashflowGuardian:
 		tenantSettings, err := a.tenantSettingsService.GetTenantSettings(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", nil
 		}
 		output := strings.Replace(registryAgent.Metric, "{currencySymbol}", tenantSettings.BaseCurrency.Symbol(), 1)
@@ -355,13 +350,13 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 		// get invoice ids
 		invoiceIds, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedImpactedIdsLast30Days(ctx, agentID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", nil
 		}
 
 		invoices, err := a.invoiceService.GetInvoicesByIds(ctx, invoiceIds)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", nil
 		}
 		amount := float64(0)
@@ -372,7 +367,7 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 				} else {
 					amountInBaseCurrency, err := a.currencyService.GetAmountInCurrency(ctx, invoice.TotalAmount, invoice.Currency.String(), tenantSettings.BaseCurrency.String())
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return "", nil
 					}
 					amount += amountInBaseCurrency
@@ -380,28 +375,27 @@ func (a *agentService) GetNorthStarMetricById(ctx context.Context, agentID strin
 			}
 		}
 		output = strings.Replace(output, "{amount}", humanize.CommafWithDigits(amount, 2), 1)
-		span.LogKV("output", output)
+		spans.LogKV("output", output)
 		return output, nil
 	default:
 		goalAchievedCount, err := a.postgresRepositories.AgentExecutionRepository.GetGoalAchievedCountLast30Days(ctx, agentID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		output := strings.Replace(registryAgent.Metric, "{count}", strconv.FormatInt(goalAchievedCount, 10), 1)
-		span.LogKV("output", output)
+		spans.LogKV("output", output)
 		return output, nil
 	}
 }
 
 func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string, position int) (*postgres_entity.Capability, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.createDefaultCapability")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.createDefaultCapability")
+	defer spans.Finish()
 
 	executor, err := a.agentCapabilities.GetExecutor(capabilityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	config := executor.DefaultConfig()
@@ -415,22 +409,21 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 	}
 	err = agentCapability.SetConfig(config)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", agentCapability)
+	spans.LogObjectAsJson("result", agentCapability)
 	return &agentCapability, nil
 }
 
 func (a *agentService) createDefaultListener(ctx context.Context, listenerEvent enum.AgentListenerEvent, listenerName string, position int) (*postgres_entity.Listener, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.createDefaultListener")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.createDefaultListener")
+	defer spans.Finish()
 
 	handler, err := a.agentListeners.GetListener(listenerEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	config := handler.DefaultConfig()
@@ -444,30 +437,30 @@ func (a *agentService) createDefaultListener(ctx context.Context, listenerEvent 
 	}
 	err = agentListener.SetConfig(config)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	tracing.LogObjectAsJson(span, "result", agentListener)
+	spans.LogObjectAsJson("result", agentListener)
 	return &agentListener, nil
 }
 
 func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgresentity.Capability, listeners []postgresentity.Listener) (*postgresentity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.UpdateAgent")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.TagEntity(span, agentId)
-	tracing.LogObjectAsJson(span, "agentFields", agentFields)
-	tracing.LogObjectAsJson(span, "capabilities", capabilities)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.UpdateAgent")
+	defer spans.Finish()
+
+	spans.TagEntity(agentId)
+	spans.LogObjectAsJson("agentFields", agentFields)
+	spans.LogObjectAsJson("capabilities", capabilities)
 
 	agentEntity, err := a.postgresRepositories.AgentRepository.GetById(ctx, agentId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if agentEntity == nil {
 		err := errors.New("agent not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if agentFields.Name != nil {
@@ -491,43 +484,43 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 
 	err = a.updateCapabilities(ctx, agentEntity, capabilities)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	err = a.updateListeners(ctx, agentEntity, listeners)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	err = a.postgresRepositories.AgentRepository.UpdateCapabilities(ctx, agentEntity.Capabilities)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	err = a.postgresRepositories.AgentRepository.UpdateListeners(ctx, agentEntity.Listeners)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	updatedAgent, err := a.postgresRepositories.AgentRepository.Update(ctx, *agentEntity)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilities, Listeners: listeners}
 	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message {UpdateAgent}"))
+		spans.TraceError(errors.Wrap(err, "unable to publish message {UpdateAgent}"))
 	}
 
 	return updatedAgent, nil
 }
 
 func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *postgresentity.Agent, capabilities []postgresentity.Capability) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.updateCapabilities")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.updateCapabilities")
+	defer spans.Finish()
 
 	agentEntity.UpdateCapabilities(capabilities)
 
@@ -540,13 +533,13 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 
 		executor, err := a.agentCapabilities.GetExecutor(capability.Type)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		config := executor.DefaultConfig()
 		err = capability.GetConfig(&config)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -557,7 +550,7 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 			}
 			err = capability.SetConfig(config)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 			agentEntity.Capabilities[i] = capability
@@ -568,8 +561,8 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 }
 
 func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgresentity.Agent, listeners []postgresentity.Listener) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.updateListeners")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.updateListeners")
+	defer spans.Finish()
 
 	agentEntity.UpdateListeners(listeners)
 
@@ -582,13 +575,13 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 
 		handler, err := a.agentListeners.GetListener(listener.Type)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		config := handler.DefaultConfig()
 		err = listener.GetConfig(&config)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -599,7 +592,7 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 			}
 			err = listener.SetConfig(config)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 			agentEntity.Listeners[i] = listener
@@ -610,9 +603,8 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 }
 
 func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agent, triggerEvent, traceId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgentExecutionRecord")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AgentService.CreateAgentExecutionRecord")
+	defer spans.Finish()
 
 	agentExecutionRecord := postgresentity.AgentExecution{
 		Tenant:        agent.Tenant,
@@ -626,13 +618,13 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 
 	createdRecord, err := a.postgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if createdRecord == nil {
 		err := errors.New("unable to create agent execution record")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

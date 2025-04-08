@@ -2,14 +2,15 @@ package jobrole
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -18,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -49,16 +50,16 @@ func (s *jobRoleService) getDriver() neo4j.DriverWithContext {
 }
 
 func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id, contactId, organizationId *string, dataFields data_fields.JobRoleFields) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.Save")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("dataFields", dataFields))
-	span.LogFields(log.String("id", utils.IfNotNilString(id)), log.String("contactId", utils.IfNotNilString(contactId)), log.String("organizationId", utils.IfNotNilString(organizationId)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.Save")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("dataFields", dataFields))
+	spans.LogKV("id", utils.IfNotNilString(id), "contactId", utils.IfNotNilString(contactId), "organizationId", utils.IfNotNilString(organizationId))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	tenant := common.GetTenantFromContext(ctx)
@@ -91,7 +92,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	}
 
 	if createFlow {
-		span.LogFields(log.String("flow", "create"))
+		spans.LogKV("flow", "create")
 
 		// set default values
 		if dataFields.Source == nil {
@@ -103,14 +104,14 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		// generate new id
 		jobRoleId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelJobRole)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	} else {
-		span.LogFields(log.String("flow", "update"))
+		spans.LogKV("flow", "update")
 	}
 
-	tracing.TagEntity(span, jobRoleId)
+	spans.TagEntity(jobRoleId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
@@ -119,7 +120,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 				// validate organization exists
 				err = s.orgService.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, utils.IfNotNilString(organizationId))
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return "", err
 				}
 
@@ -148,7 +149,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishFanoutEvent(ctx, jobRoleId, model.JOB_ROLE, dto.SaveJobRole{dataFields})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 
 			if utils.IfNotNilString(contactId) != "" {
@@ -168,10 +169,10 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 }
 
 func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string) (*neo4j_entity.JobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetAllForContact")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId)
 
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
@@ -190,10 +191,10 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 }
 
 func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []string) (*neo4j_entity.JobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForContacts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("contactIds", contactIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetAllForContacts")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("contactIds", contactIds))
 
 	jobRoles, err := s.neo4j.JobRoleReadRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
@@ -209,10 +210,10 @@ func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []str
 }
 
 func (s *jobRoleService) GetAllForUsers(ctx context.Context, userIds []string) (*neo4j_entity.JobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForUsers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("userIds", userIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetAllForUsers")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("userIds", userIds))
 
 	jobRoles, err := s.neo4j.JobRoleReadRepository.GetAllForUsers(ctx, common.GetTenantFromContext(ctx), userIds)
 	if err != nil {
@@ -228,10 +229,10 @@ func (s *jobRoleService) GetAllForUsers(ctx context.Context, userIds []string) (
 }
 
 func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organizationId string) (*neo4j_entity.JobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetAllForOrganization")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
 
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
@@ -250,10 +251,10 @@ func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organization
 }
 
 func (s *jobRoleService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.JobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetAllForOrganizations")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("organizationIds", organizationIds))
 
 	jobRoles, err := s.neo4j.JobRoleReadRepository.GetAllForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 	if err != nil {
@@ -269,10 +270,10 @@ func (s *jobRoleService) GetAllForOrganizations(ctx context.Context, organizatio
 }
 
 func (s *jobRoleService) DeleteJobRole(ctx context.Context, contactId, roleId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.DeleteJobRole")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("roleId", roleId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.DeleteJobRole")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId, "roleId", roleId)
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.neo4j.Neo4jDriver)
 	defer session.Close(ctx)
@@ -287,10 +288,10 @@ func (s *jobRoleService) DeleteJobRole(ctx context.Context, contactId, roleId st
 }
 
 func (s *jobRoleService) GetJobRolesByIds(ctx context.Context, ids []string) (*neo4j_entity.JobRoleEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetJobRolesByIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetJobRolesByIds")
+	defer spans.Finish()
+
+	spans.LogFields(log.Object("ids", ids))
 
 	jobRoleDbNodes, err := s.neo4j.JobRoleReadRepository.GetByIds(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
@@ -304,10 +305,10 @@ func (s *jobRoleService) GetJobRolesByIds(ctx context.Context, ids []string) (*n
 }
 
 func (s *jobRoleService) IdentifyJobRole(ctx context.Context, contactId, organizationId string) (*neo4j_entity.JobRoleEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.IdentifyJobRoleId")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.IdentifyJobRoleId")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId, "organizationId", organizationId)
 
 	if contactId == "" {
 		return nil, errors.New("contactId is mandatory")
@@ -321,31 +322,31 @@ func (s *jobRoleService) IdentifyJobRole(ctx context.Context, contactId, organiz
 		jobRoleDbNode, err = s.neo4j.JobRoleReadRepository.GetJobRoleForContactWithoutOrganization(ctx, common.GetTenantFromContext(ctx), contactId)
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if jobRoleDbNode == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 
 	jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(jobRoleDbNode)
-	span.LogFields(log.Bool("result.found", true))
-	span.LogFields(log.String("result.jobRoleId", jobRoleEntity.Id))
+	spans.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.jobRoleId", jobRoleEntity.Id)
 
 	return jobRoleEntity, nil
 }
 
 func (s *jobRoleService) GetById(ctx context.Context, jobRoleId string) (*neo4j_entity.JobRoleEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("jobRoleId", jobRoleId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "JobRoleService.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("jobRoleId", jobRoleId)
 
 	dbNode, err := s.neo4j.JobRoleReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), jobRoleId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return neo4jmapper.MapDbNodeToJobRoleEntity(dbNode), nil
