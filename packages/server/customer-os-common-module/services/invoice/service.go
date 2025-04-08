@@ -114,7 +114,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.InvoiceContract")
 	defer spans.Finish()
 
-	spans.LogKV("contractId", contractId)
+	spans.TagEntity(contractId)
 	spans.LogObjectAsJson("dataFields", dataFields)
 
 	// validate tenant
@@ -341,7 +341,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 
 		// Step 6 - prepare invoice status
 		invoiceStatus := neo4jenum.InvoiceStatusDue
-		if len(invoiceLines) == 0 {
+		if len(invoiceLines) == 0 && !preview {
 			invoiceStatus = neo4jenum.InvoiceStatusEmpty
 		} else {
 			if dryRun && preview {
