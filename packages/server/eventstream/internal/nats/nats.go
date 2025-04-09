@@ -8,7 +8,7 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/customeros/customeros/packages/server/inbox/internal/config"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/config"
 )
 
 type NATSConnections struct {
@@ -24,7 +24,7 @@ func (n *NATSConnections) Close() {
 }
 
 const (
-	INBOX_STREAM = "inbox"
+	EVENTSTREAM_STREAM = "eventstream"
 
 	MAX_STREAM_RECONNECTS = -1 // never stop trying to reconnect
 )
@@ -37,7 +37,7 @@ func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, 
 	}
 
 	opts := []nats.Option{
-		nats.Name("mailstack"),
+		nats.Name("eventstream"),
 		nats.MaxReconnects(MAX_STREAM_RECONNECTS),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
 			log.Printf("NATS disconnected: %v", err)
@@ -85,9 +85,13 @@ func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, 
 
 func setupNATSStreams(js nats.JetStreamContext, replicas int) error {
 	persistedSubjects := []string{
-		"inbox.errors.>",
+		"eventstream.errors.>",
+		"eventstream.*.tracker.>",
+		"eventstream.*.proxy.>",
+		"eventstream.*.event.>",
+		"eventstream.*.session.>",
 	}
-	return setupWorkQueueStream(js, INBOX_STREAM, persistedSubjects, replicas)
+	return setupWorkQueueStream(js, EVENTSTREAM_STREAM, persistedSubjects, replicas)
 }
 
 func setupWorkQueueStream(js nats.JetStreamContext, streamName string, subjects []string, replicas int) error {

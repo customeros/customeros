@@ -4,10 +4,9 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/telemetry"
 	"github.com/joho/godotenv"
-
-	"github.com/customeros/customeros/packages/server/inbox/internal/logger"
-	"github.com/customeros/customeros/packages/server/inbox/internal/telemetry"
 )
 
 type Config struct {

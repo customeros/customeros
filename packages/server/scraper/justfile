@@ -1,0 +1,30 @@
+build:
+    go build .
+
+db:
+    pgcli postgresql://postgres:password@localhost:5555/mailstack
+
+debug:
+    dlv debug . -- server
+
+gen-proto:
+    find ./proto -name "*.proto" -type f -exec \
+    protoc \
+    --proto_path=./proto \
+    --go_out=./proto/pb \
+    --go_opt=module=github.com/customeros/mailstack/proto/pb \
+    --go-grpc_out=./proto/pb \
+    --go-grpc_opt=module=github.com/customeros/mailstack/proto/pb \
+    {} \;
+
+migrate:
+    go run main.go migrate
+
+run:
+    go run main.go server
+
+tidy:
+    go mod tidy
+
+
+

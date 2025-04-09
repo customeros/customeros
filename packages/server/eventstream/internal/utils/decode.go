@@ -1,0 +1,48 @@
+package utils
+
+import (
+	"reflect"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
+)
+
+func Decode(input map[string]any, result any) error {
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Metadata: nil,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			ToHookFunc()),
+		Result: result,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := decoder.Decode(input); err != nil {
+		return err
+	}
+	return err
+}
+
+func ToHookFunc() mapstructure.DecodeHookFunc {
+	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
+		if t == reflect.TypeOf(time.Time{}) {
+			switch f.Kind() {
+			case reflect.String:
+				unmarshalledTime, err := UnmarshalDateTime(data.(string))
+				if unmarshalledTime == nil {
+					return time.Time{}, err
+				}
+				return *unmarshalledTime, err
+			case reflect.Float64:
+				return time.Unix(0, int64(data.(float64))*int64(time.Millisecond)), nil
+			case reflect.Int64:
+				return time.Unix(0, data.(int64)*int64(time.Millisecond)), nil
+			default:
+				return data, nil
+			}
+		}
+		return data, nil
+		// Convert it by parsing
+	}
+}
