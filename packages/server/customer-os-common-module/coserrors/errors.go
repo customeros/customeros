@@ -66,3 +66,18 @@ func SkipTracing(err error) bool {
 
 	return false
 }
+
+// CustomError represents a structured error with code, message and error details
+type CustomError struct {
+	Code      string
+	Message   string
+	ErrorText string
+}
+
+// Error implements the error interface
+func (e *CustomError) Error() string {
+	if e.ErrorText != "" {
+		return e.ErrorText
+	}
+	return e.Message
+}
