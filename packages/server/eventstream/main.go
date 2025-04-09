@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/customeros/customeros/packages/server/inbox/internal/config"
-	"github.com/customeros/customeros/packages/server/inbox/internal/database"
-	"github.com/customeros/customeros/packages/server/inbox/internal/server"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/config"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/database"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/server"
 )
 
 func main() {

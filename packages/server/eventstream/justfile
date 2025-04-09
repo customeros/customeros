@@ -12,9 +12,9 @@ gen-proto:
     protoc \
     --proto_path=./proto \
     --go_out=./proto/pb \
-    --go_opt=module=github.com/customeros/mailstack/proto/pb \
+    --go_opt=module=github.com/customeros/customeros/packages/server/eventstream/proto/pb \
     --go-grpc_out=./proto/pb \
-    --go-grpc_opt=module=github.com/customeros/mailstack/proto/pb \
+    --go-grpc_opt=module=github.com/customeros/customeros/packages/server/eventstraem/proto/pb \
     {} \;
 
 migrate:

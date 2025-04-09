@@ -14,8 +14,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/customeros/customeros/packages/server/inbox/internal/logger"
-	"github.com/customeros/customeros/packages/server/inbox/internal/utils"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/utils"
 )
 
 // Types and Constants
@@ -32,6 +32,7 @@ const (
 	ComponentPostgres = "postgres"
 	ComponentService  = "service"
 	ComponentCronJob  = "cron"
+	ComponentRest     = "rest"
 )
 
 const (
@@ -156,10 +157,10 @@ func StartServiceSpan(ctx context.Context, operationName string, opts ...SpanOpt
 	return spans, ctx
 }
 
-func StartProducerSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
+func StartRestSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
 	spans, ctx := startSpan(ctx, operationName, opts...)
-	TagComponentService(spans)
-	SetSpanKindProducer(spans)
+	TagComponentRest(spans)
+	SetSpanKindServer(spans)
 	return spans, ctx
 }
 
@@ -178,6 +179,15 @@ func TagComponentService(spans *Spans) {
 	}
 	if spans.OTel != nil {
 		spans.OTel.SetAttributes(attribute.String(componentKey, ComponentService))
+	}
+}
+
+func TagComponentRest(spans *Spans) {
+	if spans == nil {
+		return
+	}
+	if spans.OTel != nil {
+		spans.OTel.SetAttributes(attribute.String(componentKey, ComponentRest))
 	}
 }
 

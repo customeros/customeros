@@ -4,9 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	es_errors "github.com/customeros/customeros/packages/server/eventstream/errors"
 	"github.com/nats-io/nats.go"
-
-	inbox_errors "github.com/customeros/customeros/packages/server/inbox/errors"
 )
 
 type contextKey string
@@ -116,14 +115,14 @@ func SetTenantInContext(ctx context.Context, tenant string) context.Context {
 
 func ValidateTenant(ctx context.Context) error {
 	if GetTenantFromContext(ctx) == "" {
-		return inbox_errors.ErrTenantMissing
+		return es_errors.ErrTenantMissing
 	}
 	return nil
 }
 
 func ValidateUserId(ctx context.Context) error {
 	if GetUserIdFromContext(ctx) == "" {
-		return inbox_errors.ErrUserIdMissing
+		return es_errors.ErrUserIdMissing
 	}
 	return nil
 }

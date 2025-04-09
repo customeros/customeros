@@ -4,28 +4,36 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime/debug"
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"gorm.io/gorm"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
-	"github.com/customeros/customeros/packages/server/inbox/internal/config"
-	"github.com/customeros/customeros/packages/server/inbox/internal/logger"
-	nats_internal "github.com/customeros/customeros/packages/server/inbox/internal/nats"
-	"github.com/customeros/customeros/packages/server/inbox/internal/repository"
-	"github.com/customeros/customeros/packages/server/inbox/internal/telemetry"
-	"github.com/customeros/customeros/packages/server/inbox/services"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/config"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/cron"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
+	nats_internal "github.com/customeros/customeros/packages/server/eventstream/internal/nats"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/repository"
+	"github.com/customeros/customeros/packages/server/eventstream/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/eventstream/services"
 )
 
 type Server struct {
 	config       *config.Config
 	logger       logger.Logger
+	httpServer   *http.Server
 	natsConn     *nats_internal.NATSConnections
+	router       *gin.Engine
+	cronMgr      *cron.CronManager
 	services     *services.Services
 	repositories *repository.Repositories
 }
@@ -56,9 +64,65 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB, warehouseDB *gorm.DB) (
 	// Initialize services
 	svcs := services.InitServices(natsConn, appLogger, repos, cfg)
 
+	// Initialize Gin
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+
+	// Try to get Kubernetes config
+	var k8sClient kubernetes.Interface
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		log.Printf("Not running in Kubernetes cluster: %v", err)
+	} else {
+		k8sClient, err = kubernetes.NewForConfig(k8sConfig)
+		if err != nil {
+			log.Printf("Failed to create kubernetes client: %v", err)
+		}
+	}
+
+	// Initialize and start cron manager
+	cronManager := cron.NewCronManager(
+		cfg,
+		appLogger,
+		k8sClient,
+		svcs.DomainService,
+		svcs.MailboxService,
+		repos,
+	)
+
+	// If running in Kubernetes, use leader election
+	if k8sClient != nil {
+		podName := os.Getenv("POD_NAME")
+		if podName == "" {
+			log.Fatal("POD_NAME environment variable not set")
+		}
+		namespace := os.Getenv("POD_NAMESPACE")
+		if namespace == "" {
+			log.Fatal("POD_NAMESPACE environment variable not set")
+		}
+
+		go func() {
+			if err := cronManager.Start(podName, namespace); err != nil {
+				log.Fatalf("Failed to start cron manager: %v", err)
+			}
+		}()
+	} else {
+		// Local development - start cron manager directly
+		log.Println("Running in local mode - starting cron manager without leader election")
+		go func() {
+			cronManager.StartCron()
+		}()
+	}
+
 	return &Server{
-		config:       cfg,
-		natsConn:     natsConn,
+		config:   cfg,
+		natsConn: natsConn,
+		router:   router,
+		httpServer: &http.Server{
+			Addr:    ":" + cfg.AppConfig.APIPort,
+			Handler: router,
+		},
+		cronMgr:      cronManager,
 		services:     svcs,
 		repositories: repos,
 		logger:       appLogger,
@@ -77,7 +141,15 @@ func (s *Server) Run() error {
 	}
 	log.Println("✅ Services started successfully")
 
-	log.Println("Inbox is now running. Press Ctrl+C to exit.")
+	// Start HTTP server in a goroutine with panic recovery
+	go s.wrapGoroutine("http_server", func() {
+		log.Println("Starting HTTP server")
+		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("❌ HTTP server error: %v", err)
+		}
+	})
+	log.Println("✅ HTTP server started successfully")
+	log.Println("EventStraem is now running. Press Ctrl+C to exit.")
 
 	return s.waitForShutdown()
 }
@@ -97,6 +169,18 @@ func (s *Server) waitForShutdown() error {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer shutdownCancel()
 
+	// Shut down HTTP server
+	log.Println("Shutting down HTTP server...")
+	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("❌ HTTP server shutdown error: %v", err)
+	} else {
+		log.Println("✅ HTTP server shut down successfully")
+	}
+
+	// Stop cron manager
+	s.cronMgr.Stop()
+	log.Println("Shutdown complete")
+
 	// Close NATS connection
 	if s.natsConn != nil {
 		log.Println("Closing NATS connection...")
@@ -113,18 +197,6 @@ func (s *Server) waitForShutdown() error {
 	}
 
 	return nil
-}
-
-func (s *Server) Logger() logger.Logger {
-	return s.logger
-}
-
-func (s *Server) Services() *services.Services {
-	return s.services
-}
-
-func (s *Server) Repositories() *repository.Repositories {
-	return s.repositories
 }
 
 func (s *Server) recoverWithTracing(name string) {
