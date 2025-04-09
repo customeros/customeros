@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	common_enum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -410,12 +411,11 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						// DO NOT ALLOW REGISTERING TENANT WITH PERSONAL EMAIL
 						err = errors.New("personal email domain detected")
 						tracing.TraceErr(span, err)
-						ginContext.JSON(http.StatusBadRequest, gin.H{
-							"error":   "Personal email domains are not allowed for tenant registration",
-							"code":    "PERSONAL_EMAIL_DOMAIN",
-							"message": "Please use a business email address to register a tenant",
-						})
-						return nil, err
+						return nil, &coserrors.CustomError{
+							Code:      "PERSONAL_EMAIL_DOMAIN",
+							Message:   "Please use a business email address to register a tenant",
+							ErrorText: "Personal email domains are not allowed for tenant registration",
+						}
 						// tenantStr = utils.GenerateName() // uncomment this when we want to generate a random tenant name for personal email domains
 					} else {
 						tenantStr = utils.Sanitize(domain)
@@ -488,9 +488,17 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to create auth: %v", err.Error()),
-			})
+			if customErr, ok := err.(*coserrors.CustomError); ok {
+				ginContext.JSON(http.StatusBadRequest, gin.H{
+					"code":    customErr.Code,
+					"error":   customErr.ErrorText,
+					"message": customErr.Message,
+				})
+			} else {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to create auth: %v", err.Error()),
+				})
+			}
 			return
 		}
 
