@@ -121,7 +121,7 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 	validatedAndCompacted, err := validateAndCompactJSON(responseBody)
 	if err != nil {
 		spans.TraceError(err)
-		spans.LogKV("error.invalid.json.response", string(responseBody))
+		spans.LogKV("json.response.invalid", string(responseBody))
 		return nil, nil, fmt.Errorf("failed to process JSON response: %w", err)
 	}
 
@@ -129,7 +129,7 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 	var snitcherResponse interfaces.SnitcherResponse
 	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
 		spans.TraceError(err)
-		spans.LogKV("error.parsing.json.response", string(responseBody))
+		spans.LogKV("json.response.parsing", string(responseBody))
 		return nil, nil, fmt.Errorf("failed to parse snitcher response: %w", err)
 	}
 
