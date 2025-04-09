@@ -1,239 +1,239 @@
-name: Create Release
-
-on:
-  workflow_run:
-    workflows: 
-      - "customer-os-api"
-      - "customer-os-webhooks"
-      - "customer-os-data-upkeeper"
-      - "events-subscribers"
-      - "sync-customer-os-data"
-      - "sync-slack"
-      - "realtime"
-      - "mailsherpa-api"
-      - "integrity-checker"
-      - "apigator"
-      - "browser-automation-api"
-    types:
-      - completed
-
-# Ensure only one release workflow runs at a time for a commit
-concurrency: 
-  group: release-${{ github.sha }}
-  cancel-in-progress: true
-
-env:
-  REGISTRY: ghcr.io
-  REPOSITORY_BASE: ${{ github.repository }}
-  DOCKER_BUILDKIT: 1
-
-permissions:
-  contents: write
-  packages: write
-  actions: write
-
-jobs:
-  check-release-needed:
-    runs-on: ubicloud-standard-2
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'otter'
-    outputs:
-      version_bump: ${{ steps.commit_message.outputs.version_bump }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Needed to fetch all tags
-
-      - name: Check if tag already exists for this commit
-        id: check_tag
-        run: |
-          # Get all tags pointing to the current commit
-          existing_tags=$(git tag --points-at HEAD)
-          if [ ! -z "$existing_tags" ]; then
-            echo "Tag already exists for this commit: $existing_tags"
-            echo "version_bump=skip" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-      - name: Get version info from commits
-        id: commit_message
-        run: |
-          # Get the merge commit message
-          merge_msg=$(git log -1 --pretty=format:"%s")
-          echo "Merge message: $merge_msg"
-          
-          # If this is a merge commit, get the PR commits
-          if [[ "$merge_msg" == "Merge pull request"* ]]; then
-            # Get just the commits from this PR (between HEAD and where PR branched)
-            pr_commits=$(git log HEAD^2 --not HEAD^ --pretty=format:"%s")
-            echo "PR commits:"
-            echo "$pr_commits"
-          
-            # Check for version prefixes in PR commits
-            if echo "$pr_commits" | grep -q "^major:"; then
-              echo "Found major version commit"
-              echo "version_bump=major" >> $GITHUB_OUTPUT
-            elif echo "$pr_commits" | grep -q "^minor:"; then
-              echo "Found minor version commit"
-              echo "version_bump=minor" >> $GITHUB_OUTPUT
-            elif echo "$pr_commits" | grep -q "^patch:"; then
-              echo "Found patch version commit"
-              echo "version_bump=patch" >> $GITHUB_OUTPUT
-            else
-              echo "No version prefix found, skipping release"
-              echo "version_bump=skip" >> $GITHUB_OUTPUT
-            fi
-          else
-            # Direct commit to branch - same logic
-            if [[ "$merge_msg" =~ ^major: ]]; then
-              echo "Found major version commit"
-              echo "version_bump=major" >> $GITHUB_OUTPUT
-            elif [[ "$merge_msg" =~ ^minor: ]]; then
-              echo "Found minor version commit"
-              echo "version_bump=minor" >> $GITHUB_OUTPUT
-            elif [[ "$merge_msg" =~ ^patch: ]]; then
-              echo "Found patch version commit"
-              echo "version_bump=patch" >> $GITHUB_OUTPUT
-            else
-              echo "No version prefix found, skipping release"
-              echo "version_bump=skip" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Cancel workflow if no release is needed
-        if: steps.commit_message.outputs.version_bump == 'skip'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            console.log("No version bump prefix found or tag already exists. Cancelling workflow.");
-            await github.rest.actions.cancelWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId
-            });
-
-  create-release:
-    needs: check-release-needed
-    if: needs.check-release-needed.outputs.version_bump != 'skip'
-    runs-on: ubicloud-standard-2
-    outputs:
-      next_version: ${{ steps.generate_version.outputs.next_version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get latest tag
-        id: get_latest_tag
-        run: |
-          latest_tag=$(git tag -l "v*" | grep -E 'v[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1 -k2,2n -k3,3n | tail -n 1 || echo "v0.0.0")          
-          echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
-
-      - name: Generate next version
-        id: generate_version
-        run: |
-          latest_tag=${{ steps.get_latest_tag.outputs.latest_tag }}
-          version_bump="${{ needs.check-release-needed.outputs.version_bump }}"
-          
-          # Debug output
-          echo "Latest tag: $latest_tag"
-          echo "Version bump type: $version_bump"
-          
-          # Extract version numbers
-          major=$(echo $latest_tag | sed 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/')
-          minor=$(echo $latest_tag | sed 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/')
-          patch=$(echo $latest_tag | sed 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/')
-          
-          echo "Current version: major=$major minor=$minor patch=$patch"
-          
-          # Increment version based on bump type
-          case "$version_bump" in
-            "major")
-              echo "Performing major version bump"
-              new_major=$((major + 1))
-              next_version="v${new_major}.0.0"
-              ;;
-            "minor")
-              echo "Performing minor version bump"
-              new_minor=$((minor + 1))
-              next_version="v${major}.${new_minor}.0"
-              ;;
-            "patch")
-              echo "Performing patch version bump"
-              new_patch=$((patch + 1))
-              next_version="v${major}.${minor}.${new_patch}"
-              ;;
-          esac
-          
-          echo "Next version will be: $next_version"
-          echo "next_version=${next_version}" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.generate_version.outputs.next_version }}
-          generate_release_notes: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Save outputs for potential deployment workflows
-      - name: Save workflow outputs
-        run: |
-          echo "{\"next_version\": \"${{ steps.generate_version.outputs.next_version }}\"}" > workflow-data.json
-
-      - name: Upload workflow outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: workflow-data
-          path: workflow-data.json
-
-  publish-images:
-    needs: create-release
-    runs-on: ubicloud-standard-2
-    strategy:
-      matrix:
-        service:
-          - customer-os-api
-          - customer-os-webhooks
-          - customer-os-data-upkeeper
-          - events-subscribers
-          - sync-customer-os-data
-          - sync-slack
-          - realtime
-          - mailsherpa-api
-          - integrity-checker
-          - apigator
-          - browser-automation-api
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set package path
-        id: package_path
-        run: |
-          if [[ "${{ matrix.service }}" == "customer-os-data-upkeeper" ]] || \
-             [[ "${{ matrix.service }}" == "sync-customer-os-data" ]] || \
-             [[ "${{ matrix.service }}" == "sync-slack" ]] || \
-             [[ "${{ matrix.service }}" == "integrity-checker" ]]; then
-            echo "path=runner" >> $GITHUB_OUTPUT
-          else
-            echo "path=server" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: packages/${{ steps.package_path.outputs.path }}/${{ matrix.service }}/Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_BASE }}/${{ matrix.service }}:latest
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_BASE }}/${{ matrix.service }}:${{ needs.create-release.outputs.next_version }}
+#name: Create Release
+#
+#on:
+#  workflow_run:
+#    workflows:
+#      - "customer-os-api"
+#      - "customer-os-webhooks"
+#      - "customer-os-data-upkeeper"
+#      - "events-subscribers"
+#      - "sync-customer-os-data"
+#      - "sync-slack"
+#      - "realtime"
+#      - "mailsherpa-api"
+#      - "integrity-checker"
+#      - "apigator"
+#      - "browser-automation-api"
+#    types:
+#      - completed
+#
+## Ensure only one release workflow runs at a time for a commit
+#concurrency:
+#  group: release-${{ github.sha }}
+#  cancel-in-progress: true
+#
+#env:
+#  REGISTRY: ghcr.io
+#  REPOSITORY_BASE: ${{ github.repository }}
+#  DOCKER_BUILDKIT: 1
+#
+#permissions:
+#  contents: write
+#  packages: write
+#  actions: write
+#
+#jobs:
+#  check-release-needed:
+#    runs-on: ubicloud-standard-2
+#    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'otter'
+#    outputs:
+#      version_bump: ${{ steps.commit_message.outputs.version_bump }}
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0  # Needed to fetch all tags
+#
+#      - name: Check if tag already exists for this commit
+#        id: check_tag
+#        run: |
+#          # Get all tags pointing to the current commit
+#          existing_tags=$(git tag --points-at HEAD)
+#          if [ ! -z "$existing_tags" ]; then
+#            echo "Tag already exists for this commit: $existing_tags"
+#            echo "version_bump=skip" >> $GITHUB_OUTPUT
+#            exit 0
+#          fi
+#
+#      - name: Get version info from commits
+#        id: commit_message
+#        run: |
+#          # Get the merge commit message
+#          merge_msg=$(git log -1 --pretty=format:"%s")
+#          echo "Merge message: $merge_msg"
+#
+#          # If this is a merge commit, get the PR commits
+#          if [[ "$merge_msg" == "Merge pull request"* ]]; then
+#            # Get just the commits from this PR (between HEAD and where PR branched)
+#            pr_commits=$(git log HEAD^2 --not HEAD^ --pretty=format:"%s")
+#            echo "PR commits:"
+#            echo "$pr_commits"
+#
+#            # Check for version prefixes in PR commits
+#            if echo "$pr_commits" | grep -q "^major:"; then
+#              echo "Found major version commit"
+#              echo "version_bump=major" >> $GITHUB_OUTPUT
+#            elif echo "$pr_commits" | grep -q "^minor:"; then
+#              echo "Found minor version commit"
+#              echo "version_bump=minor" >> $GITHUB_OUTPUT
+#            elif echo "$pr_commits" | grep -q "^patch:"; then
+#              echo "Found patch version commit"
+#              echo "version_bump=patch" >> $GITHUB_OUTPUT
+#            else
+#              echo "No version prefix found, skipping release"
+#              echo "version_bump=skip" >> $GITHUB_OUTPUT
+#            fi
+#          else
+#            # Direct commit to branch - same logic
+#            if [[ "$merge_msg" =~ ^major: ]]; then
+#              echo "Found major version commit"
+#              echo "version_bump=major" >> $GITHUB_OUTPUT
+#            elif [[ "$merge_msg" =~ ^minor: ]]; then
+#              echo "Found minor version commit"
+#              echo "version_bump=minor" >> $GITHUB_OUTPUT
+#            elif [[ "$merge_msg" =~ ^patch: ]]; then
+#              echo "Found patch version commit"
+#              echo "version_bump=patch" >> $GITHUB_OUTPUT
+#            else
+#              echo "No version prefix found, skipping release"
+#              echo "version_bump=skip" >> $GITHUB_OUTPUT
+#            fi
+#          fi
+#
+#      - name: Cancel workflow if no release is needed
+#        if: steps.commit_message.outputs.version_bump == 'skip'
+#        uses: actions/github-script@v7
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          script: |
+#            console.log("No version bump prefix found or tag already exists. Cancelling workflow.");
+#            await github.rest.actions.cancelWorkflowRun({
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              run_id: context.runId
+#            });
+#
+#  create-release:
+#    needs: check-release-needed
+#    if: needs.check-release-needed.outputs.version_bump != 'skip'
+#    runs-on: ubicloud-standard-2
+#    outputs:
+#      next_version: ${{ steps.generate_version.outputs.next_version }}
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Get latest tag
+#        id: get_latest_tag
+#        run: |
+#          latest_tag=$(git tag -l "v*" | grep -E 'v[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1 -k2,2n -k3,3n | tail -n 1 || echo "v0.0.0")
+#          echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
+#
+#      - name: Generate next version
+#        id: generate_version
+#        run: |
+#          latest_tag=${{ steps.get_latest_tag.outputs.latest_tag }}
+#          version_bump="${{ needs.check-release-needed.outputs.version_bump }}"
+#
+#          # Debug output
+#          echo "Latest tag: $latest_tag"
+#          echo "Version bump type: $version_bump"
+#
+#          # Extract version numbers
+#          major=$(echo $latest_tag | sed 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/')
+#          minor=$(echo $latest_tag | sed 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/')
+#          patch=$(echo $latest_tag | sed 's/v\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/')
+#
+#          echo "Current version: major=$major minor=$minor patch=$patch"
+#
+#          # Increment version based on bump type
+#          case "$version_bump" in
+#            "major")
+#              echo "Performing major version bump"
+#              new_major=$((major + 1))
+#              next_version="v${new_major}.0.0"
+#              ;;
+#            "minor")
+#              echo "Performing minor version bump"
+#              new_minor=$((minor + 1))
+#              next_version="v${major}.${new_minor}.0"
+#              ;;
+#            "patch")
+#              echo "Performing patch version bump"
+#              new_patch=$((patch + 1))
+#              next_version="v${major}.${minor}.${new_patch}"
+#              ;;
+#          esac
+#
+#          echo "Next version will be: $next_version"
+#          echo "next_version=${next_version}" >> $GITHUB_OUTPUT
+#
+#      - name: Create Release
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          tag_name: ${{ steps.generate_version.outputs.next_version }}
+#          generate_release_notes: true
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      # Save outputs for potential deployment workflows
+#      - name: Save workflow outputs
+#        run: |
+#          echo "{\"next_version\": \"${{ steps.generate_version.outputs.next_version }}\"}" > workflow-data.json
+#
+#      - name: Upload workflow outputs
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: workflow-data
+#          path: workflow-data.json
+#
+#  publish-images:
+#    needs: create-release
+#    runs-on: ubicloud-standard-2
+#    strategy:
+#      matrix:
+#        service:
+#          - customer-os-api
+#          - customer-os-webhooks
+#          - customer-os-data-upkeeper
+#          - events-subscribers
+#          - sync-customer-os-data
+#          - sync-slack
+#          - realtime
+#          - mailsherpa-api
+#          - integrity-checker
+#          - apigator
+#          - browser-automation-api
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#
+#      - name: Login to GitHub Container Registry
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Set package path
+#        id: package_path
+#        run: |
+#          if [[ "${{ matrix.service }}" == "customer-os-data-upkeeper" ]] || \
+#             [[ "${{ matrix.service }}" == "sync-customer-os-data" ]] || \
+#             [[ "${{ matrix.service }}" == "sync-slack" ]] || \
+#             [[ "${{ matrix.service }}" == "integrity-checker" ]]; then
+#            echo "path=runner" >> $GITHUB_OUTPUT
+#          else
+#            echo "path=server" >> $GITHUB_OUTPUT
+#          fi
+#
+#      - name: Build and push
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: .
+#          file: packages/${{ steps.package_path.outputs.path }}/${{ matrix.service }}/Dockerfile
+#          push: true
+#          tags: |
+#            ${{ env.REGISTRY }}/${{ env.REPOSITORY_BASE }}/${{ matrix.service }}:latest
+#            ${{ env.REGISTRY }}/${{ env.REPOSITORY_BASE }}/${{ matrix.service }}:${{ needs.create-release.outputs.next_version }}
