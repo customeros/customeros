@@ -20,3 +20,38 @@ enum CalendarType {
     CALCOM,
     GOOGLE,
 }
+
+"""
+Represents a time slot in calendar availability
+"""
+type TimeSlot {
+    startTime: Time!
+    endTime: Time!
+    isAvailable: Boolean!
+}
+
+"""
+Input for calendar availability query
+"""
+input CalendarAvailabilityInput {
+    startTime: Time!
+    endTime: Time!
+    duration: Int! # duration in minutes
+    timezone: String! # e.g. "America/New_York"
+}
+
+"""
+Response for calendar availability query
+"""
+type CalendarAvailabilityResponse {
+    timeSlots: [TimeSlot!]!
+    totalUsers: Int!
+    availableUsers: Int!
+}
+
+extend type Query {
+    """
+    Get availability across all users in the tenant for a given time range
+    """
+    calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}

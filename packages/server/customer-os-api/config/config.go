@@ -53,6 +53,7 @@ type CommonConfig struct {
 	SlackConfig       commonconf.SlackConfig
 	Temporal          commonconf.TemporalConfig
 	CrustData         commonconf.CrustDataConfig
+	NylasConfig       commonconf.NylasConfig
 }
 
 type AppConfig struct {
@@ -143,6 +144,7 @@ func InitConfig() (*Config, error) {
 			GroqConfig:           cmnCfg.Groq,
 			GeminiConfig:         cmnCfg.Gemini,
 			CrustDataConfig:      cmnCfg.CrustData,
+			NylasConfig:          cmnCfg.NylasConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CosApi,
