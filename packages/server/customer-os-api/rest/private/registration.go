@@ -16,6 +16,7 @@ import (
 	common_enum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -234,21 +235,21 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 }
 
 func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "signInV2")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "signInV2")
+	defer spans.Finish()
 
 	var err error
 
 	saveErr := saveIP(ctx, ginContext, services, signInRequest.LoggedInEmail)
 	if saveErr != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
+		spans.TraceError(errors.Wrap(saveErr, "unable to save IP address"))
 	}
 
-	span.LogFields(tracingLog.Object("request", signInRequest))
+	spans.LogObjectAsJson("request", signInRequest)
 
 	firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
 		})
@@ -335,8 +336,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			}
 
 			if authId != "" && authUserId == "" {
-				span.LogKV("authId", authId)
-				span.LogKV("authUserId", authUserId)
+				spans.LogKV("authId", authId)
+				spans.LogKV("authUserId", authUserId)
 				return nil, fmt.Errorf("authId found but authUserId not found")
 			}
 
@@ -361,8 +362,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				}
 			}
 
-			span.LogKV("authId", authId)
-			span.LogKV("authUserId", authUserId)
+			spans.LogKV("authId", authId)
+			spans.LogKV("authUserId", authUserId)
 
 			// tenant
 			tenants, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetTenants(ctx, authUserId)
@@ -373,7 +374,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			if tenants == nil || len(tenants) == 0 {
 
 				domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
-				span.LogFields(tracingLog.String("domainExtractedFromEmail", domain))
+				spans.LogKV("domainExtractedFromEmail", domain)
 
 				// check if the user is using a personal email provider
 				for _, personalEmailProviderItem := range personalEmailProviders {
@@ -384,7 +385,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						break
 					}
 				}
-				span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
+				spans.LogKV("isPersonalEmail", isPersonalEmail)
 
 				if !isPersonalEmail {
 					tenantWithWorkspace, err := services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
@@ -410,7 +411,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					if isPersonalEmail {
 						// DO NOT ALLOW REGISTERING TENANT WITH PERSONAL EMAIL
 						err = errors.New("personal email domain detected")
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return nil, &coserrors.CustomError{
 							Code:      "PERSONAL_EMAIL_DOMAIN",
 							Message:   "Please use a business email address to register a tenant",
@@ -421,7 +422,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						tenantStr = utils.Sanitize(domain)
 					}
 
-					span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
+					spans.LogKV("newTenantCreationWith", tenantStr)
 
 					tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
 						Name:      tenantStr,
@@ -472,14 +473,14 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			// user in tenant
 			userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, err
 			}
 			if userInTenantNode != nil {
 				userId = mapper.MapDbNodeToUserEntity(userInTenantNode).Id
-				span.LogFields(tracingLog.Object("user", "found"))
+				spans.LogKV("user.found", true)
 			} else {
-				span.LogFields(tracingLog.Object("user", "not found"))
+				spans.LogKV("user.found", false)
 
 				userId, err = services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, txWithPostCommit, defaultTenant, false, authUserId, signInRequest.LoggedInEmail, firstName, lastName)
 			}
@@ -487,7 +488,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			return nil, nil
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			if customErr, ok := err.(*coserrors.CustomError); ok {
 				ginContext.JSON(http.StatusBadRequest, gin.H{
 					"code":    customErr.Code,
@@ -509,7 +510,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 
 		_, err = initializeUserInTenant(ctx, services, userId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
 			})
@@ -571,7 +572,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 
 		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, currentTenant, signInRequest.LoggedInEmail)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to find user: %v", err.Error()),
 			})
@@ -590,70 +591,14 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	}
 
 	// handle email token
-	// Handle Google provider
-	if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
-		if isRequestEnablingOAuthSync(signInRequest) {
-			oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
-			if oauthToken == nil {
-				oauthToken = &postgres_entity.OAuthTokenEntity{}
-			}
-			oauthToken.Provider = common_enum.SourceGmail.String()
-			oauthToken.TenantName = defaultTenant
-			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-			oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-			oauthToken.UserId = userId
-
-			oauthToken.AccessToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.AccessToken)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-
-			oauthToken.RefreshToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.RefreshToken)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-
-			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-			oauthToken.Scope = signInRequest.OAuthToken.Scope
-			oauthToken.NeedsManualRefresh = false
-			if isRequestEnablingGmailSync(signInRequest) {
-				oauthToken.GmailSyncEnabled = true
-			}
-			if isRequestEnablingGoogleCalendarSync(signInRequest) {
-				oauthToken.GoogleCalendarSyncEnabled = true
-			}
-			_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-		}
-	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
-		oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
-		if oauthToken == nil {
-			oauthToken = &postgres_entity.OAuthTokenEntity{}
-		}
-		oauthToken.Provider = common_enum.SourceOutlook.String()
-		oauthToken.TenantName = defaultTenant
-		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-		oauthToken.UserId = userId
-		oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
-		oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
-		oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-		oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-		oauthToken.Scope = signInRequest.OAuthToken.Scope
-		oauthToken.NeedsManualRefresh = false
-		_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+	if isRequestEnablingOAuthSync(signInRequest) {
+		err = handleOAuthTokenSync(ctx, services, signInRequest, defaultTenant, userId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
-	} else if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
-	} else {
-		tracing.TraceErr(span, fmt.Errorf("unsupported provider: %s", signInRequest.Provider))
 	}
 
-	span.LogKV(
+	spans.LogKV(
 		"result.email", signInRequest.LoggedInEmail,
 		"result.authUserId", authUserId,
 		"result.currentTenant", currentTenant,
@@ -1334,4 +1279,99 @@ func saveIP(ctx context.Context, c *gin.Context, s *cosapi_services.Services, em
 	}
 
 	return nil
+}
+
+func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Services, signInRequest SignInRequest, defaultTenant string, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "handleGoogleOAuthToken")
+	defer span.Finish()
+
+	var err error
+
+	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
+	newOAuthToken := true
+	if oauthToken == nil {
+		oauthToken = &postgres_entity.OAuthTokenEntity{}
+		newOAuthToken = false
+	}
+	oauthToken.Provider = common_enum.SourceGmail.String()
+	oauthToken.TenantName = defaultTenant
+	oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+	oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+	oauthToken.UserId = userId
+
+	oauthToken.AccessToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.AccessToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	oauthToken.RefreshToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.RefreshToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+	oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+	oauthToken.Scope = signInRequest.OAuthToken.Scope
+	oauthToken.NeedsManualRefresh = false
+	if !newOAuthToken {
+		if isRequestEnablingGmailSync(signInRequest) {
+			oauthToken.GmailSyncEnabled = true
+		}
+		if isRequestEnablingGoogleCalendarSync(signInRequest) {
+			oauthToken.GoogleCalendarSyncEnabled = true
+		}
+	}
+	_, err = services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return nil
+}
+
+func handleAzureOAuthToken(ctx context.Context, services *cosapi_services.Services, signInRequest SignInRequest, defaultTenant string, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "handleAzureOAuthToken")
+	defer span.Finish()
+
+	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
+	if oauthToken == nil {
+		oauthToken = &postgres_entity.OAuthTokenEntity{}
+	}
+	oauthToken.Provider = common_enum.SourceOutlook.String()
+	oauthToken.TenantName = defaultTenant
+	oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+	oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+	oauthToken.UserId = userId
+	oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+	oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+	oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+	oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+	oauthToken.Scope = signInRequest.OAuthToken.Scope
+	oauthToken.NeedsManualRefresh = false
+	_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return nil
+}
+
+func handleOAuthTokenSync(ctx context.Context, services *cosapi_services.Services, signInRequest SignInRequest, defaultTenant string, userId string) error {
+	spans, ctx := telemetry.StartRestSpan(ctx, "handleOAuthTokenSync")
+	defer spans.Finish()
+
+	var err error
+
+	switch signInRequest.Provider {
+	case common_enum.WorkspaceProviderGoogle.String():
+		err = handleGoogleOAuthToken(ctx, services, signInRequest, defaultTenant, userId)
+	case common_enum.WorkspaceProviderAzure.String():
+		err = handleAzureOAuthToken(ctx, services, signInRequest, defaultTenant, userId)
+	case common_enum.WorkspaceProviderMagicLink.String():
+		// No action needed for magic link
+	default:
+		spans.TraceError(fmt.Errorf("unsupported provider: %s", signInRequest.Provider))
+	}
+
+	return err
 }
