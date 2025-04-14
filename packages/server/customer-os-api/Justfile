@@ -2,33 +2,29 @@ help:
     @echo "Available commands:"
     @echo "  help        - Show this help message"
     @echo "  build       - Build the application"
-    @echo "  db          - Connect to PostgreSQL database using pgcli"
     @echo "  debug       - Start application in debug mode using Delve"
     @echo "  gen-api     - Generate GraphQL code using gqlgen"
     @echo "  generate    - Run all code generation tasks"
-    @echo "  migrate     - Run database migrations"
     @echo "  run         - Run the application server"
+    @echo "  test        - Run tests"
     @echo "  tidy        - Tidy and verify Go module dependencies"
 
 build:
     go build .
 
-db:
-    pgcli postgresql://postgres:password@localhost:5432/customer_os
-
 debug:
-    dlv debug . -- server
+    dlv debug customer_os_api_main.go
 
 gen-api:
-    go run github.com/99designs/gqlgen generate --config ./graphql/gqlgen.yml
+    go run github.com/99designs/gqlgen generate --config ./gqlgen.yml
 
 generate: gen-api
 
-migrate:
-    go run main.go migrate
-
 run:
-    go run main.go server
+    go run customer_os_api_main.go
+
+test:
+    go test ./... -v
 
 tidy:
     go mod tidy 
