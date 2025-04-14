@@ -730,6 +730,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 		log.Printf("parsed json: %v", revokeRequest)
+		tracing.LogObjectAsJson(span, "revokeRequest", revokeRequest)
 
 		workspaceProvider := ""
 		if revokeRequest.MailboxProvider == model.MailboxProviderGoogleWorkspace.String() {
@@ -737,6 +738,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		} else if revokeRequest.MailboxProvider == model.MailboxProviderOutlook.String() {
 			workspaceProvider = common_enum.WorkspaceProviderAzure.String()
 		}
+		span.LogKV("workspaceProvider", workspaceProvider)
 
 		if workspaceProvider == "" {
 			c.JSON(http.StatusBadRequest, gin.H{})
