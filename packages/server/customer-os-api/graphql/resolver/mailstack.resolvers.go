@@ -180,7 +180,6 @@ func (r *queryResolver) MailstackMailboxes(ctx context.Context) ([]*model.Mailst
 	defer spans.Finish()
 
 	userId := common.GetUserIdFromContext(ctx)
-	spans.LogKV("request.userId", userId)
 	isImpersonated := common.IsImpersonatedUserInContext(ctx)
 
 	tenant := common.GetTenantFromContext(ctx)
