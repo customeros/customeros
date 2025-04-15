@@ -1173,7 +1173,6 @@ type ComplexityRoot struct {
 		BillingProfileUnlinkEmail                  func(childComplexity int, input model.BillingProfileLinkEmailInput) int
 		BillingProfileUnlinkLocation               func(childComplexity int, input model.BillingProfileLinkLocationInput) int
 		BillingProfileUpdate                       func(childComplexity int, input model.BillingProfileUpdateInput) int
-		ConnectToNylas                             func(childComplexity int, email string) int
 		ContactAddNewLocation                      func(childComplexity int, contactID string) int
 		ContactAddOrganizationByID                 func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactAddSocial                           func(childComplexity int, contactID string, input model.SocialInput) int
@@ -1212,7 +1211,6 @@ type ComplexityRoot struct {
 		CustomFieldUpdateInContact                 func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact        func(childComplexity int, contactID string, customFields []*model.CustomFieldInput) int
 		CustomerContactCreate                      func(childComplexity int, input model.CustomerContactInput) int
-		DisconnectFromNylas                        func(childComplexity int, email string) int
 		EmailMergeToContact                        func(childComplexity int, contactID string, input model.EmailInput) int
 		EmailMergeToOrganization                   func(childComplexity int, organizationID string, input model.EmailInput) int
 		EmailMergeToUser                           func(childComplexity int, userID string, input model.EmailInput) int
@@ -1273,6 +1271,8 @@ type ComplexityRoot struct {
 		NoteLinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
 		NoteUnlinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                 func(childComplexity int, input model.NoteUpdateInput) int
+		NylasConnect                               func(childComplexity int, email string) int
+		NylasDisconnect                            func(childComplexity int, email string) int
 		OpportunityArchive                         func(childComplexity int, id string) int
 		OpportunityRenewalUpdate                   func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
 		OpportunityRenewalUpdateAllForOrganization func(childComplexity int, input model.OpportunityRenewalUpdateAllForOrganizationInput) int
@@ -1650,7 +1650,6 @@ type ComplexityRoot struct {
 		Flows                              func(childComplexity int) int
 		GetAllEmailsInThread               func(childComplexity int, threadID string) int
 		GetAllThreads                      func(childComplexity int, userID string, pagination *model.PaginationInput) int
-		GetNylasAccountID                  func(childComplexity int, email string) int
 		GetThreadMetadata                  func(childComplexity int, threadID string) int
 		GlobalCache                        func(childComplexity int) int
 		GlobalOrganizationsSearch          func(childComplexity int, searchTerm string, limit int) int
@@ -1668,6 +1667,7 @@ type ComplexityRoot struct {
 		MailstackMailboxes                 func(childComplexity int) int
 		MailstackUniqueUsernames           func(childComplexity int) int
 		Meeting                            func(childComplexity int, id string) int
+		NylasGetAccountID                  func(childComplexity int, email string) int
 		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
 		Opportunity                        func(childComplexity int, id string) int
 		Organization                       func(childComplexity int, id string) int
@@ -2149,8 +2149,6 @@ type MutationResolver interface {
 	BillingProfileUnlinkEmail(ctx context.Context, input model.BillingProfileLinkEmailInput) (string, error)
 	BillingProfileLinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
 	BillingProfileUnlinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
-	ConnectToNylas(ctx context.Context, email string) (string, error)
-	DisconnectFromNylas(ctx context.Context, email string) (bool, error)
 	AddTag(ctx context.Context, input model.AddTagInput) (string, error)
 	RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error)
 	FlagWrongField(ctx context.Context, input model.FlagWrongFieldInput) (*model.Result, error)
@@ -2248,6 +2246,8 @@ type MutationResolver interface {
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
+	NylasConnect(ctx context.Context, email string) (string, error)
+	NylasDisconnect(ctx context.Context, email string) (bool, error)
 	OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error)
 	OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error)
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
@@ -2376,7 +2376,6 @@ type QueryResolver interface {
 	Version(ctx context.Context) (float64, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
 	CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error)
-	GetNylasAccountID(ctx context.Context, email string) (string, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
@@ -2426,6 +2425,7 @@ type QueryResolver interface {
 	MailstackMailboxes(ctx context.Context) ([]*model.MailstackMailbox, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
+	NylasGetAccountID(ctx context.Context, email string) (string, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.OrganizationPage, error)
@@ -8181,18 +8181,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.BillingProfileUpdate(childComplexity, args["input"].(model.BillingProfileUpdateInput)), true
 
-	case "Mutation.connectToNylas":
-		if e.complexity.Mutation.ConnectToNylas == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_connectToNylas_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ConnectToNylas(childComplexity, args["email"].(string)), true
-
 	case "Mutation.contact_AddNewLocation":
 		if e.complexity.Mutation.ContactAddNewLocation == nil {
 			break
@@ -8648,18 +8636,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CustomerContactCreate(childComplexity, args["input"].(model.CustomerContactInput)), true
-
-	case "Mutation.disconnectFromNylas":
-		if e.complexity.Mutation.DisconnectFromNylas == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_disconnectFromNylas_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DisconnectFromNylas(childComplexity, args["email"].(string)), true
 
 	case "Mutation.emailMergeToContact":
 		if e.complexity.Mutation.EmailMergeToContact == nil {
@@ -9380,6 +9356,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.NoteUpdate(childComplexity, args["input"].(model.NoteUpdateInput)), true
+
+	case "Mutation.nylasConnect":
+		if e.complexity.Mutation.NylasConnect == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_nylasConnect_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NylasConnect(childComplexity, args["email"].(string)), true
+
+	case "Mutation.nylasDisconnect":
+		if e.complexity.Mutation.NylasDisconnect == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_nylasDisconnect_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NylasDisconnect(childComplexity, args["email"].(string)), true
 
 	case "Mutation.opportunity_Archive":
 		if e.complexity.Mutation.OpportunityArchive == nil {
@@ -12123,18 +12123,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetAllThreads(childComplexity, args["userId"].(string), args["pagination"].(*model.PaginationInput)), true
 
-	case "Query.getNylasAccountID":
-		if e.complexity.Query.GetNylasAccountID == nil {
-			break
-		}
-
-		args, err := ec.field_Query_getNylasAccountID_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.GetNylasAccountID(childComplexity, args["email"].(string)), true
-
 	case "Query.getThreadMetadata":
 		if e.complexity.Query.GetThreadMetadata == nil {
 			break
@@ -12313,6 +12301,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Meeting(childComplexity, args["id"].(string)), true
+
+	case "Query.nylasGetAccountID":
+		if e.complexity.Query.NylasGetAccountID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_nylasGetAccountID_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.NylasGetAccountID(childComplexity, args["email"].(string)), true
 
 	case "Query.opportunities_LinkedToOrganizations":
 		if e.complexity.Query.OpportunitiesLinkedToOrganizations == nil {
@@ -14800,25 +14800,7 @@ extend type Query {
     Get availability across all users in the tenant for a given time range
     """
     calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    """
-    Get the Nylas account ID for a given email
-    """
-    getNylasAccountID(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-extend type Mutation {
-    """
-    Connect a user's email to Nylas calendar service
-    """
-    connectToNylas(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    """
-    Disconnect a user's email from Nylas calendar service
-    """
-    disconnectFromNylas(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-`, BuiltIn: false},
+}`, BuiltIn: false},
 	{Name: "../schemas/comment.graphqls", Input: `type Comment {
     id: ID!
     content: String
@@ -17460,6 +17442,25 @@ input NoteUpdateInput {
     content: String
     contentType: String
 }`, BuiltIn: false},
+	{Name: "../schemas/nylas.graphqls", Input: `extend type Query {
+    """
+    Get the Nylas account ID for a given email
+    """
+    nylasGetAccountID(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    """
+    Connect a user's email to Nylas service
+    """
+    nylasConnect(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    """
+    Disconnect a user's email from Nylas service
+    """
+    nylasDisconnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+`, BuiltIn: false},
 	{Name: "../schemas/opportunity.graphqls", Input: `extend type Query {
     opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunities_LinkedToOrganizations(pagination: Pagination): OpportunityPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -20080,34 +20081,6 @@ func (ec *executionContext) field_Mutation_billingProfile_Update_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_connectToNylas_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_connectToNylas_argsEmail(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["email"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_connectToNylas_argsEmail(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["email"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-	if tmp, ok := rawArgs["email"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_contact_AddNewLocation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -21606,34 +21579,6 @@ func (ec *executionContext) field_Mutation_customer_contact_Create_argsInput(
 	}
 
 	var zeroVal model.CustomerContactInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_disconnectFromNylas_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_disconnectFromNylas_argsEmail(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["email"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_disconnectFromNylas_argsEmail(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["email"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-	if tmp, ok := rawArgs["email"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -24441,6 +24386,62 @@ func (ec *executionContext) field_Mutation_note_Update_argsInput(
 	}
 
 	var zeroVal model.NoteUpdateInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_nylasConnect_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_nylasConnect_argsEmail(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["email"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_nylasConnect_argsEmail(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["email"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+	if tmp, ok := rawArgs["email"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_nylasDisconnect_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_nylasDisconnect_argsEmail(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["email"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_nylasDisconnect_argsEmail(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["email"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+	if tmp, ok := rawArgs["email"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -27830,34 +27831,6 @@ func (ec *executionContext) field_Query_getAllThreads_argsPagination(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_getNylasAccountID_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_getNylasAccountID_argsEmail(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["email"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_getNylasAccountID_argsEmail(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["email"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-	if tmp, ok := rawArgs["email"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Query_getThreadMetadata_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -28280,6 +28253,34 @@ func (ec *executionContext) field_Query_meeting_argsID(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nylasGetAccountID_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_nylasGetAccountID_argsEmail(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["email"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_nylasGetAccountID_argsEmail(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["email"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+	if tmp, ok := rawArgs["email"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -68360,184 +68361,6 @@ func (ec *executionContext) fieldContext_Mutation_billingProfile_UnlinkLocation(
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_connectToNylas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_connectToNylas(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ConnectToNylas(rctx, fc.Args["email"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal string
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal string
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (any, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal string
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_connectToNylas(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_connectToNylas_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_disconnectFromNylas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_disconnectFromNylas(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DisconnectFromNylas(rctx, fc.Args["email"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal bool
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal bool
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (any, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal bool
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_disconnectFromNylas(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_disconnectFromNylas_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_addTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_addTag(ctx, field)
 	if err != nil {
@@ -78517,6 +78340,184 @@ func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_note_UnlinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_nylasConnect(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_nylasConnect(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().NylasConnect(rctx, fc.Args["email"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_nylasConnect(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_nylasConnect_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_nylasDisconnect(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_nylasDisconnect(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().NylasDisconnect(rctx, fc.Args["email"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_nylasDisconnect(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_nylasDisconnect_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -99062,95 +99063,6 @@ func (ec *executionContext) fieldContext_Query_calendar_availability(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getNylasAccountID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getNylasAccountID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().GetNylasAccountID(rctx, fc.Args["email"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal string
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal string
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (any, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal string
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_getNylasAccountID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getNylasAccountID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_contact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contact(ctx, field)
 	if err != nil {
@@ -103746,6 +103658,95 @@ func (ec *executionContext) fieldContext_Query_externalMeetings(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_externalMeetings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_nylasGetAccountID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_nylasGetAccountID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().NylasGetAccountID(rctx, fc.Args["email"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_nylasGetAccountID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_nylasGetAccountID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -136928,20 +136929,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "connectToNylas":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_connectToNylas(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "disconnectFromNylas":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_disconnectFromNylas(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "addTag":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addTag(ctx, field)
@@ -137599,6 +137586,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "note_UnlinkAttachment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_note_UnlinkAttachment(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nylasConnect":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_nylasConnect(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nylasDisconnect":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_nylasDisconnect(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -140699,28 +140700,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getNylasAccountID":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getNylasAccountID(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "contact":
 			field := field
 
@@ -141745,6 +141724,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_externalMeetings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "nylasGetAccountID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_nylasGetAccountID(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

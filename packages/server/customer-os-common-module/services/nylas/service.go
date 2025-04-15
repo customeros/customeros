@@ -1,14 +1,13 @@
 package nylas
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"io"
 	"net/http"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
@@ -35,7 +34,7 @@ func NewNylasService(config *config.NylasConfig, googleService interfaces.Google
 }
 
 // getProviderAccessToken handles token refresh and returns a valid access token
-func (s *nylasService) getProviderAccessToken(ctx context.Context, email, provider string) (string, error) {
+func (s *nylasService) getProviderAccessToken(ctx context.Context, email string, provider enum.OAuthEmailProvider) (string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.getProviderAccessToken")
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider)
@@ -45,7 +44,7 @@ func (s *nylasService) getProviderAccessToken(ctx context.Context, email, provid
 	accessToken := ""
 
 	switch provider {
-	case string(enum.ProviderGoogle):
+	case enum.ProviderGoogle:
 		// Get Gmail service which will handle token refresh
 		gmailService, err := s.googleService.GetGmailService(ctx, email, tenant)
 		if err != nil {
@@ -58,7 +57,7 @@ func (s *nylasService) getProviderAccessToken(ctx context.Context, email, provid
 
 		// Get the access token from the Gmail service
 		// The Gmail service will handle token refresh if needed
-		accessToken, err = s.googleService.GetAccessToken(ctx, email, tenant)
+		accessToken, err = s.googleService.GetAccessToken(ctx, tenant, email)
 		if err != nil {
 			spans.TraceError(err)
 			return "", fmt.Errorf("failed to get access token: %v", err)
@@ -70,8 +69,8 @@ func (s *nylasService) getProviderAccessToken(ctx context.Context, email, provid
 	return accessToken, nil
 }
 
-// ConnectAccount connects a user's email to Nylas calendar service if not already connected
-func (s *nylasService) ConnectAccount(ctx context.Context, email, provider string) (*postgres_entity.NylasAccount, error) {
+// ConnectAccount connects a new Nylas account
+func (s *nylasService) ConnectAccount(ctx context.Context, email string, provider enum.OAuthEmailProvider) (*postgres_entity.NylasAccount, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.ConnectAccount")
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider)
@@ -84,78 +83,31 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email, provider strin
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// First check if account already exists
+	// Check if account already exists
 	existingAccount, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas account: %v", err)
-	}
-
-	// If account exists, return it
-	if existingAccount != nil {
+	if err == nil && existingAccount != nil {
 		return existingAccount, nil
 	}
 
-	// Get provider access token
-	providerAccessToken, err := s.getProviderAccessToken(ctx, email, provider)
+	// Connect new account
+	accountID, err := s.prepareNylasAccountID(ctx, email, provider)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get provider access token: %v", err)
+		return nil, fmt.Errorf("failed to connect account: %v", err)
 	}
 
-	// Create request to Nylas v3 API to connect account
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/v3/connect/authorize", s.config.APIUrl), nil)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to create request: %v", err)
-	}
-
-	// Set headers
-	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-
-	// Set request body
-	body := map[string]interface{}{
-		"email": email,
-		"token": providerAccessToken,
-	}
-	jsonBody, _ := json.Marshal(body)
-	req.Body = io.NopCloser(bytes.NewReader(jsonBody))
-
-	// Make request
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to make request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	// Parse response
-	var response struct {
-		AccountID string `json:"account_id"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to decode response: %v", err)
-	}
-
-	// Save the new account to database
-	newAccount := &postgres_entity.NylasAccount{
+	// Save account to database
+	account := &postgres_entity.NylasAccount{
 		Tenant:         tenant,
 		Email:          email,
-		NylasAccountId: response.AccountID,
-		Provider:       provider,
+		NylasAccountId: accountID,
+		Provider:       provider.String(),
 	}
-	savedAccount, err := s.postgres.NylasAccountRepository.Save(ctx, newAccount)
+
+	savedAccount, err := s.postgres.NylasAccountRepository.Save(ctx, account)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to save Nylas account: %v", err)
+		return nil, fmt.Errorf("failed to save account: %v", err)
 	}
 
 	return savedAccount, nil
@@ -237,52 +189,53 @@ func (s *nylasService) GetAccount(ctx context.Context, email string) (*postgres_
 		return nil, fmt.Errorf("failed to get Nylas account: %v", err)
 	}
 	if account == nil {
-		return nil, fmt.Errorf("Nylas account not found")
+		return nil, nil
 	}
 
 	return account, nil
 }
 
-// prepareNylasAccountID gets or connects a Nylas account for the given email
-func (s *nylasService) prepareNylasAccountID(ctx context.Context, email, provider string) (string, error) {
+// prepareNylasAccountID prepares the Nylas account ID for a user
+func (s *nylasService) prepareNylasAccountID(ctx context.Context, email string, provider enum.OAuthEmailProvider) (string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.prepareNylasAccountID")
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider)
 
+	// Get tenant from context
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
-		return "", fmt.Errorf("tenant not set in context")
+		spans.TraceError(fmt.Errorf("tenant not found in context"))
+		return "", fmt.Errorf("tenant not found in context")
 	}
 
-	// First try to get existing account from database
-	existingAccount, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
+	// Check if account exists in database
+	account, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
 	if err != nil {
 		spans.TraceError(err)
 		return "", fmt.Errorf("failed to get Nylas account: %v", err)
 	}
 
-	// If account exists, return its Nylas account ID
-	if existingAccount != nil {
-		return existingAccount.NylasAccountId, nil
+	if account != nil {
+		return account.NylasAccountId, nil
 	}
 
-	// If no account exists, connect a new one
-	account, err := s.ConnectAccount(ctx, email, provider)
+	// Connect new account
+	accountID, err := s.ConnectAccount(ctx, email, provider)
 	if err != nil {
 		spans.TraceError(err)
-		return "", fmt.Errorf("failed to connect Nylas account: %v", err)
+		return "", fmt.Errorf("failed to connect account: %v", err)
 	}
 
-	return account.NylasAccountId, nil
+	return accountID.NylasAccountId, nil
 }
 
-// Update ListCalendars to use prepareNylasAccountID
-func (s *nylasService) ListCalendars(ctx context.Context, email, provider string) ([]*interfaces.Calendar, error) {
+// ListCalendars lists all calendars for a user
+func (s *nylasService) ListCalendars(ctx context.Context, email string, provider enum.OAuthEmailProvider) ([]*interfaces.Calendar, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.ListCalendars")
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider)
 
-	// Get Nylas account ID for this email
+	// Get Nylas account ID
 	accountID, err := s.prepareNylasAccountID(ctx, email, provider)
 	if err != nil {
 		spans.TraceError(err)
@@ -296,7 +249,7 @@ func (s *nylasService) ListCalendars(ctx context.Context, email, provider string
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 
-	// Set headers - use Nylas API key for authentication
+	// Set headers
 	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
 	req.Header.Set("Accept", "application/json")
 
@@ -314,32 +267,13 @@ func (s *nylasService) ListCalendars(ctx context.Context, email, provider string
 	}
 
 	// Parse response
-	var response struct {
-		Data []struct {
-			ID          string `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-			IsPrimary   bool   `json:"is_primary"`
-		} `json:"data"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	var calendars []*interfaces.Calendar
+	if err := json.NewDecoder(resp.Body).Decode(&calendars); err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
 
-	// Convert to our interface type
-	result := make([]*interfaces.Calendar, len(response.Data))
-	for i, cal := range response.Data {
-		result[i] = &interfaces.Calendar{
-			ID:          cal.ID,
-			Name:        cal.Name,
-			Description: cal.Description,
-			IsPrimary:   cal.IsPrimary,
-		}
-	}
-
-	return result, nil
+	return calendars, nil
 }
 
 // Update ListEvents to use prepareNylasAccountID
@@ -359,7 +293,7 @@ func (s *nylasService) ListEvents(ctx context.Context, calendarID string, startT
 	}
 
 	// Get provider from context
-	provider := ctx.Value("provider").(string)
+	provider := ctx.Value("provider").(enum.OAuthEmailProvider)
 	if provider == "" {
 		return nil, fmt.Errorf("no provider found in context")
 	}
@@ -460,4 +394,14 @@ func (s *nylasService) GetEvent(ctx context.Context, calendarID string, eventID 
 func (s *nylasService) GetCalendar(ctx context.Context, calendarID string) (*interfaces.Calendar, error) {
 	// TODO: Implement Nylas API call to get calendar
 	return nil, nil
+}
+
+// getNylasProvider maps our provider to Nylas provider
+func (s *nylasService) getNylasProvider(provider enum.OAuthEmailProvider) (string, error) {
+	switch provider {
+	case enum.ProviderGoogle:
+		return string(interfaces.NylasProviderGoogle), nil
+	default:
+		return "", fmt.Errorf("unsupported provider for Nylas: %s", provider)
+	}
 }

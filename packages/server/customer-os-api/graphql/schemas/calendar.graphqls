@@ -55,21 +55,4 @@ extend type Query {
     Get availability across all users in the tenant for a given time range
     """
     calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    """
-    Get the Nylas account ID for a given email
-    """
-    getNylasAccountID(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-extend type Mutation {
-    """
-    Connect a user's email to Nylas calendar service
-    """
-    connectToNylas(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    """
-    Disconnect a user's email from Nylas calendar service
-    """
-    disconnectFromNylas(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
