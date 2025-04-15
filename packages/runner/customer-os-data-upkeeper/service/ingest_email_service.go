@@ -84,7 +84,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 					return
 				}
 
-				oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, agent.Tenant, provider, emailAddress)
+				oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, agent.Tenant, provider, emailAddress)
 				if err != nil {
 					spans.TraceError(err)
 					return
@@ -121,7 +121,7 @@ func (s *ingestEmailService) SyncEmailsInState(state postgresEntity.IngestEmailI
 		go func(agentId, tenant, provider, email string) {
 			defer wg.Done()
 
-			oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, provider, email)
+			oAuthTokenEntities, err := s.commonServices.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, provider, email)
 			if err != nil {
 				spans.TraceError(err)
 				return

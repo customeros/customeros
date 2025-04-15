@@ -50,8 +50,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/markdown_event"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/media"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/meeting"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/notification"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/nylas"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensearch"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opensrs"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/opportunity"
@@ -125,6 +127,7 @@ type CommonServices struct {
 	MediaService               interfaces.MediaService
 	NotificationService        interfaces.NotificationService
 	NovuService                interfaces.NovuService
+	NylasService               interfaces.NylasService
 	OpenSRSService             interfaces.OpenSrsService
 	OpportunityService         interfaces.OpportunityService
 	OrganizationService        interfaces.OrganizationService
@@ -147,6 +150,7 @@ type CommonServices struct {
 	WebscraperService          interfaces.WebscraperService
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
+	MeetingService             interfaces.MeetingService
 
 	// Agents
 	AgentCapabilities  *agent_capability.AgentCapabilities
@@ -208,6 +212,8 @@ func InitCommonServices(
 	emailingImpl := emailing.NewEmailingService(log, postgresRepositories)
 	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
 	googleImpl := google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories)
+	nylasImpl := nylas.NewNylasService(&cfg.External.NylasConfig, googleImpl, postgresRepositories)
+	meetingImpl := meeting.NewMeetingService(log, nylasImpl, postgresRepositories)
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
@@ -384,6 +390,8 @@ func InitCommonServices(
 		WebscraperService:          webscrapeImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
+		NylasService:               nylasImpl,
+		MeetingService:             meetingImpl,
 
 		// Agents
 		AgentCapabilities:  capabilityImpl,

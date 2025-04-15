@@ -57,4 +57,5 @@ type ExternalServicesConfig struct {
 	TrueInboxConfig      TrueInboxConfig
 	QuickbooksConfig     QuickbooksConfig
 	CrustDataConfig      CrustDataConfig
+	NylasConfig          NylasConfig
 }

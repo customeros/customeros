@@ -5,8 +5,17 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/pkg/errors"
+	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+)
+
+type OAuthTokenProvider string
+
+const (
+	ProviderGoogle  OAuthTokenProvider = "gmail" // TODO replace gmail with google_workspace, also update prod db
+	ProviderOutlook OAuthTokenProvider = "outlook"
 )
 
 type OAuthTokenEntity struct {
@@ -89,4 +98,21 @@ func DecryptToken(key string, encryptedToken string) (string, error) {
 	}
 
 	return string(plaintext), nil
+}
+
+func (o *OAuthTokenEntity) HasCalendarReadScope() bool {
+	if o.Provider == string(ProviderGoogle) {
+		return strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar") ||
+			strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar.readonly")
+	}
+
+	return false
+}
+
+func (o *OAuthTokenEntity) HasCalendarWriteScope() bool {
+	if o.Provider == string(ProviderGoogle) {
+		return strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar")
+	}
+
+	return false
 }

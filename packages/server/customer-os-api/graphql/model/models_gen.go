@@ -347,6 +347,22 @@ type Calendar struct {
 	AppSource     string       `json:"appSource"`
 }
 
+// Input for calendar availability query
+type CalendarAvailabilityInput struct {
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	Duration  int       `json:"duration"`
+	Timezone  string    `json:"timezone"`
+	Email     *string   `json:"email,omitempty"`
+}
+
+// Response for calendar availability query
+type CalendarAvailabilityResponse struct {
+	TimeSlots      []*TimeSlot `json:"timeSlots"`
+	TotalUsers     int         `json:"totalUsers"`
+	AvailableUsers int         `json:"availableUsers"`
+}
+
 type Capability struct {
 	ID     string         `json:"id"`
 	Type   CapabilityType `json:"type"`
@@ -3179,6 +3195,13 @@ type TimeRange struct {
 	// The end time of the time range.
 	// **Required.**
 	To time.Time `json:"to"`
+}
+
+// Represents a time slot in calendar availability
+type TimeSlot struct {
+	StartTime   time.Time `json:"startTime"`
+	EndTime     time.Time `json:"endTime"`
+	IsAvailable bool      `json:"isAvailable"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.

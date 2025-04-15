@@ -79,7 +79,7 @@ func (s *mailService) getOAuthToken(ctx context.Context, emailMessage *postgres_
 	spans.LogFields(tracingLog.String("provider", emailMessage.FromProvider))
 	spans.LogFields(tracingLog.String("email", emailMessage.From))
 
-	oauthToken, err := s.postgres.OAuthTokenRepository.GetByEmail(
+	oauthToken, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(
 		ctx,
 		emailMessage.Tenant,
 		emailMessage.FromProvider,

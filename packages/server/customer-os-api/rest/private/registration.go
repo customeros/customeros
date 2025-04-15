@@ -689,7 +689,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{})
 		}
 
-		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
+		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
@@ -1287,7 +1287,7 @@ func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Servi
 
 	var err error
 
-	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
+	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
 	newOAuthToken := true
 	if oauthToken == nil {
 		oauthToken = &postgres_entity.OAuthTokenEntity{}
@@ -1333,7 +1333,7 @@ func handleAzureOAuthToken(ctx context.Context, services *cosapi_services.Servic
 	span, ctx := opentracing.StartSpanFromContext(ctx, "handleAzureOAuthToken")
 	defer span.Finish()
 
-	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
+	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
 	if oauthToken == nil {
 		oauthToken = &postgres_entity.OAuthTokenEntity{}
 	}
