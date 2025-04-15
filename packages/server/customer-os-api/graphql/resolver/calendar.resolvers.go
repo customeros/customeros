@@ -9,9 +9,56 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
+
+// ConnectToNylas is the resolver for the connectToNylas field.
+func (r *mutationResolver) ConnectToNylas(ctx context.Context, email string) (string, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ConnectToNylas", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogKV("email", email)
+
+	// first check if oauth token exists
+	oauthToken, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, common.GetTenantFromContext(ctx), email)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get OAuth token")
+		return "", nil
+	}
+
+	// if oauth token is not found, return error
+	if oauthToken == nil {
+		graphql.AddErrorf(ctx, "No OAuth token found for email: %s", email)
+		return "", nil
+	}
+
+	// connect to nylas
+	nylasAccount, err := r.Services.CommonServices.NylasService.ConnectAccount(ctx, email, oauthToken.Provider)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to connect to Nylas")
+		return "", nil
+	}
+
+	return nylasAccount.NylasAccountId, nil
+}
+
+// DisconnectFromNylas is the resolver for the disconnectFromNylas field.
+func (r *mutationResolver) DisconnectFromNylas(ctx context.Context, email string) (bool, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.DisconnectFromNylas", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	err := r.Services.CommonServices.NylasService.DisconnectAccount(ctx, email)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to disconnect from Nylas")
+		return false, nil
+	}
+
+	return true, nil
+}
 
 // CalendarAvailability is the resolver for the calendar_availability field.
 func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error) {
@@ -75,4 +122,24 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		TotalUsers:     availability.TotalUsers,
 		AvailableUsers: availability.AvailableUsers,
 	}, nil
+}
+
+// GetNylasAccountID is the resolver for the getNylasAccountID field.
+func (r *queryResolver) GetNylasAccountID(ctx context.Context, email string) (string, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.GetNylasAccountID", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.LogKV("email", email)
+
+	account, err := r.Services.CommonServices.NylasService.GetAccount(ctx, email)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get Nylas account")
+		return "", nil
+	}
+
+	if account == nil {
+		return "", nil
+	}
+
+	return account.NylasAccountId, nil
 }

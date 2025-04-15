@@ -10,7 +10,7 @@ import (
 )
 
 type NylasAccountRepository interface {
-	GetByTenantAndEmail(ctx context.Context, tenant, email, provider string) (*postgres_entity.NylasAccount, error)
+	GetByTenantAndEmail(ctx context.Context, tenant, email string) (*postgres_entity.NylasAccount, error)
 	Save(ctx context.Context, account *postgres_entity.NylasAccount) (*postgres_entity.NylasAccount, error)
 	Delete(ctx context.Context, account *postgres_entity.NylasAccount) error
 }
@@ -25,14 +25,14 @@ func NewNylasAccountRepository(db *gorm.DB) NylasAccountRepository {
 	}
 }
 
-func (r *nylasAccountRepository) GetByTenantAndEmail(ctx context.Context, tenant, email, provider string) (*postgres_entity.NylasAccount, error) {
+func (r *nylasAccountRepository) GetByTenantAndEmail(ctx context.Context, tenant, email string) (*postgres_entity.NylasAccount, error) {
 	spans, _ := telemetry.StartPostgresSpan(ctx, "NylasAccountRepository.GetByTenantAndEmail")
 	defer spans.Finish()
-	spans.LogKV("tenant", tenant, "email", email, "provider", provider)
+	spans.LogKV("tenant", tenant, "email", email)
 
 	var account postgres_entity.NylasAccount
 	err := r.db.
-		Where("tenant = ? AND email = ? AND provider = ?", tenant, email, provider).
+		Where("tenant = ? AND email = ?", tenant, email).
 		First(&account).Error
 
 	if err != nil {

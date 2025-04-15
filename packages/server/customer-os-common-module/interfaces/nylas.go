@@ -3,9 +3,16 @@ package interfaces
 import (
 	"context"
 	"time"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type NylasService interface {
+	// Account operations
+	ConnectAccount(ctx context.Context, email, provider string) (*postgres_entity.NylasAccount, error)
+	DisconnectAccount(ctx context.Context, email string) error
+	GetAccount(ctx context.Context, email string) (*postgres_entity.NylasAccount, error)
+
 	// Calendar operations
 	CreateEvent(ctx context.Context, calendarID string, event *CalendarEvent) (*CalendarEvent, error)
 	UpdateEvent(ctx context.Context, calendarID string, eventID string, event *CalendarEvent) (*CalendarEvent, error)

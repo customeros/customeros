@@ -8,14 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/pkg/errors"
-)
-
-type OAuthTokenProvider string
-
-const (
-	ProviderGoogle  OAuthTokenProvider = "gmail" // TODO replace gmail with google_workspace, also update prod db
-	ProviderOutlook OAuthTokenProvider = "outlook"
 )
 
 type OAuthTokenEntity struct {
@@ -101,7 +95,7 @@ func DecryptToken(key string, encryptedToken string) (string, error) {
 }
 
 func (o *OAuthTokenEntity) HasCalendarReadScope() bool {
-	if o.Provider == string(ProviderGoogle) {
+	if o.Provider == string(enum.ProviderGoogle) {
 		return strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar") ||
 			strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar.readonly")
 	}
@@ -110,7 +104,7 @@ func (o *OAuthTokenEntity) HasCalendarReadScope() bool {
 }
 
 func (o *OAuthTokenEntity) HasCalendarWriteScope() bool {
-	if o.Provider == string(ProviderGoogle) {
+	if o.Provider == string(enum.ProviderGoogle) {
 		return strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar")
 	}
 
