@@ -14,7 +14,7 @@ type NylasService interface {
 	ListEvents(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*CalendarEvent, error)
 
 	// Calendar management
-	ListCalendars(ctx context.Context) ([]*Calendar, error)
+	ListCalendars(ctx context.Context, email, provider string) ([]*Calendar, error)
 	GetCalendar(ctx context.Context, calendarID string) (*Calendar, error)
 }
 
@@ -46,5 +46,5 @@ type Calendar struct {
 	ID          string
 	Name        string
 	Description string
-	Primary     bool
+	IsPrimary   bool
 }

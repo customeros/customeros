@@ -15,4 +15,6 @@ type GoogleService interface {
 	ReadEmails(ctx context.Context, batchSize int64, importState *postgres_entity.IngestEmailImportState) ([]*postgres_entity.EmailRawData, string, error)
 
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
+
+	GetAccessToken(ctx context.Context, tenant, email string) (string, error)
 }

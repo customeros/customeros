@@ -14737,10 +14737,11 @@ type TimeSlot {
 Input for calendar availability query
 """
 input CalendarAvailabilityInput {
-    startTime: Time!
-    endTime: Time!
-    duration: Int! # duration in minutes
-    timezone: String! # e.g. "America/New_York"
+    startTime:  Time!
+    endTime:    Time!
+    duration:   Int! # duration in minutes
+    timezone:   String! # e.g. "America/New_York"
+    email:      String # if provided, calendar availability for given email will be returned
 }
 
 """
@@ -120387,7 +120388,7 @@ func (ec *executionContext) unmarshalInputCalendarAvailabilityInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"startTime", "endTime", "duration", "timezone"}
+	fieldsInOrder := [...]string{"startTime", "endTime", "duration", "timezone", "email"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -120422,6 +120423,13 @@ func (ec *executionContext) unmarshalInputCalendarAvailabilityInput(ctx context.
 				return it, err
 			}
 			it.Timezone = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
 		}
 	}
 

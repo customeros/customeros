@@ -6,11 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/araddon/dateparse"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -54,7 +55,7 @@ func (s *googleService) GetGmailService(ctx context.Context, username, tenant st
 	defer spans.Finish()
 	spans.LogKV("username", username)
 
-	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmail(ctx, tenant, commonenum.SourceGmail.String(), username)
+	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, commonenum.SourceGmail.String(), username)
 	if err != nil {
 		return nil, err
 	}
@@ -473,6 +474,35 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 	}
 
 	return nil
+}
+
+func (s *googleService) GetAccessToken(ctx context.Context, tenant, email string) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.GetAccessToken")
+	defer spans.Finish()
+
+	// Get OAuth token from database
+	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, commonenum.SourceGmail.String(), email)
+	if err != nil {
+		spans.TraceError(err)
+		return "", fmt.Errorf("failed to get OAuth token: %v", err)
+	}
+	if tokenEntity == nil {
+		return "", fmt.Errorf("no OAuth token found for email: %s", email)
+	}
+
+	// Check if token needs manual refresh
+	if tokenEntity.NeedsManualRefresh {
+		return "", fmt.Errorf("token needs manual refresh for email: %s", email)
+	}
+
+	// Decrypt access token
+	accessToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.AccessToken)
+	if err != nil {
+		spans.TraceError(err)
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
 func convertToUTC(datetimeStr string) (time.Time, error) {

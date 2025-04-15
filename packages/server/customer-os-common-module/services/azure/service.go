@@ -261,7 +261,7 @@ func (s *azureService) sendDraft(ctx context.Context, spans telemetry.Spans, dra
 }
 
 func (s *azureService) getValidToken(ctx context.Context, spans telemetry.Spans, tenant, email string) (string, error) {
-	token, err := s.postgres.OAuthTokenRepository.GetByEmail(ctx, tenant, enum.SourceOutlook.String(), email)
+	token, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, enum.SourceOutlook.String(), email)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "error getting oauth token"))
 		return "", fmt.Errorf("get token error: %w", err)

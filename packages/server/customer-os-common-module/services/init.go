@@ -213,7 +213,7 @@ func InitCommonServices(
 	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
 	googleImpl := google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories)
 	nylasImpl := nylas.NewNylasService(&cfg.External.NylasConfig, googleImpl)
-	meetingImpl := meeting.NewMeetingService(log, nylasImpl)
+	meetingImpl := meeting.NewMeetingService(log, nylasImpl, postgresRepositories)
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)

@@ -353,6 +353,7 @@ type CalendarAvailabilityInput struct {
 	EndTime   time.Time `json:"endTime"`
 	Duration  int       `json:"duration"`
 	Timezone  string    `json:"timezone"`
+	Email     *string   `json:"email,omitempty"`
 }
 
 // Response for calendar availability query

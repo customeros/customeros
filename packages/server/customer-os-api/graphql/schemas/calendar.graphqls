@@ -34,10 +34,11 @@ type TimeSlot {
 Input for calendar availability query
 """
 input CalendarAvailabilityInput {
-    startTime: Time!
-    endTime: Time!
-    duration: Int! # duration in minutes
-    timezone: String! # e.g. "America/New_York"
+    startTime:  Time!
+    endTime:    Time!
+    duration:   Int! # duration in minutes
+    timezone:   String! # e.g. "America/New_York"
+    email:      String # if provided, calendar availability for given email will be returned
 }
 
 """

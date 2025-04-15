@@ -42,6 +42,7 @@ require (
 	github.com/smartystreets/smartystreets-go-sdk v1.21.1
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v81 v81.4.0
+	github.com/teamwork/nylas-go v0.18.0
 	github.com/testcontainers/testcontainers-go v0.36.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	go.opentelemetry.io/otel v1.35.0
