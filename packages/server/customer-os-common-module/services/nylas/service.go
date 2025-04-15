@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"io"
 	"net/http"
 	"time"
@@ -44,7 +45,7 @@ func (s *nylasService) getProviderAccessToken(ctx context.Context, email, provid
 	accessToken := ""
 
 	switch provider {
-	case string(postgres_entity.ProviderGoogle):
+	case string(enum.ProviderGoogle):
 		// Get Gmail service which will handle token refresh
 		gmailService, err := s.googleService.GetGmailService(ctx, email, tenant)
 		if err != nil {
