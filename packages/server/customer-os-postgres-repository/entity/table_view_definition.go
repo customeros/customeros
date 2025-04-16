@@ -161,6 +161,7 @@ const (
 	ColumnViewTypeContractsForecastArr               ColumnViewType = "CONTRACTS_FORECAST_ARR"
 	ColumnViewTypeContractsOwner                     ColumnViewType = "CONTRACTS_OWNER"
 	ColumnViewTypeContractsHealth                    ColumnViewType = "CONTRACTS_HEALTH"
+	ColumnViewTypeContractsOrganizationLegalName     ColumnViewType = "CONTRACTS_ORGANIZATION_LEGAL_NAME"
 	ColumnViewTypeFlowName                           ColumnViewType = "FLOW_NAME"
 	ColumnViewTypeFlowTotalCount                     ColumnViewType = "FLOW_TOTAL_COUNT"
 	ColumnViewTypeFlowOnHoldCount                    ColumnViewType = "FLOW_ON_HOLD_COUNT"
