@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -45,10 +44,20 @@ func (s *nylasService) getProviderRefreshToken(ctx context.Context, email string
 	tenant := common.GetTenantFromContext(ctx)
 
 	refreshToken := ""
-	var err error
 
 	switch provider {
 	case enum.ProviderGoogle:
+		// get gmail service
+		gmailService, err := s.googleService.GetGmailService(ctx, tenant, email)
+		if err != nil {
+			spans.TraceError(err)
+			return "", fmt.Errorf("failed to get Gmail service: %v", err)
+		}
+		if gmailService == nil {
+			spans.TraceError(fmt.Errorf("Gmail service is nil"))
+			return "", fmt.Errorf("Gmail service is nil")
+		}
+
 		requiredScopes := []string{"https://www.googleapis.com/auth/calendar"}
 		refreshToken, err = s.googleService.GetRefreshToken(ctx, tenant, email, provider, requiredScopes)
 		if err != nil {
@@ -62,9 +71,9 @@ func (s *nylasService) getProviderRefreshToken(ctx context.Context, email string
 	return refreshToken, nil
 }
 
-// ConnectAccount connects a new Nylas account
-func (s *nylasService) ConnectAccount(ctx context.Context, email string, provider enum.OAuthEmailProvider) (*postgres_entity.NylasAccount, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.ConnectAccount")
+// Authenticate into Nylas and save the grant
+func (s *nylasService) GrantAccess(ctx context.Context, email string, provider enum.OAuthEmailProvider) (*postgres_entity.NylasGrant, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GrantAccess")
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider.String())
 
@@ -77,16 +86,16 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Check if account already exists
-	existingAccount, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
+	existingGrant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to check if Nylas account exists: %v", err)
 	}
-	if existingAccount != nil {
-		return existingAccount, nil
+	if existingGrant != nil {
+		return existingGrant, nil
 	}
 
-	// nylas account does not exist, create a new one
+	// Nylas account does not exist, create a new one
 
 	// Get refresh token from provider
 	refreshToken, err := s.getProviderRefreshToken(ctx, email, provider)
@@ -103,22 +112,14 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 	}
 	spans.LogKV("nylas_provider", nylasProvider)
 
-	// Get required calendar scopes
-	scopes, err := s.prepareScopes(provider)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get calendar scopes: %v", err)
-	}
-
 	// Prepare request body
 	requestBody := struct {
 		Provider string `json:"provider"`
 		Settings struct {
 			RefreshToken string `json:"refresh_token"`
 		} `json:"settings"`
-		Scopes []string `json:"scopes,omitempty"`
-		Email  string   `json:"email,omitempty"`
-		State  string   `json:"state,omitempty"`
+		Email string `json:"email,omitempty"`
+		State string `json:"state,omitempty"`
 	}{
 		Provider: nylasProvider,
 		Settings: struct {
@@ -126,9 +127,8 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 		}{
 			RefreshToken: refreshToken,
 		},
-		Scopes: scopes,
-		Email:  email,
-		State:  tenant, // Using tenant as state to track the origin
+		Email: email,
+		State: tenant, // Using tenant as state to track the origin
 	}
 
 	spans.LogObjectAsJson("request", requestBody)
@@ -167,13 +167,13 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		// Read and log response body
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			spans.TraceError(err)
-			return nil, fmt.Errorf("failed to read error response body: %v", err)
-		}
+	bodyBytes, err = io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to read error response body: %v", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		spans.LogKV("response", string(bodyBytes))
 		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
 		return nil, fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(bodyBytes))
@@ -181,33 +181,37 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 
 	// Parse response
 	var response struct {
-		ID string `json:"id"`
+		RequestID string `json:"request_id"`
+		Data      struct {
+			ID string `json:"id"`
+		} `json:"data"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+
+	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&response); err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
 
 	// Save account to database
-	account := &postgres_entity.NylasAccount{
-		Tenant:         tenant,
-		Email:          email,
-		NylasAccountId: response.ID,
-		Provider:       provider.String(),
-		Scopes:         strings.Join(scopes, " "),
+	grant := &postgres_entity.NylasGrant{
+		Tenant:               tenant,
+		Email:                email,
+		NylasGrantId:         response.Data.ID,
+		NylasProvider:        nylasProvider,
+		NylasConnectResponse: string(bodyBytes),
 	}
 
-	savedAccount, err := s.postgres.NylasAccountRepository.Save(ctx, account)
+	savedGrant, err := s.postgres.NylasGrantRepository.Save(ctx, grant)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to save account: %v", err)
+		return nil, fmt.Errorf("failed to save grant: %v", err)
 	}
 
-	return savedAccount, nil
+	return savedGrant, nil
 }
 
-func (s *nylasService) DisconnectAccount(ctx context.Context, email string) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.DisconnectAccount")
+func (s *nylasService) RevokeAccess(ctx context.Context, email string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.RevokeAccess")
 	defer spans.Finish()
 	spans.LogKV("email", email)
 
@@ -219,52 +223,57 @@ func (s *nylasService) DisconnectAccount(ctx context.Context, email string) erro
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	account, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
+	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
 	if err != nil {
 		spans.TraceError(err)
-		return fmt.Errorf("failed to get Nylas account: %v", err)
+		return fmt.Errorf("failed to get Nylas grant: %v", err)
 	}
-	if account == nil {
-		return fmt.Errorf("Nylas account not found")
+	if grant == nil {
+		return fmt.Errorf("Nylas grant not found")
 	}
 
-	// First remove the account from Nylas
-	req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf("%s/v3/connect/accounts/%s", s.config.APIUrl, account.NylasAccountId), nil)
+	// First remove the grant from Nylas
+	req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf("%s/v3/grants/%s", s.config.APIUrl, grant.NylasGrantId), nil)
 	if err != nil {
 		spans.TraceError(err)
-		return fmt.Errorf("failed to create request to remove Nylas account: %v", err)
+		return fmt.Errorf("failed to create request to revoke Nylas grant: %v", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", "application/json, application/gzip")
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
-		return fmt.Errorf("failed to remove Nylas account: %v", err)
+		return fmt.Errorf("failed to revoke Nylas grant: %v", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		spans.LogKV("response", string(bodyBytes))
 		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
-		if resp.StatusCode != http.StatusNotFound {
-			return fmt.Errorf("failed to remove Nylas account: unexpected status code %d", resp.StatusCode)
-		}
+		return fmt.Errorf("failed to revoke Nylas grant: status %d, response: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	// Delete from postgres database
-	err = s.postgres.NylasAccountRepository.Delete(ctx, account)
+	err = s.postgres.NylasGrantRepository.Delete(ctx, grant.NylasGrantId)
 	if err != nil {
 		spans.TraceError(err)
-		return fmt.Errorf("failed to delete Nylas account from database: %v", err)
+		return fmt.Errorf("failed to delete Nylas grant from database: %v", err)
 	}
 
 	return nil
 }
 
 // GetAccount retrieves a Nylas account for the given email
-func (s *nylasService) GetAccount(ctx context.Context, email string) (*postgres_entity.NylasAccount, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GetAccount")
+func (s *nylasService) GetGrant(ctx context.Context, email string) (*postgres_entity.NylasGrant, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GetGrant")
 	defer spans.Finish()
 	spans.LogKV("email", email)
 
@@ -276,21 +285,21 @@ func (s *nylasService) GetAccount(ctx context.Context, email string) (*postgres_
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	account, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
+	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas account: %v", err)
+		return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
 	}
-	if account == nil {
+	if grant == nil {
 		return nil, nil
 	}
 
-	return account, nil
+	return grant, nil
 }
 
-// prepareNylasAccountID prepares the Nylas account ID for a user
-func (s *nylasService) prepareNylasAccountID(ctx context.Context, email string, provider enum.OAuthEmailProvider) (string, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.prepareNylasAccountID")
+// prepareNylasGrantID prepares the Nylas grant ID for a user
+func (s *nylasService) prepareNylasGrantID(ctx context.Context, email string, provider enum.OAuthEmailProvider) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.prepareNylasGrantID")
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider)
 
@@ -302,24 +311,24 @@ func (s *nylasService) prepareNylasAccountID(ctx context.Context, email string, 
 	}
 
 	// Check if account exists in database
-	account, err := s.postgres.NylasAccountRepository.GetByTenantAndEmail(ctx, tenant, email)
+	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
 	if err != nil {
 		spans.TraceError(err)
 		return "", fmt.Errorf("failed to get Nylas account: %v", err)
 	}
 
-	if account != nil {
-		return account.NylasAccountId, nil
+	if grant != nil {
+		return grant.NylasGrantId, nil
 	}
 
 	// Connect new account
-	newAccount, err := s.ConnectAccount(ctx, email, provider)
+	newGrant, err := s.GrantAccess(ctx, email, provider)
 	if err != nil {
 		spans.TraceError(err)
 		return "", fmt.Errorf("failed to connect account: %v", err)
 	}
 
-	return newAccount.NylasAccountId, nil
+	return newGrant.NylasGrantId, nil
 }
 
 // ListCalendars lists all calendars for a user
@@ -328,15 +337,15 @@ func (s *nylasService) ListCalendars(ctx context.Context, email string, provider
 	defer spans.Finish()
 	spans.LogKV("email", email, "provider", provider)
 
-	// Get Nylas account ID
-	accountID, err := s.prepareNylasAccountID(ctx, email, provider)
+	// Get Nylas grant ID
+	grantID, err := s.prepareNylasGrantID(ctx, email, provider)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas account ID: %v", err)
+		return nil, fmt.Errorf("failed to get Nylas grant ID: %v", err)
 	}
 
 	// Create request to Nylas v3 API
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v3/calendars?account_id=%s", s.config.APIUrl, accountID), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v3/calendars?account_id=%s", s.config.APIUrl, grantID), nil)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to create request: %v", err)
@@ -392,16 +401,16 @@ func (s *nylasService) ListEvents(ctx context.Context, calendarID string, startT
 	}
 
 	// Get Nylas account ID for this email
-	accountID, err := s.prepareNylasAccountID(ctx, email, provider)
+	grantID, err := s.prepareNylasGrantID(ctx, email, provider)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas account ID: %v", err)
+		return nil, fmt.Errorf("failed to get Nylas grant ID: %v", err)
 	}
 
 	// Create request to Nylas v3 API
 	url := fmt.Sprintf("%s/v3/events?account_id=%s&calendar_id=%s&start=%d&end=%d",
 		s.config.APIUrl,
-		accountID,
+		grantID,
 		calendarID,
 		startTime.Unix(),
 		endTime.Unix(),
@@ -496,19 +505,5 @@ func (s *nylasService) prepareNylasProvider(provider enum.OAuthEmailProvider) (s
 		return string(interfaces.NylasProviderGoogle), nil
 	default:
 		return "", fmt.Errorf("unsupported provider for Nylas: %s", provider)
-	}
-}
-
-func (s *nylasService) prepareScopes(provider enum.OAuthEmailProvider) ([]string, error) {
-	switch provider {
-	case enum.ProviderGoogle:
-		return []string{
-			"calendar.read",
-			"calendar.write",
-			"calendar.free_busy.read",
-			"calendar.free_busy.write",
-		}, nil
-	default:
-		return nil, fmt.Errorf("unsupported provider for calendar scopes: %s", provider)
 	}
 }

@@ -81,7 +81,7 @@ type Repositories struct {
 	WebSessionPageVisitRepository                WebSessionPageVisitRepository
 	WebSessionRepository                         WebSessionRepository
 	WebTrackerEventsRepository                   WebTrackerEventsRepository
-	NylasAccountRepository                       NylasAccountRepository
+	NylasGrantRepository                         NylasGrantRepository
 }
 
 func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
@@ -137,7 +137,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		InvoiceRepository:                            NewInvoiceRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:                NewMailstackBuyRequestRepository(postgresDB.GormDB),
 		MagicLinkRepository:                          NewMagicLinkRepository(postgresDB.GormDB),
-		NylasAccountRepository:                       NewNylasAccountRepository(postgresDB.GormDB),
+		NylasGrantRepository:                         NewNylasGrantRepository(postgresDB.GormDB),
 		OranizationWebsiteHostingPlatformRepository:  NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
 		PersonalEmailProviderRepository:              NewPersonalEmailProviderRepository(postgresDB.GormDB),
 		PersonalIntegrationRepository:                NewPersonalIntegrationsRepo(postgresDB.GormDB),
@@ -212,7 +212,7 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.MagicLink{},
 		&postgres_entity.MailstackBuyRequest{},
 		&postgres_entity.MailstackBuyRequestDomain{},
-		&postgres_entity.NylasAccount{},
+		&postgres_entity.NylasGrant{},
 		&postgres_entity.OrganizationWebsiteHostingPlatform{},
 		&postgres_entity.PersonalEmailProvider{},
 		&postgres_entity.PersonalIntegration{},

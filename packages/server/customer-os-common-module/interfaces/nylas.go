@@ -15,10 +15,10 @@ const (
 )
 
 type NylasService interface {
-	// Account operations
-	ConnectAccount(ctx context.Context, email string, oauthProvider enum.OAuthEmailProvider) (*postgres_entity.NylasAccount, error)
-	DisconnectAccount(ctx context.Context, email string) error
-	GetAccount(ctx context.Context, email string) (*postgres_entity.NylasAccount, error)
+	// Access operations
+	GrantAccess(ctx context.Context, email string, oauthProvider enum.OAuthEmailProvider) (*postgres_entity.NylasGrant, error)
+	RevokeAccess(ctx context.Context, email string) error
+	GetGrant(ctx context.Context, email string) (*postgres_entity.NylasGrant, error)
 
 	// Calendar management
 	ListCalendars(ctx context.Context, email string, oauthProvider enum.OAuthEmailProvider) ([]*Calendar, error)

@@ -2,14 +2,14 @@ extend type Query {
     """
     Get the Nylas account ID for a given email
     """
-    nylasGetAccountID(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    nylasIsConnected(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
     """
     Connect a user's email to Nylas service
     """
-    nylasConnect(email: String!): String! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    nylasConnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     """
     Disconnect a user's email from Nylas service
