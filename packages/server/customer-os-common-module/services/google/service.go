@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -476,12 +477,13 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 	return nil
 }
 
-func (s *googleService) GetAccessToken(ctx context.Context, tenant, email string) (string, error) {
+func (s *googleService) GetAccessToken(ctx context.Context, tenant, email string, provider commonenum.OAuthEmailProvider, requiredScopes []string) (string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.GetAccessToken")
 	defer spans.Finish()
+	spans.LogKV("email", email, "provider", provider.String(), "requiredScopes", requiredScopes)
 
 	// Get OAuth token from database
-	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, commonenum.SourceGmail.String(), email)
+	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, provider.String(), email)
 	if err != nil {
 		spans.TraceError(err)
 		return "", fmt.Errorf("failed to get OAuth token: %v", err)
@@ -493,6 +495,14 @@ func (s *googleService) GetAccessToken(ctx context.Context, tenant, email string
 	// Check if token needs manual refresh
 	if tokenEntity.NeedsManualRefresh {
 		return "", fmt.Errorf("token needs manual refresh for email: %s", email)
+	}
+
+	// Check if required scopes are present
+	scopes := tokenEntity.Scopes()
+	for _, requiredScope := range requiredScopes {
+		if !slices.Contains(scopes, requiredScope) {
+			return "", fmt.Errorf("required scope %s not found for email: %s", requiredScope, email)
+		}
 	}
 
 	// Decrypt access token
@@ -505,12 +515,13 @@ func (s *googleService) GetAccessToken(ctx context.Context, tenant, email string
 	return accessToken, nil
 }
 
-func (s *googleService) GetRefreshToken(ctx context.Context, tenant, email string) (string, error) {
+func (s *googleService) GetRefreshToken(ctx context.Context, tenant, email string, provider commonenum.OAuthEmailProvider, requiredScopes []string) (string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.GetRefreshToken")
 	defer spans.Finish()
+	spans.LogKV("email", email, "provider", provider.String(), "requiredScopes", requiredScopes)
 
 	// Get OAuth token from database
-	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, commonenum.SourceGmail.String(), email)
+	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, provider.String(), email)
 	if err != nil {
 		spans.TraceError(err)
 		return "", fmt.Errorf("failed to get OAuth token: %v", err)
@@ -522,6 +533,14 @@ func (s *googleService) GetRefreshToken(ctx context.Context, tenant, email strin
 	// Check if token needs manual refresh
 	if tokenEntity.NeedsManualRefresh {
 		return "", fmt.Errorf("token needs manual refresh for email: %s", email)
+	}
+
+	// Check if required scopes are present
+	scopes := tokenEntity.Scopes()
+	for _, requiredScope := range requiredScopes {
+		if !slices.Contains(scopes, requiredScope) {
+			return "", fmt.Errorf("required scope %s not found for email: %s", requiredScope, email)
+		}
 	}
 
 	// Decrypt refresh token

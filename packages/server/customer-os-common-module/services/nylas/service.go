@@ -49,19 +49,8 @@ func (s *nylasService) getProviderRefreshToken(ctx context.Context, email string
 
 	switch provider {
 	case enum.ProviderGoogle:
-		//// Get Gmail service which will handle token refresh
-		//gmailService, err := s.googleService.GetGmailService(ctx, email, tenant)
-		//if err != nil {
-		//	spans.TraceError(err)
-		//	return "", fmt.Errorf("failed to get Gmail service: %v", err)
-		//}
-		//if gmailService == nil {
-		//	return "", fmt.Errorf("failed to get Gmail service for email: %s", email)
-		//}
-
-		// Get the access token from the Gmail service
-		// The Gmail service will handle token refresh if needed
-		refreshToken, err = s.googleService.GetRefreshToken(ctx, tenant, email)
+		requiredScopes := []string{"https://www.googleapis.com/auth/calendar"}
+		refreshToken, err = s.googleService.GetRefreshToken(ctx, tenant, email, provider, requiredScopes)
 		if err != nil {
 			spans.TraceError(err)
 			return "", fmt.Errorf("failed to get refresh token: %v", err)
@@ -77,7 +66,7 @@ func (s *nylasService) getProviderRefreshToken(ctx context.Context, email string
 func (s *nylasService) ConnectAccount(ctx context.Context, email string, provider enum.OAuthEmailProvider) (*postgres_entity.NylasAccount, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.ConnectAccount")
 	defer spans.Finish()
-	spans.LogKV("email", email, "provider", provider)
+	spans.LogKV("email", email, "provider", provider.String())
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -93,9 +82,11 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to check if Nylas account exists: %v", err)
 	}
-	if err == nil && existingAccount != nil {
+	if existingAccount != nil {
 		return existingAccount, nil
 	}
+
+	// nylas account does not exist, create a new one
 
 	// Get refresh token from provider
 	refreshToken, err := s.getProviderRefreshToken(ctx, email, provider)
@@ -104,7 +95,7 @@ func (s *nylasService) ConnectAccount(ctx context.Context, email string, provide
 		return nil, fmt.Errorf("failed to get refresh token: %v", err)
 	}
 
-	// Get Nylas provider string
+	// Prepare Nylas provider
 	nylasProvider, err := s.prepareNylasProvider(provider)
 	if err != nil {
 		spans.TraceError(err)
