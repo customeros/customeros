@@ -1288,10 +1288,10 @@ func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Servi
 	var err error
 
 	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
-	newOAuthToken := true
+	newOAuthToken := false
 	if oauthToken == nil {
 		oauthToken = &postgres_entity.OAuthTokenEntity{}
-		newOAuthToken = false
+		newOAuthToken = true
 	}
 	oauthToken.Provider = common_enum.SourceGmail.String()
 	oauthToken.TenantName = defaultTenant

@@ -5,31 +5,26 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/pkg/errors"
-)
-
-type OAuthTokenProvider string
-
-const (
-	ProviderGoogle  OAuthTokenProvider = "gmail" // TODO replace gmail with google_workspace, also update prod db
-	ProviderOutlook OAuthTokenProvider = "outlook"
 )
 
 type OAuthTokenEntity struct {
 	Provider                  string    `gorm:"primaryKey;autoIncrement:false;index:idx_primary;column:provider;size:255;not null"`
 	TenantName                string    `gorm:"primaryKey;autoIncrement:false;index:idx_primary;column:tenant_name;size:255;not null"`
 	EmailAddress              string    `gorm:"primaryKey;autoIncrement:false;index:idx_primary;column:email_address;size:255;not null"`
+	Scope                     string    `gorm:"column:scope;type:text"`
 	UserId                    string    `gorm:"column:user_id;size:255;not null"`
 	PlayerIdentityId          string    `gorm:"column:player_identity_id;size:255;not null"`
 	AccessToken               string    `gorm:"column:access_token;type:text"`
 	RefreshToken              string    `gorm:"column:refresh_token;type:text"`
-	NeedsManualRefresh        bool      `gorm:"column:needs_manual_refresh;default:false;"`
 	IdToken                   string    `gorm:"column:id_token;type:text"`
 	ExpiresAt                 time.Time `gorm:"column:expires_at;type:timestamp;"`
-	Scope                     string    `gorm:"column:scope;type:text"`
+	NeedsManualRefresh        bool      `gorm:"column:needs_manual_refresh;default:false;"`
 	GmailSyncEnabled          bool      `gorm:"column:gmail_sync_enabled;default:false;"`
 	GoogleCalendarSyncEnabled bool      `gorm:"column:google_calendar_sync_enabled;default:false;"`
 }
@@ -100,18 +95,24 @@ func DecryptToken(key string, encryptedToken string) (string, error) {
 	return string(plaintext), nil
 }
 
+func (o *OAuthTokenEntity) Scopes() []string {
+	return strings.Split(o.Scope, " ")
+}
+
 func (o *OAuthTokenEntity) HasCalendarReadScope() bool {
-	if o.Provider == string(ProviderGoogle) {
-		return strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar") ||
-			strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar.readonly")
+	scopes := o.Scopes()
+	if o.Provider == string(enum.ProviderGoogle) {
+		return slices.Contains(scopes, "https://www.googleapis.com/auth/calendar") ||
+			slices.Contains(scopes, "https://www.googleapis.com/auth/calendar.readonly")
 	}
 
 	return false
 }
 
 func (o *OAuthTokenEntity) HasCalendarWriteScope() bool {
-	if o.Provider == string(ProviderGoogle) {
-		return strings.Contains(o.Scope, "https://www.googleapis.com/auth/calendar")
+	scopes := o.Scopes()
+	if o.Provider == string(enum.ProviderGoogle) {
+		return slices.Contains(scopes, "https://www.googleapis.com/auth/calendar")
 	}
 
 	return false

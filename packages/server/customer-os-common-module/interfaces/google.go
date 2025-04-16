@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"google.golang.org/api/gmail/v1"
 )
@@ -16,5 +17,7 @@ type GoogleService interface {
 
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
 
-	GetAccessToken(ctx context.Context, tenant, email string) (string, error)
+	GetAccessToken(ctx context.Context, tenant, email string, provider enum.OAuthEmailProvider, requiredScopes []string) (string, error)
+
+	GetRefreshToken(ctx context.Context, tenant, email string, provider enum.OAuthEmailProvider, requiredScopes []string) (string, error)
 }

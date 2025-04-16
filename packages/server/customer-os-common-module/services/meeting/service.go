@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
@@ -92,7 +93,12 @@ func (s *meetingService) GetCalendarAvailabilityForEmail(ctx context.Context, em
 	}
 
 	// Get calendars for the user
-	calendars, err := s.nylasService.ListCalendars(ctx, email, oauthToken.Provider)
+	oauthProvider, err := enum.GetOAuthEmailProvider(oauthToken.Provider)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get oauth provider: %v", err)
+	}
+	calendars, err := s.nylasService.ListCalendars(ctx, email, oauthProvider)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to list calendars: %v", err)

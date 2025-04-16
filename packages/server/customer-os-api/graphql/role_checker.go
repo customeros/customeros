@@ -13,7 +13,8 @@ import (
 
 func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
 	return func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
-		spans, ctx := telemetry.StartSpan(ctx, "RoleChecker")
+		// Start a span for role checking that will be a child of the current root
+		spans, _ := telemetry.StartSpan(ctx, "RoleChecker")
 		defer spans.Finish()
 		currentRoles := common.GetRolesFromContext(ctx)
 
@@ -26,6 +27,7 @@ func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Re
 				if currentRole == allowedRole.String() {
 					// If the role is in the list of allowed roles, call the next resolver
 					spans.LogKV("result", "Access granted")
+					// Pass the original context to next resolver to avoid nesting spans
 					return next(ctx)
 				}
 			}
