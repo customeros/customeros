@@ -1271,7 +1271,7 @@ type ComplexityRoot struct {
 		NoteLinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
 		NoteUnlinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                 func(childComplexity int, input model.NoteUpdateInput) int
-		NylasConnect                               func(childComplexity int, email string) int
+		NylasConnect                               func(childComplexity int, input model.NylasConnectInput) int
 		NylasDisconnect                            func(childComplexity int, email string) int
 		OpportunityArchive                         func(childComplexity int, id string) int
 		OpportunityRenewalUpdate                   func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
@@ -2248,7 +2248,7 @@ type MutationResolver interface {
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
-	NylasConnect(ctx context.Context, email string) (bool, error)
+	NylasConnect(ctx context.Context, input model.NylasConnectInput) (bool, error)
 	NylasDisconnect(ctx context.Context, email string) (bool, error)
 	OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error)
 	OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error)
@@ -9369,7 +9369,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.NylasConnect(childComplexity, args["email"].(string)), true
+		return e.complexity.Mutation.NylasConnect(childComplexity, args["input"].(model.NylasConnectInput)), true
 
 	case "Mutation.nylasDisconnect":
 		if e.complexity.Mutation.NylasDisconnect == nil {
@@ -14225,6 +14225,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputMeetingUpdateInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
+		ec.unmarshalInputNylasConnectInput,
 		ec.unmarshalInputOnboardingStatusInput,
 		ec.unmarshalInputOpportunityCreateInput,
 		ec.unmarshalInputOpportunityRenewalUpdateAllForOrganizationInput,
@@ -15429,7 +15430,7 @@ type BillingDetails {
 input ContractInput {
     organizationId:             ID!
     contractName:               String
-    committedPeriodInMonths:   Int64
+    committedPeriodInMonths:    Int64
     appSource:                  String
     contractUrl:                String
     serviceStarted:             Time
@@ -17470,14 +17471,23 @@ extend type Mutation {
     """
     Connect a user's email to Nylas service
     """
-    nylasConnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    nylasConnect(input: NylasConnectInput!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     """
     Disconnect a user's email from Nylas service
     """
     nylasDisconnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
-`, BuiltIn: false},
+
+input NylasConnectInput {
+    email:          String!
+    refreshToken:   String!
+    provider:       NylasProvider!
+}
+
+enum NylasProvider {
+    NYLAS_PROVIDER_GOOGLE
+}`, BuiltIn: false},
 	{Name: "../schemas/opportunity.graphqls", Input: `extend type Query {
     opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunities_LinkedToOrganizations(pagination: Pagination): OpportunityPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -24410,28 +24420,28 @@ func (ec *executionContext) field_Mutation_note_Update_argsInput(
 func (ec *executionContext) field_Mutation_nylasConnect_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_nylasConnect_argsEmail(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_nylasConnect_argsInput(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["email"] = arg0
+	args["input"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_nylasConnect_argsEmail(
+func (ec *executionContext) field_Mutation_nylasConnect_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["email"]; !ok {
-		var zeroVal string
+) (model.NylasConnectInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.NylasConnectInput
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-	if tmp, ok := rawArgs["email"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNNylasConnectInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasConnectInput(ctx, tmp)
 	}
 
-	var zeroVal string
+	var zeroVal model.NylasConnectInput
 	return zeroVal, nil
 }
 
@@ -78497,7 +78507,7 @@ func (ec *executionContext) _Mutation_nylasConnect(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().NylasConnect(rctx, fc.Args["email"].(string))
+			return ec.resolvers.Mutation().NylasConnect(rctx, fc.Args["input"].(model.NylasConnectInput))
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
@@ -124082,6 +124092,47 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNylasConnectInput(ctx context.Context, obj any) (model.NylasConnectInput, error) {
+	var it model.NylasConnectInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "refreshToken", "provider"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "refreshToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("refreshToken"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RefreshToken = data
+		case "provider":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
+			data, err := ec.unmarshalNNylasProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasProvider(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Provider = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOnboardingStatusInput(ctx context.Context, obj any) (model.OnboardingStatusInput, error) {
 	var it model.OnboardingStatusInput
 	asMap := map[string]any{}
@@ -149541,6 +149592,21 @@ func (ec *executionContext) marshalNNote2ᚖgithubᚗcomᚋcustomerosᚋcustomer
 func (ec *executionContext) unmarshalNNoteUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx context.Context, v any) (model.NoteUpdateInput, error) {
 	res, err := ec.unmarshalInputNoteUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNylasConnectInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasConnectInput(ctx context.Context, v any) (model.NylasConnectInput, error) {
+	res, err := ec.unmarshalInputNylasConnectInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNylasProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasProvider(ctx context.Context, v any) (model.NylasProvider, error) {
+	var res model.NylasProvider
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNNylasProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasProvider(ctx context.Context, sel ast.SelectionSet, v model.NylasProvider) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNOnboardingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx context.Context, v any) (model.OnboardingStatus, error) {
