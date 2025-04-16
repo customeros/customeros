@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
@@ -16,12 +15,12 @@ const (
 
 type NylasService interface {
 	// Access operations
-	GrantAccess(ctx context.Context, email string, oauthProvider enum.OAuthEmailProvider) (*postgres_entity.NylasGrant, error)
+	GrantAccess(ctx context.Context, email, refreshToken string, nylasProvider NylasProvider) (*postgres_entity.NylasGrant, error)
 	RevokeAccess(ctx context.Context, email string) error
 	GetGrant(ctx context.Context, email string) (*postgres_entity.NylasGrant, error)
 
 	// Calendar management
-	ListCalendars(ctx context.Context, email string, oauthProvider enum.OAuthEmailProvider) ([]*Calendar, error)
+	ListCalendars(ctx context.Context, email string) ([]*Calendar, error)
 	GetCalendar(ctx context.Context, calendarID string) (*Calendar, error)
 
 	// Calendar operations

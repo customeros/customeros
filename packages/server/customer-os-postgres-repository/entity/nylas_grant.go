@@ -26,3 +26,23 @@ func (n *NylasGrant) BeforeCreate(tx *gorm.DB) error {
 	n.ID = utils.GenerateNanoIdWithPrefix("nylas", 16)
 	return nil
 }
+
+type NylasGrantResponse struct {
+	RequestID string `json:"request_id"`
+	Data      struct {
+		ID             string   `json:"id"`
+		GrantStatus    string   `json:"grant_status"`
+		Provider       string   `json:"provider"`
+		Scope          []string `json:"scope"`
+		State          string   `json:"state"`
+		Email          string   `json:"email"`
+		Name           string   `json:"name"`
+		IP             string   `json:"ip"`
+		UserAgent      string   `json:"user_agent"`
+		CreatedAt      int64    `json:"created_at"`
+		UpdatedAt      int64    `json:"updated_at"`
+		IDToken        string   `json:"id_token"`
+		ProviderUserID string   `json:"provider_user_id"`
+		Blocked        bool     `json:"blocked"`
+	} `json:"data"`
+}

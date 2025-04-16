@@ -9,10 +9,20 @@ extend type Mutation {
     """
     Connect a user's email to Nylas service
     """
-    nylasConnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    nylasConnect(input: NylasConnectInput!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     """
     Disconnect a user's email from Nylas service
     """
     nylasDisconnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input NylasConnectInput {
+    email:          String!
+    refreshToken:   String!
+    provider:       NylasProvider!
+}
+
+enum NylasProvider {
+    NYLAS_PROVIDER_GOOGLE
 }

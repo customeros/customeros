@@ -9,44 +9,33 @@ import (
 	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
 // NylasConnect is the resolver for the nylasConnect field.
-func (r *mutationResolver) NylasConnect(ctx context.Context, email string) (bool, error) {
+func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasConnectInput) (bool, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NylasConnect", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
-	spans.LogKV("email", email)
+	spans.LogKV("email", input.Email, "provider", input.Provider)
 
-	// first check if oauth token exists
-	oauthToken, err := r.Services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, common.GetTenantFromContext(ctx), email)
-	if err != nil {
-		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Failed to get OAuth token")
+	if input.RefreshToken == "" {
+		spans.TraceError(errors.New("missing refresh token"))
+		graphql.AddErrorf(ctx, "Missing refresh token")
 		return false, nil
 	}
 
-	// if oauth token is not found, return error
-	if oauthToken == nil {
-		spans.TraceError(errors.New("no OAuth token found for email"))
-		graphql.AddErrorf(ctx, "No OAuth token found for email: %s", email)
-		return false, nil
+	nylasProvider := interfaces.NylasProviderGoogle
+	switch input.Provider {
+	case model.NylasProviderNylasProviderGoogle:
+		nylasProvider = interfaces.NylasProviderGoogle
 	}
 
-	// connect to nylas
-	oauthProvider, err := enum.GetOAuthEmailProvider(oauthToken.Provider)
+	_, err := r.Services.CommonServices.NylasService.GrantAccess(ctx, input.Email, input.RefreshToken, nylasProvider)
 	if err != nil {
 		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Failed to get OAuth provider: %v", err)
-		return false, nil
-	}
-
-	_, err = r.Services.CommonServices.NylasService.GrantAccess(ctx, email, oauthProvider)
-	if err != nil {
-		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Failed to connect to Nylas")
+		graphql.AddErrorf(ctx, "Failed to grant access with Nylas")
 		return false, nil
 	}
 

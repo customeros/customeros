@@ -2075,6 +2075,12 @@ type NoteUpdateInput struct {
 	ContentType *string `json:"contentType,omitempty"`
 }
 
+type NylasConnectInput struct {
+	Email        string        `json:"email"`
+	RefreshToken string        `json:"refreshToken"`
+	Provider     NylasProvider `json:"provider"`
+}
+
 type OnboardingDetails struct {
 	Status    OnboardingStatus `json:"status"`
 	Comments  *string          `json:"comments,omitempty"`
@@ -5218,6 +5224,45 @@ func (e *MeetingStatus) UnmarshalGQL(v any) error {
 }
 
 func (e MeetingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type NylasProvider string
+
+const (
+	NylasProviderNylasProviderGoogle NylasProvider = "NYLAS_PROVIDER_GOOGLE"
+)
+
+var AllNylasProvider = []NylasProvider{
+	NylasProviderNylasProviderGoogle,
+}
+
+func (e NylasProvider) IsValid() bool {
+	switch e {
+	case NylasProviderNylasProviderGoogle:
+		return true
+	}
+	return false
+}
+
+func (e NylasProvider) String() string {
+	return string(e)
+}
+
+func (e *NylasProvider) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = NylasProvider(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid NylasProvider", str)
+	}
+	return nil
+}
+
+func (e NylasProvider) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
