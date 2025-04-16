@@ -505,6 +505,35 @@ func (s *googleService) GetAccessToken(ctx context.Context, tenant, email string
 	return accessToken, nil
 }
 
+func (s *googleService) GetRefreshToken(ctx context.Context, tenant, email string) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "GoogleService.GetRefreshToken")
+	defer spans.Finish()
+
+	// Get OAuth token from database
+	tokenEntity, err := s.postgres.OAuthTokenRepository.GetByEmailAndProvider(ctx, tenant, commonenum.SourceGmail.String(), email)
+	if err != nil {
+		spans.TraceError(err)
+		return "", fmt.Errorf("failed to get OAuth token: %v", err)
+	}
+	if tokenEntity == nil {
+		return "", fmt.Errorf("no OAuth token found for email: %s", email)
+	}
+
+	// Check if token needs manual refresh
+	if tokenEntity.NeedsManualRefresh {
+		return "", fmt.Errorf("token needs manual refresh for email: %s", email)
+	}
+
+	// Decrypt refresh token
+	refreshToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.RefreshToken)
+	if err != nil {
+		spans.TraceError(err)
+		return "", err
+	}
+
+	return refreshToken, nil
+}
+
 func convertToUTC(datetimeStr string) (time.Time, error) {
 	var err error
 

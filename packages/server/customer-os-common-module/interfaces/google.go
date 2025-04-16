@@ -17,4 +17,6 @@ type GoogleService interface {
 	SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error
 
 	GetAccessToken(ctx context.Context, tenant, email string) (string, error)
+
+	GetRefreshToken(ctx context.Context, tenant, email string) (string, error)
 }
