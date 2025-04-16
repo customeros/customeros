@@ -1310,6 +1310,7 @@ type ComplexityRoot struct {
 		ReminderCreate                             func(childComplexity int, input model.ReminderInput) int
 		ReminderUpdate                             func(childComplexity int, input model.ReminderUpdateInput) int
 		RemoveTag                                  func(childComplexity int, input model.RemoveTagInput) int
+		RemoveTags                                 func(childComplexity int, input model.RemoveTagsInput) int
 		SendEmail                                  func(childComplexity int, input model.SendEmailInput) int
 		ServiceLineItemDelete                      func(childComplexity int, id string) int
 		SkuArchive                                 func(childComplexity int, id string) int
@@ -2151,6 +2152,7 @@ type MutationResolver interface {
 	BillingProfileUnlinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
 	AddTag(ctx context.Context, input model.AddTagInput) (string, error)
 	RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error)
+	RemoveTags(ctx context.Context, input model.RemoveTagsInput) (*model.Result, error)
 	FlagWrongField(ctx context.Context, input model.FlagWrongFieldInput) (*model.Result, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (string, error)
 	ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error)
@@ -9825,6 +9827,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RemoveTag(childComplexity, args["input"].(model.RemoveTagInput)), true
 
+	case "Mutation.removeTags":
+		if e.complexity.Mutation.RemoveTags == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeTags_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveTags(childComplexity, args["input"].(model.RemoveTagsInput)), true
+
 	case "Mutation.sendEmail":
 		if e.complexity.Mutation.SendEmail == nil {
 			break
@@ -14230,6 +14244,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputReminderInput,
 		ec.unmarshalInputReminderUpdateInput,
 		ec.unmarshalInputRemoveTagInput,
+		ec.unmarshalInputRemoveTagsInput,
 		ec.unmarshalInputSendEmailInput,
 		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
@@ -14818,13 +14833,10 @@ type Query
 
 extend type Mutation {
   addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-  removeTag(input: RemoveTagInput!): Result
-    @hasRole(roles: [ADMIN, USER])
-    @hasTenant
+  removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+  removeTags(input: RemoveTagsInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-  flagWrongField(input: FlagWrongFieldInput!): Result
-    @hasRole(roles: [ADMIN, USER])
-    @hasTenant
+  flagWrongField(input: FlagWrongFieldInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input AddTagInput {
@@ -14837,6 +14849,11 @@ input RemoveTagInput {
   entityId: ID!
   entityType: EntityType!
   tagId: ID!
+}
+
+input RemoveTagsInput {
+  entityId: ID!
+  entityType: EntityType!
 }
 
 enum EntityType {
@@ -25893,6 +25910,34 @@ func (ec *executionContext) field_Mutation_removeTag_argsInput(
 	}
 
 	var zeroVal model.RemoveTagInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_removeTags_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_removeTags_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_removeTags_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.RemoveTagsInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.RemoveTagsInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNRemoveTagsInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagsInput(ctx, tmp)
+	}
+
+	var zeroVal model.RemoveTagsInput
 	return zeroVal, nil
 }
 
@@ -68535,6 +68580,96 @@ func (ec *executionContext) fieldContext_Mutation_removeTag(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_removeTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_removeTags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveTags(rctx, fc.Args["input"].(model.RemoveTagsInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Result
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Result
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Result
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Result); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_removeTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeTags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -125517,6 +125652,40 @@ func (ec *executionContext) unmarshalInputRemoveTagInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRemoveTagsInput(ctx context.Context, obj any) (model.RemoveTagsInput, error) {
+	var it model.RemoveTagsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"entityId", "entityType"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "entityId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityID = data
+		case "entityType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSendEmailInput(ctx context.Context, obj any) (model.SendEmailInput, error) {
 	var it model.SendEmailInput
 	asMap := map[string]any{}
@@ -136940,6 +137109,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "removeTag":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeTag(ctx, field)
+			})
+		case "removeTags":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeTags(ctx, field)
 			})
 		case "flagWrongField":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -149799,6 +149972,11 @@ func (ec *executionContext) unmarshalNReminderUpdateInput2githubᚗcomᚋcustome
 
 func (ec *executionContext) unmarshalNRemoveTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagInput(ctx context.Context, v any) (model.RemoveTagInput, error) {
 	res, err := ec.unmarshalInputRemoveTagInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNRemoveTagsInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagsInput(ctx context.Context, v any) (model.RemoveTagsInput, error) {
+	res, err := ec.unmarshalInputRemoveTagsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -47,8 +47,42 @@ func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagI
 	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), input.TagID, "")
 	if err != nil {
 		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Error adding tag to entity")
-		return nil, nil
+		graphql.AddErrorf(ctx, "Error removing tag from entity")
+		return nil, err
+	}
+
+	return &model.Result{Result: true}, nil
+}
+
+// RemoveTags is the resolver for the removeTags field.
+func (r *mutationResolver) RemoveTags(ctx context.Context, input model.RemoveTagsInput) (*model.Result, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "CommonResolver.RemoveTags", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+	spans.TagEntity(input.EntityID)
+	spans.LogObjectAsJson("request", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	// get all tags for the entity
+	tagEntities, err := r.Services.CommonServices.TagService.GetTagsForEntity(ctx, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()))
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Error getting tags for entity")
+		return nil, err
+	}
+
+	if tagEntities == nil {
+		return &model.Result{Result: true}, nil
+	}
+
+	// for each tag, remove it from the entity
+	for _, tagEntity := range *tagEntities {
+		err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.EntityID, commonModel.DecodeEntityType(input.EntityType.String()), tagEntity.Id, "")
+		if err != nil {
+			spans.TraceError(err)
+			graphql.AddErrorf(ctx, "Error removing tag from entity")
+			return nil, err
+		}
 	}
 
 	return &model.Result{Result: true}, nil

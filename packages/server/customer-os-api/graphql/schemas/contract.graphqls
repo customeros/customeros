@@ -178,7 +178,7 @@ type BillingDetails {
 input ContractInput {
     organizationId:             ID!
     contractName:               String
-    committedPeriodInMonths:   Int64
+    committedPeriodInMonths:    Int64
     appSource:                  String
     contractUrl:                String
     serviceStarted:             Time

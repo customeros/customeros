@@ -2,6 +2,7 @@ package tags
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -390,4 +391,24 @@ func (s *tagService) GetTagsByEntityType(ctx context.Context, entityType model.E
 		tagEntities = append(tagEntities, *neo4jmapper.MapDbNodeToTagEntity(dbNodePtr))
 	}
 	return &tagEntities, nil
+}
+
+func (s *tagService) GetTagsForEntity(ctx context.Context, entityId string, entityType model.EntityType) (*neo4jentity.TagEntities, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TagService.GetTagsForEntity")
+	defer spans.Finish()
+
+	spans.LogKV("entityId", entityId, "entityType", entityType.String())
+
+	switch entityType {
+	case model.CONTACT:
+		return s.GetTagsForContacts(ctx, []string{entityId})
+	case model.ISSUE:
+		return s.GetTagsForIssues(ctx, []string{entityId})
+	case model.ORGANIZATION:
+		return s.GetTagsForOrganizations(ctx, []string{entityId})
+	case model.LOG_ENTRY:
+		return s.GetTagsForLogEntries(ctx, []string{entityId})
+	}
+
+	return nil, errors.New("entity type not supported")
 }

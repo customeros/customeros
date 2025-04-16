@@ -3,13 +3,10 @@ type Query
 
 extend type Mutation {
   addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-  removeTag(input: RemoveTagInput!): Result
-    @hasRole(roles: [ADMIN, USER])
-    @hasTenant
+  removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+  removeTags(input: RemoveTagsInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-  flagWrongField(input: FlagWrongFieldInput!): Result
-    @hasRole(roles: [ADMIN, USER])
-    @hasTenant
+  flagWrongField(input: FlagWrongFieldInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input AddTagInput {
@@ -22,6 +19,11 @@ input RemoveTagInput {
   entityId: ID!
   entityType: EntityType!
   tagId: ID!
+}
+
+input RemoveTagsInput {
+  entityId: ID!
+  entityType: EntityType!
 }
 
 enum EntityType {

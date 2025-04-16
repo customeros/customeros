@@ -2664,6 +2664,11 @@ type RemoveTagInput struct {
 	TagID      string     `json:"tagId"`
 }
 
+type RemoveTagsInput struct {
+	EntityID   string     `json:"entityId"`
+	EntityType EntityType `json:"entityType"`
+}
+
 type RenewalRecord struct {
 	Organization *Organization `json:"organization"`
 	Contract     *Contract     `json:"contract"`
