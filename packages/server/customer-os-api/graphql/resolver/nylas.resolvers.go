@@ -15,7 +15,7 @@ import (
 )
 
 // NylasConnect is the resolver for the nylasConnect field.
-func (r *mutationResolver) NylasConnect(ctx context.Context, email string) (string, error) {
+func (r *mutationResolver) NylasConnect(ctx context.Context, email string) (bool, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NylasConnect", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 	spans.LogKV("email", email)
@@ -25,14 +25,14 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, email string) (stri
 	if err != nil {
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get OAuth token")
-		return "", nil
+		return false, nil
 	}
 
 	// if oauth token is not found, return error
 	if oauthToken == nil {
 		spans.TraceError(errors.New("no OAuth token found for email"))
 		graphql.AddErrorf(ctx, "No OAuth token found for email: %s", email)
-		return "", nil
+		return false, nil
 	}
 
 	// connect to nylas
@@ -40,17 +40,17 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, email string) (stri
 	if err != nil {
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get OAuth provider: %v", err)
-		return "", nil
+		return false, nil
 	}
 
-	nylasAccount, err := r.Services.CommonServices.NylasService.ConnectAccount(ctx, email, oauthProvider)
+	_, err = r.Services.CommonServices.NylasService.GrantAccess(ctx, email, oauthProvider)
 	if err != nil {
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to connect to Nylas")
-		return "", nil
+		return false, nil
 	}
 
-	return nylasAccount.NylasAccountId, nil
+	return true, nil
 }
 
 // NylasDisconnect is the resolver for the nylasDisconnect field.
@@ -58,7 +58,7 @@ func (r *mutationResolver) NylasDisconnect(ctx context.Context, email string) (b
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "MutationResolver.NylasDisconnect", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 
-	err := r.Services.CommonServices.NylasService.DisconnectAccount(ctx, email)
+	err := r.Services.CommonServices.NylasService.RevokeAccess(ctx, email)
 	if err != nil {
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to disconnect from Nylas")
@@ -68,24 +68,24 @@ func (r *mutationResolver) NylasDisconnect(ctx context.Context, email string) (b
 	return true, nil
 }
 
-// NylasGetAccountID is the resolver for the nylasGetAccountID field.
-func (r *queryResolver) NylasGetAccountID(ctx context.Context, email string) (string, error) {
-	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.NylasGetAccountID", graphql.GetOperationContext(ctx))
+// NylasIsConnected is the resolver for the nylasIsConnected field.
+func (r *queryResolver) NylasIsConnected(ctx context.Context, email string) (bool, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.NylasIsConnected", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 	spans.LogKV("email", email)
 
-	account, err := r.Services.CommonServices.NylasService.GetAccount(ctx, email)
+	grant, err := r.Services.CommonServices.NylasService.GetGrant(ctx, email)
 	if err != nil {
 		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Failed to get Nylas account")
-		return "", nil
+		graphql.AddErrorf(ctx, "Failed to get Nylas grant")
+		return false, nil
 	}
 
-	if account == nil {
-		spans.LogKV("result.nylasAccountId", "")
-		return "", nil
+	if grant == nil {
+		spans.LogKV("result", false)
+		return false, nil
 	}
 
-	spans.LogKV("result.nylasAccountId", account.NylasAccountId)
-	return account.NylasAccountId, nil
+	spans.LogKV("result", true)
+	return true, nil
 }
