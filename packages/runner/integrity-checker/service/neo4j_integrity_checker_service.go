@@ -269,6 +269,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 		spans.TraceError(errors.Wrap(err, "error getting previous alert messages"))
 	}
 	if utils.StringSlicesEqualIgnoreOrder(previousAlertMessages, alertMessages) {
+		spans.LogKV("result", "no changes from previous run")
 		return nil
 	}
 
@@ -279,6 +280,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 
 	// If no alerts, return early
 	if !hasAlert {
+		spans.LogKV("result", "no alerts to send")
 		return nil
 	}
 
@@ -311,8 +313,10 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		spans.TraceError(errors.New("unexpected status code"))
 		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
 	}
 
+	spans.LogKV("result", "alert sent successfully")
 	return nil
 }
