@@ -23,4 +23,5 @@ type TagService interface {
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForLogEntries(ctx context.Context, logEntryIds []string) (*neo4jentity.TagEntities, error)
+	GetTagsForEntity(ctx context.Context, entityId string, entityType model.EntityType) (*neo4jentity.TagEntities, error)
 }

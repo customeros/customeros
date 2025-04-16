@@ -629,6 +629,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeContractsForecastArr), Width: 100, Visible: true, Name: "ARR Forecast", Filter: ""},
 				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeContractsHealth), Width: 100, Visible: true, Name: "Health", Filter: ""},
 				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeContractsOwner), Width: 100, Visible: true, Name: "Owner", Filter: ""},
+				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeContractsOrganizationLegalName), Width: 100, Visible: true, Name: "Legal Name", Filter: ""},
 			},
 		}
 	case postgres_entity.TableIDTypeFlowActions:
