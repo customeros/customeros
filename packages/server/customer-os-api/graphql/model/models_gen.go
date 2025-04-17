@@ -1053,6 +1053,20 @@ type DashboardTimeToOnboardPerMonth struct {
 	Value float64 `json:"value"`
 }
 
+// Represents availability settings for a single day
+type DayAvailability struct {
+	Enabled   bool   `json:"enabled"`
+	StartHour string `json:"startHour"`
+	EndHour   string `json:"endHour"`
+}
+
+// Input for day availability settings
+type DayAvailabilityInput struct {
+	Enabled   bool   `json:"enabled"`
+	StartHour string `json:"startHour"`
+	EndHour   string `json:"endHour"`
+}
+
 type DeleteResponse struct {
 	Accepted  bool `json:"accepted"`
 	Completed bool `json:"completed"`
@@ -3251,6 +3265,35 @@ type User struct {
 	Source        DataSource  `json:"source"`
 	SourceOfTruth DataSource  `json:"sourceOfTruth"`
 	AppSource     string      `json:"appSource"`
+}
+
+// Represents a user's calendar available hours configuration
+type UserCalendarAvailability struct {
+	ID        string           `json:"id"`
+	Email     string           `json:"email"`
+	Timezone  string           `json:"timezone"`
+	Monday    *DayAvailability `json:"monday"`
+	Tuesday   *DayAvailability `json:"tuesday"`
+	Wednesday *DayAvailability `json:"wednesday"`
+	Thursday  *DayAvailability `json:"thursday"`
+	Friday    *DayAvailability `json:"friday"`
+	Saturday  *DayAvailability `json:"saturday"`
+	Sunday    *DayAvailability `json:"sunday"`
+	CreatedAt time.Time        `json:"createdAt"`
+	UpdatedAt time.Time        `json:"updatedAt"`
+}
+
+// Input for saving user's calendar available hours
+type UserCalendarAvailabilityInput struct {
+	Email     string                `json:"email"`
+	Timezone  string                `json:"timezone"`
+	Monday    *DayAvailabilityInput `json:"monday"`
+	Tuesday   *DayAvailabilityInput `json:"tuesday"`
+	Wednesday *DayAvailabilityInput `json:"wednesday"`
+	Thursday  *DayAvailabilityInput `json:"thursday"`
+	Friday    *DayAvailabilityInput `json:"friday"`
+	Saturday  *DayAvailabilityInput `json:"saturday"`
+	Sunday    *DayAvailabilityInput `json:"sunday"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.

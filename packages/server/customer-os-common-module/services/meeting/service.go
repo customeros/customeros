@@ -9,6 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
@@ -154,4 +155,54 @@ func (s *meetingService) GetCalendarAvailabilityForEmail(ctx context.Context, em
 func (s *meetingService) GetCalendarAvailabilityForTenant(ctx context.Context, startTime time.Time, endTime time.Time, duration int, timezone string) (*interfaces.CalendarAvailability, error) {
 	// TODO implement
 	return nil, nil
+}
+
+func (s *meetingService) GetUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetUserCalendarAvailability")
+	defer spans.Finish()
+	spans.LogKV("email", email)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get user's calendar availability
+	availability, err := s.postgresRepository.UserCalendarAvailabilityRepository.GetByTenantAndEmail(ctx, tenant, email)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get calendar availability: %v", err)
+	}
+
+	return availability, nil
+}
+
+// SaveCalendarAvailableHours implements interfaces.MeetingService
+func (s *meetingService) SaveUserCalendarAvailability(ctx context.Context, availability *postgres_entity.UserCalendarAvailability) (*postgres_entity.UserCalendarAvailability, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.SaveCalendarAvailableHours")
+	defer spans.Finish()
+	spans.LogKV("email", availability.Email)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Set tenant from context
+	availability.Tenant = tenant
+
+	// Save or update availability
+	saved, err := s.postgresRepository.UserCalendarAvailabilityRepository.SaveOrUpdate(ctx, availability)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to save calendar availability: %v", err)
+	}
+
+	return saved, nil
 }
