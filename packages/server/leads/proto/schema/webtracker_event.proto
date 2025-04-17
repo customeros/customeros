@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package eventstream;
+option go_package = "github.com/customeros/customeros/packages/server/eventstream/proto/pb";
+
+enum WebTrackerEventType {
+  WEB_TRACKER_EVENT_UNSPECIFIED = 0;
+  WEB_TRACKER_PAGE_EXIT = 1;
+  WEB_TRACKER_PAGE_VIEW = 2;
+  WEB_TRACKER_CLICK = 3;
+  WEB_TRACKER_IDENTIFY = 4;
+}
+
+message WebTrackerEvent {
+  string id = 1;
+  string session_id = 2;
+  string visitor_id = 3;
+  string ip = 4;
+  WebTrackerEventType event_type = 5;
+  string event_data = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  string href = 8;
+  string referrer = 9;
+  string user_agent = 10;
+  string language = 11;
+  bool cookies_enabled = 12;
+  string screen_resolution = 13;
+}
