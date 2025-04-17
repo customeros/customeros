@@ -262,7 +262,7 @@ func sendPayInvoiceNotifications(cont *container.Container) {
 }
 
 func sendRemindInvoiceNotifications(cont *container.Container) {
-	cont.AgentProducers.SendInvoiceProducer.Execute()
+	cont.AgentProducers.SendOverdueInvoiceProducer.Execute()
 }
 
 // Contact Jobs
