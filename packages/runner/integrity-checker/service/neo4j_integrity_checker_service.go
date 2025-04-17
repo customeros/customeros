@@ -233,6 +233,8 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 		return nil
 	}
 
+	spans.LogKV("slackUrl", h.cfg.SlackConfig.DataAlertsRegisteredWebhook)
+
 	var alertMessages []string
 	hasAlert := false
 	var issues []struct {
@@ -300,6 +302,8 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 		return fmt.Errorf("error encoding JSON: %w", err)
 	}
 
+	spans.LogObjectAsJson("request", string(jsonData))
+
 	// Send POST request
 	resp, err := http.Post(h.cfg.SlackConfig.DataAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -313,7 +317,8 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		spans.TraceError(errors.New("unexpected status code"))
+		spans.TraceError(errors.New("unexpected status code: " + resp.Status))
+		spans.LogKV("response.body", string(body))
 		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
 	}
 
