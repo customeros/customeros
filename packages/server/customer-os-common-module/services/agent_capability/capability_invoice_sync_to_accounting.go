@@ -183,15 +183,6 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 				return enum.CapabilityExecutionRetry, result, err
 			}
 		}
-
-		// TODO alexb remove this code and invoked QBO services in May
-		//if invoiceEntity.QuickbooksPaymentId == "" {
-		//	err = c.syncPaymentLinkingJournalEntryToInvoice(ctx, *invoiceEntity)
-		//	if err != nil {
-		//		spans.TraceError( err)
-		//		return enum.CapabilityExecutionRetry, result, err
-		//	}
-		//}
 	}
 
 	// re-fetch invoice to get updated quickbooks journal id
@@ -213,12 +204,22 @@ func (c *SyncInvoiceToAccountingCapability) Execute(ctx context.Context, executi
 			spans.TraceError(err)
 			return enum.CapabilityExecutionRetry, result, err
 		}
-		if executionContainer.ConfigData.AccountingMethodAccrual.Value && invoiceEntity.QuickbooksJournalEntryId != "" {
-			err = c.quickbooksService.ZeroJournalEntry(ctx, invoiceEntity.QuickbooksJournalEntryId)
-			if err != nil {
-				spans.TraceError(err)
-				return enum.CapabilityExecutionRetry, result, err
+		if executionContainer.ConfigData.AccountingMethodAccrual.Value {
+			if invoiceEntity.QuickbooksJournalEntryId != "" {
+				err = c.quickbooksService.ZeroJournalEntry(ctx, invoiceEntity.QuickbooksJournalEntryId)
+				if err != nil {
+					spans.TraceError(err)
+					return enum.CapabilityExecutionRetry, result, err
+				}
 			}
+			if invoiceEntity.QuickbooksJournalEntryIdReverse != "" {
+				err = c.quickbooksService.ZeroJournalEntry(ctx, invoiceEntity.QuickbooksJournalEntryIdReverse)
+				if err != nil {
+					spans.TraceError(err)
+					return enum.CapabilityExecutionRetry, result, err
+				}
+			}
+
 			if invoiceEntity.QuickbooksPaymentId != "" {
 				contractEntity, err := c.contractService.GetContractForInvoice(ctx, invoiceEntity.Id)
 				if err != nil {

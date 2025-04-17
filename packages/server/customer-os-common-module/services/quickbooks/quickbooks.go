@@ -6,12 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
@@ -470,6 +471,7 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, quickbooksCustomerI
 func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.VoidInvoice")
 	defer spans.Finish()
+	spans.LogKV("invoiceId", invoiceId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -754,9 +756,9 @@ func (s *quickbooksService) SaveJournalEntry(ctx context.Context, txnDate time.T
 func (s *quickbooksService) ZeroJournalEntry(ctx context.Context, journalEntryId string) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "QuickbooksService.ZeroJournalEntry")
 	defer spans.Finish()
-	tenant := common.GetTenantFromContext(ctx)
 	spans.LogKV("journalEntryId", journalEntryId)
 
+	tenant := common.GetTenantFromContext(ctx)
 	// Retrieve QuickBooks settings for the tenant.
 	qbSettings, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
 	if err != nil {
