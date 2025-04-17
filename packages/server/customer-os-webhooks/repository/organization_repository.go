@@ -2,11 +2,12 @@ package repository
 
 import (
 	"context"
+	commonTracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -99,12 +100,15 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		commonTracing.TraceErr(span, err)
 		return "", err
 	}
 	orgIDs := dbRecords.([]*db.Record)
 	if len(orgIDs) == 1 {
+		span.LogKV("result.organizationId", orgIDs[0].Values[0])
 		return orgIDs[0].Values[0].(string), nil
 	}
+	span.LogKV("result.organizationId", "")
 	return "", nil
 }
 
@@ -204,6 +208,8 @@ func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context,
 		"domain":             domain,
 		"skipOrganizationId": skipOrganizationId,
 	}
+	span.LogKV("cypher", cypher)
+	commonTracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -216,7 +222,9 @@ func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context,
 		}
 	})
 	if err != nil {
+		commonTracing.TraceErr(span, err)
 		return false, err
 	}
+	span.LogKV("result", result.(bool))
 	return result.(bool), err
 }
