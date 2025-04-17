@@ -293,15 +293,19 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
+			_, _, primaryDomain := s.services.CommonServices.DomainService.CheckDomainWithMailsherpa(ctx, domain)
+
+			if primaryDomain == "" {
+				continue
+			}
+
 			// check if the domain is already linked to an organization. If the domain is already linked, skip the link operation
-			domainInUse, err := s.repositories.OrganizationRepository.IsDomainUsedByOrganization(ctx, tenant, domain, organizationId)
+			domainInUse, err := s.repositories.OrganizationRepository.IsDomainUsedByOrganization(ctx, tenant, primaryDomain, organizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("error while checking if domain is linked to organization: %v", err.Error())
 				continue
 			}
-
-			_, _, primaryDomain := s.services.CommonServices.DomainService.CheckDomainWithMailsherpa(ctx, domain)
 
 			if !domainInUse {
 				_, err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
