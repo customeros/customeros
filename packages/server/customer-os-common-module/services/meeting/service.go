@@ -197,12 +197,6 @@ func (s *meetingService) SaveUserCalendarAvailability(ctx context.Context, avail
 	// Set tenant from context
 	availability.Tenant = tenant
 
-	// Validate time formats
-	if err := validateAvailabilityTimes(availability); err != nil {
-		spans.TraceError(err)
-		return nil, err
-	}
-
 	// Save or update availability
 	saved, err := s.postgresRepository.UserCalendarAvailabilityRepository.SaveOrUpdate(ctx, availability)
 	if err != nil {
@@ -211,45 +205,4 @@ func (s *meetingService) SaveUserCalendarAvailability(ctx context.Context, avail
 	}
 
 	return saved, nil
-}
-
-// validateAvailabilityTimes validates the time formats in the availability settings
-func validateAvailabilityTimes(availability *postgres_entity.UserCalendarAvailability) error {
-	days := []postgres_entity.DayAvailability{
-		availability.Monday,
-		availability.Tuesday,
-		availability.Wednesday,
-		availability.Thursday,
-		availability.Friday,
-		availability.Saturday,
-		availability.Sunday,
-	}
-
-	for _, day := range days {
-		if !day.Enabled {
-			continue
-		}
-
-		// Validate time format (HH:MM)
-		if _, err := time.Parse("15:04", day.StartHour); err != nil {
-			return fmt.Errorf("invalid start hour format: %s", day.StartHour)
-		}
-		if _, err := time.Parse("15:04", day.EndHour); err != nil {
-			return fmt.Errorf("invalid end hour format: %s", day.EndHour)
-		}
-
-		// Validate start time is before end time
-		start, _ := time.Parse("15:04", day.StartHour)
-		end, _ := time.Parse("15:04", day.EndHour)
-		if !start.Before(end) {
-			return fmt.Errorf("start time must be before end time: %s - %s", day.StartHour, day.EndHour)
-		}
-	}
-
-	// Validate timezone
-	if _, err := time.LoadLocation(availability.Timezone); err != nil {
-		return fmt.Errorf("invalid timezone: %s", availability.Timezone)
-	}
-
-	return nil
 }

@@ -7,7 +7,7 @@ import (
 
 const defaultTimezone = "Etc/UTC"
 
-func MapEntityToModel(entity *postgresEntity.UserCalendarAvailability) *model.UserCalendarAvailability {
+func MapUserCalendarAvailabilityEntityToModel(entity *postgresEntity.UserCalendarAvailability) *model.UserCalendarAvailability {
 	if entity == nil {
 		return nil
 	}
@@ -41,11 +41,7 @@ func mapDayAvailabilityToModel(day postgresEntity.DayAvailability) *model.DayAva
 	}
 }
 
-func MapInputToEntity(input *model.UserCalendarAvailabilityInput) *postgresEntity.UserCalendarAvailability {
-	if input == nil {
-		return nil
-	}
-
+func MapUserCalendarAvailabilityInputToEntity(input model.UserCalendarAvailabilityInput) *postgresEntity.UserCalendarAvailability {
 	timezone := input.Timezone
 	if timezone == "" {
 		timezone = defaultTimezone
@@ -69,6 +65,14 @@ func mapInputToDayAvailability(input *model.DayAvailabilityInput) postgresEntity
 		return postgresEntity.DayAvailability{
 			Enabled: false,
 		}
+	}
+
+	if input.StartHour == "" {
+		input.StartHour = "00:00"
+	}
+
+	if input.EndHour == "" {
+		input.EndHour = "24:00"
 	}
 
 	return postgresEntity.DayAvailability{
