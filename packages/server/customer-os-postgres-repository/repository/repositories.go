@@ -77,6 +77,7 @@ type Repositories struct {
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
 	TenantWebhookRepository                      TenantWebhookRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
+	UserCalendarAvailabilityRepository           UserCalendarAvailabilityRepository
 	WebhooksRepository                           WebhooksRepository
 	WebSessionPageVisitRepository                WebSessionPageVisitRepository
 	WebSessionRepository                         WebSessionRepository
@@ -156,6 +157,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TenantWebhookApiKeyRepository:                NewTenantWebhookApiKeyRepository(postgresDB.GormDB),
 		TenantWebhookRepository:                      NewTenantWebhookRepo(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
+		UserCalendarAvailabilityRepository:           NewUserCalendarAvailabilityRepository(postgresDB.GormDB),
 		QuickbooksSettingsRepository:                 NewQuickbooksSettingsRepository(postgresDB.GormDB),
 		WebhooksRepository:                           NewWebhooksRepository(postgresDB.GormDB),
 		WebSessionRepository:                         NewWebSessionRepository(postgresDB.GormDB),
@@ -232,6 +234,7 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.TenantWebhook{},
 		&postgres_entity.TenantWebhookApiKey{},
 		&postgres_entity.UserWorkingSchedule{},
+		&postgres_entity.UserCalendarAvailability{},
 		&postgres_entity.Webhooks{},
 		&postgres_entity.WebSession{},
 		&postgres_entity.WebSessionPageVisit{},

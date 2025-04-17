@@ -50,9 +50,72 @@ type CalendarAvailabilityResponse {
     availableUsers: Int!
 }
 
+"""
+Represents availability settings for a single day
+"""
+type DayAvailability {
+    enabled: Boolean!
+    startHour: String! # Format: "HH:MM"
+    endHour: String! # Format: "HH:MM"
+}
+
+"""
+Input for day availability settings
+"""
+input DayAvailabilityInput {
+    enabled: Boolean!
+    startHour: String! # Format: "HH:MM"
+    endHour: String! # Format: "HH:MM"
+}
+
+"""
+Represents a user's calendar available hours configuration
+"""
+type UserCalendarAvailability {
+    id: ID!
+    email: String!
+    timezone: String!
+    monday: DayAvailability!
+    tuesday: DayAvailability!
+    wednesday: DayAvailability!
+    thursday: DayAvailability!
+    friday: DayAvailability!
+    saturday: DayAvailability!
+    sunday: DayAvailability!
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+"""
+Input for saving user's calendar available hours
+"""
+input UserCalendarAvailabilityInput {
+    email: String!
+    timezone: String!
+    monday: DayAvailabilityInput!
+    tuesday: DayAvailabilityInput!
+    wednesday: DayAvailabilityInput!
+    thursday: DayAvailabilityInput!
+    friday: DayAvailabilityInput!
+    saturday: DayAvailabilityInput!
+    sunday: DayAvailabilityInput!
+}
+
 extend type Query {
     """
     Get availability across all users in the tenant for a given time range
     """
     calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    """
+    Get user's calendar available hours configuration
+    """
+    calendar_available_hours(email: String!): UserCalendarAvailability @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    """
+    Save user's calendar available hours configuration
+    """
+    save_calendar_available_hours(input: UserCalendarAvailabilityInput!): UserCalendarAvailability! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }

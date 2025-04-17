@@ -6,12 +6,19 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
+
+// SaveCalendarAvailableHours is the resolver for the save_calendar_available_hours field.
+func (r *mutationResolver) SaveCalendarAvailableHours(ctx context.Context, input model.UserCalendarAvailabilityInput) (*model.UserCalendarAvailability, error) {
+	panic(fmt.Errorf("not implemented: SaveCalendarAvailableHours - save_calendar_available_hours"))
+}
 
 // CalendarAvailability is the resolver for the calendar_availability field.
 func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error) {
@@ -75,4 +82,21 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		TotalUsers:     availability.TotalUsers,
 		AvailableUsers: availability.AvailableUsers,
 	}, nil
+}
+
+// CalendarAvailableHours is the resolver for the calendar_available_hours field.
+func (r *queryResolver) CalendarAvailableHours(ctx context.Context, email string) (*model.UserCalendarAvailability, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CalendarAvailableHours", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
+
+	userCalendarAvailability, err := r.Services.CommonServices.MeetingService.GetUserCalendarAvailability(ctx, email)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get calendar availability")
+		return nil, nil
+	}
+
+	return mapper.MapEntityToModel(userCalendarAvailability), nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
@@ -154,4 +155,101 @@ func (s *meetingService) GetCalendarAvailabilityForEmail(ctx context.Context, em
 func (s *meetingService) GetCalendarAvailabilityForTenant(ctx context.Context, startTime time.Time, endTime time.Time, duration int, timezone string) (*interfaces.CalendarAvailability, error) {
 	// TODO implement
 	return nil, nil
+}
+
+func (s *meetingService) GetUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetUserCalendarAvailability")
+	defer spans.Finish()
+	spans.LogKV("email", email)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get user's calendar availability
+	availability, err := s.postgresRepository.UserCalendarAvailabilityRepository.GetByTenantAndEmail(ctx, tenant, email)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get calendar availability: %v", err)
+	}
+
+	return availability, nil
+}
+
+// SaveCalendarAvailableHours implements interfaces.MeetingService
+func (s *meetingService) SaveUserCalendarAvailability(ctx context.Context, availability *postgres_entity.UserCalendarAvailability) (*postgres_entity.UserCalendarAvailability, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.SaveCalendarAvailableHours")
+	defer spans.Finish()
+	spans.LogKV("email", availability.Email)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Set tenant from context
+	availability.Tenant = tenant
+
+	// Validate time formats
+	if err := validateAvailabilityTimes(availability); err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+
+	// Save or update availability
+	saved, err := s.postgresRepository.UserCalendarAvailabilityRepository.SaveOrUpdate(ctx, availability)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to save calendar availability: %v", err)
+	}
+
+	return saved, nil
+}
+
+// validateAvailabilityTimes validates the time formats in the availability settings
+func validateAvailabilityTimes(availability *postgres_entity.UserCalendarAvailability) error {
+	days := []postgres_entity.DayAvailability{
+		availability.Monday,
+		availability.Tuesday,
+		availability.Wednesday,
+		availability.Thursday,
+		availability.Friday,
+		availability.Saturday,
+		availability.Sunday,
+	}
+
+	for _, day := range days {
+		if !day.Enabled {
+			continue
+		}
+
+		// Validate time format (HH:MM)
+		if _, err := time.Parse("15:04", day.StartHour); err != nil {
+			return fmt.Errorf("invalid start hour format: %s", day.StartHour)
+		}
+		if _, err := time.Parse("15:04", day.EndHour); err != nil {
+			return fmt.Errorf("invalid end hour format: %s", day.EndHour)
+		}
+
+		// Validate start time is before end time
+		start, _ := time.Parse("15:04", day.StartHour)
+		end, _ := time.Parse("15:04", day.EndHour)
+		if !start.Before(end) {
+			return fmt.Errorf("start time must be before end time: %s - %s", day.StartHour, day.EndHour)
+		}
+	}
+
+	// Validate timezone
+	if _, err := time.LoadLocation(availability.Timezone); err != nil {
+		return fmt.Errorf("invalid timezone: %s", availability.Timezone)
+	}
+
+	return nil
 }
