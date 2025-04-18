@@ -9,12 +9,14 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/customeros/customeros/packages/server/leads/interfaces"
 	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
 type WebEventProcessor struct {
@@ -32,7 +34,7 @@ func NewWebEventProcessor(
 	}
 }
 
-var SUBSCRIBED_SUBJECT = "eventstream.*.event.>"
+var SUBSCRIBED_SUBJECT = "webtracker.*.event.>"
 
 const (
 	// queue group
@@ -127,20 +129,31 @@ func (s *WebEventProcessor) processMessage(ctx context.Context, msg *nats.Msg) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "emailStorageService.processMessage")
 	defer spans.Finish()
 
-	subject := msg.Subject
-	switch {
-	case strings.HasSuffix(subject, "event.page_view"):
-		s.handlePageView(ctx, msg)
-	case strings.HasSuffix(subject, "event.page_exit"):
-		s.handlePageExit(ctx, msg)
-	case strings.HasSuffix(subject, "event.click"):
-		s.handleClick(ctx, msg)
-	case strings.HasSuffix(subject, "event.identify"):
-		s.handleIdentify(ctx, msg)
-	default:
-		err := errors.New("Unidentified message")
+	message, err := s.unmarshalEvent(ctx, msg)
+	if err != nil {
 		spans.TraceError(err)
+		s.handleProcessingError(ctx, msg, err)
+		return
 	}
+
+	if message.NewSession {
+		err = s.processNewSession(ctx, message)
+		if err != nil {
+			spans.TraceError(err)
+			s.handleProcessingError(ctx, msg, err)
+			return
+		}
+	}
+
+	if strings.HasSuffix(msg.Subject, "identify") {
+		err = s.processIdentifyEvent(ctx, message)
+		if err != nil {
+			spans.TraceError(err)
+			s.handleProcessingError(ctx, msg, err)
+			return
+		}
+	}
+
 	return
 }
 
@@ -159,10 +172,24 @@ func (s *WebEventProcessor) handleProcessingError(ctx context.Context, msg *nats
 	}
 }
 
+func (s *WebEventProcessor) unmarshalEvent(ctx context.Context, msg *nats.Msg) (*pb.WebTrackerEvent, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "WebEventProcessor.unmarshalEvent")
+	defer spans.Finish()
+
+	message := &pb.WebTrackerEvent{}
+	err := proto.Unmarshal(msg.Data, message)
+	if err != nil || message == nil {
+		err := errors.New("Failed to parse message")
+		spans.TraceError(err)
+		return nil, err
+	}
+	return message, nil
+}
+
 // Stop gracefully shuts down the service
-func (s *WebEventProcessor) Stop() error {
+func (s *WebEventProcessor) Stop() {
 	if s.natsConn != nil {
 		s.natsConn.Close()
 	}
-	return nil
+	return
 }

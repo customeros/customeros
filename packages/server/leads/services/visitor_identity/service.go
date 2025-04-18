@@ -8,12 +8,13 @@ import (
 	"github.com/nats-io/nats.go"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/customeros/customeros/packages/server/eventstream/interfaces"
-	nats_internal "github.com/customeros/customeros/packages/server/eventstream/internal/nats"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/repository"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/telemetry"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/utils"
-	"github.com/customeros/customeros/packages/server/eventstream/proto/pb"
+	"github.com/customeros/customeros/packages/server/leads/interfaces"
+	"github.com/customeros/customeros/packages/server/leads/internal/enum"
+	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
+	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/leads/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
 type VisitorIdentityService struct {
@@ -33,7 +34,7 @@ func NewVisitorIdentityService(
 	}
 }
 
-var SUBSCRIBED_SUBJECT = "eventstream.visitor.identify"
+var SUBSCRIBED_SUBJECT = enum.EventIdentifyVisitor.String()
 
 // Start begins listening for  events
 func (s *VisitorIdentityService) Start(ctx context.Context) error {

@@ -81,17 +81,18 @@ type WebTrackerEvent struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	SessionId        string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	VisitorId        string                 `protobuf:"bytes,3,opt,name=visitor_id,json=visitorId,proto3" json:"visitor_id,omitempty"`
-	Ip               string                 `protobuf:"bytes,4,opt,name=ip,proto3" json:"ip,omitempty"`
-	EventType        WebTrackerEventType    `protobuf:"varint,5,opt,name=event_type,json=eventType,proto3,enum=eventstream.WebTrackerEventType" json:"event_type,omitempty"`
-	EventData        string                 `protobuf:"bytes,6,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`
-	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Href             string                 `protobuf:"bytes,8,opt,name=href,proto3" json:"href,omitempty"`
-	Referrer         string                 `protobuf:"bytes,9,opt,name=referrer,proto3" json:"referrer,omitempty"`
-	UserAgent        string                 `protobuf:"bytes,10,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
-	Language         string                 `protobuf:"bytes,11,opt,name=language,proto3" json:"language,omitempty"`
-	CookiesEnabled   bool                   `protobuf:"varint,12,opt,name=cookies_enabled,json=cookiesEnabled,proto3" json:"cookies_enabled,omitempty"`
-	ScreenResolution string                 `protobuf:"bytes,13,opt,name=screen_resolution,json=screenResolution,proto3" json:"screen_resolution,omitempty"`
+	NewSession       bool                   `protobuf:"varint,3,opt,name=new_session,json=newSession,proto3" json:"new_session,omitempty"`
+	VisitorId        string                 `protobuf:"bytes,4,opt,name=visitor_id,json=visitorId,proto3" json:"visitor_id,omitempty"`
+	Ip               string                 `protobuf:"bytes,5,opt,name=ip,proto3" json:"ip,omitempty"`
+	EventType        WebTrackerEventType    `protobuf:"varint,6,opt,name=event_type,json=eventType,proto3,enum=eventstream.WebTrackerEventType" json:"event_type,omitempty"`
+	EventData        string                 `protobuf:"bytes,7,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Href             string                 `protobuf:"bytes,9,opt,name=href,proto3" json:"href,omitempty"`
+	Referrer         string                 `protobuf:"bytes,10,opt,name=referrer,proto3" json:"referrer,omitempty"`
+	UserAgent        string                 `protobuf:"bytes,11,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	Language         string                 `protobuf:"bytes,12,opt,name=language,proto3" json:"language,omitempty"`
+	CookiesEnabled   bool                   `protobuf:"varint,13,opt,name=cookies_enabled,json=cookiesEnabled,proto3" json:"cookies_enabled,omitempty"`
+	ScreenResolution string                 `protobuf:"bytes,14,opt,name=screen_resolution,json=screenResolution,proto3" json:"screen_resolution,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -138,6 +139,13 @@ func (x *WebTrackerEvent) GetSessionId() string {
 		return x.SessionId
 	}
 	return ""
+}
+
+func (x *WebTrackerEvent) GetNewSession() bool {
+	if x != nil {
+		return x.NewSession
+	}
+	return false
 }
 
 func (x *WebTrackerEvent) GetVisitorId() string {
@@ -221,27 +229,29 @@ var File_schema_webtracker_event_proto protoreflect.FileDescriptor
 
 const file_schema_webtracker_event_proto_rawDesc = "" +
 	"\n" +
-	"\x1dschema/webtracker_event.proto\x12\veventstream\x1a\x1fgoogle/protobuf/timestamp.proto\"\xca\x03\n" +
+	"\x1dschema/webtracker_event.proto\x12\veventstream\x1a\x1fgoogle/protobuf/timestamp.proto\"\xeb\x03\n" +
 	"\x0fWebTrackerEvent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x1d\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x1f\n" +
+	"\vnew_session\x18\x03 \x01(\bR\n" +
+	"newSession\x12\x1d\n" +
 	"\n" +
-	"visitor_id\x18\x03 \x01(\tR\tvisitorId\x12\x0e\n" +
-	"\x02ip\x18\x04 \x01(\tR\x02ip\x12?\n" +
+	"visitor_id\x18\x04 \x01(\tR\tvisitorId\x12\x0e\n" +
+	"\x02ip\x18\x05 \x01(\tR\x02ip\x12?\n" +
 	"\n" +
-	"event_type\x18\x05 \x01(\x0e2 .eventstream.WebTrackerEventTypeR\teventType\x12\x1d\n" +
+	"event_type\x18\x06 \x01(\x0e2 .eventstream.WebTrackerEventTypeR\teventType\x12\x1d\n" +
 	"\n" +
-	"event_data\x18\x06 \x01(\tR\teventData\x128\n" +
-	"\ttimestamp\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
-	"\x04href\x18\b \x01(\tR\x04href\x12\x1a\n" +
-	"\breferrer\x18\t \x01(\tR\breferrer\x12\x1d\n" +
+	"event_data\x18\a \x01(\tR\teventData\x128\n" +
+	"\ttimestamp\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04href\x18\t \x01(\tR\x04href\x12\x1a\n" +
+	"\breferrer\x18\n" +
+	" \x01(\tR\breferrer\x12\x1d\n" +
 	"\n" +
-	"user_agent\x18\n" +
-	" \x01(\tR\tuserAgent\x12\x1a\n" +
-	"\blanguage\x18\v \x01(\tR\blanguage\x12'\n" +
-	"\x0fcookies_enabled\x18\f \x01(\bR\x0ecookiesEnabled\x12+\n" +
-	"\x11screen_resolution\x18\r \x01(\tR\x10screenResolution*\x9f\x01\n" +
+	"user_agent\x18\v \x01(\tR\tuserAgent\x12\x1a\n" +
+	"\blanguage\x18\f \x01(\tR\blanguage\x12'\n" +
+	"\x0fcookies_enabled\x18\r \x01(\bR\x0ecookiesEnabled\x12+\n" +
+	"\x11screen_resolution\x18\x0e \x01(\tR\x10screenResolution*\x9f\x01\n" +
 	"\x13WebTrackerEventType\x12!\n" +
 	"\x1dWEB_TRACKER_EVENT_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15WEB_TRACKER_PAGE_EXIT\x10\x01\x12\x19\n" +
