@@ -1,0 +1,19 @@
+type MeetingScheduling {
+    id: String!
+    title: String!
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+input SaveMeetingSchedulingInput {
+    id: String
+    title: String
+}
+
+extend type Query {
+    meetingSchedulings: [MeetingScheduling!]!
+}
+
+extend type Mutation {
+    meetingScheduling_Save(input: SaveMeetingSchedulingInput!): MeetingScheduling!
+}

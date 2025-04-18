@@ -1143,6 +1143,13 @@ type ComplexityRoot struct {
 		UpdatedAt          func(childComplexity int) int
 	}
 
+	MeetingScheduling struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Title     func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
 	MeetingsPage struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
@@ -1269,6 +1276,7 @@ type ComplexityRoot struct {
 		MeetingLinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
 		MeetingLinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingLinkRecording                       func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingSchedulingSave                      func(childComplexity int, input model.SaveMeetingSchedulingInput) int
 		MeetingUnlinkAttachment                    func(childComplexity int, meetingID string, attachmentID string) int
 		MeetingUnlinkAttendedBy                    func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingUnlinkRecording                     func(childComplexity int, meetingID string, attachmentID string) int
@@ -1676,6 +1684,7 @@ type ComplexityRoot struct {
 		MailstackMailboxes                 func(childComplexity int) int
 		MailstackUniqueUsernames           func(childComplexity int) int
 		Meeting                            func(childComplexity int, id string) int
+		MeetingSchedulings                 func(childComplexity int) int
 		NylasIsConnected                   func(childComplexity int, email string) int
 		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
 		Opportunity                        func(childComplexity int, id string) int
@@ -2268,6 +2277,7 @@ type MutationResolver interface {
 	MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Meeting, error)
 	MeetingAddNote(ctx context.Context, meetingID string, note *model.NoteInput) (*model.Meeting, error)
+	MeetingSchedulingSave(ctx context.Context, input model.SaveMeetingSchedulingInput) (*model.MeetingScheduling, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
@@ -2452,6 +2462,7 @@ type QueryResolver interface {
 	MailstackMailboxes(ctx context.Context) ([]*model.MailstackMailbox, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
+	MeetingSchedulings(ctx context.Context) ([]*model.MeetingScheduling, error)
 	NylasIsConnected(ctx context.Context, email string) (bool, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error)
@@ -7931,6 +7942,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.UpdatedAt(childComplexity), true
 
+	case "MeetingScheduling.createdAt":
+		if e.complexity.MeetingScheduling.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.MeetingScheduling.CreatedAt(childComplexity), true
+
+	case "MeetingScheduling.id":
+		if e.complexity.MeetingScheduling.ID == nil {
+			break
+		}
+
+		return e.complexity.MeetingScheduling.ID(childComplexity), true
+
+	case "MeetingScheduling.title":
+		if e.complexity.MeetingScheduling.Title == nil {
+			break
+		}
+
+		return e.complexity.MeetingScheduling.Title(childComplexity), true
+
+	case "MeetingScheduling.updatedAt":
+		if e.complexity.MeetingScheduling.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.MeetingScheduling.UpdatedAt(childComplexity), true
+
 	case "MeetingsPage.content":
 		if e.complexity.MeetingsPage.Content == nil {
 			break
@@ -9308,6 +9347,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.MeetingLinkRecording(childComplexity, args["meetingId"].(string), args["attachmentId"].(string)), true
+
+	case "Mutation.meetingScheduling_Save":
+		if e.complexity.Mutation.MeetingSchedulingSave == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meetingScheduling_Save_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingSchedulingSave(childComplexity, args["input"].(model.SaveMeetingSchedulingInput)), true
 
 	case "Mutation.meeting_UnlinkAttachment":
 		if e.complexity.Mutation.MeetingUnlinkAttachment == nil {
@@ -12386,6 +12437,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Meeting(childComplexity, args["id"].(string)), true
 
+	case "Query.meetingSchedulings":
+		if e.complexity.Query.MeetingSchedulings == nil {
+			break
+		}
+
+		return e.complexity.Query.MeetingSchedulings(childComplexity), true
+
 	case "Query.nylasIsConnected":
 		if e.complexity.Query.NylasIsConnected == nil {
 			break
@@ -14401,6 +14459,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputReminderUpdateInput,
 		ec.unmarshalInputRemoveTagInput,
 		ec.unmarshalInputRemoveTagsInput,
+		ec.unmarshalInputSaveMeetingSchedulingInput,
 		ec.unmarshalInputSendEmailInput,
 		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
@@ -17627,6 +17686,26 @@ type Meeting implements Node {
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
     status: MeetingStatus!
 }`, BuiltIn: false},
+	{Name: "../schemas/meeting_scheduling.graphqls", Input: `type MeetingScheduling {
+    id: String!
+    title: String!
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+input SaveMeetingSchedulingInput {
+    id: String
+    title: String
+}
+
+extend type Query {
+    meetingSchedulings: [MeetingScheduling!]!
+}
+
+extend type Mutation {
+    meetingScheduling_Save(input: SaveMeetingSchedulingInput!): MeetingScheduling!
+}
+`, BuiltIn: false},
 	{Name: "../schemas/metadata.graphqls", Input: `type Metadata implements SourceFieldsInterface & Node {
     id:             ID!
     created:        Time!
@@ -24011,6 +24090,34 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailb
 	}
 
 	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_meetingScheduling_Save_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_meetingScheduling_Save_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_meetingScheduling_Save_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.SaveMeetingSchedulingInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.SaveMeetingSchedulingInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSaveMeetingSchedulingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSaveMeetingSchedulingInput(ctx, tmp)
+	}
+
+	var zeroVal model.SaveMeetingSchedulingInput
 	return zeroVal, nil
 }
 
@@ -66752,6 +66859,182 @@ func (ec *executionContext) fieldContext_Meeting_status(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _MeetingScheduling_id(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingScheduling_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingScheduling_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingScheduling",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingScheduling_title(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingScheduling_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingScheduling_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingScheduling",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingScheduling_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingScheduling_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingScheduling_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingScheduling",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingScheduling_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingScheduling_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingScheduling_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingScheduling",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MeetingsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.MeetingsPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MeetingsPage_content(ctx, field)
 	if err != nil {
@@ -78718,6 +79001,71 @@ func (ec *executionContext) fieldContext_Mutation_meeting_AddNote(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_meeting_AddNote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meetingScheduling_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meetingScheduling_Save(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingSchedulingSave(rctx, fc.Args["input"].(model.SaveMeetingSchedulingInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.MeetingScheduling)
+	fc.Result = res
+	return ec.marshalNMeetingScheduling2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meetingScheduling_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MeetingScheduling_id(ctx, field)
+			case "title":
+				return ec.fieldContext_MeetingScheduling_title(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MeetingScheduling_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_MeetingScheduling_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MeetingScheduling", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meetingScheduling_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -104444,6 +104792,60 @@ func (ec *executionContext) fieldContext_Query_externalMeetings(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_meetingSchedulings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_meetingSchedulings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MeetingSchedulings(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MeetingScheduling)
+	fc.Result = res
+	return ec.marshalNMeetingScheduling2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingSchedulingᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_meetingSchedulings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MeetingScheduling_id(ctx, field)
+			case "title":
+				return ec.fieldContext_MeetingScheduling_title(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MeetingScheduling_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_MeetingScheduling_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MeetingScheduling", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_nylasIsConnected(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_nylasIsConnected(ctx, field)
 	if err != nil {
@@ -126996,6 +127398,40 @@ func (ec *executionContext) unmarshalInputRemoveTagsInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSaveMeetingSchedulingInput(ctx context.Context, obj any) (model.SaveMeetingSchedulingInput, error) {
+	var it model.SaveMeetingSchedulingInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "title"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "title":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Title = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSendEmailInput(ctx context.Context, obj any) (model.SendEmailInput, error) {
 	var it model.SendEmailInput
 	asMap := map[string]any{}
@@ -138288,6 +138724,60 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var meetingSchedulingImplementors = []string{"MeetingScheduling"}
+
+func (ec *executionContext) _MeetingScheduling(ctx context.Context, sel ast.SelectionSet, obj *model.MeetingScheduling) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, meetingSchedulingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MeetingScheduling")
+		case "id":
+			out.Values[i] = ec._MeetingScheduling_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._MeetingScheduling_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._MeetingScheduling_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._MeetingScheduling_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var meetingsPageImplementors = []string{"MeetingsPage", "Pages"}
 
 func (ec *executionContext) _MeetingsPage(ctx context.Context, sel ast.SelectionSet, obj *model.MeetingsPage) graphql.Marshaler {
@@ -139181,6 +139671,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "meeting_AddNote":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_meeting_AddNote(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "meetingScheduling_Save":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meetingScheduling_Save(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -143366,6 +143863,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_externalMeetings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "meetingSchedulings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_meetingSchedulings(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -151018,6 +151537,64 @@ func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNMeetingScheduling2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx context.Context, sel ast.SelectionSet, v model.MeetingScheduling) graphql.Marshaler {
+	return ec._MeetingScheduling(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMeetingScheduling2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingSchedulingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MeetingScheduling) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMeetingScheduling2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMeetingScheduling2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx context.Context, sel ast.SelectionSet, v *model.MeetingScheduling) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MeetingScheduling(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNMeetingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, v any) (model.MeetingStatus, error) {
 	var res model.MeetingStatus
 	err := res.UnmarshalGQL(v)
@@ -151707,6 +152284,11 @@ func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomer
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNSaveMeetingSchedulingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSaveMeetingSchedulingInput(ctx context.Context, v any) (model.SaveMeetingSchedulingInput, error) {
+	res, err := ec.unmarshalInputSaveMeetingSchedulingInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSendEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSendEmailInput(ctx context.Context, v any) (model.SendEmailInput, error) {

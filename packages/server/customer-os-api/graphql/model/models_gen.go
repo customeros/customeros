@@ -1985,6 +1985,13 @@ type MeetingParticipantInput struct {
 	OrganizationID *string `json:"organizationId,omitempty"`
 }
 
+type MeetingScheduling struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 type MeetingUpdateInput struct {
 	Name               *string                       `json:"name,omitempty"`
 	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
@@ -2725,6 +2732,11 @@ type Result struct {
 	// The result of the GraphQL call.
 	// **Required.**
 	Result bool `json:"result"`
+}
+
+type SaveMeetingSchedulingInput struct {
+	ID    *string `json:"id,omitempty"`
+	Title *string `json:"title,omitempty"`
 }
 
 type SendEmailInput struct {
