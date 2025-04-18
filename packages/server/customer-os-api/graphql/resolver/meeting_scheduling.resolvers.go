@@ -8,12 +8,11 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
