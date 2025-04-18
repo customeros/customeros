@@ -20,6 +20,12 @@ func StartCron(cont *container.Container) *cron.Cron {
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job: %v", err.Error())
 	}
+	err = c.AddFunc(cont.Cfg.Cron.CronSchedulePostgresIntegrityChecker, func() {
+		lockAndRunJob(cont, postgresIntegrityCheckerJob)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job: %v", err.Error())
+	}
 
 	c.Start()
 
@@ -41,5 +47,9 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func neo4jIntegrityCheckerJob(cont *container.Container) {
-	service.NewNeo4jIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunIntegrityCheckerQueries()
+	service.NewIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunNeo4jIntegrityCheckerQueries()
+}
+
+func postgresIntegrityCheckerJob(cont *container.Container) {
+	service.NewIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunPostgresIntegrityCheckerQueries()
 }

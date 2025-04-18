@@ -15,6 +15,7 @@ import (
 type CommonRepository interface {
 	UpdateProperty(ctx context.Context, tenant string, postgres_entityType interface{}, id any, propertyName string, newValue interface{}) error
 	PermanentlyDelete(ctx context.Context, tenant string) error
+	GetCountFromPlainQuery(ctx context.Context, query string) (int64, error)
 }
 
 type commonRepository struct {
@@ -152,4 +153,20 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 	}
 
 	return nil
+}
+
+func (r *commonRepository) GetCountFromPlainQuery(ctx context.Context, query string) (int64, error) {
+	spans, _ := telemetry.StartPostgresSpan(ctx, "CommonRepository.GetCountFromPlainQuery")
+	defer spans.Finish()
+	spans.LogKV("query", query)
+
+	var count int64
+	err := r.postgresDB.GormDB.WithContext(ctx).Raw(query).Count(&count).Error
+	if err != nil {
+		spans.TraceError(err)
+		return 0, err
+	}
+
+	spans.LogKV("result.count", count)
+	return count, nil
 }
