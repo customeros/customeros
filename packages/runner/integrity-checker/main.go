@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/signal"
@@ -13,7 +16,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/integrity-checker/container"
 	localCron "github.com/customeros/customeros/packages/runner/integrity-checker/cron"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
-	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go"
@@ -36,6 +38,17 @@ func main() {
 
 	ctx := context.Background()
 
+	commonCfg := commonConfig.CommonConfig{
+		Infrastructure: commonConfig.InfrastructureConfig{
+			PostgresConfig: cfg.Postgres,
+		},
+	}
+	postgresDb, err := commonConfig.InitPostgres(&commonCfg)
+	if err != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+	}
+	defer postgresDb.Close()
+
 	// Neo4j DB
 	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
 	if errNeo4j != nil {
@@ -44,10 +57,11 @@ func main() {
 	defer (neo4jDriver).Close(ctx)
 
 	appContainer := &container.Container{
-		Cfg:          cfg,
-		Log:          appLogger,
-		Repositories: repository.InitRepositories(cfg, &neo4jDriver),
-		Cache:        caches.NewCache(),
+		Cfg:      cfg,
+		Log:      appLogger,
+		Neo4j:    neo4jRepository.InitNeo4jRepositories(&neo4jDriver, cfg.Neo4j.Database),
+		Postgres: postgresRepository.InitRepositories(postgresDb),
+		Cache:    caches.NewCache(),
 	}
 
 	cronJub := localCron.StartCron(appContainer)

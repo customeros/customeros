@@ -10,6 +10,9 @@ import (
 	"sort"
 	"strings"
 
+	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -19,7 +22,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/integrity-checker/config"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/model"
-	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
@@ -30,10 +32,11 @@ type Neo4jIntegrityCheckerService interface {
 }
 
 type neo4jIntegrityCheckerService struct {
-	cfg          *config.Config
-	log          logger.Logger
-	repositories *repository.Repositories
-	cache        *caches.Cache
+	cfg      *config.Config
+	log      logger.Logger
+	neo4j    *neo4jRepository.Repositories
+	postgres *postgresRepository.Repositories
+	cache    *caches.Cache
 }
 
 type integrityCheckerResult struct {
@@ -48,12 +51,13 @@ func (i integrityCheckerResult) String() string {
 		i.Name, i.Success, i.CountOfDataWithIssue, i.TechError)
 }
 
-func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, cache *caches.Cache) Neo4jIntegrityCheckerService {
+func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, neo4j *neo4jRepository.Repositories, postgres *postgresRepository.Repositories, cache *caches.Cache) Neo4jIntegrityCheckerService {
 	return &neo4jIntegrityCheckerService{
-		cfg:          cfg,
-		log:          log,
-		repositories: repositories,
-		cache:        cache,
+		cfg:      cfg,
+		log:      log,
+		neo4j:    neo4j,
+		postgres: postgres,
+		cache:    cache,
 	}
 }
 
@@ -136,7 +140,7 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 			// Continue fetching organizations
 		}
 
-		count, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
+		count, err := s.neo4j.CommonReadRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
 		checkerResult := integrityCheckerResult{
 			Name:                 query.Name,
 			Success:              err == nil && count == int64(0),

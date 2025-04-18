@@ -1,11 +1,12 @@
 package cron
 
 import (
+	"sync"
+
 	"github.com/customeros/customeros/packages/runner/integrity-checker/container"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/service"
 	"github.com/robfig/cron"
-	"sync"
 )
 
 var jobLock sync.Mutex
@@ -40,5 +41,5 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func neo4jIntegrityCheckerJob(cont *container.Container) {
-	service.NewNeo4jIntegrityCheckerService(cont.Cfg, cont.Log, cont.Repositories, cont.Cache).RunIntegrityCheckerQueries()
+	service.NewNeo4jIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunIntegrityCheckerQueries()
 }
