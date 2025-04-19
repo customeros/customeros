@@ -12,28 +12,30 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/caches"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/config"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/model"
-	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/pkg/errors"
 )
 
-type Neo4jIntegrityCheckerService interface {
-	RunIntegrityCheckerQueries()
+type IntegrityCheckerService interface {
+	RunNeo4jIntegrityCheckerQueries()
+	RunPostgresIntegrityCheckerQueries()
 }
 
-type neo4jIntegrityCheckerService struct {
-	cfg          *config.Config
-	log          logger.Logger
-	repositories *repository.Repositories
-	cache        *caches.Cache
+type integrityCheckerService struct {
+	cfg      *config.Config
+	log      logger.Logger
+	cache    *caches.Cache
+	neo4j    *neo4jRepository.Repositories
+	postgres *postgresRepository.Repositories
 }
 
 type integrityCheckerResult struct {
@@ -48,37 +50,56 @@ func (i integrityCheckerResult) String() string {
 		i.Name, i.Success, i.CountOfDataWithIssue, i.TechError)
 }
 
-func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, cache *caches.Cache) Neo4jIntegrityCheckerService {
-	return &neo4jIntegrityCheckerService{
-		cfg:          cfg,
-		log:          log,
-		repositories: repositories,
-		cache:        cache,
+func NewIntegrityCheckerService(cfg *config.Config, log logger.Logger, neo4j *neo4jRepository.Repositories, postgres *postgresRepository.Repositories, cache *caches.Cache) IntegrityCheckerService {
+	return &integrityCheckerService{
+		cfg:      cfg,
+		log:      log,
+		neo4j:    neo4j,
+		postgres: postgres,
+		cache:    cache,
 	}
 }
 
-func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
+func (s *integrityCheckerService) RunNeo4jIntegrityCheckerQueries() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.RunIntegrityCheckerQueries")
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.RunNeo4jIntegrityCheckerQueries")
 	defer spans.Finish()
 
-	integrityCheckerQueries, err := s.getQueriesFromS3(ctx)
+	integrityCheckerQueries, err := s.getQueriesFromS3(ctx, "neo4j-integrity-checker-queries.json")
 	if err != nil {
 		spans.TraceError(err)
 		s.log.Errorf("Error getting queries from S3: %v", err)
 	}
-	result := s.executeQueries(ctx, integrityCheckerQueries)
+	result := s.executeNeo4jQueries(ctx, integrityCheckerQueries)
 	spans.LogObjectAsJson("integrityCheckerResult", result)
-	s.log.Infof("Integrity checker result: %v", result)
+	s.log.Infof("Neo4j integrity checker result: %v", result)
 
-	s.sendMetrics(ctx, result)
-	_ = s.alertInSlack(ctx, result)
+	_ = s.alertInSlack(ctx, result, "Neo4j")
 }
 
-func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (model.IntegrityCheckQueries, error) {
-	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.getQueriesFromS3")
+func (s *integrityCheckerService) RunPostgresIntegrityCheckerQueries() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.RunPostgresIntegrityCheckerQueries")
+	defer spans.Finish()
+
+	integrityCheckerQueries, err := s.getQueriesFromS3(ctx, "postgres-integrity-checker-queries.json")
+	if err != nil {
+		spans.TraceError(err)
+		s.log.Errorf("Error getting queries from S3: %v", err)
+	}
+	result := s.executePostgresQueries(ctx, integrityCheckerQueries)
+	spans.LogObjectAsJson("integrityCheckerResult", result)
+	s.log.Infof("Postgres integrity checker result: %v", result)
+
+	_ = s.alertInSlack(ctx, result, "PostgreSQL")
+}
+
+func (s *integrityCheckerService) getQueriesFromS3(ctx context.Context, filename string) (model.IntegrityCheckQueries, error) {
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.getQueriesFromS3")
 	defer spans.Finish()
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
@@ -93,7 +114,7 @@ func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (mo
 	_, err := downloader.Download(buffer,
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String("neo4j-integrity-checker-queries.json"),
+			Key:    aws.String(filename),
 		})
 	if err != nil {
 		spans.TraceError(err)
@@ -111,12 +132,11 @@ func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (mo
 	return queries, nil
 }
 
-func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queries model.IntegrityCheckQueries) []integrityCheckerResult {
-	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.executeQueries")
+func (s *integrityCheckerService) executeNeo4jQueries(ctx context.Context, queries model.IntegrityCheckQueries) []integrityCheckerResult {
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.executeNeo4jQueries")
 	defer spans.Finish()
 
 	var output []integrityCheckerResult
-
 	var queriesToExecute []model.Query
 	for _, query := range queries.Queries {
 		queriesToExecute = append(queriesToExecute, query)
@@ -128,112 +148,73 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 	}
 
 	for _, query := range queriesToExecute {
-		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
 			return output
 		default:
-			// Continue fetching organizations
+			count, err := s.neo4j.CommonReadRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
+			checkerResult := integrityCheckerResult{
+				Name:                 query.Name,
+				Success:              err == nil && count == int64(0),
+				CountOfDataWithIssue: count,
+			}
+			if err != nil {
+				checkerResult.TechError = err.Error()
+			}
+			output = append(output, checkerResult)
 		}
-
-		count, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
-		checkerResult := integrityCheckerResult{
-			Name:                 query.Name,
-			Success:              err == nil && count == int64(0),
-			CountOfDataWithIssue: count,
-		}
-		if err != nil {
-			checkerResult.TechError = err.Error()
-		}
-		output = append(output, checkerResult)
 	}
 
 	return output
 }
 
-func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results []integrityCheckerResult) {
-	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.sendMetrics")
+func (s *integrityCheckerService) executePostgresQueries(ctx context.Context, queries model.IntegrityCheckQueries) []integrityCheckerResult {
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.executePostgresQueries")
 	defer spans.Finish()
 
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-		Config: aws.Config{
-			Region: aws.String(s.cfg.AWS.Region),
-		},
-	}))
-
-	svc := cloudwatch.New(sess)
-
-	var metrics []*cloudwatch.MetricDatum
-	totalProblematicNodes := int64(0)
-	totalFailedQueries := 0
-
-	dimensions := []*cloudwatch.Dimension{{
-		Name:  aws.String("Environment"),
-		Value: aws.String(s.cfg.AWS.MetricsDimensionEnvironment),
-	}, {
-		Name:  aws.String("Service"),
-		Value: aws.String(s.cfg.AWS.MetricsDimensionNeo4jIntegrityChecks),
-	}}
-
-	executionTime := utils.Now()
-
-	for _, result := range results {
-		if result.Success && result.CountOfDataWithIssue == 0 && result.TechError == "" {
-			continue
+	var output []integrityCheckerResult
+	var queriesToExecute []model.Query
+	for _, query := range queries.Queries {
+		queriesToExecute = append(queriesToExecute, query)
+	}
+	for _, group := range queries.Groups {
+		for _, query := range group.Queries {
+			queriesToExecute = append(queriesToExecute, query)
 		}
-		metrics = append(metrics, &cloudwatch.MetricDatum{
-			MetricName: aws.String(strings.ReplaceAll(strings.ToLower(result.Name), " ", "_")),
-			Value:      aws.Float64(float64(result.CountOfDataWithIssue)),
-			Unit:       aws.String("Count"),
-			Timestamp:  utils.TimePtr(executionTime),
-			Dimensions: dimensions,
-		})
-		if result.TechError != "" {
-			totalFailedQueries++
-		}
-		totalProblematicNodes += result.CountOfDataWithIssue
 	}
 
-	metrics = append(metrics, &cloudwatch.MetricDatum{
-		MetricName: aws.String("failed_neo4j_queries"),
-		Value:      aws.Float64(float64(totalFailedQueries)),
-		Unit:       aws.String("Count"),
-		Timestamp:  utils.TimePtr(utils.Now()),
-		Dimensions: dimensions,
-	})
-
-	metrics = append(metrics, &cloudwatch.MetricDatum{
-		MetricName: aws.String("neo4j_integrity_checker_data_issues"),
-		Value:      aws.Float64(float64(totalProblematicNodes)),
-		Unit:       aws.String("Count"),
-		Timestamp:  utils.TimePtr(utils.Now()),
-		Dimensions: dimensions,
-	})
-
-	_, err := svc.PutMetricData(&cloudwatch.PutMetricDataInput{
-		Namespace:  aws.String(s.cfg.AWS.CloudWatchNamespace),
-		MetricData: metrics,
-	})
-
-	if err != nil {
-		spans.TraceError(err)
-		s.log.Errorf("Error reporting metrics: %v", err)
-		return
+	for _, query := range queriesToExecute {
+		select {
+		case <-ctx.Done():
+			return output
+		default:
+			count, err := s.postgres.CommonRepository.GetCountFromPlainQuery(ctx, query.Query)
+			checkerResult := integrityCheckerResult{
+				Name:                 query.Name,
+				Success:              err == nil && count == int64(0),
+				CountOfDataWithIssue: count,
+			}
+			if err != nil {
+				checkerResult.TechError = err.Error()
+			}
+			output = append(output, checkerResult)
+		}
 	}
+
+	return output
 }
 
-func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results []integrityCheckerResult) error {
-	spans, ctx := telemetry.StartSpan(ctx, "Neo4jIntegrityCheckerService.alertInSlack")
+func (s *integrityCheckerService) alertInSlack(ctx context.Context, results []integrityCheckerResult, dbType string) error {
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.alertInSlack")
 	defer spans.Finish()
 
 	// if no webhook is configured, return early
-	if h.cfg.SlackConfig.DataAlertsRegisteredWebhook == "" {
+	if s.cfg.SlackConfig.DataAlertsRegisteredWebhook == "" {
 		spans.TraceError(errors.New("no slack webhook configured"))
 		return nil
 	}
 
-	spans.LogKV("slackUrl", h.cfg.SlackConfig.DataAlertsRegisteredWebhook)
+	spans.LogKV("slackUrl", s.cfg.SlackConfig.DataAlertsRegisteredWebhook)
 
 	var alertMessages []string
 	hasAlert := false
@@ -266,7 +247,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	}
 
 	// do not send messages to slack if no changes from previous run
-	previousAlertMessages, err := h.cache.GetPreviousAlertMessages()
+	previousAlertMessages, err := s.cache.GetPreviousAlertMessages()
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "error getting previous alert messages"))
 	}
@@ -275,7 +256,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 		return nil
 	}
 
-	err = h.cache.SetPreviousAlertMessages(alertMessages)
+	err = s.cache.SetPreviousAlertMessages(alertMessages)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "error setting previous alert messages"))
 	}
@@ -287,7 +268,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	}
 
 	// Create the message text
-	messageText := "Data Integrity Issues Summary:\n" + strings.Join(alertMessages, "\n")
+	messageText := fmt.Sprintf("%s Data Integrity Issues Summary:\n%s", dbType, strings.Join(alertMessages, "\n"))
 
 	// Create a struct to hold the JSON data
 	type SlackMessage struct {
@@ -305,7 +286,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	spans.LogObjectAsJson("request", string(jsonData))
 
 	// Send POST request
-	resp, err := http.Post(h.cfg.SlackConfig.DataAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(s.cfg.SlackConfig.DataAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		spans.TraceError(err)
 		return fmt.Errorf("error sending request: %w", err)

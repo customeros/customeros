@@ -1,11 +1,12 @@
 package cron
 
 import (
+	"sync"
+
 	"github.com/customeros/customeros/packages/runner/integrity-checker/container"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	"github.com/customeros/customeros/packages/runner/integrity-checker/service"
 	"github.com/robfig/cron"
-	"sync"
 )
 
 var jobLock sync.Mutex
@@ -15,6 +16,12 @@ func StartCron(cont *container.Container) *cron.Cron {
 
 	err := c.AddFunc(cont.Cfg.Cron.CronScheduleNeo4jIntegrityChecker, func() {
 		lockAndRunJob(cont, neo4jIntegrityCheckerJob)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job: %v", err.Error())
+	}
+	err = c.AddFunc(cont.Cfg.Cron.CronSchedulePostgresIntegrityChecker, func() {
+		lockAndRunJob(cont, postgresIntegrityCheckerJob)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job: %v", err.Error())
@@ -40,5 +47,9 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func neo4jIntegrityCheckerJob(cont *container.Container) {
-	service.NewNeo4jIntegrityCheckerService(cont.Cfg, cont.Log, cont.Repositories, cont.Cache).RunIntegrityCheckerQueries()
+	service.NewIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunNeo4jIntegrityCheckerQueries()
+}
+
+func postgresIntegrityCheckerJob(cont *container.Container) {
+	service.NewIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunPostgresIntegrityCheckerQueries()
 }

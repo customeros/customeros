@@ -30,10 +30,12 @@ func InitPostgres(cfg *CommonConfig) (*PostgresDB, error) {
 		log.Fatalf("failed to connect to postgres: %v", err)
 		return nil, err
 	}
-	db.AsyncSqlDB, db.AsyncGormDB, err = NewPostgresDBConn(cfg.Infrastructure.PostgresAsyncConfig.Host, cfg.Infrastructure.PostgresAsyncConfig.Port, cfg.Infrastructure.PostgresAsyncConfig.User, cfg.Infrastructure.PostgresAsyncConfig.Password, cfg.Infrastructure.PostgresAsyncConfig.Db, cfg.Infrastructure.PostgresAsyncConfig.LogLevel, cfg.Infrastructure.PostgresAsyncConfig.MaxConn, cfg.Infrastructure.PostgresAsyncConfig.MaxIdleConn, cfg.Infrastructure.PostgresAsyncConfig.ConnMaxLifetime)
-	if err != nil {
-		log.Fatalf("failed to connect to postgres: %v", err)
-		return nil, err
+	if cfg.Infrastructure.PostgresAsyncConfig.Host != "" {
+		db.AsyncSqlDB, db.AsyncGormDB, err = NewPostgresDBConn(cfg.Infrastructure.PostgresAsyncConfig.Host, cfg.Infrastructure.PostgresAsyncConfig.Port, cfg.Infrastructure.PostgresAsyncConfig.User, cfg.Infrastructure.PostgresAsyncConfig.Password, cfg.Infrastructure.PostgresAsyncConfig.Db, cfg.Infrastructure.PostgresAsyncConfig.LogLevel, cfg.Infrastructure.PostgresAsyncConfig.MaxConn, cfg.Infrastructure.PostgresAsyncConfig.MaxIdleConn, cfg.Infrastructure.PostgresAsyncConfig.ConnMaxLifetime)
+		if err != nil {
+			log.Fatalf("failed to connect to postgres: %v", err)
+			return nil, err
+		}
 	}
 
 	return db, nil
