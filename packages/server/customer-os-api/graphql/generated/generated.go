@@ -2558,7 +2558,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 	return parsedSchema
 }
 
-func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
+func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
@@ -3562,7 +3562,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Contact_organizations_args(context.TODO(), rawArgs)
+		args, err := ec.field_Contact_organizations_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -3630,7 +3630,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Contact_timelineEvents_args(context.TODO(), rawArgs)
+		args, err := ec.field_Contact_timelineEvents_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -3642,7 +3642,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Contact_timelineEventsTotalCount_args(context.TODO(), rawArgs)
+		args, err := ec.field_Contact_timelineEventsTotalCount_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8141,7 +8141,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_addMailbox_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addMailbox_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8153,7 +8153,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_addTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8165,7 +8165,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_admin_addWorkspaceAccess_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_admin_addWorkspaceAccess_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8177,7 +8177,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_admin_removeWorkspaceAccess_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_admin_removeWorkspaceAccess_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8189,7 +8189,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_admin_switchCurrentWorkspace_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_admin_switchCurrentWorkspace_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8201,7 +8201,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_admin_tenant_AddDomainAsWorkspace_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_admin_tenant_AddDomainAsWorkspace_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8213,7 +8213,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_admin_tenant_hardDelete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_admin_tenant_hardDelete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8225,7 +8225,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_agent_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_agent_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8237,7 +8237,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_agent_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_agent_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8249,7 +8249,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_attachment_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_attachment_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8261,7 +8261,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_bankAccount_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_bankAccount_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8273,7 +8273,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_bankAccount_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_bankAccount_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8285,7 +8285,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_bankAccount_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_bankAccount_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8297,7 +8297,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_billingProfile_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_billingProfile_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8309,7 +8309,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_billingProfile_LinkEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_billingProfile_LinkEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8321,7 +8321,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_billingProfile_LinkLocation_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_billingProfile_LinkLocation_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8333,7 +8333,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_billingProfile_UnlinkEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_billingProfile_UnlinkEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8345,7 +8345,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_billingProfile_UnlinkLocation_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_billingProfile_UnlinkLocation_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8357,7 +8357,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_billingProfile_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_billingProfile_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8369,7 +8369,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_AddNewLocation_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_AddNewLocation_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8381,7 +8381,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_AddOrganizationById_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_AddOrganizationById_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8393,7 +8393,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_AddSocial_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_AddSocial_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8405,7 +8405,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_AddTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_AddTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8417,7 +8417,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8429,7 +8429,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_CreateBulkByEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_CreateBulkByEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8441,7 +8441,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_CreateBulkByEmailV2_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_CreateBulkByEmailV2_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8453,7 +8453,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_CreateBulkByLinkedIn_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_CreateBulkByLinkedIn_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8465,7 +8465,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_CreateBulkByLinkedInV2_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_CreateBulkByLinkedInV2_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8477,7 +8477,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_CreateForOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_CreateForOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8489,7 +8489,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_FindWorkEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_FindWorkEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8501,7 +8501,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_HardDelete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_HardDelete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8513,7 +8513,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_Hide_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_Hide_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8525,7 +8525,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_Merge_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_Merge_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8537,7 +8537,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_RemoveLocation_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_RemoveLocation_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8549,7 +8549,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_RemoveSocial_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_RemoveSocial_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8561,7 +8561,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_RemoveTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_RemoveTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8573,7 +8573,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8585,7 +8585,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contract_AddAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contract_AddAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8597,7 +8597,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contract_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contract_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8609,7 +8609,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contract_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contract_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8621,7 +8621,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contractLineItem_Close_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contractLineItem_Close_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8633,7 +8633,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contractLineItem_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contractLineItem_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8645,7 +8645,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contractLineItem_NewVersion_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contractLineItem_NewVersion_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8657,7 +8657,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contractLineItem_Pause_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contractLineItem_Pause_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8669,7 +8669,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contractLineItem_Resume_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contractLineItem_Resume_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8681,7 +8681,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contractLineItem_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contractLineItem_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8693,7 +8693,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contract_RemoveAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contract_RemoveAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8705,7 +8705,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contract_Renew_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contract_Renew_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8717,7 +8717,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_contract_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contract_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8729,7 +8729,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldDeleteFromContactById_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldDeleteFromContactById_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8741,7 +8741,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldDeleteFromContactByName_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldDeleteFromContactByName_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8753,7 +8753,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldMergeToContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldMergeToContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8765,7 +8765,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldTemplate_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldTemplate_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8777,7 +8777,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldTemplate_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldTemplate_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8789,7 +8789,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldUpdateInContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldUpdateInContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8801,7 +8801,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldsMergeAndUpdateInContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldsMergeAndUpdateInContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8813,7 +8813,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_customer_contact_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customer_contact_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8825,7 +8825,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailMergeToContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailMergeToContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8837,7 +8837,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailMergeToOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailMergeToOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8849,7 +8849,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailMergeToUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailMergeToUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8861,7 +8861,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailRemoveFromContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailRemoveFromContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8873,7 +8873,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailRemoveFromOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailRemoveFromOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8885,7 +8885,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailRemoveFromUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailRemoveFromUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8897,7 +8897,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailReplaceForContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailReplaceForContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8909,7 +8909,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailReplaceForOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailReplaceForOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8921,7 +8921,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailReplaceForUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailReplaceForUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8933,7 +8933,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_emailSetPrimaryForContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_emailSetPrimaryForContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8945,7 +8945,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_email_Validate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_email_Validate_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8957,7 +8957,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_externalSystem_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_externalSystem_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8969,7 +8969,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flagWrongField_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flagWrongField_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8981,7 +8981,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flow_Archive_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flow_Archive_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -8993,7 +8993,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flow_ArchiveBulk_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flow_ArchiveBulk_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9005,7 +9005,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flow_ChangeName_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flow_ChangeName_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9017,7 +9017,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowEmailActionTest_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowEmailActionTest_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9029,7 +9029,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flow_Merge_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flow_Merge_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9041,7 +9041,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flow_Off_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flow_Off_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9053,7 +9053,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flow_On_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flow_On_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9065,7 +9065,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowParticipant_Add_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowParticipant_Add_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9077,7 +9077,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowParticipant_AddBulk_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowParticipant_AddBulk_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9089,7 +9089,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowParticipant_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowParticipant_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9101,7 +9101,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowParticipant_DeleteBulk_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowParticipant_DeleteBulk_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9113,7 +9113,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowSender_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowSender_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9125,7 +9125,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_flowSender_Merge_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_flowSender_Merge_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9137,7 +9137,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_interactionEvent_LinkAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_interactionEvent_LinkAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9149,7 +9149,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_invoice_Pay_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_invoice_Pay_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9161,7 +9161,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_invoice_RegeneratePdf_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_invoice_RegeneratePdf_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9173,7 +9173,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_invoice_Simulate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_invoice_Simulate_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9185,7 +9185,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_invoice_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_invoice_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9197,7 +9197,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_invoice_Void_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_invoice_Void_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9209,7 +9209,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_jobRole_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_jobRole_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9221,7 +9221,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_jobRole_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_jobRole_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9233,7 +9233,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_jobRole_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_jobRole_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9245,7 +9245,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_jobRole_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_jobRole_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9257,7 +9257,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_location_RemoveFromContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_location_RemoveFromContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9269,7 +9269,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_location_RemoveFromOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_location_RemoveFromOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9281,7 +9281,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_location_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_location_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9293,7 +9293,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_logEntry_AddTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_logEntry_AddTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9305,7 +9305,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_logEntry_CreateForOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_logEntry_CreateForOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9317,7 +9317,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_logEntry_RemoveTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_logEntry_RemoveTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9329,7 +9329,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_logEntry_ResetTags_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_logEntry_ResetTags_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9341,7 +9341,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_logEntry_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_logEntry_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9353,7 +9353,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_mailstack_GetPaymentIntent_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_mailstack_GetPaymentIntent_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9365,7 +9365,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_mailstack_RegisterBuyDomainsWithMailboxes_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9377,7 +9377,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_AddNewLocation_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_AddNewLocation_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9389,7 +9389,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_AddNote_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_AddNote_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9401,7 +9401,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9413,7 +9413,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_LinkAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_LinkAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9425,7 +9425,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_LinkAttendedBy_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_LinkAttendedBy_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9437,7 +9437,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_LinkRecording_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_LinkRecording_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9449,7 +9449,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meetingScheduling_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meetingScheduling_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9461,7 +9461,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_UnlinkAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_UnlinkAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9473,7 +9473,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_UnlinkAttendedBy_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_UnlinkAttendedBy_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9485,7 +9485,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_UnlinkRecording_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_UnlinkRecording_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9497,7 +9497,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_meeting_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_meeting_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9509,7 +9509,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_note_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_note_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9521,7 +9521,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_note_LinkAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_note_LinkAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9533,7 +9533,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_note_UnlinkAttachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_note_UnlinkAttachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9545,7 +9545,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_note_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_note_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9557,7 +9557,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_nylasConnect_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_nylasConnect_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9569,7 +9569,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_nylasDisconnect_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_nylasDisconnect_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9581,7 +9581,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_opportunity_Archive_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_opportunity_Archive_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9593,7 +9593,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_opportunityRenewalUpdate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_opportunityRenewalUpdate_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9605,7 +9605,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_opportunityRenewal_UpdateAllForOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_opportunityRenewal_UpdateAllForOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9617,7 +9617,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_opportunity_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_opportunity_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9629,7 +9629,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_AddDomain_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_AddDomain_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9641,7 +9641,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_AddSocial_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_AddSocial_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9653,7 +9653,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_AddSubsidiary_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_AddSubsidiary_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9665,7 +9665,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_AddTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_AddTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9677,7 +9677,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_Hide_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_Hide_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9689,7 +9689,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_HideAll_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_HideAll_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9701,7 +9701,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_Merge_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_Merge_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9713,7 +9713,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_RemoveDomain_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_RemoveDomain_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9725,7 +9725,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_RemoveDomains_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_RemoveDomains_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9737,7 +9737,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_RemoveSocial_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_RemoveSocial_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9749,7 +9749,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_RemoveSubsidiary_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_RemoveSubsidiary_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9761,7 +9761,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_RemoveTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_RemoveTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9773,7 +9773,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9785,7 +9785,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_SaveByGlobalOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_SaveByGlobalOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9797,7 +9797,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_SetOwner_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_SetOwner_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9809,7 +9809,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_Show_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_Show_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9821,7 +9821,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_ShowAll_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_ShowAll_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9833,7 +9833,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_UnlinkAllDomains_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_UnlinkAllDomains_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9845,7 +9845,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_UnsetOwner_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_UnsetOwner_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9857,7 +9857,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9869,7 +9869,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_organization_UpdateOnboardingStatus_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_organization_UpdateOnboardingStatus_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9881,7 +9881,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberMergeToContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberMergeToContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9893,7 +9893,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberMergeToOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberMergeToOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9905,7 +9905,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberRemoveFromContactByE164_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberRemoveFromContactByE164_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9917,7 +9917,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberRemoveFromContactById_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberRemoveFromContactById_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9929,7 +9929,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberRemoveFromOrganizationByE164_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberRemoveFromOrganizationByE164_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9941,7 +9941,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberRemoveFromOrganizationById_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberRemoveFromOrganizationById_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9953,7 +9953,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumber_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumber_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9965,7 +9965,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberUpdateInContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberUpdateInContact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9977,7 +9977,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_phoneNumberUpdateInOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_phoneNumberUpdateInOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9989,7 +9989,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_reminder_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_reminder_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10001,7 +10001,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_reminder_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_reminder_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10013,7 +10013,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_removeTag_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_removeTag_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10025,7 +10025,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_removeTags_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_removeTags_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10037,7 +10037,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_save_calendar_available_hours_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_save_calendar_available_hours_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10049,7 +10049,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_sendEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_sendEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10061,7 +10061,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_serviceLineItem_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_serviceLineItem_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10073,7 +10073,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_sku_Archive_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_sku_Archive_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10085,7 +10085,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_sku_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_sku_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10097,7 +10097,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_social_Remove_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_social_Remove_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10109,7 +10109,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_social_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_social_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10121,7 +10121,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tableViewDef_Archive_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tableViewDef_Archive_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10133,7 +10133,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tableViewDef_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tableViewDef_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10145,7 +10145,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tableViewDef_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tableViewDef_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10157,7 +10157,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tableViewDef_UpdateShared_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tableViewDef_UpdateShared_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10169,7 +10169,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tag_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tag_Create_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10181,7 +10181,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tag_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tag_Delete_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10193,7 +10193,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tag_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tag_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10205,7 +10205,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_task_Archive_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_task_Archive_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10217,7 +10217,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_task_Save_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_task_Save_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10229,7 +10229,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tenant_AddBillingProfile_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tenant_AddBillingProfile_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10241,7 +10241,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tenant_UpdateBillingProfile_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tenant_UpdateBillingProfile_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10253,7 +10253,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tenant_UpdateSettings_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tenant_UpdateSettings_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10265,7 +10265,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_tenant_UpdateSettingsOpportunityStage_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_tenant_UpdateSettingsOpportunityStage_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10277,7 +10277,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_testMutation_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_testMutation_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10289,7 +10289,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_updateMailbox_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateMailbox_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10301,7 +10301,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_user_Update_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_user_Update_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10313,7 +10313,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_user_UpdateOnboardingDetails_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_user_UpdateOnboardingDetails_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -10745,7 +10745,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Organization_contacts_args(context.TODO(), rawArgs)
+		args, err := ec.field_Organization_contacts_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -11191,7 +11191,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Organization_timelineEvents_args(context.TODO(), rawArgs)
+		args, err := ec.field_Organization_timelineEvents_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -11203,7 +11203,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Organization_timelineEventsTotalCount_args(context.TODO(), rawArgs)
+		args, err := ec.field_Organization_timelineEventsTotalCount_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -11936,7 +11936,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_agent_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_agent_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -11955,7 +11955,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_attachment_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_attachment_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -11981,7 +11981,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_calendar_availability_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_calendar_availability_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -11993,7 +11993,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_calendar_available_hours_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_calendar_available_hours_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12005,7 +12005,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_checkDomain_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_checkDomain_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12017,7 +12017,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contact_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12029,7 +12029,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contact_ByEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contact_ByEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12041,7 +12041,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contact_ByLinkedIn_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contact_ByLinkedIn_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12053,7 +12053,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contact_ByPhone_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contact_ByPhone_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12065,7 +12065,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contact_ExistsByLinkedIn_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contact_ExistsByLinkedIn_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12077,7 +12077,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contacts_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contacts_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12089,7 +12089,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contract_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contract_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12101,7 +12101,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_contracts_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_contracts_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12120,7 +12120,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_ARRBreakdown_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_ARRBreakdown_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12139,7 +12139,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_GrossRevenueRetention_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_GrossRevenueRetention_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12151,7 +12151,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_MRRPerCustomer_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_MRRPerCustomer_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12163,7 +12163,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_NewCustomers_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_NewCustomers_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12175,7 +12175,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_OnboardingCompletion_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_OnboardingCompletion_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12187,7 +12187,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_RetentionRate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_RetentionRate_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12199,7 +12199,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_RevenueAtRisk_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_RevenueAtRisk_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12211,7 +12211,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboard_TimeToOnboard_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboard_TimeToOnboard_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12223,7 +12223,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboardView_Organizations_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboardView_Organizations_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12235,7 +12235,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_dashboardView_Renewals_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_dashboardView_Renewals_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12247,7 +12247,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_email_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_email_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12259,7 +12259,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_email_ProfilePhoto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_email_ProfilePhoto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12271,7 +12271,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_externalMeetings_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_externalMeetings_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12290,7 +12290,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_flow_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_flow_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12309,7 +12309,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_flowParticipant_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_flowParticipant_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12335,7 +12335,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_getAllEmailsInThread_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getAllEmailsInThread_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12347,7 +12347,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_getAllThreads_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getAllThreads_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12359,7 +12359,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_getThreadMetadata_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getThreadMetadata_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12378,7 +12378,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_globalOrganizations_Search_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_globalOrganizations_Search_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12397,7 +12397,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_interactionEvent_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_interactionEvent_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12409,7 +12409,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_invoice_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_invoice_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12421,7 +12421,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_invoice_ByNumber_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_invoice_ByNumber_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12433,7 +12433,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_invoices_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_invoices_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12445,7 +12445,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_issue_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_issue_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12457,7 +12457,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_jobRoles_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_jobRoles_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12469,7 +12469,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_logEntry_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_logEntry_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12481,7 +12481,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_mailstack_CheckUnavailableDomains_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_mailstack_CheckUnavailableDomains_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12493,7 +12493,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_mailstack_DomainPurchaseSuggestions_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_mailstack_DomainPurchaseSuggestions_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12526,7 +12526,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_meeting_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_meeting_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12545,7 +12545,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_nylasIsConnected_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_nylasIsConnected_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12557,7 +12557,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_opportunities_LinkedToOrganizations_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_opportunities_LinkedToOrganizations_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12569,7 +12569,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_opportunity_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_opportunity_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12581,7 +12581,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12593,7 +12593,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organization_ByCustomId_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organization_ByCustomId_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12605,7 +12605,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organization_ByCustomerOsId_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organization_ByCustomerOsId_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12617,7 +12617,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organization_ByLinkedIn_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organization_ByLinkedIn_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12629,7 +12629,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organization_CheckWebsite_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organization_CheckWebsite_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12648,7 +12648,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organization_ExistsByLinkedIn_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organization_ExistsByLinkedIn_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12660,7 +12660,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organizations_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organizations_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12672,7 +12672,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_organizations_HiddenAfter_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organizations_HiddenAfter_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12684,7 +12684,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_phoneNumber_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_phoneNumber_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12696,7 +12696,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_reminder_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_reminder_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12708,7 +12708,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_remindersForOrganization_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_remindersForOrganization_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12720,7 +12720,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_serviceLineItem_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_serviceLineItem_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12739,7 +12739,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_slack_Channels_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_slack_Channels_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12772,7 +12772,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_tags_ByEntityType_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_tags_ByEntityType_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12784,7 +12784,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_tasks_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_tasks_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12796,7 +12796,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_tasks_Search_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_tasks_Search_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12815,7 +12815,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_tenantBillingProfile_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_tenantBillingProfile_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12848,7 +12848,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_timelineEvents_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_timelineEvents_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12860,7 +12860,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_ui_contacts_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_ui_contacts_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12872,7 +12872,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_ui_contacts_search_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_ui_contacts_search_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12884,7 +12884,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_ui_organizations_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_ui_organizations_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12896,7 +12896,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_ui_organizations_search_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_ui_organizations_search_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12908,7 +12908,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_user_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_user_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12920,7 +12920,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_user_ByEmail_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_user_ByEmail_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -12939,7 +12939,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_users_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_users_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
