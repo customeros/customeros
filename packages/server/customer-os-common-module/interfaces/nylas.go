@@ -15,7 +15,7 @@ const (
 
 type NylasService interface {
 	// Access operations
-	GrantAccess(ctx context.Context, email, refreshToken string, nylasProvider NylasProvider) (*postgres_entity.NylasGrant, error)
+	GrantAccess(ctx context.Context, email, userId, refreshToken string, nylasProvider NylasProvider) (*postgres_entity.NylasGrant, error)
 	RevokeAccess(ctx context.Context, email string) error
 	GetGrant(ctx context.Context, email string) (*postgres_entity.NylasGrant, error)
 

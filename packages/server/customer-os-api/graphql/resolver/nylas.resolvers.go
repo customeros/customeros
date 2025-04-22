@@ -10,6 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
@@ -32,7 +33,14 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 		nylasProvider = interfaces.NylasProviderGoogle
 	}
 
-	_, err := r.Services.CommonServices.NylasService.GrantAccess(ctx, input.Email, input.RefreshToken, nylasProvider)
+	userId := common.GetUserIdFromContext(ctx)
+	if userId == "" {
+		spans.TraceError(errors.New("missing user ID"))
+		graphql.AddErrorf(ctx, "Missing user ID")
+		return false, nil
+	}
+
+	_, err := r.Services.CommonServices.NylasService.GrantAccess(ctx, input.Email, userId, input.RefreshToken, nylasProvider)
 	if err != nil {
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to grant access with Nylas")

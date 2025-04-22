@@ -72,10 +72,10 @@ func (s *nylasService) getProviderRefreshToken(ctx context.Context, email string
 }
 
 // Authenticate into Nylas and save the grant
-func (s *nylasService) GrantAccess(ctx context.Context, email, refreshToken string, nylasProvider interfaces.NylasProvider) (*postgresEntity.NylasGrant, error) {
+func (s *nylasService) GrantAccess(ctx context.Context, email, userId, refreshToken string, nylasProvider interfaces.NylasProvider) (*postgresEntity.NylasGrant, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GrantAccess")
 	defer spans.Finish()
-	spans.LogKV("email", email, "nylasProvider", nylasProvider)
+	spans.LogKV("email", email, "userId", userId, "nylasProvider", nylasProvider)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -171,6 +171,7 @@ func (s *nylasService) GrantAccess(ctx context.Context, email, refreshToken stri
 	// Save grant to database
 	nylasGrantEntity.Tenant = tenant
 	nylasGrantEntity.Email = email
+	nylasGrantEntity.UserId = userId
 	nylasGrantEntity.NylasGrantId = responseStruct.Data.ID
 	nylasGrantEntity.NylasProvider = string(nylasProvider)
 	nylasGrantEntity.NylasConnectResponse = string(bodyBytes)
