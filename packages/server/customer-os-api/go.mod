@@ -10,13 +10,15 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
+replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
+
 require (
 	github.com/99designs/gqlgen v0.17.72
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250123143641-47eb9a512f9d
-	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
-	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250422171625-b9f0106c7d32
 	github.com/customeros/mailsherpa v0.3.9
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/zap v1.1.5
@@ -77,6 +79,7 @@ require (
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
+	github.com/customeros/customeros/packages/server/core-crm v0.0.0-00010101000000-000000000000 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -149,6 +152,9 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mrz1836/postmark v1.7.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/nats-io/nats.go v1.41.2 // indirect
+	github.com/nats-io/nkeys v0.4.11 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.6.0 // indirect

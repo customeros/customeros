@@ -8,12 +8,11 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/worker"
-
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/worker"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -71,7 +70,7 @@ func main() {
 		Cfg:            cfg,
 		Log:            appLogger,
 		Repositories:   repositories,
-		CommonServices: commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
+		CommonServices: commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, nil, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
 	}
 	cntnr.AgentProducers = agent_producers.InitAgentProducers(cntnr.CommonServices)
 

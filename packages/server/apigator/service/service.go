@@ -6,15 +6,17 @@ import (
 	"fmt"
 
 	"github.com/coocood/freecache"
-	entities "github.com/customeros/customeros/packages/server/apigator/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jRepos "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	entities "github.com/customeros/customeros/packages/server/apigator/entity"
 )
 
 type ApiKeyRepository interface {
 	GetTenantForApiKey(ctx context.Context, apiKey string) (*postgres_entity.TenantWebhookApiKey, error)
 }
+
 type UserRepository interface {
 	GetCurrentTenantByUserEmail(ctx context.Context, email string) (string, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, tenant string, email string) (*neo4jRepos.AuthenticatedUserInTenant, error)

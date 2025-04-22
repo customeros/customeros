@@ -2,8 +2,8 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-package eventstream;
-option go_package = "github.com/customeros/customeros/packages/server/eventstream/proto/pb";
+package leads;
+option go_package = "github.com/customeros/customeros/packages/server/leads/proto/pb";
 
 enum WebTrackerEventType {
   WEB_TRACKER_EVENT_UNSPECIFIED = 0;

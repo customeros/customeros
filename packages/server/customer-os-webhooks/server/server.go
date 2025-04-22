@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +11,7 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/gin-contrib/cors"
@@ -80,6 +80,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		repos.Neo4jRepositories,
 		repos.PostgresRepositories,
 		&server.cfg.Common,
+		nil,
 		&commonservice.InitOptions{
 			LoadPersonalEmailProviders: true,
 			LoadEmailExclusionList:     true,

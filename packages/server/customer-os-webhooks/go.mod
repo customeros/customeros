@@ -10,13 +10,15 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
+replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
+
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
-	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
-	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250422171625-b9f0106c7d32
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/zap v1.1.5
 	github.com/gin-gonic/gin v1.10.0
@@ -55,6 +57,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/cloudflare-go v0.115.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
+	github.com/customeros/customeros/packages/server/core-crm v0.0.0-00010101000000-000000000000 // indirect
 	github.com/customeros/mailsherpa v0.3.9 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
@@ -92,6 +95,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -104,6 +108,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.7.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/nats-io/nats.go v1.41.2 // indirect
+	github.com/nats-io/nkeys v0.4.11 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.6.0 // indirect

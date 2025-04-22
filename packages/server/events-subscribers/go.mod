@@ -10,11 +10,13 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
+replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
+
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250213142435-9a4f34296882
-	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
-	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250422171625-b9f0106c7d32
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.0
@@ -47,6 +49,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
+	github.com/customeros/customeros/packages/server/core-crm v0.0.0-00010101000000-000000000000 // indirect
 	github.com/customeros/mailsherpa v0.3.9 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
@@ -86,6 +89,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -96,6 +100,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.7.3 // indirect
+	github.com/nats-io/nats.go v1.41.2 // indirect
+	github.com/nats-io/nkeys v0.4.11 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.6.0 // indirect

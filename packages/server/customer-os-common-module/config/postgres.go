@@ -16,9 +16,6 @@ import (
 type PostgresDB struct {
 	SqlDB  *sql.DB
 	GormDB *gorm.DB
-
-	AsyncSqlDB  *sql.DB
-	AsyncGormDB *gorm.DB
 }
 
 func InitPostgres(cfg *CommonConfig) (*PostgresDB, error) {
@@ -30,20 +27,12 @@ func InitPostgres(cfg *CommonConfig) (*PostgresDB, error) {
 		log.Fatalf("failed to connect to postgres: %v", err)
 		return nil, err
 	}
-	if cfg.Infrastructure.PostgresAsyncConfig.Host != "" {
-		db.AsyncSqlDB, db.AsyncGormDB, err = NewPostgresDBConn(cfg.Infrastructure.PostgresAsyncConfig.Host, cfg.Infrastructure.PostgresAsyncConfig.Port, cfg.Infrastructure.PostgresAsyncConfig.User, cfg.Infrastructure.PostgresAsyncConfig.Password, cfg.Infrastructure.PostgresAsyncConfig.Db, cfg.Infrastructure.PostgresAsyncConfig.LogLevel, cfg.Infrastructure.PostgresAsyncConfig.MaxConn, cfg.Infrastructure.PostgresAsyncConfig.MaxIdleConn, cfg.Infrastructure.PostgresAsyncConfig.ConnMaxLifetime)
-		if err != nil {
-			log.Fatalf("failed to connect to postgres: %v", err)
-			return nil, err
-		}
-	}
 
 	return db, nil
 }
 
 func (db *PostgresDB) Close() {
 	db.SqlDB.Close()
-	db.AsyncSqlDB.Close()
 }
 
 func NewPostgresDBConn(host, port, user, password, db, logLevel string, maxConn, maxIdleConn, connMaxLifetime int) (*sql.DB, *gorm.DB, error) {

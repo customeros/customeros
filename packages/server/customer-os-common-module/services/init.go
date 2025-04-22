@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"reflect"
 
+	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -157,6 +159,36 @@ type CommonServices struct {
 	AgentRunnerService interfaces.AgentRunnerService
 }
 
+func (s *CommonServices) Start(ctx context.Context) error {
+	services := []struct {
+		name    string
+		starter func(context.Context) error
+	}{
+		{"Organization Service", s.OrganizationService.Start},
+	}
+
+	for _, svc := range services {
+		if err := svc.starter(ctx); err != nil {
+			return fmt.Errorf("failed to start %s service: %w", svc.name, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *CommonServices) Stop(ctx context.Context) {
+	services := []struct {
+		name    string
+		stopper func(context.Context)
+	}{
+		{"Organization Service", func(ctx context.Context) { s.OrganizationService.Stop() }},
+	}
+
+	for _, service := range services {
+		service.stopper(ctx)
+	}
+}
+
 type InitOptions struct {
 	LoadPersonalEmailProviders bool
 	LoadEmailExclusionList     bool
@@ -167,6 +199,7 @@ func InitCommonServices(
 	neo4jRepositories *neo4j_repository.Repositories,
 	postgresRepositories *postgres_repository.Repositories,
 	cfg *config.CommonConfig,
+	natsConn *nats_internal.NATSConnections,
 	options *InitOptions,
 ) *CommonServices {
 	var err error
@@ -250,7 +283,7 @@ func InitCommonServices(
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
-	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
+	orgImpl := organization.NewOrganizationService(log, natsConn, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, postgresRepositories, contractImpl)

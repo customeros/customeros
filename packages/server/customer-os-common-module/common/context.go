@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 )
 
@@ -41,6 +42,20 @@ func WithCustomContextFromGinRequest(c *gin.Context, appSource string) context.C
 		Roles:      c.GetStringSlice("UserRoles"),
 	}
 	return WithCustomContext(c.Request.Context(), customContext)
+}
+
+func WithCustomContextFromNats(ctx context.Context, msg *nats.Msg) context.Context {
+	if msg.Header == nil {
+		return ctx
+	}
+
+	// Create custom context from message headers
+	customContext := &CustomContext{
+		Tenant:    msg.Header.Get("X-Tenant"),
+		UserId:    msg.Header.Get("X-UserId"),
+		AppSource: msg.Header.Get("X-AppSource"),
+	}
+	return WithCustomContext(ctx, customContext)
 }
 
 func GetContext(ctx context.Context) *CustomContext {
