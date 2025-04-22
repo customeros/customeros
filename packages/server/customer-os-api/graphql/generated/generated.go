@@ -1143,7 +1143,7 @@ type ComplexityRoot struct {
 		UpdatedAt          func(childComplexity int) int
 	}
 
-	MeetingScheduling struct {
+	MeetingBookingEvent struct {
 		AllowedParticipants                 func(childComplexity int) int
 		BookOptionBufferBetweenMeetingsMins func(childComplexity int) int
 		BookOptionDaysInAdvance             func(childComplexity int) int
@@ -1284,11 +1284,11 @@ type ComplexityRoot struct {
 		MailstackRegisterBuyDomainsWithMailboxes   func(childComplexity int, test bool, paymentIntentID string, domains []string, usernames []string, amount float64, redirectWebsite *string) int
 		MeetingAddNewLocation                      func(childComplexity int, meetingID string) int
 		MeetingAddNote                             func(childComplexity int, meetingID string, note *model.NoteInput) int
+		MeetingBookingEventSave                    func(childComplexity int, input model.SaveMeetingBookingEventInput) int
 		MeetingCreate                              func(childComplexity int, meeting model.MeetingInput) int
 		MeetingLinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
 		MeetingLinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingLinkRecording                       func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingSchedulingSave                      func(childComplexity int, input model.SaveMeetingSchedulingInput) int
 		MeetingUnlinkAttachment                    func(childComplexity int, meetingID string, attachmentID string) int
 		MeetingUnlinkAttendedBy                    func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingUnlinkRecording                     func(childComplexity int, meetingID string, attachmentID string) int
@@ -1702,7 +1702,7 @@ type ComplexityRoot struct {
 		MailstackMailboxes                 func(childComplexity int) int
 		MailstackUniqueUsernames           func(childComplexity int) int
 		Meeting                            func(childComplexity int, id string) int
-		MeetingSchedulings                 func(childComplexity int) int
+		MeetingBookingEvents               func(childComplexity int) int
 		NylasIsConnected                   func(childComplexity int, email *string) int
 		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
 		Opportunity                        func(childComplexity int, id string) int
@@ -2295,7 +2295,7 @@ type MutationResolver interface {
 	MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Meeting, error)
 	MeetingAddNote(ctx context.Context, meetingID string, note *model.NoteInput) (*model.Meeting, error)
-	MeetingSchedulingSave(ctx context.Context, input model.SaveMeetingSchedulingInput) (*model.MeetingScheduling, error)
+	MeetingBookingEventSave(ctx context.Context, input model.SaveMeetingBookingEventInput) (*model.MeetingBookingEvent, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
@@ -2480,7 +2480,7 @@ type QueryResolver interface {
 	MailstackMailboxes(ctx context.Context) ([]*model.MailstackMailbox, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
-	MeetingSchedulings(ctx context.Context) ([]*model.MeetingScheduling, error)
+	MeetingBookingEvents(ctx context.Context) ([]*model.MeetingBookingEvent, error)
 	NylasIsConnected(ctx context.Context, email *string) (*model.NylasDetails, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error)
@@ -7960,117 +7960,117 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Meeting.UpdatedAt(childComplexity), true
 
-	case "MeetingScheduling.allowedParticipants":
-		if e.complexity.MeetingScheduling.AllowedParticipants == nil {
+	case "MeetingBookingEvent.allowedParticipants":
+		if e.complexity.MeetingBookingEvent.AllowedParticipants == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.AllowedParticipants(childComplexity), true
+		return e.complexity.MeetingBookingEvent.AllowedParticipants(childComplexity), true
 
-	case "MeetingScheduling.bookOptionBufferBetweenMeetingsMins":
-		if e.complexity.MeetingScheduling.BookOptionBufferBetweenMeetingsMins == nil {
+	case "MeetingBookingEvent.bookOptionBufferBetweenMeetingsMins":
+		if e.complexity.MeetingBookingEvent.BookOptionBufferBetweenMeetingsMins == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookOptionBufferBetweenMeetingsMins(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookOptionBufferBetweenMeetingsMins(childComplexity), true
 
-	case "MeetingScheduling.bookOptionDaysInAdvance":
-		if e.complexity.MeetingScheduling.BookOptionDaysInAdvance == nil {
+	case "MeetingBookingEvent.bookOptionDaysInAdvance":
+		if e.complexity.MeetingBookingEvent.BookOptionDaysInAdvance == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookOptionDaysInAdvance(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookOptionDaysInAdvance(childComplexity), true
 
-	case "MeetingScheduling.bookOptionEnabled":
-		if e.complexity.MeetingScheduling.BookOptionEnabled == nil {
+	case "MeetingBookingEvent.bookOptionEnabled":
+		if e.complexity.MeetingBookingEvent.BookOptionEnabled == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookOptionEnabled(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookOptionEnabled(childComplexity), true
 
-	case "MeetingScheduling.bookOptionMinNoticeMins":
-		if e.complexity.MeetingScheduling.BookOptionMinNoticeMins == nil {
+	case "MeetingBookingEvent.bookOptionMinNoticeMins":
+		if e.complexity.MeetingBookingEvent.BookOptionMinNoticeMins == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookOptionMinNoticeMins(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookOptionMinNoticeMins(childComplexity), true
 
-	case "MeetingScheduling.bookOptionRedirectLink":
-		if e.complexity.MeetingScheduling.BookOptionRedirectLink == nil {
+	case "MeetingBookingEvent.bookOptionRedirectLink":
+		if e.complexity.MeetingBookingEvent.BookOptionRedirectLink == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookOptionRedirectLink(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookOptionRedirectLink(childComplexity), true
 
-	case "MeetingScheduling.bookingFormEmail":
-		if e.complexity.MeetingScheduling.BookingFormEmail == nil {
+	case "MeetingBookingEvent.bookingFormEmail":
+		if e.complexity.MeetingBookingEvent.BookingFormEmail == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookingFormEmail(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookingFormEmail(childComplexity), true
 
-	case "MeetingScheduling.bookingFormName":
-		if e.complexity.MeetingScheduling.BookingFormName == nil {
+	case "MeetingBookingEvent.bookingFormName":
+		if e.complexity.MeetingBookingEvent.BookingFormName == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookingFormName(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookingFormName(childComplexity), true
 
-	case "MeetingScheduling.bookingFormPhone":
-		if e.complexity.MeetingScheduling.BookingFormPhone == nil {
+	case "MeetingBookingEvent.bookingFormPhone":
+		if e.complexity.MeetingBookingEvent.BookingFormPhone == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.BookingFormPhone(childComplexity), true
+		return e.complexity.MeetingBookingEvent.BookingFormPhone(childComplexity), true
 
-	case "MeetingScheduling.createdAt":
-		if e.complexity.MeetingScheduling.CreatedAt == nil {
+	case "MeetingBookingEvent.createdAt":
+		if e.complexity.MeetingBookingEvent.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.CreatedAt(childComplexity), true
+		return e.complexity.MeetingBookingEvent.CreatedAt(childComplexity), true
 
-	case "MeetingScheduling.description":
-		if e.complexity.MeetingScheduling.Description == nil {
+	case "MeetingBookingEvent.description":
+		if e.complexity.MeetingBookingEvent.Description == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.Description(childComplexity), true
+		return e.complexity.MeetingBookingEvent.Description(childComplexity), true
 
-	case "MeetingScheduling.durationMins":
-		if e.complexity.MeetingScheduling.DurationMins == nil {
+	case "MeetingBookingEvent.durationMins":
+		if e.complexity.MeetingBookingEvent.DurationMins == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.DurationMins(childComplexity), true
+		return e.complexity.MeetingBookingEvent.DurationMins(childComplexity), true
 
-	case "MeetingScheduling.emailNotificationEnabled":
-		if e.complexity.MeetingScheduling.EmailNotificationEnabled == nil {
+	case "MeetingBookingEvent.emailNotificationEnabled":
+		if e.complexity.MeetingBookingEvent.EmailNotificationEnabled == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.EmailNotificationEnabled(childComplexity), true
+		return e.complexity.MeetingBookingEvent.EmailNotificationEnabled(childComplexity), true
 
-	case "MeetingScheduling.id":
-		if e.complexity.MeetingScheduling.ID == nil {
+	case "MeetingBookingEvent.id":
+		if e.complexity.MeetingBookingEvent.ID == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.ID(childComplexity), true
+		return e.complexity.MeetingBookingEvent.ID(childComplexity), true
 
-	case "MeetingScheduling.title":
-		if e.complexity.MeetingScheduling.Title == nil {
+	case "MeetingBookingEvent.title":
+		if e.complexity.MeetingBookingEvent.Title == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.Title(childComplexity), true
+		return e.complexity.MeetingBookingEvent.Title(childComplexity), true
 
-	case "MeetingScheduling.updatedAt":
-		if e.complexity.MeetingScheduling.UpdatedAt == nil {
+	case "MeetingBookingEvent.updatedAt":
+		if e.complexity.MeetingBookingEvent.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.MeetingScheduling.UpdatedAt(childComplexity), true
+		return e.complexity.MeetingBookingEvent.UpdatedAt(childComplexity), true
 
 	case "MeetingsPage.content":
 		if e.complexity.MeetingsPage.Content == nil {
@@ -9402,6 +9402,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.MeetingAddNote(childComplexity, args["meetingId"].(string), args["note"].(*model.NoteInput)), true
 
+	case "Mutation.meetingBookingEvent_Save":
+		if e.complexity.Mutation.MeetingBookingEventSave == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meetingBookingEvent_Save_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingBookingEventSave(childComplexity, args["input"].(model.SaveMeetingBookingEventInput)), true
+
 	case "Mutation.meeting_Create":
 		if e.complexity.Mutation.MeetingCreate == nil {
 			break
@@ -9449,18 +9461,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.MeetingLinkRecording(childComplexity, args["meetingId"].(string), args["attachmentId"].(string)), true
-
-	case "Mutation.meetingScheduling_Save":
-		if e.complexity.Mutation.MeetingSchedulingSave == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_meetingScheduling_Save_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.MeetingSchedulingSave(childComplexity, args["input"].(model.SaveMeetingSchedulingInput)), true
 
 	case "Mutation.meeting_UnlinkAttachment":
 		if e.complexity.Mutation.MeetingUnlinkAttachment == nil {
@@ -12560,12 +12560,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.Meeting(childComplexity, args["id"].(string)), true
 
-	case "Query.meetingSchedulings":
-		if e.complexity.Query.MeetingSchedulings == nil {
+	case "Query.meetingBookingEvents":
+		if e.complexity.Query.MeetingBookingEvents == nil {
 			break
 		}
 
-		return e.complexity.Query.MeetingSchedulings(childComplexity), true
+		return e.complexity.Query.MeetingBookingEvents(childComplexity), true
 
 	case "Query.nylasIsConnected":
 		if e.complexity.Query.NylasIsConnected == nil {
@@ -14582,7 +14582,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputReminderUpdateInput,
 		ec.unmarshalInputRemoveTagInput,
 		ec.unmarshalInputRemoveTagsInput,
-		ec.unmarshalInputSaveMeetingSchedulingInput,
+		ec.unmarshalInputSaveMeetingBookingEventInput,
 		ec.unmarshalInputSendEmailInput,
 		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
@@ -17809,7 +17809,7 @@ type Meeting implements Node {
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
     status: MeetingStatus!
 }`, BuiltIn: false},
-	{Name: "../schemas/meeting_scheduling.graphqls", Input: `type MeetingScheduling {
+	{Name: "../schemas/meeting_booking_event.graphqls", Input: `type MeetingBookingEvent {
     id:             String!
     title:          String!
     durationMins:   Int64!
@@ -17832,7 +17832,7 @@ type Meeting implements Node {
 
 }
 
-input SaveMeetingSchedulingInput {
+input SaveMeetingBookingEventInput {
     id:             String
     title:          String
     durationMins:   Int64
@@ -17851,11 +17851,11 @@ input SaveMeetingSchedulingInput {
 }
 
 extend type Query {
-    meetingSchedulings: [MeetingScheduling!]!
+    meetingBookingEvents: [MeetingBookingEvent!]!
 }
 
 extend type Mutation {
-    meetingScheduling_Save(input: SaveMeetingSchedulingInput!): MeetingScheduling!
+    meetingBookingEvent_Save(input: SaveMeetingBookingEventInput!): MeetingBookingEvent!
 }
 `, BuiltIn: false},
 	{Name: "../schemas/metadata.graphqls", Input: `type Metadata implements SourceFieldsInterface & Node {
@@ -24251,31 +24251,31 @@ func (ec *executionContext) field_Mutation_mailstack_RegisterBuyDomainsWithMailb
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_meetingScheduling_Save_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_meetingBookingEvent_Save_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_meetingScheduling_Save_argsInput(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_meetingBookingEvent_Save_argsInput(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_meetingScheduling_Save_argsInput(
+func (ec *executionContext) field_Mutation_meetingBookingEvent_Save_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (model.SaveMeetingSchedulingInput, error) {
+) (model.SaveMeetingBookingEventInput, error) {
 	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal model.SaveMeetingSchedulingInput
+		var zeroVal model.SaveMeetingBookingEventInput
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSaveMeetingSchedulingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSaveMeetingSchedulingInput(ctx, tmp)
+		return ec.unmarshalNSaveMeetingBookingEventInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSaveMeetingBookingEventInput(ctx, tmp)
 	}
 
-	var zeroVal model.SaveMeetingSchedulingInput
+	var zeroVal model.SaveMeetingBookingEventInput
 	return zeroVal, nil
 }
 
@@ -67017,8 +67017,8 @@ func (ec *executionContext) fieldContext_Meeting_status(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_id(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_id(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67048,9 +67048,9 @@ func (ec *executionContext) _MeetingScheduling_id(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67061,8 +67061,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_id(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_title(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_title(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_title(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_title(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67092,9 +67092,9 @@ func (ec *executionContext) _MeetingScheduling_title(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67105,8 +67105,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_title(_ context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_durationMins(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_durationMins(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_durationMins(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_durationMins(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67136,9 +67136,9 @@ func (ec *executionContext) _MeetingScheduling_durationMins(ctx context.Context,
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_durationMins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_durationMins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67149,8 +67149,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_durationMins(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_description(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_description(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_description(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_description(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67180,9 +67180,9 @@ func (ec *executionContext) _MeetingScheduling_description(ctx context.Context, 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67193,8 +67193,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_description(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_createdAt(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67224,9 +67224,9 @@ func (ec *executionContext) _MeetingScheduling_createdAt(ctx context.Context, fi
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67237,8 +67237,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_createdAt(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_updatedAt(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_updatedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67268,9 +67268,9 @@ func (ec *executionContext) _MeetingScheduling_updatedAt(ctx context.Context, fi
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67281,8 +67281,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_updatedAt(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_allowedParticipants(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_allowedParticipants(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_allowedParticipants(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_allowedParticipants(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67312,9 +67312,9 @@ func (ec *executionContext) _MeetingScheduling_allowedParticipants(ctx context.C
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_allowedParticipants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_allowedParticipants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67325,8 +67325,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_allowedParticipants(_
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookingFormName(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookingFormName(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookingFormName(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookingFormName(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67356,9 +67356,9 @@ func (ec *executionContext) _MeetingScheduling_bookingFormName(ctx context.Conte
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookingFormName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookingFormName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67369,8 +67369,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookingFormName(_ con
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookingFormEmail(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookingFormEmail(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookingFormEmail(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookingFormEmail(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67400,9 +67400,9 @@ func (ec *executionContext) _MeetingScheduling_bookingFormEmail(ctx context.Cont
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookingFormEmail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookingFormEmail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67413,8 +67413,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookingFormEmail(_ co
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookingFormPhone(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookingFormPhone(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookingFormPhone(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookingFormPhone(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67444,9 +67444,9 @@ func (ec *executionContext) _MeetingScheduling_bookingFormPhone(ctx context.Cont
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookingFormPhone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookingFormPhone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67457,8 +67457,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookingFormPhone(_ co
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookOptionEnabled(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookOptionEnabled(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookOptionEnabled(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookOptionEnabled(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67488,9 +67488,9 @@ func (ec *executionContext) _MeetingScheduling_bookOptionEnabled(ctx context.Con
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookOptionEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67501,8 +67501,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionEnabled(_ c
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookOptionBufferBetweenMeetingsMins(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookOptionBufferBetweenMeetingsMins(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookOptionBufferBetweenMeetingsMins(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookOptionBufferBetweenMeetingsMins(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67532,9 +67532,9 @@ func (ec *executionContext) _MeetingScheduling_bookOptionBufferBetweenMeetingsMi
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionBufferBetweenMeetingsMins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookOptionBufferBetweenMeetingsMins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67545,8 +67545,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionBufferBetwe
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookOptionDaysInAdvance(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookOptionDaysInAdvance(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookOptionDaysInAdvance(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookOptionDaysInAdvance(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67576,9 +67576,9 @@ func (ec *executionContext) _MeetingScheduling_bookOptionDaysInAdvance(ctx conte
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionDaysInAdvance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookOptionDaysInAdvance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67589,8 +67589,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionDaysInAdvan
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookOptionMinNoticeMins(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookOptionMinNoticeMins(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookOptionMinNoticeMins(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookOptionMinNoticeMins(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67620,9 +67620,9 @@ func (ec *executionContext) _MeetingScheduling_bookOptionMinNoticeMins(ctx conte
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionMinNoticeMins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookOptionMinNoticeMins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67633,8 +67633,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionMinNoticeMi
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_bookOptionRedirectLink(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_bookOptionRedirectLink(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_bookOptionRedirectLink(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookOptionRedirectLink(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67664,9 +67664,9 @@ func (ec *executionContext) _MeetingScheduling_bookOptionRedirectLink(ctx contex
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionRedirectLink(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookOptionRedirectLink(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -67677,8 +67677,8 @@ func (ec *executionContext) fieldContext_MeetingScheduling_bookOptionRedirectLin
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingScheduling_emailNotificationEnabled(ctx context.Context, field graphql.CollectedField, obj *model.MeetingScheduling) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingScheduling_emailNotificationEnabled(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_emailNotificationEnabled(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_emailNotificationEnabled(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67708,9 +67708,9 @@ func (ec *executionContext) _MeetingScheduling_emailNotificationEnabled(ctx cont
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingScheduling_emailNotificationEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_emailNotificationEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "MeetingScheduling",
+		Object:     "MeetingBookingEvent",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -79693,8 +79693,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_AddNote(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_meetingScheduling_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_meetingScheduling_Save(ctx, field)
+func (ec *executionContext) _Mutation_meetingBookingEvent_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meetingBookingEvent_Save(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -79707,7 +79707,7 @@ func (ec *executionContext) _Mutation_meetingScheduling_Save(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MeetingSchedulingSave(rctx, fc.Args["input"].(model.SaveMeetingSchedulingInput))
+		return ec.resolvers.Mutation().MeetingBookingEventSave(rctx, fc.Args["input"].(model.SaveMeetingBookingEventInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -79719,12 +79719,12 @@ func (ec *executionContext) _Mutation_meetingScheduling_Save(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.MeetingScheduling)
+	res := resTmp.(*model.MeetingBookingEvent)
 	fc.Result = res
-	return ec.marshalNMeetingScheduling2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx, field.Selections, res)
+	return ec.marshalNMeetingBookingEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEvent(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_meetingScheduling_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_meetingBookingEvent_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -79733,39 +79733,39 @@ func (ec *executionContext) fieldContext_Mutation_meetingScheduling_Save(ctx con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_MeetingScheduling_id(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_id(ctx, field)
 			case "title":
-				return ec.fieldContext_MeetingScheduling_title(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_title(ctx, field)
 			case "durationMins":
-				return ec.fieldContext_MeetingScheduling_durationMins(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_durationMins(ctx, field)
 			case "description":
-				return ec.fieldContext_MeetingScheduling_description(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_description(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_MeetingScheduling_createdAt(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_createdAt(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_MeetingScheduling_updatedAt(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_updatedAt(ctx, field)
 			case "allowedParticipants":
-				return ec.fieldContext_MeetingScheduling_allowedParticipants(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_allowedParticipants(ctx, field)
 			case "bookingFormName":
-				return ec.fieldContext_MeetingScheduling_bookingFormName(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookingFormName(ctx, field)
 			case "bookingFormEmail":
-				return ec.fieldContext_MeetingScheduling_bookingFormEmail(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookingFormEmail(ctx, field)
 			case "bookingFormPhone":
-				return ec.fieldContext_MeetingScheduling_bookingFormPhone(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookingFormPhone(ctx, field)
 			case "bookOptionEnabled":
-				return ec.fieldContext_MeetingScheduling_bookOptionEnabled(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionEnabled(ctx, field)
 			case "bookOptionBufferBetweenMeetingsMins":
-				return ec.fieldContext_MeetingScheduling_bookOptionBufferBetweenMeetingsMins(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionBufferBetweenMeetingsMins(ctx, field)
 			case "bookOptionDaysInAdvance":
-				return ec.fieldContext_MeetingScheduling_bookOptionDaysInAdvance(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionDaysInAdvance(ctx, field)
 			case "bookOptionMinNoticeMins":
-				return ec.fieldContext_MeetingScheduling_bookOptionMinNoticeMins(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionMinNoticeMins(ctx, field)
 			case "bookOptionRedirectLink":
-				return ec.fieldContext_MeetingScheduling_bookOptionRedirectLink(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionRedirectLink(ctx, field)
 			case "emailNotificationEnabled":
-				return ec.fieldContext_MeetingScheduling_emailNotificationEnabled(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_emailNotificationEnabled(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type MeetingScheduling", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type MeetingBookingEvent", field.Name)
 		},
 	}
 	defer func() {
@@ -79775,7 +79775,7 @@ func (ec *executionContext) fieldContext_Mutation_meetingScheduling_Save(ctx con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_meetingScheduling_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_meetingBookingEvent_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -105639,8 +105639,8 @@ func (ec *executionContext) fieldContext_Query_externalMeetings(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_meetingSchedulings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_meetingSchedulings(ctx, field)
+func (ec *executionContext) _Query_meetingBookingEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_meetingBookingEvents(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -105653,7 +105653,7 @@ func (ec *executionContext) _Query_meetingSchedulings(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MeetingSchedulings(rctx)
+		return ec.resolvers.Query().MeetingBookingEvents(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -105665,12 +105665,12 @@ func (ec *executionContext) _Query_meetingSchedulings(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.MeetingScheduling)
+	res := resTmp.([]*model.MeetingBookingEvent)
 	fc.Result = res
-	return ec.marshalNMeetingScheduling2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingSchedulingᚄ(ctx, field.Selections, res)
+	return ec.marshalNMeetingBookingEvent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_meetingSchedulings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_meetingBookingEvents(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -105679,39 +105679,39 @@ func (ec *executionContext) fieldContext_Query_meetingSchedulings(_ context.Cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_MeetingScheduling_id(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_id(ctx, field)
 			case "title":
-				return ec.fieldContext_MeetingScheduling_title(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_title(ctx, field)
 			case "durationMins":
-				return ec.fieldContext_MeetingScheduling_durationMins(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_durationMins(ctx, field)
 			case "description":
-				return ec.fieldContext_MeetingScheduling_description(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_description(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_MeetingScheduling_createdAt(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_createdAt(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_MeetingScheduling_updatedAt(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_updatedAt(ctx, field)
 			case "allowedParticipants":
-				return ec.fieldContext_MeetingScheduling_allowedParticipants(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_allowedParticipants(ctx, field)
 			case "bookingFormName":
-				return ec.fieldContext_MeetingScheduling_bookingFormName(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookingFormName(ctx, field)
 			case "bookingFormEmail":
-				return ec.fieldContext_MeetingScheduling_bookingFormEmail(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookingFormEmail(ctx, field)
 			case "bookingFormPhone":
-				return ec.fieldContext_MeetingScheduling_bookingFormPhone(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookingFormPhone(ctx, field)
 			case "bookOptionEnabled":
-				return ec.fieldContext_MeetingScheduling_bookOptionEnabled(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionEnabled(ctx, field)
 			case "bookOptionBufferBetweenMeetingsMins":
-				return ec.fieldContext_MeetingScheduling_bookOptionBufferBetweenMeetingsMins(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionBufferBetweenMeetingsMins(ctx, field)
 			case "bookOptionDaysInAdvance":
-				return ec.fieldContext_MeetingScheduling_bookOptionDaysInAdvance(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionDaysInAdvance(ctx, field)
 			case "bookOptionMinNoticeMins":
-				return ec.fieldContext_MeetingScheduling_bookOptionMinNoticeMins(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionMinNoticeMins(ctx, field)
 			case "bookOptionRedirectLink":
-				return ec.fieldContext_MeetingScheduling_bookOptionRedirectLink(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_bookOptionRedirectLink(ctx, field)
 			case "emailNotificationEnabled":
-				return ec.fieldContext_MeetingScheduling_emailNotificationEnabled(ctx, field)
+				return ec.fieldContext_MeetingBookingEvent_emailNotificationEnabled(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type MeetingScheduling", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type MeetingBookingEvent", field.Name)
 		},
 	}
 	return fc, nil
@@ -128277,8 +128277,8 @@ func (ec *executionContext) unmarshalInputRemoveTagsInput(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSaveMeetingSchedulingInput(ctx context.Context, obj any) (model.SaveMeetingSchedulingInput, error) {
-	var it model.SaveMeetingSchedulingInput
+func (ec *executionContext) unmarshalInputSaveMeetingBookingEventInput(ctx context.Context, obj any) (model.SaveMeetingBookingEventInput, error) {
+	var it model.SaveMeetingBookingEventInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -139687,94 +139687,94 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var meetingSchedulingImplementors = []string{"MeetingScheduling"}
+var meetingBookingEventImplementors = []string{"MeetingBookingEvent"}
 
-func (ec *executionContext) _MeetingScheduling(ctx context.Context, sel ast.SelectionSet, obj *model.MeetingScheduling) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, meetingSchedulingImplementors)
+func (ec *executionContext) _MeetingBookingEvent(ctx context.Context, sel ast.SelectionSet, obj *model.MeetingBookingEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, meetingBookingEventImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("MeetingScheduling")
+			out.Values[i] = graphql.MarshalString("MeetingBookingEvent")
 		case "id":
-			out.Values[i] = ec._MeetingScheduling_id(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "title":
-			out.Values[i] = ec._MeetingScheduling_title(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "durationMins":
-			out.Values[i] = ec._MeetingScheduling_durationMins(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_durationMins(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "description":
-			out.Values[i] = ec._MeetingScheduling_description(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "createdAt":
-			out.Values[i] = ec._MeetingScheduling_createdAt(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "updatedAt":
-			out.Values[i] = ec._MeetingScheduling_updatedAt(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "allowedParticipants":
-			out.Values[i] = ec._MeetingScheduling_allowedParticipants(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_allowedParticipants(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookingFormName":
-			out.Values[i] = ec._MeetingScheduling_bookingFormName(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookingFormName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookingFormEmail":
-			out.Values[i] = ec._MeetingScheduling_bookingFormEmail(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookingFormEmail(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookingFormPhone":
-			out.Values[i] = ec._MeetingScheduling_bookingFormPhone(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookingFormPhone(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookOptionEnabled":
-			out.Values[i] = ec._MeetingScheduling_bookOptionEnabled(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookOptionEnabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookOptionBufferBetweenMeetingsMins":
-			out.Values[i] = ec._MeetingScheduling_bookOptionBufferBetweenMeetingsMins(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookOptionBufferBetweenMeetingsMins(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookOptionDaysInAdvance":
-			out.Values[i] = ec._MeetingScheduling_bookOptionDaysInAdvance(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookOptionDaysInAdvance(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookOptionMinNoticeMins":
-			out.Values[i] = ec._MeetingScheduling_bookOptionMinNoticeMins(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookOptionMinNoticeMins(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "bookOptionRedirectLink":
-			out.Values[i] = ec._MeetingScheduling_bookOptionRedirectLink(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_bookOptionRedirectLink(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "emailNotificationEnabled":
-			out.Values[i] = ec._MeetingScheduling_emailNotificationEnabled(ctx, field, obj)
+			out.Values[i] = ec._MeetingBookingEvent_emailNotificationEnabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -140698,9 +140698,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "meetingScheduling_Save":
+		case "meetingBookingEvent_Save":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_meetingScheduling_Save(ctx, field)
+				return ec._Mutation_meetingBookingEvent_Save(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -144944,7 +144944,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "meetingSchedulings":
+		case "meetingBookingEvents":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -144953,7 +144953,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_meetingSchedulings(ctx, field)
+				res = ec._Query_meetingBookingEvents(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -152537,6 +152537,64 @@ func (ec *executionContext) marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcusto
 	return ec._Meeting(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMeetingBookingEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEvent(ctx context.Context, sel ast.SelectionSet, v model.MeetingBookingEvent) graphql.Marshaler {
+	return ec._MeetingBookingEvent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMeetingBookingEvent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MeetingBookingEvent) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMeetingBookingEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEvent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMeetingBookingEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEvent(ctx context.Context, sel ast.SelectionSet, v *model.MeetingBookingEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MeetingBookingEvent(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNMeetingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingInput(ctx context.Context, v any) (model.MeetingInput, error) {
 	res, err := ec.unmarshalInputMeetingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -152604,64 +152662,6 @@ func (ec *executionContext) unmarshalNMeetingParticipantInput2githubᚗcomᚋcus
 func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx context.Context, v any) (*model.MeetingParticipantInput, error) {
 	res, err := ec.unmarshalInputMeetingParticipantInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNMeetingScheduling2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx context.Context, sel ast.SelectionSet, v model.MeetingScheduling) graphql.Marshaler {
-	return ec._MeetingScheduling(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMeetingScheduling2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingSchedulingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MeetingScheduling) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMeetingScheduling2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNMeetingScheduling2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingScheduling(ctx context.Context, sel ast.SelectionSet, v *model.MeetingScheduling) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._MeetingScheduling(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNMeetingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, v any) (model.MeetingStatus, error) {
@@ -153369,8 +153369,8 @@ func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomer
 	return ret
 }
 
-func (ec *executionContext) unmarshalNSaveMeetingSchedulingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSaveMeetingSchedulingInput(ctx context.Context, v any) (model.SaveMeetingSchedulingInput, error) {
-	res, err := ec.unmarshalInputSaveMeetingSchedulingInput(ctx, v)
+func (ec *executionContext) unmarshalNSaveMeetingBookingEventInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSaveMeetingBookingEventInput(ctx context.Context, v any) (model.SaveMeetingBookingEventInput, error) {
+	res, err := ec.unmarshalInputSaveMeetingBookingEventInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

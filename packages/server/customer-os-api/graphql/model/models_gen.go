@@ -1963,6 +1963,25 @@ func (this Meeting) GetID() string { return this.ID }
 
 func (Meeting) IsTimelineEvent() {}
 
+type MeetingBookingEvent struct {
+	ID                                  string    `json:"id"`
+	Title                               string    `json:"title"`
+	DurationMins                        int64     `json:"durationMins"`
+	Description                         string    `json:"description"`
+	CreatedAt                           time.Time `json:"createdAt"`
+	UpdatedAt                           time.Time `json:"updatedAt"`
+	AllowedParticipants                 []string  `json:"allowedParticipants"`
+	BookingFormName                     string    `json:"bookingFormName"`
+	BookingFormEmail                    string    `json:"bookingFormEmail"`
+	BookingFormPhone                    string    `json:"bookingFormPhone"`
+	BookOptionEnabled                   bool      `json:"bookOptionEnabled"`
+	BookOptionBufferBetweenMeetingsMins int64     `json:"bookOptionBufferBetweenMeetingsMins"`
+	BookOptionDaysInAdvance             int64     `json:"bookOptionDaysInAdvance"`
+	BookOptionMinNoticeMins             int64     `json:"bookOptionMinNoticeMins"`
+	BookOptionRedirectLink              string    `json:"bookOptionRedirectLink"`
+	EmailNotificationEnabled            bool      `json:"emailNotificationEnabled"`
+}
+
 type MeetingInput struct {
 	Name               *string                       `json:"name,omitempty"`
 	AttendedBy         []*MeetingParticipantInput    `json:"attendedBy,omitempty"`
@@ -1984,25 +2003,6 @@ type MeetingParticipantInput struct {
 	ContactID      *string `json:"contactId,omitempty"`
 	UserID         *string `json:"userId,omitempty"`
 	OrganizationID *string `json:"organizationId,omitempty"`
-}
-
-type MeetingScheduling struct {
-	ID                                  string    `json:"id"`
-	Title                               string    `json:"title"`
-	DurationMins                        int64     `json:"durationMins"`
-	Description                         string    `json:"description"`
-	CreatedAt                           time.Time `json:"createdAt"`
-	UpdatedAt                           time.Time `json:"updatedAt"`
-	AllowedParticipants                 []string  `json:"allowedParticipants"`
-	BookingFormName                     string    `json:"bookingFormName"`
-	BookingFormEmail                    string    `json:"bookingFormEmail"`
-	BookingFormPhone                    string    `json:"bookingFormPhone"`
-	BookOptionEnabled                   bool      `json:"bookOptionEnabled"`
-	BookOptionBufferBetweenMeetingsMins int64     `json:"bookOptionBufferBetweenMeetingsMins"`
-	BookOptionDaysInAdvance             int64     `json:"bookOptionDaysInAdvance"`
-	BookOptionMinNoticeMins             int64     `json:"bookOptionMinNoticeMins"`
-	BookOptionRedirectLink              string    `json:"bookOptionRedirectLink"`
-	EmailNotificationEnabled            bool      `json:"emailNotificationEnabled"`
 }
 
 type MeetingUpdateInput struct {
@@ -2753,7 +2753,7 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
-type SaveMeetingSchedulingInput struct {
+type SaveMeetingBookingEventInput struct {
 	ID                                  *string  `json:"id,omitempty"`
 	Title                               *string  `json:"title,omitempty"`
 	DurationMins                        *int64   `json:"durationMins,omitempty"`
