@@ -1383,8 +1383,9 @@ type ComplexityRoot struct {
 	}
 
 	NylasDetails struct {
-		Connected func(childComplexity int) int
-		Email     func(childComplexity int) int
+		Connected     func(childComplexity int) int
+		Email         func(childComplexity int) int
+		RefreshNeeded func(childComplexity int) int
 	}
 
 	OnboardingDetails struct {
@@ -10430,6 +10431,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.NylasDetails.Email(childComplexity), true
 
+	case "NylasDetails.refreshNeeded":
+		if e.complexity.NylasDetails.RefreshNeeded == nil {
+			break
+		}
+
+		return e.complexity.NylasDetails.RefreshNeeded(childComplexity), true
+
 	case "OnboardingDetails.comments":
 		if e.complexity.OnboardingDetails.Comments == nil {
 			break
@@ -17922,8 +17930,9 @@ extend type Mutation {
 }
 
 type NylasDetails {
-    connected:  Boolean!
-    email:      String
+    connected:      Boolean!
+    refreshNeeded:  Boolean!
+    email:          String
 }
 
 input NylasConnectInput {
@@ -80138,6 +80147,8 @@ func (ec *executionContext) fieldContext_Mutation_nylasConnect(ctx context.Conte
 			switch field.Name {
 			case "connected":
 				return ec.fieldContext_NylasDetails_connected(ctx, field)
+			case "refreshNeeded":
+				return ec.fieldContext_NylasDetails_refreshNeeded(ctx, field)
 			case "email":
 				return ec.fieldContext_NylasDetails_email(ctx, field)
 			}
@@ -88831,6 +88842,50 @@ func (ec *executionContext) _NylasDetails_connected(ctx context.Context, field g
 }
 
 func (ec *executionContext) fieldContext_NylasDetails_connected(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NylasDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NylasDetails_refreshNeeded(ctx context.Context, field graphql.CollectedField, obj *model.NylasDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NylasDetails_refreshNeeded(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RefreshNeeded, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NylasDetails_refreshNeeded(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NylasDetails",
 		Field:      field,
@@ -105737,6 +105792,8 @@ func (ec *executionContext) fieldContext_Query_nylasIsConnected(ctx context.Cont
 			switch field.Name {
 			case "connected":
 				return ec.fieldContext_NylasDetails_connected(ctx, field)
+			case "refreshNeeded":
+				return ec.fieldContext_NylasDetails_refreshNeeded(ctx, field)
 			case "email":
 				return ec.fieldContext_NylasDetails_email(ctx, field)
 			}
@@ -141335,6 +141392,11 @@ func (ec *executionContext) _NylasDetails(ctx context.Context, sel ast.Selection
 			out.Values[i] = graphql.MarshalString("NylasDetails")
 		case "connected":
 			out.Values[i] = ec._NylasDetails_connected(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refreshNeeded":
+			out.Values[i] = ec._NylasDetails_refreshNeeded(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

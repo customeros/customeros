@@ -18,8 +18,9 @@ extend type Mutation {
 }
 
 type NylasDetails {
-    connected:  Boolean!
-    email:      String
+    connected:      Boolean!
+    refreshNeeded:  Boolean!
+    email:          String
 }
 
 input NylasConnectInput {

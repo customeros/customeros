@@ -2116,8 +2116,9 @@ type NylasConnectInput struct {
 }
 
 type NylasDetails struct {
-	Connected bool    `json:"connected"`
-	Email     *string `json:"email,omitempty"`
+	Connected     bool    `json:"connected"`
+	RefreshNeeded bool    `json:"refreshNeeded"`
+	Email         *string `json:"email,omitempty"`
 }
 
 type OnboardingDetails struct {
