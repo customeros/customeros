@@ -7,6 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/leads/api/handlers"
+	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
 // RegisterRoutes sets up all API endpoints
@@ -27,14 +30,8 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, s *services.Services, re
 	// Health check and status endpoints (no custom context needed)
 	r.GET("/health", handlers.HealthCheck)
 
-	apiKeyMiddleware := middleware.APIKeyMiddleware(middleware.APIKeyConfig{
-		HeaderName:  "X-CUSTOMER-OS-API-KEY",
-		ValidAPIKey: cfg.AppConfig.APIKey,
-	})
-
 	// Rest API
 	api := r.Group("/v1")
-	api.Use(apiKeyMiddleware)
 	{
 		// Domain endpoints
 		events := api.Group("/events")
