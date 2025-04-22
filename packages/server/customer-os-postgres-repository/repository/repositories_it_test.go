@@ -26,8 +26,7 @@ func TestMain(m *testing.M) {
 	}(postgresContainer, context.Background())
 
 	postgresDB := config.PostgresDB{
-		GormDB:      gormDB,
-		AsyncGormDB: gormDB,
+		GormDB: gormDB,
 	}
 
 	repositories = InitRepositories(&postgresDB)
@@ -41,8 +40,7 @@ func createPostgresTables(db *gorm.DB) {
 	db.Exec("create schema if not exists derived")
 
 	postgresDB := config.PostgresDB{
-		GormDB:      db,
-		AsyncGormDB: db,
+		GormDB: db,
 	}
 
 	err := InitRepositories(&postgresDB).AutoMigrate(&postgresDB)

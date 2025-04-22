@@ -2,12 +2,11 @@ package service
 
 import (
 	"database/sql"
-	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"os"
 	"testing"
 
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/testcontainers/testcontainers-go"
@@ -15,6 +14,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	test "github.com/customeros/customeros/packages/server/customer-os-common-module/test"
 )
@@ -83,8 +83,7 @@ func createPostgresTables(db *gorm.DB) {
 	db.Exec("create schema if not exists derived")
 
 	postgresDB := commonconfig.PostgresDB{
-		GormDB:      db,
-		AsyncGormDB: db,
+		GormDB: db,
 	}
 
 	err := postgresrepository.InitRepositories(&postgresDB).AutoMigrate(&postgresDB)

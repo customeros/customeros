@@ -81,14 +81,6 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, po
 func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string) error {
 	spans, ctx := telemetry.StartPostgresSpan(ctx, "CommonRepository.PermanentlyDelete")
 	defer spans.Finish()
-	asyncTablesWithTenantNameColumn := []string{
-		postgres_entity.OAuthTokenEntity{}.TableName(),
-	}
-
-	asyncTablesWithTenantColumn := []string{
-		postgres_entity.IngestEmailMessage{}.TableName(),
-		postgres_entity.IngestEmailImportState{}.TableName(),
-	}
 
 	tableNamesWithTenantNameColumn := []string{
 		postgres_entity.PersonalIntegration{}.TableName(),
@@ -122,20 +114,6 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		postgres_entity.UserWorkingSchedule{}.TableName(),
 		postgres_entity.WebSession{}.TableName(),
 		postgres_entity.WebTrackerEvents{}.TableName(),
-	}
-
-	for _, tableName := range asyncTablesWithTenantNameColumn {
-		if err := r.postgresDB.AsyncGormDB.Exec("DELETE FROM "+tableName+" WHERE tenant_name = ?", tenant).Error; err != nil {
-			spans.TraceError(err)
-			return err
-		}
-	}
-
-	for _, tableName := range asyncTablesWithTenantColumn {
-		if err := r.postgresDB.AsyncGormDB.Exec("DELETE FROM "+tableName+" WHERE tenant = ?", tenant).Error; err != nil {
-			spans.TraceError(err)
-			return err
-		}
 	}
 
 	for _, tableName := range tableNamesWithTenantNameColumn {

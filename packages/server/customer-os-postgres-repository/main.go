@@ -5,8 +5,9 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	common_config "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/joho/godotenv"
+
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Config struct {
@@ -43,8 +44,7 @@ func loadConfig() common_config.CommonConfig {
 
 	return common_config.CommonConfig{
 		Infrastructure: common_config.InfrastructureConfig{
-			PostgresConfig:      cfg.PostgresConfig,
-			PostgresAsyncConfig: cfg.PostgresAsyncConfig,
+			PostgresConfig: cfg.PostgresConfig,
 		},
 	}
 }

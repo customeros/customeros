@@ -95,8 +95,7 @@ func (a *App) initDatabases() error {
 	// Initialize Postgres
 	db, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
 		Infrastructure: commonConfig.InfrastructureConfig{
-			PostgresConfig:      a.config.Common.Infrastructure.PostgresConfig,
-			PostgresAsyncConfig: a.config.Common.Infrastructure.PostgresAsyncConfig,
+			PostgresConfig: a.config.Common.Infrastructure.PostgresConfig,
 		},
 	})
 	if err != nil {
@@ -125,6 +124,7 @@ func (a *App) initServices() error {
 		neo4jRepositories,
 		postgresRepositories,
 		&a.config.Common,
+		nil,
 		&service.InitOptions{LoadPersonalEmailProviders: true},
 	)
 

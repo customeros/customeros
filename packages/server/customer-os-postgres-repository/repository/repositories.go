@@ -88,12 +88,7 @@ type Repositories struct {
 
 func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	repositories := &Repositories{
-		Db:      postgresDB.GormDB,
-		AsyncDb: postgresDB.AsyncGormDB,
-
-		OAuthTokenRepository:             NewOAuthTokenRepository(postgresDB.AsyncGormDB),
-		IngestEmailMessageRepository:     NewIngestEmailMessageRepository(postgresDB.AsyncGormDB),
-		IngestEmailImportStateRepository: NewIngestEmailImportStateRepository(postgresDB.AsyncGormDB),
+		Db: postgresDB.GormDB,
 
 		AgentRepository:                              NewAgentRepository(postgresDB.GormDB),
 		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
@@ -242,15 +237,6 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 		&postgres_entity.WebSession{},
 		&postgres_entity.WebSessionPageVisit{},
 		&postgres_entity.WebTrackerEvents{},
-	)
-	if err != nil {
-		return err
-	}
-
-	err = postgresDB.AsyncGormDB.AutoMigrate(
-		&postgres_entity.IngestEmailMessage{},
-		&postgres_entity.OAuthTokenEntity{},
-		&postgres_entity.IngestEmailImportState{},
 	)
 	if err != nil {
 		return err
