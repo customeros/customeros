@@ -72,10 +72,10 @@ func (s *nylasService) getProviderRefreshToken(ctx context.Context, email string
 }
 
 // Authenticate into Nylas and save the grant
-func (s *nylasService) GrantAccess(ctx context.Context, email, refreshToken string, nylasProvider interfaces.NylasProvider) (*postgresEntity.NylasGrant, error) {
+func (s *nylasService) GrantAccess(ctx context.Context, email, userId, refreshToken string, nylasProvider interfaces.NylasProvider) (*postgresEntity.NylasGrant, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GrantAccess")
 	defer spans.Finish()
-	spans.LogKV("email", email, "nylasProvider", nylasProvider)
+	spans.LogKV("email", email, "userId", userId, "nylasProvider", nylasProvider)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -171,6 +171,7 @@ func (s *nylasService) GrantAccess(ctx context.Context, email, refreshToken stri
 	// Save grant to database
 	nylasGrantEntity.Tenant = tenant
 	nylasGrantEntity.Email = email
+	nylasGrantEntity.UserId = userId
 	nylasGrantEntity.NylasGrantId = responseStruct.Data.ID
 	nylasGrantEntity.NylasProvider = string(nylasProvider)
 	nylasGrantEntity.NylasConnectResponse = string(bodyBytes)
@@ -258,14 +259,27 @@ func (s *nylasService) GetGrant(ctx context.Context, email string) (*postgresEnt
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
+	userId := common.GetUserIdFromContext(ctx)
 
-	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
-	}
-	if grant == nil {
-		return nil, nil
+	var grant *postgresEntity.NylasGrant
+	if email != "" {
+		grant, err = s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
+		if err != nil {
+			spans.TraceError(err)
+			return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
+		}
+		if grant == nil {
+			return nil, nil
+		}
+	} else if userId != "" {
+		grant, err = s.postgres.NylasGrantRepository.GetByTenantAndUserId(ctx, tenant, userId)
+		if err != nil {
+			spans.TraceError(err)
+			return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
+		}
+		if grant == nil {
+			return nil, nil
+		}
 	}
 
 	return grant, nil

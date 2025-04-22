@@ -13,6 +13,7 @@ type MeetingService interface {
 
 	GetUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error)
 	SaveUserCalendarAvailability(ctx context.Context, availability *postgres_entity.UserCalendarAvailability) (*postgres_entity.UserCalendarAvailability, error)
+	SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error)
 }
 
 // TimeSlot represents a time slot in calendar availability

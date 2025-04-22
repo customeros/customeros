@@ -176,8 +176,16 @@ func (s *meetingService) GetUserCalendarAvailability(ctx context.Context, email 
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to get calendar availability: %v", err)
 	}
+	if availability != nil {
+		return availability, nil
+	}
 
-	return availability, nil
+	defaultAvailability, err := s.SetDefaultUserCalendarAvailability(ctx, email)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to set default calendar availability: %v", err)
+	}
+	return defaultAvailability, nil
 }
 
 // SaveCalendarAvailableHours implements interfaces.MeetingService
@@ -205,4 +213,78 @@ func (s *meetingService) SaveUserCalendarAvailability(ctx context.Context, avail
 	}
 
 	return saved, nil
+}
+
+func (s *meetingService) SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.SetDefaultUserCalendarAvailability")
+	defer spans.Finish()
+	spans.LogKV("email", email)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get user's calendar availability
+	availability, err := s.postgresRepository.UserCalendarAvailabilityRepository.GetByTenantAndEmail(ctx, tenant, email)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get calendar availability: %v", err)
+	}
+	if availability != nil {
+		s.log.Info("calendar availability already exists for email: %s", email)
+		return availability, nil
+	}
+
+	defaultAvailability := &postgres_entity.UserCalendarAvailability{
+		Tenant:   tenant,
+		Email:    email,
+		Timezone: "Etc/UTC",
+		Monday: postgres_entity.DayAvailability{
+			Enabled:   true,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+		Tuesday: postgres_entity.DayAvailability{
+			Enabled:   true,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+		Wednesday: postgres_entity.DayAvailability{
+			Enabled:   true,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+		Thursday: postgres_entity.DayAvailability{
+			Enabled:   true,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+		Friday: postgres_entity.DayAvailability{
+			Enabled:   true,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+		Saturday: postgres_entity.DayAvailability{
+			Enabled:   false,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+		Sunday: postgres_entity.DayAvailability{
+			Enabled:   false,
+			StartHour: "08:30",
+			EndHour:   "17:00",
+		},
+	}
+	// Save default availability
+	defaultAvailability, err = s.postgresRepository.UserCalendarAvailabilityRepository.SaveOrUpdate(ctx, defaultAvailability)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to save default calendar availability: %v", err)
+	}
+
+	return defaultAvailability, nil
 }

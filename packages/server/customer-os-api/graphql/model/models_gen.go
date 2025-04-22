@@ -2115,6 +2115,12 @@ type NylasConnectInput struct {
 	Provider     NylasProvider `json:"provider"`
 }
 
+type NylasDetails struct {
+	Connected     bool    `json:"connected"`
+	RefreshNeeded bool    `json:"refreshNeeded"`
+	Email         *string `json:"email,omitempty"`
+}
+
 type OnboardingDetails struct {
 	Status    OnboardingStatus `json:"status"`
 	Comments  *string          `json:"comments,omitempty"`

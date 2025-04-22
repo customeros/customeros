@@ -1382,6 +1382,12 @@ type ComplexityRoot struct {
 		TotalPages    func(childComplexity int) int
 	}
 
+	NylasDetails struct {
+		Connected     func(childComplexity int) int
+		Email         func(childComplexity int) int
+		RefreshNeeded func(childComplexity int) int
+	}
+
 	OnboardingDetails struct {
 		Comments  func(childComplexity int) int
 		Status    func(childComplexity int) int
@@ -1697,7 +1703,7 @@ type ComplexityRoot struct {
 		MailstackUniqueUsernames           func(childComplexity int) int
 		Meeting                            func(childComplexity int, id string) int
 		MeetingSchedulings                 func(childComplexity int) int
-		NylasIsConnected                   func(childComplexity int, email string) int
+		NylasIsConnected                   func(childComplexity int, email *string) int
 		OpportunitiesLinkedToOrganizations func(childComplexity int, pagination *model.Pagination) int
 		Opportunity                        func(childComplexity int, id string) int
 		Organization                       func(childComplexity int, id string) int
@@ -2294,7 +2300,7 @@ type MutationResolver interface {
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
-	NylasConnect(ctx context.Context, input model.NylasConnectInput) (bool, error)
+	NylasConnect(ctx context.Context, input model.NylasConnectInput) (*model.NylasDetails, error)
 	NylasDisconnect(ctx context.Context, email string) (bool, error)
 	OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error)
 	OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error)
@@ -2475,7 +2481,7 @@ type QueryResolver interface {
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
 	MeetingSchedulings(ctx context.Context) ([]*model.MeetingScheduling, error)
-	NylasIsConnected(ctx context.Context, email string) (bool, error)
+	NylasIsConnected(ctx context.Context, email *string) (*model.NylasDetails, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.OrganizationPage, error)
@@ -10411,6 +10417,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.NotePage.TotalPages(childComplexity), true
 
+	case "NylasDetails.connected":
+		if e.complexity.NylasDetails.Connected == nil {
+			break
+		}
+
+		return e.complexity.NylasDetails.Connected(childComplexity), true
+
+	case "NylasDetails.email":
+		if e.complexity.NylasDetails.Email == nil {
+			break
+		}
+
+		return e.complexity.NylasDetails.Email(childComplexity), true
+
+	case "NylasDetails.refreshNeeded":
+		if e.complexity.NylasDetails.RefreshNeeded == nil {
+			break
+		}
+
+		return e.complexity.NylasDetails.RefreshNeeded(childComplexity), true
+
 	case "OnboardingDetails.comments":
 		if e.complexity.OnboardingDetails.Comments == nil {
 			break
@@ -12550,7 +12577,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.NylasIsConnected(childComplexity, args["email"].(string)), true
+		return e.complexity.Query.NylasIsConnected(childComplexity, args["email"].(*string)), true
 
 	case "Query.opportunities_LinkedToOrganizations":
 		if e.complexity.Query.OpportunitiesLinkedToOrganizations == nil {
@@ -17887,19 +17914,25 @@ input NoteUpdateInput {
     """
     Get the Nylas account ID for a given email
     """
-    nylasIsConnected(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    nylasIsConnected(email: String): NylasDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
     """
     Connect a user's email to Nylas service
     """
-    nylasConnect(input: NylasConnectInput!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    nylasConnect(input: NylasConnectInput!): NylasDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     """
     Disconnect a user's email from Nylas service
     """
     nylasDisconnect(email: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type NylasDetails {
+    connected:      Boolean!
+    refreshNeeded:  Boolean!
+    email:          String
 }
 
 input NylasConnectInput {
@@ -28835,18 +28868,18 @@ func (ec *executionContext) field_Query_nylasIsConnected_args(ctx context.Contex
 func (ec *executionContext) field_Query_nylasIsConnected_argsEmail(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (string, error) {
+) (*string, error) {
 	if _, ok := rawArgs["email"]; !ok {
-		var zeroVal string
+		var zeroVal *string
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 	if tmp, ok := rawArgs["email"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
 	}
 
-	var zeroVal string
+	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -80060,18 +80093,18 @@ func (ec *executionContext) _Mutation_nylasConnect(ctx context.Context, field gr
 		directive1 := func(ctx context.Context) (any, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal bool
+				var zeroVal *model.NylasDetails
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal bool
+				var zeroVal *model.NylasDetails
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal bool
+				var zeroVal *model.NylasDetails
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -80084,10 +80117,10 @@ func (ec *executionContext) _Mutation_nylasConnect(ctx context.Context, field gr
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(bool); ok {
+		if data, ok := tmp.(*model.NylasDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.NylasDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -80099,9 +80132,9 @@ func (ec *executionContext) _Mutation_nylasConnect(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*model.NylasDetails)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNNylasDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_nylasConnect(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80111,7 +80144,15 @@ func (ec *executionContext) fieldContext_Mutation_nylasConnect(ctx context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "connected":
+				return ec.fieldContext_NylasDetails_connected(ctx, field)
+			case "refreshNeeded":
+				return ec.fieldContext_NylasDetails_refreshNeeded(ctx, field)
+			case "email":
+				return ec.fieldContext_NylasDetails_email(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NylasDetails", field.Name)
 		},
 	}
 	defer func() {
@@ -88764,6 +88805,135 @@ func (ec *executionContext) fieldContext_NotePage_totalElements(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NylasDetails_connected(ctx context.Context, field graphql.CollectedField, obj *model.NylasDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NylasDetails_connected(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Connected, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NylasDetails_connected(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NylasDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NylasDetails_refreshNeeded(ctx context.Context, field graphql.CollectedField, obj *model.NylasDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NylasDetails_refreshNeeded(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RefreshNeeded, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NylasDetails_refreshNeeded(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NylasDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NylasDetails_email(ctx context.Context, field graphql.CollectedField, obj *model.NylasDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NylasDetails_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NylasDetails_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NylasDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -105562,24 +105732,24 @@ func (ec *executionContext) _Query_nylasIsConnected(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().NylasIsConnected(rctx, fc.Args["email"].(string))
+			return ec.resolvers.Query().NylasIsConnected(rctx, fc.Args["email"].(*string))
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal bool
+				var zeroVal *model.NylasDetails
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal bool
+				var zeroVal *model.NylasDetails
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal bool
+				var zeroVal *model.NylasDetails
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -105592,10 +105762,10 @@ func (ec *executionContext) _Query_nylasIsConnected(ctx context.Context, field g
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(bool); ok {
+		if data, ok := tmp.(*model.NylasDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.NylasDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -105607,9 +105777,9 @@ func (ec *executionContext) _Query_nylasIsConnected(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*model.NylasDetails)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNNylasDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_nylasIsConnected(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -105619,7 +105789,15 @@ func (ec *executionContext) fieldContext_Query_nylasIsConnected(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "connected":
+				return ec.fieldContext_NylasDetails_connected(ctx, field)
+			case "refreshNeeded":
+				return ec.fieldContext_NylasDetails_refreshNeeded(ctx, field)
+			case "email":
+				return ec.fieldContext_NylasDetails_email(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NylasDetails", field.Name)
 		},
 	}
 	defer func() {
@@ -141201,6 +141379,52 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var nylasDetailsImplementors = []string{"NylasDetails"}
+
+func (ec *executionContext) _NylasDetails(ctx context.Context, sel ast.SelectionSet, obj *model.NylasDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nylasDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NylasDetails")
+		case "connected":
+			out.Values[i] = ec._NylasDetails_connected(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refreshNeeded":
+			out.Values[i] = ec._NylasDetails_refreshNeeded(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._NylasDetails_email(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var onboardingDetailsImplementors = []string{"OnboardingDetails"}
 
 func (ec *executionContext) _OnboardingDetails(ctx context.Context, sel ast.SelectionSet, obj *model.OnboardingDetails) graphql.Marshaler {
@@ -152545,6 +152769,20 @@ func (ec *executionContext) unmarshalNNoteUpdateInput2githubᚗcomᚋcustomeros�
 func (ec *executionContext) unmarshalNNylasConnectInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasConnectInput(ctx context.Context, v any) (model.NylasConnectInput, error) {
 	res, err := ec.unmarshalInputNylasConnectInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNNylasDetails2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasDetails(ctx context.Context, sel ast.SelectionSet, v model.NylasDetails) graphql.Marshaler {
+	return ec._NylasDetails(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNylasDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasDetails(ctx context.Context, sel ast.SelectionSet, v *model.NylasDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NylasDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNNylasProvider2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNylasProvider(ctx context.Context, v any) (model.NylasProvider, error) {

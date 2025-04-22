@@ -12,15 +12,10 @@ func MapUserCalendarAvailabilityEntityToModel(entity *postgresEntity.UserCalenda
 		return nil
 	}
 
-	timezone := entity.Timezone
-	if timezone == "" {
-		timezone = defaultTimezone
-	}
-
 	return &model.UserCalendarAvailability{
 		ID:        entity.ID,
 		Email:     entity.Email,
-		Timezone:  timezone,
+		Timezone:  entity.Timezone,
 		Monday:    mapDayAvailabilityToModel(entity.Monday),
 		Tuesday:   mapDayAvailabilityToModel(entity.Tuesday),
 		Wednesday: mapDayAvailabilityToModel(entity.Wednesday),
