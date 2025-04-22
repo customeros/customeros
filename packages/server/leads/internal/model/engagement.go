@@ -1,5 +1,11 @@
 package model
 
+import (
+	"time"
+
+	"github.com/customeros/customeros/packages/server/leads/internal/enum"
+)
+
 type SessionEngagement struct {
 	// Primary identification
 	ID        string `gorm:"column:id;primaryKey;type:uuid;default:gen_random_uuid()"`

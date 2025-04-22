@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/customeros/customeros/packages/server/leads/dto"
+	"github.com/customeros/customeros/packages/server/leads/internal/caches"
 	"github.com/customeros/customeros/packages/server/leads/internal/enum"
 	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
@@ -26,7 +28,7 @@ type WebsiteEventsHandler struct {
 	cache    *caches.OriginTenantCache
 }
 
-func NewWebsiteEventsHandler(natsConn *nats_internal.NATSConnections) *WebsiteTrackerEventsHandler {
+func NewWebsiteEventsHandler(natsConn *nats_internal.NATSConnections) *WebsiteEventsHandler {
 	return &WebsiteEventsHandler{
 		natsConn: natsConn,
 		cache:    caches.NewOriginTenantCache(),
@@ -63,7 +65,10 @@ func (h *WebsiteEventsHandler) Handle() gin.HandlerFunc {
 		}
 
 		// check if bot, return early if not trusted IP
-		if !h.isTrustedIP(ctx, trackerData.IP) {
+		userAgent := utils.ParseUserAgent(trackerData.UserAgent)
+		trusted, err := h.isTrustedIP(ctx, trackerData.IP)
+		isSuspicious := isSuspiciousURL(trackerData.Referrer)
+		if !trusted || userAgent.IsBot || isSuspicious {
 			c.JSON(http.StatusAccepted, gin.H{"accepted": "true"})
 			return
 		}
@@ -112,6 +117,64 @@ func (h *WebsiteEventsHandler) Handle() gin.HandlerFunc {
 		c.JSON(http.StatusAccepted, gin.H{"accepted": "true"})
 		return
 	}
+}
+
+func isSuspiciousURL(url string) bool {
+	suspiciousPatterns := []string{
+		"oastify.com",
+		"burpcollaborator.net",
+		"interactsh.com",
+		"/zws",
+		"xss.ht",
+		"ngrok.io",
+	}
+
+	for _, pattern := range suspiciousPatterns {
+		if strings.Contains(url, pattern) {
+			return true
+		}
+	}
+
+	// Check for very long random-looking subdomains
+	parts := strings.Split(url, "/")
+	if len(parts) >= 3 {
+		domain := parts[2]
+		if len(domain) > 30 && containsRandomString(domain) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsRandomString(s string) bool {
+	if strings.Contains(s, "google") {
+		return false
+	}
+
+	// Count letters, numbers, and special characters
+	letters := 0
+	numbers := 0
+	special := 0
+
+	for _, char := range s {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
+			letters++
+		} else if char >= '0' && char <= '9' {
+			numbers++
+		} else {
+			special++
+		}
+	}
+
+	// If it has a mix of characters and is sufficiently long
+	if letters > 0 && numbers > 0 && len(s) > 20 {
+		// Check if it has a high entropy (i.e., appears random)
+		// Simple heuristic: Over 20 chars with mixed numbers and letters
+		return true
+	}
+
+	return false
 }
 
 func (h *WebsiteEventsHandler) isTrustedIP(ctx context.Context, ipAddress string) (bool, error) {
