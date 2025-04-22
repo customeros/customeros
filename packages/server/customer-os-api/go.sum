@@ -324,8 +324,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
-github.com/mrz1836/postmark v1.7.2 h1:NeneL9aQs8fpaaqxZfuaYlNwKIzZ2Xuhf03bR22bcTY=
-github.com/mrz1836/postmark v1.7.2/go.mod h1:6z5MxAH00Kj44owtQaryv9Pbqp5OKT3wWcRSydB0p0A=
+github.com/mrz1836/postmark v1.7.3 h1:Z5j95uN0z0Mmh67XYOrFxWFI8exZPbYgTHsvXFD0Idk=
+github.com/mrz1836/postmark v1.7.3/go.mod h1:6z5MxAH00Kj44owtQaryv9Pbqp5OKT3wWcRSydB0p0A=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/neo4j/neo4j-go-driver/v5 v5.28.0 h1:chDT68PHNa8JZRmjSkGzAbk1weLWo4rMtDvccvpobg0=
