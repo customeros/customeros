@@ -11,6 +11,7 @@ import (
 
 type NylasGrantRepository interface {
 	GetByTenantAndEmail(ctx context.Context, tenant, email string) (*postgres_entity.NylasGrant, error)
+	GetByTenantAndUserId(ctx context.Context, tenant, userId string) (*postgres_entity.NylasGrant, error)
 	Save(ctx context.Context, grant *postgres_entity.NylasGrant) (*postgres_entity.NylasGrant, error)
 	Delete(ctx context.Context, grantId string) error
 }
@@ -30,10 +31,10 @@ func (r *nylasGrantRepository) GetByTenantAndEmail(ctx context.Context, tenant, 
 	defer spans.Finish()
 	spans.LogKV("tenant", tenant, "email", email)
 
-	var account postgres_entity.NylasGrant
+	var grant postgres_entity.NylasGrant
 	err := r.db.
 		Where("tenant = ? AND email = ?", tenant, email).
-		First(&account).Error
+		First(&grant).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -45,7 +46,30 @@ func (r *nylasGrantRepository) GetByTenantAndEmail(ctx context.Context, tenant, 
 	}
 
 	spans.LogKV("result.found", true)
-	return &account, nil
+	return &grant, nil
+}
+
+func (r *nylasGrantRepository) GetByTenantAndUserId(ctx context.Context, tenant, userId string) (*postgres_entity.NylasGrant, error) {
+	spans, _ := telemetry.StartPostgresSpan(ctx, "NylasGrantRepository.GetByTenantAndUserId")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant, "userId", userId)
+
+	var grant postgres_entity.NylasGrant
+	err := r.db.
+		Where("tenant = ? AND user_id = ?", tenant, userId).
+		First(&grant).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			spans.LogKV("result.found", false)
+			return nil, nil
+		}
+		spans.TraceError(err)
+		return nil, err
+	}
+
+	spans.LogKV("result.found", true)
+	return &grant, nil
 }
 
 func (r *nylasGrantRepository) Save(ctx context.Context, grant *postgres_entity.NylasGrant) (*postgres_entity.NylasGrant, error) {

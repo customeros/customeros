@@ -259,14 +259,27 @@ func (s *nylasService) GetGrant(ctx context.Context, email string) (*postgresEnt
 		return nil, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
+	userId := common.GetUserIdFromContext(ctx)
 
-	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
-	}
-	if grant == nil {
-		return nil, nil
+	var grant *postgresEntity.NylasGrant
+	if email != "" {
+		grant, err = s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, tenant, email)
+		if err != nil {
+			spans.TraceError(err)
+			return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
+		}
+		if grant == nil {
+			return nil, nil
+		}
+	} else if userId != "" {
+		grant, err = s.postgres.NylasGrantRepository.GetByTenantAndUserId(ctx, tenant, userId)
+		if err != nil {
+			spans.TraceError(err)
+			return nil, fmt.Errorf("failed to get Nylas grant: %v", err)
+		}
+		if grant == nil {
+			return nil, nil
+		}
 	}
 
 	return grant, nil
