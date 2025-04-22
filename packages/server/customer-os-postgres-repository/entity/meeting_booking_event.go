@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type MeetingScheduling struct {
+type MeetingBookingEvent struct {
 	ID        string    `gorm:"column:id;type:varchar(21);primaryKey" json:"id"`
 	Tenant    string    `gorm:"column:tenant;size:255;not null;primaryKey" json:"tenant"`
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
@@ -31,18 +31,18 @@ type MeetingScheduling struct {
 	EmailNotificationEnabled bool `gorm:"column:email_notification_enabled;not null;default:false" json:"emailNotificationEnabled"`
 }
 
-func (MeetingScheduling) TableName() string {
-	return "meeting_scheduling"
+func (MeetingBookingEvent) TableName() string {
+	return "meeting_booking_events"
 }
 
 // BeforeCreate hook to ensure ID has the correct prefix and validate
-func (u *MeetingScheduling) BeforeCreate(tx *gorm.DB) error {
-	u.ID = utils.GenerateNanoIdWithPrefix("msch", 16)
+func (u *MeetingBookingEvent) BeforeCreate(tx *gorm.DB) error {
+	u.ID = utils.GenerateNanoIdWithPrefix("mbe", 16)
 	return nil
 }
 
 // BeforeUpdate hook to update the UpdatedAt timestamp and validate
-func (u *MeetingScheduling) BeforeUpdate(tx *gorm.DB) error {
+func (u *MeetingBookingEvent) BeforeUpdate(tx *gorm.DB) error {
 	u.UpdatedAt = time.Now()
 	return nil
 }

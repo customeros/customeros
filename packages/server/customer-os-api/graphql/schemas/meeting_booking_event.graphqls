@@ -1,4 +1,4 @@
-type MeetingScheduling {
+type MeetingBookingEvent {
     id:             String!
     title:          String!
     durationMins:   Int64!
@@ -21,7 +21,7 @@ type MeetingScheduling {
 
 }
 
-input SaveMeetingSchedulingInput {
+input SaveMeetingBookingEventInput {
     id:             String
     title:          String
     durationMins:   Int64
@@ -40,9 +40,9 @@ input SaveMeetingSchedulingInput {
 }
 
 extend type Query {
-    meetingSchedulings: [MeetingScheduling!]!
+    meetingBookingEvents: [MeetingBookingEvent!]!
 }
 
 extend type Mutation {
-    meetingScheduling_Save(input: SaveMeetingSchedulingInput!): MeetingScheduling!
+    meetingBookingEvent_Save(input: SaveMeetingBookingEventInput!): MeetingBookingEvent!
 }

@@ -5,9 +5,9 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
-func MapMeetingSchedulingInputToEntity(input model.SaveMeetingSchedulingInput, entity *postgres_entity.MeetingScheduling) *postgres_entity.MeetingScheduling {
+func MapMeetingBookingEventInputToEntity(input model.SaveMeetingBookingEventInput, entity *postgres_entity.MeetingBookingEvent) *postgres_entity.MeetingBookingEvent {
 	if entity == nil {
-		entity = &postgres_entity.MeetingScheduling{}
+		entity = &postgres_entity.MeetingBookingEvent{}
 	}
 
 	if input.Title != nil {
@@ -56,11 +56,11 @@ func MapMeetingSchedulingInputToEntity(input model.SaveMeetingSchedulingInput, e
 	return entity
 }
 
-func MapMeetingSchedulingEntityToModel(entity *postgres_entity.MeetingScheduling) *model.MeetingScheduling {
+func MapMeetingBookingEventEntityToModel(entity *postgres_entity.MeetingBookingEvent) *model.MeetingBookingEvent {
 	if entity == nil {
 		return nil
 	}
-	return &model.MeetingScheduling{
+	return &model.MeetingBookingEvent{
 		ID:                                  entity.ID,
 		Title:                               entity.Title,
 		DurationMins:                        entity.DurationMins,
@@ -80,14 +80,14 @@ func MapMeetingSchedulingEntityToModel(entity *postgres_entity.MeetingScheduling
 	}
 }
 
-func MapMeetingSchedulingEntitiesToModels(entities []*postgres_entity.MeetingScheduling) []*model.MeetingScheduling {
+func MapMeetingBookingEventEntitiesToModels(entities []*postgres_entity.MeetingBookingEvent) []*model.MeetingBookingEvent {
 	if entities == nil {
 		return nil
 	}
 
-	models := make([]*model.MeetingScheduling, len(entities))
+	models := make([]*model.MeetingBookingEvent, len(entities))
 	for i, entity := range entities {
-		models[i] = MapMeetingSchedulingEntityToModel(entity)
+		models[i] = MapMeetingBookingEventEntityToModel(entity)
 	}
 	return models
 }
