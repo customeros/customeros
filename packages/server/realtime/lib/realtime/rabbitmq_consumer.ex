@@ -10,7 +10,7 @@ defmodule Realtime.RabbitMQConsumer do
 
   @queue_name "notifications"
   @entityToChannelMap %{
-    "ORGANIZATION" => "Organizations",
+    "ORGANIZATION" => "OrganizationStore",
     "CONTACT" => "Contacts",
     "CONTRACT" => "Contracts",
     "OPPORTUNITY" => "Opportunities",
@@ -75,6 +75,14 @@ defmodule Realtime.RabbitMQConsumer do
               true -> message
             end
 
+          event_type =
+            cond do
+              create -> "store:set"
+              update -> "store:invalidate"
+              delete -> "store:delete"
+              true -> message
+            end
+
           Tracer.set_attributes(%{
             tenant: tenant,
             entity_type: entity_type,
@@ -89,6 +97,17 @@ defmodule Realtime.RabbitMQConsumer do
             nil ->
               Logger.warning(
                 "No channel_topic detected for entity:#{entity_type} - tenant:#{tenant}, will ack and do nothing."
+              )
+
+            "OrganizationStore:" <> _topic ->
+              Endpoint.broadcast!(channel_topic, event_type, %{
+                key: Enum.at(entity_ids, 0),
+                source: "__system__",
+                type: event_type
+              })
+
+              Logger.info(
+                "Broadcasted notification:#{event_type} to #{channel_topic} for #{tenant}"
               )
 
             _ ->

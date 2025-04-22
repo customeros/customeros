@@ -79,6 +79,8 @@ defmodule RealtimeWeb.UserSocket do
   channel "Document:*", RealtimeWeb.DocumentChannel
   channel "Documents:*", RealtimeWeb.DocumentsChannel
   channel "Tasks:*", RealtimeWeb.TasksChannel
+  #
+  channel "OrganizationStore:*", RealtimeWeb.OrganizationStoreChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
