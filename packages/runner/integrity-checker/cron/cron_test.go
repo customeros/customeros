@@ -22,7 +22,10 @@ func getLogger() logger.Logger {
 func TestStartCron(t *testing.T) {
 	// Arrange
 	cfg := config.Config{
-		Cron: cron_config.Config{CronScheduleNeo4jIntegrityChecker: "0 0 */1 * * *"},
+		Cron: cron_config.Config{
+			CronScheduleNeo4jIntegrityChecker:    "0 0 */1 * * *",
+			CronSchedulePostgresIntegrityChecker: "0 0 */1 * * *",
+		},
 	}
 
 	// Act
