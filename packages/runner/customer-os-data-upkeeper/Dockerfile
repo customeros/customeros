@@ -9,6 +9,7 @@ COPY server/customer-os-common-module/. /app/packages/server/customer-os-common-
 COPY server/customer-os-neo4j-repository/. /app/packages/server/customer-os-neo4j-repository/
 COPY server/customer-os-postgres-repository/. /app/packages/server/customer-os-postgres-repository/
 COPY server/mailsherpa-api/. /app/packages/server/mailsherpa-api/
+COPY server/core-crm/. /app/packages/server/core-crm/
 COPY runner/customer-os-data-upkeeper/. /app/packages/runner/customer-os-data-upkeeper
 
 WORKDIR /app/packages/runner/customer-os-data-upkeeper

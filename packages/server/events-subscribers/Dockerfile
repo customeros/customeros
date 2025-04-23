@@ -4,6 +4,7 @@ WORKDIR /app
 COPY customer-os-common-module/. ./customer-os-common-module/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
+COPY core-crm/. ./core-crm/
 COPY events-subscribers/. ./events-subscribers
 COPY mailsherpa-api/. ./mailsherpa-api/
 
