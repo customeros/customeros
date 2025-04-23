@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"time"
@@ -27,7 +27,7 @@ type SessionEngagement struct {
 	EntryPage        string              `gorm:"column:entry_page;type:varchar(255)"`
 	ExitPage         string              `gorm:"column:exit_page;type:varchar(255)"`
 	Channel          enum.Channel        `gorm:"column:channel;type:varchar(50)"`
-	Source           enum.LeadSource     `gorm:"column:source;type:varchar(50)"`
+	Source           enum.AdPlatform     `gorm:"column:source;type:varchar(50)"`
 	SourcePlatform   enum.SocialPlatform `gorm:"column:source_platform;type:varchar(50)"`
 	ViewedOnPlatform enum.SocialPlatform `gorm:"column:viewed_on_platform;type:varchar(50)"`
 	GCLID            string              `gorm:"column:gclid;type:varchar(255)"`
@@ -49,7 +49,6 @@ type SessionEngagement struct {
 	Language   string          `gorm:"column:language;type:varchar(10)"`
 
 	// Page/content engagement summaries
-	TopContents postgres.Jsonb `gorm:"column:top_contents;type:jsonb"` // Most viewed content in session
 
 	// System fields
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamptz;not null;default:now()"`

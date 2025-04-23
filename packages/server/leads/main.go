@@ -28,16 +28,16 @@ func main() {
 	}
 
 	// Setup the databases
-	inboxDB, err := database.InitDatabase(&database.DatabaseConfig{
-		DBName:          cfg.EventStreamDatabaseConfig.DBName,
-		Host:            cfg.EventStreamDatabaseConfig.Host,
-		Port:            cfg.EventStreamDatabaseConfig.Port,
-		User:            cfg.EventStreamDatabaseConfig.User,
-		Password:        cfg.EventStreamDatabaseConfig.Password,
-		MaxConn:         cfg.EventStreamDatabaseConfig.MaxConn,
-		MaxIdleConn:     cfg.EventStreamDatabaseConfig.MaxIdleConn,
-		ConnMaxLifetime: cfg.EventStreamDatabaseConfig.ConnMaxLifetime,
-		LogLevel:        cfg.EventStreamDatabaseConfig.LogLevel,
+	leadsDB, err := database.InitDatabase(&database.DatabaseConfig{
+		DBName:          cfg.LeadsDatabaseConfig.DBName,
+		Host:            cfg.LeadsDatabaseConfig.Host,
+		Port:            cfg.LeadsDatabaseConfig.Port,
+		User:            cfg.LeadsDatabaseConfig.User,
+		Password:        cfg.LeadsDatabaseConfig.Password,
+		MaxConn:         cfg.LeadsDatabaseConfig.MaxConn,
+		MaxIdleConn:     cfg.LeadsDatabaseConfig.MaxIdleConn,
+		ConnMaxLifetime: cfg.LeadsDatabaseConfig.ConnMaxLifetime,
+		LogLevel:        cfg.LeadsDatabaseConfig.LogLevel,
 	})
 	if err != nil {
 		log.Fatalf("Inbox database initialization failed: %v", err)
@@ -78,7 +78,7 @@ func main() {
 		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 		log.Println("ActivityStream starting up...")
 
-		srv, err := server.NewServer(cfg, inboxDB, warehouseDB)
+		srv, err := server.NewServer(cfg, leadsDB, warehouseDB)
 		if err != nil {
 			log.Fatalf("Server setup failed: %v", err)
 		}

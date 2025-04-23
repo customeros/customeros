@@ -4,13 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/customeros/mailstack/internal/config"
-	cron_config "github.com/customeros/mailstack/internal/cron/config"
-	"github.com/customeros/mailstack/internal/logger"
 	cronv3 "github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	"github.com/customeros/customeros/packages/server/leads/internal/logger"
 )
 
 type mockKubernetesInterface struct {
@@ -35,7 +35,7 @@ func TestNewCronManager(t *testing.T) {
 	k8s := &mockKubernetesInterface{}
 
 	// Act
-	cm := NewCronManager(cfg, log, k8s, nil, nil, nil)
+	cm := NewCronManager(cfg, log, k8s, nil)
 
 	// Assert
 	assert.NotNil(t, cm)
@@ -47,12 +47,8 @@ func TestNewCronManager(t *testing.T) {
 
 func TestCronManager_StartCron(t *testing.T) {
 	// Set environment variable for testing
-	os.Setenv("CRON_SCHEDULE_MAILSTACK_REPUTATION", "0 0 * * *")
-	os.Setenv("CRON_SCHEDULE_RAMP_UP_MAILBOXES", "0 * * * * *")
-	os.Setenv("CRON_SCHEDULE_CONFIGURE_MAILBOXES", "0 0 * * * *")
-	defer os.Unsetenv("CRON_SCHEDULE_MAILSTACK_REPUTATION")
-	defer os.Unsetenv("CRON_SCHEDULE_RAMP_UP_MAILBOXES")
-	defer os.Unsetenv("CRON_SCHEDULE_CONFIGURE_MAILBOXES")
+	// os.Setenv("CRON_SCHEDULE_MAILSTACK_REPUTATION", "0 0 * * *")
+	// defer os.Unsetenv("CRON_SCHEDULE_CONFIGURE_MAILBOXES")
 
 	// Arrange
 	cfg := &config.Config{
@@ -60,31 +56,21 @@ func TestCronManager_StartCron(t *testing.T) {
 	}
 	log := getLogger()
 	k8s := &mockKubernetesInterface{}
-	cm := NewCronManager(cfg, log, k8s, nil, nil, nil)
+	cm := NewCronManager(cfg, log, k8s, nil)
 
 	// Create a mock cron for testing
 	mockCron := cronv3.New()
 
 	// Register jobs directly
-	var cronConfig cron_config.Config
-	cronConfig.CronScheduleMailstackReputation = "0 0 * * *"
-	cronConfig.CronScheduleRampUpMailboxes = "0 * * * * *"
-	cronConfig.CronScheduleConfigureMailboxes = "0 0 * * * *"
+	// var cronConfig cron_config.Config
+	// cronConfig.CronScheduleMailstackReputation = "0 0 * * *"
 
 	// Act - register jobs manually
-	id, err := mockCron.AddFunc(cronConfig.CronScheduleMailstackReputation, func() {})
-	assert.NoError(t, err)
-	cm.jobIDs["mailstack_reputation"] = id
+	// id, err := mockCron.AddFunc(cronConfig.CronScheduleMailstackReputation, func() {})
+	// assert.NoError(t, err)
+	// cm.jobIDs["mailstack_reputation"] = id
 
 	// Add ramp up mailboxes job
-	rampUpId, err := mockCron.AddFunc(cronConfig.CronScheduleRampUpMailboxes, func() {})
-	assert.NoError(t, err)
-	cm.jobIDs["ramp_up_mailboxes"] = rampUpId
-
-	// Add configure mailboxes job
-	configureId, err := mockCron.AddFunc(cronConfig.CronScheduleConfigureMailboxes, func() {})
-	assert.NoError(t, err)
-	cm.jobIDs["configure_mailboxes"] = configureId
 
 	cm.cron = mockCron
 
@@ -104,7 +90,7 @@ func TestCronManager_Stop(t *testing.T) {
 	}
 	log := getLogger()
 	k8s := &mockKubernetesInterface{}
-	cm := NewCronManager(cfg, log, k8s, nil, nil, nil)
+	cm := NewCronManager(cfg, log, k8s, nil)
 
 	// Create a mock cron for testing
 	mockCron := cronv3.New()

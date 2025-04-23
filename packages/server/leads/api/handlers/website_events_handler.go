@@ -17,10 +17,12 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/dto"
 	"github.com/customeros/customeros/packages/server/leads/internal/caches"
 	"github.com/customeros/customeros/packages/server/leads/internal/enum"
+	"github.com/customeros/customeros/packages/server/leads/internal/models"
 	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 	"github.com/customeros/customeros/packages/server/leads/proto/mappers"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
 type WebsiteEventsHandler struct {
@@ -181,10 +183,14 @@ func (h *WebsiteEventsHandler) isTrustedIP(ctx context.Context, ipAddress string
 	span, ctx := telemetry.StartRestSpan(ctx, "WebsiteEventsHandler.isTrustedIP")
 	defer span.Finish()
 
+	request := &pb.IdentifyVisitorRequest{
+		IpAddress: ipAddress,
+	}
+
 	reqData, err := proto.Marshal(request)
 	if err != nil {
 		span.TraceError(err)
-		return nil, err
+		return false, err
 	}
 
 	// Send request to service
@@ -195,20 +201,20 @@ func (h *WebsiteEventsHandler) isTrustedIP(ctx context.Context, ipAddress string
 	}
 	msg.Data = reqData
 
-	resp, err := s.natsConn.Conn.RequestMsg(msg, REQUEST_TIMEOUT)
+	resp, err := h.natsConn.Conn.RequestMsg(msg, REQUEST_TIMEOUT)
 	if err != nil {
 		span.TraceError(err)
 		return false, err
 	}
 
 	// Unmarshal response
-	response := &pb.EmailClassificationResponse{}
+	response := &pb.IdentifyVisitorResponse{}
 	if err := proto.Unmarshal(resp.Data, response); err != nil {
 		span.TraceError(err)
 		return false, err
 	}
 
-	return !ipThreats.IsThreat
+	return false, nil
 }
 
 func (h *WebsiteEventsHandler) attachToSession(ctx context.Context, event *dto.WebTrackerEvent) (string, error) {
@@ -331,25 +337,25 @@ func (h *WebsiteEventsHandler) validateTrackingAllowed(ctx context.Context, orig
 		return tenant, nil
 	}
 
-	agents, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get agents"))
-		return "", err
-	}
+	// agents, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
+	// if err != nil {
+	// 	tracing.TraceErr(span, errors.Wrap(err, "failed to get agents"))
+	// 	return "", err
+	// }
 
-	// check if agent has intent to identify visitor
-	tenant = h.findTenantByOrigin(ctx, agents, cleanedOrigin)
-
-	if tenant == "" {
-		err = fmt.Errorf("tenant not found for origin: %s", origin)
-		span.LogFields(log.Bool("result.tenant.found", false))
-		return "", err
-	}
+	// // check if agent has intent to identify visitor
+	// tenant = h.findTenantByOrigin(ctx, agents, cleanedOrigin)
+	//
+	// if tenant == "" {
+	// 	err = fmt.Errorf("tenant not found for origin: %s", origin)
+	// 	span.LogFields(log.Bool("result.tenant.found", false))
+	// 	return "", err
+	// }
 	span.LogKV("result.tenant", tenant)
 	return tenant, nil
 }
 
-func (h *WebsiteEventsHandler) findTenantByOrigin(ctx context.Context, agents []postgres_entity.Agent, cleanedOrigin string) string {
+func (h *WebsiteEventsHandler) findTenantByOrigin(ctx context.Context, agents []models.Agent, cleanedOrigin string) string {
 	for _, agent := range agents {
 		if tenant := h.checkAgentForOrigin(ctx, agent, cleanedOrigin); tenant != "" {
 			h.cache.SetTenantForOrigin(cleanedOrigin, tenant)
@@ -359,28 +365,28 @@ func (h *WebsiteEventsHandler) findTenantByOrigin(ctx context.Context, agents []
 	return ""
 }
 
-func (h *WebsiteEventsHandler) checkAgentForOrigin(ctx context.Context, agent postgres_entity.Agent, cleanedOrigin string) string {
-	span, _ := telemetry.StartRestSpan(c.Request.Context(), "WebsiteEventsHandler.checkAgentForOrigin")
+func (h *WebsiteEventsHandler) checkAgentForOrigin(ctx context.Context, agent models.Agent, cleanedOrigin string) string {
+	span, _ := telemetry.StartRestSpan(ctx, "WebsiteEventsHandler.checkAgentForOrigin")
 	defer span.Finish()
 
-	for _, listener := range agent.Listeners {
-		if listener.Type != enum.EventNewWebSession {
-			continue
-		}
-
-		var config agent_listeners.IdentifyWebsiteVisitorConfig
-		err := listener.GetConfig(&config)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return ""
-		}
-
-		for _, website := range config.Websites.Value {
-			if utils.StripUrlToBasePath(website) == cleanedOrigin {
-				return agent.Tenant
-			}
-		}
-	}
+	// for _, listener := range agent.Listeners {
+	// 	if listener.Type != enum.EventNewWebSession {
+	// 		continue
+	// 	}
+	//
+	// 	var config agent_listeners.IdentifyWebsiteVisitorConfig
+	// 	err := listener.GetConfig(&config)
+	// 	if err != nil {
+	// 		tracing.TraceErr(span, err)
+	// 		return ""
+	// 	}
+	//
+	// 	for _, website := range config.Websites.Value {
+	// 		if utils.StripUrlToBasePath(website) == cleanedOrigin {
+	// 			return agent.Tenant
+	// 		}
+	// 	}
+	// }
 	return ""
 }
 

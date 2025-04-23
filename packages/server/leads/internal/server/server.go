@@ -18,13 +18,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/customeros/customeros/packages/server/eventstream/internal/config"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/cron"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
-	nats_internal "github.com/customeros/customeros/packages/server/eventstream/internal/nats"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/repository"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/telemetry"
-	"github.com/customeros/customeros/packages/server/eventstream/services"
+	"github.com/customeros/customeros/packages/server/leads/api/handlers"
+	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	"github.com/customeros/customeros/packages/server/leads/internal/cron"
+	"github.com/customeros/customeros/packages/server/leads/internal/logger"
+	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
+	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
 type Server struct {
@@ -36,9 +37,10 @@ type Server struct {
 	cronMgr      *cron.CronManager
 	services     *services.Services
 	repositories *repository.Repositories
+	apiHandlers  *handlers.APIHandlers
 }
 
-func NewServer(cfg *config.Config, mailstackDB *gorm.DB, warehouseDB *gorm.DB) (*Server, error) {
+func NewServer(cfg *config.Config, leadsDB *gorm.DB, warehouseDB *gorm.DB) (*Server, error) {
 	// Initialize logger
 	appLogger := logger.NewAppLogger(cfg.Logger)
 	appLogger.InitLogger()
@@ -50,7 +52,7 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB, warehouseDB *gorm.DB) (
 	}
 
 	// Initialize repositories
-	repos := repository.InitRepositories(mailstackDB, warehouseDB)
+	repos := repository.InitRepositories(leadsDB, warehouseDB)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +64,14 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB, warehouseDB *gorm.DB) (
 	}
 
 	// Initialize services
-	svcs := services.InitServices(natsConn, appLogger, repos, cfg)
+	svcs := services.InitServices(natsConn, repos, cfg)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+
+	// Initialize API Handlers
+	handlers := handlers.InitHandlers(natsConn, repos)
 
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface
@@ -85,8 +90,6 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB, warehouseDB *gorm.DB) (
 		cfg,
 		appLogger,
 		k8sClient,
-		svcs.DomainService,
-		svcs.MailboxService,
 		repos,
 	)
 
@@ -126,6 +129,7 @@ func NewServer(cfg *config.Config, mailstackDB *gorm.DB, warehouseDB *gorm.DB) (
 		services:     svcs,
 		repositories: repos,
 		logger:       appLogger,
+		apiHandlers:  handlers,
 	}, nil
 }
 
@@ -190,11 +194,8 @@ func (s *Server) waitForShutdown() error {
 
 	// Stop services
 	log.Println("Stopping services...")
-	if err := s.services.Stop(shutdownCtx); err != nil {
-		log.Printf("⚠️ Services shutdown error: %v", err)
-	} else {
-		log.Println("✅ Services stopped successfully")
-	}
+	s.services.Stop(shutdownCtx)
+	log.Println("✅ Services stopped")
 
 	return nil
 }

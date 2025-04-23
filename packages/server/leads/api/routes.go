@@ -7,14 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/leads/api/handlers"
-	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
-	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
 // RegisterRoutes sets up all API endpoints
-func RegisterRoutes(ctx context.Context, r *gin.Engine, s *services.Services, repos *repository.Repositories, cfg *config.Config) {
-	if s == nil {
+func RegisterRoutes(ctx context.Context, r *gin.Engine, natsConn *nats_internal.NATSConnections, repos *repository.Repositories) {
+	if natsConn == nil {
 		panic("Services cannot be nil")
 	}
 	if repos == nil {
@@ -25,7 +24,7 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, s *services.Services, re
 	r.Use(gin.Recovery()) // Gin's built-in recovery
 
 	// setup handlers
-	apiHandlers := handlers.InitHandlers(repos, cfg, s)
+	apiHandlers := handlers.InitHandlers(natsConn, repos)
 
 	// Health check and status endpoints (no custom context needed)
 	r.GET("/health", handlers.HealthCheck)

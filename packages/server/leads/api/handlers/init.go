@@ -9,7 +9,7 @@ type APIHandlers struct {
 	WebEvents *WebsiteEventsHandler
 }
 
-func InitHandlers(natsConn *nats_internal.NATSConnections, r *repository.Repository) *APIHandlers {
+func InitHandlers(natsConn *nats_internal.NATSConnections, r *repository.Repositories) *APIHandlers {
 	return &APIHandlers{
 		WebEvents: NewWebsiteEventsHandler(natsConn),
 	}

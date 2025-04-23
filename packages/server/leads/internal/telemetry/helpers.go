@@ -14,8 +14,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/internal/logger"
+	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 )
 
 // Types and Constants

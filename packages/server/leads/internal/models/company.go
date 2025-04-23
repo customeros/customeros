@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"time"
@@ -11,8 +11,8 @@ type Company struct {
 	CompanyName           string                    `gorm:"column:company_name;type:varchar(255);index;not null"`
 	PrimaryDomain         string                    `gorm:"column:primary_domain;type:varchar(255);uniqueIndex"`
 	ICPFit                bool                      `gorm:"column:icp_fit;type:boolean;default:false"`
-	FirstEngagementSource enum.LeadSource           `gorm:"column:first_engagement_source;type:varchar(50)"`
-	LastEngagementSource  enum.LeadSource           `gorm:"column:last_engagement_source;type:varchar(50)"`
+	FirstEngagementSource enum.AdPlatform           `gorm:"column:first_engagement_source;type:varchar(50)"`
+	LastEngagementSource  enum.AdPlatform           `gorm:"column:last_engagement_source;type:varchar(50)"`
 	TopEngagementChannel  enum.Channel              `gorm:"column:top_engagement_channel;type:varchar(50)"`
 	IdentifiedContacts    int                       `gorm:"column:identified_contacts;type:varchar(50)"`
 	AnonymousVisitors     int                       `gorm:"column:anonymous_visitors:varchar(50)"`

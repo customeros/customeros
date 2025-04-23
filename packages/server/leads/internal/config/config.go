@@ -1,6 +1,7 @@
 package config
 
 type AppConfig struct {
+	APIPort     string `env:"API_PORT,required" envDefault:"16600"`
 	Environment string `env:"ENVIRONMENT,required" envDefault:"dev"`
 }
 
@@ -10,16 +11,16 @@ type NATSConfig struct {
 	Node3 string `env:"NATS_NODE_3_URL"`
 }
 
-type EventStreamDatabaseConfig struct {
-	Host            string `env:"EVENT_STREAM_POSTGRES_HOST,required"`
-	Port            string `env:"EVENT_STREAM_POSTGRES_PORT,required"`
-	User            string `env:"EVENT_STREAM_POSTGRES_USER,required"`
-	DBName          string `env:"EVENT_STREAM_POSTGRES_DB_NAME,required"`
-	Password        string `env:"EVENT_STREAM_POSTGRES_PASSWORD,required"`
-	MaxConn         int    `env:"EVENT_STREAM_POSTGRES_DB_MAX_CONN"`
-	MaxIdleConn     int    `env:"EVENT_STREAM_POSTGRES_DB_MAX_IDLE_CONN"`
-	ConnMaxLifetime int    `env:"EVENT_STREAM_POSTGRES_DB_CONN_MAX_LIFETIME"`
-	LogLevel        string `env:"EVENT_STREAM_POSTGRES_LOG_LEVEL" envDefault:"WARN"`
+type LeadsDatabaseConfig struct {
+	Host            string `env:"LEADS_POSTGRES_HOST,required"`
+	Port            string `env:"LEADS_POSTGRES_PORT,required"`
+	User            string `env:"LEADS_POSTGRES_USER,required"`
+	DBName          string `env:"LEADS_POSTGRES_DB_NAME,required"`
+	Password        string `env:"LEADS_POSTGRES_PASSWORD,required"`
+	MaxConn         int    `env:"LEADS_POSTGRES_DB_MAX_CONN"`
+	MaxIdleConn     int    `env:"LEADS_POSTGRES_DB_MAX_IDLE_CONN"`
+	ConnMaxLifetime int    `env:"LEADS_POSTGRES_DB_CONN_MAX_LIFETIME"`
+	LogLevel        string `env:"LEADS_POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 }
 
 type DataWarehouseConfig struct {
@@ -32,4 +33,15 @@ type DataWarehouseConfig struct {
 	MaxIdleConn     int    `env:"WAREHOUSE_DB_MAX_IDLE_CONN"`
 	ConnMaxLifetime int    `env:"WAREHOUSE_DB_CONN_MAX_LIFETIME"`
 	LogLevel        string `env:"WAREHOUSE_DB_LOG_LEVEL" envDefault:"WARN"`
+}
+
+type IPDataConfig struct {
+	ApiUrl             string `env:"IPDATA_API_URL"`
+	ApiKey             string `env:"IPDATA_API_KEY"`
+	IpDataCacheTtlDays int    `env:"IPDATA_CACHE_TTL_DAYS" envDefault:"90"`
+}
+
+type SnitcherConfig struct {
+	Url    string `env:"SNITCHER_API_URL" required:"true" envDefault:"https://app.snitcher.com/api"`
+	ApiKey string `env:"SNITCHER_API_KEY" `
 }

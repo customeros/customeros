@@ -4,28 +4,33 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/telemetry"
 	"github.com/joho/godotenv"
+
+	"github.com/customeros/customeros/packages/server/leads/internal/logger"
+	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 )
 
 type Config struct {
-	AppConfig                 *AppConfig
-	Logger                    *logger.Config
-	NATSConfig                *NATSConfig
-	OpenTelemetry             *telemetry.OpenTelemetryConfig
-	EventStreamDatabaseConfig *EventStreamDatabaseConfig
-	DataWarehouseConfig       *DataWarehouseConfig
+	AppConfig           *AppConfig
+	Logger              *logger.Config
+	NATSConfig          *NATSConfig
+	OpenTelemetry       *telemetry.OpenTelemetryConfig
+	LeadsDatabaseConfig *LeadsDatabaseConfig
+	DataWarehouseConfig *DataWarehouseConfig
+	IPDataConfig        *IPDataConfig
+	SnitcherConfig      *SnitcherConfig
 }
 
 func InitConfig() (*Config, error) {
 	config := &Config{
-		AppConfig:                 &AppConfig{},
-		Logger:                    &logger.Config{},
-		NATSConfig:                &NATSConfig{},
-		OpenTelemetry:             &telemetry.OpenTelemetryConfig{},
-		EventStreamDatabaseConfig: &EventStreamDatabaseConfig{},
-		DataWarehouseConfig:       &DataWarehouseConfig{},
+		AppConfig:           &AppConfig{},
+		Logger:              &logger.Config{},
+		NATSConfig:          &NATSConfig{},
+		OpenTelemetry:       &telemetry.OpenTelemetryConfig{},
+		LeadsDatabaseConfig: &LeadsDatabaseConfig{},
+		DataWarehouseConfig: &DataWarehouseConfig{},
+		IPDataConfig:        &IPDataConfig{},
+		SnitcherConfig:      &SnitcherConfig{},
 	}
 
 	err := godotenv.Load()

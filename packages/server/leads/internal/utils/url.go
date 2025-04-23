@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -48,4 +49,34 @@ func ParseURL(rawURL string) (*URLComponents, error) {
 		QueryParams:  parsedURL.Query(),
 		Anchor:       parsedURL.Fragment,
 	}, nil
+}
+
+func SortUrlsByLength(urls []string) []string {
+	sort.Slice(urls, func(i, j int) bool {
+		// If lengths are different, sort by length
+		if len(urls[i]) != len(urls[j]) {
+			return len(urls[i]) < len(urls[j])
+		}
+		// If lengths are equal, sort alphabetically
+		return urls[i] < urls[j]
+	})
+	return urls
+}
+
+func StripUrlToBasePath(s string) string {
+	if s == "" {
+		return ""
+	}
+	clean := strings.Split(s, "?")[0]
+	return NormalizeUrlPath(clean)
+}
+
+func NormalizeUrlPath(s string) string {
+	if s == "" {
+		return ""
+	}
+	clean := strings.TrimPrefix(s, "https://")
+	clean = strings.TrimPrefix(clean, "http://")
+	clean = strings.TrimPrefix(clean, "www.")
+	return strings.Trim(clean, "/")
 }
