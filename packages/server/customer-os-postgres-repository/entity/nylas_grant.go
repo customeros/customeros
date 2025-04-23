@@ -8,7 +8,7 @@ import (
 )
 
 type NylasGrant struct {
-	ID                   string    `gorm:"primaryKey;type:varchar(21)" json:"id"`
+	ID                   string    `gorm:"primaryKey;type:varchar(22)" json:"id"`
 	Tenant               string    `gorm:"column:tenant;type:varchar(255);NOT NULL;index:idx_nylas_account_tenant_email,unique" json:"tenant"`
 	Email                string    `gorm:"column:email;type:varchar(255);NOT NULL;index:idx_nylas_account_tenant_email,unique" json:"email"`
 	UserId               string    `gorm:"column:user_id;type:varchar(255);NOT NULL" json:"userId"`

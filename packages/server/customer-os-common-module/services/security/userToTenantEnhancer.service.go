@@ -69,6 +69,7 @@ func TenantUserContextEnhancer(cr *neo4jrepository.Repositories, opts ...CommonS
 
 		authenticatedUserInTenant, err := checkUsernameHeader(c, tenantHeader, usernameHeader, cr, ctx, config.cache)
 		if err != nil {
+			spans.TraceError(err)
 			return
 		}
 
@@ -78,6 +79,8 @@ func TenantUserContextEnhancer(cr *neo4jrepository.Repositories, opts ...CommonS
 		c.Set(KEY_USER_EMAIL, usernameHeader)
 		c.Set(KEY_USER_ROLES, authenticatedUserInTenant.Roles)
 
+		spans.LogKV("result.completed", true)
+		spans.LogKV("result.tenant", authenticatedUserInTenant.Tenant)
 		c.Next()
 	}
 }
