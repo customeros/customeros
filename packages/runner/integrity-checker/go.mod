@@ -11,7 +11,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../../server/customer-os-postgres-repository
 
 require (
-	github.com/aws/aws-sdk-go v1.55.6
+	github.com/aws/aws-sdk-go v1.55.7
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250304155944-2c902e5beea3
