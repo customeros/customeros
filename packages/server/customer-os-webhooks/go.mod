@@ -40,7 +40,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/longrunning v0.5.7 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/99designs/gqlgen v0.17.71 // indirect
+	github.com/99designs/gqlgen v0.17.72 // indirect
 	github.com/Boostport/mjml-go v0.15.0 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect

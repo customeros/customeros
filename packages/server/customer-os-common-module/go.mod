@@ -9,7 +9,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
-	github.com/99designs/gqlgen v0.17.71
+	github.com/99designs/gqlgen v0.17.72
 	github.com/BurntSushi/toml v1.5.0
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
