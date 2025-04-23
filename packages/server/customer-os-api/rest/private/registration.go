@@ -1,9 +1,11 @@
 package private
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"io"
 	"log"
 	"net/http"
@@ -390,6 +392,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				if !isPersonalEmail {
 					tenantWithWorkspace, err := services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
 					if err != nil {
+						spans.TraceError(err)
 						return nil, err
 					}
 
@@ -405,6 +408,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				} else {
 					isNewTenant = true
 				}
+
+				spans.LogKV("isNewTenant", isNewTenant)
 
 				if isNewTenant {
 					tenantStr := ""
@@ -518,50 +523,42 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		}
 
 		if isNewTenant {
-			go func() {
-				c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-				defer cancelFunc()
+			// Post tenant creation actions
+			err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
+			if err != nil {
+				spans.TraceError(err)
+			}
 
-				ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
-				defer span.Finish()
-
-				ctx = common.WithCustomContext(ctx, &common.CustomContext{
-					Tenant: currentTenant,
-				})
-
-				err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
+			if !isPersonalEmail {
+				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 				}
 
-				if !isPersonalEmail {
-					err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+				platformOwners, err := services.Repositories.Neo4jRepositories.UserReadRepository.FindPlatformOwners(ctx)
+				if err != nil {
+					spans.TraceError(err)
+				}
+
+				for _, platformOwner := range platformOwners {
+					err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, defaultTenant)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 					}
 
-					platformOwners, err := services.Repositories.Neo4jRepositories.UserReadRepository.FindPlatformOwners(ctx)
+					_, err = services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, nil, defaultTenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
 					if err != nil {
-						tracing.TraceErr(span, err)
-					}
-
-					for _, platformOwner := range platformOwners {
-
-						err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, defaultTenant)
-						if err != nil {
-							tracing.TraceErr(span, err)
-						}
-
-						_, err := services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, nil, defaultTenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
-						if err != nil {
-							tracing.TraceErr(span, err)
-						}
+						spans.TraceError(err)
 					}
 				}
 
-				span.LogFields(tracingLog.String("result", "ok"))
-			}()
+				err = sendTenantRegistrationSlackNotification(ctx, config.Common.External.SlackConfig, defaultTenant)
+				if err != nil {
+					spans.TraceError(err)
+				}
+			}
 		}
+
 	} else {
 		currentTenant = signInRequest.Tenant
 		defaultTenant = signInRequest.Tenant
@@ -1374,4 +1371,33 @@ func handleOAuthTokenSync(ctx context.Context, services *cosapi_services.Service
 	}
 
 	return err
+}
+
+func sendTenantRegistrationSlackNotification(ctx context.Context, cfg commonconfig.SlackConfig, tenant string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "sendTenantRegistrationSlackNotification")
+	defer spans.Finish()
+
+	// Create a struct to hold the JSON data
+	type SlackMessage struct {
+		Text string `json:"text"`
+	}
+	message := SlackMessage{Text: fmt.Sprintf("New tenant registered: %s", tenant)}
+	// Convert struct to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+
+	// Send POST request
+	resp, err := http.Post(cfg.NotifyNewTenantRegisteredHook, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	spans.LogKV("result.status", resp.Status)
+
+	return nil
 }
