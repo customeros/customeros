@@ -69,6 +69,11 @@ func (s *organizationService) Start(ctx context.Context) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "organizationService.Start")
 	defer spans.Finish()
 
+	if s.natsConn == nil {
+		spans.TraceError(errors.New("NATS connection is nil"))
+		return fmt.Errorf("NATS connection is nil")
+	}
+
 	// Create a subscription for handling requests
 	sub, err := s.natsConn.Conn.QueueSubscribe(SUBSCRIBED_SUBJECT, QUEUE_GROUP, func(msg *nats.Msg) {
 		s.handleNatsMessage(ctx, msg)
