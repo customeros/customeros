@@ -47,6 +47,7 @@ func (s *authenticationService) IsInitialized() bool {
 func (a *authenticationService) CreateUserInTenant(ctx context.Context, txWithPostCommit *common_utils.TxWithPostCommit, tenant string, impersonating bool, authUserId, email, firstName, lastName string) (string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "AuthenticationService.CreateUserInTenant")
 	defer spans.Finish()
+	spans.LogKV("tenant", tenant, "email", email, "firstName", firstName, "lastName", lastName, "impersonating", impersonating, "authUserId", authUserId)
 
 	authenticatedUserInTenant, err := a.neo4j.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, tenant, email)
 	if err != nil {

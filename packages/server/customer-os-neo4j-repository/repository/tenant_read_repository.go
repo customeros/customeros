@@ -211,7 +211,7 @@ func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context
 }
 
 func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, workspaceName string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForWorkspaceProvider")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForWorkspace")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 
@@ -237,6 +237,7 @@ func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, worksp
 	})
 
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
@@ -246,6 +247,7 @@ func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, worksp
 	}
 
 	span.LogFields(log.Bool("result.found", true))
+	tracing.LogObjectAsJson(span, "result", result.(*dbtype.Node))
 	return result.(*dbtype.Node), nil
 }
 
