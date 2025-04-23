@@ -3,6 +3,7 @@ package postgres_entity
 import (
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 )
@@ -22,13 +23,16 @@ type MeetingBookingEvent struct {
 	BookingFormEmail string `gorm:"column:booking_form_email;size:255;not null;default:''" json:"bookingFormEmail"`
 	BookingFormPhone string `gorm:"column:booking_form_phone;size:255;not null;default:''" json:"bookingFormPhone"`
 
-	BookOptionEnabled                   bool   `gorm:"column:book_option_enabled;not null;default:false" json:"bookOptionEnabled"`
-	BookOptionBufferBetweenMeetingsMins int64  `gorm:"column:book_option_buffer_between_meetings_mins;not null;default:0" json:"bookOptionBufferBetweenMeetingsMins"`
-	BookOptionDaysInAdvance             int64  `gorm:"column:book_option_days_in_advance;not null;default:0" json:"bookOptionDaysInAdvance"`
-	BookOptionMinNoticeMins             int64  `gorm:"column:book_option_min_notice_mins;not null;default:0" json:"bookOptionMinNoticeMins"`
-	BookOptionRedirectLink              string `gorm:"column:book_option_redirect_link;size:1024;not null;default:''" json:"bookOptionRedirectLink"`
+	BookOptionEnabled                   bool  `gorm:"column:book_option_enabled;not null;default:false" json:"bookOptionEnabled"`
+	BookOptionBufferBetweenMeetingsMins int64 `gorm:"column:book_option_buffer_between_meetings_mins;not null;default:0" json:"bookOptionBufferBetweenMeetingsMins"`
+	BookOptionDaysInAdvance             int64 `gorm:"column:book_option_days_in_advance;not null;default:0" json:"bookOptionDaysInAdvance"`
+	BookOptionMinNoticeMins             int64 `gorm:"column:book_option_min_notice_mins;not null;default:0" json:"bookOptionMinNoticeMins"`
 
-	EmailNotificationEnabled bool `gorm:"column:email_notification_enabled;not null;default:false" json:"emailNotificationEnabled"`
+	EmailNotificationEnabled        bool                                `gorm:"column:email_notification_enabled;not null;default:false" json:"emailNotificationEnabled"`
+	Location                        string                              `gorm:"column:location;size:255;not null;default:''" json:"location"`
+	AssignmentMethod                enum.MeetingBookingAssignmentMethod `gorm:"column:assignment_method;size:255;not null;default:''" json:"assignmentMethod"`
+	ShowLogo                        bool                                `gorm:"column:show_logo;not null;default:false" json:"showLogo"`
+	BookingConfirmationRedirectLink string                              `gorm:"column:booking_confirmation_redirect_link;size:255;not null;default:''" json:"bookingConfirmationRedirectLink"`
 }
 
 func (MeetingBookingEvent) TableName() string {
