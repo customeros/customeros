@@ -5,6 +5,7 @@ COPY customer-os-common-module/. ./customer-os-common-module/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY mailsherpa-api/. ./mailsherpa-api/
+COPY core-crm/. ./core-crm/
 COPY customer-os-api/. ./customer-os-api
 
 WORKDIR /app/customer-os-api
