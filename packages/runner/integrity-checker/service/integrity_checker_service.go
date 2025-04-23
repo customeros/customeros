@@ -25,6 +25,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+type DbType string
+
+const (
+	Neo4j    DbType = "Neo4j"
+	Postgres DbType = "Postgres"
+)
+
 type IntegrityCheckerService interface {
 	RunNeo4jIntegrityCheckerQueries()
 	RunPostgresIntegrityCheckerQueries()
@@ -76,7 +83,7 @@ func (s *integrityCheckerService) RunNeo4jIntegrityCheckerQueries() {
 	spans.LogObjectAsJson("integrityCheckerResult", result)
 	s.log.Infof("Neo4j integrity checker result: %v", result)
 
-	_ = s.alertInSlack(ctx, result, "Neo4j")
+	_ = s.alertInSlack(ctx, result, Neo4j)
 }
 
 func (s *integrityCheckerService) RunPostgresIntegrityCheckerQueries() {
@@ -95,7 +102,7 @@ func (s *integrityCheckerService) RunPostgresIntegrityCheckerQueries() {
 	spans.LogObjectAsJson("integrityCheckerResult", result)
 	s.log.Infof("Postgres integrity checker result: %v", result)
 
-	_ = s.alertInSlack(ctx, result, "PostgreSQL")
+	_ = s.alertInSlack(ctx, result, Postgres)
 }
 
 func (s *integrityCheckerService) getQueriesFromS3(ctx context.Context, filename string) (model.IntegrityCheckQueries, error) {
@@ -204,7 +211,7 @@ func (s *integrityCheckerService) executePostgresQueries(ctx context.Context, qu
 	return output
 }
 
-func (s *integrityCheckerService) alertInSlack(ctx context.Context, results []integrityCheckerResult, dbType string) error {
+func (s *integrityCheckerService) alertInSlack(ctx context.Context, results []integrityCheckerResult, dbType DbType) error {
 	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.alertInSlack")
 	defer spans.Finish()
 
@@ -247,7 +254,13 @@ func (s *integrityCheckerService) alertInSlack(ctx context.Context, results []in
 	}
 
 	// do not send messages to slack if no changes from previous run
-	previousAlertMessages, err := s.cache.GetPreviousAlertMessages()
+	var previousAlertMessages []string
+	var err error
+	if dbType == Neo4j {
+		previousAlertMessages, err = s.cache.GetPreviousNeo4jAlertMessages()
+	} else {
+		previousAlertMessages, err = s.cache.GetPreviousPostgresAlertMessages()
+	}
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "error getting previous alert messages"))
 	}
@@ -256,7 +269,11 @@ func (s *integrityCheckerService) alertInSlack(ctx context.Context, results []in
 		return nil
 	}
 
-	err = s.cache.SetPreviousAlertMessages(alertMessages)
+	if dbType == Neo4j {
+		err = s.cache.SetPreviousNeo4jAlertMessages(alertMessages)
+	} else {
+		err = s.cache.SetPreviousPostgresAlertMessages(alertMessages)
+	}
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "error setting previous alert messages"))
 	}
