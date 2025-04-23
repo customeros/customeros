@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	nats_core "github.com/customeros/customeros/packages/server/core-crm/nats"
 	"github.com/customeros/customeros/packages/server/core-crm/proto/pb"
@@ -67,6 +68,11 @@ const QUEUE_GROUP = "organization-service"
 func (s *organizationService) Start(ctx context.Context) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "organizationService.Start")
 	defer spans.Finish()
+
+	if s.natsConn == nil {
+		spans.TraceError(errors.New("NATS connection is nil"))
+		return fmt.Errorf("NATS connection is nil")
+	}
 
 	// Create a subscription for handling requests
 	sub, err := s.natsConn.Conn.QueueSubscribe(SUBSCRIBED_SUBJECT, QUEUE_GROUP, func(msg *nats.Msg) {
@@ -150,5 +156,5 @@ func (s *organizationService) SetContractService(contractService interfaces.Cont
 }
 
 func (s *organizationService) IsInitialized() bool {
-	return utils.IsInitialized(s)
+	return utils.IsInitialized(s, reflect.TypeOf((*nats_core.NATSConnections)(nil)))
 }

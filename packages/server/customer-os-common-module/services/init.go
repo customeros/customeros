@@ -466,15 +466,9 @@ func CheckIsInitialized(common *CommonServices) {
 	v := reflect.ValueOf(common).Elem() // struct value
 	t := v.Type()                       // struct type
 
-	var natsType reflect.Type = reflect.TypeOf((*nats_internal.NATSConnections)(nil))
-
 	for i := 0; i < t.NumField(); i++ {
 		field := v.Field(i)
-
-		fieldType := field.Type()
-		if fieldType == natsType {
-			continue
-		}
+		fieldName := t.Field(i).Name
 
 		// We only care if the field is non-nil (pointer or interface)
 		if (field.Kind() == reflect.Ptr || field.Kind() == reflect.Interface) && !field.IsNil() {
@@ -482,14 +476,13 @@ func CheckIsInitialized(common *CommonServices) {
 			fieldType := reflect.TypeOf(fieldValue)
 
 			// Check if the underlying type has IsInitialized method
-			_, exists := fieldType.MethodByName("IsInitialized")
-			if exists {
+			if _, exists := fieldType.MethodByName("IsInitialized"); exists {
 				// Invoke IsInitialized
 				results := reflect.ValueOf(fieldValue).MethodByName("IsInitialized").Call(nil)
 				if len(results) == 1 && results[0].Kind() == reflect.Bool {
 					isInitialized := results[0].Bool()
 					if !isInitialized {
-						log.Fatalf("Service %s is not initialized", t.Field(i).Name)
+						log.Fatalf("Service %s is not initialized", fieldName)
 					}
 				}
 			}

@@ -1,42 +1,46 @@
 package utils
 
 import (
-	"log"
 	"reflect"
 )
 
-func IsInitialized(data any) bool {
+func IsInitialized(data any, skipTypes ...reflect.Type) bool {
+	if data == nil {
+		return false
+	}
+
 	v := reflect.ValueOf(data)
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return false
+		}
+		v = v.Elem()
+	}
 
-	// Check if input is a pointer
-	if v.Kind() != reflect.Ptr {
-		log.Printf("Input must be a pointer to struct")
+	if v.Kind() != reflect.Struct {
 		return false
 	}
 
-	// Check if pointer is nil
-	if v.IsNil() {
-		log.Printf("Input is nil")
-		return false
-	}
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := field.Type()
 
-	val := v.Elem()
-	// Check if pointing to a struct
-	if val.Kind() != reflect.Struct {
-		log.Printf("Input must be a pointer to struct")
-		return false
-	}
-
-	typ := val.Type()
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		fieldName := typ.Field(i).Name
-		if field.Kind() == reflect.Ptr || field.Kind() == reflect.Interface {
-			if field.IsNil() {
-				log.Printf("Field %s is not initialized", fieldName)
-				return false
+		// Skip specified types
+		shouldSkip := false
+		for _, skipType := range skipTypes {
+			if fieldType == skipType {
+				shouldSkip = true
+				break
 			}
 		}
+		if shouldSkip {
+			continue
+		}
+
+		if (field.Kind() == reflect.Ptr || field.Kind() == reflect.Interface) && field.IsNil() {
+			return false
+		}
 	}
+
 	return true
 }
