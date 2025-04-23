@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	nats_core "github.com/customeros/customeros/packages/server/core-crm/nats"
 	"github.com/customeros/customeros/packages/server/core-crm/proto/pb"
@@ -150,5 +151,5 @@ func (s *organizationService) SetContractService(contractService interfaces.Cont
 }
 
 func (s *organizationService) IsInitialized() bool {
-	return utils.IsInitialized(s)
+	return utils.IsInitialized(s, reflect.TypeOf((*nats_core.NATSConnections)(nil)))
 }
