@@ -516,7 +516,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeInvoicesAmount), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeInvoicesInvoiceStatus), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeInvoicesIssueDatePast), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeInvoicesOrganization), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeInvoicesOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case postgres_entity.TableIDTypePastInvoices:
@@ -558,7 +558,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeContactsSchools), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeContactsLanguages), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeContactsExperience), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 24, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 24, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 26, ColumnType: string(postgres_entity.ColumnViewTypeContactsCreatedAt), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
@@ -587,7 +587,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeContactsSchools), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeContactsLanguages), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeContactsExperience), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 24, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 24, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 26, ColumnType: string(postgres_entity.ColumnViewTypeContactsCreatedAt), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
@@ -663,7 +663,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeContactsCountry), Width: 100, Visible: true, Name: "Country", Filter: ""},
 				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeContactsRegion), Width: 100, Visible: true, Name: "Region", Filter: ""},
 				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeContactsCity), Width: 100, Visible: true, Name: "City", Filter: ""},
-				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: false, Name: "Updated at", Filter: ""},
+				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: true, Name: "Updated at", Filter: ""},
 				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeContactsCreatedAt), Width: 100, Visible: false, Name: "Created at", Filter: ""},
 			},
 		}
