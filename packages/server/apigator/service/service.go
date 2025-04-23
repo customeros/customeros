@@ -21,7 +21,6 @@ type UserRepository interface {
 }
 
 type Cache struct {
-	tenantsByUsers   *freecache.Cache
 	tenantsByApiKeys *freecache.Cache
 	userDetails      *freecache.Cache
 }
@@ -38,7 +37,6 @@ func (s *Service) Init(
 	userRepo UserRepository,
 ) *Service {
 	s.cache = &Cache{
-		tenantsByUsers:   freecache.NewCache(5 * 1024 * 1024),
 		tenantsByApiKeys: freecache.NewCache(5 * 1024 * 1024),
 		userDetails:      freecache.NewCache(5 * 1024 * 1024),
 	}
@@ -57,26 +55,15 @@ func (s *Service) GetTenantByUser(ctx context.Context, username string) (string,
 	defer spans.Finish()
 	spans.LogKV("username", username)
 
-	var result string
-	var err error
-
-	cached, cacheErr := s.cache.tenantsByUsers.Get([]byte(username))
-	if cacheErr != nil {
-		retrieved, err := s.userRepo.GetCurrentTenantByUserEmail(s.ctx, username)
-		if err != nil {
-			err = fmt.Errorf("failed to get current tenant by user email: %w", err)
-			spans.TraceError(err)
-		}
-		if retrieved != "" {
-			result = retrieved
-			s.cache.tenantsByUsers.Set([]byte(username), []byte(retrieved), 24*60*60)
-		}
-	} else {
-		result = string(cached)
+	foundTenant, err := s.userRepo.GetCurrentTenantByUserEmail(s.ctx, username)
+	if err != nil {
+		err = fmt.Errorf("failed to get current tenant by user email: %w", err)
+		spans.TraceError(err)
+		return "", err
 	}
 
-	spans.LogKV("result", result)
-	return result, err
+	spans.LogKV("result.foundTenant", foundTenant)
+	return foundTenant, err
 }
 
 func (s *Service) GetTenantByApiKey(apiKey string) (string, error) {
