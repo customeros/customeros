@@ -55,7 +55,7 @@ func (s *Service) GetTenantByUser(ctx context.Context, username string) (string,
 	defer spans.Finish()
 	spans.LogKV("username", username)
 
-	foundTenant, err := s.userRepo.GetCurrentTenantByUserEmail(s.ctx, username)
+	foundTenant, err := s.userRepo.GetCurrentTenantByUserEmail(ctx, username)
 	if err != nil {
 		err = fmt.Errorf("failed to get current tenant by user email: %w", err)
 		spans.TraceError(err)
