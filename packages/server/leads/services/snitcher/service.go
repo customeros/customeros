@@ -1,36 +1,47 @@
 package snitcher
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
 
+	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 )
 
-type SnitcherService interface {
-	AskSnitcher(ctx context.Context, ipAddress string) *SnitcherResponse
-}
-
-type snitcherService struct {
+type SnitcherService struct {
 	config       *config.SnitcherConfig
+	natsConn     *nats_internal.NATSConnections
 	repositories *repository.Repositories
 }
 
-func NewSnitcherService(config *config.SnitcherConfig, repos *repository.Repositories) SnitcherService {
-	return &snitcherService{
+func NewSnitcherService(config *config.SnitcherConfig, repos *repository.Repositories, natsConn *nats_internal.NATSConnections) *SnitcherService {
+	return &SnitcherService{
 		config:       config,
+		natsConn:     natsConn,
 		repositories: repos,
 	}
 }
 
-func (s *snitcherService) AskSnitcher(ctx context.Context, ip string) (*SnitcherResponse, *string, error) {
+const (
+	HTTP_TIMEOUT      = 60 * time.Second
+	MAX_RESPONSE_SIZE = 1
+)
+
+func (s *SnitcherService) AskSnitcher(ctx context.Context, ip string) (*SnitcherResponse, *string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "snitcherService.AskSnitcher")
 	defer spans.Finish()
 
 	spans.LogKV("ip", ip)
 
 	// validate if snitcher is configured
-	if s.config.SnitcherConfig.ApiKey == "" || s.config.SnitcherConfig.Url == "" {
+	if s.config.ApiKey == "" || s.config.Url == "" {
 		err := fmt.Errorf("snitcher is not configured")
 		spans.TraceError(err)
 		return nil, nil, err
@@ -42,7 +53,7 @@ func (s *snitcherService) AskSnitcher(ctx context.Context, ip string) (*Snitcher
 	}
 
 	// Create POST request with context
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.SnitcherConfig.Url, ip), nil)
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.Url, ip), nil)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, nil, fmt.Errorf("failed to create POST request: %w", err)
@@ -50,7 +61,7 @@ func (s *snitcherService) AskSnitcher(ctx context.Context, ip string) (*Snitcher
 
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.config.SnitcherConfig.ApiKey)
+	req.Header.Set("Authorization", "Bearer "+s.config.ApiKey)
 
 	// Perform the request
 	resp, err := client.Do(req)
@@ -83,7 +94,7 @@ func (s *snitcherService) AskSnitcher(ctx context.Context, ip string) (*Snitcher
 	}
 
 	// Parse the response
-	var snitcherResponse interfaces.SnitcherResponse
+	var snitcherResponse SnitcherResponse
 	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
 		spans.TraceError(err)
 		spans.LogKV("json.response.parsing", string(responseBody))

@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	es_errors "github.com/customeros/customeros/packages/server/eventstream/errors"
 	"github.com/nats-io/nats.go"
+
+	es_errors "github.com/customeros/customeros/packages/server/leads/errors"
 )
 
 type contextKey string

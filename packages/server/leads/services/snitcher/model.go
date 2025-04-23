@@ -1,5 +1,10 @@
 package snitcher
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type SnitcherResponse struct {
 	Fuzzy   bool            `json:"fuzzy"`
 	Domain  string          `json:"domain"`

@@ -15,11 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 )
 
-type IPDataService interface {
-	AskIPData(ctx context.Context, ipAddress string) *IPDataResponseBody
-}
-
-type ipDataService struct {
+type IPDataService struct {
 	config        *config.IPDataConfig
 	natsConn      *nats_internal.NATSConnections
 	repositories  *repository.Repositories
@@ -30,8 +26,8 @@ func NewIPDataService(
 	config *config.IPDataConfig,
 	natsConn *nats_internal.NATSConnections,
 	repos *repository.Repositories,
-) IPDataService {
-	return &ipDataService{
+) *IPDataService {
+	return &IPDataService{
 		config:       config,
 		natsConn:     natsConn,
 		repositories: repos,
@@ -41,8 +37,8 @@ func NewIPDataService(
 var SUBSCRIBED_SUBJECT = enum.EventAskIPData.String()
 
 // Start begins listening for  events
-func (s *ipDataService) Start(ctx context.Context) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "ipDataService.Start")
+func (s *IPDataService) Start(ctx context.Context) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IPDataService.Start")
 	defer spans.Finish()
 
 	// Create a subscription for handling requests
@@ -69,14 +65,14 @@ func (s *ipDataService) Start(ctx context.Context) error {
 }
 
 // Close gracefully shuts down the service
-func (s *ipDataService) Close() error {
+func (s *IPDataService) Close() {
 	if s.natsConn != nil {
 		s.natsConn.Close()
 	}
-	return nil
+	return
 }
 
-func (s *ipDataService) handleNatsMessage(ctx context.Context, msg *nats.Msg) {
+func (s *IPDataService) handleNatsMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = utils.WithCustomContextFromNats(ctx, msg)
 	spans, ctx := telemetry.StartServiceSpan(ctx, "ipDataService.handleNatsMessage")
 	defer spans.Finish()
@@ -88,39 +84,39 @@ func (s *ipDataService) handleNatsMessage(ctx context.Context, msg *nats.Msg) {
 	spans.TagString("nats.subject", msg.Subject)
 	spans.TagString("nats.reply", msg.Reply)
 
-	resp := &pb.EmailClassificationResponse{}
-
-	request := &pb.EmailClassificationRequest{}
-	err := proto.Unmarshal(msg.Data, request)
-	if err != nil {
-		errMsg := "Failed to parse request"
-		resp.ErrorMessage = errMsg
-		s.sendResponse(ctx, msg, resp)
-		spans.TraceError(err)
-		return
-	}
+	// resp := &pb.IdentifyVisitorRequest{}
+	//
+	// request := &pb.EmailClassificationRequest{}
+	// err := proto.Unmarshal(msg.Data, request)
+	// if err != nil {
+	// 	errMsg := "Failed to parse request"
+	// 	resp.ErrorMessage = errMsg
+	// 	s.sendResponse(ctx, msg, resp)
+	// 	spans.TraceError(err)
+	// 	return
+	// }
 
 	// Process the request
-	resp = s.AskIPData(ctx, request)
-	if resp == nil {
-		spans.TraceError(errors.New("empty response"))
-		return
-	}
-
-	s.sendResponse(ctx, msg, resp)
+	// resp = s.AskIPData(ctx, request)
+	// if resp == nil {
+	// 	spans.TraceError(errors.New("empty response"))
+	// 	return
+	// }
+	//
+	// s.sendResponse(ctx, msg, resp)
 }
 
-func (s *ipDataService) sendResponse(ctx context.Context, req *nats.Msg, resp *pb.EmailClassificationResponse) {
-	spans, _ := telemetry.StartServiceSpan(ctx, "EmailClassificationService.sendResponse")
-	defer spans.Finish()
-
-	respMessage, err := proto.Marshal(resp)
-	if err != nil {
-		spans.TraceError(err)
-		return
-	}
-	err = req.Respond(respMessage)
-	if err != nil {
-		spans.TraceError(err)
-	}
-}
+// func (s *IPDataService) sendResponse(ctx context.Context, req *nats.Msg, resp *pb.EmailClassificationResponse) {
+// 	spans, _ := telemetry.StartServiceSpan(ctx, "IPDataService.sendResponse")
+// 	defer spans.Finish()
+//
+// 	respMessage, err := proto.Marshal(resp)
+// 	if err != nil {
+// 		spans.TraceError(err)
+// 		return
+// 	}
+// 	err = req.Respond(respMessage)
+// 	if err != nil {
+// 		spans.TraceError(err)
+// 	}
+// }

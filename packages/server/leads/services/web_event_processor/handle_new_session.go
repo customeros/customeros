@@ -53,7 +53,7 @@ func (s *WebEventProcessor) processNewSession(ctx context.Context, message *pb.W
 	}
 
 	// determime lead source
-	leadSource, err := s.determineLeadSource(ctx, message.Href, message.Referrer)
+	_, err = s.determineLeadSource(ctx, message.Href, message.Referrer)
 
 	// lookup company to determine if new or existing lead
 

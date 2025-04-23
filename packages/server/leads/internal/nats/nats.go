@@ -85,9 +85,11 @@ func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, 
 	log.Println("NATS initialized successfully")
 
 	return &NATSConnections{
-		Conn:         conn,
-		JS:           js,
-		SessionCache: sessionCache.kv,
+		Conn: conn,
+		JS:   js,
+		SessionCache: &SessionCache{
+			kv: sessionCache.kv,
+		},
 	}, nil
 }
 

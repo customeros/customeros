@@ -13,11 +13,11 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
-	"github.com/customeros/customeros/packages/server/eventstream/internal/config"
-	cron_config "github.com/customeros/customeros/packages/server/eventstream/internal/cron/config"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/logger"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/telemetry"
-	"github.com/customeros/customeros/packages/server/eventstream/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	cron_config "github.com/customeros/customeros/packages/server/leads/internal/cron/config"
+	"github.com/customeros/customeros/packages/server/leads/internal/logger"
+	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 )
 
 // CONSTANTS
@@ -52,7 +52,7 @@ type CronManager struct {
 	postgres *repository.Repositories
 }
 
-func NewCronManager(cfg *config.Config, log logger.Logger, k8s kubernetes.Interface, domain interfaces.DomainService, mailbox interfaces.MailboxService, postgres *repository.Repositories) *CronManager {
+func NewCronManager(cfg *config.Config, log logger.Logger, k8s kubernetes.Interface, postgres *repository.Repositories) *CronManager {
 	return &CronManager{
 		cfg:      cfg,
 		log:      log,
@@ -171,14 +171,6 @@ func (cm *CronManager) registerJobs(c *cronv3.Cron) {
 			Schedule: cronConfig.CronScheduleHeartbeat,
 			HandlerFunc: func(ctx context.Context) {
 				cm.log.Infof("Cron heartbeat from pod: %s", podName)
-			},
-		},
-		{
-			Name:     "process_web_sessions",
-			Schedule: cronConfig.CronScheduleProcessWebSessions,
-			Group:    GroupWebSession,
-			HandlerFunc: func(ctx context.Context) {
-				cm.checkMailstackDomainReputation(ctx)
 			},
 		},
 		// Add more jobs here following the same pattern

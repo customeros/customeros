@@ -1,3 +1,3 @@
-package nginx_config_manager
+package proxy_manager
 
-type NGINXConfigManager interface{}
+type ProxyManager interface{}

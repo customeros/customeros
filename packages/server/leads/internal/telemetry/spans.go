@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/customeros/customeros/packages/server/eventstream/internal/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 )
 
 // nopCloser implements io.Closer for when tracing is disabled
