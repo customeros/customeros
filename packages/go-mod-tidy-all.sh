@@ -15,6 +15,8 @@ cd ../mailsherpa-api
 go mod tidy
 cd ../apigator
 go mod tidy
+cd ../core-crm
+go mod tidy
 cd ../..
 cd runner
 cd customer-os-data-upkeeper
