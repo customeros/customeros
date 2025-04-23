@@ -3,6 +3,7 @@ package api_organization
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"reflect"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -516,11 +517,10 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	return err
 }
 
-func (s *organizationService) GetOrganizations(parentCtx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "OrganizationService.GetOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+func (s *organizationService) GetOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetOrganizations")
+	defer spans.Finish()
+	spans.LogKV("organizationIds", organizationIds)
 
 	organizationDbNodes, err := s.repositories.OrganizationRepository.GetOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 	if err != nil {
