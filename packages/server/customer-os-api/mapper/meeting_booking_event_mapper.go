@@ -2,12 +2,13 @@ package mapper
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
-func MapMeetingBookingEventInputToEntity(input model.SaveMeetingBookingEventInput, entity *postgres_entity.MeetingBookingEvent) *postgres_entity.MeetingBookingEvent {
+func MapMeetingBookingEventInputToEntity(input model.SaveMeetingBookingEventInput, entity *postgresEntity.MeetingBookingEvent) *postgresEntity.MeetingBookingEvent {
 	if entity == nil {
-		entity = &postgres_entity.MeetingBookingEvent{}
+		entity = &postgresEntity.MeetingBookingEvent{}
 	}
 
 	if input.Title != nil {
@@ -45,18 +46,27 @@ func MapMeetingBookingEventInputToEntity(input model.SaveMeetingBookingEventInpu
 	if input.BookOptionMinNoticeMins != nil {
 		entity.BookOptionMinNoticeMins = *input.BookOptionMinNoticeMins
 	}
-	if input.BookOptionRedirectLink != nil {
-		entity.BookOptionRedirectLink = *input.BookOptionRedirectLink
-	}
 
 	if input.EmailNotificationEnabled != nil {
 		entity.EmailNotificationEnabled = *input.EmailNotificationEnabled
+	}
+	if input.BookingConfirmationRedirectLink != nil {
+		entity.BookingConfirmationRedirectLink = *input.BookingConfirmationRedirectLink
+	}
+	if input.AssignmentMethod != nil {
+		entity.AssignmentMethod = enummapper.MapMeetingBookingAssignmentMethodFromModel(*input.AssignmentMethod)
+	}
+	if input.ShowLogo != nil {
+		entity.ShowLogo = *input.ShowLogo
+	}
+	if input.Location != nil {
+		entity.Location = *input.Location
 	}
 
 	return entity
 }
 
-func MapMeetingBookingEventEntityToModel(entity *postgres_entity.MeetingBookingEvent) *model.MeetingBookingEvent {
+func MapMeetingBookingEventEntityToModel(entity *postgresEntity.MeetingBookingEvent) *model.MeetingBookingEvent {
 	if entity == nil {
 		return nil
 	}
@@ -73,14 +83,17 @@ func MapMeetingBookingEventEntityToModel(entity *postgres_entity.MeetingBookingE
 		BookOptionBufferBetweenMeetingsMins: entity.BookOptionBufferBetweenMeetingsMins,
 		BookOptionDaysInAdvance:             entity.BookOptionDaysInAdvance,
 		BookOptionMinNoticeMins:             entity.BookOptionMinNoticeMins,
-		BookOptionRedirectLink:              entity.BookOptionRedirectLink,
 		EmailNotificationEnabled:            entity.EmailNotificationEnabled,
+		BookingConfirmationRedirectLink:     entity.BookingConfirmationRedirectLink,
+		AssignmentMethod:                    enummapper.MapMeetingBookingAssignmentMethodToModel(entity.AssignmentMethod),
+		ShowLogo:                            entity.ShowLogo,
+		Location:                            entity.Location,
 		CreatedAt:                           entity.CreatedAt,
 		UpdatedAt:                           entity.UpdatedAt,
 	}
 }
 
-func MapMeetingBookingEventEntitiesToModels(entities []*postgres_entity.MeetingBookingEvent) []*model.MeetingBookingEvent {
+func MapMeetingBookingEventEntitiesToModels(entities []*postgresEntity.MeetingBookingEvent) []*model.MeetingBookingEvent {
 	if entities == nil {
 		return nil
 	}

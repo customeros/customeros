@@ -1964,22 +1964,25 @@ func (this Meeting) GetID() string { return this.ID }
 func (Meeting) IsTimelineEvent() {}
 
 type MeetingBookingEvent struct {
-	ID                                  string    `json:"id"`
-	Title                               string    `json:"title"`
-	DurationMins                        int64     `json:"durationMins"`
-	Description                         string    `json:"description"`
-	CreatedAt                           time.Time `json:"createdAt"`
-	UpdatedAt                           time.Time `json:"updatedAt"`
-	AllowedParticipants                 []string  `json:"allowedParticipants"`
-	BookingFormName                     string    `json:"bookingFormName"`
-	BookingFormEmail                    string    `json:"bookingFormEmail"`
-	BookingFormPhone                    string    `json:"bookingFormPhone"`
-	BookOptionEnabled                   bool      `json:"bookOptionEnabled"`
-	BookOptionBufferBetweenMeetingsMins int64     `json:"bookOptionBufferBetweenMeetingsMins"`
-	BookOptionDaysInAdvance             int64     `json:"bookOptionDaysInAdvance"`
-	BookOptionMinNoticeMins             int64     `json:"bookOptionMinNoticeMins"`
-	BookOptionRedirectLink              string    `json:"bookOptionRedirectLink"`
-	EmailNotificationEnabled            bool      `json:"emailNotificationEnabled"`
+	ID                                  string                         `json:"id"`
+	CreatedAt                           time.Time                      `json:"createdAt"`
+	UpdatedAt                           time.Time                      `json:"updatedAt"`
+	Title                               string                         `json:"title"`
+	DurationMins                        int64                          `json:"durationMins"`
+	Description                         string                         `json:"description"`
+	Location                            string                         `json:"location"`
+	AllowedParticipants                 []string                       `json:"allowedParticipants"`
+	BookingFormName                     string                         `json:"bookingFormName"`
+	BookingFormEmail                    string                         `json:"bookingFormEmail"`
+	BookingFormPhone                    string                         `json:"bookingFormPhone"`
+	BookOptionEnabled                   bool                           `json:"bookOptionEnabled"`
+	BookOptionBufferBetweenMeetingsMins int64                          `json:"bookOptionBufferBetweenMeetingsMins"`
+	BookOptionDaysInAdvance             int64                          `json:"bookOptionDaysInAdvance"`
+	BookOptionMinNoticeMins             int64                          `json:"bookOptionMinNoticeMins"`
+	AssignmentMethod                    MeetingBookingAssignmentMethod `json:"assignmentMethod"`
+	EmailNotificationEnabled            bool                           `json:"emailNotificationEnabled"`
+	BookingConfirmationRedirectLink     string                         `json:"bookingConfirmationRedirectLink"`
+	ShowLogo                            bool                           `json:"showLogo"`
 }
 
 type MeetingInput struct {
@@ -2754,20 +2757,23 @@ type Result struct {
 }
 
 type SaveMeetingBookingEventInput struct {
-	ID                                  *string  `json:"id,omitempty"`
-	Title                               *string  `json:"title,omitempty"`
-	DurationMins                        *int64   `json:"durationMins,omitempty"`
-	Description                         *string  `json:"description,omitempty"`
-	BookingFormName                     *string  `json:"bookingFormName,omitempty"`
-	BookingFormEmail                    *string  `json:"bookingFormEmail,omitempty"`
-	BookingFormPhone                    *string  `json:"bookingFormPhone,omitempty"`
-	BookOptionEnabled                   *bool    `json:"bookOptionEnabled,omitempty"`
-	BookOptionBufferBetweenMeetingsMins *int64   `json:"bookOptionBufferBetweenMeetingsMins,omitempty"`
-	BookOptionDaysInAdvance             *int64   `json:"bookOptionDaysInAdvance,omitempty"`
-	BookOptionMinNoticeMins             *int64   `json:"bookOptionMinNoticeMins,omitempty"`
-	BookOptionRedirectLink              *string  `json:"bookOptionRedirectLink,omitempty"`
-	EmailNotificationEnabled            *bool    `json:"emailNotificationEnabled,omitempty"`
-	AllowedParticipants                 []string `json:"allowedParticipants,omitempty"`
+	ID                                  *string                         `json:"id,omitempty"`
+	Title                               *string                         `json:"title,omitempty"`
+	DurationMins                        *int64                          `json:"durationMins,omitempty"`
+	Description                         *string                         `json:"description,omitempty"`
+	Location                            *string                         `json:"location,omitempty"`
+	BookingFormName                     *string                         `json:"bookingFormName,omitempty"`
+	BookingFormEmail                    *string                         `json:"bookingFormEmail,omitempty"`
+	BookingFormPhone                    *string                         `json:"bookingFormPhone,omitempty"`
+	BookOptionEnabled                   *bool                           `json:"bookOptionEnabled,omitempty"`
+	BookOptionBufferBetweenMeetingsMins *int64                          `json:"bookOptionBufferBetweenMeetingsMins,omitempty"`
+	BookOptionDaysInAdvance             *int64                          `json:"bookOptionDaysInAdvance,omitempty"`
+	BookOptionMinNoticeMins             *int64                          `json:"bookOptionMinNoticeMins,omitempty"`
+	EmailNotificationEnabled            *bool                           `json:"emailNotificationEnabled,omitempty"`
+	BookingConfirmationRedirectLink     *string                         `json:"bookingConfirmationRedirectLink,omitempty"`
+	ShowLogo                            *bool                           `json:"showLogo,omitempty"`
+	AssignmentMethod                    *MeetingBookingAssignmentMethod `json:"assignmentMethod,omitempty"`
+	AllowedParticipants                 []string                        `json:"allowedParticipants,omitempty"`
 }
 
 type SendEmailInput struct {
@@ -5755,6 +5761,63 @@ func (e *Market) UnmarshalJSON(b []byte) error {
 }
 
 func (e Market) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type MeetingBookingAssignmentMethod string
+
+const (
+	MeetingBookingAssignmentMethodRoundRobinMaxFairness     MeetingBookingAssignmentMethod = "ROUND_ROBIN_MAX_FAIRNESS"
+	MeetingBookingAssignmentMethodRoundRobinMaxAvailability MeetingBookingAssignmentMethod = "ROUND_ROBIN_MAX_AVAILABILITY"
+	MeetingBookingAssignmentMethodCustom                    MeetingBookingAssignmentMethod = "CUSTOM"
+)
+
+var AllMeetingBookingAssignmentMethod = []MeetingBookingAssignmentMethod{
+	MeetingBookingAssignmentMethodRoundRobinMaxFairness,
+	MeetingBookingAssignmentMethodRoundRobinMaxAvailability,
+	MeetingBookingAssignmentMethodCustom,
+}
+
+func (e MeetingBookingAssignmentMethod) IsValid() bool {
+	switch e {
+	case MeetingBookingAssignmentMethodRoundRobinMaxFairness, MeetingBookingAssignmentMethodRoundRobinMaxAvailability, MeetingBookingAssignmentMethodCustom:
+		return true
+	}
+	return false
+}
+
+func (e MeetingBookingAssignmentMethod) String() string {
+	return string(e)
+}
+
+func (e *MeetingBookingAssignmentMethod) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MeetingBookingAssignmentMethod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MeetingBookingAssignmentMethod", str)
+	}
+	return nil
+}
+
+func (e MeetingBookingAssignmentMethod) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *MeetingBookingAssignmentMethod) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e MeetingBookingAssignmentMethod) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
