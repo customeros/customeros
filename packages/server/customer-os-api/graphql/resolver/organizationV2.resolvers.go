@@ -24,15 +24,18 @@ import (
 func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*model.OrganizationUIDetails, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.UIOrganizations", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
-
 	spans.LogObjectAsJson("ids", ids)
+
+	if len(ids) == 0 {
+		return nil, nil
+	}
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	mapResponse := map[string]*model.OrganizationUIDetails{}
 	for _, id := range ids {
 		mapResponse[id] = &model.OrganizationUIDetails{
-			ID:             id,
+			ID:             "",
 			Contacts:       make([]string, 0),
 			Contracts:      make([]string, 0),
 			SocialMedia:    make([]*model.Social, 0),
@@ -70,6 +73,7 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 
 		for _, org := range *organizations {
 			mapper.MapEntityToOrganizationUIDetails(&org, (*resp)[org.ID])
+			(*resp)[org.ID].ID = org.ID
 		}
 	}(&mapResponse)
 
@@ -273,9 +277,11 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 		return nil, nil
 	}
 
-	response := make([]*model.OrganizationUIDetails, 0, len(mapResponse))
-	for _, org := range mapResponse {
-		response = append(response, org)
+	response := make([]*model.OrganizationUIDetails, 0)
+	for _, orgUiDetails := range mapResponse {
+		if orgUiDetails.ID != "" {
+			response = append(response, orgUiDetails)
+		}
 	}
 
 	return response, nil
