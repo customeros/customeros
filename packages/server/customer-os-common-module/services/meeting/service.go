@@ -170,6 +170,12 @@ func (s *meetingService) GetUserCalendarAvailability(ctx context.Context, email 
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
+	if email == "" {
+		err = fmt.Errorf("missing email")
+		spans.TraceError(err)
+		return nil, err
+	}
+
 	// Get user's calendar availability
 	availability, err := s.postgresRepository.UserCalendarAvailabilityRepository.GetByTenantAndEmail(ctx, tenant, email)
 	if err != nil {

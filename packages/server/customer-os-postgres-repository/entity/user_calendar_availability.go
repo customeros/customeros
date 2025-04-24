@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	_ "time/tzdata"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 )
@@ -167,9 +169,11 @@ func (u *UserCalendarAvailability) Validate() error {
 	if u.Timezone == "" {
 		u.Timezone = "Etc/UTC"
 	}
+	// Trim any whitespace that might have been added
+	u.Timezone = strings.TrimSpace(u.Timezone)
 	_, err := time.LoadLocation(u.Timezone)
 	if err != nil {
-		return fmt.Errorf("invalid timezone: %s", u.Timezone)
+		return fmt.Errorf("invalid timezone: %s, %s", u.Timezone, err.Error())
 	}
 
 	// Validate each day's availability

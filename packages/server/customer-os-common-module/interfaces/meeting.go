@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type MeetingService interface {
 	GetCalendarAvailabilityForTenant(ctx context.Context, startTime time.Time, endTime time.Time, duration int, timezone string) (*CalendarAvailability, error)
 	GetCalendarAvailabilityForEmail(ctx context.Context, email string, startTime time.Time, endTime time.Time, duration int, timezone string) (*CalendarAvailability, error)
 
-	GetUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error)
-	SaveUserCalendarAvailability(ctx context.Context, availability *postgres_entity.UserCalendarAvailability) (*postgres_entity.UserCalendarAvailability, error)
-	SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgres_entity.UserCalendarAvailability, error)
+	GetUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
+	SaveUserCalendarAvailability(ctx context.Context, availability *postgresEntity.UserCalendarAvailability) (*postgresEntity.UserCalendarAvailability, error)
+	SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
 }
 
 // TimeSlot represents a time slot in calendar availability
