@@ -85,8 +85,7 @@ func createPostgresTables(db *gorm.DB) {
 	db.Exec("create schema if not exists derived")
 
 	postgresDB := commonConfig.PostgresDB{
-		GormDB:      db,
-		AsyncGormDB: db,
+		GormDB: db,
 	}
 
 	err := postgresRepository.InitRepositories(&postgresDB).AutoMigrate(&postgresDB)
@@ -109,8 +108,7 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	postgresDB := &commonConfig.PostgresDB{
-		GormDB:      gormDB,
-		AsyncGormDB: gormDB,
+		GormDB: gormDB,
 	}
 
 	customerOsApiServices = cosapiservices.InitServices(
