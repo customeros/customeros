@@ -49,7 +49,7 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		return nil, err
 	}
 	if meetingBookingEvent == nil {
-		graphql.AddErrorf(ctx, "Meeting booking event not found")
+		graphql.AddErrorf(ctx, "Meeting booking event with id %s not found", input.MeetingBookingEventID)
 		return nil, nil
 	}
 

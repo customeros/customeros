@@ -16,6 +16,9 @@ func MapMeetingBookingEventInputToEntity(input model.SaveMeetingBookingEventInpu
 	}
 	if input.DurationMins != nil {
 		entity.DurationMins = *input.DurationMins
+		if entity.DurationMins%15 != 0 {
+			entity.DurationMins = ((entity.DurationMins / 15) + 1) * 15
+		}
 	}
 	if input.Description != nil {
 		entity.Description = *input.Description
