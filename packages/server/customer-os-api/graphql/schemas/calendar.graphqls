@@ -22,6 +22,19 @@ enum CalendarType {
 }
 
 """
+Response for calendar availability query
+"""
+type CalendarAvailabilityResponse {
+    days:       [DaySlot!]!
+}
+
+type DaySlot {
+    date:       Time!
+    timeSlots:  [TimeSlot!]!
+    available:  Boolean!
+}
+
+"""
 Represents a time slot in calendar availability
 """
 type TimeSlot {
@@ -34,20 +47,10 @@ type TimeSlot {
 Input for calendar availability query
 """
 input CalendarAvailabilityInput {
-    startTime:  Time!
-    endTime:    Time!
-    duration:   Int! # duration in minutes
-    timezone:   String! # e.g. "America/New_York"
-    email:      String # if provided, calendar availability for given email will be returned
-}
-
-"""
-Response for calendar availability query
-"""
-type CalendarAvailabilityResponse {
-    timeSlots: [TimeSlot!]!
-    totalUsers: Int!
-    availableUsers: Int!
+    meetingBookingEventId:  ID!
+    startTime:              Time!
+    endTime:                Time!
+    timezone:               String! # e.g. "America/New_York"
 }
 
 """
