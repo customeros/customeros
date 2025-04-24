@@ -37,7 +37,7 @@ require (
 	github.com/mrz1836/postmark v1.7.3
 	github.com/nats-io/nats.go v1.41.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.0
-	github.com/nyaruka/phonenumbers v1.6.0
+	github.com/nyaruka/phonenumbers v1.6.1
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
