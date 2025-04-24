@@ -142,8 +142,7 @@ func (h *BillingHandler) GetInvoicesForOrganization() gin.HandlerFunc {
 				Currency:      invoiceEntity.Currency.String(),
 			}
 
-			if (invoiceEntity.Status == neo4jenum.InvoiceStatusDue || invoiceEntity.Status == neo4jenum.InvoiceStatusOverdue) &&
-				(invoiceEntity.PaymentDetails.PaymentLink != "") {
+			if invoiceEntity.Status == neo4jenum.InvoiceStatusDue || invoiceEntity.Status == neo4jenum.InvoiceStatusOverdue {
 				record.PaymentLink = h.services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
 			}
 
