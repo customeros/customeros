@@ -237,7 +237,7 @@ func (s *nylasService) RevokeAccess(ctx context.Context, email string) error {
 	}
 
 	// Delete from postgres database
-	err = s.postgres.NylasGrantRepository.Delete(ctx, grant.NylasGrantId)
+	err = s.postgres.NylasGrantRepository.DeleteByGrantId(ctx, grant.NylasGrantId)
 	if err != nil {
 		spans.TraceError(err)
 		return fmt.Errorf("failed to delete Nylas grant from database: %v", err)
