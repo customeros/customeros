@@ -575,9 +575,9 @@ type ComplexityRoot struct {
 	}
 
 	DaySlot struct {
-		Available func(childComplexity int) int
-		Date      func(childComplexity int) int
-		TimeSlots func(childComplexity int) int
+		Date        func(childComplexity int) int
+		IsAvailable func(childComplexity int) int
+		TimeSlots   func(childComplexity int) int
 	}
 
 	DeleteResponse struct {
@@ -5063,19 +5063,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DayAvailability.StartHour(childComplexity), true
 
-	case "DaySlot.available":
-		if e.complexity.DaySlot.Available == nil {
-			break
-		}
-
-		return e.complexity.DaySlot.Available(childComplexity), true
-
 	case "DaySlot.date":
 		if e.complexity.DaySlot.Date == nil {
 			break
 		}
 
 		return e.complexity.DaySlot.Date(childComplexity), true
+
+	case "DaySlot.isAvailable":
+		if e.complexity.DaySlot.IsAvailable == nil {
+			break
+		}
+
+		return e.complexity.DaySlot.IsAvailable(childComplexity), true
 
 	case "DaySlot.timeSlots":
 		if e.complexity.DaySlot.TimeSlots == nil {
@@ -15226,9 +15226,9 @@ type CalendarAvailabilityResponse {
 }
 
 type DaySlot {
-    date:       Time!
-    timeSlots:  [TimeSlot!]!
-    available:  Boolean!
+    date:           Time!
+    timeSlots:      [TimeSlot!]!
+    isAvailable:    Boolean!
 }
 
 """
@@ -34510,8 +34510,8 @@ func (ec *executionContext) fieldContext_CalendarAvailabilityResponse_days(_ con
 				return ec.fieldContext_DaySlot_date(ctx, field)
 			case "timeSlots":
 				return ec.fieldContext_DaySlot_timeSlots(ctx, field)
-			case "available":
-				return ec.fieldContext_DaySlot_available(ctx, field)
+			case "isAvailable":
+				return ec.fieldContext_DaySlot_isAvailable(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DaySlot", field.Name)
 		},
@@ -47177,8 +47177,8 @@ func (ec *executionContext) fieldContext_DaySlot_timeSlots(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _DaySlot_available(ctx context.Context, field graphql.CollectedField, obj *model.DaySlot) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DaySlot_available(ctx, field)
+func (ec *executionContext) _DaySlot_isAvailable(ctx context.Context, field graphql.CollectedField, obj *model.DaySlot) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DaySlot_isAvailable(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -47191,7 +47191,7 @@ func (ec *executionContext) _DaySlot_available(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Available, nil
+		return obj.IsAvailable, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -47208,7 +47208,7 @@ func (ec *executionContext) _DaySlot_available(ctx context.Context, field graphq
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_DaySlot_available(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_DaySlot_isAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DaySlot",
 		Field:      field,
@@ -135478,8 +135478,8 @@ func (ec *executionContext) _DaySlot(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "available":
-			out.Values[i] = ec._DaySlot_available(ctx, field, obj)
+		case "isAvailable":
+			out.Values[i] = ec._DaySlot_isAvailable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

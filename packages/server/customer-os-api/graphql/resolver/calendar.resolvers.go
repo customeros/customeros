@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -39,6 +40,12 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 	defer spans.Finish()
 	spans.LogObjectAsJson("input", input)
 
+	// Validate time range
+	if input.StartTime.After(input.EndTime) {
+		graphql.AddErrorf(ctx, "End time must be after start time")
+		return nil, fmt.Errorf("invalid time range: end time must be after start time")
+	}
+
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Get meeting booking event details
@@ -70,9 +77,20 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		durationMins = ((durationMins / 15) + 1) * 15
 	}
 
-	// Return initial response with meeting booking event details
+	// Get calendar availability data
+	availabilityResult, err := r.Services.CommonServices.MeetingService.GetCalendarAvailability(ctx, input.MeetingBookingEventID, input.StartTime, input.EndTime, input.Timezone)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get calendar availability: %s", err.Error())
+		return nil, err
+	}
+
+	// Convert availability data using mapper
+	daySlots := mapper.MapCalendarAvailabilityResultToDaySlotsModel(availabilityResult)
+
+	// Return response with meeting booking event details and availability data
 	return &model.CalendarAvailabilityResponse{
-		Days:               []*model.DaySlot{}, // Will be populated in next step
+		Days:               daySlots,
 		Location:           meetingBookingEvent.Location,
 		TenantName:         tenantName,
 		TenantLogoURL:      "", // TODO: Get from tenant service when available
