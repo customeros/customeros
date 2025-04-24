@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/pkg/errors"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	servicesCommon "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 
@@ -28,8 +28,8 @@ import (
 
 type registrationService struct {
 	events       *events.EventsService
-	postgres     *postgres_repository.Repositories
-	neo4j        *neo4j_repository.Repositories
+	postgres     *postgresRepository.Repositories
+	neo4j        *neo4jRepository.Repositories
 	contact      interfaces.ContactService
 	email        interfaces.EmailService
 	flow         interfaces.FlowService
@@ -38,11 +38,12 @@ type registrationService struct {
 	postmark     interfaces.PostmarkService
 	user         interfaces.UserService
 	agentService interfaces.AgentService
+	auth         interfaces.AuthenticationService
 }
 
 func NewRegistrationService(events *events.EventsService,
-	postgres *postgres_repository.Repositories,
-	neo4j *neo4j_repository.Repositories,
+	postgres *postgresRepository.Repositories,
+	neo4j *neo4jRepository.Repositories,
 	contact interfaces.ContactService,
 	email interfaces.EmailService,
 	flow interfaces.FlowService,
@@ -51,6 +52,7 @@ func NewRegistrationService(events *events.EventsService,
 	postmark interfaces.PostmarkService,
 	user interfaces.UserService,
 	agentService interfaces.AgentService,
+	auth interfaces.AuthenticationService,
 ) interfaces.RegistrationService {
 	return &registrationService{
 		events:       events,
@@ -64,31 +66,16 @@ func NewRegistrationService(events *events.EventsService,
 		postmark:     postmark,
 		user:         user,
 		agentService: agentService,
+		auth:         auth,
 	}
-}
-
-func (s *registrationService) SetContactService(contact interfaces.ContactService) {
-	s.contact = contact
-}
-
-func (s *registrationService) SetEmailService(email interfaces.EmailService) {
-	s.email = email
-}
-
-func (s *registrationService) SetFlowService(flow interfaces.FlowService) {
-	s.flow = flow
-}
-
-func (s *registrationService) SetOrganizationService(org interfaces.OrganizationService) {
-	s.org = org
 }
 
 func (s *registrationService) IsInitialized() bool {
 	return utils.IsInitialized(s)
 }
 
-func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.PrepareDefaultTenantSetup")
+func (s *registrationService) InitialTenantSetup(ctx context.Context, loggedInUserEmail string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.InitialTenantSetup")
 	defer spans.Finish()
 
 	spans.LogKV("loggedInUserEmail", loggedInUserEmail)
@@ -169,7 +156,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 	_, err = s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
 		Email: fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN),
 	},
-		&common_srv.LinkWith{
+		&servicesCommon.LinkWith{
 			Id:   contactId,
 			Type: model.CONTACT,
 		})
@@ -184,7 +171,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	flow, err := s.flow.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
+	flow, err := s.flow.FlowMerge(ctx, nil, &neo4jEntity.FlowEntity{
 		Name:        "Cold Outbound Example",
 		DefaultName: "Cold Outbound Example",
 		Nodes: `
@@ -413,7 +400,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	_, err = s.flow.FlowSenderMerge(ctx, flow.Id, &neo4jentity.FlowSenderEntity{
+	_, err = s.flow.FlowSenderMerge(ctx, flow.Id, &neo4jEntity.FlowSenderEntity{
 		UserId: &testUser.UserId,
 	})
 	if err != nil {
@@ -541,7 +528,7 @@ func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant strin
 
 	testEmailId, err := s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
 		Email: mailboxAddress,
-	}, &common_srv.LinkWith{
+	}, &servicesCommon.LinkWith{
 		Type: model.USER,
 		Id:   testUser.UserId,
 	})
@@ -595,5 +582,31 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 		}
 	}
 
+	return nil
+}
+
+func (s *registrationService) ProvideAccessToPlatformOwners(ctx context.Context, tenant string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.ProvideAccessToPlatformOwners")
+	defer spans.Finish()
+
+	platformOwners, err := s.neo4j.UserReadRepository.FindPlatformOwners(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+
+	for _, platformOwner := range platformOwners {
+		err = s.neo4j.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, tenant)
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+
+		_, err = s.auth.CreateUserInTenant(ctx, nil, tenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+	}
 	return nil
 }

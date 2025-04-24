@@ -122,20 +122,19 @@ func (r *authenticationWriteRepository) LinkAuthenticationWithAuthenticationUser
 }
 
 func (r *authenticationWriteRepository) LinkAuthenticationUserWithTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.LinkAuthenticationUserWithTenant")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationWriteRepository.LinkAuthenticationUserWithTenant")
+	defer spans.Finish()
 
-	span.LogKV("authUserId", authUserId)
-	span.LogKV("tenant", tenant)
+	spans.LogKV("authUserId", authUserId)
+	spans.LogKV("tenant", tenant)
 
 	cypher := fmt.Sprintf(`MATCH (u:AuthenticationUser {id:$authUserId}), (t:Tenant {name:$tenant}) MERGE (u)-[:%s]->(t)`, model.HAS_WORKSPACE.String())
 	params := map[string]any{
 		"tenant":     tenant,
 		"authUserId": authUserId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -145,7 +144,7 @@ func (r *authenticationWriteRepository) LinkAuthenticationUserWithTenant(ctx con
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

@@ -350,7 +350,7 @@ func InitCommonServices(
 	agentImpl.SetListeners(agentListenerImpl)
 
 	// initialize registration service
-	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailstackImpl, orgImpl, postmarkImpl, userImpl, agentImpl)
+	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailstackImpl, orgImpl, postmarkImpl, userImpl, agentImpl, authenticationImpl)
 
 	// Initialize CommonServices struct
 	common := CommonServices{

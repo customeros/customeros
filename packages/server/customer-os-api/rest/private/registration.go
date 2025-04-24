@@ -530,26 +530,14 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			}
 
 			if !isPersonalEmail {
-				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+				err = services.CommonServices.RegistrationService.InitialTenantSetup(ctx, signInRequest.LoggedInEmail)
 				if err != nil {
 					spans.TraceError(err)
 				}
 
-				platformOwners, err := services.Repositories.Neo4jRepositories.UserReadRepository.FindPlatformOwners(ctx)
+				err = services.CommonServices.RegistrationService.ProvideAccessToPlatformOwners(ctx, defaultTenant)
 				if err != nil {
 					spans.TraceError(err)
-				}
-
-				for _, platformOwner := range platformOwners {
-					err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, defaultTenant)
-					if err != nil {
-						spans.TraceError(err)
-					}
-
-					_, err = services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, nil, defaultTenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
-					if err != nil {
-						spans.TraceError(err)
-					}
 				}
 
 				err = sendTenantRegistrationSlackNotification(ctx, config.Common.External.SlackConfig, defaultTenant)
