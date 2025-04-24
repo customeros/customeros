@@ -3,14 +3,15 @@ package registration
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/http"
 	"strings"
 
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+
+	neo4jEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/pkg/errors"
 
@@ -19,7 +20,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	servicesCommon "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailstack"
 
@@ -27,22 +28,26 @@ import (
 )
 
 type registrationService struct {
-	events       *events.EventsService
-	postgres     *postgres_repository.Repositories
-	neo4j        *neo4j_repository.Repositories
-	contact      interfaces.ContactService
-	email        interfaces.EmailService
-	flow         interfaces.FlowService
-	mailstack    interfaces.MailstackService
-	org          interfaces.OrganizationService
-	postmark     interfaces.PostmarkService
-	user         interfaces.UserService
-	agentService interfaces.AgentService
+	events         *events.EventsService
+	postgres       *postgresRepository.Repositories
+	neo4j          *neo4jRepository.Repositories
+	contact        interfaces.ContactService
+	email          interfaces.EmailService
+	flow           interfaces.FlowService
+	mailstack      interfaces.MailstackService
+	org            interfaces.OrganizationService
+	postmark       interfaces.PostmarkService
+	user           interfaces.UserService
+	agentService   interfaces.AgentService
+	auth           interfaces.AuthenticationService
+	tenantSettings interfaces.TenantSettingsService
+	workspace      interfaces.WorkspaceService
+	domain         interfaces.DomainService
 }
 
 func NewRegistrationService(events *events.EventsService,
-	postgres *postgres_repository.Repositories,
-	neo4j *neo4j_repository.Repositories,
+	postgres *postgresRepository.Repositories,
+	neo4j *neo4jRepository.Repositories,
 	contact interfaces.ContactService,
 	email interfaces.EmailService,
 	flow interfaces.FlowService,
@@ -51,44 +56,36 @@ func NewRegistrationService(events *events.EventsService,
 	postmark interfaces.PostmarkService,
 	user interfaces.UserService,
 	agentService interfaces.AgentService,
+	auth interfaces.AuthenticationService,
+	tenantSettings interfaces.TenantSettingsService,
+	workspace interfaces.WorkspaceService,
+	domain interfaces.DomainService,
 ) interfaces.RegistrationService {
 	return &registrationService{
-		events:       events,
-		postgres:     postgres,
-		neo4j:        neo4j,
-		contact:      contact,
-		email:        email,
-		flow:         flow,
-		mailstack:    mailstack,
-		org:          org,
-		postmark:     postmark,
-		user:         user,
-		agentService: agentService,
+		events:         events,
+		postgres:       postgres,
+		neo4j:          neo4j,
+		contact:        contact,
+		email:          email,
+		flow:           flow,
+		mailstack:      mailstack,
+		org:            org,
+		postmark:       postmark,
+		user:           user,
+		agentService:   agentService,
+		auth:           auth,
+		tenantSettings: tenantSettings,
+		workspace:      workspace,
+		domain:         domain,
 	}
-}
-
-func (s *registrationService) SetContactService(contact interfaces.ContactService) {
-	s.contact = contact
-}
-
-func (s *registrationService) SetEmailService(email interfaces.EmailService) {
-	s.email = email
-}
-
-func (s *registrationService) SetFlowService(flow interfaces.FlowService) {
-	s.flow = flow
-}
-
-func (s *registrationService) SetOrganizationService(org interfaces.OrganizationService) {
-	s.org = org
 }
 
 func (s *registrationService) IsInitialized() bool {
 	return utils.IsInitialized(s)
 }
 
-func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.PrepareDefaultTenantSetup")
+func (s *registrationService) InitialTenantSetup(ctx context.Context, loggedInUserEmail string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.InitialTenantSetup")
 	defer spans.Finish()
 
 	spans.LogKV("loggedInUserEmail", loggedInUserEmail)
@@ -98,32 +95,37 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 		return err
 	}
 
-	testUser, err := s.ConfigureTestMailbox(ctx)
-	if err != nil {
-		spans.TraceError(errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
-	}
-
-	if err = s.configureDefaultFlowData(ctx, testUser); err != nil {
+	if err := s.configureDefaultFlowData(ctx); err != nil {
 		spans.TraceError(errors.Wrap(err, "Error configuring test flow data during tenant onboarding"))
 	}
 
-	if err = s.createPostmarkServer(ctx); err != nil {
+	if err := s.createPostmarkServer(ctx); err != nil {
 		spans.TraceError(errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
 	}
 
-	if err = s.createDefaultAgents(ctx); err != nil {
+	if err := s.createDefaultAgents(ctx); err != nil {
 		spans.TraceError(errors.Wrap(err, "Error creating default agents during tenant onboarding"))
+	}
+
+	if err := s.setDefaultWorkspaceDetails(ctx); err != nil {
+		spans.TraceError(errors.Wrap(err, "Error setting default workspace details during tenant onboarding"))
 	}
 
 	return nil
 }
 
-func (s *registrationService) configureDefaultFlowData(ctx context.Context, testUser *interfaces.TestUserSetup) error {
+func (s *registrationService) configureDefaultFlowData(ctx context.Context) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.configureDefaultFlowData")
 	defer spans.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
 		spans.TraceError(err)
+		return err
+	}
+
+	testUser, err := s.ConfigureTestMailbox(ctx)
+	if err != nil {
+		spans.TraceError(errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
 		return err
 	}
 
@@ -169,7 +171,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 	_, err = s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
 		Email: fmt.Sprintf("%s@%s", tenant, mailstack.TEST_MAILBOX_DOMAIN),
 	},
-		&common_srv.LinkWith{
+		&servicesCommon.LinkWith{
 			Id:   contactId,
 			Type: model.CONTACT,
 		})
@@ -184,7 +186,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	flow, err := s.flow.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
+	flow, err := s.flow.FlowMerge(ctx, nil, &neo4jEntity.FlowEntity{
 		Name:        "Cold Outbound Example",
 		DefaultName: "Cold Outbound Example",
 		Nodes: `
@@ -413,7 +415,7 @@ func (s *registrationService) configureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	_, err = s.flow.FlowSenderMerge(ctx, flow.Id, &neo4jentity.FlowSenderEntity{
+	_, err = s.flow.FlowSenderMerge(ctx, flow.Id, &neo4jEntity.FlowSenderEntity{
 		UserId: &testUser.UserId,
 	})
 	if err != nil {
@@ -541,7 +543,7 @@ func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant strin
 
 	testEmailId, err := s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
 		Email: mailboxAddress,
-	}, &common_srv.LinkWith{
+	}, &servicesCommon.LinkWith{
 		Type: model.USER,
 		Id:   testUser.UserId,
 	})
@@ -589,6 +591,99 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 		}
 
 		err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *registrationService) ProvideAccessToPlatformOwners(ctx context.Context, tenant string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.ProvideAccessToPlatformOwners")
+	defer spans.Finish()
+
+	platformOwners, err := s.neo4j.UserReadRepository.FindPlatformOwners(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+
+	for _, platformOwner := range platformOwners {
+		err = s.neo4j.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, nil, platformOwner.AuthenticatedUserId, tenant)
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+
+		_, err = s.auth.CreateUserInTenant(ctx, nil, tenant, true, platformOwner.AuthenticatedUserId, platformOwner.UserPrimaryEmail, platformOwner.UserFirstname, "@ CustomerOS")
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *registrationService) setDefaultWorkspaceDetails(ctx context.Context) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.setDefaultWorkspaceDetails")
+	defer spans.Finish()
+
+	err := s.setDefaultTenantWorkspaceName(ctx)
+	if err != nil {
+		return err
+	}
+
+	// TODO set default workspace logo
+
+	return nil
+}
+
+func (s *registrationService) setDefaultTenantWorkspaceName(ctx context.Context) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.setDefaultTenantWorkspaceName")
+	defer spans.Finish()
+
+	// get workspaces
+	domains, err := s.workspace.GetWorkspaceDomainsForTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+
+	workspaceName := ""
+	for _, domain := range domains {
+		// check global organization for domain
+		globalOrg, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, domain)
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+		if globalOrg != nil && globalOrg.Name != "" {
+			workspaceName = globalOrg.Name
+			break
+		}
+	}
+
+	if workspaceName == "" && len(domains) > 0 && domains[0] != "" {
+		domainEntity, err := s.domain.GetDomain(ctx, domains[0])
+		if err != nil {
+			spans.TraceError(err)
+			return err
+		}
+		if domainEntity != nil {
+			if domainEntity.PrimaryDomain != "" {
+				workspaceName = domainEntity.PrimaryDomain
+			} else {
+				workspaceName = domainEntity.Domain
+			}
+		}
+	}
+
+	if workspaceName != "" {
+		err = s.tenantSettings.UpdateTenantSettings(ctx, data_fields.TenantSettingsFields{
+			WorkspaceName: utils.StringPtr(workspaceName),
+		})
 		if err != nil {
 			spans.TraceError(err)
 			return err

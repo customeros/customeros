@@ -528,7 +528,7 @@ func (r *queryResolver) FlowTestEmailSender(ctx context.Context) (string, error)
 	}
 
 	if testEmailAddress == "" {
-		err := r.Services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, common.GetUserEmailFromContext(ctx))
+		err := r.Services.CommonServices.RegistrationService.InitialTenantSetup(ctx, common.GetUserEmailFromContext(ctx))
 		if err != nil {
 			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "")
