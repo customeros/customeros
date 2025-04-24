@@ -21,6 +21,7 @@ type NylasService interface {
 
 	// Calendar management
 	ListCalendars(ctx context.Context, email string) ([]*Calendar, error)
+	GetDefaultCalendar(ctx context.Context, email string) (*Calendar, error)
 	GetCalendar(ctx context.Context, calendarID string) (*Calendar, error)
 
 	// Calendar operations

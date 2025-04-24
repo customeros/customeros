@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -333,6 +334,42 @@ func (s *nylasService) ListCalendars(ctx context.Context, email string) ([]*inte
 	}
 
 	return calendars, nil
+}
+
+func (s *nylasService) GetDefaultCalendar(ctx context.Context, email string) (*interfaces.Calendar, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GetDefaultCalendar")
+	defer spans.Finish()
+	spans.LogKV("email", email)
+
+	// Get all calendars for the user
+	calendars, err := s.ListCalendars(ctx, email)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to list calendars: %v", err)
+	}
+
+	if len(calendars) == 0 {
+		return nil, nil
+	}
+
+	// Look for the default calendar
+	// First try to find a calendar marked as primary
+	for _, calendar := range calendars {
+		if calendar.IsPrimary {
+			return calendar, nil
+		}
+	}
+
+	// If no primary calendar found, look for one with "primary" in the name (case insensitive)
+	for _, calendar := range calendars {
+		name := strings.ToLower(calendar.Name)
+		if strings.Contains(name, "primary") || strings.Contains(name, "default") {
+			return calendar, nil
+		}
+	}
+
+	// If still no default calendar found, return the first one
+	return calendars[0], nil
 }
 
 // Update ListEvents to use prepareNylasAccountID

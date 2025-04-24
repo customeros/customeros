@@ -3,6 +3,7 @@ package meeting
 import (
 	"context"
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -293,14 +294,41 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		meetingDurationMins = ((meetingDurationMins / 15) + 1) * 15
 	}
 
+	// 1. Get default calendar for each participant
+	type participantCalendars struct {
+		email    string
+		calendar *interfaces.Calendar
+	}
+
+	participantsData := make(map[string]participantCalendars)
+	for _, email := range meetingBookingEvent.AllowedParticipants {
+		// Get default calendar for the participant
+		calendar, err := s.nylas.GetDefaultCalendar(ctx, email)
+		if err != nil {
+			spans.TraceError(err)
+			continue
+		}
+		if calendar == nil {
+			s.log.Warn("No default calendar found for participant: %s", email)
+			continue
+		}
+
+		participantsData[email] = participantCalendars{
+			email:    email,
+			calendar: calendar,
+		}
+	}
+
+	spans.LogKV("participants_with_calendars", maps.Keys(participantsData))
+
 	// TODO: Implement the following steps:
-	// 1. Get Nylas calendars for each participant
 	// 2. Get working hours for each participant
 	// 3. Get calendar events for each participant's calendar
 	// 4. Generate time slots based on duration and rules
 	// 5. Apply meeting booking event rules
-	// 6. Convert to requested timezone
-	// 7. Return the result
+	// 6. Combine all participants' availability
+	// 7. Convert to requested timezone
+	// 8. Return the result
 
 	return &interfaces.CalendarAvailabilityResult{
 		Days: []*interfaces.DaySlot{},
