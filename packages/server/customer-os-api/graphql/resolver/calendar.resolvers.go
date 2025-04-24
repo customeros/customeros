@@ -139,6 +139,10 @@ func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]string, error)
 		"Europe/Amsterdam",    // UTC+1
 		"Europe/Warsaw",       // UTC+1
 		"Europe/Stockholm",    // UTC+1
+		"Europe/Helsinki",     // UTC+2
+		"Europe/Athens",       // UTC+2
+		"Europe/Bucharest",    // UTC+2
+		"Europe/Kyiv",         // UTC+2
 		"Europe/Istanbul",     // UTC+3
 		"Europe/Moscow",       // UTC+3
 		"Africa/Cairo",        // UTC+2
