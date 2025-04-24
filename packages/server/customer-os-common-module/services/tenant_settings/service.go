@@ -77,6 +77,7 @@ func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFi
 
 	if dataFields.IsEmpty() {
 		// nothing to update, return
+		spans.LogKV("result", "nothing to update")
 		return nil
 	}
 
