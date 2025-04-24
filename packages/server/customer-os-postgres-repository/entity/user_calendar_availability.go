@@ -218,12 +218,6 @@ func (u *UserCalendarAvailability) BeforeUpdate(tx *gorm.DB) error {
 
 // standardizeAndValidate checks if the day availability is valid and standardizes time formats
 func (d *DayAvailability) standardizeAndValidate() error {
-	if !d.Enabled {
-		d.StartHour = ""
-		d.EndHour = ""
-		return nil
-	}
-
 	// Validate start time
 	start, err := standardizeTimeFormat(d.StartHour)
 	if err != nil {
