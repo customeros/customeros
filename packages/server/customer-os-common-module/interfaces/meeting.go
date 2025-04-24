@@ -8,9 +8,6 @@ import (
 )
 
 type MeetingService interface {
-	GetCalendarAvailabilityForTenant(ctx context.Context, startTime time.Time, endTime time.Time, duration int, timezone string) (*CalendarAvailability, error)
-	GetCalendarAvailabilityForEmail(ctx context.Context, email string, startTime time.Time, endTime time.Time, duration int, timezone string) (*CalendarAvailability, error)
-
 	GetUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
 	SaveUserCalendarAvailability(ctx context.Context, availability *postgresEntity.UserCalendarAvailability) (*postgresEntity.UserCalendarAvailability, error)
 	SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
@@ -25,7 +22,5 @@ type TimeSlot struct {
 
 // CalendarAvailability represents the availability of users for a given time range
 type CalendarAvailability struct {
-	TimeSlots      []TimeSlot
-	TotalUsers     int
-	AvailableUsers int
+	TimeSlots []TimeSlot
 }

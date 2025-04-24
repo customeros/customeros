@@ -12,6 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
@@ -38,7 +39,47 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 	defer spans.Finish()
 	spans.LogObjectAsJson("input", input)
 
-	return nil, nil
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get meeting booking event details
+	meetingBookingEvent, err := r.Services.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetById(ctx, tenant, input.MeetingBookingEventID)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get meeting booking event: %s", err.Error())
+		return nil, err
+	}
+	if meetingBookingEvent == nil {
+		graphql.AddErrorf(ctx, "Meeting booking event not found")
+		return nil, nil
+	}
+
+	tenantSettings, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
+	if err != nil {
+		spans.TraceError(err)
+	}
+	tenantName := tenant
+	if tenantSettings != nil {
+		if tenantSettings.WorkspaceName != "" {
+			tenantName = tenantSettings.WorkspaceName
+		}
+	}
+
+	// Round up duration to nearest 15 minutes if needed
+	durationMins := meetingBookingEvent.DurationMins
+	if durationMins%15 != 0 {
+		durationMins = ((durationMins / 15) + 1) * 15
+	}
+
+	// Return initial response with meeting booking event details
+	return &model.CalendarAvailabilityResponse{
+		Days:               []*model.DaySlot{}, // Will be populated in next step
+		Location:           meetingBookingEvent.Location,
+		TenantName:         tenantName,
+		TenantLogoURL:      "", // TODO: Get from tenant service when available
+		DurationMins:       durationMins,
+		BookingTitle:       meetingBookingEvent.Title,
+		BookingDescription: meetingBookingEvent.Description,
+	}, nil
 }
 
 // CalendarAvailableHours is the resolver for the calendar_available_hours field.
