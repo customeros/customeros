@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -39,6 +40,19 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 	defer spans.Finish()
 	spans.LogObjectAsJson("input", input)
 
+	// Validate time range
+	if input.StartTime.After(input.EndTime) {
+		graphql.AddErrorf(ctx, "End time must be after start time")
+		return nil, fmt.Errorf("invalid time range: end time must be after start time")
+	}
+
+	// Convert input times to UTC for processing
+	startTimeUTC := input.StartTime.UTC()
+	endTimeUTC := input.EndTime.UTC()
+
+	spans.LogKV("startTimeUTC", startTimeUTC)
+	spans.LogKV("endTimeUTC", endTimeUTC)
+
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Get meeting booking event details
@@ -49,7 +63,7 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		return nil, err
 	}
 	if meetingBookingEvent == nil {
-		graphql.AddErrorf(ctx, "Meeting booking event not found")
+		graphql.AddErrorf(ctx, "Meeting booking event with id %s not found", input.MeetingBookingEventID)
 		return nil, nil
 	}
 
@@ -70,9 +84,20 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		durationMins = ((durationMins / 15) + 1) * 15
 	}
 
-	// Return initial response with meeting booking event details
+	// Get calendar availability data using UTC times
+	availabilityResult, err := r.Services.CommonServices.MeetingService.GetCalendarAvailability(ctx, input.MeetingBookingEventID, startTimeUTC, endTimeUTC, input.Timezone)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get calendar availability: %s", err.Error())
+		return nil, err
+	}
+
+	// Convert availability data using mapper
+	daySlots := mapper.MapCalendarAvailabilityResultToDaySlotsModel(availabilityResult)
+
+	// Return response with meeting booking event details and availability data
 	return &model.CalendarAvailabilityResponse{
-		Days:               []*model.DaySlot{}, // Will be populated in next step
+		Days:               daySlots,
 		Location:           meetingBookingEvent.Location,
 		TenantName:         tenantName,
 		TenantLogoURL:      "", // TODO: Get from tenant service when available
@@ -139,6 +164,10 @@ func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]string, error)
 		"Europe/Amsterdam",    // UTC+1
 		"Europe/Warsaw",       // UTC+1
 		"Europe/Stockholm",    // UTC+1
+		"Europe/Helsinki",     // UTC+2
+		"Europe/Athens",       // UTC+2
+		"Europe/Bucharest",    // UTC+2
+		"Europe/Kyiv",         // UTC+2
 		"Europe/Istanbul",     // UTC+3
 		"Europe/Moscow",       // UTC+3
 		"Africa/Cairo",        // UTC+2

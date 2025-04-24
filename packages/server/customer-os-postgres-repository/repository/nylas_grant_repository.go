@@ -13,7 +13,7 @@ type NylasGrantRepository interface {
 	GetByTenantAndEmail(ctx context.Context, tenant, email string) (*postgres_entity.NylasGrant, error)
 	GetByTenantAndUserId(ctx context.Context, tenant, userId string) (*postgres_entity.NylasGrant, error)
 	Save(ctx context.Context, grant *postgres_entity.NylasGrant) (*postgres_entity.NylasGrant, error)
-	Delete(ctx context.Context, grantId string) error
+	DeleteByGrantId(ctx context.Context, grantId string) error
 }
 
 type nylasGrantRepository struct {
@@ -86,12 +86,12 @@ func (r *nylasGrantRepository) Save(ctx context.Context, grant *postgres_entity.
 	return grant, nil
 }
 
-func (r *nylasGrantRepository) Delete(ctx context.Context, grantId string) error {
-	spans, _ := telemetry.StartPostgresSpan(ctx, "NylasGrantRepository.Delete")
+func (r *nylasGrantRepository) DeleteByGrantId(ctx context.Context, grantId string) error {
+	spans, _ := telemetry.StartPostgresSpan(ctx, "NylasGrantRepository.DeleteByGrantId")
 	defer spans.Finish()
 	spans.TagEntity(grantId)
 
-	err := r.db.Where("id = ?", grantId).Delete(&postgres_entity.NylasGrant{}).Error
+	err := r.db.Where("nylas_grant_id = ?", grantId).Delete(&postgres_entity.NylasGrant{}).Error
 	if err != nil {
 		spans.TraceError(err)
 		return err

@@ -72,6 +72,11 @@ func (r *meetingBookingEventRepository) Save(ctx context.Context, meetingBooking
 		meetingBookingEvent.Tenant = common.GetTenantFromContext(ctx)
 	}
 
+	// Ensure allowedParticipants is never null
+	if meetingBookingEvent.AllowedParticipants == nil {
+		meetingBookingEvent.AllowedParticipants = []string{}
+	}
+
 	err := r.db.Save(meetingBookingEvent).Error
 	if err != nil {
 		spans.TraceError(err)

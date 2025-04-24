@@ -1072,9 +1072,9 @@ type DayAvailabilityInput struct {
 }
 
 type DaySlot struct {
-	Date      time.Time   `json:"date"`
-	TimeSlots []*TimeSlot `json:"timeSlots"`
-	Available bool        `json:"available"`
+	Date        time.Time   `json:"date"`
+	TimeSlots   []*TimeSlot `json:"timeSlots"`
+	IsAvailable bool        `json:"isAvailable"`
 }
 
 type DeleteResponse struct {

@@ -17,7 +17,7 @@ type MeetingBookingEvent struct {
 	Title               string   `gorm:"column:title;size:255;not null" json:"title"`
 	DurationMins        int64    `gorm:"column:duration_mins;not null;default:30" json:"durationMins"`
 	Description         string   `gorm:"column:description;type:text;not null;default:''" json:"description"`
-	AllowedParticipants []string `gorm:"column:allowed_participants;type:text[];not null;default:'{}'" json:"allowedParticipants"`
+	AllowedParticipants []string `gorm:"column:allowed_participants;type:text[];default:'{}'" json:"allowedParticipants"`
 
 	BookingFormName  string `gorm:"column:booking_form_name;size:255;not null;default:''" json:"bookingFormName"`
 	BookingFormEmail string `gorm:"column:booking_form_email;size:255;not null;default:''" json:"bookingFormEmail"`

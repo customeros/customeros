@@ -3,6 +3,8 @@ package meeting
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -255,4 +257,52 @@ func (s *meetingService) SetDefaultUserCalendarAvailability(ctx context.Context,
 	}
 
 	return defaultAvailability, nil
+}
+
+// GetCalendarAvailability implements interfaces.MeetingService
+func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time, timezone string) (*interfaces.CalendarAvailabilityResult, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetCalendarAvailability")
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", map[string]interface{}{
+		"meetingBookingEventID": meetingBookingEventID,
+		"startTime":             startTime,
+		"endTime":               endTime,
+		"timezone":              timezone,
+	})
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get meeting booking event
+	meetingBookingEvent, err := s.postgres.MeetingBookingEventRepository.GetById(ctx, tenant, meetingBookingEventID)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get meeting booking event: %v", err)
+	}
+	if meetingBookingEvent == nil {
+		return nil, fmt.Errorf("meeting booking event not found")
+	}
+
+	meetingDurationMins := meetingBookingEvent.DurationMins
+	if meetingDurationMins%15 != 0 {
+		meetingDurationMins = ((meetingDurationMins / 15) + 1) * 15
+	}
+
+	// TODO: Implement the following steps:
+	// 1. Get Nylas calendars for each participant
+	// 2. Get working hours for each participant
+	// 3. Get calendar events for each participant's calendar
+	// 4. Generate time slots based on duration and rules
+	// 5. Apply meeting booking event rules
+	// 6. Convert to requested timezone
+	// 7. Return the result
+
+	return &interfaces.CalendarAvailabilityResult{
+		Days: []*interfaces.DaySlot{},
+	}, nil
 }

@@ -28,11 +28,11 @@ func (r *mutationResolver) MeetingBookingEventSave(ctx context.Context, input mo
 		entity, err = r.Services.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetById(ctx, common.GetTenantFromContext(ctx), utils.IfNotNilString(input.ID))
 		if err != nil {
 			spans.TraceError(err)
-			graphql.AddErrorf(ctx, "Meeting booking event not found")
+			graphql.AddErrorf(ctx, "Meeting booking event with id %s not found", utils.IfNotNilString(input.ID))
 			return nil, err
 		}
 		if entity == nil {
-			graphql.AddErrorf(ctx, "Meeting booking event not found")
+			graphql.AddErrorf(ctx, "Meeting booking event with id %s not found", utils.IfNotNilString(input.ID))
 			return nil, nil
 		}
 	}

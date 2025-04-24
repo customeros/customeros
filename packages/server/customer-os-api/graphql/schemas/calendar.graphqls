@@ -35,9 +35,9 @@ type CalendarAvailabilityResponse {
 }
 
 type DaySlot {
-    date:       Time!
-    timeSlots:  [TimeSlot!]!
-    available:  Boolean!
+    date:           Time!
+    timeSlots:      [TimeSlot!]!
+    isAvailable:    Boolean!
 }
 
 """
