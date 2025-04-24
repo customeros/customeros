@@ -46,6 +46,13 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		return nil, fmt.Errorf("invalid time range: end time must be after start time")
 	}
 
+	// Convert input times to UTC for processing
+	startTimeUTC := input.StartTime.UTC()
+	endTimeUTC := input.EndTime.UTC()
+
+	spans.LogKV("startTimeUTC", startTimeUTC)
+	spans.LogKV("endTimeUTC", endTimeUTC)
+
 	tenant := common.GetTenantFromContext(ctx)
 
 	// Get meeting booking event details
@@ -77,8 +84,8 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		durationMins = ((durationMins / 15) + 1) * 15
 	}
 
-	// Get calendar availability data
-	availabilityResult, err := r.Services.CommonServices.MeetingService.GetCalendarAvailability(ctx, input.MeetingBookingEventID, input.StartTime, input.EndTime, input.Timezone)
+	// Get calendar availability data using UTC times
+	availabilityResult, err := r.Services.CommonServices.MeetingService.GetCalendarAvailability(ctx, input.MeetingBookingEventID, startTimeUTC, endTimeUTC, input.Timezone)
 	if err != nil {
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to get calendar availability: %s", err.Error())
