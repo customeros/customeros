@@ -25,7 +25,13 @@ enum CalendarType {
 Response for calendar availability query
 """
 type CalendarAvailabilityResponse {
-    days:       [DaySlot!]!
+    days:               [DaySlot!]!
+    location:           String!
+    tenantName:         String!
+    tenantLogoUrl:      String!
+    durationMins:       Int64!
+    bookingTitle:       String!
+    bookingDescription: String!
 }
 
 type DaySlot {
@@ -108,12 +114,14 @@ extend type Query {
     """
     Get availability across all users in the tenant for a given time range
     """
-    calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
 
     """
     Get user's calendar available hours configuration
     """
     calendar_available_hours(email: String!): UserCalendarAvailability @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    calendar_timezones: [String!]!
 }
 
 extend type Mutation {

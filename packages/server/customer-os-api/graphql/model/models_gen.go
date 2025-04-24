@@ -350,18 +350,21 @@ type Calendar struct {
 
 // Input for calendar availability query
 type CalendarAvailabilityInput struct {
-	StartTime time.Time `json:"startTime"`
-	EndTime   time.Time `json:"endTime"`
-	Duration  int       `json:"duration"`
-	Timezone  string    `json:"timezone"`
-	Email     *string   `json:"email,omitempty"`
+	MeetingBookingEventID string    `json:"meetingBookingEventId"`
+	StartTime             time.Time `json:"startTime"`
+	EndTime               time.Time `json:"endTime"`
+	Timezone              string    `json:"timezone"`
 }
 
 // Response for calendar availability query
 type CalendarAvailabilityResponse struct {
-	TimeSlots      []*TimeSlot `json:"timeSlots"`
-	TotalUsers     int         `json:"totalUsers"`
-	AvailableUsers int         `json:"availableUsers"`
+	Days               []*DaySlot `json:"days"`
+	Location           string     `json:"location"`
+	TenantName         string     `json:"tenantName"`
+	TenantLogoURL      string     `json:"tenantLogoUrl"`
+	DurationMins       int64      `json:"durationMins"`
+	BookingTitle       string     `json:"bookingTitle"`
+	BookingDescription string     `json:"bookingDescription"`
 }
 
 type Capability struct {
@@ -1066,6 +1069,12 @@ type DayAvailabilityInput struct {
 	Enabled   bool   `json:"enabled"`
 	StartHour string `json:"startHour"`
 	EndHour   string `json:"endHour"`
+}
+
+type DaySlot struct {
+	Date      time.Time   `json:"date"`
+	TimeSlots []*TimeSlot `json:"timeSlots"`
+	Available bool        `json:"available"`
 }
 
 type DeleteResponse struct {

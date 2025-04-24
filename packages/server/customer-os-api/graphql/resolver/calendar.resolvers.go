@@ -6,11 +6,12 @@ package resolver
 
 import (
 	"context"
+	"sort"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
@@ -35,64 +36,9 @@ func (r *mutationResolver) SaveCalendarAvailableHours(ctx context.Context, input
 func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CalendarAvailability", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
+	spans.LogObjectAsJson("input", input)
 
-	spans.LogObjectAsJson("request", input)
-
-	var availability *interfaces.CalendarAvailability
-	var err error
-
-	if input.Email != nil && *input.Email != "" {
-		availability, err = r.Services.CommonServices.MeetingService.GetCalendarAvailabilityForEmail(
-			ctx,
-			*input.Email,
-			input.StartTime,
-			input.EndTime,
-			input.Duration,
-			input.Timezone,
-		)
-		if err != nil {
-			spans.TraceError(err)
-			graphql.AddErrorf(ctx, "Failed to get calendar availability")
-			return nil, nil
-		}
-	} else {
-		availability, err = r.Services.CommonServices.MeetingService.GetCalendarAvailabilityForTenant(
-			ctx,
-			input.StartTime,
-			input.EndTime,
-			input.Duration,
-			input.Timezone,
-		)
-		if err != nil {
-			spans.TraceError(err)
-			graphql.AddErrorf(ctx, "Failed to get calendar availability")
-			return nil, nil
-		}
-	}
-
-	if availability == nil {
-		spans.LogObjectAsJson("response", "No availability found")
-		return &model.CalendarAvailabilityResponse{
-			TimeSlots:      []*model.TimeSlot{},
-			TotalUsers:     0,
-			AvailableUsers: 0,
-		}, nil
-	}
-
-	timeSlots := make([]*model.TimeSlot, len(availability.TimeSlots))
-	for i, slot := range availability.TimeSlots {
-		timeSlots[i] = &model.TimeSlot{
-			StartTime:   slot.StartTime,
-			EndTime:     slot.EndTime,
-			IsAvailable: slot.IsAvailable,
-		}
-	}
-
-	return &model.CalendarAvailabilityResponse{
-		TimeSlots:      timeSlots,
-		TotalUsers:     availability.TotalUsers,
-		AvailableUsers: availability.AvailableUsers,
-	}, nil
+	return nil, nil
 }
 
 // CalendarAvailableHours is the resolver for the calendar_available_hours field.
@@ -110,4 +56,96 @@ func (r *queryResolver) CalendarAvailableHours(ctx context.Context, email string
 	}
 
 	return mapper.MapUserCalendarAvailabilityEntityToModel(userCalendarAvailabilityEntity), nil
+}
+
+// CalendarTimezones is the resolver for the calendar_timezones field.
+func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]string, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CalendarTimezones", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	// Define comprehensive list of timezone locations
+	zones := []string{
+		// UTC and GMT
+		"Etc/UTC",
+		"Etc/GMT",
+
+		// Americas (UTC-10 to UTC-3)
+		"America/Adak",         // UTC-10
+		"Pacific/Honolulu",     // UTC-10
+		"America/Anchorage",    // UTC-9
+		"America/Los_Angeles",  // UTC-8
+		"America/Phoenix",      // UTC-7
+		"America/Denver",       // UTC-7
+		"America/Chicago",      // UTC-6
+		"America/Mexico_City",  // UTC-6
+		"America/New_York",     // UTC-5
+		"America/Toronto",      // UTC-5
+		"America/Caracas",      // UTC-4
+		"America/Halifax",      // UTC-4
+		"America/Santiago",     // UTC-4
+		"America/Sao_Paulo",    // UTC-3
+		"America/Buenos_Aires", // UTC-3
+
+		// Europe & Africa (UTC-1 to UTC+3)
+		"Atlantic/Azores",     // UTC-1
+		"Europe/London",       // UTC+0
+		"Europe/Dublin",       // UTC+0
+		"Europe/Lisbon",       // UTC+0
+		"Europe/Paris",        // UTC+1
+		"Europe/Berlin",       // UTC+1
+		"Europe/Madrid",       // UTC+1
+		"Europe/Rome",         // UTC+1
+		"Europe/Amsterdam",    // UTC+1
+		"Europe/Warsaw",       // UTC+1
+		"Europe/Stockholm",    // UTC+1
+		"Europe/Istanbul",     // UTC+3
+		"Europe/Moscow",       // UTC+3
+		"Africa/Cairo",        // UTC+2
+		"Africa/Johannesburg", // UTC+2
+		"Africa/Nairobi",      // UTC+3
+
+		// Asia (UTC+3 to UTC+9)
+		"Asia/Baghdad",   // UTC+3
+		"Asia/Dubai",     // UTC+4
+		"Asia/Tehran",    // UTC+3:30
+		"Asia/Kabul",     // UTC+4:30
+		"Asia/Karachi",   // UTC+5
+		"Asia/Kolkata",   // UTC+5:30
+		"Asia/Kathmandu", // UTC+5:45
+		"Asia/Dhaka",     // UTC+6
+		"Asia/Yangon",    // UTC+6:30
+		"Asia/Bangkok",   // UTC+7
+		"Asia/Jakarta",   // UTC+7
+		"Asia/Singapore", // UTC+8
+		"Asia/Shanghai",  // UTC+8
+		"Asia/Hong_Kong", // UTC+8
+		"Asia/Taipei",    // UTC+8
+		"Asia/Seoul",     // UTC+9
+		"Asia/Tokyo",     // UTC+9
+
+		// Oceania (UTC+8 to UTC+12)
+		"Australia/Perth",     // UTC+8
+		"Australia/Darwin",    // UTC+9:30
+		"Australia/Brisbane",  // UTC+10
+		"Australia/Adelaide",  // UTC+9:30
+		"Australia/Sydney",    // UTC+10
+		"Australia/Melbourne", // UTC+10
+		"Australia/Hobart",    // UTC+10
+		"Pacific/Noumea",      // UTC+11
+		"Pacific/Auckland",    // UTC+12
+		"Pacific/Fiji",        // UTC+12
+	}
+
+	// Verify each timezone is valid
+	validZones := make([]string, 0, len(zones))
+	for _, zone := range zones {
+		if _, err := time.LoadLocation(zone); err == nil {
+			validZones = append(validZones, zone)
+		}
+	}
+
+	// Sort the timezones alphabetically
+	sort.Strings(validZones)
+
+	return validZones, nil
 }
