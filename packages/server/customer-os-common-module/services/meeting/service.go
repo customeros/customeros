@@ -3,7 +3,6 @@ package meeting
 import (
 	"context"
 	"fmt"
-	"maps"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -295,12 +294,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 	}
 
 	// 1. Get default calendar for each participant
-	type participantCalendars struct {
-		email    string
-		calendar *interfaces.Calendar
-	}
-
-	participantsData := make(map[string]participantCalendars)
+	participantsData := make(map[string]*interfaces.NylasCalendar)
 	for _, email := range meetingBookingEvent.AllowedParticipants {
 		// Get default calendar for the participant
 		calendar, err := s.nylas.GetDefaultCalendar(ctx, email)
@@ -313,13 +307,10 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 			continue
 		}
 
-		participantsData[email] = participantCalendars{
-			email:    email,
-			calendar: calendar,
-		}
+		participantsData[email] = calendar
 	}
 
-	spans.LogKV("participants_with_calendars", maps.Keys(participantsData))
+	spans.LogObjectAsJson("participants_with_calendars", participantsData)
 
 	// TODO: Implement the following steps:
 	// 2. Get working hours for each participant

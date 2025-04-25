@@ -2,6 +2,7 @@ package postgres_repository
 
 import (
 	"context"
+	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -29,7 +30,7 @@ func (r *userCalendarAvailabilityRepository) GetByTenantAndEmail(ctx context.Con
 	spans.LogKV("email", email)
 
 	var availability postgres_entity.UserCalendarAvailability
-	result := r.db.Where("tenant = ? AND email = ?", tenant, email).First(&availability)
+	result := r.db.Where("tenant = ? AND LOWER(email) = LOWER(?)", tenant, email).First(&availability)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			spans.LogKV("result.found", false)
@@ -63,6 +64,7 @@ func (r *userCalendarAvailabilityRepository) SaveOrUpdate(ctx context.Context, a
 		}
 	} else {
 		// Create new record
+		availability.Email = strings.ToLower(availability.Email)
 		result := r.db.Create(availability)
 		if result.Error != nil {
 			return nil, result.Error

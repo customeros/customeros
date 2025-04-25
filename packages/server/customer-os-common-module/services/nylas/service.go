@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -287,7 +286,7 @@ func (s *nylasService) GetGrant(ctx context.Context, email string) (*postgresEnt
 }
 
 // ListCalendars lists all calendars for a user
-func (s *nylasService) ListCalendars(ctx context.Context, email string) ([]*interfaces.Calendar, error) {
+func (s *nylasService) ListCalendars(ctx context.Context, email string) ([]*interfaces.NylasCalendar, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.ListCalendars")
 	defer spans.Finish()
 	spans.LogKV("email", email)
@@ -303,7 +302,7 @@ func (s *nylasService) ListCalendars(ctx context.Context, email string) ([]*inte
 	}
 
 	// Create request to Nylas v3 API
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v3/calendars?account_id=%s", s.config.APIUrl, grant.NylasGrantId), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v3/grants/%s/calendars?limit=200", s.config.APIUrl, grant.NylasGrantId), nil)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to create request: %v", err)
@@ -321,22 +320,29 @@ func (s *nylasService) ListCalendars(ctx context.Context, email string) ([]*inte
 	}
 	defer resp.Body.Close()
 
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
 	if resp.StatusCode != http.StatusOK {
+		spans.LogKV("response", string(bodyBytes))
 		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Parse response
-	var calendars []*interfaces.Calendar
-	if err := json.NewDecoder(resp.Body).Decode(&calendars); err != nil {
+	var response interfaces.NylasCalendarsResponse
+	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&response); err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
 
-	return calendars, nil
+	return response.Data, nil
 }
 
-func (s *nylasService) GetDefaultCalendar(ctx context.Context, email string) (*interfaces.Calendar, error) {
+func (s *nylasService) GetDefaultCalendar(ctx context.Context, email string) (*interfaces.NylasCalendar, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GetDefaultCalendar")
 	defer spans.Finish()
 	spans.LogKV("email", email)
@@ -352,23 +358,18 @@ func (s *nylasService) GetDefaultCalendar(ctx context.Context, email string) (*i
 		return nil, nil
 	}
 
-	// Look for the default calendar
 	// First try to find a calendar marked as primary
 	for _, calendar := range calendars {
 		if calendar.IsPrimary {
+			spans.LogKV("result.primaryFound", true)
+			spans.LogObjectAsJson("result.calendar", calendar)
 			return calendar, nil
 		}
 	}
 
-	// If no primary calendar found, look for one with "primary" in the name (case insensitive)
-	for _, calendar := range calendars {
-		name := strings.ToLower(calendar.Name)
-		if strings.Contains(name, "primary") || strings.Contains(name, "default") {
-			return calendar, nil
-		}
-	}
-
-	// If still no default calendar found, return the first one
+	// If no primary calendar found, return the first one
+	spans.LogKV("result.primaryFound", false)
+	spans.LogObjectAsJson("result.calendar", calendars[0])
 	return calendars[0], nil
 }
 
@@ -487,10 +488,5 @@ func (s *nylasService) DeleteEvent(ctx context.Context, calendarID string, event
 
 func (s *nylasService) GetEvent(ctx context.Context, calendarID string, eventID string) (*interfaces.CalendarEvent, error) {
 	// TODO: Implement Nylas API call to get event
-	return nil, nil
-}
-
-func (s *nylasService) GetCalendar(ctx context.Context, calendarID string) (*interfaces.Calendar, error) {
-	// TODO: Implement Nylas API call to get calendar
 	return nil, nil
 }
