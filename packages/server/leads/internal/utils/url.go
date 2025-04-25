@@ -80,3 +80,61 @@ func NormalizeUrlPath(s string) string {
 	clean = strings.TrimPrefix(clean, "www.")
 	return strings.Trim(clean, "/")
 }
+
+func IsSuspiciousURL(url string) bool {
+	suspiciousPatterns := []string{
+		"oastify.com",
+		"burpcollaborator.net",
+		"interactsh.com",
+		"/zws",
+		"xss.ht",
+		"ngrok.io",
+	}
+
+	for _, pattern := range suspiciousPatterns {
+		if strings.Contains(url, pattern) {
+			return true
+		}
+	}
+
+	// Check for very long random-looking subdomains
+	parts := strings.Split(url, "/")
+	if len(parts) >= 3 {
+		domain := parts[2]
+		if len(domain) > 30 && URLContainsRandomString(domain) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func URLContainsRandomString(s string) bool {
+	if strings.Contains(s, "google") {
+		return false
+	}
+
+	// Count letters, numbers, and special characters
+	letters := 0
+	numbers := 0
+	special := 0
+
+	for _, char := range s {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
+			letters++
+		} else if char >= '0' && char <= '9' {
+			numbers++
+		} else {
+			special++
+		}
+	}
+
+	// If it has a mix of characters and is sufficiently long
+	if letters > 0 && numbers > 0 && len(s) > 20 {
+		// Check if it has a high entropy (i.e., appears random)
+		// Simple heuristic: Over 20 chars with mixed numbers and letters
+		return true
+	}
+
+	return false
+}

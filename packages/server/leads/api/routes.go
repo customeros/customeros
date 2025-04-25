@@ -3,17 +3,26 @@ package api
 import (
 	"context"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/customeros/mailstack/api/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/vektah/gqlparser/v2/ast"
 
+	"github.com/customeros/customeros/packages/server/leads/api/graphql/generated"
+	"github.com/customeros/customeros/packages/server/leads/api/graphql/resolver"
 	"github.com/customeros/customeros/packages/server/leads/api/handlers"
-	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
+	"github.com/customeros/customeros/packages/server/leads/internal/config"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
 // RegisterRoutes sets up all API endpoints
-func RegisterRoutes(ctx context.Context, r *gin.Engine, natsConn *nats_internal.NATSConnections, repos *repository.Repositories) {
-	if natsConn == nil {
+func RegisterRoutes(ctx context.Context, r *gin.Engine, services *services.Services, repos *repository.Repositories, config *config.AppConfig) {
+	if services == nil {
 		panic("Services cannot be nil")
 	}
 	if repos == nil {
@@ -41,4 +50,59 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, natsConn *nats_internal.
 			events.POST("", apiHandlers.WebEvents.Handle())
 		}
 	}
+
+	apiKeyMiddleware := middleware.APIKeyMiddleware(middleware.APIKeyConfig{
+		HeaderName:  "X-CUSTOMER-OS-API-KEY",
+		ValidAPIKey: config.APIKey,
+	})
+
+	// GraphQL API
+	graphqlHandler, playgroundHandler := SetupGraphQLServer(services)
+
+	graphql := r.Group("/")
+	{
+		graphql.GET("/", playgroundHandler) // playground
+	}
+
+	query := r.Group("/query")
+	query.Use(apiKeyMiddleware)
+	query.Use(middleware.TenantValidationMiddleware()) // Tenant header validation
+	query.Use(middleware.UserIdMiddleware())           // UserId header parsing
+	query.Use(middleware.CustomContextMiddleware())    // Add custom context
+	query.Use(middleware.TracingMiddleware(ctx))       // Add tracing with parent context
+	{
+		query.POST("", graphqlHandler) // query
+	}
+}
+
+// SetupGraphQLServer configures and returns the GraphQL server and playground handlers
+func SetupGraphQLServer(services *services.Services) (graphqlHandler, playgroundHandler gin.HandlerFunc) {
+	// Create the resolver with dependencies
+	resolver := resolver.NewResolver(services)
+
+	// Create a new schema with your resolvers
+	schema := generated.NewExecutableSchema(generated.Config{
+		Resolvers: resolver,
+	})
+
+	// Create the GraphQL server with custom options
+	srv := handler.New(schema)
+
+	// Configure server options
+	srv.AddTransport(transport.POST{})          // Support POST requests
+	srv.AddTransport(transport.GET{})           // Support GET requests
+	srv.AddTransport(transport.MultipartForm{}) // Support multipart form
+	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+
+	// Add extensions
+	srv.Use(extension.Introspection{}) // Enable introspection
+	srv.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New[string](100),
+	})
+
+	// Create playground handler
+	playground := playground.Handler("GraphQL", "/query")
+
+	// Return handlers wrapped for Gin
+	return gin.WrapH(srv), gin.WrapH(playground)
 }

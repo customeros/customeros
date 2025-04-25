@@ -33,6 +33,7 @@ const (
 	ComponentService  = "service"
 	ComponentCronJob  = "cron"
 	ComponentRest     = "rest"
+	ComponentGraphQL  = "graphql"
 )
 
 const (
@@ -150,6 +151,13 @@ func StartPostgresSpan(ctx context.Context, operationName string, opts ...SpanOp
 	return spans, ctx
 }
 
+func StartGraphQLSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
+	spans, ctx := startSpan(ctx, operationName, opts...)
+	TagComponentGraphQL(spans)
+	SetSpanKindServer(spans)
+	return spans, ctx
+}
+
 func StartServiceSpan(ctx context.Context, operationName string, opts ...SpanOptions) (*Spans, context.Context) {
 	spans, ctx := startSpan(ctx, operationName, opts...)
 	TagComponentService(spans)
@@ -170,6 +178,15 @@ func TagComponentPostgres(spans *Spans) {
 	}
 	if spans.OTel != nil {
 		spans.OTel.SetAttributes(attribute.String(componentKey, ComponentPostgres))
+	}
+}
+
+func TagComponentGraphQL(spans *Spans) {
+	if spans == nil {
+		return
+	}
+	if spans.OTel != nil {
+		spans.OTel.SetAttributes(attribute.String(componentKey, ComponentGraphQL))
 	}
 }
 

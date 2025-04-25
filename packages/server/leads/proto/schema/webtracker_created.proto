@@ -1,13 +1,11 @@
 syntax = "proto3";
 
 package leads;
-
 option go_package = "github.com/customeros/customeros/packages/server/leads/proto/pb";
 
-message IdentifyVisitorRequest { string ip_address = 1; }
-
-message IdentifyVisitorResponse {
-  string ip_address = 1;
+message WebTrackerCreated {
+  string id = 1;
   string domain = 2;
-  string errorMessage = 3;
+  string cname_host = 3;
+  string cname_target = 4;
 }

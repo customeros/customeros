@@ -14,3 +14,12 @@ func GenerateNanoIDWithPrefix(prefix string, length int) string {
 	}
 	return fmt.Sprintf("%s_%s", prefix, id)
 }
+
+func GenerateNanoID(length int) string {
+	alphabet := "abcdefghijklmnopqrstuvwxyz0123456789"
+	id, err := gonanoid.Generate(alphabet, length)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}

@@ -1,11 +1,14 @@
 build:
-    go build .
+    go build -o .bin/app .
 
 db:
     pgcli postgresql://postgres:password@localhost:5555/mailstack
 
 debug:
     dlv debug . -- server
+
+gen-api:
+    go run github.com/99designs/gqlgen generate --config ./api/graphql/gqlgen.yml
 
 gen-proto:
     find ./proto -name "*.proto" -type f -exec \

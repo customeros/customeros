@@ -84,7 +84,7 @@ type WebTrackerEvent struct {
 	NewSession       bool                   `protobuf:"varint,3,opt,name=new_session,json=newSession,proto3" json:"new_session,omitempty"`
 	VisitorId        string                 `protobuf:"bytes,4,opt,name=visitor_id,json=visitorId,proto3" json:"visitor_id,omitempty"`
 	Ip               string                 `protobuf:"bytes,5,opt,name=ip,proto3" json:"ip,omitempty"`
-	EventType        WebTrackerEventType    `protobuf:"varint,6,opt,name=event_type,json=eventType,proto3,enum=eventstream.WebTrackerEventType" json:"event_type,omitempty"`
+	EventType        WebTrackerEventType    `protobuf:"varint,6,opt,name=event_type,json=eventType,proto3,enum=leads.WebTrackerEventType" json:"event_type,omitempty"`
 	EventData        string                 `protobuf:"bytes,7,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`
 	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	Href             string                 `protobuf:"bytes,9,opt,name=href,proto3" json:"href,omitempty"`
@@ -229,7 +229,7 @@ var File_schema_webtracker_event_proto protoreflect.FileDescriptor
 
 const file_schema_webtracker_event_proto_rawDesc = "" +
 	"\n" +
-	"\x1dschema/webtracker_event.proto\x12\veventstream\x1a\x1fgoogle/protobuf/timestamp.proto\"\xeb\x03\n" +
+	"\x1dschema/webtracker_event.proto\x12\x05leads\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe5\x03\n" +
 	"\x0fWebTrackerEvent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -238,9 +238,9 @@ const file_schema_webtracker_event_proto_rawDesc = "" +
 	"newSession\x12\x1d\n" +
 	"\n" +
 	"visitor_id\x18\x04 \x01(\tR\tvisitorId\x12\x0e\n" +
-	"\x02ip\x18\x05 \x01(\tR\x02ip\x12?\n" +
+	"\x02ip\x18\x05 \x01(\tR\x02ip\x129\n" +
 	"\n" +
-	"event_type\x18\x06 \x01(\x0e2 .eventstream.WebTrackerEventTypeR\teventType\x12\x1d\n" +
+	"event_type\x18\x06 \x01(\x0e2\x1a.leads.WebTrackerEventTypeR\teventType\x12\x1d\n" +
 	"\n" +
 	"event_data\x18\a \x01(\tR\teventData\x128\n" +
 	"\ttimestamp\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
@@ -257,7 +257,7 @@ const file_schema_webtracker_event_proto_rawDesc = "" +
 	"\x15WEB_TRACKER_PAGE_EXIT\x10\x01\x12\x19\n" +
 	"\x15WEB_TRACKER_PAGE_VIEW\x10\x02\x12\x15\n" +
 	"\x11WEB_TRACKER_CLICK\x10\x03\x12\x18\n" +
-	"\x14WEB_TRACKER_IDENTIFY\x10\x04BGZEgithub.com/customeros/customeros/packages/server/eventstream/proto/pbb\x06proto3"
+	"\x14WEB_TRACKER_IDENTIFY\x10\x04BAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
 
 var (
 	file_schema_webtracker_event_proto_rawDescOnce sync.Once
@@ -274,13 +274,13 @@ func file_schema_webtracker_event_proto_rawDescGZIP() []byte {
 var file_schema_webtracker_event_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_schema_webtracker_event_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_schema_webtracker_event_proto_goTypes = []any{
-	(WebTrackerEventType)(0),      // 0: eventstream.WebTrackerEventType
-	(*WebTrackerEvent)(nil),       // 1: eventstream.WebTrackerEvent
+	(WebTrackerEventType)(0),      // 0: leads.WebTrackerEventType
+	(*WebTrackerEvent)(nil),       // 1: leads.WebTrackerEvent
 	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
 }
 var file_schema_webtracker_event_proto_depIdxs = []int32{
-	0, // 0: eventstream.WebTrackerEvent.event_type:type_name -> eventstream.WebTrackerEventType
-	2, // 1: eventstream.WebTrackerEvent.timestamp:type_name -> google.protobuf.Timestamp
+	0, // 0: leads.WebTrackerEvent.event_type:type_name -> leads.WebTrackerEventType
+	2, // 1: leads.WebTrackerEvent.timestamp:type_name -> google.protobuf.Timestamp
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

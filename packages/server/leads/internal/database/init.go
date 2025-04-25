@@ -2,11 +2,9 @@ package database
 
 import (
 	"log"
-
-	"gorm.io/gorm"
 )
 
-func InitDatabase(dbConfig *DatabaseConfig) (*gorm.DB, error) {
+func InitDatabase(dbConfig *DatabaseConfig) (*DbConnections, error) {
 	db, err := NewConnection(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)

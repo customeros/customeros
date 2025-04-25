@@ -1,0 +1,23 @@
+scalar Time
+
+type Query
+type Mutation
+
+input PaginationInput {
+  offset: Int
+  limit: Int
+}
+
+# Standard pagination metadata
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Generic connection interface that specific connections can implement
+interface Connection {
+  pageInfo: PageInfo!
+  totalCount: Int!
+}

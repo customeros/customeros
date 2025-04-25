@@ -38,7 +38,7 @@ type CampaignMetadata struct {
 	UTMContent  string
 }
 
-func (s *WebEventProcessor) processNewSession(ctx context.Context, message *pb.WebTrackerEvent) error {
+func (s *webEventProcessor) processNewSession(ctx context.Context, message *pb.WebTrackerEvent) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "WebEventProcessor.processNewSession")
 	defer spans.Finish()
 
@@ -64,7 +64,7 @@ func (s *WebEventProcessor) processNewSession(ctx context.Context, message *pb.W
 	return nil
 }
 
-func (s *WebEventProcessor) determineLeadSource(ctx context.Context, href, referrer string) (LeadSource, error) {
+func (s *webEventProcessor) determineLeadSource(ctx context.Context, href, referrer string) (LeadSource, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "WebEventProcessor.determineLeadSource")
 	defer spans.Finish()
 
@@ -231,7 +231,7 @@ func parseCampaignMetadata(href *utils.URLComponents) *CampaignMetadata {
 	return metadata
 }
 
-func (s *WebEventProcessor) identifyWebSession(ctx context.Context, ipAddress string) (*pb.IdentifyVisitorResponse, error) {
+func (s *webEventProcessor) identifyWebSession(ctx context.Context, ipAddress string) (*pb.IdentifyVisitorResponse, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "WebEventProcessor.identifyWebSession")
 	defer spans.Finish()
 
@@ -255,7 +255,7 @@ func (s *WebEventProcessor) identifyWebSession(ctx context.Context, ipAddress st
 	return resp, nil
 }
 
-func (s *WebEventProcessor) sendIdentifyVisitorRequest(ctx context.Context, request *pb.IdentifyVisitorRequest) (*pb.IdentifyVisitorResponse, error) {
+func (s *webEventProcessor) sendIdentifyVisitorRequest(ctx context.Context, request *pb.IdentifyVisitorRequest) (*pb.IdentifyVisitorResponse, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "WebEventProcessor.sendIdentifyVisitorRequest")
 	defer spans.Finish()
 
@@ -267,7 +267,7 @@ func (s *WebEventProcessor) sendIdentifyVisitorRequest(ctx context.Context, requ
 	}
 
 	// Send request to service
-	msg := nats.NewMsg(enum.EventIdentifyVisitor.String())
+	msg := nats.NewMsg(enum.EventAskSnitcher.String())
 	msg.Header = nats.Header{
 		enum.TENANT_HEADER:  []string{utils.GetTenantFromContext(ctx)},
 		enum.USER_ID_HEADER: []string{utils.GetUserIdFromContext(ctx)},

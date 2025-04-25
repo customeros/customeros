@@ -31,7 +31,8 @@ func main() {
 	leadsDB, err := database.InitDatabase(&database.DatabaseConfig{
 		DBName:          cfg.LeadsDatabaseConfig.DBName,
 		Host:            cfg.LeadsDatabaseConfig.Host,
-		Port:            cfg.LeadsDatabaseConfig.Port,
+		ReadPort:        cfg.LeadsDatabaseConfig.ReadPort,
+		WritePort:       cfg.LeadsDatabaseConfig.WritePort,
 		User:            cfg.LeadsDatabaseConfig.User,
 		Password:        cfg.LeadsDatabaseConfig.Password,
 		MaxConn:         cfg.LeadsDatabaseConfig.MaxConn,
@@ -46,7 +47,8 @@ func main() {
 	warehouseDB, err := database.InitDatabase(&database.DatabaseConfig{
 		DBName:          cfg.DataWarehouseConfig.DBName,
 		Host:            cfg.DataWarehouseConfig.Host,
-		Port:            cfg.DataWarehouseConfig.Port,
+		ReadPort:        cfg.DataWarehouseConfig.ReadPort,
+		WritePort:       cfg.DataWarehouseConfig.WritePort,
 		User:            cfg.DataWarehouseConfig.User,
 		Password:        cfg.DataWarehouseConfig.Password,
 		MaxConn:         cfg.DataWarehouseConfig.MaxConn,
