@@ -30,17 +30,15 @@ func MapDaySlotToModel(daySlot *interfaces.DaySlot) *model.DaySlot {
 	}
 
 	return &model.DaySlot{
-		Date:        daySlot.Date,
-		TimeSlots:   timeSlots,
-		IsAvailable: daySlot.IsAvailable,
+		Date:      daySlot.Date,
+		TimeSlots: timeSlots,
 	}
 }
 
 // MapTimeSlotToModel converts from interface TimeSlot to GraphQL model
 func MapTimeSlotToModel(timeSlot interfaces.TimeSlot) *model.TimeSlot {
 	return &model.TimeSlot{
-		StartTime:   timeSlot.StartTime,
-		EndTime:     timeSlot.EndTime,
-		IsAvailable: timeSlot.IsAvailable,
+		StartTime: timeSlot.StartTime,
+		EndTime:   timeSlot.EndTime,
 	}
 }

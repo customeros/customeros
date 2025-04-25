@@ -390,7 +390,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		}
 	}
 
-	// 2c. Apply booking option restrictions if enabled
+	// 2c. Apply booking option restrictions for minimum notice and maximum advance if enabled
 	if meetingBookingEvent.BookOptionEnabled {
 		now := utils.Now()
 		minNotice := meetingBookingEvent.BookOptionMinNoticeMins
@@ -432,9 +432,21 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		convertedParticipantTimeSlots[email] = convertedSlots
 	}
 
-	// 4. Group time slots into day slots
+	// 4a. Remove time slots that are not available
+	filteredParticipantTimeSlots := make(map[string][]*interfaces.TimeSlot)
+	for email, slots := range convertedParticipantTimeSlots {
+		availableSlots := make([]*interfaces.TimeSlot, 0)
+		for _, slot := range slots {
+			if slot.IsAvailable {
+				availableSlots = append(availableSlots, slot)
+			}
+		}
+		filteredParticipantTimeSlots[email] = availableSlots
+	}
+
+	// 4b. Group time slots into day slots
 	var daySlots []*interfaces.DaySlot
-	for _, slots := range convertedParticipantTimeSlots {
+	for _, slots := range filteredParticipantTimeSlots {
 		daySlots = convertTimeSlotsToDaySlots(slots)
 		// Only process first participant
 		break
