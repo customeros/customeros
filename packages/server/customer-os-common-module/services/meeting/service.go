@@ -9,6 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
@@ -383,6 +384,37 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 			// Check each slot against user's calendar availability
 			for _, slot := range slots {
 				if !isSlotInUserAvailability(slot, userAvailability) {
+					slot.IsAvailable = false
+				}
+			}
+		}
+	}
+
+	// 2c. Apply booking option restrictions if enabled
+	if meetingBookingEvent.BookOptionEnabled {
+		now := utils.Now()
+		minNotice := meetingBookingEvent.BookOptionMinNoticeMins
+		if minNotice < 0 {
+			minNotice = 0
+		}
+		maxAdvance := meetingBookingEvent.BookOptionDaysInAdvance
+		if maxAdvance < 0 {
+			maxAdvance = 1
+		}
+		minNoticeTime := now.Add(time.Duration(minNotice) * time.Minute)
+		maxAdvanceTime := now.AddDate(0, 0, int(maxAdvance))
+
+		// Apply restrictions to all participants' slots
+		for _, slots := range participantTimeSlots {
+			for _, slot := range slots {
+				// Mark slot as unavailable if it's before minimum notice time
+				if slot.StartTime.Before(minNoticeTime) {
+					slot.IsAvailable = false
+					continue
+				}
+
+				// Mark slot as unavailable if it's after maximum advance time
+				if slot.StartTime.After(maxAdvanceTime) {
 					slot.IsAvailable = false
 				}
 			}
