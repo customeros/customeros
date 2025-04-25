@@ -62,7 +62,7 @@ func (s *tenantService) CheckOnboarding() {
 
 	for _, tenantDbNode := range tenantDbNodes {
 		func(tenantDbNode *dbtype.Node) {
-			recordSpans, ctx := telemetry.StartCronSpan(ctx, "TenantService.CheckOnboarding.Record")
+			recordSpans, ctx := telemetry.StartCronSpan(ctx, "TenantService.CheckOnboarding.Record", telemetry.WithNewRoot())
 			defer recordSpans.Finish()
 
 			tenantEntity := neo4jmapper.MapDbNodeToTenantEntity(tenantDbNode)
@@ -83,6 +83,7 @@ func (s *tenantService) CheckOnboarding() {
 			//s.checkWebVisitorAgents(innerCtx, tenantEntity.Name) // temporary disabled
 			//s.checkIcpQualificationAgents(innerCtx, tenantEntity.Name) // temporary disabled
 			s.checkTestMailbox(innerCtx, tenantEntity.Name)
+			s.checkTenantPresentInWorkspaceSwitcher(innerCtx, tenantEntity.Name)
 		}(tenantDbNode)
 	}
 }
@@ -195,4 +196,16 @@ func (s *tenantService) checkTestMailbox(ctx context.Context, tenant string) {
 	}
 
 	spans.LogKV("result.created", true)
+}
+
+func (s *tenantService) checkTenantPresentInWorkspaceSwitcher(ctx context.Context, tenant string) {
+	spans, ctx := telemetry.StartCronSpan(ctx, "TenantService.checkTenantPresentInWorkspaceSwitcher")
+	defer spans.Finish()
+
+	// just assign the tenant to the platform owners, method is idempotent
+	err := s.commonServices.RegistrationService.ProvideAccessToPlatformOwners(ctx, tenant)
+	if err != nil {
+		spans.TraceError(errors.Wrap(err, "failed to provide access to platform owners"))
+		s.log.Errorf("Error providing access to platform owners: %s", err.Error())
+	}
 }
