@@ -530,12 +530,12 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			}
 
 			if !isPersonalEmail {
-				err = services.CommonServices.RegistrationService.InitialTenantSetup(ctx, signInRequest.LoggedInEmail)
+				err = services.CommonServices.RegistrationService.ProvideAccessToPlatformOwners(ctx, defaultTenant)
 				if err != nil {
 					spans.TraceError(err)
 				}
 
-				err = services.CommonServices.RegistrationService.ProvideAccessToPlatformOwners(ctx, defaultTenant)
+				err = services.CommonServices.RegistrationService.InitialTenantSetup(ctx, signInRequest.LoggedInEmail)
 				if err != nil {
 					spans.TraceError(err)
 				}
