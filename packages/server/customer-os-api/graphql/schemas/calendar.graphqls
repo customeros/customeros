@@ -37,7 +37,6 @@ type CalendarAvailabilityResponse {
 type DaySlot {
     date:           Time!
     timeSlots:      [TimeSlot!]!
-    isAvailable:    Boolean!
 }
 
 """
@@ -46,7 +45,6 @@ Represents a time slot in calendar availability
 type TimeSlot {
     startTime: Time!
     endTime: Time!
-    isAvailable: Boolean!
 }
 
 """

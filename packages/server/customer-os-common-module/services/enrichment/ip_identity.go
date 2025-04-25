@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"io"
 	"net/http"
 	"time"
@@ -46,6 +47,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 	snitcherResponse, respString, err := s.callSnitcher(ctx, ip)
 	if err != nil {
 		spans.TraceError(err)
+		spans.LogKV("result.rawSnitcherResponse", utils.IfNotNilString(respString))
 		return nil, fmt.Errorf("failed to call snitcher: %w", err)
 	}
 

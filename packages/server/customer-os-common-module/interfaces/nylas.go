@@ -19,40 +19,10 @@ type NylasService interface {
 	RevokeAccess(ctx context.Context, email string) error
 	GetGrant(ctx context.Context, email string) (*postgres_entity.NylasGrant, error)
 
-	// Calendar management
+	// Calendar operations
 	ListCalendars(ctx context.Context, email string) ([]*NylasCalendar, error)
 	GetDefaultCalendar(ctx context.Context, email string) (*NylasCalendar, error)
-
-	// Calendar operations
-	CreateEvent(ctx context.Context, calendarID string, event *CalendarEvent) (*CalendarEvent, error)
-	UpdateEvent(ctx context.Context, calendarID string, eventID string, event *CalendarEvent) (*CalendarEvent, error)
-	DeleteEvent(ctx context.Context, calendarID string, eventID string) error
-	GetEvent(ctx context.Context, calendarID string, eventID string) (*CalendarEvent, error)
-	ListEvents(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*CalendarEvent, error)
-}
-
-type CalendarEvent struct {
-	ID           string
-	Title        string
-	Description  string
-	StartTime    time.Time
-	EndTime      time.Time
-	Location     string
-	Participants []Participant
-	Recurrence   *Recurrence
-	Status       string
-}
-
-type Participant struct {
-	Email  string
-	Name   string
-	Status string // accepted, declined, tentative
-}
-
-type Recurrence struct {
-	Frequency string // daily, weekly, monthly, yearly
-	Interval  int
-	Until     time.Time
+	GetCalendarAvailability(ctx context.Context, email, calendarID string, startTime, endTime time.Time, bufferBefore, bufferAfter int) (*NylasAvailabilityResponse, error)
 }
 
 type NylasCalendarsResponse struct {
@@ -74,4 +44,53 @@ type NylasCalendar struct {
 	Object             string                 `json:"object"`
 	ReadOnly           bool                   `json:"read_only"`
 	Timezone           string                 `json:"timezone"`
+}
+
+type NylasAvailabilityParticipant struct {
+	Email       string   `json:"email"`
+	CalendarIds []string `json:"calendar_ids,omitempty"`
+	OpenHours   []struct {
+		Days     []int    `json:"days"`
+		Timezone string   `json:"timezone"`
+		Start    string   `json:"start"`
+		End      string   `json:"end"`
+		Exdates  []string `json:"exdates"`
+	} `json:"open_hours,omitempty"`
+}
+
+type NylasAvailabilityRules struct {
+	AvailabilityMethod string `json:"availability_method"`
+	Buffer             struct {
+		Before int `json:"before"`
+		After  int `json:"after"`
+	} `json:"buffer"`
+	TentativeAsBusy  bool `json:"tentative_as_busy"`
+	DefaultOpenHours []struct {
+		Days     []int    `json:"days"`
+		Timezone string   `json:"timezone"`
+		Start    string   `json:"start"`
+		End      string   `json:"end"`
+		Exdates  []string `json:"exdates"`
+	} `json:"default_open_hours"`
+}
+
+type NylasAvailabilityRequest struct {
+	Participants      []NylasAvailabilityParticipant `json:"participants"`
+	StartTime         int64                          `json:"start_time"`
+	EndTime           int64                          `json:"end_time"`
+	IntervalMinutes   int                            `json:"interval_minutes"`
+	DurationMinutes   int                            `json:"duration_minutes"`
+	RoundTo           int                            `json:"round_to"`
+	AvailabilityRules NylasAvailabilityRules         `json:"availability_rules"`
+}
+
+type NylasAvailabilityResponse struct {
+	RequestID string `json:"request_id"`
+	Data      struct {
+		Order     []string `json:"order"`
+		TimeSlots []struct {
+			StartTime int64 `json:"start_time"`
+			EndTime   int64 `json:"end_time"`
+		} `json:"time_slots"`
+	} `json:"data"`
 }

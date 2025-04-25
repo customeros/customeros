@@ -575,9 +575,8 @@ type ComplexityRoot struct {
 	}
 
 	DaySlot struct {
-		Date        func(childComplexity int) int
-		IsAvailable func(childComplexity int) int
-		TimeSlots   func(childComplexity int) int
+		Date      func(childComplexity int) int
+		TimeSlots func(childComplexity int) int
 	}
 
 	DeleteResponse struct {
@@ -1994,9 +1993,8 @@ type ComplexityRoot struct {
 	}
 
 	TimeSlot struct {
-		EndTime     func(childComplexity int) int
-		IsAvailable func(childComplexity int) int
-		StartTime   func(childComplexity int) int
+		EndTime   func(childComplexity int) int
+		StartTime func(childComplexity int) int
 	}
 
 	User struct {
@@ -5069,13 +5067,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DaySlot.Date(childComplexity), true
-
-	case "DaySlot.isAvailable":
-		if e.complexity.DaySlot.IsAvailable == nil {
-			break
-		}
-
-		return e.complexity.DaySlot.IsAvailable(childComplexity), true
 
 	case "DaySlot.timeSlots":
 		if e.complexity.DaySlot.TimeSlots == nil {
@@ -14220,13 +14211,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.TimeSlot.EndTime(childComplexity), true
 
-	case "TimeSlot.isAvailable":
-		if e.complexity.TimeSlot.IsAvailable == nil {
-			break
-		}
-
-		return e.complexity.TimeSlot.IsAvailable(childComplexity), true
-
 	case "TimeSlot.startTime":
 		if e.complexity.TimeSlot.StartTime == nil {
 			break
@@ -15228,7 +15212,6 @@ type CalendarAvailabilityResponse {
 type DaySlot {
     date:           Time!
     timeSlots:      [TimeSlot!]!
-    isAvailable:    Boolean!
 }
 
 """
@@ -15237,7 +15220,6 @@ Represents a time slot in calendar availability
 type TimeSlot {
     startTime: Time!
     endTime: Time!
-    isAvailable: Boolean!
 }
 
 """
@@ -34510,8 +34492,6 @@ func (ec *executionContext) fieldContext_CalendarAvailabilityResponse_days(_ con
 				return ec.fieldContext_DaySlot_date(ctx, field)
 			case "timeSlots":
 				return ec.fieldContext_DaySlot_timeSlots(ctx, field)
-			case "isAvailable":
-				return ec.fieldContext_DaySlot_isAvailable(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DaySlot", field.Name)
 		},
@@ -47168,54 +47148,8 @@ func (ec *executionContext) fieldContext_DaySlot_timeSlots(_ context.Context, fi
 				return ec.fieldContext_TimeSlot_startTime(ctx, field)
 			case "endTime":
 				return ec.fieldContext_TimeSlot_endTime(ctx, field)
-			case "isAvailable":
-				return ec.fieldContext_TimeSlot_isAvailable(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TimeSlot", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DaySlot_isAvailable(ctx context.Context, field graphql.CollectedField, obj *model.DaySlot) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DaySlot_isAvailable(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsAvailable, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DaySlot_isAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DaySlot",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -118726,50 +118660,6 @@ func (ec *executionContext) fieldContext_TimeSlot_endTime(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _TimeSlot_isAvailable(ctx context.Context, field graphql.CollectedField, obj *model.TimeSlot) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TimeSlot_isAvailable(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.IsAvailable, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TimeSlot_isAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TimeSlot",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -135478,11 +135368,6 @@ func (ec *executionContext) _DaySlot(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "isAvailable":
-			out.Values[i] = ec._DaySlot_isAvailable(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -148283,11 +148168,6 @@ func (ec *executionContext) _TimeSlot(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "endTime":
 			out.Values[i] = ec._TimeSlot_endTime(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "isAvailable":
-			out.Values[i] = ec._TimeSlot_isAvailable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

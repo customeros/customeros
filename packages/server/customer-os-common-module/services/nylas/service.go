@@ -373,55 +373,69 @@ func (s *nylasService) GetDefaultCalendar(ctx context.Context, email string) (*i
 	return calendars[0], nil
 }
 
-// Update ListEvents to use prepareNylasAccountID
-func (s *nylasService) ListEvents(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*interfaces.CalendarEvent, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.ListEvents")
+func (s *nylasService) GetCalendarAvailability(ctx context.Context, email, calendarID string, startTime, endTime time.Time, bufferBefore, bufferAfter int) (*interfaces.NylasAvailabilityResponse, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GetCalendarAvailability")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
-		"calendarID": calendarID,
-		"startTime":  startTime,
-		"endTime":    endTime,
+		"email":        email,
+		"calendarID":   calendarID,
+		"startTime":    startTime,
+		"endTime":      endTime,
+		"bufferBefore": bufferBefore,
+		"bufferAfter":  bufferAfter,
 	})
 
-	// Get email from context
-	email := ctx.Value("email").(string)
 	if email == "" {
-		return nil, fmt.Errorf("no email found in context")
+		return nil, fmt.Errorf("grantID is required")
+	}
+	if calendarID == "" {
+		return nil, fmt.Errorf("calendarID is required")
 	}
 
-	// Get provider from context
-	provider := ctx.Value("provider").(enum.OAuthEmailProvider)
-	if provider == "" {
-		return nil, fmt.Errorf("no provider found in context")
+	// Create availability request
+	request := interfaces.NylasAvailabilityRequest{
+		Participants: []interfaces.NylasAvailabilityParticipant{
+			{
+				Email:       email,
+				CalendarIds: []string{calendarID},
+			},
+		},
+		StartTime:       startTime.UTC().Unix(),
+		EndTime:         endTime.UTC().Unix(),
+		IntervalMinutes: 5, // Match our time slot generation interval
+		DurationMinutes: 5, // Default duration
+		RoundTo:         5, // Match our time slot generation interval
+		AvailabilityRules: interfaces.NylasAvailabilityRules{
+			AvailabilityMethod: "max-availability",
+			Buffer: struct {
+				Before int `json:"before"`
+				After  int `json:"after"`
+			}{
+				Before: bufferBefore,
+				After:  bufferAfter,
+			},
+			TentativeAsBusy: true,
+		},
 	}
 
-	// Get Nylas grant ID for this email
-	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, common.GetTenantFromContext(ctx), email)
+	// Marshal request body
+	bodyBytes, err := json.Marshal(request)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas grant ID: %v", err)
-	}
-	if grant == nil {
-		return nil, fmt.Errorf("Nylas grant not found")
+		return nil, fmt.Errorf("failed to marshal request body: %v", err)
 	}
 
 	// Create request to Nylas v3 API
-	url := fmt.Sprintf("%s/v3/events?account_id=%s&calendar_id=%s&start=%d&end=%d",
-		s.config.APIUrl,
-		grant.NylasGrantId,
-		calendarID,
-		startTime.Unix(),
-		endTime.Unix(),
-	)
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/v3/calendars/availability", s.config.APIUrl), bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 
-	// Set headers - use Nylas API key for authentication
+	// Set headers
 	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", "application/json, application/gzip")
+	req.Header.Set("Content-Type", "application/json")
 
 	// Make request
 	resp, err := s.httpClient.Do(req)
@@ -431,62 +445,24 @@ func (s *nylasService) ListEvents(ctx context.Context, calendarID string, startT
 	}
 	defer resp.Body.Close()
 
+	respBodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
 	if resp.StatusCode != http.StatusOK {
+		spans.LogKV("response", string(respBodyBytes))
 		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(respBodyBytes))
 	}
 
 	// Parse response
-	var response struct {
-		Data []struct {
-			ID          string `json:"id"`
-			Title       string `json:"title"`
-			Description string `json:"description"`
-			Start       int64  `json:"start"`
-			End         int64  `json:"end"`
-			Location    string `json:"location"`
-			Status      string `json:"status"`
-		} `json:"data"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	var response interfaces.NylasAvailabilityResponse
+	if err := json.NewDecoder(bytes.NewReader(respBodyBytes)).Decode(&response); err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
 
-	// Convert to our interface type
-	result := make([]*interfaces.CalendarEvent, len(response.Data))
-	for i, event := range response.Data {
-		result[i] = &interfaces.CalendarEvent{
-			ID:          event.ID,
-			Title:       event.Title,
-			Description: event.Description,
-			StartTime:   time.Unix(event.Start, 0),
-			EndTime:     time.Unix(event.End, 0),
-			Location:    event.Location,
-			Status:      event.Status,
-		}
-	}
-
-	return result, nil
-}
-
-func (s *nylasService) CreateEvent(ctx context.Context, calendarID string, event *interfaces.CalendarEvent) (*interfaces.CalendarEvent, error) {
-	// TODO: Implement Nylas API call to create event
-	return nil, nil
-}
-
-func (s *nylasService) UpdateEvent(ctx context.Context, calendarID string, eventID string, event *interfaces.CalendarEvent) (*interfaces.CalendarEvent, error) {
-	// TODO: Implement Nylas API call to update event
-	return nil, nil
-}
-
-func (s *nylasService) DeleteEvent(ctx context.Context, calendarID string, eventID string) error {
-	// TODO: Implement Nylas API call to delete event
-	return nil
-}
-
-func (s *nylasService) GetEvent(ctx context.Context, calendarID string, eventID string) (*interfaces.CalendarEvent, error) {
-	// TODO: Implement Nylas API call to get event
-	return nil, nil
+	return &response, nil
 }

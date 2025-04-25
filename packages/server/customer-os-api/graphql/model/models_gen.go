@@ -1072,9 +1072,8 @@ type DayAvailabilityInput struct {
 }
 
 type DaySlot struct {
-	Date        time.Time   `json:"date"`
-	TimeSlots   []*TimeSlot `json:"timeSlots"`
-	IsAvailable bool        `json:"isAvailable"`
+	Date      time.Time   `json:"date"`
+	TimeSlots []*TimeSlot `json:"timeSlots"`
 }
 
 type DeleteResponse struct {
@@ -3282,9 +3281,8 @@ type TimeRange struct {
 
 // Represents a time slot in calendar availability
 type TimeSlot struct {
-	StartTime   time.Time `json:"startTime"`
-	EndTime     time.Time `json:"endTime"`
-	IsAvailable bool      `json:"isAvailable"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
