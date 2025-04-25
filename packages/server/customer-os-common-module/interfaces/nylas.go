@@ -20,8 +20,8 @@ type NylasService interface {
 	GetGrant(ctx context.Context, email string) (*postgres_entity.NylasGrant, error)
 
 	// Calendar management
-	ListCalendars(ctx context.Context, email string) ([]*Calendar, error)
-	GetCalendar(ctx context.Context, calendarID string) (*Calendar, error)
+	ListCalendars(ctx context.Context, email string) ([]*NylasCalendar, error)
+	GetDefaultCalendar(ctx context.Context, email string) (*NylasCalendar, error)
 
 	// Calendar operations
 	CreateEvent(ctx context.Context, calendarID string, event *CalendarEvent) (*CalendarEvent, error)
@@ -55,9 +55,23 @@ type Recurrence struct {
 	Until     time.Time
 }
 
-type Calendar struct {
-	ID          string
-	Name        string
-	Description string
-	IsPrimary   bool
+type NylasCalendarsResponse struct {
+	RequestID  string           `json:"request_id"`
+	Data       []*NylasCalendar `json:"data"`
+	NextCursor string           `json:"next_cursor"`
+}
+
+type NylasCalendar struct {
+	Description        string                 `json:"description"`
+	HexColor           string                 `json:"hex_color"`
+	HexForegroundColor string                 `json:"hex_foreground_color"`
+	ID                 string                 `json:"id"`
+	IsOwnedByUser      bool                   `json:"is_owned_by_user"`
+	IsPrimary          bool                   `json:"is_primary"`
+	Location           string                 `json:"location"`
+	Metadata           map[string]interface{} `json:"metadata"`
+	Name               string                 `json:"name"`
+	Object             string                 `json:"object"`
+	ReadOnly           bool                   `json:"read_only"`
+	Timezone           string                 `json:"timezone"`
 }
