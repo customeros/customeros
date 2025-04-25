@@ -553,10 +553,13 @@ func (s *registrationService) SetupTestMailbox(ctx context.Context, tenant strin
 	}
 	spans.LogKV("result.testEmailId", testEmailId)
 
-	return s.createMailboxIfNotExists(ctx, *spans, tenant, mailboxAddress)
+	return s.createMailboxIfNotExists(ctx, tenant, mailboxAddress)
 }
 
-func (s *registrationService) createMailboxIfNotExists(ctx context.Context, spans telemetry.Spans, tenant, mailboxAddress string) error {
+func (s *registrationService) createMailboxIfNotExists(ctx context.Context, tenant, mailboxAddress string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.createMailboxIfNotExists")
+	defer spans.Finish()
+
 	mailboxRecord, err := s.mailstack.GetByMailbox(ctx, tenant, mailboxAddress)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "failed to get by mailbox"))
@@ -590,10 +593,12 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			return err
 		}
 
-		err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
-		if err != nil {
-			spans.TraceError(err)
-			return err
+		if mailboxRecord != nil {
+			err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+			if err != nil {
+				spans.TraceError(err)
+				return err
+			}
 		}
 	}
 
