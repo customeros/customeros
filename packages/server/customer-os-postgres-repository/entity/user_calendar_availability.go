@@ -14,6 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	DefaultTimezone string = "Etc/UTC"
+)
+
 // DayAvailability represents the availability for a single day
 type DayAvailability struct {
 	Enabled   bool   `json:"enabled" gorm:"type:boolean;default:false"`
@@ -167,8 +171,9 @@ func (UserCalendarAvailability) TableName() string {
 func (u *UserCalendarAvailability) Validate() error {
 	// Validate timezone
 	if u.Timezone == "" {
-		u.Timezone = "Etc/UTC"
+		u.Timezone = DefaultTimezone
 	}
+
 	// Trim any whitespace that might have been added
 	u.Timezone = strings.TrimSpace(u.Timezone)
 	_, err := time.LoadLocation(u.Timezone)
