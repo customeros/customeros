@@ -78,10 +78,10 @@ func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.Ca
 		}
 	}
 
-	// Round up duration to nearest 15 minutes if needed
+	// Round up duration to nearest 5 minutes if needed
 	durationMins := meetingBookingEvent.DurationMins
-	if durationMins%15 != 0 {
-		durationMins = ((durationMins / 15) + 1) * 15
+	if durationMins%5 != 0 {
+		durationMins = ((durationMins / 5) + 1) * 5
 	}
 
 	// Get calendar availability data using UTC times

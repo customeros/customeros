@@ -166,15 +166,26 @@ func (s *meetingService) SetDefaultUserCalendarAvailability(ctx context.Context,
 	return defaultAvailability, nil
 }
 
-// generateTimeSlots generates 15-minute time slots between start and end time
+// generateTimeSlots generates 5-minute time slots between start and end time
 func generateTimeSlots(startTime, endTime time.Time) []*interfaces.TimeSlot {
-	slots := []*interfaces.TimeSlot{}
-	current := startTime
+	var slots []*interfaces.TimeSlot
 
-	for current.Before(endTime) {
-		slotEnd := current.Add(15 * time.Minute)
-		if slotEnd.After(endTime) {
-			slotEnd = endTime
+	// Round start time down to nearest 5 minutes
+	startMins := startTime.Minute()
+	roundedStartMins := (startMins / 5) * 5
+	roundedStart := startTime.Add(-time.Duration(startMins-roundedStartMins) * time.Minute)
+
+	// Round end time up to nearest 5 minutes
+	endMins := endTime.Minute()
+	roundedEndMins := ((endMins + 4) / 5) * 5
+	roundedEnd := endTime.Add(time.Duration(roundedEndMins-endMins) * time.Minute)
+
+	current := roundedStart
+
+	for current.Before(roundedEnd) {
+		slotEnd := current.Add(5 * time.Minute)
+		if slotEnd.After(roundedEnd) {
+			slotEnd = roundedEnd
 		}
 
 		slots = append(slots, &interfaces.TimeSlot{
@@ -257,15 +268,17 @@ func isTimeInDayAvailability(t time.Time, dayAvailability postgresEntity.DayAvai
 		return false
 	}
 
-	// Parse start and end hours
+	// Parse start and end hours in local time
 	startTime, _ := time.Parse("15:04", dayAvailability.StartHour)
 	endTime, _ := time.Parse("15:04", dayAvailability.EndHour)
 
-	// Get just the time part of the input time
-	timeOnly := time.Date(0, 1, 1, t.Hour(), t.Minute(), 0, 0, t.Location())
+	// Create reference time points in the user's timezone for today
+	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	startTimeToday := today.Add(time.Duration(startTime.Hour())*time.Hour + time.Duration(startTime.Minute())*time.Minute)
+	endTimeToday := today.Add(time.Duration(endTime.Hour())*time.Hour + time.Duration(endTime.Minute())*time.Minute)
 
-	// Compare times
-	return !timeOnly.Before(startTime) && !timeOnly.After(endTime)
+	// Compare the actual time against the window
+	return !t.Before(startTimeToday) && !t.After(endTimeToday)
 }
 
 // isSlotInUserAvailability checks if a time slot is within user's calendar availability
@@ -339,8 +352,8 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 	}
 
 	meetingDurationMins := meetingBookingEvent.DurationMins
-	if meetingDurationMins%15 != 0 {
-		meetingDurationMins = ((meetingDurationMins / 15) + 1) * 15
+	if meetingDurationMins%5 != 0 {
+		meetingDurationMins = ((meetingDurationMins / 5) + 1) * 5
 	}
 
 	// 1. Get default calendar for each participant
@@ -365,7 +378,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 	// 2a. Generate initial time slots for each participant
 	participantTimeSlots := make(map[string][]*interfaces.TimeSlot)
 	for email := range participantsData {
-		// Generate 15-minute time slots for the participant
+		// Generate 5-minute time slots for the participant
 		slots := generateTimeSlots(startTime, endTime)
 		participantTimeSlots[email] = slots
 	}
@@ -391,7 +404,12 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 	}
 
 	// 2c. Apply booking option restrictions for minimum notice and maximum advance if enabled
+	bufferBefore := 0
+	bufferAfter := 0
 	if meetingBookingEvent.BookOptionEnabled {
+		bufferBefore = int(meetingBookingEvent.BookOptionBufferBetweenMeetingsMins)
+		bufferAfter = int(meetingBookingEvent.BookOptionBufferBetweenMeetingsMins)
+
 		now := utils.Now()
 		minNotice := meetingBookingEvent.BookOptionMinNoticeMins
 		if minNotice < 0 {
@@ -399,7 +417,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		}
 		maxAdvance := meetingBookingEvent.BookOptionDaysInAdvance
 		if maxAdvance < 0 {
-			maxAdvance = 1
+			maxAdvance = 0
 		}
 		minNoticeTime := now.Add(time.Duration(minNotice) * time.Minute)
 		maxAdvanceTime := now.AddDate(0, 0, int(maxAdvance))
@@ -414,8 +432,49 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 				}
 
 				// Mark slot as unavailable if it's after maximum advance time
-				if slot.StartTime.After(maxAdvanceTime) {
+				if maxAdvance > 0 && slot.StartTime.After(maxAdvanceTime) {
 					slot.IsAvailable = false
+				}
+			}
+		}
+	}
+
+	// 2d. Get calendar availability for each participant
+	for email, calendar := range participantsData {
+		// Get calendar availability from Nylas
+		calendarAvailability, err := s.nylas.GetCalendarAvailability(ctx, email, calendar.ID, startTime, endTime, bufferBefore, bufferAfter)
+		if err != nil {
+			spans.TraceError(err)
+			s.log.Warn("Failed to get calendar availability for participant %s: %v", email, err)
+			// If error occurs, mark all slots as unavailable for this participant
+			for _, slot := range participantTimeSlots[email] {
+				slot.IsAvailable = false
+			}
+			continue
+		}
+
+		// Create a map of available times from Nylas
+		availableTimes := make(map[int64]bool)
+		for _, slot := range calendarAvailability.Data.TimeSlots {
+			// Mark all times between start and end as available
+			for t := slot.StartTime; t < slot.EndTime; t += 300 { // 300 seconds = 5 minutes
+				availableTimes[t] = true
+			}
+		}
+
+		// Update participant's time slots based on Nylas availability
+		// Only mark as unavailable if the slot was previously available
+		for _, slot := range participantTimeSlots[email] {
+			if slot.IsAvailable { // Only check Nylas availability if slot is currently available
+				slotStart := slot.StartTime.UTC().Unix()
+				slotEnd := slot.EndTime.UTC().Unix()
+
+				// Check if all 5-minute intervals are available in Nylas
+				for t := slotStart; t < slotEnd; t += 300 {
+					if !availableTimes[t] {
+						slot.IsAvailable = false
+						break
+					}
 				}
 			}
 		}
