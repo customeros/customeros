@@ -33,7 +33,7 @@ func (r *nylasGrantRepository) GetByTenantAndEmail(ctx context.Context, tenant, 
 
 	var grant postgres_entity.NylasGrant
 	err := r.db.
-		Where("tenant = ? AND email = ?", tenant, email).
+		Where("tenant = ? AND LOWER(email) = LOWER(?)", tenant, email).
 		First(&grant).Error
 
 	if err != nil {

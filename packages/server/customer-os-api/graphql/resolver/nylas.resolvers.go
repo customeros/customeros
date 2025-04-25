@@ -48,6 +48,11 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 		return &model.NylasDetails{Connected: false}, nil
 	}
 
+	_, err = r.Services.CommonServices.MeetingService.GetUserCalendarAvailability(ctx, input.Email)
+	if err != nil {
+		spans.TraceError(err)
+	}
+
 	return &model.NylasDetails{Connected: true}, nil
 }
 
