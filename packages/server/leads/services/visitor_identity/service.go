@@ -34,7 +34,7 @@ func NewVisitorIdentityService(
 	}
 }
 
-var SUBSCRIBED_SUBJECT = enum.EventIdentifyVisitor.String()
+var SUBSCRIBED_SUBJECT = enum.EventAskSnitcher.String()
 
 // Start begins listening for  events
 func (s *VisitorIdentityService) Start(ctx context.Context) error {

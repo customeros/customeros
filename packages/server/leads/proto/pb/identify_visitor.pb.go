@@ -9,7 +9,6 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -130,7 +129,7 @@ var File_schema_identify_visitor_proto protoreflect.FileDescriptor
 
 const file_schema_identify_visitor_proto_rawDesc = "" +
 	"\n" +
-	"\x1dschema/identify_visitor.proto\x12\veventstream\x1a\x1fgoogle/protobuf/timestamp.proto\"7\n" +
+	"\x1dschema/identify_visitor.proto\x12\x05leads\"7\n" +
 	"\x16IdentifyVisitorRequest\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\"t\n" +
@@ -138,7 +137,7 @@ const file_schema_identify_visitor_proto_rawDesc = "" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\x12\x16\n" +
 	"\x06domain\x18\x02 \x01(\tR\x06domain\x12\"\n" +
-	"\ferrorMessage\x18\x03 \x01(\tR\ferrorMessageBGZEgithub.com/customeros/customeros/packages/server/eventstream/proto/pbb\x06proto3"
+	"\ferrorMessage\x18\x03 \x01(\tR\ferrorMessageBAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
 
 var (
 	file_schema_identify_visitor_proto_rawDescOnce sync.Once
@@ -154,8 +153,8 @@ func file_schema_identify_visitor_proto_rawDescGZIP() []byte {
 
 var file_schema_identify_visitor_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_schema_identify_visitor_proto_goTypes = []any{
-	(*IdentifyVisitorRequest)(nil),  // 0: eventstream.IdentifyVisitorRequest
-	(*IdentifyVisitorResponse)(nil), // 1: eventstream.IdentifyVisitorResponse
+	(*IdentifyVisitorRequest)(nil),  // 0: leads.IdentifyVisitorRequest
+	(*IdentifyVisitorResponse)(nil), // 1: leads.IdentifyVisitorResponse
 }
 var file_schema_identify_visitor_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type

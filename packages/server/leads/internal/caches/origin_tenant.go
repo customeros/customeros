@@ -1,6 +1,8 @@
 package caches
 
 import (
+	"encoding/json"
+
 	"github.com/coocood/freecache"
 )
 
@@ -21,17 +23,38 @@ func NewOriginTenantCache() *OriginTenantCache {
 	}
 }
 
-// SetTenantForOrigin stores tenant (value) mapped by origin (key), expiring after 1 hour.
-func (o *OriginTenantCache) SetTenantForOrigin(origin, tenant string) {
-	_ = o.cache.Set([]byte(origin), []byte(tenant), expire1Hour)
+type OriginData struct {
+	Tenant       string `json:"tenant"`
+	WebTrackerID string `json:"webTrackerId"`
 }
 
-// GetTenantForOrigin retrieves the tenant associated with the given origin key.
-// Returns an empty string if not found or if an error occurs.
-func (o *OriginTenantCache) GetTenantForOrigin(origin string) string {
+// SetDataForOrigin stores both tenant and webTrackerID mapped by origin, expiring after 1 hour.
+func (o *OriginTenantCache) SetDataForOrigin(origin, tenant, webTrackerID string) error {
+	data := OriginData{
+		Tenant:       tenant,
+		WebTrackerID: webTrackerID,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return o.cache.Set([]byte(origin), jsonData, expire1Hour)
+}
+
+// GetDataForOrigin retrieves both tenant and webTrackerID associated with the given origin key.
+// Returns empty strings if not found or if an error occurs.
+func (o *OriginTenantCache) GetDataForOrigin(origin string) (tenant string, webTrackerID string, err error) {
 	value, err := o.cache.Get([]byte(origin))
 	if err != nil {
-		return ""
+		return "", "", err
 	}
-	return string(value)
+
+	var data OriginData
+	if err := json.Unmarshal(value, &data); err != nil {
+		return "", "", err
+	}
+
+	return data.Tenant, data.WebTrackerID, nil
 }

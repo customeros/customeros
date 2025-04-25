@@ -2,6 +2,7 @@ package config
 
 type AppConfig struct {
 	APIPort     string `env:"API_PORT,required" envDefault:"16600"`
+	APIKey      string `env:"API_KEY,required"`
 	Environment string `env:"ENVIRONMENT,required" envDefault:"dev"`
 }
 
@@ -13,7 +14,8 @@ type NATSConfig struct {
 
 type LeadsDatabaseConfig struct {
 	Host            string `env:"LEADS_POSTGRES_HOST,required"`
-	Port            string `env:"LEADS_POSTGRES_PORT,required"`
+	WritePort       string `env:"LEADS_POSTGRES_WRITE_PORT,required"`
+	ReadPort        string `env:"LEADS_POSTGRES_READ_PORT,required"`
 	User            string `env:"LEADS_POSTGRES_USER,required"`
 	DBName          string `env:"LEADS_POSTGRES_DB_NAME,required"`
 	Password        string `env:"LEADS_POSTGRES_PASSWORD,required"`
@@ -25,7 +27,8 @@ type LeadsDatabaseConfig struct {
 
 type DataWarehouseConfig struct {
 	Host            string `env:"WAREHOUSE_DB_HOST,required"`
-	Port            string `env:"WAREHOUSE_DB_PORT,required"`
+	WritePort       string `env:"WAREHOUSE_DB_WRITE_PORT,required"`
+	ReadPort        string `env:"WAREHOUSE_DB_READ_PORT,required"`
 	User            string `env:"WAREHOUSE_DB_USER,required"`
 	DBName          string `env:"WAREHOUSE_DB_NAME,required"`
 	Password        string `env:"WAREHOUSE_DB_PASSWORD,required"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/nats-io/nats.go"
 
 	es_errors "github.com/customeros/customeros/packages/server/leads/errors"
@@ -62,6 +63,16 @@ func WithContext(customContext *CustomContext, next http.Handler) http.Handler {
 
 func WithCustomContext(ctx context.Context, customContext *CustomContext) context.Context {
 	return context.WithValue(ctx, customContextKey, customContext)
+}
+
+func WithCustomContextFromGinRequest(c *gin.Context) context.Context {
+	customContext := &CustomContext{
+		Tenant:    c.GetString("Tenant"),
+		UserId:    c.GetString("UserId"),
+		UserEmail: c.GetString("UserEmail"),
+		RequestID: c.GetHeader("X-Request-Id"),
+	}
+	return WithCustomContext(c.Request.Context(), customContext)
 }
 
 func WithCustomContextFromNats(ctx context.Context, msg *nats.Msg) context.Context {

@@ -14,13 +14,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/customeros/customeros/packages/server/leads/api/handlers"
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
 	"github.com/customeros/customeros/packages/server/leads/internal/cron"
+	"github.com/customeros/customeros/packages/server/leads/internal/database"
 	"github.com/customeros/customeros/packages/server/leads/internal/logger"
 	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
@@ -40,7 +40,7 @@ type Server struct {
 	apiHandlers  *handlers.APIHandlers
 }
 
-func NewServer(cfg *config.Config, leadsDB *gorm.DB, warehouseDB *gorm.DB) (*Server, error) {
+func NewServer(cfg *config.Config, leadsDB *database.DbConnections, warehouseDB *database.DbConnections) (*Server, error) {
 	// Initialize logger
 	appLogger := logger.NewAppLogger(cfg.Logger)
 	appLogger.InitLogger()
@@ -71,7 +71,7 @@ func NewServer(cfg *config.Config, leadsDB *gorm.DB, warehouseDB *gorm.DB) (*Ser
 	router := gin.Default()
 
 	// Initialize API Handlers
-	handlers := handlers.InitHandlers(natsConn, repos)
+	handlers := handlers.InitHandlers(svcs, repos)
 
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface

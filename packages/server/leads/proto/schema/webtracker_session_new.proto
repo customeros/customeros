@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package leads;
+option go_package = "github.com/customeros/customeros/packages/server/leads/proto/pb";
+
+message WebtrackerSessionNew {
+  string id = 1;
+  string tracker_id = 2;
+  string session_id = 3;
+  string ip = 4;
+}
