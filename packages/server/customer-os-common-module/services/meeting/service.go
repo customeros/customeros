@@ -57,7 +57,7 @@ func (s *meetingService) GetUserCalendarAvailability(ctx context.Context, email 
 		return availability, nil
 	}
 
-	defaultAvailability, err := s.SetDefaultUserCalendarAvailability(ctx, email)
+	defaultAvailability, err := s.SetDefaultUserCalendarAvailability(ctx, email, "")
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to set default calendar availability: %v", err)
