@@ -12,6 +12,7 @@ import (
 
 type MeetingBookingEventRepository interface {
 	GetById(ctx context.Context, tenant, id string) (*postgresEntity.MeetingBookingEvent, error)
+	GetByIdCrossTenant(ctx context.Context, id string) (*postgresEntity.MeetingBookingEvent, error)
 	GetAll(ctx context.Context, tenant string) ([]*postgresEntity.MeetingBookingEvent, error)
 	Save(ctx context.Context, meetingBookingEvent *postgresEntity.MeetingBookingEvent) (*postgresEntity.MeetingBookingEvent, error)
 	Delete(ctx context.Context, tenant, id string) error
@@ -48,6 +49,19 @@ func (r *meetingBookingEventRepository) GetById(ctx context.Context, tenant, id 
 	return &meetingBookingEvent, nil
 }
 
+func (r *meetingBookingEventRepository) GetByIdCrossTenant(ctx context.Context, id string) (*postgresEntity.MeetingBookingEvent, error) {
+	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookingEventRepository.GetByIdCrossTenant")
+	defer spans.Finish()
+	spans.LogKV("id", id)
+
+	var meetingBookingEvent postgresEntity.MeetingBookingEvent
+	err := r.db.Where("id = ?", id).First(&meetingBookingEvent).Error
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	return &meetingBookingEvent, nil
+}
 func (r *meetingBookingEventRepository) GetAll(ctx context.Context, tenant string) ([]*postgresEntity.MeetingBookingEvent, error) {
 	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookingEventRepository.GetAll")
 	defer spans.Finish()
