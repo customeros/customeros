@@ -36,6 +36,18 @@ func standardizeTimeFormat(timeStr string) (string, error) {
 		return "24:00", nil
 	}
 
+	// Handle single digit minutes
+	if strings.Contains(timeStr, ":") {
+		parts := strings.Split(timeStr, ":")
+		if len(parts) == 2 {
+			// Handle single digit minute
+			if len(parts[1]) == 1 {
+				parts[1] = "0" + parts[1]
+			}
+			timeStr = parts[0] + ":" + parts[1]
+		}
+	}
+
 	// Try parsing with different formats
 	formats := []string{"15:04", "3:04PM", "3:04 PM", "3PM", "15", "3"}
 	var t time.Time
@@ -178,7 +190,7 @@ func (u *UserCalendarAvailability) Validate() error {
 	u.Timezone = strings.TrimSpace(u.Timezone)
 	_, err := time.LoadLocation(u.Timezone)
 	if err != nil {
-		return fmt.Errorf("invalid timezone: %s, %s", u.Timezone, err.Error())
+		u.Timezone = DefaultTimezone
 	}
 
 	// Validate each day's availability

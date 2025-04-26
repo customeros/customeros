@@ -2124,6 +2124,7 @@ type NylasConnectInput struct {
 	Email        string        `json:"email"`
 	RefreshToken string        `json:"refreshToken"`
 	Provider     NylasProvider `json:"provider"`
+	Timezone     *string       `json:"timezone,omitempty"`
 }
 
 type NylasDetails struct {

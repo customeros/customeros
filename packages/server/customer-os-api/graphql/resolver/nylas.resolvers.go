@@ -48,7 +48,7 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 		return &model.NylasDetails{Connected: false}, nil
 	}
 
-	_, err = r.Services.CommonServices.MeetingService.GetUserCalendarAvailability(ctx, input.Email)
+	_, err = r.Services.CommonServices.MeetingService.SetDefaultUserCalendarAvailability(ctx, input.Email, utils.IfNotNilString(input.Timezone))
 	if err != nil {
 		spans.TraceError(err)
 	}

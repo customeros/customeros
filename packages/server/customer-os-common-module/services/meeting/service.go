@@ -92,10 +92,10 @@ func (s *meetingService) SaveUserCalendarAvailability(ctx context.Context, avail
 	return saved, nil
 }
 
-func (s *meetingService) SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error) {
+func (s *meetingService) SetDefaultUserCalendarAvailability(ctx context.Context, email, timezone string) (*postgresEntity.UserCalendarAvailability, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.SetDefaultUserCalendarAvailability")
 	defer spans.Finish()
-	spans.LogKV("email", email)
+	spans.LogKV("email", email, "timezone", timezone)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -116,10 +116,14 @@ func (s *meetingService) SetDefaultUserCalendarAvailability(ctx context.Context,
 		return availability, nil
 	}
 
+	if timezone == "" {
+		timezone = postgresEntity.DefaultTimezone
+	}
+
 	defaultAvailability := &postgresEntity.UserCalendarAvailability{
 		Tenant:   tenant,
 		Email:    email,
-		Timezone: postgresEntity.DefaultTimezone,
+		Timezone: timezone,
 		Monday: postgresEntity.DayAvailability{
 			Enabled:   true,
 			StartHour: "08:30",

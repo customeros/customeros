@@ -18036,6 +18036,7 @@ input NylasConnectInput {
     email:          String!
     refreshToken:   String!
     provider:       NylasProvider!
+    timezone:       String
 }
 
 enum NylasProvider {
@@ -127115,7 +127116,7 @@ func (ec *executionContext) unmarshalInputNylasConnectInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "refreshToken", "provider"}
+	fieldsInOrder := [...]string{"email", "refreshToken", "provider", "timezone"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -127143,6 +127144,13 @@ func (ec *executionContext) unmarshalInputNylasConnectInput(ctx context.Context,
 				return it, err
 			}
 			it.Provider = data
+		case "timezone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
 		}
 	}
 
