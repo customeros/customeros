@@ -12,13 +12,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type calendarAvailabilityRequest struct {
-	MeetingBookingEventID string    `form:"meetingBookingEventId" binding:"required"`
-	StartTime             time.Time `form:"startTime" binding:"required" time_format:"2006-01-02T15:04:05Z07:00"`
-	EndTime               time.Time `form:"endTime" binding:"required" time_format:"2006-01-02T15:04:05Z07:00"`
-	Timezone              string    `form:"timezone"`
-}
-
 type TimeSlot struct {
 	StartTime time.Time `json:"startTime"`
 	EndTime   time.Time `json:"endTime"`
@@ -68,31 +61,60 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetCalendarAvailability", c.Request.Header)
 		defer span.Finish()
 
-		var req calendarAvailabilityRequest
-		if err := c.ShouldBindQuery(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// Get and validate calendarId
+		calendarId := c.Query("calendarId")
+		if calendarId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Calendar ID is required"})
 			return
 		}
 
+		// Get and validate startTime
+		startTimeStr := c.Query("startTime")
+		if startTimeStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Start time is required"})
+			return
+		}
+		startTime, err := time.Parse(time.RFC3339, startTimeStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format. Expected RFC3339 format (e.g., 2024-03-20T10:00:00Z)"})
+			return
+		}
+
+		// Get and validate endTime
+		endTimeStr := c.Query("endTime")
+		if endTimeStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "End time is required"})
+			return
+		}
+		endTime, err := time.Parse(time.RFC3339, endTimeStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time format. Expected RFC3339 format (e.g., 2024-03-20T11:00:00Z)"})
+			return
+		}
+
+		// Get timezone (optional)
+		timezone := c.Query("timezone")
+
 		// Validate time range
-		if req.StartTime.After(req.EndTime) {
+		if startTime.After(endTime) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "End time must be after start time"})
 			return
 		}
 
 		// Convert input times to UTC for processing
-		startTimeUTC := req.StartTime.UTC()
-		endTimeUTC := req.EndTime.UTC()
+		startTimeUTC := startTime.UTC()
+		endTimeUTC := endTime.UTC()
 
 		// Get meeting booking event to determine tenant
-		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(c, req.MeetingBookingEventID)
+		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(c, calendarId)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			s.Log.Error("Failed to get meeting booking event: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get meeting booking event"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Calendar not found"})
 			return
 		}
 		if meetingBookingEvent == nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Meeting booking event not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Calendar not found"})
 			return
 		}
 
@@ -121,7 +143,7 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		// Get calendar availability
-		availabilityResult, err := s.CommonServices.MeetingService.GetCalendarAvailability(ctx, req.MeetingBookingEventID, startTimeUTC, endTimeUTC, req.Timezone)
+		availabilityResult, err := s.CommonServices.MeetingService.GetCalendarAvailability(ctx, calendarId, startTimeUTC, endTimeUTC, timezone)
 		if err != nil {
 			s.Log.Error("Failed to get calendar availability: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get calendar availability"})
