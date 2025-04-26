@@ -42,7 +42,7 @@ func standardizeTimeFormat(timeStr string) (string, error) {
 		if len(parts) == 2 {
 			// Handle single digit minute
 			if len(parts[1]) == 1 {
-				parts[1] = parts[1] + "0"
+				parts[1] = "0" + parts[1]
 			}
 			timeStr = parts[0] + ":" + parts[1]
 		}
