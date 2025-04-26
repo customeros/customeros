@@ -14,7 +14,7 @@ var AllMeetingBookingAssignmentMethod = []MeetingBookingAssignmentMethod{
 	MeetingBookingAssignmentMethodCustom,
 }
 
-var DefaultMeetingBookingAssignmentMethod = MeetingBookingAssignmentMethodRoundRobinMaxFairness
+var DefaultMeetingBookingAssignmentMethod = MeetingBookingAssignmentMethodRoundRobinMaxAvailability
 
 func GetMeetingBookingAssignmentMethod(s string) MeetingBookingAssignmentMethod {
 	if IsValidMeetingBookingAssignmentMethod(s) {
