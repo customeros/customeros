@@ -3,7 +3,10 @@ package meeting
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -213,9 +216,14 @@ func convertTimeSlotsToTimezone(slots []*interfaces.TimeSlot, timezone string) (
 
 	convertedSlots := make([]*interfaces.TimeSlot, len(slots))
 	for i, slot := range slots {
+		// First convert to target timezone to get correct local time components
+		startInZone := slot.StartTime.In(location)
+		endInZone := slot.EndTime.In(location)
+
+		// Create new time objects in the target timezone with the correct offset
 		convertedSlots[i] = &interfaces.TimeSlot{
-			StartTime:   slot.StartTime.In(location),
-			EndTime:     slot.EndTime.In(location),
+			StartTime:   startInZone,
+			EndTime:     endInZone,
 			IsAvailable: slot.IsAvailable,
 		}
 	}
@@ -323,6 +331,134 @@ func isSlotInUserAvailability(slot *interfaces.TimeSlot, availability *postgresE
 	return isTimeInDayAvailability(slotStart, dayAvailability) && isTimeInDayAvailability(slotEnd, dayAvailability)
 }
 
+// getValidStartMinutes returns the valid minutes past the hour when a meeting can start
+func getValidStartMinutes(durationMins int) []int {
+	switch durationMins {
+	case 5:
+		return []int{0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}
+	case 10:
+		return []int{0, 10, 20, 30, 40, 50}
+	case 15:
+		return []int{0, 15, 30, 45}
+	case 20:
+		return []int{0, 20, 40}
+	case 25, 30:
+		return []int{0, 30}
+	case 45:
+		return []int{0}
+	case 60, 90, 120:
+		return []int{0}
+	default:
+		// For non-standard durations, round up to nearest 5 and start at hour
+		return []int{0}
+	}
+}
+
+// filterValidMeetingStartSlots filters 5-minute slots to only keep valid meeting start times
+func filterValidMeetingStartSlots(slots []*interfaces.TimeSlot, durationMins int) []*interfaces.TimeSlot {
+	if len(slots) == 0 {
+		return slots
+	}
+
+	validStartMinutes := getValidStartMinutes(durationMins)
+	filteredSlots := make([]*interfaces.TimeSlot, 0)
+	durationInMinutes := int(durationMins)
+
+	for i, slot := range slots {
+		if !slot.IsAvailable {
+			continue
+		}
+
+		// Check if this slot's minute is a valid start time
+		slotMinute := slot.StartTime.Minute()
+		isValidStartTime := false
+		for _, validMin := range validStartMinutes {
+			if slotMinute == validMin {
+				isValidStartTime = true
+				break
+			}
+		}
+
+		if !isValidStartTime {
+			slot.IsAvailable = false
+			continue
+		}
+
+		// Check if we have enough consecutive available slots for the meeting duration
+		hasEnoughTime := true
+		slotsNeeded := (durationInMinutes + 4) / 5 // Round up to nearest 5 minutes
+
+		for j := 0; j < slotsNeeded && i+j < len(slots); j++ {
+			if !slots[i+j].IsAvailable {
+				hasEnoughTime = false
+				break
+			}
+		}
+
+		if !hasEnoughTime {
+			slot.IsAvailable = false
+			continue
+		}
+
+		// Mark subsequent slots as unavailable
+		for j := 1; j < slotsNeeded && i+j < len(slots); j++ {
+			slots[i+j].IsAvailable = false
+		}
+
+		filteredSlots = append(filteredSlots, slot)
+	}
+
+	return filteredSlots
+}
+
+// unifyTimeSlots combines time slots from all participants based on the assignment method
+func unifyTimeSlots(participantSlots map[string][]*interfaces.TimeSlot) []*interfaces.TimeSlot {
+	if len(participantSlots) == 0 {
+		return []*interfaces.TimeSlot{}
+	}
+
+	// Create a map to track unique time slots
+	slotMap := make(map[string]*interfaces.TimeSlot)
+
+	// Process slots from each participant
+	for _, slots := range participantSlots {
+		for _, slot := range slots {
+			// Use time as key (format that includes timezone to handle DST correctly)
+			key := slot.StartTime.Format(time.RFC3339)
+			if _, exists := slotMap[key]; !exists {
+				// Create a new slot copy
+				slotMap[key] = &interfaces.TimeSlot{
+					StartTime:   slot.StartTime,
+					EndTime:     slot.EndTime,
+					IsAvailable: slot.IsAvailable,
+				}
+			}
+		}
+	}
+
+	// Convert map to slice
+	unified := make([]*interfaces.TimeSlot, 0, len(slotMap))
+	for _, slot := range slotMap {
+		unified = append(unified, slot)
+	}
+
+	return unified
+}
+
+// sortTimeSlots sorts time slots by start time in ascending order
+func sortTimeSlots(slots []*interfaces.TimeSlot) []*interfaces.TimeSlot {
+	// Create a copy to avoid modifying the original slice
+	sorted := make([]*interfaces.TimeSlot, len(slots))
+	copy(sorted, slots)
+
+	// Sort by start time
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].StartTime.Before(sorted[j].StartTime)
+	})
+
+	return sorted
+}
+
 // GetCalendarAvailability implements interfaces.MeetingService
 func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time, timezone string) (*interfaces.CalendarAvailabilityResult, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetCalendarAvailability")
@@ -355,7 +491,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		return nil, fmt.Errorf("meeting booking event not found")
 	}
 
-	meetingDurationMins := meetingBookingEvent.DurationMins
+	meetingDurationMins := int(meetingBookingEvent.DurationMins)
 	if meetingDurationMins%5 != 0 {
 		meetingDurationMins = ((meetingDurationMins / 5) + 1) * 5
 	}
@@ -484,20 +620,14 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		}
 	}
 
-	// 3. Convert all time slots to requested timezone
-	convertedParticipantTimeSlots := make(map[string][]*interfaces.TimeSlot)
+	// 3. Filter slots to valid meeting start times
 	for email, slots := range participantTimeSlots {
-		convertedSlots, err := convertTimeSlotsToTimezone(slots, timezone)
-		if err != nil {
-			spans.TraceError(err)
-			return nil, fmt.Errorf("failed to convert time slots to timezone %s: %v", timezone, err)
-		}
-		convertedParticipantTimeSlots[email] = convertedSlots
+		participantTimeSlots[email] = filterValidMeetingStartSlots(slots, meetingDurationMins)
 	}
 
 	// 4a. Remove time slots that are not available
 	filteredParticipantTimeSlots := make(map[string][]*interfaces.TimeSlot)
-	for email, slots := range convertedParticipantTimeSlots {
+	for email, slots := range participantTimeSlots {
 		availableSlots := make([]*interfaces.TimeSlot, 0)
 		for _, slot := range slots {
 			if slot.IsAvailable {
@@ -507,13 +637,40 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		filteredParticipantTimeSlots[email] = availableSlots
 	}
 
-	// 4b. Group time slots into day slots
-	var daySlots []*interfaces.DaySlot
-	for _, slots := range filteredParticipantTimeSlots {
-		daySlots = convertTimeSlotsToDaySlots(slots)
-		// Only process first participant
-		break
+	// 4b. Set end time for each slot based on meeting duration
+	for _, participant5MinSlots := range filteredParticipantTimeSlots {
+		for _, slot := range participant5MinSlots {
+			slot.EndTime = slot.StartTime.Add(time.Duration(meetingDurationMins) * time.Minute)
+		}
 	}
+
+	// 4c. Convert all time slots to requested timezone
+	convertedParticipantTimeSlots := make(map[string][]*interfaces.TimeSlot)
+	for email, slots := range filteredParticipantTimeSlots {
+		convertedSlots, err := convertTimeSlotsToTimezone(slots, timezone)
+		if err != nil {
+			spans.TraceError(err)
+			return nil, fmt.Errorf("failed to convert time slots to timezone %s: %v", timezone, err)
+		}
+		convertedParticipantTimeSlots[email] = convertedSlots
+	}
+
+	// 4d. Group slots
+	unifiedSlots := make([]*interfaces.TimeSlot, 0)
+	switch meetingBookingEvent.AssignmentMethod {
+	case enum.MeetingBookingAssignmentMethodRoundRobinMaxAvailability:
+		// For round-robin, we want slots that are available for any participant
+		unifiedSlots = unifyTimeSlots(convertedParticipantTimeSlots)
+	default:
+		// Default behavior: same as round-robin
+		unifiedSlots = unifyTimeSlots(convertedParticipantTimeSlots)
+	}
+
+	// Sort slots by start time
+	unifiedSlots = sortTimeSlots(unifiedSlots)
+
+	// Group time slots into day slots
+	var daySlots = convertTimeSlotsToDaySlots(unifiedSlots)
 
 	return &interfaces.CalendarAvailabilityResult{
 		Days: daySlots,
