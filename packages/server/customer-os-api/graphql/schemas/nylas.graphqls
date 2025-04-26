@@ -27,6 +27,7 @@ input NylasConnectInput {
     email:          String!
     refreshToken:   String!
     provider:       NylasProvider!
+    timezone:       String
 }
 
 enum NylasProvider {

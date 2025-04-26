@@ -386,7 +386,7 @@ func (s *nylasService) GetCalendarAvailability(ctx context.Context, email, calen
 	})
 
 	if email == "" {
-		return nil, fmt.Errorf("grantID is required")
+		return nil, fmt.Errorf("email is required")
 	}
 	if calendarID == "" {
 		return nil, fmt.Errorf("calendarID is required")

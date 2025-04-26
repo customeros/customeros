@@ -29,7 +29,7 @@ type CalendarAvailabilityResult struct {
 type MeetingService interface {
 	GetUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
 	SaveUserCalendarAvailability(ctx context.Context, availability *postgresEntity.UserCalendarAvailability) (*postgresEntity.UserCalendarAvailability, error)
-	SetDefaultUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
+	SetDefaultUserCalendarAvailability(ctx context.Context, email, timezone string) (*postgresEntity.UserCalendarAvailability, error)
 
 	// GetCalendarAvailability returns the available time slots for a meeting booking event
 	// It takes into account:
