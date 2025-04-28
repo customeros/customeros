@@ -186,7 +186,7 @@ func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
 
 func (h *BrowserExtensionHandler) TouchContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.GetContact")
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.TouchContact")
 		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)

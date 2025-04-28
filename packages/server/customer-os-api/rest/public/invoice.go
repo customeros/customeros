@@ -112,7 +112,7 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 
 func GetInvoicePaymentLink(services *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RedirectToPayInvoice")
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "GetInvoicePaymentLink")
 		defer spans.Finish()
 
 		// Get invoice ID from path parameter
