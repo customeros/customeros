@@ -5,9 +5,8 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type DNSRecord struct {
@@ -27,16 +26,14 @@ type DNSRecordResponse struct {
 
 func (h *MailstackHandler) DNS() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.DNS", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.DNS")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(log.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
@@ -73,16 +70,14 @@ func (h *MailstackHandler) DNS() gin.HandlerFunc {
 
 func (h *MailstackHandler) AddDNSRecord() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.AddDNSRecord", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.AddDNSRecord")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(log.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
@@ -129,16 +124,14 @@ func (h *MailstackHandler) AddDNSRecord() gin.HandlerFunc {
 
 func (h *MailstackHandler) DeleteDNSRecord() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.DeleteDNSRecord", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.DeleteDNSRecord")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(log.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
@@ -162,9 +155,8 @@ func (h *MailstackHandler) DeleteDNSRecord() gin.HandlerFunc {
 }
 
 func (h *MailstackHandler) getDNSRequestPayload(c *gin.Context) (DNSRecord, error) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "MailstackHandler.getDNSRequestPayload")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.getDNSRequestPayload")
+	defer spans.Finish()
 
 	var req DNSRecord
 	err := c.ShouldBindJSON(&req)

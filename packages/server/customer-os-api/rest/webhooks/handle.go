@@ -5,24 +5,22 @@ import (
 	"strings"
 
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
 func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Webhooks", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "Webhooks")
+		defer spans.Finish()
 
-		span.LogFields(log.String("param.tenantHash", c.Param("tenantHash")))
+		spans.LogKV("param.tenantHash", c.Param("tenantHash"))
 
 		tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenantByHashId(ctx, c.Param("tenantHash"))
 		if err != nil {
 			err := errors.Wrap(err, "Unable to identify tenant")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 			return
 		}
@@ -34,7 +32,7 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
-		span.LogKV("result.integration", integration.String())
+		spans.LogKV("result.integration", integration.String())
 
 		switch integration {
 		case commonEnum.SourceCalCom:
@@ -49,7 +47,7 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 		// todo
 		default:
 			err := errors.New("Unsupported integration")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}

@@ -7,17 +7,16 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"net/url"
 )
 
 func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		_, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/requestAccess", c.Request.Header)
-		defer span.Finish()
+		spans, _ := telemetry.StartRestSpan(c.Request.Context(), "RequestAccessQuickbooks")
+		defer spans.Finish()
 
 		quickbooksRequestAccessUrl := "https://appcenter.intuit.com/connect/oauth2?client_id=" + s.Cfg.Common.External.QuickbooksConfig.ClientId
 
@@ -33,7 +32,7 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 			quickbooksRequestAccessUrl += "&state=" + state
 		}
 
-		span.LogFields(log.Object("quickbooksRequestAccessUrl", quickbooksRequestAccessUrl))
+		spans.LogKV("quickbooksRequestAccessUrl", quickbooksRequestAccessUrl)
 
 		c.JSON(http.StatusOK, gin.H{"url": quickbooksRequestAccessUrl})
 	}
@@ -41,15 +40,15 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/oauth/callback", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "CallbackQuickbooks")
+		defer spans.Finish()
 
 		code := c.Request.URL.Query().Get("code")
 		realmId := c.Request.URL.Query().Get("realmId")
 		redirectUrl := c.Request.URL.Query().Get("redirect_url")
-		span.LogKV("code", code)
-		span.LogKV("redirectUrl", url.QueryEscape(redirectUrl))
-		span.LogKV("realmId", realmId)
+		spans.LogKV("code", code)
+		spans.LogKV("redirectUrl", url.QueryEscape(redirectUrl))
+		spans.LogKV("realmId", realmId)
 
 		requestData := url.Values{}
 		requestData.Set("grant_type", "authorization_code")
@@ -64,7 +63,7 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 		_, err := s.CommonServices.QuickbooksService.GetAndStoreAccessToken(ctx, realmId, requestData)
 		if err != nil {
-			span.LogFields(log.Error(err))
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
@@ -72,7 +71,7 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		//publish SKUs not pushed already to QB on initial connection
 		skuList, err := s.CommonServices.PostgresRepositories.SkuRepository.GetAll(ctx, tenant.(string), nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
 		if skuList != nil && len(skuList) > 0 {
@@ -80,7 +79,7 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 				if sku.QuickbooksId == "" {
 					err = s.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, sku.ID, model.SKU, dto.SkuUpdate{})
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 					}
 				}
 			}
@@ -92,9 +91,8 @@ func CallbackQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func RevokeQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/revoke", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RevokeQuickbooks")
+		defer spans.Finish()
 
 		// Retrieve the tenant from context.
 		tenant, exists := c.Get(security.KEY_TENANT_NAME)
@@ -107,12 +105,12 @@ func RevokeQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 			Tenant:    tenant.(string),
 			AppSource: constants.AppSourceCustomerOsApi,
 		})
-		tracing.TagTenant(span, tenant.(string))
+		spans.LogKV("tenant", tenant.(string))
 
 		// Call the QuickBooks service to revoke the access.
 		err := s.CommonServices.QuickbooksService.RevokeAccess(ctx)
 		if err != nil {
-			span.LogFields(log.Error(err))
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revoke QuickBooks access"})
 			return
 		}
@@ -123,8 +121,8 @@ func RevokeQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 
 func GetQuickbooksSettings(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/tenant/settings", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "GetQuickbooksSettings")
+		defer spans.Finish()
 
 		tenant, _ := c.Get(security.KEY_TENANT_NAME)
 

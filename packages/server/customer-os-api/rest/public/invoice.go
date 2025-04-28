@@ -7,7 +7,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -113,25 +112,24 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 
 func GetInvoicePaymentLink(services *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RedirectToPayInvoice")
+		defer spans.Finish()
 
 		// Get invoice ID from path parameter
 		invoiceID := c.Param("invoiceId")
-		span.LogKV("invoiceId", invoiceID)
+		spans.LogKV("invoiceId", invoiceID)
 
 		// Fetch invoice by ID
 		invoice, tenant, err := services.CommonServices.InvoiceService.GetByIdAcrossAllTenants(ctx, invoiceID)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error fetching invoice"))
+			spans.TraceError(errors.Wrap(err, "Error fetching invoice"))
 		}
 		if invoice == nil || invoice.DryRun {
 			c.String(http.StatusNotFound, "")
 			return
 		}
-		tracing.TagTenant(span, tenant)
-		span.LogKV("invoiceStatus", invoice.Status.String())
+		spans.TagTenant(tenant)
+		spans.LogKV("invoiceStatus", invoice.Status.String())
 
 		// Check invoice status
 		switch invoice.Status {
@@ -150,7 +148,7 @@ func GetInvoicePaymentLink(services *cosapi_services.Services) gin.HandlerFunc {
 
 		paymentLink := invoice.PaymentDetails.PaymentLink
 		validUntil := invoice.PaymentDetails.PaymentLinkValidUntil
-		span.LogKV("paymentLink", paymentLink, "validUntil", validUntil.Format(time.RFC3339))
+		spans.LogKV("paymentLink", paymentLink, "validUntil", validUntil.Format(time.RFC3339))
 
 		if paymentLink != "" && validUntil != nil && validUntil.After(utils.Now()) {
 			c.String(http.StatusOK, paymentLink)

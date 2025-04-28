@@ -11,7 +11,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
@@ -42,9 +41,8 @@ type ReferrerQueryParams struct {
 
 func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "WebsiteTrackerEventsHandler.RevealWebsiteVisitors", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "WebsiteTrackerEventsHandler.RevealWebsiteVisitors")
+		defer spans.Finish()
 
 		if err := h.validateHeaders(c); err != nil {
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
@@ -56,13 +54,13 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
+		spans.TagTenant(tenant)
 		ctx = common.SetTenantInContext(ctx, tenant)
 
 		trackerData := h.buildTrackerDbData(c, tenant)
 		if trackerData == nil {
 			err = fmt.Errorf("unable to build tracking record")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -77,19 +75,19 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 		// check if the event type is known
 		if !enum.IsValidWebTrackerEvent(trackerData.EventType) {
 			err = fmt.Errorf("unsupported web-tracker event type: %s", trackerData.EventType)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		if err := h.assignEventToSession(ctx, trackerData); err != nil {
 			if trackerData.EventType != enum.WebTrackerPageExit.String() {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			return
 		}
 
 		if _, err := h.services.Repositories.PostgresRepositories.WebTrackerEventsRepository.Create(ctx, *trackerData); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 	}

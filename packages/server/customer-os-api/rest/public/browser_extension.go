@@ -9,7 +9,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -39,10 +38,8 @@ type ContactResponse struct {
 
 func (h *BrowserExtensionHandler) CreateContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.CreateContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.CreateContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -153,10 +150,8 @@ func isValidLinkedinContactUrl(s string) bool {
 
 func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.GetContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.GetContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -191,10 +186,8 @@ func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
 
 func (h *BrowserExtensionHandler) TouchContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.GetContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.GetContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {

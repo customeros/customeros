@@ -11,7 +11,6 @@ import (
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoEnum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -199,9 +198,8 @@ func (h *OrganizationHandler) SetPrimaryExternalSystemId() gin.HandlerFunc {
 }
 
 func (h *OrganizationHandler) validateOrganizationRequest(c *gin.Context, request *CreateOrganizationRequest) error {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.validateOrganizationRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "Customerbase.validateOrganizationRequest")
+	defer spans.Finish()
 
 	if request.Name == "" && request.CustomId == "" && request.Website == "" && request.LinkedinUrl == "" {
 		message := "Missing organization input fields"
@@ -294,16 +292,15 @@ func (h *OrganizationHandler) determineOrganizationStage(relationship model.Orga
 }
 
 func (h *OrganizationHandler) retrieveOrganization(c *gin.Context, orgID string) (OrganizationRecord, APIStatus) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.retrieveOrganization")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "Customerbase.retrieveOrganization")
+	defer spans.Finish()
 
 	var result OrganizationRecord
 
 	organizationDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(
 		ctx, common.GetTenantFromContext(ctx), orgID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return result, APIStatusError
 	}
 	if organizationDbNode == nil {
@@ -330,9 +327,8 @@ func (h *OrganizationHandler) retrieveOrganization(c *gin.Context, orgID string)
 }
 
 func (h *OrganizationHandler) handleExternalSystemUpdate(c *gin.Context) (ExternalSystemRecord, int) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.handleExternalSystemUpdate")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "OrganizationHandler.handleExternalSystemUpdate")
+	defer spans.Finish()
 
 	var results ExternalSystemRecord
 

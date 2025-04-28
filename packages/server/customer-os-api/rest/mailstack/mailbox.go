@@ -6,9 +6,8 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -36,10 +35,8 @@ import (
 // @Security ApiKeyAuth
 func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewMailbox", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RegisterNewMailbox")
+		defer spans.Finish()
 
 		// get domain from path
 		domain := c.Param("domain")
@@ -48,24 +45,24 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		span.LogKV("request.domain", domain)
+		spans.LogKV("request.domain", domain)
 
 		// get tenant from context
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
 		// Parse and validate request body
 		var mailboxRequest MailboxRequest
 		if err := c.ShouldBindJSON(&mailboxRequest); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
+			spans.TraceError(errors.Wrap(err, "Invalid request body"))
 			// log body
 			body, _ := c.GetRawData()
-			span.LogFields(tracingLog.String("request.body", string(body)))
+			spans.LogKV("request.body", string(body))
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
@@ -80,7 +77,7 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 		})
 		if err != nil {
 			h.responseHandler.HandleError(c, statusCode, &errMsg)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
@@ -117,9 +114,8 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetMailboxes", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.GetMailboxes")
+		defer spans.Finish()
 
 		// get domain from path
 		domain := c.Param("domain")
@@ -128,14 +124,14 @@ func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		span.LogKV("request.domain", domain)
+		spans.LogKV("request.domain", domain)
 
 		// get tenant from context
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
@@ -144,7 +140,7 @@ func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 		if err != nil {
 			message := "Internal server error"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/gin-gonic/gin"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -20,13 +20,12 @@ import (
 const EXTERNAL_SYSTEM = "mailstack"
 
 func (h *IntegrationHandler) PostmarkInboundEmail(c *gin.Context) {
-	_, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.PostmarkInboundEmail", c.Request.Header)
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.PostmarkInboundEmail")
+	defer spans.Finish()
 
 	// Validate Postmark User-Agent
 	if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
-		tracing.TraceErr(span, fmt.Errorf("invalid user agent %s", c.Request.UserAgent()))
+		spans.TraceError(fmt.Errorf("invalid user agent %s", c.Request.UserAgent()))
 		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 		return
 	}
@@ -34,8 +33,8 @@ func (h *IntegrationHandler) PostmarkInboundEmail(c *gin.Context) {
 	// Parse email data
 	emailData, err := h.parseInboundEmail(c)
 	if err != nil {
-		tracing.LogObjectAsJson(span, "body", c.Request.Body)
-		tracing.TraceErr(span, err)
+		spans.LogObjectAsJson("body", c.Request.Body)
+		spans.TraceError(err)
 		h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 		return
 	}
@@ -46,12 +45,12 @@ func (h *IntegrationHandler) PostmarkInboundEmail(c *gin.Context) {
 			if r := recover(); r != nil {
 				stack := debug.Stack()
 				err := fmt.Errorf("panic recovered in email processing: %v\n%s", r, stack)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}()
 
 		if err := h.processInboundEmail(c, &emailData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to process inbound email from Postmark"))
+			spans.TraceError(errors.Wrap(err, "failed to process inbound email from Postmark"))
 		}
 	}()
 }
@@ -67,9 +66,8 @@ func (h *IntegrationHandler) parseInboundEmail(c *gin.Context) (PostmarkInboundE
 }
 
 func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *PostmarkInboundEmailData) error {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.processInboundEmail")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.processInboundEmail")
+	defer spans.Finish()
 
 	tenant, err := h.getTenant(c, emailData)
 	if err != nil {
@@ -85,8 +83,8 @@ func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *Post
 	participants := emailData.AllParticipantEmails()
 	username, err := h.getUsername(ctx, participants)
 	if err != nil || username == "" {
-		span.LogFields(tracingLog.Bool("mailbox.found", false))
-		tracing.TraceErr(span, err)
+		spans.LogFields(tracingLog.Bool("mailbox.found", false))
+		spans.TraceError(err)
 		return err
 	}
 
@@ -95,7 +93,7 @@ func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *Post
 		ctx, EXTERNAL_SYSTEM, tenant, username, messageId,
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return fmt.Errorf("unable to determine if email exists in db for messageId %s: %v", messageId, err)
 	}
 
@@ -155,35 +153,33 @@ func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *Post
 }
 
 func (h *IntegrationHandler) getTenant(c *gin.Context, emailData *PostmarkInboundEmailData) (string, error) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.getTenant")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.getTenant")
+	defer spans.Finish()
 
 	nameFromBcc := emailData.TenantFromBcc()
 
 	n, err := h.services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantByNameIgnoreCase(ctx, nameFromBcc)
 	if err != nil {
-		span.LogFields(tracingLog.Bool("tenant.found", false))
-		tracing.TraceErr(span, err)
+		spans.LogFields(tracingLog.Bool("tenant.found", false))
+		spans.TraceError(err)
 		return "", fmt.Errorf("cannot identify tenant %s: %v", nameFromBcc, err)
 	}
 
 	if n == nil {
-		span.LogFields(tracingLog.Bool("tenant.found", false))
+		spans.LogKV("tenant.found", false)
 		return "", fmt.Errorf("no valid tenant %s: %v", nameFromBcc, err)
 	}
 
 	tenant := mapper.MapDbNodeToTenantEntity(n)
-	span.LogFields(tracingLog.Bool("tenant.found", true))
-	span.LogFields(tracingLog.String("tenant.name", tenant.Name))
+	spans.LogKV("tenant.found", true)
+	spans.LogKV("tenant.name", tenant.Name)
 
 	return tenant.Name, nil
 }
 
 func (h *IntegrationHandler) getUsername(ctx context.Context, EmailParticipants []string) (string, error) {
-	span, _ := tracing.StartTracerSpan(ctx, "Flows.getUsername")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(ctx, "IntegrationHandler.getUsername")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 

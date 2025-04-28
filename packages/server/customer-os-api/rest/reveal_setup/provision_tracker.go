@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -54,9 +54,8 @@ const TrackerScript = `<!-- CustomerOS Visitor Reveal -->
 </script>`
 
 func (h *WebTrackerHandler) getTrackerRequestPayload(c *gin.Context) (TrackerRequest, error) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Reveal.getTrackerRequestPayload")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "WebTrackerHandler.getTrackerRequestPayload")
+	defer spans.Finish()
 
 	var req TrackerRequest
 	err := c.ShouldBindJSON(&req)
@@ -78,13 +77,12 @@ func (h *WebTrackerHandler) getTrackerRequestPayload(c *gin.Context) (TrackerReq
 }
 
 func (h *WebTrackerHandler) isValidDomain(ctx context.Context, domain string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "Reveal.isValidDomain")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebTrackerHandler.isValidDomain")
+	defer spans.Finish()
 
 	_, err := net.LookupHost(domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false
 	}
 	return true

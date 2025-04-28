@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -192,10 +191,8 @@ type IpIntelligenceOrganization struct {
 // @Security ApiKeyAuth
 func (h *VerifyHandler) IpIntelligence() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "VerifyHandler.IpIntelligence")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -211,7 +208,7 @@ func (h *VerifyHandler) IpIntelligence() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		span.LogFields(log.String("address", ipAddress))
+		spans.LogKV("address", ipAddress)
 
 		if net.ParseIP(ipAddress) == nil {
 			message := "IP address is not valid"
@@ -223,7 +220,7 @@ func (h *VerifyHandler) IpIntelligence() gin.HandlerFunc {
 		var ipIntelligenceResponse IpIntelligenceRecord
 		result, err := h.services.CommonServices.VerifyService.LookupIp(ctx, ipAddress)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -280,7 +277,7 @@ func (h *VerifyHandler) IpIntelligence() gin.HandlerFunc {
 				ReferenceData: ipAddress,
 			})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+			spans.TraceError(errors.Wrap(err, "failed to register billable event"))
 		}
 
 		h.responseHandler.HandleSuccess(c, IpIntelligenceResponse{

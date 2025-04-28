@@ -4,16 +4,14 @@ package customerbase
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 // BulkResponse represents the response for bulk operations with single error
@@ -106,9 +104,8 @@ func (h *ContactHandler) CreateBulkContacts() gin.HandlerFunc {
 // @Security ApiKeyAutl
 func (h *ContactHandler) ImportContacts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ContactHandler.ImportContacts", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "ContactHandler.ImportContacts")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {

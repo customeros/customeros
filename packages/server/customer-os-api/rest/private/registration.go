@@ -19,7 +19,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -44,12 +43,12 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/rml", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "RML")
+		defer spans.Finish()
 
 		var request RequestMagicLinkRequest
 		if err := c.BindJSON(&request); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INVALID_REQUEST"),
 			})
@@ -65,7 +64,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 
 		saveErr := saveIP(ctx, c, s, request.Email)
 		if saveErr != nil {
-			tracing.TraceErr(span, errors.Wrap(saveErr, "unable to save IP address"))
+			spans.TraceError(errors.Wrap(saveErr, "unable to save IP address"))
 		}
 
 		emailValidation := mailvalidate.ValidateEmailSyntax(request.Email)
@@ -86,7 +85,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 			// Check if the code already exists
 			magicLink, err := s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, code)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})
@@ -100,7 +99,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 
 		byEmail, err := s.Repositories.PostgresRepositories.MagicLinkRepository.GetByEmail(ctx, request.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 			})
@@ -110,7 +109,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 		if byEmail != nil {
 			err := s.Repositories.PostgresRepositories.MagicLinkRepository.Delete(ctx, byEmail.ID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})
@@ -136,7 +135,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 			},
 		}, "openlineai")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 			})
@@ -159,13 +158,13 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/pml", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "PML")
+		defer spans.Finish()
 
 		var magicLink *postgres_entity.MagicLink
 		var signInRequest SignInRequest
 		if err := c.BindJSON(&signInRequest); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INVALID_REQUEST"),
 			})
@@ -175,7 +174,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 		if signInRequest.Code != "" {
 			magicLink, err = s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, signInRequest.Code)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})
@@ -201,7 +200,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 
 		err = s.Repositories.PostgresRepositories.MagicLinkRepository.Delete(ctx, magicLink.ID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
 		return
@@ -218,12 +217,12 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 			panic(err)
 		}
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/signin", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "Signin")
+		defer spans.Finish()
 
 		var signInRequest SignInRequest
 		if err = c.BindJSON(&signInRequest); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 			})
@@ -235,7 +234,7 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 }
 
 func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
-	spans, ctx := telemetry.StartRestSpan(ctx, "signInV2")
+	spans, ctx := telemetry.StartRestSpan(ctx, "signIn")
 	defer spans.Finish()
 
 	var err error

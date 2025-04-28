@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
 
@@ -132,10 +132,8 @@ type TrackedLink struct {
 // @Security ApiKeyAuth
 func (h *OutreachHandler) GenerateEmailTrackingUrls() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GenerateEmailTrackingUrls", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "OutreachHandler.GenerateEmailTrackingUrls")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -165,7 +163,7 @@ func (h *OutreachHandler) GenerateEmailTrackingUrls() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		tracing.LogObjectAsJson(span, "request", request)
+		spans.LogKV("request", request)
 
 		trackerDomain := request.TrackerDomain
 		if trackerDomain == "" {
@@ -180,7 +178,7 @@ func (h *OutreachHandler) GenerateEmailTrackingUrls() gin.HandlerFunc {
 		// Generate tracking open URL
 		trackedOpenUrl, _, err := h.services.CommonServices.EmailingService.GenerateEmailSpyPixelUrl(ctx, tenant, trackerDomain, messageId, request.CampaignId, request.RecipientId, request.TrackOpens)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Error generating email open tracker"
 			log.Error(ctx, message, err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -192,7 +190,7 @@ func (h *OutreachHandler) GenerateEmailTrackingUrls() gin.HandlerFunc {
 		for _, redirectUrl := range request.Links {
 			trackedUrl, _, _, err := h.services.CommonServices.EmailingService.GenerateEmailLinkUrl(ctx, tenant, trackerDomain, redirectUrl, messageId, request.CampaignId, request.RecipientId, request.TrackClicks)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				message := "Error generating tracked link"
 				log.Error(ctx, message, err)
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
@@ -209,7 +207,7 @@ func (h *OutreachHandler) GenerateEmailTrackingUrls() gin.HandlerFunc {
 		if request.GenerateUnsubscribeLink && request.UnsubscribeLink != "" {
 			unsubscribeUrl, _, err := h.services.CommonServices.EmailingService.GenerateEmailUnsubscribeUrl(ctx, tenant, trackerDomain, request.UnsubscribeLink, messageId, request.CampaignId, request.RecipientId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				message := "Error generating unsubscribe URL"
 				log.Error(ctx, message, err)
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)

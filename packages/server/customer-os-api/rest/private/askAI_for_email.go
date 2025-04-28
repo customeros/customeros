@@ -11,7 +11,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,15 +32,14 @@ func (h *AskAIHandler) AskAIForEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/askAIForEmail", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "AskAIHandler.AskAIForEmail")
+		defer spans.Finish()
 
 		// parse request
 		var request AskAIForEmailRequest
 		err := c.BindJSON(&request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Unable to parse request"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -49,7 +48,7 @@ func (h *AskAIHandler) AskAIForEmail() gin.HandlerFunc {
 		// validate request
 		err = h.validateAskAIForEmailRequest(&request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Invalid request"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -80,7 +79,7 @@ Next, determine if an email signature is present.  If it is, then you are to ide
 			OutputFormat:     enum.AIOutputJson,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Unable to ask AI"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return

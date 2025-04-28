@@ -6,20 +6,19 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 )
 
 func (h *IntegrationHandler) PostmarkDMARCMonitor() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.PostmarkDMARCMonitor", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.PostmarkDMARCMonitor")
+		defer spans.Finish()
 
 		// Validate Postmark User-Agent
 		if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
-			tracing.TraceErr(span, fmt.Errorf("invalid user agent %s", c.Request.UserAgent()))
+			spans.TraceError(fmt.Errorf("invalid user agent %s", c.Request.UserAgent()))
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
@@ -27,7 +26,7 @@ func (h *IntegrationHandler) PostmarkDMARCMonitor() gin.HandlerFunc {
 		// Get raw request body
 		rawBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to read request body"))
+			spans.TraceError(errors.Wrap(err, "failed to read request body"))
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
@@ -35,7 +34,7 @@ func (h *IntegrationHandler) PostmarkDMARCMonitor() gin.HandlerFunc {
 		// Process DMARC report via mailstack service
 		err = h.services.CommonServices.MailstackService.ProcessDMARCMonitoringReport(ctx, rawBody)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to process DMARC report"))
+			spans.TraceError(errors.Wrap(err, "failed to process DMARC report"))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}

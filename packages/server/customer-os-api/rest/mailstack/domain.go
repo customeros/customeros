@@ -5,9 +5,8 @@ import (
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -33,14 +32,13 @@ import (
 // @Security ApiKeyAuth
 func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.RegisterNewDomain", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.RegisterNewDomain")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			tracing.TraceErr(span, errors.New("Missing tenant in context"))
+			spans.TraceError(errors.New("Missing tenant in context"))
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
@@ -49,7 +47,7 @@ func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 		var req RegisterNewDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			message := "Invalid request body"
-			tracing.TraceErr(span, errors.Wrap(err, message))
+			spans.TraceError(errors.Wrap(err, message))
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
@@ -93,15 +91,14 @@ func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *MailstackHandler) ConfigureDomain() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.ConfigureDomain", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.ConfigureDomain")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
@@ -109,7 +106,7 @@ func (h *MailstackHandler) ConfigureDomain() gin.HandlerFunc {
 		var req ConfigureDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			message := "Invalid request body"
-			tracing.TraceErr(span, errors.Wrap(err, message))
+			spans.TraceError(errors.Wrap(err, message))
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
@@ -150,15 +147,14 @@ func (h *MailstackHandler) ConfigureDomain() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *MailstackHandler) GetDomains() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.GetDomains", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.GetDomains")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 
@@ -206,15 +202,14 @@ func (h *MailstackHandler) GetDomains() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *MailstackHandler) RecommendDomain() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "MailstackHandler.RecommendDomain", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailstackHandler.RecommendDomain")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			spans.LogKV("result", "Missing tenant in context")
 			return
 		}
 

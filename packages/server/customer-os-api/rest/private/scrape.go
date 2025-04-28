@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -37,9 +36,8 @@ func (h *WebscrapeHandler) Crawl() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/crawl", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "WebscrapeHandler/Crawl")
+		defer spans.Finish()
 
 		// parse request
 		request, err := h.parseRequest(c)
@@ -51,7 +49,7 @@ func (h *WebscrapeHandler) Crawl() gin.HandlerFunc {
 
 		crawled, err := h.services.CommonServices.WebscraperService.Crawl(ctx, request.Url)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Unable to crawl website"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return

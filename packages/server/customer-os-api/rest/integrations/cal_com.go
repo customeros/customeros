@@ -11,8 +11,7 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -21,10 +20,8 @@ import (
 )
 
 func (h *IntegrationHandler) CalDotCom(c *gin.Context, tenant string) {
-	span, ctx := commontracing.StartTracerSpan(c.Request.Context(), "Flows.CalDotCom")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.CalDotCom")
+	defer spans.Finish()
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
 		h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
@@ -58,14 +55,14 @@ func (h *IntegrationHandler) CalDotCom(c *gin.Context, tenant string) {
 	// lookup secret
 	webhook, err := h.services.Repositories.PostgresRepositories.WebhooksRepository.Find(ctx, postgres_entity.Webhooks{WebhookPath: c.Request.URL.Path})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 		return
 	}
 
 	valid, err := h.verifyCalWebhookSignature(body, signature, webhook.Secret)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		message := "Unable to verify message payload"
 		h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 		return
@@ -96,16 +93,15 @@ func (h *IntegrationHandler) verifyCalWebhookSignature(payload []byte, signature
 }
 
 func (h *IntegrationHandler) handleCalDotComEvent(c *gin.Context) {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleCalDotComEvent")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.handleCalDotComEvent")
+	defer spans.Finish()
 
 	var webhook CalDotComPayload
 	err := c.BindJSON(&webhook)
 	if err != nil {
 		message := "Unable to parse cal.com payload"
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-		tracing.TraceErr(span, errors.Wrap(err, "Unable to parse cal.com payload"))
+		spans.TraceError(errors.Wrap(err, "Unable to parse cal.com payload"))
 		return
 	}
 

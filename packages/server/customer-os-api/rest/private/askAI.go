@@ -13,7 +13,6 @@ import (
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -56,9 +55,8 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/askAI", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "AskAIHandler.AskAI")
+		defer spans.Finish()
 
 		// parse request
 		request, err := h.parseRequest(c)
@@ -72,7 +70,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 
 		err = h.validateAIRequest(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := err.Error()
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -87,7 +85,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		} else {
 			promptBytes, err := json.Marshal(prompt)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				message := "Unable to marshal prompt"
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
@@ -108,7 +106,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 
 		answer, err := h.services.CommonServices.AIService.AskAI(ctx, AIRequest)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Unable to ask AI"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return

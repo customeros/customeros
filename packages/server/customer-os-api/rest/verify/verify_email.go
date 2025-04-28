@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -214,10 +214,8 @@ type BulkResultsDetails struct {
 // @Security ApiKeyAuth
 func (h *VerifyHandler) VerifyEmailAddress() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "VerifyEmailAddress", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "VerifyHandler.VerifyEmailAddress")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -233,7 +231,7 @@ func (h *VerifyHandler) VerifyEmailAddress() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		span.LogKV("request.address", emailAddress)
+		spans.LogKV("request.address", emailAddress)
 
 		syntaxValidation := mailsherpa.ValidateEmailSyntax(emailAddress)
 		if !syntaxValidation.IsValid {
@@ -303,7 +301,7 @@ func (h *VerifyHandler) VerifyEmailAddress() gin.HandlerFunc {
 					ReferenceData: emailAddress,
 				})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+				spans.TraceError(errors.Wrap(err, "failed to register billable event"))
 			}
 		}
 
@@ -329,10 +327,8 @@ func (h *VerifyHandler) VerifyEmailAddress() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BulkUploadEmailsForVerification", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "VerifyHandler.BulkUploadEmailsForVerification")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -348,13 +344,13 @@ func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 		if strings.ToLower(verifyCatchAllParam) == "false" {
 			verifyCatchAll = false
 		}
-		span.LogKV("emailColumn", emailColumn)
-		span.LogKV("verifyCatchAll", verifyCatchAllParam)
+		spans.LogKV("emailColumn", emailColumn)
+		spans.LogKV("verifyCatchAll", verifyCatchAllParam)
 
 		// Parse the uploaded CSV file
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			spans.TraceError(errors.Wrap(err, "failed to insert records"))
 			message := "Unable to read csv file"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -435,7 +431,7 @@ func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 
 		bulkRequest, err := h.services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, verifyCatchAll, totalEmails)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			spans.TraceError(errors.Wrap(err, "failed to insert records"))
 			message := "Unable to process bulk request"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 		}
@@ -443,7 +439,7 @@ func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 		// Bulk insert email records into the database
 		err = h.services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, verifyCatchAll, emails)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to insert email records"))
+			spans.TraceError(errors.Wrap(err, "failed to insert email records"))
 			message := "Unable to process bulk request"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
@@ -451,7 +447,7 @@ func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 
 		countPendingRequests, err := h.services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
+			spans.TraceError(errors.Wrap(err, "failed to count pending requests"))
 			countPendingRequests = 100 // default to 100 records
 		}
 		countPendingRequests = countPendingRequests + int64(totalEmails)
@@ -482,10 +478,8 @@ func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *VerifyHandler) GetBulkEmailVerificationResults() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "VerifyHandler.GetBulkEmailVerificationResults")
+		defer spans.Finish()
 
 		requestID := c.Param("requestId")
 		if requestID == "" {
@@ -493,13 +487,12 @@ func (h *VerifyHandler) GetBulkEmailVerificationResults() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		span.LogKV("requestId", requestID)
+		spans.LogKV("requestId", requestID)
 
 		// Fetch the bulk request from the database
 		bulkRequest, err := h.services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
-
-			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			spans.TraceError(errors.Wrap(err, "failed to insert records"))
 			message := "Invalid requestId"
 			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
@@ -511,7 +504,7 @@ func (h *VerifyHandler) GetBulkEmailVerificationResults() gin.HandlerFunc {
 
 		countPendingRequests, err := h.services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
+			spans.TraceError(errors.Wrap(err, "failed to count pending requests"))
 			countPendingRequests = 100 // default to 100 records
 		}
 		// Check if the processing is completed
@@ -558,10 +551,8 @@ func (h *VerifyHandler) GetBulkEmailVerificationResults() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *VerifyHandler) DownloadBulkEmailVerificationResults() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "VerifyHandler.DownloadBulkEmailVerificationResults")
+		defer spans.Finish()
 
 		// Extract requestID from the path parameter
 		requestID := c.Param("requestId")
@@ -575,7 +566,7 @@ func (h *VerifyHandler) DownloadBulkEmailVerificationResults() gin.HandlerFunc {
 		// Fetch the bulk request from the database
 		bulkRequest, err := h.services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			spans.TraceError(errors.Wrap(err, "failed to insert records"))
 			message := "Unable to retrieve request"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
@@ -602,7 +593,7 @@ func (h *VerifyHandler) DownloadBulkEmailVerificationResults() gin.HandlerFunc {
 
 		_, err = h.services.CommonServices.FileService.DownloadSingleFile(ctx, bulkRequest.FileStoreId, c, false)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get file using file store api"))
+			spans.TraceError(errors.Wrap(err, "failed to get file using file store api"))
 			message := "Unable to fetch csv file"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
