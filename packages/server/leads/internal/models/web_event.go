@@ -8,7 +8,6 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/internal/enum"
 )
 
-// EmailEvent represents the main email events table
 type WebTrackerEvent struct {
 	ID           string               `gorm:"column:id;type:varchar(50);primaryKey;not null" json:"id"`
 	Event        enum.WebTrackerEvent `gorm:"column:event;type:varchar(50);index;not null" json:"event"`

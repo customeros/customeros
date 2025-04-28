@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +24,8 @@ type WebTrackerRepository interface {
 	GetByDomain(ctx context.Context, id string) (*models.WebTracker, error)
 	GetActiveTrackers(ctx context.Context) ([]models.WebTracker, error)
 	Update(ctx context.Context, record dto.WebTrackerUpdate) error
+	UpdateLastEventAt(ctx context.Context, trackerID string, timestamp time.Time) error
+	UpdateLastEventAtWithTxn(ctx context.Context, txn *gorm.DB, trackerID string, timestamp time.Time) error
 	Archive(ctx context.Context, id string) error
 	Restore(ctx context.Context, id string) error
 }
@@ -164,6 +167,52 @@ func (r *webTrackerRepository) Update(ctx context.Context, dto dto.WebTrackerUpd
 		return errors.New("webtracker not found")
 	}
 	return result.Error
+}
+
+// UpdateLastEventAt updates the LastEventAt timestamp for a specific tracker
+func (r *webTrackerRepository) UpdateLastEventAt(ctx context.Context, trackerID string, timestamp time.Time) error {
+	span, ctx := telemetry.StartPostgresSpan(ctx, "webTrackerRepository.UpdateLastEventAt")
+	defer span.Finish()
+
+	result := r.write.WithContext(ctx).
+		Model(&models.WebTracker{}).
+		Where("id = ?", trackerID).
+		Update("last_event_at", timestamp)
+
+	if result.Error != nil {
+		span.TraceError(result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := fmt.Errorf("no tracker found with ID: %s", trackerID)
+		span.TraceError(err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *webTrackerRepository) UpdateLastEventAtWithTxn(ctx context.Context, txn *gorm.DB, trackerID string, timestamp time.Time) error {
+	span, ctx := telemetry.StartPostgresSpan(ctx, "webTrackerRepository.UpdateLastEventAtWithTxn")
+	defer span.Finish()
+
+	result := txn.Model(&models.WebTracker{}).
+		Where("id = ?", trackerID).
+		Update("last_event_at", timestamp)
+
+	if result.Error != nil {
+		span.TraceError(result.Error)
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		err := fmt.Errorf("no tracker found with ID: %s", trackerID)
+		span.TraceError(err)
+		return err
+	}
+
+	return nil
 }
 
 // Archive marks a WebTracker as archived

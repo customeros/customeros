@@ -58,7 +58,7 @@ func (r *mutationResolver) UpdateWebtracker(ctx context.Context, tracker graphql
 		return nil, err
 	default:
 		cnameHost = *tracker.CnameHost
-		updatedTracker, err := r.services.WebtrackerRegistrationService.UpdateCNAMEHost(ctx, cnameHost)
+		updatedTracker, err := r.services.WebtrackerService.UpdateCNAMEHost(ctx, cnameHost)
 		if err != nil {
 			span.TraceError(err)
 			return nil, err
@@ -78,7 +78,7 @@ func (r *mutationResolver) VerifyWebtrackerCname(ctx context.Context, id string)
 		return false, err
 	}
 
-	return r.services.WebtrackerRegistrationService.IsCNAMEConfigured(ctx, id)
+	return r.services.WebtrackerService.IsCNAMEConfigured(ctx, id)
 }
 
 // ArchiveWebtracker is the resolver for the archiveWebtracker field.
@@ -92,7 +92,7 @@ func (r *mutationResolver) ArchiveWebtracker(ctx context.Context, id string) (bo
 		return false, err
 	}
 
-	err := r.services.WebtrackerRegistrationService.ArchiveWebtracker(ctx, id)
+	err := r.services.WebtrackerService.ArchiveWebtracker(ctx, id)
 	if err != nil {
 		span.TraceError(err)
 		return false, err
@@ -111,7 +111,7 @@ func (r *queryResolver) Webtracker(ctx context.Context, id string) (*graphql_mod
 		return nil, err
 	}
 
-	tracker, err := r.services.WebtrackerRegistrationService.GetWebtracker(ctx, id)
+	tracker, err := r.services.WebtrackerService.GetWebtracker(ctx, id)
 	if err != nil {
 		span.TraceError(err)
 		return nil, err
@@ -125,7 +125,7 @@ func (r *queryResolver) Webtrackers(ctx context.Context) ([]*graphql_model.Webtr
 	span, ctx := telemetry.StartGraphQLSpan(ctx, "graphQLResolvers.Webtracker")
 	defer span.Finish()
 
-	webtrackers, err := r.services.WebtrackerRegistrationService.GetActiveWebtrackers(ctx)
+	webtrackers, err := r.services.WebtrackerService.GetActiveWebtrackers(ctx)
 	if err != nil {
 		span.TraceError(err)
 		return nil, err

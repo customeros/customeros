@@ -10,11 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/customeros/customeros/packages/server/leads/dto"
 	"github.com/customeros/customeros/packages/server/leads/internal/caches"
+	"github.com/customeros/customeros/packages/server/leads/internal/enum"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/proto/mappers"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
@@ -28,6 +31,24 @@ func NewWebsiteEventsHandler(services *services.Services) *WebsiteEventsHandler 
 		cache:    caches.NewOriginTenantCache(),
 		services: services,
 	}
+}
+
+type WebTrackerEvent struct {
+	IP               string               `json:"ip"`
+	VisitorID        string               `json:"visitorId"`
+	EventType        enum.WebTrackerEvent `json:"eventType"`
+	EventData        string               `json:"eventData"`
+	Timestamp        time.Time            `json:"timestamp"`
+	Href             string               `json:"href"`
+	Origin           string               `json:"origin"`
+	Search           string               `json:"search"`
+	Hostname         string               `json:"hostname"`
+	Pathname         string               `json:"pathname"`
+	Referrer         string               `json:"referrer"`
+	UserAgent        string               `json:"userAgent"`
+	Language         string               `json:"language"`
+	CookiesEnabled   bool                 `json:"cookiesEnabled"`
+	ScreenResolution string               `json:"screenResolution"`
 }
 
 const REQUEST_TIMEOUT = 60 * time.Second
@@ -60,7 +81,20 @@ func (h *WebsiteEventsHandler) Handle() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusAccepted, gin.H{"accepted": "true"})
-		h.services.WebEventProcessor.Process(ctx, trackerData, webtrackerID)
+
+		h.services.WebEventProcessor.Process(ctx, webtrackerID, &pb.WebTrackerEvent{
+			VisitorId:        trackerData.VisitorID,
+			Ip:               trackerData.IP,
+			EventType:        proto_mappers.ConvertToProtoEventType(trackerData.EventType),
+			EventData:        trackerData.EventData,
+			Timestamp:        timestamppb.New(trackerData.Timestamp),
+			Href:             trackerData.Href,
+			Referrer:         trackerData.Referrer,
+			UserAgent:        trackerData.UserAgent,
+			Language:         trackerData.Language,
+			CookiesEnabled:   trackerData.CookiesEnabled,
+			ScreenResolution: trackerData.ScreenResolution,
+		})
 		return
 	}
 }
@@ -135,11 +169,11 @@ func (h *WebsiteEventsHandler) findTrackerIDForOrigin(ctx context.Context, clean
 	return webtracker.Tenant, webtracker.ID, nil
 }
 
-func (h *WebsiteEventsHandler) parsePayload(c *gin.Context, tenant string) *dto.WebTrackerEvent {
+func (h *WebsiteEventsHandler) parsePayload(c *gin.Context, tenant string) *WebTrackerEvent {
 	span, _ := telemetry.StartRestSpan(c.Request.Context(), "WebsiteEventsHandler.parsePayload")
 	defer span.Finish()
 
-	tracking := dto.WebTrackerEvent{}
+	tracking := WebTrackerEvent{}
 
 	rawJSON, err := c.GetRawData()
 	if err != nil {

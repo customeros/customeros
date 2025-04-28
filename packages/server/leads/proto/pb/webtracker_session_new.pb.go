@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -23,10 +24,17 @@ const (
 
 type WebtrackerSessionNew struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	TrackerId     string                 `protobuf:"bytes,2,opt,name=tracker_id,json=trackerId,proto3" json:"tracker_id,omitempty"`
-	SessionId     string                 `protobuf:"bytes,3,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	VisitorId     string                 `protobuf:"bytes,3,opt,name=visitor_id,json=visitorId,proto3" json:"visitor_id,omitempty"`
 	Ip            string                 `protobuf:"bytes,4,opt,name=ip,proto3" json:"ip,omitempty"`
+	EventType     WebTrackerEventType    `protobuf:"varint,5,opt,name=event_type,json=eventType,proto3,enum=leads.WebTrackerEventType" json:"event_type,omitempty"`
+	EventData     string                 `protobuf:"bytes,6,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`
+	Timestamp     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Href          string                 `protobuf:"bytes,8,opt,name=href,proto3" json:"href,omitempty"`
+	Referrer      string                 `protobuf:"bytes,9,opt,name=referrer,proto3" json:"referrer,omitempty"`
+	UserAgent     string                 `protobuf:"bytes,10,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	Language      string                 `protobuf:"bytes,11,opt,name=language,proto3" json:"language,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -61,9 +69,9 @@ func (*WebtrackerSessionNew) Descriptor() ([]byte, []int) {
 	return file_schema_webtracker_session_new_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *WebtrackerSessionNew) GetId() string {
+func (x *WebtrackerSessionNew) GetSessionId() string {
 	if x != nil {
-		return x.Id
+		return x.SessionId
 	}
 	return ""
 }
@@ -75,9 +83,9 @@ func (x *WebtrackerSessionNew) GetTrackerId() string {
 	return ""
 }
 
-func (x *WebtrackerSessionNew) GetSessionId() string {
+func (x *WebtrackerSessionNew) GetVisitorId() string {
 	if x != nil {
-		return x.SessionId
+		return x.VisitorId
 	}
 	return ""
 }
@@ -89,18 +97,79 @@ func (x *WebtrackerSessionNew) GetIp() string {
 	return ""
 }
 
+func (x *WebtrackerSessionNew) GetEventType() WebTrackerEventType {
+	if x != nil {
+		return x.EventType
+	}
+	return WebTrackerEventType_WEB_TRACKER_EVENT_UNSPECIFIED
+}
+
+func (x *WebtrackerSessionNew) GetEventData() string {
+	if x != nil {
+		return x.EventData
+	}
+	return ""
+}
+
+func (x *WebtrackerSessionNew) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timestamp
+	}
+	return nil
+}
+
+func (x *WebtrackerSessionNew) GetHref() string {
+	if x != nil {
+		return x.Href
+	}
+	return ""
+}
+
+func (x *WebtrackerSessionNew) GetReferrer() string {
+	if x != nil {
+		return x.Referrer
+	}
+	return ""
+}
+
+func (x *WebtrackerSessionNew) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
+	}
+	return ""
+}
+
+func (x *WebtrackerSessionNew) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
 var File_schema_webtracker_session_new_proto protoreflect.FileDescriptor
 
 const file_schema_webtracker_session_new_proto_rawDesc = "" +
 	"\n" +
-	"#schema/webtracker_session_new.proto\x12\x05leads\"t\n" +
-	"\x14WebtrackerSessionNew\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
+	"#schema/webtracker_session_new.proto\x12\x05leads\x1a\x1fgoogle/protobuf/timestamp.proto\x1a'schema/webtracker_event_type_enum.proto\"\x82\x03\n" +
+	"\x14WebtrackerSessionNew\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
 	"\n" +
 	"tracker_id\x18\x02 \x01(\tR\ttrackerId\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x03 \x01(\tR\tsessionId\x12\x0e\n" +
-	"\x02ip\x18\x04 \x01(\tR\x02ipBAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
+	"visitor_id\x18\x03 \x01(\tR\tvisitorId\x12\x0e\n" +
+	"\x02ip\x18\x04 \x01(\tR\x02ip\x129\n" +
+	"\n" +
+	"event_type\x18\x05 \x01(\x0e2\x1a.leads.WebTrackerEventTypeR\teventType\x12\x1d\n" +
+	"\n" +
+	"event_data\x18\x06 \x01(\tR\teventData\x128\n" +
+	"\ttimestamp\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04href\x18\b \x01(\tR\x04href\x12\x1a\n" +
+	"\breferrer\x18\t \x01(\tR\breferrer\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\n" +
+	" \x01(\tR\tuserAgent\x12\x1a\n" +
+	"\blanguage\x18\v \x01(\tR\blanguageBAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
 
 var (
 	file_schema_webtracker_session_new_proto_rawDescOnce sync.Once
@@ -116,14 +185,18 @@ func file_schema_webtracker_session_new_proto_rawDescGZIP() []byte {
 
 var file_schema_webtracker_session_new_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_schema_webtracker_session_new_proto_goTypes = []any{
-	(*WebtrackerSessionNew)(nil), // 0: leads.WebtrackerSessionNew
+	(*WebtrackerSessionNew)(nil),  // 0: leads.WebtrackerSessionNew
+	(WebTrackerEventType)(0),      // 1: leads.WebTrackerEventType
+	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
 }
 var file_schema_webtracker_session_new_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: leads.WebtrackerSessionNew.event_type:type_name -> leads.WebTrackerEventType
+	2, // 1: leads.WebtrackerSessionNew.timestamp:type_name -> google.protobuf.Timestamp
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_schema_webtracker_session_new_proto_init() }
@@ -131,6 +204,7 @@ func file_schema_webtracker_session_new_proto_init() {
 	if File_schema_webtracker_session_new_proto != nil {
 		return
 	}
+	file_schema_webtracker_event_type_enum_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

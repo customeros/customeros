@@ -25,7 +25,7 @@ func (n *NATSConnections) Close() {
 }
 
 const (
-	EVENTSTREAM_STREAM = "eventstream"
+	LEADS_STREAM = "leads"
 
 	MAX_STREAM_RECONNECTS = -1 // never stop trying to reconnect
 )
@@ -95,13 +95,11 @@ func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, 
 
 func setupNATSStreams(js nats.JetStreamContext, replicas int) error {
 	persistedSubjects := []string{
-		"eventstream.errors.>",
-		"eventstream.*.tracker.>",
-		"eventstream.*.proxy.>",
-		"eventstream.*.event.>",
-		"eventstream.*.session.>",
+		"webtracker.>",
+		"proxy.>",
+		"lead.>",
 	}
-	return setupWorkQueueStream(js, EVENTSTREAM_STREAM, persistedSubjects, replicas)
+	return setupWorkQueueStream(js, LEADS_STREAM, persistedSubjects, replicas)
 }
 
 func setupWorkQueueStream(js nats.JetStreamContext, streamName string, subjects []string, replicas int) error {

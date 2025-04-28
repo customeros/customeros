@@ -72,6 +72,7 @@ type IPAddressVerifyResponse struct {
 	Region        string                 `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"`
 	CountryCode   string                 `protobuf:"bytes,4,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
 	IsThreat      bool                   `protobuf:"varint,5,opt,name=is_threat,json=isThreat,proto3" json:"is_threat,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -141,6 +142,13 @@ func (x *IPAddressVerifyResponse) GetIsThreat() bool {
 	return false
 }
 
+func (x *IPAddressVerifyResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
 var File_schema_ipaddress_verify_proto protoreflect.FileDescriptor
 
 const file_schema_ipaddress_verify_proto_rawDesc = "" +
@@ -148,14 +156,15 @@ const file_schema_ipaddress_verify_proto_rawDesc = "" +
 	"\x1dschema/ipaddress_verify.proto\x12\x05leads\"7\n" +
 	"\x16IPAddressVerifyRequest\x12\x1d\n" +
 	"\n" +
-	"ip_address\x18\x01 \x01(\tR\tipAddress\"\xa4\x01\n" +
+	"ip_address\x18\x01 \x01(\tR\tipAddress\"\xc9\x01\n" +
 	"\x17IPAddressVerifyResponse\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\x12\x12\n" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12\x16\n" +
 	"\x06region\x18\x03 \x01(\tR\x06region\x12!\n" +
 	"\fcountry_code\x18\x04 \x01(\tR\vcountryCode\x12\x1b\n" +
-	"\tis_threat\x18\x05 \x01(\bR\bisThreatBAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
+	"\tis_threat\x18\x05 \x01(\bR\bisThreat\x12#\n" +
+	"\rerror_message\x18\x06 \x01(\tR\ferrorMessageBAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
 
 var (
 	file_schema_ipaddress_verify_proto_rawDescOnce sync.Once

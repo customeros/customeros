@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
 	"github.com/customeros/customeros/packages/server/leads/internal/enum"
@@ -13,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
 type IPDataService struct {
@@ -84,39 +86,38 @@ func (s *IPDataService) handleNatsMessage(ctx context.Context, msg *nats.Msg) {
 	spans.TagString("nats.subject", msg.Subject)
 	spans.TagString("nats.reply", msg.Reply)
 
-	// resp := &pb.IdentifyVisitorRequest{}
-	//
-	// request := &pb.EmailClassificationRequest{}
-	// err := proto.Unmarshal(msg.Data, request)
-	// if err != nil {
-	// 	errMsg := "Failed to parse request"
-	// 	resp.ErrorMessage = errMsg
-	// 	s.sendResponse(ctx, msg, resp)
-	// 	spans.TraceError(err)
-	// 	return
-	// }
+	resp := &pb.IPAddressVerifyResponse{}
 
-	// Process the request
-	// resp = s.AskIPData(ctx, request)
-	// if resp == nil {
-	// 	spans.TraceError(errors.New("empty response"))
-	// 	return
-	// }
-	//
-	// s.sendResponse(ctx, msg, resp)
+	request := &pb.IPAddressIdentifyRequest{}
+	err := proto.Unmarshal(msg.Data, request)
+	if err != nil {
+		errMsg := "Failed to parse request"
+		resp.ErrorMessage = errMsg
+		s.sendResponse(ctx, msg, resp)
+		spans.TraceError(err)
+		return
+	}
+
+	resp = s.AskIPData(ctx, request.IpAddress)
+	if resp == nil {
+		spans.TraceError(errors.New("empty response"))
+		return
+	}
+
+	s.sendResponse(ctx, msg, resp)
 }
 
-// func (s *IPDataService) sendResponse(ctx context.Context, req *nats.Msg, resp *pb.EmailClassificationResponse) {
-// 	spans, _ := telemetry.StartServiceSpan(ctx, "IPDataService.sendResponse")
-// 	defer spans.Finish()
-//
-// 	respMessage, err := proto.Marshal(resp)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return
-// 	}
-// 	err = req.Respond(respMessage)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 	}
-// }
+func (s *IPDataService) sendResponse(ctx context.Context, req *nats.Msg, resp *pb.IPAddressVerifyResponse) {
+	spans, _ := telemetry.StartServiceSpan(ctx, "IPDataService.sendResponse")
+	defer spans.Finish()
+
+	respMessage, err := proto.Marshal(resp)
+	if err != nil {
+		spans.TraceError(err)
+		return
+	}
+	err = req.Respond(respMessage)
+	if err != nil {
+		spans.TraceError(err)
+	}
+}

@@ -12,4 +12,5 @@ message IPAddressVerifyResponse {
   string region = 3;
   string country_code = 4;
   bool is_threat = 5;
+  string error_message = 6;
 }
