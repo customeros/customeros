@@ -7,7 +7,7 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
-func (s *webEventProcessor) processIdentifyEvent(ctx context.Context, message *pb.WebTrackerEvent) error {
+func (s *webEventProcessor) processIdentifyEvent(ctx context.Context, message *pb.WebTrackerEvent, webtrackerID string) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "WebEventProcessor.processIdentifyEvent")
 	defer spans.Finish()
 

@@ -15,19 +15,23 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/internal/models"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
 var knownBadResponseMessages = []string{"is a reserved IP address"}
 
-func (s *IPDataService) AskIPData(ctx context.Context, ipAddress string) (*models.IPIntelligence, error) {
+func (s *IPDataService) AskIPData(ctx context.Context, ipAddress string) *pb.IPAddressVerifyResponse {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "ipDataService.AskIPData")
 	defer spans.Finish()
+
+	response := &pb.IPAddressVerifyResponse{}
 
 	// validate if IPData is configured
 	if s.config.ApiKey == "" || s.config.ApiUrl == "" {
 		err := errors.New("IPData is not configured")
 		spans.TraceError(err)
-		return nil, err
+		response.ErrorMessage = err.Error()
+		return response
 	}
 
 	// Create HTTP client
@@ -37,7 +41,8 @@ func (s *IPDataService) AskIPData(ctx context.Context, ipAddress string) (*model
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.config.ApiUrl, ipAddress, s.config.ApiKey), nil)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "failed to create GET request for IPData"))
-		return nil, err
+		response.ErrorMessage = err.Error()
+		return response
 	}
 
 	// Set headers
@@ -48,18 +53,35 @@ func (s *IPDataService) AskIPData(ctx context.Context, ipAddress string) (*model
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "failed to perform GET request for IPData")
 		spans.TraceError(wrappedErr)
-		return nil, err
+		response.ErrorMessage = wrappedErr.Error()
+		return response
 	}
 	defer resp.Body.Close()
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		return s.handleSuccess(ctx, resp)
+		data, err := s.handleSuccess(ctx, resp)
+		if err != nil {
+			spans.TraceError(err)
+			response.ErrorMessage = err.Error()
+			return response
+		}
+		return &pb.IPAddressVerifyResponse{
+			IpAddress:   data.IPAddress,
+			City:        data.City,
+			Region:      data.Region,
+			CountryCode: data.CountryCode,
+			IsThreat:    data.HasThreat,
+		}
+
 	case resp.StatusCode == http.StatusBadRequest:
 		err := s.handleBadRequest(ctx, resp)
-		return nil, err
+		response.ErrorMessage = err.Error()
+		return response
+
 	default:
-		return nil, errors.New("IPData unable to process request")
+		response.ErrorMessage = "IPData unable to process request"
+		return response
 	}
 }
 

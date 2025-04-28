@@ -22,77 +22,21 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type WebTrackerEventType int32
-
-const (
-	WebTrackerEventType_WEB_TRACKER_EVENT_UNSPECIFIED WebTrackerEventType = 0
-	WebTrackerEventType_WEB_TRACKER_PAGE_EXIT         WebTrackerEventType = 1
-	WebTrackerEventType_WEB_TRACKER_PAGE_VIEW         WebTrackerEventType = 2
-	WebTrackerEventType_WEB_TRACKER_CLICK             WebTrackerEventType = 3
-	WebTrackerEventType_WEB_TRACKER_IDENTIFY          WebTrackerEventType = 4
-)
-
-// Enum value maps for WebTrackerEventType.
-var (
-	WebTrackerEventType_name = map[int32]string{
-		0: "WEB_TRACKER_EVENT_UNSPECIFIED",
-		1: "WEB_TRACKER_PAGE_EXIT",
-		2: "WEB_TRACKER_PAGE_VIEW",
-		3: "WEB_TRACKER_CLICK",
-		4: "WEB_TRACKER_IDENTIFY",
-	}
-	WebTrackerEventType_value = map[string]int32{
-		"WEB_TRACKER_EVENT_UNSPECIFIED": 0,
-		"WEB_TRACKER_PAGE_EXIT":         1,
-		"WEB_TRACKER_PAGE_VIEW":         2,
-		"WEB_TRACKER_CLICK":             3,
-		"WEB_TRACKER_IDENTIFY":          4,
-	}
-)
-
-func (x WebTrackerEventType) Enum() *WebTrackerEventType {
-	p := new(WebTrackerEventType)
-	*p = x
-	return p
-}
-
-func (x WebTrackerEventType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (WebTrackerEventType) Descriptor() protoreflect.EnumDescriptor {
-	return file_schema_webtracker_event_proto_enumTypes[0].Descriptor()
-}
-
-func (WebTrackerEventType) Type() protoreflect.EnumType {
-	return &file_schema_webtracker_event_proto_enumTypes[0]
-}
-
-func (x WebTrackerEventType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use WebTrackerEventType.Descriptor instead.
-func (WebTrackerEventType) EnumDescriptor() ([]byte, []int) {
-	return file_schema_webtracker_event_proto_rawDescGZIP(), []int{0}
-}
-
 type WebTrackerEvent struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	SessionId        string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	NewSession       bool                   `protobuf:"varint,3,opt,name=new_session,json=newSession,proto3" json:"new_session,omitempty"`
-	VisitorId        string                 `protobuf:"bytes,4,opt,name=visitor_id,json=visitorId,proto3" json:"visitor_id,omitempty"`
-	Ip               string                 `protobuf:"bytes,5,opt,name=ip,proto3" json:"ip,omitempty"`
-	EventType        WebTrackerEventType    `protobuf:"varint,6,opt,name=event_type,json=eventType,proto3,enum=leads.WebTrackerEventType" json:"event_type,omitempty"`
-	EventData        string                 `protobuf:"bytes,7,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`
-	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Href             string                 `protobuf:"bytes,9,opt,name=href,proto3" json:"href,omitempty"`
-	Referrer         string                 `protobuf:"bytes,10,opt,name=referrer,proto3" json:"referrer,omitempty"`
-	UserAgent        string                 `protobuf:"bytes,11,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
-	Language         string                 `protobuf:"bytes,12,opt,name=language,proto3" json:"language,omitempty"`
-	CookiesEnabled   bool                   `protobuf:"varint,13,opt,name=cookies_enabled,json=cookiesEnabled,proto3" json:"cookies_enabled,omitempty"`
-	ScreenResolution string                 `protobuf:"bytes,14,opt,name=screen_resolution,json=screenResolution,proto3" json:"screen_resolution,omitempty"`
+	VisitorId        string                 `protobuf:"bytes,3,opt,name=visitor_id,json=visitorId,proto3" json:"visitor_id,omitempty"`
+	Ip               string                 `protobuf:"bytes,4,opt,name=ip,proto3" json:"ip,omitempty"`
+	EventType        WebTrackerEventType    `protobuf:"varint,5,opt,name=event_type,json=eventType,proto3,enum=leads.WebTrackerEventType" json:"event_type,omitempty"`
+	EventData        string                 `protobuf:"bytes,6,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Href             string                 `protobuf:"bytes,8,opt,name=href,proto3" json:"href,omitempty"`
+	Referrer         string                 `protobuf:"bytes,9,opt,name=referrer,proto3" json:"referrer,omitempty"`
+	UserAgent        string                 `protobuf:"bytes,10,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	Language         string                 `protobuf:"bytes,11,opt,name=language,proto3" json:"language,omitempty"`
+	CookiesEnabled   bool                   `protobuf:"varint,12,opt,name=cookies_enabled,json=cookiesEnabled,proto3" json:"cookies_enabled,omitempty"`
+	ScreenResolution string                 `protobuf:"bytes,13,opt,name=screen_resolution,json=screenResolution,proto3" json:"screen_resolution,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -139,13 +83,6 @@ func (x *WebTrackerEvent) GetSessionId() string {
 		return x.SessionId
 	}
 	return ""
-}
-
-func (x *WebTrackerEvent) GetNewSession() bool {
-	if x != nil {
-		return x.NewSession
-	}
-	return false
 }
 
 func (x *WebTrackerEvent) GetVisitorId() string {
@@ -229,35 +166,27 @@ var File_schema_webtracker_event_proto protoreflect.FileDescriptor
 
 const file_schema_webtracker_event_proto_rawDesc = "" +
 	"\n" +
-	"\x1dschema/webtracker_event.proto\x12\x05leads\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe5\x03\n" +
+	"\x1dschema/webtracker_event.proto\x12\x05leads\x1a\x1fgoogle/protobuf/timestamp.proto\x1a'schema/webtracker_event_type_enum.proto\"\xc4\x03\n" +
 	"\x0fWebTrackerEvent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x1f\n" +
-	"\vnew_session\x18\x03 \x01(\bR\n" +
-	"newSession\x12\x1d\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x1d\n" +
 	"\n" +
-	"visitor_id\x18\x04 \x01(\tR\tvisitorId\x12\x0e\n" +
-	"\x02ip\x18\x05 \x01(\tR\x02ip\x129\n" +
+	"visitor_id\x18\x03 \x01(\tR\tvisitorId\x12\x0e\n" +
+	"\x02ip\x18\x04 \x01(\tR\x02ip\x129\n" +
 	"\n" +
-	"event_type\x18\x06 \x01(\x0e2\x1a.leads.WebTrackerEventTypeR\teventType\x12\x1d\n" +
+	"event_type\x18\x05 \x01(\x0e2\x1a.leads.WebTrackerEventTypeR\teventType\x12\x1d\n" +
 	"\n" +
-	"event_data\x18\a \x01(\tR\teventData\x128\n" +
-	"\ttimestamp\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
-	"\x04href\x18\t \x01(\tR\x04href\x12\x1a\n" +
-	"\breferrer\x18\n" +
-	" \x01(\tR\breferrer\x12\x1d\n" +
+	"event_data\x18\x06 \x01(\tR\teventData\x128\n" +
+	"\ttimestamp\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x12\n" +
+	"\x04href\x18\b \x01(\tR\x04href\x12\x1a\n" +
+	"\breferrer\x18\t \x01(\tR\breferrer\x12\x1d\n" +
 	"\n" +
-	"user_agent\x18\v \x01(\tR\tuserAgent\x12\x1a\n" +
-	"\blanguage\x18\f \x01(\tR\blanguage\x12'\n" +
-	"\x0fcookies_enabled\x18\r \x01(\bR\x0ecookiesEnabled\x12+\n" +
-	"\x11screen_resolution\x18\x0e \x01(\tR\x10screenResolution*\x9f\x01\n" +
-	"\x13WebTrackerEventType\x12!\n" +
-	"\x1dWEB_TRACKER_EVENT_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15WEB_TRACKER_PAGE_EXIT\x10\x01\x12\x19\n" +
-	"\x15WEB_TRACKER_PAGE_VIEW\x10\x02\x12\x15\n" +
-	"\x11WEB_TRACKER_CLICK\x10\x03\x12\x18\n" +
-	"\x14WEB_TRACKER_IDENTIFY\x10\x04BAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
+	"user_agent\x18\n" +
+	" \x01(\tR\tuserAgent\x12\x1a\n" +
+	"\blanguage\x18\v \x01(\tR\blanguage\x12'\n" +
+	"\x0fcookies_enabled\x18\f \x01(\bR\x0ecookiesEnabled\x12+\n" +
+	"\x11screen_resolution\x18\r \x01(\tR\x10screenResolutionBAZ?github.com/customeros/customeros/packages/server/leads/proto/pbb\x06proto3"
 
 var (
 	file_schema_webtracker_event_proto_rawDescOnce sync.Once
@@ -271,15 +200,14 @@ func file_schema_webtracker_event_proto_rawDescGZIP() []byte {
 	return file_schema_webtracker_event_proto_rawDescData
 }
 
-var file_schema_webtracker_event_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_schema_webtracker_event_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_schema_webtracker_event_proto_goTypes = []any{
-	(WebTrackerEventType)(0),      // 0: leads.WebTrackerEventType
-	(*WebTrackerEvent)(nil),       // 1: leads.WebTrackerEvent
+	(*WebTrackerEvent)(nil),       // 0: leads.WebTrackerEvent
+	(WebTrackerEventType)(0),      // 1: leads.WebTrackerEventType
 	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
 }
 var file_schema_webtracker_event_proto_depIdxs = []int32{
-	0, // 0: leads.WebTrackerEvent.event_type:type_name -> leads.WebTrackerEventType
+	1, // 0: leads.WebTrackerEvent.event_type:type_name -> leads.WebTrackerEventType
 	2, // 1: leads.WebTrackerEvent.timestamp:type_name -> google.protobuf.Timestamp
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
@@ -293,19 +221,19 @@ func file_schema_webtracker_event_proto_init() {
 	if File_schema_webtracker_event_proto != nil {
 		return
 	}
+	file_schema_webtracker_event_type_enum_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_webtracker_event_proto_rawDesc), len(file_schema_webtracker_event_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_schema_webtracker_event_proto_goTypes,
 		DependencyIndexes: file_schema_webtracker_event_proto_depIdxs,
-		EnumInfos:         file_schema_webtracker_event_proto_enumTypes,
 		MessageInfos:      file_schema_webtracker_event_proto_msgTypes,
 	}.Build()
 	File_schema_webtracker_event_proto = out.File

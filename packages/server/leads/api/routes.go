@@ -33,7 +33,7 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *services.Servi
 	r.Use(gin.Recovery()) // Gin's built-in recovery
 
 	// setup handlers
-	apiHandlers := handlers.InitHandlers(natsConn, repos)
+	apiHandlers := handlers.InitHandlers(services, repos)
 
 	// Health check and status endpoints (no custom context needed)
 	r.GET("/health", handlers.HealthCheck)

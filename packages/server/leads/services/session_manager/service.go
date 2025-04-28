@@ -1,11 +1,23 @@
 package session_manager
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/nats-io/nats.go"
+
+	"github.com/customeros/customeros/packages/server/leads/interfaces"
+	"github.com/customeros/customeros/packages/server/leads/internal/enum"
 	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 )
 
-type SessionManager struct {
+type sessionManager struct {
 	natsConn     *nats_internal.NATSConnections
 	repositories *repository.Repositories
 }
@@ -13,402 +25,148 @@ type SessionManager struct {
 func NewSessionManager(
 	natsConn *nats_internal.NATSConnections,
 	repository *repository.Repositories,
-) *SessionManager {
-	return &SessionManager{
+) interfaces.NatsService {
+	return &sessionManager{
 		natsConn:     natsConn,
 		repositories: repository,
 	}
 }
 
+var SUBSCRIBED_SUBJECT = "webtracker.session.>"
+
 const (
-	WebSessionTimeoutPageExit int = 5  // mins -- page exit without a following page view
-	WebSessionTimeoutPageView int = 30 // mins -- page view without a page exit
+	// queue group
+	QUEUE_GROUP = "session-manager"
+
+	// consumer config
+	CONSUMER_NAME         = "session-manager-consumer"
+	ACK_WAIT              = 30 * time.Second
+	MAX_DELIVERY_ATTEMPTS = 5
+	MAX_ACK_PENDING       = 100
+	FETCH_BATCH_SIZE      = 50
+	MAX_FETCH_WAIT        = 500 * time.Millisecond
+	ERR_BACKOFF           = 100 * time.Millisecond
 )
 
-// func (s *SessionManager) Execute() {
-// 	ctx, cancel := context.WithCancel(context.Background())
-// 	defer cancel()
-//
-// 	spans, ctx := telemetry.StartCronSpan(ctx, "SessionManager.ProcessWebSessions")
-// 	defer spans.Finish()
-//
-// 	// find timed out page exit events
-// 	pageExitSessions, err := s.findTimedOutPageExitEvents(ctx)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return
-// 	}
-//
-// 	// close sessions & fire webtracker event
-// 	if pageExitSessions != nil {
-// 		err = s.closeSessions(ctx, pageExitSessions)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			return
-// 		}
-// 	}
-//
-// 	// find timed out active events
-// 	activeSessions, err := s.findTimedOutActiveEvents(ctx)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return
-// 	}
-//
-// 	// close sessions & fire webtracker event
-// 	if activeSessions != nil {
-// 		err = s.closeSessions(ctx, activeSessions)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			return
-// 		}
-// 	}
-// }
-//
-// func (s *SessionManager) findTimedOutPageExitEvents(ctx context.Context) ([]models.WebSession, error) {
-// 	spans, ctx := telemetry.StartCronSpan(ctx, "SessionManager.findTimedOutPageExitEvents")
-// 	defer spans.Finish()
-//
-// 	lookback := WebSessionTimeoutPageExit
-// 	query := models.WebSession{
-// 		LastEventType: enum.WebTrackerPageExit.String(),
-// 		IsActive:      true,
-// 	}
-// 	return s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
-// }
-//
-// func (s *SessionManager) findTimedOutActiveEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-// 	spans, ctx := telemetry.StartCronSpan(ctx, "SessionManager.findTimedOutActiveEvents")
-// 	defer spans.Finish()
-//
-// 	activeEvents := []string{
-// 		enum.WebTrackerPageView.String(),
-// 		enum.WebTrackerClick.String(),
-// 		enum.WebTrackerIdentify.String(),
-// 	}
-//
-// 	var activeSessions []models.WebSession
-// 	lookback := WebSessionTimeoutPageView
-// 	for _, eventType := range activeEvents {
-// 		query := models.WebSession{
-// 			LastEventType: eventType,
-// 			IsActive:      true,
-// 		}
-//
-// 		sessions, err := s.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			return nil, err
-// 		}
-// 		activeSessions = append(activeSessions, sessions...)
-// 	}
-//
-// 	spans.LogKV("result.count", len(activeSessions))
-// 	return activeSessions, nil
-// }
-//
-// func (s *SessionManager) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
-// 	spans, ctx := telemetry.StartCronSpan(ctx, "SessionManager.closeSessions")
-// 	defer spans.Finish()
-//
-// 	if len(sessions) == 0 {
-// 		spans.LogKV("result", "no_sessions_to_process")
-// 		return nil
-// 	}
-//
-// 	var errs error
-// 	for _, session := range sessions {
-// 		innerCtx := utils.WithCustomContext(ctx, &utils.CustomContext{
-// 			Tenant: session.Tenant,
-// 		})
-// 		err := s.processClosedSession(innerCtx, session)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			errs = multierr.Append(errs, err)
-// 		}
-// 	}
-//
-// 	return errs
-// }
-//
-// func (s *SessionManager) processClosedSession(ctx context.Context, session models.WebSession) error {
-// 	spans, ctx := telemetry.StartCronSpan(ctx, "SessionManager.processClosedSession")
-// 	defer spans.Finish()
-//
-// 	if session.ID == "" {
-// 		err := errors.New("SessionID cannot be empty")
-// 		spans.TraceError(err)
-// 		return err
-// 	}
-//
-// 	// close websession record
-// 	endTime := session.LastActivity
-// 	closedSession, err := s.postgresRepositories.WebSessionRepository.SetSessionEnd(ctx, session.ID, endTime)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return err
-// 	}
-// 	if closedSession == nil {
-// 		err := errors.New("closedSession is nil")
-// 		spans.TraceError(err)
-// 		return err
-// 	}
-//
-// 	pageViews, err := s.processUniquePageViews(ctx, session.Tenant, session.ID)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return err
-// 	}
-//
-// 	// process page visits
-// 	identifiedVisitor := IdentifiedVisitor{}
-// 	for _, page := range pageViews {
-// 		visitor, err := s.processPageView(ctx, session.ID, page, endTime)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			continue
-// 		}
-// 		if identifiedVisitor.Domain == "" && visitor.Domain != "" {
-// 			identifiedVisitor.Domain = visitor.Domain
-// 		}
-// 		if identifiedVisitor.Email == "" && visitor.Email != "" {
-// 			identifiedVisitor.Email = visitor.Email
-// 			identifiedVisitor.EmailType = visitor.EmailType
-// 			identifiedVisitor.Domain = visitor.Domain
-// 		}
-// 		if identifiedVisitor.EmailType == enum.EmailPersonal && visitor.EmailType == enum.EmailBusiness {
-// 			identifiedVisitor.Email = visitor.Email
-// 			identifiedVisitor.EmailType = visitor.EmailType
-// 			identifiedVisitor.Domain = visitor.Domain
-// 		}
-// 	}
-//
-// 	// update websession with identity
-// 	if identifiedVisitor.Domain != "" || identifiedVisitor.Email != "" {
-// 		err := s.postgresRepositories.WebSessionRepository.SetVisitorIdentity(ctx, session.ID, &identifiedVisitor.Domain, &identifiedVisitor.Email, &identifiedVisitor.EmailType)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			return err
-// 		}
-// 	}
-//
-// 	err = s.events.Publisher.PublishFanoutEvent(ctx, session.ID, model.WEB_SESSION, dto.NewWebSession{})
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return err
-// 	}
-//
-// 	return nil
-// }
-//
-// type IdentifiedVisitor struct {
-// 	Domain    string
-// 	Email     string
-// 	EmailType enum.EmailType
-// }
-//
-// func (s *SessionManager) processPageView(ctx context.Context, sessionId, page string, endTime time.Time) (IdentifiedVisitor, error) {
-// 	spans, ctx := telemetry.StartCronSpan(ctx, "NewWebSessionProducer.processPageView")
-// 	defer spans.Finish()
-// 	spans.LogKV("sessionId", sessionId, "page", page, "endTime", endTime.String())
-//
-// 	visitor := IdentifiedVisitor{}
-//
-// 	// get session events
-// 	events, err := s.postgresRepositories.WebTrackerEventsRepository.FindEventsForPageVisit(ctx, sessionId, page)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return visitor, err
-// 	}
-//
-// 	url := page
-// 	if !strings.HasPrefix(page, "http") {
-// 		url = fmt.Sprintf("https://%s", page)
-// 	}
-//
-// 	visit := models.WebSessionPageVisit{
-// 		SessionID: sessionId,
-// 		Url:       url,
-// 	}
-//
-// 	for _, event := range events {
-// 		if visit.Referer == "" && event.Referrer != "" {
-// 			visit.Referer = event.Referer()
-// 		}
-// 		if visit.Hostname == "" && event.Hostname != "" {
-// 			visit.Hostname = event.Hostname
-// 		}
-// 		if visit.Pathname == "" && event.Pathname != "" {
-// 			visit.Pathname = event.Pathname
-// 		}
-//
-// 		switch event.EventType {
-// 		case "page_view":
-// 			if visit.EntryTimestamp.IsZero() {
-// 				visit.EntryTimestamp = event.Timestamp
-// 			} else if event.Timestamp.Before(visit.EntryTimestamp) {
-// 				visit.EntryTimestamp = event.Timestamp
-// 			}
-//
-// 		case "page_exit":
-// 			if event.Timestamp.IsZero() {
-// 				event.Timestamp = endTime
-// 			}
-//
-// 			if visit.ExitTimestamp.IsZero() {
-// 				visit.ExitTimestamp = event.Timestamp
-// 			} else if event.Timestamp.After(visit.ExitTimestamp) {
-// 				visit.ExitTimestamp = event.Timestamp
-// 			}
-//
-// 		case "identify":
-// 			email, err := event.VisitorEmail()
-// 			if err != nil {
-// 				spans.TraceError(err)
-// 				continue
-// 			}
-// 			if email == "" {
-// 				continue
-// 			}
-//
-// 			emailValidate := mailvalidate.ValidateEmailSyntax(email)
-// 			if emailValidate.Error != "" || emailValidate.IsSystemGenerated {
-// 				continue
-// 			}
-//
-// 			switch {
-// 			case !emailValidate.IsFreeAccount:
-// 				visitor.Domain = emailValidate.Domain
-// 				if !emailValidate.IsRoleAccount {
-// 					visitor.Email = emailValidate.CleanEmail
-// 					visitor.EmailType = enum.EmailBusiness
-// 				}
-//
-// 			case emailValidate.IsFreeAccount:
-// 				if visitor.EmailType != enum.EmailBusiness && !emailValidate.IsRoleAccount {
-// 					visitor.Email = emailValidate.CleanEmail
-// 					visitor.EmailType = enum.EmailPersonal
-// 				}
-// 			}
-//
-// 		}
-// 	}
-//
-// 	// save pagevisit to db
-// 	_, err = s.postgresRepositories.WebSessionPageVisitRepository.Create(ctx, visit)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return visitor, err
-// 	}
-//
-// 	// check to see if webpage has been scraped
-// 	scrapedPage, err := s.postgresRepositories.ScrapedWebpageRepository.GetWebpage(ctx, url, 365)
-// 	if err != nil {
-// 		spans.TraceError(err)
-// 		return visitor, err
-// 	}
-//
-// 	// handle all permutations of scraped data
-// 	switch {
-// 	case scrapedPage == nil:
-// 		err := s.scrapeAndClassifyWebpage(ctx, url)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			return visitor, err
-// 		}
-// 		return visitor, nil
-//
-// 	case scrapedPage.Error != "":
-// 		if scrapedPage.Category == "" {
-// 			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &scrapedPage.Content)
-// 			if err != nil {
-// 				spans.TraceError(err)
-// 				return visitor, err
-// 			}
-// 		}
-// 		return visitor, nil
-//
-// 	case scrapedPage.Content == "":
-// 		err := s.scrapeAndClassifyWebpage(ctx, url)
-// 		if err != nil {
-// 			spans.TraceError(err)
-// 			return visitor, err
-// 		}
-// 		return visitor, nil
-//
-// 	default:
-// 		if scrapedPage.Category == "" {
-// 			_, err = s.webscraperService.ClassifyWebpageCategory(ctx, url, &scrapedPage.Content)
-// 			if err != nil {
-// 				spans.TraceError(err)
-// 				return visitor, err
-// 			}
-// 		}
-//
-// 		if scrapedPage.ContentStage == "" {
-// 			_, err = s.webscraperService.ClassifyContentStage(ctx, url, &scrapedPage.Content)
-// 			if err != nil {
-// 				spans.TraceError(err)
-// 				return visitor, err
-// 			}
-// 		}
-//
-// 		if len(scrapedPage.Topics) == 0 {
-// 			_, err = s.webscraperService.ClassifyWebpageTopics(ctx, page, &scrapedPage.Content)
-// 			if err != nil {
-// 				spans.TraceError(err)
-// 				return visitor, err
-// 			}
-// 		}
-// 		return visitor, nil
-// 	}
-// }
-//
-// func (s *SessionManager) processUniquePageViews(ctx context.Context, tenant, sessionID string) ([]string, error) {
-// 	spans, ctx := telemetry.StartServiceSpan(ctx, "NewWebSessionProducer.getUniquePageViews")
-// 	defer spans.Finish()
-//
-// 	session, err := s.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, postgres_entity.WebTrackerEvents{
-// 		SessionID: sessionID,
-// 		Tenant:    tenant,
-// 	}, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if session == nil {
-// 		return nil, nil
-// 	}
-//
-// 	// Use map to track unique pages
-// 	uniquePageMap := make(map[string]struct{})
-// 	for _, page := range session {
-// 		url := s.extractPageUrl(page)
-// 		uniquePageMap[url] = struct{}{}
-// 	}
-//
-// 	// Convert map keys to slice
-// 	uniquePages := make([]string, 0, len(uniquePageMap))
-// 	for pathname := range uniquePageMap {
-// 		uniquePages = append(uniquePages, pathname)
-// 	}
-//
-// 	uniquePages = utils.SortUrlsByLength(uniquePages)
-//
-// 	// strore in db
-// 	_, err = s.postgresRepositories.WebSessionRepository.SetSessionPageViews(ctx, sessionID, tenant, uniquePages)
-// 	if err != nil {
-// 		spans.TraceError(errors.Wrap(err, "Unable to update websession with unique page views"))
-// 	}
-//
-// 	return uniquePages, nil
-// }
-//
-// func (s *SessionManager) extractPageUrl(page models.WebTrackerEvents) string {
-// 	url := utils.StripUrlToBasePath(page.Hostname)
-// 	if page.Pathname != "" {
-// 		url = strings.TrimSuffix(fmt.Sprintf("%s/%s",
-// 			utils.StripUrlToBasePath(page.Hostname),
-// 			utils.StripUrlToBasePath(page.Pathname)), "/")
-// 	}
-// 	return url
-// }
+// Start begins listening for raw email events and processing them
+func (s *sessionManager) Start(ctx context.Context) error {
+	// Create durable consumer for processing emails
+	_, err := s.natsConn.JS.AddConsumer(nats_internal.LEADS_STREAM, &nats.ConsumerConfig{
+		Durable:       CONSUMER_NAME,
+		DeliverGroup:  QUEUE_GROUP,
+		AckPolicy:     nats.AckExplicitPolicy,
+		AckWait:       ACK_WAIT,
+		MaxDeliver:    MAX_DELIVERY_ATTEMPTS,
+		FilterSubject: SUBSCRIBED_SUBJECT,
+		MaxAckPending: MAX_ACK_PENDING,
+		DeliverPolicy: nats.DeliverAllPolicy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create consumer: %w", err)
+	}
+
+	// Create pull subscription
+	sub, err := s.natsConn.JS.PullSubscribe(
+		SUBSCRIBED_SUBJECT,
+		CONSUMER_NAME,
+		nats.Bind(nats_internal.LEADS_STREAM, CONSUMER_NAME),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create subscription: %w", err)
+	}
+
+	// Start processing
+	go s.processRawEvents(ctx, sub)
+
+	return nil
+}
+
+// processRawEmailEvents continuously processes raw email events
+func (s *sessionManager) processRawEvents(ctx context.Context, sub *nats.Subscription) {
+	log.Println("Session Manager started")
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Session Manager shutting down")
+			return
+		default:
+			s.processBatch(ctx, sub)
+		}
+	}
+}
+
+// processBatch fetches and processes a batch of messages
+func (s *sessionManager) processBatch(ctx context.Context, sub *nats.Subscription) {
+	// Fetch messages batch
+	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
+	if err != nil {
+		s.handleFetchError(err)
+		return
+	}
+
+	for _, msg := range msgs {
+		msgCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		s.routeMessage(msgCtx, msg)
+		cancel()
+	}
+}
+
+// handleFetchError handles errors that occur during message fetching
+func (s *sessionManager) handleFetchError(err error) {
+	if errors.Is(err, nats.ErrTimeout) {
+		// No messages available, this is normal
+		return
+	}
+	log.Printf("Fetch error: %v", err)
+	time.Sleep(ERR_BACKOFF) // Small backoff on error
+}
+
+func (s *sessionManager) routeMessage(ctx context.Context, msg *nats.Msg) {
+	ctx = utils.WithCustomContextFromNats(ctx, msg)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "sessionManager.processMessage")
+	defer spans.Finish()
+
+	if msg == nil {
+		spans.TraceError(errors.New("nil nats message"))
+		return
+	}
+	spans.TagString("nats.subject", msg.Subject)
+	spans.TagString("nats.reply", msg.Reply)
+
+	switch {
+	case msg.Subject == enum.EventWebtrackerSessionNew.String():
+		s.NewSession(ctx, msg)
+
+	case msg.Subject == enum.EventWebtrackerSessionClosed.String():
+		s.CloseSession(ctx, msg)
+
+	default:
+		spans.TraceError(errors.New("Unsupported event type"))
+	}
+
+	msg.Ack()
+	return
+}
+
+// handleProcessingError deals with errors during email processing
+func (s *sessionManager) handleProcessingError(ctx context.Context, msg *nats.Msg, err error) {
+	metadata, _ := msg.Metadata()
+
+	// Check if we should retry
+	if metadata.NumDelivered <= uint64(MAX_DELIVERY_ATTEMPTS) {
+		// Negative acknowledgment triggers redelivery
+		msg.Nak()
+	} else {
+		// Max retries reached, acknowledge but publish to dead letter
+		msg.Ack()
+		// s.publishError(ctx, msg, err)
+	}
+}
+
+// Close gracefully shuts down the service
+func (s *sessionManager) Stop() {
+	if s.natsConn != nil {
+		s.natsConn.Close()
+	}
+	return
+}

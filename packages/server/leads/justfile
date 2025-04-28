@@ -2,7 +2,7 @@ build:
     go build -o .bin/app .
 
 db:
-    pgcli postgresql://postgres:password@localhost:5555/mailstack
+    pgcli postgresql://postgres:password@localhost:5555/leads
 
 debug:
     dlv debug . -- server

@@ -1,0 +1,35 @@
+FROM --platform=$BUILDPLATFORM golang:1.21-alpine AS builder
+
+WORKDIR /app
+
+# Set environment variables for optimized builds
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=arm64
+
+# Copy go.mod and go.sum first to leverage Docker cache
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code
+COPY . .
+
+# Build the application
+RUN go mod tidy && \
+    go build -ldflags="-s -w" -o /go/bin/app ./cmd/leads
+
+# Final stage - using the smallest static distroless
+FROM --platform=linux/arm64 gcr.io/distroless/static:nonroot-arm64
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the binary and any required files
+COPY --from=builder /go/bin/app ./app
+COPY --from=builder /app/configs ./configs
+
+# Use nonroot user
+USER nonroot:nonroot
+
+# Set the entrypoint
+ENTRYPOINT ["/app/app"]

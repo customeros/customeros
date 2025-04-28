@@ -1,24 +1,28 @@
 package snitcher
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
+	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
+	"github.com/customeros/customeros/packages/server/leads/internal/enum"
 	nats_internal "github.com/customeros/customeros/packages/server/leads/internal/nats"
 	"github.com/customeros/customeros/packages/server/leads/internal/repository"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/leads/internal/utils"
+	"github.com/customeros/customeros/packages/server/leads/proto/pb"
 )
 
 type SnitcherService struct {
-	config       *config.SnitcherConfig
-	natsConn     *nats_internal.NATSConnections
-	repositories *repository.Repositories
+	config        *config.SnitcherConfig
+	natsConn      *nats_internal.NATSConnections
+	repositories  *repository.Repositories
+	subscriptions []*nats.Subscription
 }
 
 func NewSnitcherService(config *config.SnitcherConfig, repos *repository.Repositories, natsConn *nats_internal.NATSConnections) *SnitcherService {
@@ -29,91 +33,93 @@ func NewSnitcherService(config *config.SnitcherConfig, repos *repository.Reposit
 	}
 }
 
+var SUBSCRIBED_SUBJECT = enum.EventAskSnitcher.String()
+
 const (
 	HTTP_TIMEOUT      = 60 * time.Second
-	MAX_RESPONSE_SIZE = 1
+	MAX_RESPONSE_SIZE = 1 * 1024 * 1024
 )
 
-func (s *SnitcherService) AskSnitcher(ctx context.Context, ip string) (*SnitcherResponse, *string, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "snitcherService.AskSnitcher")
+// Start begins listening for  events
+func (s *SnitcherService) Start(ctx context.Context) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SnitcherService.Start")
 	defer spans.Finish()
 
-	spans.LogKV("ip", ip)
-
-	// validate if snitcher is configured
-	if s.config.ApiKey == "" || s.config.Url == "" {
-		err := fmt.Errorf("snitcher is not configured")
-		spans.TraceError(err)
-		return nil, nil, err
-	}
-
-	// Create HTTP client with timeout
-	client := &http.Client{
-		Timeout: HTTP_TIMEOUT,
-	}
-
-	// Create POST request with context
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.Url, ip), nil)
+	// Create a subscription for handling requests
+	sub, err := s.natsConn.Conn.Subscribe(SUBSCRIBED_SUBJECT, func(msg *nats.Msg) {
+		s.handleNatsMessage(ctx, msg)
+	})
 	if err != nil {
 		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("failed to create POST request: %w", err)
+		return fmt.Errorf("failed to create subscription: %w", err)
 	}
 
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.config.ApiKey)
+	// Keep track of subscription for cleanup
+	s.subscriptions = append(s.subscriptions, sub)
 
-	// Perform the request
-	resp, err := client.Do(req)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("failed to perform POST request: %w", err)
-	}
-	defer resp.Body.Close()
+	// Listen for context cancellation to clean up
+	go func() {
+		<-ctx.Done()
+		for _, sub := range s.subscriptions {
+			sub.Unsubscribe()
+		}
+	}()
 
-	// Read response with size limit
-	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, MAX_RESPONSE_SIZE))
-	if err != nil {
-		spans.TraceError(err)
-		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	// Check status code
-	spans.LogKV("response.statusCode", resp.StatusCode)
-	if resp.StatusCode != http.StatusOK {
-		spans.LogKV("result.rawSnitcherResponse", string(responseBody))
-		return nil, nil, fmt.Errorf("snitcher API returned non-200 status code: %d", resp.StatusCode)
-	}
-
-	// Validate and compact JSON
-	validatedAndCompacted, err := validateAndCompactJSON(responseBody)
-	if err != nil {
-		spans.TraceError(err)
-		spans.LogKV("json.response.invalid", string(responseBody))
-		return nil, nil, fmt.Errorf("failed to process JSON response: %w", err)
-	}
-
-	// Parse the response
-	var snitcherResponse SnitcherResponse
-	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
-		spans.TraceError(err)
-		spans.LogKV("json.response.parsing", string(responseBody))
-		return nil, nil, fmt.Errorf("failed to parse snitcher response: %w", err)
-	}
-
-	spans.LogObjectAsJson("result.snitcherData", snitcherResponse)
-	return &snitcherResponse, &validatedAndCompacted, nil
+	return nil
 }
 
-func validateAndCompactJSON(data []byte) (string, error) {
-	if !json.Valid(data) {
-		return "", fmt.Errorf("invalid JSON")
+// Close gracefully shuts down the service
+func (s *SnitcherService) Close() {
+	if s.natsConn != nil {
+		s.natsConn.Close()
+	}
+	return
+}
+
+func (s *SnitcherService) handleNatsMessage(ctx context.Context, msg *nats.Msg) {
+	ctx = utils.WithCustomContextFromNats(ctx, msg)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SnitcherService.handleNatsMessage")
+	defer spans.Finish()
+
+	if msg == nil {
+		spans.TraceError(errors.New("nil nats message"))
+		return
+	}
+	spans.TagString("nats.subject", msg.Subject)
+	spans.TagString("nats.reply", msg.Reply)
+
+	resp := &pb.IPAddressIdentifyResponse{}
+
+	request := &pb.IPAddressIdentifyRequest{}
+	err := proto.Unmarshal(msg.Data, request)
+	if err != nil {
+		errMsg := "Failed to parse request"
+		resp.ErrorMessage = errMsg
+		s.sendResponse(ctx, msg, resp)
+		spans.TraceError(err)
+		return
 	}
 
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, data); err != nil {
-		return "", fmt.Errorf("failed to compact JSON: %w", err)
+	resp = s.AskSnitcher(ctx, request.IpAddress)
+	if resp == nil {
+		spans.TraceError(errors.New("empty response"))
+		return
 	}
 
-	return buf.String(), nil
+	s.sendResponse(ctx, msg, resp)
+}
+
+func (s *SnitcherService) sendResponse(ctx context.Context, req *nats.Msg, resp *pb.IPAddressIdentifyResponse) {
+	spans, _ := telemetry.StartServiceSpan(ctx, "SnitcherService.sendResponse")
+	defer spans.Finish()
+
+	respMessage, err := proto.Marshal(resp)
+	if err != nil {
+		spans.TraceError(err)
+		return
+	}
+	err = req.Respond(respMessage)
+	if err != nil {
+		spans.TraceError(err)
+	}
 }
