@@ -14,7 +14,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -207,15 +206,13 @@ func sanitizeCsvField(field string) string {
 // @Security ApiKeyAuth
 func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "DownloadUpcomingInvoices", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "DownloadUpcomingInvoices")
+		defer spans.Finish()
 
 		// Get upcoming invoices
 		upcomingInvoices, err := h.services.CommonServices.InvoiceService.GetUpcomingInvoices(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -229,7 +226,7 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 		// get all invoice lines for the invoices
 		invoiceLines, err := h.services.CommonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, invoiceIds)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -237,7 +234,7 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 		// get organizations for the invoices
 		organizations, err := h.services.CommonServices.OrganizationService.GetOrganizationsForInvoices(ctx, invoiceIds)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -269,14 +266,14 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 			// Get the invoice for this line
 			invoice, exists := invoiceByInvoiceId[line.DataloaderKey]
 			if !exists {
-				tracing.TraceErr(span, errors.Errorf("expected invoice not found for line %s", line.Id))
+				spans.TraceError(errors.Errorf("expected invoice not found for line %s", line.Id))
 				continue
 			}
 
 			// Get the organization for this invoice
 			org, exists := orgByInvoiceId[invoice.Id]
 			if !exists {
-				tracing.TraceErr(span, errors.Errorf("expected organization not found for invoice %s", invoice.Id))
+				spans.TraceError(errors.Errorf("expected organization not found for invoice %s", invoice.Id))
 				continue
 			}
 
@@ -334,7 +331,7 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 
 		// Write headers
 		if err := writer.Write(upcomingInvoiceCsvHeaders); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -342,7 +339,7 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 		// Write sorted records
 		for _, record := range records {
 			if err := writer.Write(record.Record); err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 				return
 			}
@@ -352,7 +349,7 @@ func (h *BillingHandler) DownloadUpcomingInvoices() gin.HandlerFunc {
 		writer.Flush()
 
 		if err := writer.Error(); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}

@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -77,9 +77,8 @@ type BulkSummary struct {
 // @Security ApiKeyAuth
 func (h *ContactHandler) CreateBulkContacts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateBulkContacts", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "ContactHandler.CreateBulkContacts")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -107,7 +106,7 @@ func (h *ContactHandler) CreateBulkContacts() gin.HandlerFunc {
 // @Security ApiKeyAutl
 func (h *ContactHandler) ImportContacts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.ImportContacts", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ContactHandler.ImportContacts", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
@@ -129,15 +128,14 @@ func (h *ContactHandler) ImportContacts() gin.HandlerFunc {
 }
 
 func (h *ContactHandler) handleBulkJSONRequest(c *gin.Context) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleBulkJSONRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "ContactHandler.handleBulkJSONRequest")
+	defer spans.Finish()
 
 	var multipleContacts []ContactRecord
 	if err := c.ShouldBindJSON(&multipleContacts); err != nil {
 		message := "Unable to parse request"
+		spans.TraceError(err)
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-		tracing.TraceErr(span, err)
 		return
 	}
 
@@ -209,13 +207,12 @@ func (h *ContactHandler) handleBulkJSONRequest(c *gin.Context) {
 }
 
 func (h *ContactHandler) handleCSVUpload(c *gin.Context) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleCSVUpload")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "Customerbase.handleCSVUpload")
+	defer spans.Finish()
 
 	file, err := h.validateAndOpenCsvFile(c)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return
 	}
 	defer file.Close()
@@ -229,9 +226,8 @@ func (h *ContactHandler) handleCSVUpload(c *gin.Context) {
 }
 
 func (h *ContactHandler) validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.validateFileHeaders")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "ContactHandler.validateFileHeaders")
+	defer spans.Finish()
 
 	headers, err := reader.Read()
 	if err != nil {
@@ -260,9 +256,8 @@ func (h *ContactHandler) validateFileHeaders(c *gin.Context, reader *csv.Reader)
 }
 
 func (h *ContactHandler) processCSVRecords(c *gin.Context, reader *csv.Reader) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.processCSVRecords")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "ContactHandler.processCSVRecords")
+	defer spans.Finish()
 
 	var csvErrors []BulkErrorDetails
 	var total int
@@ -348,13 +343,13 @@ func (h *ContactHandler) processCSVRecords(c *gin.Context, reader *csv.Reader) {
 }
 
 func (h *ContactHandler) validateAndOpenCsvFile(c *gin.Context) (multipart.File, error) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.validateAndOpenCsvFile")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "ContactHandler.validateAndOpenCsvFile")
+	defer spans.Finish()
 
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		message := "Unable to parse file"
+		spans.TraceError(err)
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return nil, err
 	}

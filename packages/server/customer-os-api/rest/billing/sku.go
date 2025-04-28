@@ -2,13 +2,14 @@
 package billing
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"sort"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary Get skus
@@ -23,16 +24,14 @@ import (
 // @Security ApiKeyAuth
 func (h *BillingHandler) GetSkus() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetSkus", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "GetSkus")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 
 		skuEntities, err := h.services.CommonServices.PostgresRepositories.SkuRepository.GetAll(ctx, tenant, utils.TruePtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}

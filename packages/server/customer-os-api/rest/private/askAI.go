@@ -12,9 +12,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -127,22 +127,21 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 }
 
 func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "parseRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "AskAIHandler.parseRequest")
+	defer spans.Finish()
 
 	var request AskAIRequest
 	err := c.BindJSON(&request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	tracing.LogObjectAsJson(span, "request", request)
+	spans.LogObjectAsJson("request", request)
 
 	aiModel, err := commonEnum.GetAIModel(request.Model)
 	if err != nil {
 		err = errors.New("Invalid AI model: " + request.Model)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -152,9 +151,8 @@ func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 }
 
 func (h *AskAIHandler) validateAIRequest(ctx context.Context, req *AskAIRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "validateAIRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(ctx, "AskAIHandler.validateAIRequest")
+	defer spans.Finish()
 
 	if req.Model == "" {
 		return fmt.Errorf("model is required")

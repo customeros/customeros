@@ -10,6 +10,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -61,9 +62,8 @@ const (
 // @Security ApiKeyAuth
 func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateOrganization", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "CreateOrganization")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -74,7 +74,7 @@ func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 		var request CreateOrganizationRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			message := "Invalid request body"
-			tracing.TraceErr(span, errors.Wrap(err, message))
+			spans.TraceError(errors.Wrap(err, message))
 			h.services.Log.Error(ctx, message, err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -87,7 +87,7 @@ func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 		organizationId, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, nil, orgFields)
 		if err != nil {
 			message := "Failed to create organization"
-			tracing.TraceErr(span, errors.Wrap(err, message))
+			spans.TraceError(errors.Wrap(err, message))
 			h.services.Log.Error(ctx, message, err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
@@ -118,9 +118,8 @@ func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *OrganizationHandler) GetOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.GetOrganization", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "GetOrganization")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -172,9 +171,8 @@ func (h *OrganizationHandler) GetOrganization() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *OrganizationHandler) SetPrimaryExternalSystemId() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.SetPrimaryExternalSystemId", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "SetPrimaryExternalSystemId")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {

@@ -11,12 +11,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
@@ -51,10 +49,8 @@ func NewContactHandler(services *cosapi_services.Services, responseHandler *resp
 // @Security ApiKeyAuth
 func (h *ContactHandler) CreateContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "CreateContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -67,16 +63,15 @@ func (h *ContactHandler) CreateContact() gin.HandlerFunc {
 }
 
 func (h *ContactHandler) handleJSONRequest(c *gin.Context) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleJSONRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "handleJSONRequest")
+	defer spans.Finish()
 
 	var contactRecord ContactRecord
 	if err := c.BindJSON(&contactRecord); err == nil && (strings.TrimSpace(contactRecord.Email) != "" || strings.TrimSpace(contactRecord.LinkedInURL) != "") {
 		err, errValue := h.validateContactRecord(&contactRecord)
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
-			span.LogFields(log.String("result.error", errMessage))
+			spans.LogKV("result.error", errMessage)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 			return
 		}
@@ -121,17 +116,15 @@ func (h *ContactHandler) validateContactRecord(record *ContactRecord) (error, st
 }
 
 func (h *ContactHandler) processContact(ctx context.Context, record ContactRecord) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.processContact")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("email", record.Email), log.String("linkedin", record.LinkedInURL))
+	spans, ctx := telemetry.StartRestSpan(ctx, "ContactHandler.processContact")
+	defer spans.Finish()
+	spans.LogKV("email", record.Email, "linkedin", record.LinkedInURL)
 
 	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
 	email := strings.TrimSpace(record.Email)
 
 	if linkedInUrl == "" && email == "" {
-		span.LogFields(log.String("result", "No email or LinkedIn URL provided"))
+		spans.LogKV("result", "No email or LinkedIn URL provided")
 		return ""
 	}
 
@@ -140,7 +133,7 @@ func (h *ContactHandler) processContact(ctx context.Context, record ContactRecor
 	if linkedInUrl != "" {
 		createdContactId, _, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+			spans.TraceError(errors.Wrap(err, "failed to save contact"))
 			return ""
 		}
 	}
@@ -149,7 +142,7 @@ func (h *ContactHandler) processContact(ctx context.Context, record ContactRecor
 		if createdContactId == "" {
 			createdContactId, err = h.services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+				spans.TraceError(errors.Wrap(err, "failed to save contact"))
 				return ""
 			}
 		} else {
@@ -160,9 +153,8 @@ func (h *ContactHandler) processContact(ctx context.Context, record ContactRecor
 }
 
 func (h *ContactHandler) associateEmailWithContact(ctx context.Context, email, contactId string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.associateEmailWithContact")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "ContactHandler.associateEmailWithContact")
+	defer spans.Finish()
 
 	_, err := h.services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		interfaces.EmailFields{
@@ -174,8 +166,8 @@ func (h *ContactHandler) associateEmailWithContact(ctx context.Context, email, c
 			Id:   contactId,
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.String("result", "Failed to upsert email"))
+		spans.TraceError(err)
+		spans.LogKV("result", "Failed to upsert email")
 	}
 }
 

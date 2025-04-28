@@ -9,21 +9,18 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
 
 func (h *IntegrationHandler) GrainZapier(c *gin.Context, tenant string) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Integrations.Grain", c.Request.Header)
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "Integrations.Grain")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
 
 	// update context with tenant, pass this where tenant is needed
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
@@ -48,9 +45,8 @@ func (h *IntegrationHandler) GrainZapier(c *gin.Context, tenant string) {
 }
 
 func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.handleGrainNewRecordingEventZapier")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "IntegrationHandler.handleGrainNewRecordingEventZapier")
+	defer spans.Finish()
 
 	var grainDataPayload GrainRecordingData
 	err := c.BindJSON(&grainDataPayload)
@@ -86,23 +82,22 @@ func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, 
 		return
 	}
 
-	span.LogKV("userId", userID)
+	spans.LogKV("userId", userID)
 	ctx = common.SetUserIdInContext(ctx, userID)
 
 	h.responseHandler.HandleAccepted(c)
 
 	go func() {
 		if err := h.publishGrainMeetingSummaryCreatedEvent(c, ctx, grainData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
+			spans.TraceError(errors.Wrap(err, "failed to process Grain AI summary from zapier"))
 		}
 	}()
 	return
 }
 
 func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, grainData *GrainRecordingData) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.publishGrainMeetingSummaryCreatedEvent")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "IntegrationHandler.publishGrainMeetingSummaryCreatedEvent")
+	defer spans.Finish()
 
 	content := grainData.MeetingNoteContent()
 	participants := grainData.RecordingData.participantEmails()
@@ -125,7 +120,7 @@ func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Conte
 	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingID, model.MEETING, event)
 
 	if pubErr != nil {
-		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish new meeting recording event"))
+		spans.TraceError(errors.Wrap(pubErr, "failed to publish new meeting recording event"))
 	}
 
 	return nil
