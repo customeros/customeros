@@ -2,7 +2,6 @@ package private
 
 import (
 	"bytes"
-	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	"image"
 	"image/color"
@@ -12,12 +11,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -40,16 +38,15 @@ func (h *MailHandler) SendEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/mail/send", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "MailHandler.SendEmail")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 
 		var request *postgres_entity.EmailMessage
 
 		if err := c.BindJSON(&request); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
@@ -58,11 +55,11 @@ func (h *MailHandler) SendEmail() gin.HandlerFunc {
 		request.ProducerId = "N/A"
 		request.ProducerType = "N/A"
 
-		span.LogKV("request", request)
+		spans.LogObjectAsJson("request", request)
 
 		err := h.services.CommonServices.MailService.SendMail(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -75,9 +72,8 @@ func (h *MailHandler) SendEmail() gin.HandlerFunc {
 func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customerOSInternalIdentifier := c.Param("customerOSInternalIdentifier")
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "/mail/"+customerOSInternalIdentifier+"/track", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "MailHandler.TrackEmail")
+		defer spans.Finish()
 
 		// Preload 1px transparent image
 		px := image.NewRGBA(image.Rect(0, 0, 1, 1))
@@ -85,7 +81,7 @@ func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 		var spyPixel bytes.Buffer
 		err := png.Encode(&spyPixel, px)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to encode image"))
+			spans.TraceError(errors.Wrap(err, "unable to encode image"))
 		}
 		spyPixelBytes := spyPixel.Bytes()
 
@@ -95,40 +91,40 @@ func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 			return
 		}
 
-		span.LogFields(log.String("customerOSInternalIdentifier", customerOSInternalIdentifier))
+		spans.LogKV("customerOSInternalIdentifier", customerOSInternalIdentifier)
 
 		// log all headers
 		for name, values := range c.Request.Header {
 			for _, value := range values {
-				span.LogFields(log.String("Header: "+name, value))
+				spans.LogKV("Header: "+name, value)
 			}
 		}
 
 		interactionEventNode, err := h.services.Repositories.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEventByCustomerOSIdentifier(ctx, customerOSInternalIdentifier)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
 		if interactionEventNode == nil {
-			span.LogFields(log.String("interactionEventId", "not found"))
+			spans.LogKV("interactionEventId", "not found")
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
 		interactionEvent := mapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
-		span.LogFields(log.String("interactionEventId", interactionEvent.Id))
+		spans.LogKV("interactionEventId", interactionEvent.Id)
 
 		tenant := model.GetTenantFromLabels(interactionEventNode.Labels, model.NodeLabelInteractionEvent)
 		if tenant == "" {
-			span.LogFields(log.String("tenant", "not identified"))
+			spans.LogKV("tenant", "not identified")
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
-		span.SetTag(tracing.SpanTagTenant, tenant)
+		spans.LogKV("tenant", tenant)
 
 		metadata, err := utils.ToJson(map[string]interface{}{
 			"User-Agent":       c.GetHeader("User-Agent"),
@@ -136,14 +132,14 @@ func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 		})
 		if err != nil {
 			message := "Error while converting metadata to json"
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
 		_, err = h.services.Repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, model.INTERACTION_EVENT, enum.ActionInteractionEventRead, "", metadata, utils.Now(), constants.AppSourceCustomerOsApi)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}

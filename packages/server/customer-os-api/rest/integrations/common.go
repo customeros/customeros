@@ -7,20 +7,18 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, emails []string, agent enum.AgentType) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.getCustomerOSUser")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "IntegrationHandler.getCustomerOSUser")
+	defer spans.Finish()
 
 	if len(emails) == 0 {
 		return "", coserrors.ErrCannotIdentifyUser
@@ -34,7 +32,7 @@ func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, emails []str
 		}
 		user, err := h.services.CommonServices.UserService.FindUserByEmail(ctx, email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		if user != nil && user.Id != "" {
 			ctx = common.SetUserIdInContext(ctx, user.Id)
@@ -43,7 +41,7 @@ func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, emails []str
 				return user.Id, nil
 			}
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 		}
 	}
@@ -51,9 +49,8 @@ func (h *IntegrationHandler) GetCustomerOSUser(ctx context.Context, emails []str
 }
 
 func getParticipantOrganizationIds(c *gin.Context, s *cosapi_services.Services, domains []string) ([]string, error) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "flows.getParticipantOrganizationIds")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.getParticipantOrganizationIds")
+	defer spans.Finish()
 
 	var results []string
 	tenantDomains, err := s.CommonServices.WorkspaceService.GetWorkspaceDomainsForTenant(ctx)
@@ -71,7 +68,7 @@ func getParticipantOrganizationIds(c *gin.Context, s *cosapi_services.Services, 
 		}
 		orgId, err := s.CommonServices.OrganizationService.Save(ctx, nil, nil, dataFields)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error saving organization by domain"))
+			spans.TraceError(errors.Wrap(err, "Error saving organization by domain"))
 		}
 
 		results = append(results, orgId)

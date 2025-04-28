@@ -3,19 +3,15 @@ package enrich
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/http"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // EnrichOrganizationResponse represents the response for organization enrichment
@@ -167,10 +163,8 @@ type EnrichOrganizationLocation struct {
 // @Security ApiKeyAuth
 func (h *EnrichHandler) EnrichOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichOrganization", c.Request.Header)
-		defer span.Finish()
-		commontracing.TagComponentRest(span)
-		commontracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "EnrichOrganization")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -188,9 +182,7 @@ func (h *EnrichHandler) EnrichOrganization() gin.HandlerFunc {
 			return
 		}
 
-		span.LogFields(
-			log.String("request.domain", domain),
-			log.String("request.linkedinUrl", linkedinUrl))
+		spans.LogKV("request.domain", domain, "request.linkedinUrl", linkedinUrl)
 
 		// Call enrichOrg
 		enrichOrganizationResponse, err := h.services.CommonServices.EnrichmentService.FetchEnrichOrganizationData(
@@ -242,7 +234,7 @@ func (h *EnrichHandler) EnrichOrganization() gin.HandlerFunc {
 					ReferenceData: fmt.Sprintf("LinkedIn URL: %s, Domain: %s", linkedinUrl, domain),
 				})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+				spans.TraceError(err)
 			}
 		}
 

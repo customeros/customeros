@@ -9,22 +9,19 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 )
 
 func (h *IntegrationHandler) FathomZapier(c *gin.Context, tenant string) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.FathomZapier", c.Request.Header)
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.FathomZapier")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
 
 	// update context with tenant, pass this where tenant is needed
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
@@ -52,9 +49,8 @@ func (h *IntegrationHandler) FathomZapier(c *gin.Context, tenant string) {
 }
 
 func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.handleFathomAISummaryZapier")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "IntegrationHandler.handleFathomAISummaryZapier")
+	defer spans.Finish()
 
 	var aiSummaryDataPayload FathomZapierPayload
 	err := c.BindJSON(&aiSummaryDataPayload)
@@ -81,7 +77,7 @@ func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx con
 		h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 		return
 	}
-	span.LogKV("userId", userId)
+	spans.LogKV("userId", userId)
 	ctx = common.SetUserIdInContext(ctx, userId)
 
 	aiSummaryData := &aiSummaryDataPayload
@@ -102,22 +98,21 @@ func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx con
 
 	go func() {
 		if err := h.publishFathomMeetingSummaryCreatedEvent(c, ctx, aiSummaryData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
+			spans.TraceError(errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
 		}
 	}()
 	return
 }
 
 func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, aiSummaryData *FathomZapierPayload) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Integrations.publishFathomMeetingSummaryCreatedEvent")
-	defer span.Finish()
-	commontracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "IntegrationHandler.publishFathomMeetingSummaryCreatedEvent")
+	defer spans.Finish()
 
 	meetingID := aiSummaryData.ID
 	participants := aiSummaryData.Meeting.participantEmails()
 	content, err := aiSummaryData.toMarkdownContent()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
+		spans.TraceError(errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
 		return err
 	}
 
@@ -140,7 +135,7 @@ func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Cont
 
 	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingID, model.MEETING, event)
 	if pubErr != nil {
-		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
+		spans.TraceError(errors.Wrap(pubErr, "failed to publish event"))
 	}
 
 	return nil

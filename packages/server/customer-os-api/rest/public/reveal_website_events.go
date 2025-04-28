@@ -10,12 +10,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/caches"
@@ -43,9 +41,8 @@ type ReferrerQueryParams struct {
 
 func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "WebsiteTrackerEventsHandler.RevealWebsiteVisitors", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "WebsiteTrackerEventsHandler.RevealWebsiteVisitors")
+		defer spans.Finish()
 
 		if err := h.validateHeaders(c); err != nil {
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
@@ -57,13 +54,13 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
+		spans.TagTenant(tenant)
 		ctx = common.SetTenantInContext(ctx, tenant)
 
 		trackerData := h.buildTrackerDbData(c, tenant)
 		if trackerData == nil {
 			err = fmt.Errorf("unable to build tracking record")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -78,49 +75,48 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 		// check if the event type is known
 		if !enum.IsValidWebTrackerEvent(trackerData.EventType) {
 			err = fmt.Errorf("unsupported web-tracker event type: %s", trackerData.EventType)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 
 		if err := h.assignEventToSession(ctx, trackerData); err != nil {
 			if trackerData.EventType != enum.WebTrackerPageExit.String() {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 			}
 			return
 		}
 
 		if _, err := h.services.Repositories.PostgresRepositories.WebTrackerEventsRepository.Create(ctx, *trackerData); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return
 		}
 	}
 }
 
 func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.validateHeaders")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "WebsiteTrackerEventsHandler.validateHeaders")
+	defer spans.Finish()
 
 	origin := c.GetHeader("Origin")
 	referer := c.GetHeader("Referer")
 	userAgent := c.GetHeader("User-Agent")
 
-	span.LogKV("origin", origin)
-	span.LogKV("referer", referer)
-	span.LogKV("userAgent", userAgent)
+	spans.LogKV("origin", origin)
+	spans.LogKV("referer", referer)
+	spans.LogKV("userAgent", userAgent)
 
 	switch {
 	case origin == "":
 		err := errors.New("missing origin")
-		span.LogFields(log.String("result.error", err.Error()))
+		spans.LogKV("result.error", err.Error())
 		return err
 	case referer == "":
 		err := errors.New("missing referer")
-		span.LogFields(log.String("result.error", err.Error()))
+		spans.LogKV("result.error", err.Error())
 		return err
 	case userAgent == "":
 		err := errors.New("missing userAgent")
-		span.LogFields(log.String("result.error", err.Error()))
+		spans.LogKV("result.error", err.Error())
 		return err
 	default:
 		return nil
@@ -128,22 +124,21 @@ func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
 }
 
 func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Context, origin string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.validateTrackingAllowed")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-	span.LogKV("origin", origin)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.validateTrackingAllowed")
+	defer spans.Finish()
+	spans.LogKV("origin", origin)
 
 	cleanedOrigin := utils.StripUrlToBasePath(origin)
 
 	tenant := h.cache.GetTenantForOrigin(cleanedOrigin)
 	if tenant != "" {
-		span.LogKV("result.tenant.cached", tenant)
+		spans.LogKV("result.tenant.cached", tenant)
 		return tenant, nil
 	}
 
 	agents, err := h.services.Repositories.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get agents"))
+		spans.TraceError(errors.Wrap(err, "failed to get agents"))
 		return "", err
 	}
 
@@ -152,10 +147,10 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 
 	if tenant == "" {
 		err = fmt.Errorf("tenant not found for origin: %s", origin)
-		span.LogFields(log.Bool("result.tenant.found", false))
+		spans.LogKV("result.tenant.found", false)
 		return "", err
 	}
-	span.LogKV("result.tenant", tenant)
+	spans.LogKV("result.tenant", tenant)
 	return tenant, nil
 }
 
@@ -170,9 +165,8 @@ func (h *WebsiteTrackerEventsHandler) findTenantByOrigin(ctx context.Context, ag
 }
 
 func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, agent postgres_entity.Agent, cleanedOrigin string) string {
-	span, _ := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.checkAgentForOrigin")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.checkAgentForOrigin")
+	defer spans.Finish()
 
 	for _, listener := range agent.Listeners {
 		if listener.Type != enum.EventNewWebSession {
@@ -182,7 +176,7 @@ func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, a
 		var config agent_listeners.IdentifyWebsiteVisitorConfig
 		err := listener.GetConfig(&config)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return ""
 		}
 
@@ -196,11 +190,10 @@ func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, a
 }
 
 func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, trackerData *postgres_entity.WebTrackerEvents) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
+	defer spans.Finish()
 
-	span.LogKV(
+	spans.LogKV(
 		"ip", trackerData.IP,
 		"hostname", trackerData.Hostname,
 		"visitor_id", trackerData.VisitorID,
@@ -217,14 +210,14 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 
 	session, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if session == nil && enum.IsActiveWebTrackerEvent(trackerData.EventType) {
 		session, err = h.createWebSession(ctx, trackerData)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -232,7 +225,7 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 	if session == nil {
 		err = errors.New("session not found and not created")
 		if trackerData.EventType != enum.WebTrackerPageExit.String() {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 		return err
 	}
@@ -240,31 +233,29 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 	trackerData.SessionID = session.ID
 	err = h.updateSessionLastActivity(ctx, trackerData.SessionID, trackerData.EventType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (h *WebsiteTrackerEventsHandler) updateSessionLastActivity(ctx context.Context, sessionID, eventType string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.updateSessionLastActivityTimestamp")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-	span.LogKV("sessionID", sessionID, "eventType", eventType)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.updateSessionLastActivityTimestamp")
+	defer spans.Finish()
+	spans.LogKV("sessionID", sessionID, "eventType", eventType)
 
 	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.UpdateLastActivity(ctx, sessionID, eventType)
 	if err != nil {
 		err = errors.New("unable to update web session")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trackerData *postgres_entity.WebTrackerEvents) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.createWebSession")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.createWebSession")
+	defer spans.Finish()
 
 	query := postgres_entity.WebSession{
 		Tenant:        trackerData.Tenant,
@@ -283,7 +274,7 @@ func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trac
 	if params != nil {
 		paramString, err := h.setReferrerQueryParams(ctx, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		if paramString != nil {
@@ -293,20 +284,20 @@ func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trac
 
 	newSession, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.Create(ctx, query)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if newSession == nil {
 		err = errors.New("unable to create new web session")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return newSession, nil
 }
 
 func (h *WebsiteTrackerEventsHandler) setReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryParams) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.SetReferrerQueryParams")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.SetReferrerQueryParams")
+	defer spans.Finish()
 
 	bytes, err := json.Marshal(queryParams)
 	if err != nil {
@@ -317,27 +308,27 @@ func (h *WebsiteTrackerEventsHandler) setReferrerQueryParams(ctx context.Context
 }
 
 func (h *WebsiteTrackerEventsHandler) buildTrackerDbData(c *gin.Context, tenant string) *postgres_entity.WebTrackerEvents {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.buildTrackerEventData")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "WebsiteTrackerEventsHandler.buildTrackerEventData")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
 
 	tracking := postgres_entity.WebTrackerEvents{}
 
 	rawJSON, err := c.GetRawData()
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get raw data"))
+		spans.TraceError(errors.Wrap(err, "failed to get raw data"))
 		return nil
 	}
-	span.LogFields(log.String("rawJSON", string(rawJSON)))
+	spans.LogKV("rawJSON", string(rawJSON))
 
 	var inputMap map[string]any
 	if err := json.Unmarshal(rawJSON, &inputMap); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 
 	if err := utils.Decode(inputMap, &tracking); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil
 	}
 	tracking.Tenant = tenant
@@ -354,14 +345,14 @@ func (h *WebsiteTrackerEventsHandler) buildTrackerDbData(c *gin.Context, tenant 
 }
 
 func (h *WebsiteTrackerEventsHandler) isTrustedIP(ctx context.Context, ipAddress string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.isTrustedIp")
-	defer span.Finish()
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	span.LogKV("ipAddress", ipAddress)
+	spans, ctx := telemetry.StartRestSpan(ctx, "WebsiteTrackerEventsHandler.isTrustedIp")
+	defer spans.Finish()
+	spans.TagTenant(common.GetTenantFromContext(ctx))
+	spans.LogKV("ipAddress", ipAddress)
 
 	ipThreats, err := h.services.CommonServices.VerifyService.Threats(ctx, ipAddress)
 	if err != nil || ipThreats == nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return true
 	}
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
@@ -36,21 +36,20 @@ func (h *HybridSearchHandler) Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/hybridSearch", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "HybridSearchHandler.Search")
+		defer spans.Finish()
 
 		var request HybridSearchRequest
 		err := c.BindJSON(&request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
 		answer, err := h.services.CommonServices.SearchService.SearchWebsites(ctx, "nuso.cloud", request.Query)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}

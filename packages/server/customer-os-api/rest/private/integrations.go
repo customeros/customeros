@@ -11,7 +11,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 )
@@ -32,13 +32,12 @@ func (h *PrivateIntegrationHandler) GetIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/settings/integrations", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "PrivateIntegrationHandler.GetIntegrations")
+		defer spans.Finish()
 
 		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.GetForTenant(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -51,13 +50,12 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/settings/integrations", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "PrivateIntegrationHandler.CreateIntegration")
+		defer spans.Finish()
 
 		var request map[string]interface{}
 		if err := c.BindJSON(&request); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Invalid request format"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -65,7 +63,7 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 
 		// Validate required fields
 		if err := h.validateIntegrationRequest(request); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := err.Error()
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
@@ -73,7 +71,7 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 
 		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.SaveIntegrationData(ctx, request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := err.Error()
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
@@ -96,9 +94,8 @@ func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/settings/integrations/:identifier", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "PrivateIntegrationHandler.DeleteIntegrations")
+		defer spans.Finish()
 
 		identifier := c.Param("identifier")
 		if identifier == "" {
@@ -109,7 +106,7 @@ func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 
 		data, activeServices, err := h.services.TenantSettingsService.ClearIntegrationData(ctx, identifier)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Failed to delete integration"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return

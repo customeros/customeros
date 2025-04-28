@@ -19,7 +19,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -28,8 +27,6 @@ import (
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -46,12 +43,12 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/rml", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "RML")
+		defer spans.Finish()
 
 		var request RequestMagicLinkRequest
 		if err := c.BindJSON(&request); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INVALID_REQUEST"),
 			})
@@ -67,7 +64,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 
 		saveErr := saveIP(ctx, c, s, request.Email)
 		if saveErr != nil {
-			tracing.TraceErr(span, errors.Wrap(saveErr, "unable to save IP address"))
+			spans.TraceError(errors.Wrap(saveErr, "unable to save IP address"))
 		}
 
 		emailValidation := mailvalidate.ValidateEmailSyntax(request.Email)
@@ -88,7 +85,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 			// Check if the code already exists
 			magicLink, err := s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, code)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})
@@ -102,7 +99,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 
 		byEmail, err := s.Repositories.PostgresRepositories.MagicLinkRepository.GetByEmail(ctx, request.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 			})
@@ -112,7 +109,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 		if byEmail != nil {
 			err := s.Repositories.PostgresRepositories.MagicLinkRepository.Delete(ctx, byEmail.ID)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})
@@ -138,7 +135,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 			},
 		}, "openlineai")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 			})
@@ -161,13 +158,13 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/pml", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "PML")
+		defer spans.Finish()
 
 		var magicLink *postgres_entity.MagicLink
 		var signInRequest SignInRequest
 		if err := c.BindJSON(&signInRequest); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("INVALID_REQUEST"),
 			})
@@ -177,7 +174,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 		if signInRequest.Code != "" {
 			magicLink, err = s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, signInRequest.Code)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 				})
@@ -203,7 +200,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 
 		err = s.Repositories.PostgresRepositories.MagicLinkRepository.Delete(ctx, magicLink.ID)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 
 		return
@@ -220,12 +217,12 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 			panic(err)
 		}
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/signin", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "Signin")
+		defer spans.Finish()
 
 		var signInRequest SignInRequest
 		if err = c.BindJSON(&signInRequest); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 			})
@@ -237,7 +234,7 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 }
 
 func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
-	spans, ctx := telemetry.StartRestSpan(ctx, "signInV2")
+	spans, ctx := telemetry.StartRestSpan(ctx, "signIn")
 	defer spans.Finish()
 
 	var err error
@@ -600,14 +597,14 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 }
 
 func initializeUserInTenant(ctx context.Context, services *cosapi_services.Services, userId string) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Registration.initializeUserInTenant")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "Registration.initializeUserInTenant")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	err := addDefaultMissingRoles(ctx, services, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -620,21 +617,21 @@ func initializeUserInTenant(ctx context.Context, services *cosapi_services.Servi
 
 	workingSchedule, err := services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if len(workingSchedule) == 0 {
 		err = services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &defaultWorkSchedule)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 	}
 
 	err = services.Repositories.Neo4jRepositories.UserWriteRepository.RegisterLogin(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	// TODO why is this needed?
@@ -648,8 +645,8 @@ func initializeUserInTenant(ctx context.Context, services *cosapi_services.Servi
 
 func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "Registration.Revoke")
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "Registration.Revoke")
+		defer spans.Finish()
 
 		var revokeRequest RevokeRequest
 		if err := c.BindJSON(&revokeRequest); err != nil {
@@ -660,7 +657,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 		log.Printf("parsed json: %v", revokeRequest)
-		tracing.LogObjectAsJson(span, "revokeRequest", revokeRequest)
+		spans.LogObjectAsJson("revokeRequest", revokeRequest)
 
 		workspaceProvider := ""
 		if revokeRequest.MailboxProvider == model.MailboxProviderGoogleWorkspace.String() {
@@ -668,7 +665,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 		} else if revokeRequest.MailboxProvider == model.MailboxProviderOutlook.String() {
 			workspaceProvider = common_enum.WorkspaceProviderAzure.String()
 		}
-		span.LogKV("workspaceProvider", workspaceProvider)
+		spans.LogKV("workspaceProvider", workspaceProvider)
 
 		if workspaceProvider == "" {
 			c.JSON(http.StatusBadRequest, gin.H{})
@@ -676,7 +673,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		oauthToken, err := s.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
@@ -690,7 +687,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				// Decrypt the access token before revoking
 				decryptedAccessToken, err := postgres_entity.DecryptToken(s.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, oauthToken.AccessToken)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
@@ -704,12 +701,12 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 					"Authorization": fmt.Sprintf("Bearer %s", oauthToken.AccessToken),
 				}
 			}
-			span.LogFields(tracingLog.String("revocationURL", revocationURL))
+			spans.LogKV("revocationURL", revocationURL)
 
 			if revocationURL != "" {
 				req, err := http.NewRequest("POST", revocationURL, nil)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
@@ -721,14 +718,14 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				client := &http.Client{}
 				resp, err := client.Do(req)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					c.JSON(http.StatusInternalServerError, gin.H{})
 					return
 				}
 				defer resp.Body.Close()
 
 				body, _ := io.ReadAll(resp.Body)
-				span.LogFields(tracingLog.String("response.body", string(body)))
+				spans.LogKV("response.body", string(body))
 
 				// For Google, if token is already revoked (invalid_token error), we can proceed
 				if workspaceProvider == common_enum.WorkspaceProviderGoogle.String() {
@@ -739,10 +736,10 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 					if err := json.Unmarshal(body, &errorResponse); err == nil {
 						if errorResponse.Error == "invalid_token" {
 							// Token is already revoked, we can proceed
-							span.LogFields(tracingLog.String("token_status", "already_revoked"))
+							spans.LogKV("token_status", "already_revoked")
 						} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 							// Other errors should be treated as failures
-							tracing.TraceErr(span, fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
+							spans.TraceError(fmt.Errorf("revocation failed, status code: %d", resp.StatusCode))
 							c.JSON(http.StatusInternalServerError, gin.H{})
 							return
 						}
@@ -754,14 +751,14 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 					// Decrypt the refresh token before revoking
 					decryptedRefreshToken, err := postgres_entity.DecryptToken(s.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, oauthToken.RefreshToken)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						c.JSON(http.StatusInternalServerError, gin.H{})
 						return
 					}
 					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", decryptedRefreshToken)
 					req, err = http.NewRequest("POST", revocationURL, nil)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						c.JSON(http.StatusInternalServerError, gin.H{})
 						return
 					}
@@ -772,14 +769,14 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 					resp, err = client.Do(req)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						c.JSON(http.StatusInternalServerError, gin.H{})
 						return
 					}
 					defer resp.Body.Close()
 
 					body, _ = io.ReadAll(resp.Body)
-					span.LogFields(tracingLog.String("refresh_token_response.body", string(body)))
+					spans.LogKV("refresh_token_response.body", string(body))
 
 					// Handle already revoked refresh token case
 					var errorResponse struct {
@@ -789,10 +786,10 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 					if err := json.Unmarshal(body, &errorResponse); err == nil {
 						if errorResponse.Error == "invalid_token" {
 							// Refresh token is already revoked, we can proceed
-							span.LogFields(tracingLog.String("refresh_token_status", "already_revoked"))
+							spans.LogKV("refresh_token_status", "already_revoked")
 						} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 							// Other errors should be treated as failures
-							tracing.TraceErr(span, fmt.Errorf("refresh token revocation failed, status code: %d", resp.StatusCode))
+							spans.TraceError(fmt.Errorf("refresh token revocation failed, status code: %d", resp.StatusCode))
 							c.JSON(http.StatusInternalServerError, gin.H{})
 							return
 						}
@@ -803,7 +800,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		err = s.Repositories.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, workspaceProvider, revokeRequest.Email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
@@ -813,15 +810,15 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 }
 
 func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest SignInRequest) (string, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "Registration.validateRequestAtProvider")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(c, "Registration.validateRequestAtProvider")
+	defer spans.Finish()
 
 	if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
 		return "", "", nil
 	} else if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
 		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
-			tracing.TraceErr(nil, err)
+			spans.TraceError(err)
 			return "", "", err
 		}
 
@@ -831,7 +828,7 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 		// Create a GET request with the Authorization header.
 		req, err := http.NewRequest("GET", "https://graph.microsoft.com/oidc/userinfo", nil)
 		if err != nil {
-			tracing.TraceErr(nil, err)
+			spans.TraceError(err)
 			return "", "", err
 		}
 
@@ -839,7 +836,7 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 
 		resp, err := client.Do(req)
 		if err != nil {
-			tracing.TraceErr(nil, err)
+			spans.TraceError(err)
 			return "", "", err
 		}
 		defer resp.Body.Close()
@@ -852,18 +849,18 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 			lastName := data["family_name"]
 			return firstName, lastName, nil
 		} else {
-			tracing.TraceErr(nil, err)
+			spans.TraceError(err)
 			return "", "", err
 		}
 	} else {
-		tracing.TraceErr(nil, fmt.Errorf("provider not supported"))
+		spans.TraceError(fmt.Errorf("provider not supported"))
 		return "", "", fmt.Errorf("provider not supported")
 	}
 }
 
 func getUserInfoFromGoogle(c context.Context, config *config.Config, signInRequest SignInRequest) (*googleOauth.Userinfo, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(c, "Registration.getUserInfoFromGoogle")
+	defer spans.Finish()
 
 	conf := &tokenOauth.Config{
 		ClientID:     config.Common.Infrastructure.GoogleOAuthConfig.ClientId,
@@ -882,14 +879,14 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 
 	oauth2Service, err := googleOauth.New(client)
 	if err != nil {
-		tracing.TraceErr(nil, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	userInfoService := googleOauth.NewUserinfoV2MeService(oauth2Service)
 
 	userInfo, err := userInfoService.Get().Do()
 	if err != nil {
-		tracing.TraceErr(nil, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -897,8 +894,8 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 }
 
 func addDefaultMissingRoles(c context.Context, services *cosapi_services.Services, tenant, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "Registration.addDefaultMissingRoles")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(c, "Registration.addDefaultMissingRoles")
+	defer spans.Finish()
 
 	userRoleFound := false
 	ownerRoleFound := false
@@ -906,12 +903,13 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 
 	userNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	if userNode == nil {
-		tracing.TraceErr(span, fmt.Errorf("user not found"))
-		return fmt.Errorf("user not found")
+		err = fmt.Errorf("user not found")
+		spans.TraceError(err)
+		return err
 	}
 
 	existingUser := mapper.MapDbNodeToUserEntity(userNode)
@@ -934,14 +932,14 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 		if !userRoleFound {
 			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, common_enum.UserRoleUser.String())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 		}
 		if !ownerRoleFound {
 			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, common_enum.UserRoleOwner.String())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 		}
@@ -979,8 +977,8 @@ func isRequestEnablingOAuthSync(signInRequest SignInRequest) bool {
 }
 
 func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config.Config, services *cosapi_services.Services, registeredEmail string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.registerNewTenantAsLeadInProviderTenant")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "Registration.registerNewTenantAsLeadInProviderTenant")
+	defer spans.Finish()
 
 	providerTenantCtx := common.WithCustomContext(ctx, &common.CustomContext{
 		Tenant: config.App.AuthConfig.ProviderTenantName,
@@ -988,12 +986,12 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 
 	organizationId, contactId, err := createOrganizationAndContact(providerTenantCtx, services, config.App.AuthConfig.ProviderTenantName, registeredEmail, true, "Tenant Registration")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
-	span.LogFields(tracingLog.String("providerOrganizationId", *organizationId))
-	span.LogFields(tracingLog.String("providerContactId", *contactId))
+	spans.LogKV("providerOrganizationId", *organizationId)
+	spans.LogKV("providerContactId", *contactId)
 
 	// TODO EDI - send welcome email
 
@@ -1122,8 +1120,8 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 }
 
 func createOrganizationAndContact(ctx context.Context, services *cosapi_services.Services, tenant, email string, allowPersonalEmail bool, leadSource string) (*string, *string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.CreateOrganizationAndContact")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "RegistrationService.CreateOrganizationAndContact")
+	defer spans.Finish()
 
 	domain := common_utils.ExtractDomain(email)
 
@@ -1142,7 +1140,7 @@ func createOrganizationAndContact(ctx context.Context, services *cosapi_services
 	if !isPersonalEmail || allowPersonalEmail {
 		organizationByDomain, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, nil, err
 		}
 
@@ -1155,41 +1153,41 @@ func createOrganizationAndContact(ctx context.Context, services *cosapi_services
 				LeadSource:   common_utils.StringPtr(leadSource),
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, nil, err
 			}
 			if organizationId == "" {
-				e := errors.New("organization id empty")
-				tracing.TraceErr(span, e)
-				return nil, nil, e
+				err := errors.New("organization id empty")
+				spans.TraceError(err)
+				return nil, nil, err
 			}
 		} else {
 			organizationId = mapper.MapDbNodeToOrganizationEntity(organizationByDomain).ID
 		}
 
 		if organizationId == "" {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, nil, err
 		}
-		span.LogFields(tracingLog.String("result.organizationId", organizationId))
+		spans.LogKV("result.organizationId", organizationId)
 
 		contactNode, err := services.Repositories.Neo4jRepositories.ContactReadRepository.GetContactInOrganizationByEmail(ctx, tenant, organizationId, email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, nil, err
 		}
 
 		if contactNode == nil {
 			contactId, err = services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, nil, err
 			}
 
 			err = services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "", "",
 				neoEntity.DataSourceOpenline.String(), false, nil, nil)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return nil, nil, err
 			}
 		} else {
@@ -1197,18 +1195,18 @@ func createOrganizationAndContact(ctx context.Context, services *cosapi_services
 		}
 
 		if contactId == "" {
-			tracing.TraceErr(span, errors.New("contact id empty"))
+			spans.TraceError(errors.New("contact id empty"))
 			return nil, nil, errors.New("contact id empty")
 		}
-		span.LogFields(tracingLog.String("result.contactId", contactId))
+		spans.LogKV("result.contactId", contactId)
 	}
 
 	return &organizationId, &contactId, nil
 }
 
 func saveIP(ctx context.Context, c *gin.Context, s *cosapi_services.Services, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.saveIP")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "registration.saveIP")
+	defer spans.Finish()
 
 	var clientIP string
 	var originalIP string
@@ -1239,8 +1237,8 @@ func saveIP(ctx context.Context, c *gin.Context, s *cosapi_services.Services, em
 	validEmail := mailvalidate.ValidateEmailSyntax(email)
 	if !validEmail.IsValid {
 		err := errors.New("Email is invalid")
-		span.LogKV("email", email)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
+		spans.LogKV("email", email)
 	}
 
 	if validEmail.IsFreeAccount || validEmail.IsRoleAccount || validEmail.IsSystemGenerated {
@@ -1255,11 +1253,11 @@ func saveIP(ctx context.Context, c *gin.Context, s *cosapi_services.Services, em
 		CompanyWebsite: &website,
 		SourceEmail:    &validEmail.CleanEmail,
 	}
-	tracing.LogObjectAsJson(span, "ipToEmailDetails", details)
+	spans.LogObjectAsJson("ipToEmailDetails", details)
 
 	err := s.Repositories.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, details)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -1267,8 +1265,8 @@ func saveIP(ctx context.Context, c *gin.Context, s *cosapi_services.Services, em
 }
 
 func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Services, signInRequest SignInRequest, defaultTenant string, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "handleGoogleOAuthToken")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "handleGoogleOAuthToken")
+	defer spans.Finish()
 
 	var err error
 
@@ -1286,12 +1284,12 @@ func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Servi
 
 	oauthToken.AccessToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.AccessToken)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	oauthToken.RefreshToken, err = postgres_entity.EncryptToken(services.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, signInRequest.OAuthToken.RefreshToken)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	oauthToken.IdToken = signInRequest.OAuthToken.IdToken
@@ -1308,15 +1306,15 @@ func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Servi
 	}
 	_, err = services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return nil
 }
 
 func handleAzureOAuthToken(ctx context.Context, services *cosapi_services.Services, signInRequest SignInRequest, defaultTenant string, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "handleAzureOAuthToken")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "handleAzureOAuthToken")
+	defer spans.Finish()
 
 	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
 	if oauthToken == nil {
@@ -1335,7 +1333,7 @@ func handleAzureOAuthToken(ctx context.Context, services *cosapi_services.Servic
 	oauthToken.NeedsManualRefresh = false
 	_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return nil

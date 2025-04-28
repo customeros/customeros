@@ -5,9 +5,8 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -33,9 +32,8 @@ func (h *CompanyResearchHandler) GenerateCompanyBrief() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(ctx, "/generateCompanyBrief", c.Request.Header)
-		defer span.Finish()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
+		spans, ctx := telemetry.StartRestSpan(ctx, "CompanyResearchHandler.GenerateCompanyBrief")
+		defer spans.Finish()
 
 		// parse request
 		_, err := h.parseRequest(c)
@@ -49,7 +47,7 @@ func (h *CompanyResearchHandler) GenerateCompanyBrief() gin.HandlerFunc {
 
 		_, err = h.services.CommonServices.CompanyResearch.GenerateCompanyBriefForTenant(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			message := "Unable to crawl website"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
@@ -58,17 +56,16 @@ func (h *CompanyResearchHandler) GenerateCompanyBrief() gin.HandlerFunc {
 }
 
 func (h *CompanyResearchHandler) parseRequest(c *gin.Context) (*WebscrapeRequest, error) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "parseRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "CompanyResearchHandler.parseRequest")
+	defer spans.Finish()
 
 	var request WebscrapeRequest
 	err := c.BindJSON(&request)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	tracing.LogObjectAsJson(span, "request", request)
+	spans.LogObjectAsJson("request", request)
 
 	return &request, nil
 }

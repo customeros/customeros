@@ -9,7 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 
@@ -52,9 +52,8 @@ type CreateWebhookResponse struct {
 
 func (h *WebhookHandler) CreateWebhook(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateWebhook", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "WebhookHandler.CreateWebhook")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -116,9 +115,8 @@ type ActiveWebhookRecord struct {
 
 func (h *WebhookHandler) GetActiveWebhooks(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetActiveWebhooks", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "WebhookHandler.GetActiveWebhooks")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -136,7 +134,7 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, apiPath string) gin.HandlerF
 			webhooks, err = h.services.Repositories.PostgresRepositories.WebhooksRepository.FindAll(ctx)
 			if err != nil {
 				err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 				return
 			}
@@ -144,7 +142,7 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, apiPath string) gin.HandlerF
 			webhook, err := h.services.CommonServices.WebhookService.GetWebhookForIntegration(ctx, enum.DecodeSource(integration))
 			if err != nil || webhook == nil {
 				err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 				return
 			}
@@ -152,7 +150,7 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, apiPath string) gin.HandlerF
 			webhooks = &webhookArray
 		}
 
-		tracing.LogObjectAsJson(span, "webhooks", webhooks)
+		spans.LogKV("webhooks", webhooks)
 
 		if len(*webhooks) == 0 {
 			h.responseHandler.HandleSuccess(c, NoActiveWebhooks{
@@ -187,9 +185,8 @@ func (h *WebhookHandler) GetActiveWebhooks(baseURL, apiPath string) gin.HandlerF
 
 func (h *WebhookHandler) RotateWebhook(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "WebhookHandler.RotateWebhook")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -239,9 +236,8 @@ func (h *WebhookHandler) RotateWebhook(baseURL, apiPath string) gin.HandlerFunc 
 
 func (h *WebhookHandler) DeactivateWebhook(baseURL, apiPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "DeactivateWebhook", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "WebhookHandler.DeactivateWebhook")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {

@@ -10,10 +10,9 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -47,8 +46,8 @@ type OauthSlackRevokeResponse struct {
 
 func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		_, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/slack/requestAccess", c.Request.Header)
-		defer span.Finish()
+		spans, _ := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.RequestAccessSlack")
+		defer spans.Finish()
 
 		scopes := []string{
 			"channels:history",
@@ -83,7 +82,7 @@ func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 			slackRequestAccessUrl += "&redirect_uri=" + url.QueryEscape(redirectUri)
 		}
 
-		span.LogFields(log.Object("slackRequestAccessUrl", slackRequestAccessUrl))
+		spans.LogKV("slackRequestAccessUrl", slackRequestAccessUrl)
 
 		c.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
 	}
@@ -91,22 +90,22 @@ func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/slack/oauth/callback", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "IntegrationHandler.CallbackSlack")
+		defer spans.Finish()
 
 		tenant, _ := c.Get(security.KEY_TENANT_NAME)
 
 		slackSettingsEntity, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant.(string))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		code := c.Request.URL.Query().Get("code")
 		redirectUri := c.Request.URL.Query().Get("redirect_uri")
-		span.LogKV("code", code)
-		span.LogKV("redirectUri", redirectUri)
+		spans.LogKV("code", code)
+		spans.LogKV("redirectUri", redirectUri)
 
 		requestData := url.Values{}
 		requestData.Set("code", code)
@@ -119,7 +118,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		request, err := http.NewRequest("POST", "https://slack.com/api/oauth.v2.access", nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -132,7 +131,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		client := &http.Client{}
 		resp, err := client.Do(request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -141,7 +140,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		// Read and print the response
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -150,7 +149,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		var slackResponse OauthSlackResponse
 		err = json.Unmarshal(body, &slackResponse)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -173,12 +172,12 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 			_, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Save(ctx, entity)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 		} else {
-			tracing.TraceErr(span, errors.Wrap(errors.New("slack response not ok"), slackResponse.Error))
+			spans.TraceError(errors.Wrap(errors.New("slack response not ok"), slackResponse.Error))
 
 			c.JSON(http.StatusInternalServerError, gin.H{"error": slackResponse.Error})
 			return
@@ -191,14 +190,14 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 	responseHandler := response.NewRestResponseHandler()
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/slack/revoke", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RevokeSlack")
+		defer spans.Finish()
 
 		tenant, _ := c.Get(security.KEY_TENANT_NAME)
 
 		slackSettingsEntity, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant.(string))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -211,7 +210,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		request, err := http.NewRequest("GET", "https://slack.com/api/auth.revoke", nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -221,7 +220,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		client := &http.Client{}
 		resp, err := client.Do(request)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -229,7 +228,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -237,7 +236,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		var slackResponse OauthSlackRevokeResponse
 		err = json.Unmarshal(body, &slackResponse)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -247,7 +246,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 			if slackResponse.Error != nil {
 				errMsg = *slackResponse.Error
 			}
-			tracing.TraceErr(span, errors.New(errMsg))
+			spans.TraceError(errors.New(errMsg))
 			responseHandler.HandleError(c, http.StatusInternalServerError, &errMsg)
 			return
 		}
@@ -255,7 +254,7 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		// Revoke was successful, delete settings
 		err = s.Repositories.PostgresRepositories.SlackSettingsRepository.Delete(ctx, tenant.(string))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}

@@ -5,7 +5,6 @@ import (
 
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
@@ -48,7 +47,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 
 func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 	middlewares := []gin.HandlerFunc{
-		tracing.TracingEnhancer(ctx, config.method+":"+config.path),
+		rest_handlers.RestTracingEnhancer(ctx, config.method+":"+config.path),
 	}
 
 	switch config.routeType {

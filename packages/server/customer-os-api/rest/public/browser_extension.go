@@ -8,11 +8,9 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
@@ -40,10 +38,8 @@ type ContactResponse struct {
 
 func (h *BrowserExtensionHandler) CreateContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.CreateContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.CreateContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -56,14 +52,13 @@ func (h *BrowserExtensionHandler) CreateContact() gin.HandlerFunc {
 }
 
 func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "BrowserExtensionHandler.handleCreateContactJSONRequest")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
+	spans, _ := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.handleCreateContactJSONRequest")
+	defer spans.Finish()
 
 	var contactRecord customerbase.ContactRecord
 	err := c.BindJSON(&contactRecord)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		errMessage := "cannot parse request"
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 		return
@@ -77,7 +72,7 @@ func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context)
 	err, errValue := h.validateContactRecord(&contactRecord)
 	if err != nil {
 		errMessage := fmt.Sprintf("%s | %s", errValue, err)
-		span.LogFields(log.String("result.error", errMessage))
+		spans.LogKV("result.error", errMessage)
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 		return
 	}
@@ -88,19 +83,15 @@ func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context)
 }
 
 func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, record customerbase.ContactRecord) (string, string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BrowserExtensionHandler.processCreateContact")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-	tenant := common.GetTenantFromContext(ctx)
+	spans, ctx := telemetry.StartRestSpan(ctx, "BrowserExtensionHandler.processCreateContact")
+	defer spans.Finish()
 
-	tracing.TagTenant(span, tenant)
-
-	span.LogFields(log.String("email", record.Email), log.String("linkedin", record.LinkedInURL))
+	spans.LogKV("email", record.Email, "linkedin", record.LinkedInURL)
 
 	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
 
 	if linkedInUrl == "" {
-		span.LogFields(log.String("result", "No email or LinkedIn URL provided"))
+		spans.LogKV("result", "No email or LinkedIn URL provided")
 		return "", ""
 	}
 
@@ -108,11 +99,11 @@ func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, reco
 	var err error
 	createdContactId, linkedInUrl, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
+		spans.TraceError(errors.Wrap(err, "failed to save contact"))
 		return "", ""
 	}
 
-	h.services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, createdContactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
+	h.services.CommonServices.Events.Publisher.PublishNotification(ctx, common.GetTenantFromContext(ctx), createdContactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
 
 	return createdContactId, linkedInUrl
 }
@@ -159,10 +150,8 @@ func isValidLinkedinContactUrl(s string) bool {
 
 func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.GetContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.GetContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -197,10 +186,8 @@ func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
 
 func (h *BrowserExtensionHandler) TouchContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.GetContact", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BrowserExtensionHandler.TouchContact")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
