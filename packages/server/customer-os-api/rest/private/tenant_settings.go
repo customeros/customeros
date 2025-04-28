@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	commonUtils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -25,12 +24,12 @@ func CreateOrganizationStage(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant, _ := c.Get(security.KEY_TENANT_NAME)
 		organizationStageId := c.Param("id")
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/tenant/settings/organizationStage/"+organizationStageId, c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "CreateOrganizationStage")
+		defer spans.Finish()
 
 		var requestData postgres_entity.TenantSettingsOpportunityStage
 		if err := c.BindJSON(&requestData); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 			})
@@ -39,13 +38,13 @@ func CreateOrganizationStage(s *cosapi_services.Services) gin.HandlerFunc {
 
 		opportunityStage, err := s.Repositories.PostgresRepositories.TenantSettingsOpportunityStageRepository.GetById(ctx, tenant.(string), organizationStageId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 
 		if opportunityStage == nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(404, gin.H{"error": "Opportunity stage not found"})
 			return
 		}
@@ -56,7 +55,7 @@ func CreateOrganizationStage(s *cosapi_services.Services) gin.HandlerFunc {
 
 		opportunityStage, err = s.Repositories.PostgresRepositories.TenantSettingsOpportunityStageRepository.Store(ctx, *opportunityStage)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
@@ -67,29 +66,29 @@ func CreateOrganizationStage(s *cosapi_services.Services) gin.HandlerFunc {
 
 func GetAPIKey(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "GetApiKey")
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "TenantSettings.GetAPIKey")
+		defer spans.Finish()
 
 		tenantValue, _ := c.Get(security.KEY_TENANT_NAME)
 		tenant := tenantValue.(string)
-		tracing.TagTenant(span, tenant)
+		spans.TagTenant(tenant)
 
 		apiKey, err := s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "GetFirstApiKeyForTenant"))
+			spans.TraceError(errors.Wrap(err, "GetFirstApiKeyForTenant"))
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 		if apiKey == nil {
 			err = s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenant)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "CreateApiKey"))
+				spans.TraceError(errors.Wrap(err, "CreateApiKey"))
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 			apiKey, err = s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "GetFirstApiKeyForTenant"))
+				spans.TraceError(errors.Wrap(err, "GetFirstApiKeyForTenant"))
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}

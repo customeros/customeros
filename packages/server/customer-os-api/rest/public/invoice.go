@@ -2,6 +2,9 @@ package public
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -11,11 +14,8 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -85,7 +85,7 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 
 		paymentLink := invoice.PaymentDetails.PaymentLink
 		validUntil := invoice.PaymentDetails.PaymentLinkValidUntil
-		spans.LogFields(log.String("initial.paymentLink", paymentLink), log.Object("initial.validUntil", validUntil), log.Object("now", utils.Now()))
+		spans.LogKV("initial.paymentLink", paymentLink, "initial.validUntil", validUntil, "now", utils.Now())
 		generateNewLink := false
 		if paymentLink == "" {
 			generateNewLink = true
@@ -150,7 +150,7 @@ func GetInvoicePaymentLink(services *cosapi_services.Services) gin.HandlerFunc {
 
 		paymentLink := invoice.PaymentDetails.PaymentLink
 		validUntil := invoice.PaymentDetails.PaymentLinkValidUntil
-		span.LogFields(log.String("paymentLink", paymentLink), log.Object("validUntil", validUntil))
+		span.LogKV("paymentLink", paymentLink, "validUntil", validUntil.Format(time.RFC3339))
 
 		if paymentLink != "" && validUntil != nil && validUntil.After(utils.Now()) {
 			c.String(http.StatusOK, paymentLink)
@@ -176,11 +176,10 @@ func getClientIP(c *gin.Context) string {
 }
 
 func saveClientIP(ctx context.Context, s *cosapi_services.Services, clientIP, invoiceID, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Rest.SaveIP")
-	defer span.Finish()
-	tracing.TagComponentRest(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("clientIP", clientIP, "invoiceID", invoiceID)
+	spans, ctx := telemetry.StartRestSpan(ctx, "Rest.SaveIP")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
+	spans.LogKV("clientIP", clientIP, "invoiceID", invoiceID)
 
 	if clientIP == "" {
 		return nil
@@ -188,13 +187,13 @@ func saveClientIP(ctx context.Context, s *cosapi_services.Services, clientIP, in
 
 	contracts, err := s.ContractService.GetContractsForInvoices(ctx, []string{invoiceID})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if len(*contracts) == 0 {
 		err := errors.New("Could not find contract for invoice")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -202,8 +201,8 @@ func saveClientIP(ctx context.Context, s *cosapi_services.Services, clientIP, in
 	verifyEmail := mailvalidate.ValidateEmailSyntax(invoiceEmail)
 	if !verifyEmail.IsValid {
 		err := errors.New("Invalid invoice email address")
-		span.LogKV("invoiceEmail", invoiceEmail)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
+		spans.LogKV("invoiceEmail", invoiceEmail)
 		return err
 	}
 
@@ -216,32 +215,32 @@ func saveClientIP(ctx context.Context, s *cosapi_services.Services, clientIP, in
 
 	createErr := s.Repositories.PostgresRepositories.EnrichDetailsTrackingRepository.Save(ctx, details)
 	if createErr != nil {
-		tracing.TraceErr(span, createErr)
+		spans.TraceError(createErr)
 		return createErr
 	}
 	return nil
 }
 
 func notifyOnSlackPaymentFailed(ctx context.Context, services *cosapi_services.Services, tenant, invoiceId, invoiceNumber string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "notifyOnSlackPaymentFailed")
-	defer span.Finish()
+	spans, ctx := telemetry.StartRestSpan(ctx, "notifyOnSlackPaymentFailed")
+	defer spans.Finish()
 
 	tenantSettings, err := services.CommonServices.TenantSettingsService.GetTenantSettingsForTenant(ctx, tenant)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error fetching tenant settings"))
+		spans.TraceError(errors.Wrap(err, "Error fetching tenant settings"))
 	}
 	if tenantSettings == nil || tenantSettings.SharedSlackChannelUrl == "" {
-		span.LogKV("msg", "Notification slack channel URL not set")
+		spans.LogKV("msg", "Notification slack channel URL not set")
 		return
 	}
 
 	organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization"))
+		spans.TraceError(errors.Wrap(err, "Error fetching organization"))
 		return
 	}
 	if organizationDbNode == nil {
-		span.LogKV("msg", "Organization not found")
+		spans.LogKV("msg", "Organization not found")
 		return
 	}
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
@@ -250,6 +249,6 @@ func notifyOnSlackPaymentFailed(ctx context.Context, services *cosapi_services.S
 
 	err = utils.SendSlackMessage(ctx, tenantSettings.SharedSlackChannelUrl, slackMessageText)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error sending slack message"))
+		spans.TraceError(errors.Wrap(err, "Error sending slack message"))
 	}
 }
