@@ -4,20 +4,18 @@ package enrich
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/http"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 const (
@@ -321,10 +319,8 @@ type EnrichPersonDiscord struct {
 
 func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
-		defer span.Finish()
-		commontracing.TagComponentRest(span)
-		commontracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "EnrichPerson")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -344,7 +340,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			return
 		}
 
-		span.LogFields(
+		spans.LogFields(
 			log.String("request.email", email),
 			log.String("request.linkedinUrl", linkedinUrl),
 			log.Bool("request.includeMobileNumber", enrichPhoneNumber),
@@ -406,7 +402,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 
 			dbRecord, err := h.services.Repositories.PostgresRepositories.CosApiEnrichPersonTempResultRepository.Create(ctx, query)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to create temp result"))
+				spans.TraceError(err)
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 				return
 			}
@@ -449,7 +445,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 							email, linkedinUrl, firstName, lastName),
 					})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+					spans.TraceError(err)
 				}
 			}
 			if phoneFound {
@@ -461,7 +457,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 							email, linkedinUrl, firstName, lastName),
 					})
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+					spans.TraceError(err)
 				}
 			}
 		}
@@ -472,7 +468,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			if emailRecord.Address != "" {
 				emailValidationResult, err := h.services.CommonServices.VerifyService.ValidateEmail(ctx, emailRecord.Address)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
+					spans.TraceError(err)
 					continue
 				}
 
@@ -517,10 +513,8 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 // @Security ApiKeyAuth
 func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
-		defer span.Finish()
-		commontracing.TagComponentRest(span)
-		commontracing.TagTenant(span, common.GetTenantFromContext(ctx))
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "EnrichPerson")
+		defer spans.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -529,11 +523,11 @@ func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 		}
 
 		tempId := c.Param("id")
-		span.LogFields(log.String("request.tempId", tempId))
+		spans.LogKV("request.tempId", tempId)
 
 		getTempRecord, err := h.services.Repositories.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetById(ctx, tempId, tenant)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get temp record"))
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -545,12 +539,12 @@ func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 		// Enrich person data
 		scrapInDbRecord, err := h.services.Repositories.PostgresRepositories.EnrichDetailsScrapInRepository.GetById(ctx, getTempRecord.ScrapinRecordId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 		if scrapInDbRecord == nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
+			spans.TraceError(errors.New("scrap in record not found"))
 
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
@@ -558,12 +552,12 @@ func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 
 		betterContactDbRecord, err := h.services.Repositories.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, getTempRecord.BettercontactRecordId)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 		if betterContactDbRecord == nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
+			spans.TraceError(errors.New("better contact record not found"))
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
@@ -575,7 +569,7 @@ func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 		var scrapInPersonResponse postgresentity.ScrapInResponseBody
 		err = json.Unmarshal([]byte(scrapInDbRecord.Data), &scrapInPersonResponse)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin record"))
+			spans.TraceError(err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -590,7 +584,7 @@ func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 		if betterContactDbRecord.Response != "" {
 			err = json.Unmarshal([]byte(betterContactDbRecord.Response), &betterContactResponseBody)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal bettercontact record"))
+				spans.TraceError(err)
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 				return
 			}
@@ -626,7 +620,7 @@ func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 			if email.Address != "" {
 				emailValidationResult, err := h.services.CommonServices.VerifyService.ValidateEmail(ctx, email.Address)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
+					spans.TraceError(err)
 					continue
 				}
 				email.Deliverable = utils.StringPtr(emailValidationResult.EmailData.Deliverable)
