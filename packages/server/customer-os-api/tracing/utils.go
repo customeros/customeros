@@ -2,9 +2,7 @@ package tracing
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -21,30 +19,6 @@ func ExtractSpanCtx(ctx context.Context) opentracing.SpanContext {
 		return ctx.Value(activeSpanCtxKey).(opentracing.SpanContext)
 	}
 	return nil
-}
-
-func EnrichCtxWithSpanCtxForGraphQL(ctx context.Context, operationContext *graphql.OperationContext) context.Context {
-	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
-	if err != nil {
-		return ctx
-	}
-	if ExtractSpanCtx(ctx) != nil {
-		return ctx
-	}
-	return context.WithValue(ctx, activeSpanCtxKey, spanCtx)
-}
-
-func StartGraphQLTracerSpan(ctx context.Context, operationName string, operationContext *graphql.OperationContext) (context.Context, opentracing.Span) {
-	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
-
-	if err != nil {
-		rootSpan := opentracing.GlobalTracer().StartSpan(operationName)
-		opentracing.GlobalTracer().Inject(rootSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
-		return opentracing.ContextWithSpan(ctx, rootSpan), rootSpan
-	}
-
-	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
-	return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
 }
 
 func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (context.Context, opentracing.Span) {
@@ -77,13 +51,4 @@ func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 	if loggedInUserEmail != "" {
 		span.SetTag(tracing.SpanTagUserEmail, loggedInUserEmail)
 	}
-}
-
-func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
-	setDefaultSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
-}
-
-func LogObjectAsJson(span opentracing.Span, name string, object any) {
-	tracing.LogObjectAsJson(span, name, object)
 }

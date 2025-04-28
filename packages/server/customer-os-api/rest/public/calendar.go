@@ -1,6 +1,7 @@
 package public
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"net/http"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type TimeSlot struct {
@@ -58,8 +58,8 @@ func mapToRestDaySlots(result *interfaces.CalendarAvailabilityResult) []DaySlot 
 // GetCalendarAvailability handles the public endpoint for getting calendar availability
 func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetCalendarAvailability", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "GetCalendarAvailability")
+		defer spans.Finish()
 
 		// Get and validate calendarId
 		calendarId := c.Query("calendarId")
@@ -106,9 +106,9 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 		endTimeUTC := endTime.UTC()
 
 		// Get meeting booking event to determine tenant
-		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(c, calendarId)
+		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(ctx, calendarId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.Log.Error("Failed to get meeting booking event: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Calendar not found"})
 			return
@@ -125,6 +125,7 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 				Tenant: meetingBookingEvent.Tenant,
 			},
 		)
+		spans.TagTenant(meetingBookingEvent.Tenant)
 
 		// Get tenant settings for workspace name
 		tenantSettings, err := s.CommonServices.TenantSettingsService.GetTenantSettings(ctx)

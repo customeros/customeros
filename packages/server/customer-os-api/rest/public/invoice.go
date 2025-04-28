@@ -3,6 +3,7 @@ package public
 import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -22,14 +23,13 @@ import (
 
 func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RedirectToPayInvoice")
+		defer spans.Finish()
 
 		// validate integration app is configured
 		if services.Cfg.Common.External.IntegrationAppConfig.WorkspaceKey == "" || services.Cfg.Common.External.IntegrationAppConfig.WorkspaceSecret == "" {
 			err := errors.New("Integration app not configured")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})
 			return
 		}
@@ -38,19 +38,19 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 
 		// Get invoice ID from path parameter
 		invoiceID := c.Param("invoiceId")
-		span.LogKV("invoiceId", invoiceID)
+		spans.LogKV("invoiceId", invoiceID)
 
 		// Fetch invoice by ID
 		invoice, tenant, err := services.CommonServices.InvoiceService.GetByIdAcrossAllTenants(ctx, invoiceID)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error fetching invoice"))
+			spans.TraceError(err)
 		}
 		if invoice == nil || invoice.DryRun {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
 			return
 		}
-		tracing.TagTenant(span, tenant)
-		span.LogKV("invoiceStatus", invoice.Status.String())
+		spans.TagTenant(tenant)
+		spans.LogKV("invoiceStatus", invoice.Status.String())
 
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    tenant,
@@ -60,7 +60,7 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 		// Save Client IP
 		saveErr := saveClientIP(innerCtx, services, clientIP, invoiceID, tenant)
 		if saveErr != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error saving clientIP"))
+			spans.TraceError(errors.Wrap(err, "Error saving clientIP"))
 		}
 
 		// Check invoice status
@@ -85,19 +85,19 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 
 		paymentLink := invoice.PaymentDetails.PaymentLink
 		validUntil := invoice.PaymentDetails.PaymentLinkValidUntil
-		span.LogFields(log.String("initial.paymentLink", paymentLink), log.Object("initial.validUntil", validUntil), log.Object("now", utils.Now()))
+		spans.LogFields(log.String("initial.paymentLink", paymentLink), log.Object("initial.validUntil", validUntil), log.Object("now", utils.Now()))
 		generateNewLink := false
 		if paymentLink == "" {
 			generateNewLink = true
 		} else if validUntil != nil && validUntil.Before(utils.Now()) {
 			generateNewLink = true
 		}
-		span.LogFields(log.Bool("generateNewLink", generateNewLink))
+		spans.LogKV("generateNewLink", generateNewLink)
 
 		if generateNewLink {
 			err = services.CommonServices.InvoiceService.GenerateNewPaymentLink(innerCtx, invoice.Id)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error generating payment link"))
+				spans.TraceError(errors.Wrap(err, "error generating payment link"))
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})
 				return
 			}
