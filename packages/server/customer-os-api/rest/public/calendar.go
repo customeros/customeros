@@ -1,9 +1,11 @@
 package public
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/gin-gonic/gin"
 
@@ -74,9 +76,13 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Start time is required"})
 			return
 		}
-		startTime, err := time.Parse(time.RFC3339, startTimeStr)
+		startTime, err := utils.UnmarshalDateTime(startTimeStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format. Expected RFC3339 format (e.g., 2024-03-20T10:00:00Z)"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if startTime == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format"})
 			return
 		}
 
@@ -86,9 +92,13 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "End time is required"})
 			return
 		}
-		endTime, err := time.Parse(time.RFC3339, endTimeStr)
+		endTime, err := utils.UnmarshalDateTime(endTimeStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time format. Expected RFC3339 format (e.g., 2024-03-20T11:00:00Z)"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if endTime == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time format"})
 			return
 		}
 
@@ -96,7 +106,7 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 		timezone := c.Query("timezone")
 
 		// Validate time range
-		if startTime.After(endTime) {
+		if startTime.After(*endTime) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "End time must be after start time"})
 			return
 		}

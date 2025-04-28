@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	customLayout1 = "2006-01-02 15:04:05"
-	customLayout2 = "2006-01-02T15:04:05.000-0700"
-	customLayout3 = "2006-01-02T15:04:05-07:00"
-	customLayout4 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
-	customLayout5 = "Mon, 2 Jan 2006 15:04:05 MST"
-	customLayout6 = "Mon, 2 Jan 2006 15:04:05 -0700"
-	customLayout7 = "Mon, 2 Jan 2006 15:04:05 +0000 (GMT)"
-	customLayout8 = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
-	customLayout9 = "2 Jan 2006 15:04:05 -0700"
+	customLayout1  = "2006-01-02 15:04:05"
+	customLayout2  = "2006-01-02T15:04:05.000-0700"
+	customLayout3  = "2006-01-02T15:04:05-07:00"
+	customLayout4  = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+	customLayout5  = "Mon, 2 Jan 2006 15:04:05 MST"
+	customLayout6  = "Mon, 2 Jan 2006 15:04:05 -0700"
+	customLayout7  = "Mon, 2 Jan 2006 15:04:05 +0000 (GMT)"
+	customLayout8  = "Mon, 2 Jan 2006 15:04:05 -0700 (MST)"
+	customLayout9  = "2 Jan 2006 15:04:05 -0700"
+	customLayout10 = "2006-01-02"
 )
 
 type YearMonth struct {
@@ -99,7 +100,7 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	}
 
 	// Try custom layouts
-	customLayouts := []string{customLayout1, customLayout2, customLayout4, customLayout5, customLayout6, customLayout7, customLayout8, customLayout9}
+	customLayouts := []string{customLayout1, customLayout2, customLayout3, customLayout4, customLayout5, customLayout6, customLayout7, customLayout8, customLayout9, customLayout10}
 
 	for _, layout := range customLayouts {
 		t, err = time.Parse(layout, input)
