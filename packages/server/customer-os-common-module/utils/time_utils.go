@@ -220,6 +220,14 @@ func GetCurrentTimeInTimeZone(timezone string) time.Time {
 	return time.Now().In(loc)
 }
 
+func GetTimeInTimeZone(inputTime time.Time, timezone string) (time.Time, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return inputTime, err
+	}
+	return inputTime.In(loc), nil
+}
+
 // IsAfter compares two *time.Time, considering nil as far in the future.
 // if both are nil return false
 func IsAfter(t1, t2 *time.Time) bool {
