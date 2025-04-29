@@ -103,5 +103,5 @@ require (
 	gorm.io/datatypes v1.2.5 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 	gorm.io/driver/postgres v1.5.11 // indirect
-	gorm.io/gorm v1.25.12 // indirect
+	gorm.io/gorm v1.26.0 // indirect
 )
