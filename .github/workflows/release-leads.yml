@@ -11,6 +11,7 @@ on:
 env:
   REGISTRY: ghcr.io
   REPOSITORY_BASE: ${{ github.repository_owner }}
+  IMAGE_NAME: ${{ github.repository_owner }}/customer-os-leads
 
 jobs:
   check-release-needed:
@@ -66,8 +67,7 @@ jobs:
 
   publish-images:
     needs: create-release
-    # Only run if the create-release job completed successfully (implies a release was created)
-    runs-on: ubicloud-standard-2
+    runs-on: ubicloud-standard-2-arm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -82,13 +82,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image for leads
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          # Use the path output from the script and hardcoded service name
-          file: packages/server/leads/deployments/build/Containerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_BASE }}/leads:latest 
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_BASE }}/leads:${{ needs.create-release.outputs.next_version }}
+      - name: Build and push ARM64 image
+        run: |
+          ./packages/server/leads/deployments/build/build-push.sh \
+            "${{ env.REGISTRY }}" \
+            "${{ env.IMAGE_NAME }}" \
+            "${{ needs.create-release.outputs.next_version }}" \
+            "linux/arm64" \
+            "arm64"
+
+          # Tag as latest as well
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.create-release.outputs.next_version }}-arm64
