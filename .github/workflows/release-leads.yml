@@ -89,4 +89,9 @@ jobs:
             "${{ env.IMAGE_NAME }}" \
             "${{ needs.create-release.outputs.next_version }}" \
             "linux/arm64" \
-            "arm64"
+            "arm64" > /dev/null
+
+          # Create the latest tag
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.create-release.outputs.next_version }}-arm64
