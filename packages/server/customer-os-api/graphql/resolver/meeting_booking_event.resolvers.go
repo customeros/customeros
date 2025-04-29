@@ -62,8 +62,68 @@ func (r *queryResolver) MeetingBookingEvents(ctx context.Context) ([]*model.Meet
 		return nil, nil
 	}
 
+	result := mapper.MapMeetingBookingEventEntitiesToModels(meetingBookingEvents)
+
+	// enrich with user data
+
+	// prepare user ids with nylas grants (connected calendars)
+	nylasGrants, err := r.Services.CommonServices.PostgresRepositories.NylasGrantRepository.GetAllByTenant(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get nylas grants")
+		return nil, nil
+	}
+	userIdsFromNylasGrants := make([]string, 0)
+	for _, nylasGrant := range nylasGrants {
+		userIdsFromNylasGrants = append(userIdsFromNylasGrants, nylasGrant.UserId)
+	}
+
+	// prepare all email addresses
+	emails := make([]string, 0)
+	for _, record := range result {
+		for _, email := range record.ParticipantEmails {
+			emails = append(emails, email)
+		}
+	}
+	// remove duplicates
+	emails = utils.RemoveDuplicates(emails)
+	emails = utils.RemoveEmpties(emails)
+
+	users, err := r.Services.CommonServices.UserService.GetUsersByEmailAddresses(ctx, emails)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get users")
+		return nil, nil
+	}
+	// convert list to map
+	userMap := make(map[string]*neo4jentity.UserEntity)
+	for _, user := range *users {
+		userMap[user.Id] = &user
+	}
+
+	// enrich with user data
+	for _, record := range result {
+		record.Participants = make([]*model.MeetingBookingEventUserParticipant, 0)
+		for _, email := range record.ParticipantEmails {
+			userParticipant := model.MeetingBookingEventUserParticipant{
+				Email: email,
+			}
+			if user, ok := userMap[email]; ok {
+				userParticipant.ID = user.Id
+				userParticipant.Name = user.FullName()
+				userParticipant.ProfilePhotoURL = user.ProfilePhotoUrl
+			}
+			if utils.Contains(userIdsFromNylasGrants, userParticipant.ID) {
+				userParticipant.Connected = true
+			} else {
+				userParticipant.Connected = false
+			}
+			record.Participants = append(record.Participants, &userParticipant)
+		}
+	}
+
 	spans.LogKV("result.count", len(meetingBookingEvents))
-	return mapper.MapMeetingBookingEventEntitiesToModels(meetingBookingEvents), nil
+	return result, nil
 }
 
 // ParticipantsForMeetingBookingEvent is the resolver for the participantsForMeetingBookingEvent field.
