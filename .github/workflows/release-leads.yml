@@ -8,6 +8,11 @@ on:
     branches:
       - otter
 
+permissions:
+  contents: write
+  packages: write
+  pull-requests: read
+
 env:
   REGISTRY: ghcr.io
   REPOSITORY_BASE: ${{ github.repository_owner }}
