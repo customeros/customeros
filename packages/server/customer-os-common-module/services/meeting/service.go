@@ -209,18 +209,18 @@ func generateTimeSlots(startTime, endTime time.Time) []*interfaces.TimeSlot {
 
 // convertTimeSlotsToTimezone converts all time slots to the specified timezone
 func convertTimeSlotsToTimezone(slots []*interfaces.TimeSlot, timezone string) ([]*interfaces.TimeSlot, error) {
-	location, err := time.LoadLocation(timezone)
-	if err != nil {
-		return nil, fmt.Errorf("invalid timezone %s: %v", timezone, err)
-	}
-
 	convertedSlots := make([]*interfaces.TimeSlot, len(slots))
 	for i, slot := range slots {
-		// First convert to target timezone to get correct local time components
-		startInZone := slot.StartTime.In(location)
-		endInZone := slot.EndTime.In(location)
+		// Convert times to target timezone using the utility function
+		startInZone, err := utils.GetTimeInTimeZone(slot.StartTime, timezone)
+		if err != nil {
+			return nil, fmt.Errorf("invalid timezone %s: %v", timezone, err)
+		}
+		endInZone, err := utils.GetTimeInTimeZone(slot.EndTime, timezone)
+		if err != nil {
+			return nil, fmt.Errorf("invalid timezone %s: %v", timezone, err)
+		}
 
-		// Create new time objects in the target timezone with the correct offset
 		convertedSlots[i] = &interfaces.TimeSlot{
 			StartTime:   startInZone,
 			EndTime:     endInZone,

@@ -1987,6 +1987,7 @@ type MeetingBookingEvent struct {
 	BookingFormNameEnabled              bool                                  `json:"bookingFormNameEnabled"`
 	BookingFormEmailEnabled             bool                                  `json:"bookingFormEmailEnabled"`
 	BookingFormPhoneEnabled             bool                                  `json:"bookingFormPhoneEnabled"`
+	BookingFormPhoneRequired            bool                                  `json:"bookingFormPhoneRequired"`
 	BookOptionEnabled                   bool                                  `json:"bookOptionEnabled"`
 	BookOptionBufferBetweenMeetingsMins int64                                 `json:"bookOptionBufferBetweenMeetingsMins"`
 	BookOptionDaysInAdvance             int64                                 `json:"bookOptionDaysInAdvance"`
@@ -2786,6 +2787,7 @@ type SaveMeetingBookingEventInput struct {
 	BookingFormNameEnabled              *bool                           `json:"bookingFormNameEnabled,omitempty"`
 	BookingFormEmailEnabled             *bool                           `json:"bookingFormEmailEnabled,omitempty"`
 	BookingFormPhoneEnabled             *bool                           `json:"bookingFormPhoneEnabled,omitempty"`
+	BookingFormPhoneRequired            *bool                           `json:"bookingFormPhoneRequired,omitempty"`
 	BookOptionEnabled                   *bool                           `json:"bookOptionEnabled,omitempty"`
 	BookOptionBufferBetweenMeetingsMins *int64                          `json:"bookOptionBufferBetweenMeetingsMins,omitempty"`
 	BookOptionDaysInAdvance             *int64                          `json:"bookOptionDaysInAdvance,omitempty"`
