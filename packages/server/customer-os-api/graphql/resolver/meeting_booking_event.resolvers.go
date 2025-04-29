@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -63,4 +64,9 @@ func (r *queryResolver) MeetingBookingEvents(ctx context.Context) ([]*model.Meet
 
 	spans.LogKV("result.count", len(meetingBookingEvents))
 	return mapper.MapMeetingBookingEventEntitiesToModels(meetingBookingEvents), nil
+}
+
+// ParticipantsForMeetingBookingEvent is the resolver for the participantsForMeetingBookingEvent field.
+func (r *queryResolver) ParticipantsForMeetingBookingEvent(ctx context.Context) ([]*model.MeetingBookingEventUserParticipant, error) {
+	panic(fmt.Errorf("not implemented: ParticipantsForMeetingBookingEvent - participantsForMeetingBookingEvent"))
 }

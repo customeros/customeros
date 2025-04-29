@@ -1972,28 +1972,37 @@ func (this Meeting) GetID() string { return this.ID }
 func (Meeting) IsTimelineEvent() {}
 
 type MeetingBookingEvent struct {
-	ID                                  string                         `json:"id"`
-	CreatedAt                           time.Time                      `json:"createdAt"`
-	UpdatedAt                           time.Time                      `json:"updatedAt"`
-	Title                               string                         `json:"title"`
-	DurationMins                        int64                          `json:"durationMins"`
-	Description                         string                         `json:"description"`
-	Location                            string                         `json:"location"`
-	AllowedParticipants                 []string                       `json:"allowedParticipants"`
-	BookingFormName                     string                         `json:"bookingFormName"`
-	BookingFormEmail                    string                         `json:"bookingFormEmail"`
-	BookingFormPhone                    string                         `json:"bookingFormPhone"`
-	BookingFormNameEnabled              bool                           `json:"bookingFormNameEnabled"`
-	BookingFormEmailEnabled             bool                           `json:"bookingFormEmailEnabled"`
-	BookingFormPhoneEnabled             bool                           `json:"bookingFormPhoneEnabled"`
-	BookOptionEnabled                   bool                           `json:"bookOptionEnabled"`
-	BookOptionBufferBetweenMeetingsMins int64                          `json:"bookOptionBufferBetweenMeetingsMins"`
-	BookOptionDaysInAdvance             int64                          `json:"bookOptionDaysInAdvance"`
-	BookOptionMinNoticeMins             int64                          `json:"bookOptionMinNoticeMins"`
-	AssignmentMethod                    MeetingBookingAssignmentMethod `json:"assignmentMethod"`
-	EmailNotificationEnabled            bool                           `json:"emailNotificationEnabled"`
-	BookingConfirmationRedirectLink     string                         `json:"bookingConfirmationRedirectLink"`
-	ShowLogo                            bool                           `json:"showLogo"`
+	ID                                  string                                `json:"id"`
+	CreatedAt                           time.Time                             `json:"createdAt"`
+	UpdatedAt                           time.Time                             `json:"updatedAt"`
+	Title                               string                                `json:"title"`
+	DurationMins                        int64                                 `json:"durationMins"`
+	Description                         string                                `json:"description"`
+	Location                            string                                `json:"location"`
+	ParticipantEmails                   []string                              `json:"participantEmails"`
+	Participants                        []*MeetingBookingEventUserParticipant `json:"participants"`
+	BookingFormName                     string                                `json:"bookingFormName"`
+	BookingFormEmail                    string                                `json:"bookingFormEmail"`
+	BookingFormPhone                    string                                `json:"bookingFormPhone"`
+	BookingFormNameEnabled              bool                                  `json:"bookingFormNameEnabled"`
+	BookingFormEmailEnabled             bool                                  `json:"bookingFormEmailEnabled"`
+	BookingFormPhoneEnabled             bool                                  `json:"bookingFormPhoneEnabled"`
+	BookOptionEnabled                   bool                                  `json:"bookOptionEnabled"`
+	BookOptionBufferBetweenMeetingsMins int64                                 `json:"bookOptionBufferBetweenMeetingsMins"`
+	BookOptionDaysInAdvance             int64                                 `json:"bookOptionDaysInAdvance"`
+	BookOptionMinNoticeMins             int64                                 `json:"bookOptionMinNoticeMins"`
+	AssignmentMethod                    MeetingBookingAssignmentMethod        `json:"assignmentMethod"`
+	EmailNotificationEnabled            bool                                  `json:"emailNotificationEnabled"`
+	BookingConfirmationRedirectLink     string                                `json:"bookingConfirmationRedirectLink"`
+	ShowLogo                            bool                                  `json:"showLogo"`
+}
+
+type MeetingBookingEventUserParticipant struct {
+	ID              string `json:"id"`
+	Email           string `json:"email"`
+	Name            string `json:"name"`
+	ProfilePhotoURL string `json:"profilePhotoUrl"`
+	Connected       bool   `json:"connected"`
 }
 
 type MeetingInput struct {
@@ -2774,9 +2783,6 @@ type SaveMeetingBookingEventInput struct {
 	DurationMins                        *int64                          `json:"durationMins,omitempty"`
 	Description                         *string                         `json:"description,omitempty"`
 	Location                            *string                         `json:"location,omitempty"`
-	BookingFormName                     *string                         `json:"bookingFormName,omitempty"`
-	BookingFormEmail                    *string                         `json:"bookingFormEmail,omitempty"`
-	BookingFormPhone                    *string                         `json:"bookingFormPhone,omitempty"`
 	BookingFormNameEnabled              *bool                           `json:"bookingFormNameEnabled,omitempty"`
 	BookingFormEmailEnabled             *bool                           `json:"bookingFormEmailEnabled,omitempty"`
 	BookingFormPhoneEnabled             *bool                           `json:"bookingFormPhoneEnabled,omitempty"`
@@ -2788,7 +2794,7 @@ type SaveMeetingBookingEventInput struct {
 	BookingConfirmationRedirectLink     *string                         `json:"bookingConfirmationRedirectLink,omitempty"`
 	ShowLogo                            *bool                           `json:"showLogo,omitempty"`
 	AssignmentMethod                    *MeetingBookingAssignmentMethod `json:"assignmentMethod,omitempty"`
-	AllowedParticipants                 []string                        `json:"allowedParticipants,omitempty"`
+	ParticipantEmails                   []string                        `json:"participantEmails,omitempty"`
 }
 
 type SendEmailInput struct {

@@ -6,7 +6,8 @@ type MeetingBookingEvent {
     durationMins:   Int64!
     description:    String!
     location:       String!
-    allowedParticipants:    [String!]!
+    participantEmails: [String!]!
+    participants:      [MeetingBookingEventUserParticipant!]!
 
     bookingFormName:    String!
     bookingFormEmail:   String!
@@ -38,9 +39,6 @@ input SaveMeetingBookingEventInput {
     durationMins:   Int64
     description:    String
     location:       String
-    bookingFormName:    String
-    bookingFormEmail:   String
-    bookingFormPhone:   String
     bookingFormNameEnabled:    Boolean
     bookingFormEmailEnabled:   Boolean
     bookingFormPhoneEnabled:   Boolean
@@ -52,12 +50,20 @@ input SaveMeetingBookingEventInput {
     bookingConfirmationRedirectLink:        String
     showLogo:                               Boolean
     assignmentMethod:                       MeetingBookingAssignmentMethod
-    allowedParticipants:                    [String!]
+    participantEmails:                      [String!]
+}
 
+type MeetingBookingEventUserParticipant {
+    id:                 ID!
+    email:              String!
+    name:               String!
+    profilePhotoUrl:    String!
+    connected:          Boolean!
 }
 
 extend type Query {
     meetingBookingEvents: [MeetingBookingEvent!]!
+    participantsForMeetingBookingEvent: [MeetingBookingEventUserParticipant!]!
 }
 
 extend type Mutation {

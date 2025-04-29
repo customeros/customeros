@@ -112,7 +112,7 @@ extend type Query {
     """
     Get availability across all users in the tenant for a given time range
     """
-    calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
+    m(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
 
     """
     Get user's calendar available hours configuration

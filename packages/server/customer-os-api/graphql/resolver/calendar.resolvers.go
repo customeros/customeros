@@ -13,7 +13,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
 
@@ -34,77 +33,9 @@ func (r *mutationResolver) SaveCalendarAvailableHours(ctx context.Context, input
 	return mapper.MapUserCalendarAvailabilityEntityToModel(userCalendarAvailabilityEntity), nil
 }
 
-// CalendarAvailability is the resolver for the calendar_availability field.
-func (r *queryResolver) CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error) {
-	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CalendarAvailability", graphql.GetOperationContext(ctx))
-	defer spans.Finish()
-	spans.LogObjectAsJson("input", input)
-
-	// Validate time range
-	if input.StartTime.After(input.EndTime) {
-		graphql.AddErrorf(ctx, "End time must be after start time")
-		return nil, fmt.Errorf("invalid time range: end time must be after start time")
-	}
-
-	// Convert input times to UTC for processing
-	startTimeUTC := input.StartTime.UTC()
-	endTimeUTC := input.EndTime.UTC()
-
-	spans.LogKV("startTimeUTC", startTimeUTC)
-	spans.LogKV("endTimeUTC", endTimeUTC)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	// Get meeting booking event details
-	meetingBookingEvent, err := r.Services.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetById(ctx, tenant, input.MeetingBookingEventID)
-	if err != nil {
-		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Failed to get meeting booking event: %s", err.Error())
-		return nil, err
-	}
-	if meetingBookingEvent == nil {
-		graphql.AddErrorf(ctx, "Meeting booking event with id %s not found", input.MeetingBookingEventID)
-		return nil, nil
-	}
-
-	tenantSettings, err := r.Services.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
-	if err != nil {
-		spans.TraceError(err)
-	}
-	tenantName := tenant
-	if tenantSettings != nil {
-		if tenantSettings.WorkspaceName != "" {
-			tenantName = tenantSettings.WorkspaceName
-		}
-	}
-
-	// Round up duration to nearest 5 minutes if needed
-	durationMins := meetingBookingEvent.DurationMins
-	if durationMins%5 != 0 {
-		durationMins = ((durationMins / 5) + 1) * 5
-	}
-
-	// Get calendar availability data using UTC times
-	availabilityResult, err := r.Services.CommonServices.MeetingService.GetCalendarAvailability(ctx, input.MeetingBookingEventID, startTimeUTC, endTimeUTC, input.Timezone)
-	if err != nil {
-		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Failed to get calendar availability: %s", err.Error())
-		return nil, err
-	}
-
-	// Convert availability data using mapper
-	daySlots := mapper.MapCalendarAvailabilityResultToDaySlotsModel(availabilityResult)
-
-	// Return response with meeting booking event details and availability data
-	return &model.CalendarAvailabilityResponse{
-		Days:               daySlots,
-		Location:           meetingBookingEvent.Location,
-		TenantName:         tenantName,
-		TenantLogoURL:      "", // TODO: Get from tenant service when available
-		DurationMins:       durationMins,
-		BookingTitle:       meetingBookingEvent.Title,
-		BookingDescription: meetingBookingEvent.Description,
-	}, nil
+// M is the resolver for the m field.
+func (r *queryResolver) M(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error) {
+	panic(fmt.Errorf("not implemented: M - m"))
 }
 
 // CalendarAvailableHours is the resolver for the calendar_available_hours field.
