@@ -8,18 +8,16 @@ SAFE_TAG=$4
 REF_NAME=$5
 EVENT_NAME=$6
 
-# Create and push the SHA manifest
+# Create and push the SHA manifest (ARM64 only)
 echo "Creating SHA manifest..."
 docker buildx imagetools create \
   --tag ${REGISTRY}/${IMAGE_NAME}:${SHA} \
-  ${REGISTRY}/${IMAGE_NAME}:${SHA}-amd64 \
   ${REGISTRY}/${IMAGE_NAME}:${SHA}-arm64
 
-# Create and push the branch/PR manifest
+# Create and push the branch/PR manifest (ARM64 only)
 echo "Creating branch/PR manifest..."
 docker buildx imagetools create \
   --tag ${REGISTRY}/${IMAGE_NAME}:${SAFE_TAG} \
-  ${REGISTRY}/${IMAGE_NAME}:${SHA}-amd64 \
   ${REGISTRY}/${IMAGE_NAME}:${SHA}-arm64
 
 # If this is the otter branch, also tag as latest
@@ -27,7 +25,6 @@ if [[ "${REF_NAME}" == "otter" ]]; then
   echo "Creating latest manifest..."
   docker buildx imagetools create \
     --tag ${REGISTRY}/${IMAGE_NAME}:latest \
-    ${REGISTRY}/${IMAGE_NAME}:${SHA}-amd64 \
     ${REGISTRY}/${IMAGE_NAME}:${SHA}-arm64
 fi
 
@@ -38,7 +35,6 @@ if [[ "${EVENT_NAME}" == "release" ]]; then
   echo "Creating release manifest for ${RELEASE_TAG}..."
   docker buildx imagetools create \
     --tag ${REGISTRY}/${IMAGE_NAME}:${RELEASE_TAG} \
-    ${REGISTRY}/${IMAGE_NAME}:${SHA}-amd64 \
     ${REGISTRY}/${IMAGE_NAME}:${SHA}-arm64
 fi
 
