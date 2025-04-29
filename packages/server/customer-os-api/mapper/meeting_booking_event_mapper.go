@@ -36,6 +36,15 @@ func MapMeetingBookingEventInputToEntity(input model.SaveMeetingBookingEventInpu
 	if input.BookingFormPhone != nil {
 		entity.BookingFormPhone = *input.BookingFormPhone
 	}
+	if input.BookingFormNameEnabled != nil {
+		entity.BookingFormNameEnabled = *input.BookingFormNameEnabled
+	}
+	if input.BookingFormEmailEnabled != nil {
+		entity.BookingFormEmailEnabled = *input.BookingFormEmailEnabled
+	}
+	if input.BookingFormPhoneEnabled != nil {
+		entity.BookingFormPhoneEnabled = *input.BookingFormPhoneEnabled
+	}
 
 	if input.BookOptionEnabled != nil {
 		entity.BookOptionEnabled = *input.BookOptionEnabled
@@ -82,6 +91,9 @@ func MapMeetingBookingEventEntityToModel(entity *postgresEntity.MeetingBookingEv
 		BookingFormName:                     entity.BookingFormName,
 		BookingFormEmail:                    entity.BookingFormEmail,
 		BookingFormPhone:                    entity.BookingFormPhone,
+		BookingFormNameEnabled:              entity.BookingFormNameEnabled,
+		BookingFormEmailEnabled:             entity.BookingFormEmailEnabled,
+		BookingFormPhoneEnabled:             entity.BookingFormPhoneEnabled,
 		BookOptionEnabled:                   entity.BookOptionEnabled,
 		BookOptionBufferBetweenMeetingsMins: entity.BookOptionBufferBetweenMeetingsMins,
 		BookOptionDaysInAdvance:             entity.BookOptionDaysInAdvance,

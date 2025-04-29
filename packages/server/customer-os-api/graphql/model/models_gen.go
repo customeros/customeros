@@ -1983,6 +1983,9 @@ type MeetingBookingEvent struct {
 	BookingFormName                     string                         `json:"bookingFormName"`
 	BookingFormEmail                    string                         `json:"bookingFormEmail"`
 	BookingFormPhone                    string                         `json:"bookingFormPhone"`
+	BookingFormNameEnabled              bool                           `json:"bookingFormNameEnabled"`
+	BookingFormEmailEnabled             bool                           `json:"bookingFormEmailEnabled"`
+	BookingFormPhoneEnabled             bool                           `json:"bookingFormPhoneEnabled"`
 	BookOptionEnabled                   bool                           `json:"bookOptionEnabled"`
 	BookOptionBufferBetweenMeetingsMins int64                          `json:"bookOptionBufferBetweenMeetingsMins"`
 	BookOptionDaysInAdvance             int64                          `json:"bookOptionDaysInAdvance"`
@@ -2774,6 +2777,9 @@ type SaveMeetingBookingEventInput struct {
 	BookingFormName                     *string                         `json:"bookingFormName,omitempty"`
 	BookingFormEmail                    *string                         `json:"bookingFormEmail,omitempty"`
 	BookingFormPhone                    *string                         `json:"bookingFormPhone,omitempty"`
+	BookingFormNameEnabled              *bool                           `json:"bookingFormNameEnabled,omitempty"`
+	BookingFormEmailEnabled             *bool                           `json:"bookingFormEmailEnabled,omitempty"`
+	BookingFormPhoneEnabled             *bool                           `json:"bookingFormPhoneEnabled,omitempty"`
 	BookOptionEnabled                   *bool                           `json:"bookOptionEnabled,omitempty"`
 	BookOptionBufferBetweenMeetingsMins *int64                          `json:"bookOptionBufferBetweenMeetingsMins,omitempty"`
 	BookOptionDaysInAdvance             *int64                          `json:"bookOptionDaysInAdvance,omitempty"`
@@ -5777,20 +5783,18 @@ func (e Market) MarshalJSON() ([]byte, error) {
 type MeetingBookingAssignmentMethod string
 
 const (
-	MeetingBookingAssignmentMethodRoundRobinMaxFairness     MeetingBookingAssignmentMethod = "ROUND_ROBIN_MAX_FAIRNESS"
 	MeetingBookingAssignmentMethodRoundRobinMaxAvailability MeetingBookingAssignmentMethod = "ROUND_ROBIN_MAX_AVAILABILITY"
 	MeetingBookingAssignmentMethodCustom                    MeetingBookingAssignmentMethod = "CUSTOM"
 )
 
 var AllMeetingBookingAssignmentMethod = []MeetingBookingAssignmentMethod{
-	MeetingBookingAssignmentMethodRoundRobinMaxFairness,
 	MeetingBookingAssignmentMethodRoundRobinMaxAvailability,
 	MeetingBookingAssignmentMethodCustom,
 }
 
 func (e MeetingBookingAssignmentMethod) IsValid() bool {
 	switch e {
-	case MeetingBookingAssignmentMethodRoundRobinMaxFairness, MeetingBookingAssignmentMethodRoundRobinMaxAvailability, MeetingBookingAssignmentMethodCustom:
+	case MeetingBookingAssignmentMethodRoundRobinMaxAvailability, MeetingBookingAssignmentMethodCustom:
 		return true
 	}
 	return false

@@ -56,9 +56,12 @@ type MeetingBookingEvent struct {
 	Description         string      `gorm:"column:description;type:text;not null;default:''" json:"description"`
 	AllowedParticipants StringArray `gorm:"column:allowed_participants;type:text[];not null;default:'{}'" json:"allowedParticipants"`
 
-	BookingFormName  string `gorm:"column:booking_form_name;size:255;not null;default:''" json:"bookingFormName"`
-	BookingFormEmail string `gorm:"column:booking_form_email;size:255;not null;default:''" json:"bookingFormEmail"`
-	BookingFormPhone string `gorm:"column:booking_form_phone;size:255;not null;default:''" json:"bookingFormPhone"`
+	BookingFormName         string `gorm:"column:booking_form_name;size:255;not null;default:''" json:"bookingFormName"`
+	BookingFormEmail        string `gorm:"column:booking_form_email;size:255;not null;default:''" json:"bookingFormEmail"`
+	BookingFormPhone        string `gorm:"column:booking_form_phone;size:255;not null;default:''" json:"bookingFormPhone"`
+	BookingFormNameEnabled  bool   `gorm:"column:booking_form_name_enabled;default:false" json:"bookingFormNameEnabled"`
+	BookingFormEmailEnabled bool   `gorm:"column:booking_form_email_enabled;default:false" json:"bookingFormEmailEnabled"`
+	BookingFormPhoneEnabled bool   `gorm:"column:booking_form_phone_enabled;default:false" json:"bookingFormPhoneEnabled"`
 
 	BookOptionEnabled                   bool  `gorm:"column:book_option_enabled;not null;default:false" json:"bookOptionEnabled"`
 	BookOptionBufferBetweenMeetingsMins int64 `gorm:"column:book_option_buffer_between_meetings_mins;not null;default:0" json:"bookOptionBufferBetweenMeetingsMins"`
