@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -14,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
@@ -68,5 +68,46 @@ func (r *queryResolver) MeetingBookingEvents(ctx context.Context) ([]*model.Meet
 
 // ParticipantsForMeetingBookingEvent is the resolver for the participantsForMeetingBookingEvent field.
 func (r *queryResolver) ParticipantsForMeetingBookingEvent(ctx context.Context) ([]*model.MeetingBookingEventUserParticipant, error) {
-	panic(fmt.Errorf("not implemented: ParticipantsForMeetingBookingEvent - participantsForMeetingBookingEvent"))
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ParticipantsForMeetingBookingEvent", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	nylasGrants, err := r.Services.CommonServices.PostgresRepositories.NylasGrantRepository.GetAllByTenant(ctx, tenant)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get nylas grants")
+		return nil, nil
+	}
+	userIdsFromNylasGrants := make([]string, 0)
+	for _, nylasGrant := range nylasGrants {
+		userIdsFromNylasGrants = append(userIdsFromNylasGrants, nylasGrant.UserId)
+	}
+
+	users, err := r.Services.CommonServices.UserService.GetUsers(ctx, userIdsFromNylasGrants)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get users")
+	}
+	// convert list to map
+	userMap := make(map[string]*neo4jentity.UserEntity)
+	for _, user := range *users {
+		userMap[user.Id] = &user
+	}
+
+	results := make([]*model.MeetingBookingEventUserParticipant, 0)
+	for _, nylasGrant := range nylasGrants {
+		result := model.MeetingBookingEventUserParticipant{
+			Email: nylasGrant.Email,
+		}
+		if user, ok := userMap[nylasGrant.UserId]; ok {
+			result.ID = user.Id
+			result.Name = user.FullName()
+			result.ProfilePhotoURL = user.ProfilePhotoUrl
+			result.Connected = true
+		}
+		results = append(results, &result)
+	}
+
+	return results, nil
 }
