@@ -14,9 +14,14 @@ RUN go build -v -o /go/bin/app
 # Use a minimal base image for the runtime stage
 FROM alpine:3.14
 
+# Install tzdata in the final stage
+RUN apk add --no-cache tzdata
+
 COPY --chown=65534:65534 --from=builder /go/bin/app .
 COPY --chown=65534:65534 --from=builder /app/customer-os-api/.env .env
 COPY --chown=65534:65534 --from=builder /app/customer-os-api/static/* /static/
+
+
 USER 65534
 
 ENTRYPOINT [ "./app" ]

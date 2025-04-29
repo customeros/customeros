@@ -1165,6 +1165,7 @@ type ComplexityRoot struct {
 		BookingFormNameEnabled              func(childComplexity int) int
 		BookingFormPhone                    func(childComplexity int) int
 		BookingFormPhoneEnabled             func(childComplexity int) int
+		BookingFormPhoneRequired            func(childComplexity int) int
 		CreatedAt                           func(childComplexity int) int
 		Description                         func(childComplexity int) int
 		DurationMins                        func(childComplexity int) int
@@ -8112,6 +8113,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MeetingBookingEvent.BookingFormPhoneEnabled(childComplexity), true
+
+	case "MeetingBookingEvent.bookingFormPhoneRequired":
+		if e.complexity.MeetingBookingEvent.BookingFormPhoneRequired == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEvent.BookingFormPhoneRequired(childComplexity), true
 
 	case "MeetingBookingEvent.createdAt":
 		if e.complexity.MeetingBookingEvent.CreatedAt == nil {
@@ -17995,6 +18003,7 @@ type Meeting implements Node {
     bookingFormNameEnabled:    Boolean!
     bookingFormEmailEnabled:   Boolean!
     bookingFormPhoneEnabled:   Boolean!
+    bookingFormPhoneRequired:  Boolean!
 
     bookOptionEnabled:                      Boolean!
     bookOptionBufferBetweenMeetingsMins:    Int64!
@@ -18022,6 +18031,7 @@ input SaveMeetingBookingEventInput {
     bookingFormNameEnabled:    Boolean
     bookingFormEmailEnabled:   Boolean
     bookingFormPhoneEnabled:   Boolean
+    bookingFormPhoneRequired:  Boolean
     bookOptionEnabled:                      Boolean
     bookOptionBufferBetweenMeetingsMins:    Int64
     bookOptionDaysInAdvance:                Int64
@@ -68150,6 +68160,50 @@ func (ec *executionContext) fieldContext_MeetingBookingEvent_bookingFormPhoneEna
 	return fc, nil
 }
 
+func (ec *executionContext) _MeetingBookingEvent_bookingFormPhoneRequired(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_bookingFormPhoneRequired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BookingFormPhoneRequired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEvent_bookingFormPhoneRequired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MeetingBookingEvent_bookOptionEnabled(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MeetingBookingEvent_bookOptionEnabled(ctx, field)
 	if err != nil {
@@ -80763,6 +80817,8 @@ func (ec *executionContext) fieldContext_Mutation_meetingBookingEvent_Save(ctx c
 				return ec.fieldContext_MeetingBookingEvent_bookingFormEmailEnabled(ctx, field)
 			case "bookingFormPhoneEnabled":
 				return ec.fieldContext_MeetingBookingEvent_bookingFormPhoneEnabled(ctx, field)
+			case "bookingFormPhoneRequired":
+				return ec.fieldContext_MeetingBookingEvent_bookingFormPhoneRequired(ctx, field)
 			case "bookOptionEnabled":
 				return ec.fieldContext_MeetingBookingEvent_bookOptionEnabled(ctx, field)
 			case "bookOptionBufferBetweenMeetingsMins":
@@ -106741,6 +106797,8 @@ func (ec *executionContext) fieldContext_Query_meetingBookingEvents(_ context.Co
 				return ec.fieldContext_MeetingBookingEvent_bookingFormEmailEnabled(ctx, field)
 			case "bookingFormPhoneEnabled":
 				return ec.fieldContext_MeetingBookingEvent_bookingFormPhoneEnabled(ctx, field)
+			case "bookingFormPhoneRequired":
+				return ec.fieldContext_MeetingBookingEvent_bookingFormPhoneRequired(ctx, field)
 			case "bookOptionEnabled":
 				return ec.fieldContext_MeetingBookingEvent_bookOptionEnabled(ctx, field)
 			case "bookOptionBufferBetweenMeetingsMins":
@@ -129343,7 +129401,7 @@ func (ec *executionContext) unmarshalInputSaveMeetingBookingEventInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "durationMins", "description", "location", "bookingFormNameEnabled", "bookingFormEmailEnabled", "bookingFormPhoneEnabled", "bookOptionEnabled", "bookOptionBufferBetweenMeetingsMins", "bookOptionDaysInAdvance", "bookOptionMinNoticeMins", "emailNotificationEnabled", "bookingConfirmationRedirectLink", "showLogo", "assignmentMethod", "participantEmails"}
+	fieldsInOrder := [...]string{"id", "title", "durationMins", "description", "location", "bookingFormNameEnabled", "bookingFormEmailEnabled", "bookingFormPhoneEnabled", "bookingFormPhoneRequired", "bookOptionEnabled", "bookOptionBufferBetweenMeetingsMins", "bookOptionDaysInAdvance", "bookOptionMinNoticeMins", "emailNotificationEnabled", "bookingConfirmationRedirectLink", "showLogo", "assignmentMethod", "participantEmails"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -129406,6 +129464,13 @@ func (ec *executionContext) unmarshalInputSaveMeetingBookingEventInput(ctx conte
 				return it, err
 			}
 			it.BookingFormPhoneEnabled = data
+		case "bookingFormPhoneRequired":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookingFormPhoneRequired"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BookingFormPhoneRequired = data
 		case "bookOptionEnabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookOptionEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -140914,6 +140979,11 @@ func (ec *executionContext) _MeetingBookingEvent(ctx context.Context, sel ast.Se
 			}
 		case "bookingFormPhoneEnabled":
 			out.Values[i] = ec._MeetingBookingEvent_bookingFormPhoneEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "bookingFormPhoneRequired":
+			out.Values[i] = ec._MeetingBookingEvent_bookingFormPhoneRequired(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
