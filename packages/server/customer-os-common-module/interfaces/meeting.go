@@ -38,4 +38,5 @@ type MeetingService interface {
 	// - Meeting booking event rules (buffer between meetings, min notice time, etc.)
 	// - Timezone conversion
 	GetCalendarAvailability(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time, timezone string) (*CalendarAvailabilityResult, error)
+	GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time) ([]string, error)
 }
