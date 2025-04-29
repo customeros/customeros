@@ -1,9 +1,18 @@
 name: build-leads
+
 on:
   pull_request:
     paths:
       - packages/server/leads/**
       - .github/workflows/build-leads.yml
+
+  push:
+    branches:
+      - otter
+    paths:
+      - packages/server/leads/**
+      - .github/workflows/build-leads.yml
+
   release:
     types: [created, edited]
 
@@ -23,6 +32,7 @@ permissions:
 
 jobs:
   build:
+    # This job runs on PRs and also as the first step for push/release triggers.
     runs-on: ubicloud-standard-2
     steps:
       - uses: actions/checkout@v4
@@ -35,35 +45,37 @@ jobs:
         env:
           GOPROXY: "direct"
           GOSUMDB: "off"
-          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+          GOMODCACHE: ${{ env.GOMODCACHE }}
 
+      # Cache Go tools installed via go install
       - name: Cache Go tools
         uses: ubicloud/cache@v4
         with:
           path: ${{ env.GOBIN }}
           key: ${{ runner.os }}-go-tools-${{ hashFiles('./packages/server/leads/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-tools-
 
+      # Cache Go modules and build cache
       - name: Go Cache
         id: go-cache
         uses: ubicloud/cache@v4
         with:
           path: |
-            ~/.cache/go-build
-            ${{ env.GOMODCACHE }}
-          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/leads/go.sum') }}
+            ~/.cache/go-build # Standard Go build cache location
+            ${{ env.GOMODCACHE }} # Module cache location defined in env
+          key: ${{ runner.os }}-go-${{ hashFiles('packages/server/leads/go.sum') }} # Key based on go.sum
           restore-keys: |
             ${{ runner.os }}-go-
 
       - name: Install dependencies
         run: |
           ./packages/server/leads/deployments/build/install-dependencies.sh
-        env:
-          GOBIN: ${{ env.GOBIN }}
 
-      - name: Build
-        if: steps.go-cache.outputs.cache-hit != 'true'
+      - name: Build Go Binary
         run: |
-          ./packages/server/leads/deployments/build/build.sh
+          ./packages/server/leads/deployments/build/build.sh # Make sure this script includes go build .
+          # You might add steps here to verify the build artifacts exist
 
   prepare:
     needs: [build]
@@ -80,39 +92,15 @@ jobs:
           SAFE_TAG=$(bash ./packages/server/leads/deployments/build/get-safe-tag.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.event.pull_request.number }}")
           echo "value=${SAFE_TAG}" >> $GITHUB_OUTPUT
 
-  build-amd64:
-    needs: [prepare]
-    runs-on: ubicloud-standard-2
-    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
-    outputs:
-      digest: ${{ steps.digest.outputs.value }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push amd64 image
-        id: digest
-        run: |
-          DIGEST=$(bash ./packages/server/leads/deployments/build/build-push.sh "${{ env.REGISTRY }}" "${{ env.IMAGE_NAME }}" "${{ github.sha }}" "linux/amd64" "amd64")
-          echo "value=${DIGEST}" >> $GITHUB_OUTPUT
-
   build-arm64:
     needs: [prepare]
     runs-on: ubicloud-standard-2-arm
+    # This job only runs on push to otter or release
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # Checkout required
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -124,6 +112,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Build and push the ARM64 image
       - name: Build and push arm64 image
         id: digest
         run: |
@@ -131,7 +120,8 @@ jobs:
           echo "value=${DIGEST}" >> $GITHUB_OUTPUT
 
   create-manifest:
-    needs: [prepare, build-amd64, build-arm64]
+    needs: [prepare, build-arm64]
+    # This job only runs on push to otter or release
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     runs-on: ubicloud-standard-2
     steps:
@@ -149,27 +139,41 @@ jobs:
 
       - name: Create and push manifests
         run: |
-          bash ./packages/server/leads/deployments/build/create-manifest.sh "${{ env.REGISTRY }}" "${{ env.IMAGE_NAME }}" "${{ github.sha }}" "${{ needs.prepare.outputs.safe-tag }}" "${{ github.ref_name }}" "${{ github.event_name }}"
+          bash ./packages/server/leads/deployments/build/create-manifest.sh \
+            "${{ env.REGISTRY }}" \
+            "${{ env.IMAGE_NAME }}" \
+            "${{ github.sha }}" \
+            "${{ needs.prepare.outputs.safe-tag }}" \
+            "${{ github.ref_name }}" \
+            "${{ github.event_name }}" \
+            "${{ needs.build-arm64.outputs.digest }}" # Pass the arm64 digest output if needed
 
+      # Optional: Update Kustomization in Cloud Repo
+      # This job also only runs on push to otter or release
       # - name: Update Kustomization in Cloud Repo
+      #   # if condition is already handled by the job-level if, but good to keep for clarity
       #   if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
+      #   # Needs the manifest job to complete
+      #   needs: [create-manifest]
       #   run: |
-      #     # For pushes to otter, use the otter tag
+      #     # Logic from your original script...
+      #     TAG_TO_USE=""
       #     if [[ "${{ github.ref_name }}" == "otter" ]]; then
-      #       TAG_TO_USE="otter"
-      #     # For releases, use the release tag
+      #       TAG_TO_USE="${{ needs.prepare.outputs.safe-tag }}" # Use the safe tag generated earlier
       #     elif [[ "${{ github.event_name }}" == "release" ]]; then
-      #       TAG_TO_USE="${{ github.ref_name }}"
+      #       TAG_TO_USE="${{ needs.prepare.outputs.safe-tag }}" # Use the safe tag generated earlier (likely the release tag)
       #     else
-      #       # For other events, no update
+      #       # Should not happen with the job-level if condition, but harmless fallback
       #       echo "Not updating kustomization for this event"
       #       exit 0
       #     fi
       #
-      #     bash ./packages/server/leads/deployments/build/update-kustomization.sh \
-      #       "https://github.com/customeros/cloud.git" \
-      #       "deployment/leads/kustomization.yaml" \
-      #       "${TAG_TO_USE}" \
-      #       "${{ secrets.CLOUD_REPO_TOKEN }}"
+      #     if [[ -n "${TAG_TO_USE}" ]]; then
+      #        bash ./packages/server/leads/deployments/build/update-kustomization.sh \
+      #          "https://github.com/customeros/cloud.git" \
+      #          "deployment/leads/kustomization.yaml" \
+      #          "${TAG_TO_USE}" \
+      #          "${{ secrets.CLOUD_REPO_TOKEN }}"
+      #     fi
       #   env:
-      #     GITHUB_TOKEN: ${{ secrets.CLOUD_REPO_TOKEN }}
+      #     GITHUB_TOKEN: ${{ secrets.CLOUD_REPO_TOKEN }} # Or use the specific secret if needed
