@@ -1153,7 +1153,6 @@ type ComplexityRoot struct {
 	}
 
 	MeetingBookingEvent struct {
-		AllowedParticipants                 func(childComplexity int) int
 		AssignmentMethod                    func(childComplexity int) int
 		BookOptionBufferBetweenMeetingsMins func(childComplexity int) int
 		BookOptionDaysInAdvance             func(childComplexity int) int
@@ -1172,9 +1171,19 @@ type ComplexityRoot struct {
 		EmailNotificationEnabled            func(childComplexity int) int
 		ID                                  func(childComplexity int) int
 		Location                            func(childComplexity int) int
+		ParticipantEmails                   func(childComplexity int) int
+		Participants                        func(childComplexity int) int
 		ShowLogo                            func(childComplexity int) int
 		Title                               func(childComplexity int) int
 		UpdatedAt                           func(childComplexity int) int
+	}
+
+	MeetingBookingEventUserParticipant struct {
+		Connected       func(childComplexity int) int
+		Email           func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Name            func(childComplexity int) int
+		ProfilePhotoURL func(childComplexity int) int
 	}
 
 	MeetingsPage struct {
@@ -1666,7 +1675,6 @@ type ComplexityRoot struct {
 		Attachment                         func(childComplexity int, id string) int
 		BankAccounts                       func(childComplexity int) int
 		BillableInfo                       func(childComplexity int) int
-		CalendarAvailability               func(childComplexity int, input model.CalendarAvailabilityInput) int
 		CalendarAvailableHours             func(childComplexity int, email string) int
 		CalendarTimezones                  func(childComplexity int) int
 		CheckDomain                        func(childComplexity int, domain string) int
@@ -1712,6 +1720,7 @@ type ComplexityRoot struct {
 		Issue                              func(childComplexity int, id string) int
 		JobRoles                           func(childComplexity int, ids []string) int
 		LogEntry                           func(childComplexity int, id string) int
+		M                                  func(childComplexity int, input model.CalendarAvailabilityInput) int
 		MailstackCheckUnavailableDomains   func(childComplexity int, domains []string) int
 		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string) int
 		MailstackDomains                   func(childComplexity int) int
@@ -1731,6 +1740,7 @@ type ComplexityRoot struct {
 		OrganizationExistsByLinkedIn       func(childComplexity int, linkedInURL string) int
 		Organizations                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
 		OrganizationsHiddenAfter           func(childComplexity int, date time.Time) int
+		ParticipantsForMeetingBookingEvent func(childComplexity int) int
 		PhoneNumber                        func(childComplexity int, id string) int
 		Reminder                           func(childComplexity int, id string) int
 		RemindersForOrganization           func(childComplexity int, organizationID string, dismissed *bool) int
@@ -2444,7 +2454,7 @@ type QueryResolver interface {
 	BankAccounts(ctx context.Context) ([]*model.BankAccount, error)
 	Version(ctx context.Context) (float64, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
-	CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error)
+	M(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error)
 	CalendarAvailableHours(ctx context.Context, email string) (*model.UserCalendarAvailability, error)
 	CalendarTimezones(ctx context.Context) ([]string, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
@@ -2497,6 +2507,7 @@ type QueryResolver interface {
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.MeetingsPage, error)
 	MeetingBookingEvents(ctx context.Context) ([]*model.MeetingBookingEvent, error)
+	ParticipantsForMeetingBookingEvent(ctx context.Context) ([]*model.MeetingBookingEventUserParticipant, error)
 	NylasIsConnected(ctx context.Context, email *string) (*model.NylasDetails, error)
 	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error)
@@ -8018,13 +8029,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Meeting.UpdatedAt(childComplexity), true
 
-	case "MeetingBookingEvent.allowedParticipants":
-		if e.complexity.MeetingBookingEvent.AllowedParticipants == nil {
-			break
-		}
-
-		return e.complexity.MeetingBookingEvent.AllowedParticipants(childComplexity), true
-
 	case "MeetingBookingEvent.assignmentMethod":
 		if e.complexity.MeetingBookingEvent.AssignmentMethod == nil {
 			break
@@ -8151,6 +8155,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.MeetingBookingEvent.Location(childComplexity), true
 
+	case "MeetingBookingEvent.participantEmails":
+		if e.complexity.MeetingBookingEvent.ParticipantEmails == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEvent.ParticipantEmails(childComplexity), true
+
+	case "MeetingBookingEvent.participants":
+		if e.complexity.MeetingBookingEvent.Participants == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEvent.Participants(childComplexity), true
+
 	case "MeetingBookingEvent.showLogo":
 		if e.complexity.MeetingBookingEvent.ShowLogo == nil {
 			break
@@ -8171,6 +8189,41 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MeetingBookingEvent.UpdatedAt(childComplexity), true
+
+	case "MeetingBookingEventUserParticipant.connected":
+		if e.complexity.MeetingBookingEventUserParticipant.Connected == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEventUserParticipant.Connected(childComplexity), true
+
+	case "MeetingBookingEventUserParticipant.email":
+		if e.complexity.MeetingBookingEventUserParticipant.Email == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEventUserParticipant.Email(childComplexity), true
+
+	case "MeetingBookingEventUserParticipant.id":
+		if e.complexity.MeetingBookingEventUserParticipant.ID == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEventUserParticipant.ID(childComplexity), true
+
+	case "MeetingBookingEventUserParticipant.name":
+		if e.complexity.MeetingBookingEventUserParticipant.Name == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEventUserParticipant.Name(childComplexity), true
+
+	case "MeetingBookingEventUserParticipant.profilePhotoUrl":
+		if e.complexity.MeetingBookingEventUserParticipant.ProfilePhotoURL == nil {
+			break
+		}
+
+		return e.complexity.MeetingBookingEventUserParticipant.ProfilePhotoURL(childComplexity), true
 
 	case "MeetingsPage.content":
 		if e.complexity.MeetingsPage.Content == nil {
@@ -12103,18 +12156,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.BillableInfo(childComplexity), true
 
-	case "Query.calendar_availability":
-		if e.complexity.Query.CalendarAvailability == nil {
-			break
-		}
-
-		args, err := ec.field_Query_calendar_availability_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.CalendarAvailability(childComplexity, args["input"].(model.CalendarAvailabilityInput)), true
-
 	case "Query.calendar_available_hours":
 		if e.complexity.Query.CalendarAvailableHours == nil {
 			break
@@ -12610,6 +12651,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.LogEntry(childComplexity, args["id"].(string)), true
 
+	case "Query.m":
+		if e.complexity.Query.M == nil {
+			break
+		}
+
+		args, err := ec.field_Query_m_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.M(childComplexity, args["input"].(model.CalendarAvailabilityInput)), true
+
 	case "Query.mailstack_CheckUnavailableDomains":
 		if e.complexity.Query.MailstackCheckUnavailableDomains == nil {
 			break
@@ -12812,6 +12865,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.OrganizationsHiddenAfter(childComplexity, args["date"].(time.Time)), true
+
+	case "Query.participantsForMeetingBookingEvent":
+		if e.complexity.Query.ParticipantsForMeetingBookingEvent == nil {
+			break
+		}
+
+		return e.complexity.Query.ParticipantsForMeetingBookingEvent(childComplexity), true
 
 	case "Query.phoneNumber":
 		if e.complexity.Query.PhoneNumber == nil {
@@ -15311,7 +15371,7 @@ extend type Query {
     """
     Get availability across all users in the tenant for a given time range
     """
-    calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
+    m(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
 
     """
     Get user's calendar available hours configuration
@@ -17926,7 +17986,8 @@ type Meeting implements Node {
     durationMins:   Int64!
     description:    String!
     location:       String!
-    allowedParticipants:    [String!]!
+    participantEmails: [String!]!
+    participants:      [MeetingBookingEventUserParticipant!]!
 
     bookingFormName:    String!
     bookingFormEmail:   String!
@@ -17958,9 +18019,6 @@ input SaveMeetingBookingEventInput {
     durationMins:   Int64
     description:    String
     location:       String
-    bookingFormName:    String
-    bookingFormEmail:   String
-    bookingFormPhone:   String
     bookingFormNameEnabled:    Boolean
     bookingFormEmailEnabled:   Boolean
     bookingFormPhoneEnabled:   Boolean
@@ -17972,12 +18030,20 @@ input SaveMeetingBookingEventInput {
     bookingConfirmationRedirectLink:        String
     showLogo:                               Boolean
     assignmentMethod:                       MeetingBookingAssignmentMethod
-    allowedParticipants:                    [String!]
+    participantEmails:                      [String!]
+}
 
+type MeetingBookingEventUserParticipant {
+    id:                 ID!
+    email:              String!
+    name:               String!
+    profilePhotoUrl:    String!
+    connected:          Boolean!
 }
 
 extend type Query {
     meetingBookingEvents: [MeetingBookingEvent!]!
+    participantsForMeetingBookingEvent: [MeetingBookingEventUserParticipant!]!
 }
 
 extend type Mutation {
@@ -27517,34 +27583,6 @@ func (ec *executionContext) field_Query_attachment_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_calendar_availability_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_calendar_availability_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_calendar_availability_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.CalendarAvailabilityInput, error) {
-	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal model.CalendarAvailabilityInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCalendarAvailabilityInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarAvailabilityInput(ctx, tmp)
-	}
-
-	var zeroVal model.CalendarAvailabilityInput
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Query_calendar_available_hours_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -28895,6 +28933,34 @@ func (ec *executionContext) field_Query_logEntry_argsID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_m_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_m_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_m_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.CalendarAvailabilityInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.CalendarAvailabilityInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCalendarAvailabilityInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarAvailabilityInput(ctx, tmp)
+	}
+
+	var zeroVal model.CalendarAvailabilityInput
 	return zeroVal, nil
 }
 
@@ -67720,8 +67786,8 @@ func (ec *executionContext) fieldContext_MeetingBookingEvent_location(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _MeetingBookingEvent_allowedParticipants(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MeetingBookingEvent_allowedParticipants(ctx, field)
+func (ec *executionContext) _MeetingBookingEvent_participantEmails(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_participantEmails(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -67734,7 +67800,7 @@ func (ec *executionContext) _MeetingBookingEvent_allowedParticipants(ctx context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AllowedParticipants, nil
+		return obj.ParticipantEmails, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -67751,7 +67817,7 @@ func (ec *executionContext) _MeetingBookingEvent_allowedParticipants(ctx context
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MeetingBookingEvent_allowedParticipants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MeetingBookingEvent_participantEmails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MeetingBookingEvent",
 		Field:      field,
@@ -67759,6 +67825,62 @@ func (ec *executionContext) fieldContext_MeetingBookingEvent_allowedParticipants
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingBookingEvent_participants(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEvent_participants(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Participants, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MeetingBookingEventUserParticipant)
+	fc.Result = res
+	return ec.marshalNMeetingBookingEventUserParticipant2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventUserParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEvent_participants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_id(ctx, field)
+			case "email":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_email(ctx, field)
+			case "name":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_name(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_profilePhotoUrl(ctx, field)
+			case "connected":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_connected(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MeetingBookingEventUserParticipant", field.Name)
 		},
 	}
 	return fc, nil
@@ -68370,6 +68492,226 @@ func (ec *executionContext) _MeetingBookingEvent_showLogo(ctx context.Context, f
 func (ec *executionContext) fieldContext_MeetingBookingEvent_showLogo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MeetingBookingEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingBookingEventUserParticipant_id(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEventUserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEventUserParticipant_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEventUserParticipant_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEventUserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingBookingEventUserParticipant_email(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEventUserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEventUserParticipant_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEventUserParticipant_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEventUserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingBookingEventUserParticipant_name(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEventUserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEventUserParticipant_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEventUserParticipant_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEventUserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingBookingEventUserParticipant_profilePhotoUrl(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEventUserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEventUserParticipant_profilePhotoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProfilePhotoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEventUserParticipant_profilePhotoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEventUserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MeetingBookingEventUserParticipant_connected(ctx context.Context, field graphql.CollectedField, obj *model.MeetingBookingEventUserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MeetingBookingEventUserParticipant_connected(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Connected, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MeetingBookingEventUserParticipant_connected(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MeetingBookingEventUserParticipant",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -80405,8 +80747,10 @@ func (ec *executionContext) fieldContext_Mutation_meetingBookingEvent_Save(ctx c
 				return ec.fieldContext_MeetingBookingEvent_description(ctx, field)
 			case "location":
 				return ec.fieldContext_MeetingBookingEvent_location(ctx, field)
-			case "allowedParticipants":
-				return ec.fieldContext_MeetingBookingEvent_allowedParticipants(ctx, field)
+			case "participantEmails":
+				return ec.fieldContext_MeetingBookingEvent_participantEmails(ctx, field)
+			case "participants":
+				return ec.fieldContext_MeetingBookingEvent_participants(ctx, field)
 			case "bookingFormName":
 				return ec.fieldContext_MeetingBookingEvent_bookingFormName(ctx, field)
 			case "bookingFormEmail":
@@ -101500,8 +101844,8 @@ func (ec *executionContext) fieldContext_Query_global_Cache(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_calendar_availability(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_calendar_availability(ctx, field)
+func (ec *executionContext) _Query_m(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_m(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -101514,7 +101858,7 @@ func (ec *executionContext) _Query_calendar_availability(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CalendarAvailability(rctx, fc.Args["input"].(model.CalendarAvailabilityInput))
+		return ec.resolvers.Query().M(rctx, fc.Args["input"].(model.CalendarAvailabilityInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -101531,7 +101875,7 @@ func (ec *executionContext) _Query_calendar_availability(ctx context.Context, fi
 	return ec.marshalNCalendarAvailabilityResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarAvailabilityResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_calendar_availability(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_m(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -101564,7 +101908,7 @@ func (ec *executionContext) fieldContext_Query_calendar_availability(ctx context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_calendar_availability_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_m_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -106381,8 +106725,10 @@ func (ec *executionContext) fieldContext_Query_meetingBookingEvents(_ context.Co
 				return ec.fieldContext_MeetingBookingEvent_description(ctx, field)
 			case "location":
 				return ec.fieldContext_MeetingBookingEvent_location(ctx, field)
-			case "allowedParticipants":
-				return ec.fieldContext_MeetingBookingEvent_allowedParticipants(ctx, field)
+			case "participantEmails":
+				return ec.fieldContext_MeetingBookingEvent_participantEmails(ctx, field)
+			case "participants":
+				return ec.fieldContext_MeetingBookingEvent_participants(ctx, field)
 			case "bookingFormName":
 				return ec.fieldContext_MeetingBookingEvent_bookingFormName(ctx, field)
 			case "bookingFormEmail":
@@ -106413,6 +106759,62 @@ func (ec *executionContext) fieldContext_Query_meetingBookingEvents(_ context.Co
 				return ec.fieldContext_MeetingBookingEvent_showLogo(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MeetingBookingEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_participantsForMeetingBookingEvent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_participantsForMeetingBookingEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ParticipantsForMeetingBookingEvent(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.MeetingBookingEventUserParticipant)
+	fc.Result = res
+	return ec.marshalNMeetingBookingEventUserParticipant2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventUserParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_participantsForMeetingBookingEvent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_id(ctx, field)
+			case "email":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_email(ctx, field)
+			case "name":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_name(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_profilePhotoUrl(ctx, field)
+			case "connected":
+				return ec.fieldContext_MeetingBookingEventUserParticipant_connected(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MeetingBookingEventUserParticipant", field.Name)
 		},
 	}
 	return fc, nil
@@ -128941,7 +129343,7 @@ func (ec *executionContext) unmarshalInputSaveMeetingBookingEventInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "durationMins", "description", "location", "bookingFormName", "bookingFormEmail", "bookingFormPhone", "bookingFormNameEnabled", "bookingFormEmailEnabled", "bookingFormPhoneEnabled", "bookOptionEnabled", "bookOptionBufferBetweenMeetingsMins", "bookOptionDaysInAdvance", "bookOptionMinNoticeMins", "emailNotificationEnabled", "bookingConfirmationRedirectLink", "showLogo", "assignmentMethod", "allowedParticipants"}
+	fieldsInOrder := [...]string{"id", "title", "durationMins", "description", "location", "bookingFormNameEnabled", "bookingFormEmailEnabled", "bookingFormPhoneEnabled", "bookOptionEnabled", "bookOptionBufferBetweenMeetingsMins", "bookOptionDaysInAdvance", "bookOptionMinNoticeMins", "emailNotificationEnabled", "bookingConfirmationRedirectLink", "showLogo", "assignmentMethod", "participantEmails"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -128983,27 +129385,6 @@ func (ec *executionContext) unmarshalInputSaveMeetingBookingEventInput(ctx conte
 				return it, err
 			}
 			it.Location = data
-		case "bookingFormName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookingFormName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BookingFormName = data
-		case "bookingFormEmail":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookingFormEmail"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BookingFormEmail = data
-		case "bookingFormPhone":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookingFormPhone"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BookingFormPhone = data
 		case "bookingFormNameEnabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bookingFormNameEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -129081,13 +129462,13 @@ func (ec *executionContext) unmarshalInputSaveMeetingBookingEventInput(ctx conte
 				return it, err
 			}
 			it.AssignmentMethod = data
-		case "allowedParticipants":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowedParticipants"))
+		case "participantEmails":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("participantEmails"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.AllowedParticipants = data
+			it.ParticipantEmails = data
 		}
 	}
 
@@ -140496,8 +140877,13 @@ func (ec *executionContext) _MeetingBookingEvent(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "allowedParticipants":
-			out.Values[i] = ec._MeetingBookingEvent_allowedParticipants(ctx, field, obj)
+		case "participantEmails":
+			out.Values[i] = ec._MeetingBookingEvent_participantEmails(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "participants":
+			out.Values[i] = ec._MeetingBookingEvent_participants(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -140568,6 +140954,65 @@ func (ec *executionContext) _MeetingBookingEvent(ctx context.Context, sel ast.Se
 			}
 		case "showLogo":
 			out.Values[i] = ec._MeetingBookingEvent_showLogo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var meetingBookingEventUserParticipantImplementors = []string{"MeetingBookingEventUserParticipant"}
+
+func (ec *executionContext) _MeetingBookingEventUserParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.MeetingBookingEventUserParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, meetingBookingEventUserParticipantImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MeetingBookingEventUserParticipant")
+		case "id":
+			out.Values[i] = ec._MeetingBookingEventUserParticipant_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._MeetingBookingEventUserParticipant_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._MeetingBookingEventUserParticipant_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "profilePhotoUrl":
+			out.Values[i] = ec._MeetingBookingEventUserParticipant_profilePhotoUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "connected":
+			out.Values[i] = ec._MeetingBookingEventUserParticipant_connected(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -144660,7 +145105,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "calendar_availability":
+		case "m":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -144669,7 +145114,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_calendar_availability(ctx, field)
+				res = ec._Query_m(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -145769,6 +146214,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_meetingBookingEvents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "participantsForMeetingBookingEvent":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_participantsForMeetingBookingEvent(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -153467,6 +153934,60 @@ func (ec *executionContext) marshalNMeetingBookingEvent2ᚖgithubᚗcomᚋcustom
 		return graphql.Null
 	}
 	return ec._MeetingBookingEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMeetingBookingEventUserParticipant2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventUserParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MeetingBookingEventUserParticipant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMeetingBookingEventUserParticipant2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventUserParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMeetingBookingEventUserParticipant2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingBookingEventUserParticipant(ctx context.Context, sel ast.SelectionSet, v *model.MeetingBookingEventUserParticipant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MeetingBookingEventUserParticipant(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNMeetingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingInput(ctx context.Context, v any) (model.MeetingInput, error) {

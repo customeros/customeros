@@ -1,9 +1,11 @@
 package public
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
@@ -70,35 +72,57 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
+		var startTime *time.Time
+		var endTime *time.Time
+
 		// Get and validate startTime
 		startTimeStr := c.Query("startTime")
-		if startTimeStr == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Start time is required"})
-			return
-		}
-		startTime, err := utils.UnmarshalDateTime(startTimeStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if startTime == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format"})
-			return
+		if startTimeStr != "" {
+			startTime, err := utils.UnmarshalDateTime(startTimeStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			if startTime == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format"})
+				return
+			}
 		}
 
 		// Get and validate endTime
 		endTimeStr := c.Query("endTime")
-		if endTimeStr == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "End time is required"})
-			return
+		if endTimeStr != "" {
+			endTime, err := utils.UnmarshalDateTime(endTimeStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			if endTime == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time format"})
+				return
+			}
 		}
-		endTime, err := utils.UnmarshalDateTime(endTimeStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+
+		year := c.Query("year")
+		month := c.Query("month")
+
+		// if startTime is not set, set it to first day of the year and month, and end time to first day of the next month
+		if startTime == nil && year != "" && month != "" {
+			yearInt, _ := strconv.Atoi(year)
+			monthInt, _ := strconv.Atoi(month)
+			startTime = utils.TimePtr(time.Date(yearInt, time.Month(monthInt), 1, 0, 0, 0, 0, time.UTC))
+			// Set end time to first day of next month
+			nextMonth := time.Month(monthInt) + 1
+			nextYear := yearInt
+			if nextMonth > 12 {
+				nextMonth = 1
+				nextYear++
+			}
+			endTime = utils.TimePtr(time.Date(nextYear, nextMonth, 1, 0, 0, 0, 0, time.UTC))
 		}
-		if endTime == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time format"})
+
+		if startTime == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing start time"})
 			return
 		}
 

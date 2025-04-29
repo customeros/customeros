@@ -7,6 +7,11 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -46,6 +51,21 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 		spans.TraceError(err)
 		graphql.AddErrorf(ctx, "Failed to grant access with Nylas")
 		return &model.NylasDetails{Connected: false}, nil
+	}
+
+	// Link email address with user
+	_, err = r.Services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
+		interfaces.EmailFields{
+			Email:     strings.TrimSpace(input.Email),
+			Primary:   false,
+			Source:    neo4jentity.DataSourceOpenline,
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &common_srv.LinkWith{
+			Type: commonmodel.USER,
+			Id:   userId,
+		})
+	if err != nil {
+		spans.TraceError(err)
 	}
 
 	_, err = r.Services.CommonServices.MeetingService.SetDefaultUserCalendarAvailability(ctx, input.Email, utils.IfNotNilString(input.Timezone))

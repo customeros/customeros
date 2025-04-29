@@ -13,6 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
@@ -61,6 +62,112 @@ func (r *queryResolver) MeetingBookingEvents(ctx context.Context) ([]*model.Meet
 		return nil, nil
 	}
 
+	result := mapper.MapMeetingBookingEventEntitiesToModels(meetingBookingEvents)
+
+	// enrich with user data
+
+	// prepare user ids with nylas grants (connected calendars)
+	nylasGrants, err := r.Services.CommonServices.PostgresRepositories.NylasGrantRepository.GetAllByTenant(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get nylas grants")
+		return nil, nil
+	}
+	userIdsFromNylasGrants := make([]string, 0)
+	for _, nylasGrant := range nylasGrants {
+		userIdsFromNylasGrants = append(userIdsFromNylasGrants, nylasGrant.UserId)
+	}
+
+	// prepare all email addresses
+	emails := make([]string, 0)
+	for _, record := range result {
+		for _, email := range record.ParticipantEmails {
+			emails = append(emails, email)
+		}
+	}
+	// remove duplicates
+	emails = utils.RemoveDuplicates(emails)
+	emails = utils.RemoveEmpties(emails)
+
+	users, err := r.Services.CommonServices.UserService.GetUsersByEmailAddresses(ctx, emails)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get users")
+		return nil, nil
+	}
+	// convert list to map
+	userMap := make(map[string]*neo4jentity.UserEntity)
+	for _, user := range *users {
+		userMap[user.Id] = &user
+	}
+
+	// enrich with user data
+	for _, record := range result {
+		record.Participants = make([]*model.MeetingBookingEventUserParticipant, 0)
+		for _, email := range record.ParticipantEmails {
+			userParticipant := model.MeetingBookingEventUserParticipant{
+				Email: email,
+			}
+			if user, ok := userMap[email]; ok {
+				userParticipant.ID = user.Id
+				userParticipant.Name = user.FullName()
+				userParticipant.ProfilePhotoURL = user.ProfilePhotoUrl
+			}
+			if utils.Contains(userIdsFromNylasGrants, userParticipant.ID) {
+				userParticipant.Connected = true
+			} else {
+				userParticipant.Connected = false
+			}
+			record.Participants = append(record.Participants, &userParticipant)
+		}
+	}
+
 	spans.LogKV("result.count", len(meetingBookingEvents))
-	return mapper.MapMeetingBookingEventEntitiesToModels(meetingBookingEvents), nil
+	return result, nil
+}
+
+// ParticipantsForMeetingBookingEvent is the resolver for the participantsForMeetingBookingEvent field.
+func (r *queryResolver) ParticipantsForMeetingBookingEvent(ctx context.Context) ([]*model.MeetingBookingEventUserParticipant, error) {
+	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.ParticipantsForMeetingBookingEvent", graphql.GetOperationContext(ctx))
+	defer spans.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	nylasGrants, err := r.Services.CommonServices.PostgresRepositories.NylasGrantRepository.GetAllByTenant(ctx, tenant)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get nylas grants")
+		return nil, nil
+	}
+	userIdsFromNylasGrants := make([]string, 0)
+	for _, nylasGrant := range nylasGrants {
+		userIdsFromNylasGrants = append(userIdsFromNylasGrants, nylasGrant.UserId)
+	}
+
+	users, err := r.Services.CommonServices.UserService.GetUsers(ctx, userIdsFromNylasGrants)
+	if err != nil {
+		spans.TraceError(err)
+		graphql.AddErrorf(ctx, "Failed to get users")
+	}
+	// convert list to map
+	userMap := make(map[string]*neo4jentity.UserEntity)
+	for _, user := range *users {
+		userMap[user.Id] = &user
+	}
+
+	results := make([]*model.MeetingBookingEventUserParticipant, 0)
+	for _, nylasGrant := range nylasGrants {
+		result := model.MeetingBookingEventUserParticipant{
+			Email: nylasGrant.Email,
+		}
+		if user, ok := userMap[nylasGrant.UserId]; ok {
+			result.ID = user.Id
+			result.Name = user.FullName()
+			result.ProfilePhotoURL = user.ProfilePhotoUrl
+			result.Connected = true
+		}
+		results = append(results, &result)
+	}
+
+	return results, nil
 }

@@ -51,17 +51,14 @@ type MeetingBookingEvent struct {
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 
-	Title               string      `gorm:"column:title;size:255;not null" json:"title"`
-	DurationMins        int64       `gorm:"column:duration_mins;not null;default:30" json:"durationMins"`
-	Description         string      `gorm:"column:description;type:text;not null;default:''" json:"description"`
-	AllowedParticipants StringArray `gorm:"column:allowed_participants;type:text[];not null;default:'{}'" json:"allowedParticipants"`
+	Title             string      `gorm:"column:title;size:255;not null" json:"title"`
+	DurationMins      int64       `gorm:"column:duration_mins;not null;default:30" json:"durationMins"`
+	Description       string      `gorm:"column:description;type:text;not null;default:''" json:"description"`
+	ParticipantEmails StringArray `gorm:"column:participant_emails;type:text[];not null;default:'{}'" json:"participantEmails"`
 
-	BookingFormName         string `gorm:"column:booking_form_name;size:255;not null;default:''" json:"bookingFormName"`
-	BookingFormEmail        string `gorm:"column:booking_form_email;size:255;not null;default:''" json:"bookingFormEmail"`
-	BookingFormPhone        string `gorm:"column:booking_form_phone;size:255;not null;default:''" json:"bookingFormPhone"`
-	BookingFormNameEnabled  bool   `gorm:"column:booking_form_name_enabled;default:false" json:"bookingFormNameEnabled"`
-	BookingFormEmailEnabled bool   `gorm:"column:booking_form_email_enabled;default:false" json:"bookingFormEmailEnabled"`
-	BookingFormPhoneEnabled bool   `gorm:"column:booking_form_phone_enabled;default:false" json:"bookingFormPhoneEnabled"`
+	BookingFormNameEnabled  bool `gorm:"column:booking_form_name_enabled;default:false" json:"bookingFormNameEnabled"`
+	BookingFormEmailEnabled bool `gorm:"column:booking_form_email_enabled;default:false" json:"bookingFormEmailEnabled"`
+	BookingFormPhoneEnabled bool `gorm:"column:booking_form_phone_enabled;default:false" json:"bookingFormPhoneEnabled"`
 
 	BookOptionEnabled                   bool  `gorm:"column:book_option_enabled;not null;default:false" json:"bookOptionEnabled"`
 	BookOptionBufferBetweenMeetingsMins int64 `gorm:"column:book_option_buffer_between_meetings_mins;not null;default:0" json:"bookOptionBufferBetweenMeetingsMins"`

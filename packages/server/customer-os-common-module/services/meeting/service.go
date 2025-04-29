@@ -561,7 +561,7 @@ func (s *meetingService) prepareAvailableParticipantTimeSlots(ctx context.Contex
 
 	// 1. Get default calendar for each participant
 	participantsData := make(map[string]*interfaces.NylasCalendar)
-	for _, email := range meetingBookingEvent.AllowedParticipants {
+	for _, email := range meetingBookingEvent.ParticipantEmails {
 		// Get default calendar for the participant
 		calendar, err := s.nylas.GetDefaultCalendar(ctx, email)
 		if err != nil {
