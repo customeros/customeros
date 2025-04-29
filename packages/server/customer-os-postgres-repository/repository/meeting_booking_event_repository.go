@@ -87,8 +87,8 @@ func (r *meetingBookingEventRepository) Save(ctx context.Context, meetingBooking
 	}
 
 	// Ensure allowedParticipants is never null
-	if meetingBookingEvent.AllowedParticipants == nil {
-		meetingBookingEvent.AllowedParticipants = []string{}
+	if meetingBookingEvent.ParticipantEmails == nil {
+		meetingBookingEvent.ParticipantEmails = []string{}
 	}
 
 	err := r.db.Save(meetingBookingEvent).Error
