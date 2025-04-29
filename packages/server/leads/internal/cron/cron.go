@@ -22,6 +22,7 @@ import (
 
 // CONSTANTS
 const (
+	GroupOutbox     = "outbox"
 	GroupWebSession = "webSession"
 
 	// LeaseDuration is how long a lease lasts before needing renewal
@@ -38,6 +39,7 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
+		GroupOutbox:     {},
 		GroupWebSession: {},
 	},
 }
@@ -76,7 +78,7 @@ func (cm *CronManager) Start(podName, namespace string) error {
 	// Create the leader election lock
 	lock := &resourcelock.LeaseLock{
 		LeaseMeta: metav1.ObjectMeta{
-			Name:      "mailstack-cron-leader",
+			Name:      "leads-cron-leader",
 			Namespace: namespace,
 		},
 		Client: cm.k8s.CoordinationV1(),
