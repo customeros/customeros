@@ -8,7 +8,6 @@ import (
 )
 
 var meetingBookingAssignmentMethodByModel = map[model.MeetingBookingAssignmentMethod]enum.MeetingBookingAssignmentMethod{
-	model.MeetingBookingAssignmentMethodRoundRobinMaxFairness:     enum.MeetingBookingAssignmentMethodRoundRobinMaxFairness,
 	model.MeetingBookingAssignmentMethodRoundRobinMaxAvailability: enum.MeetingBookingAssignmentMethodRoundRobinMaxAvailability,
 	model.MeetingBookingAssignmentMethodCustom:                    enum.MeetingBookingAssignmentMethodCustom,
 }

@@ -11,6 +11,9 @@ type MeetingBookingEvent {
     bookingFormName:    String!
     bookingFormEmail:   String!
     bookingFormPhone:   String!
+    bookingFormNameEnabled:    Boolean!
+    bookingFormEmailEnabled:   Boolean!
+    bookingFormPhoneEnabled:   Boolean!
 
     bookOptionEnabled:                      Boolean!
     bookOptionBufferBetweenMeetingsMins:    Int64!
@@ -25,7 +28,6 @@ type MeetingBookingEvent {
 }
 
 enum MeetingBookingAssignmentMethod {
-    ROUND_ROBIN_MAX_FAIRNESS
     ROUND_ROBIN_MAX_AVAILABILITY
     CUSTOM
 }
@@ -39,6 +41,9 @@ input SaveMeetingBookingEventInput {
     bookingFormName:    String
     bookingFormEmail:   String
     bookingFormPhone:   String
+    bookingFormNameEnabled:    Boolean
+    bookingFormEmailEnabled:   Boolean
+    bookingFormPhoneEnabled:   Boolean
     bookOptionEnabled:                      Boolean
     bookOptionBufferBetweenMeetingsMins:    Int64
     bookOptionDaysInAdvance:                Int64

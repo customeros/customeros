@@ -3,13 +3,11 @@ package enum
 type MeetingBookingAssignmentMethod string
 
 const (
-	MeetingBookingAssignmentMethodRoundRobinMaxFairness     MeetingBookingAssignmentMethod = "ROUND_ROBIN_MAX_FAIRNESS"
 	MeetingBookingAssignmentMethodRoundRobinMaxAvailability MeetingBookingAssignmentMethod = "ROUND_ROBIN_MAX_AVAILABILITY"
 	MeetingBookingAssignmentMethodCustom                    MeetingBookingAssignmentMethod = "CUSTOM"
 )
 
 var AllMeetingBookingAssignmentMethod = []MeetingBookingAssignmentMethod{
-	MeetingBookingAssignmentMethodRoundRobinMaxFairness,
 	MeetingBookingAssignmentMethodRoundRobinMaxAvailability,
 	MeetingBookingAssignmentMethodCustom,
 }
