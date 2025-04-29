@@ -16,7 +16,7 @@ docker buildx build \
   --push \
   --tag ${REGISTRY}/${IMAGE_NAME}:${SHA}-${ARCH} \
   --provenance=false \
-  --file ./packages/server/leads/deployments/build/Dockerfile \
+  --file ./packages/server/leads/deployments/build/Containerfile \
   ./packages/server
 
 # Get and output the image digest
