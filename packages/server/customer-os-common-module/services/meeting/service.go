@@ -355,12 +355,12 @@ func getValidStartMinutes(durationMins int) []int {
 }
 
 // filterValidMeetingStartSlots filters 5-minute slots to only keep valid meeting start times
-func filterValidMeetingStartSlots(slots []*interfaces.TimeSlot, durationMins int) []*interfaces.TimeSlot {
+func filterValidMeetingStartSlots(slots []*interfaces.TimeSlot, durationMins int32) []*interfaces.TimeSlot {
 	if len(slots) == 0 {
 		return slots
 	}
 
-	validStartMinutes := getValidStartMinutes(durationMins)
+	validStartMinutes := getValidStartMinutes(int(durationMins))
 	filteredSlots := make([]*interfaces.TimeSlot, 0)
 	durationInMinutes := int(durationMins)
 
@@ -473,6 +473,14 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		timezone = postgresEntity.DefaultTimezone
 	}
 
+	// Ensure times are in UTC
+	if startTime.Location() != time.UTC {
+		startTime = startTime.UTC()
+	}
+	if endTime.Location() != time.UTC {
+		endTime = endTime.UTC()
+	}
+
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
@@ -489,6 +497,61 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 	}
 	if meetingBookingEvent == nil {
 		return nil, fmt.Errorf("meeting booking event not found")
+	}
+
+	filteredParticipantTimeSlots, err := s.prepareAvailableParticipantTimeSlots(ctx, meetingBookingEvent, startTime, endTime)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+
+	// 4c. Convert all time slots to requested timezone
+	convertedParticipantTimeSlots := make(map[string][]*interfaces.TimeSlot)
+	for email, slots := range filteredParticipantTimeSlots {
+		convertedSlots, err := convertTimeSlotsToTimezone(slots, timezone)
+		if err != nil {
+			spans.TraceError(err)
+			return nil, fmt.Errorf("failed to convert time slots to timezone %s: %v", timezone, err)
+		}
+		convertedParticipantTimeSlots[email] = convertedSlots
+	}
+
+	// 4d. Group slots
+	unifiedSlots := make([]*interfaces.TimeSlot, 0)
+	switch meetingBookingEvent.AssignmentMethod {
+	case enum.MeetingBookingAssignmentMethodRoundRobinMaxAvailability:
+		// For round-robin, we want slots that are available for any participant
+		unifiedSlots = unifyTimeSlots(convertedParticipantTimeSlots)
+	default:
+		// Default behavior: same as round-robin
+		unifiedSlots = unifyTimeSlots(convertedParticipantTimeSlots)
+	}
+
+	// Sort slots by start time
+	unifiedSlots = sortTimeSlots(unifiedSlots)
+
+	// Group time slots into day slots
+	var daySlots = convertTimeSlotsToDaySlots(unifiedSlots)
+
+	return &interfaces.CalendarAvailabilityResult{
+		Days: daySlots,
+	}, nil
+}
+
+// getParticipantTimeSlots returns time slots for all participants in the given time range
+func (s *meetingService) prepareAvailableParticipantTimeSlots(ctx context.Context, meetingBookingEvent *postgresEntity.MeetingBookingEvent, startTime time.Time, endTime time.Time) (map[string][]*interfaces.TimeSlot, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.prepareAvailableParticipantTimeSlots")
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", map[string]interface{}{
+		"startTime": startTime,
+		"endTime":   endTime,
+	})
+	// Ensure times are in UTC
+	if startTime.Location() != time.UTC {
+		startTime = startTime.UTC()
+	}
+	if endTime.Location() != time.UTC {
+		endTime = endTime.UTC()
 	}
 
 	meetingDurationMins := int(meetingBookingEvent.DurationMins)
@@ -526,7 +589,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 	// 2b. Apply calendar availability restrictions for each participant
 	for email, slots := range participantTimeSlots {
 		// Get user's calendar availability
-		userAvailability, err := s.postgres.UserCalendarAvailabilityRepository.GetByTenantAndEmail(ctx, tenant, email)
+		userAvailability, err := s.postgres.UserCalendarAvailabilityRepository.GetByTenantAndEmail(ctx, common.GetTenantFromContext(ctx), email)
 		if err != nil {
 			s.log.Warn("Failed to get calendar availability for user %s: %v", email, err)
 			continue
@@ -622,7 +685,7 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 
 	// 3. Filter slots to valid meeting start times
 	for email, slots := range participantTimeSlots {
-		participantTimeSlots[email] = filterValidMeetingStartSlots(slots, meetingDurationMins)
+		participantTimeSlots[email] = filterValidMeetingStartSlots(slots, int32(meetingDurationMins))
 	}
 
 	// 4a. Remove time slots that are not available
@@ -644,35 +707,62 @@ func (s *meetingService) GetCalendarAvailability(ctx context.Context, meetingBoo
 		}
 	}
 
-	// 4c. Convert all time slots to requested timezone
-	convertedParticipantTimeSlots := make(map[string][]*interfaces.TimeSlot)
-	for email, slots := range filteredParticipantTimeSlots {
-		convertedSlots, err := convertTimeSlotsToTimezone(slots, timezone)
-		if err != nil {
-			spans.TraceError(err)
-			return nil, fmt.Errorf("failed to convert time slots to timezone %s: %v", timezone, err)
+	return filteredParticipantTimeSlots, nil
+}
+
+// GetAvailableCalendarParticipantEmailsForTimeRange returns all participants that are available in the given time range
+func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time) ([]string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetAvailableCalendarParticipantEmailsForTimeRange")
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", map[string]interface{}{
+		"meetingBookingEventID": meetingBookingEventID,
+		"startTime":             startTime,
+		"endTime":               endTime,
+	})
+
+	// Ensure times are in UTC
+	if startTime.Location() != time.UTC {
+		startTime = startTime.UTC()
+	}
+	if endTime.Location() != time.UTC {
+		endTime = endTime.UTC()
+	}
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get meeting booking event
+	meetingBookingEvent, err := s.postgres.MeetingBookingEventRepository.GetById(ctx, tenant, meetingBookingEventID)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get meeting booking event: %v", err)
+	}
+	if meetingBookingEvent == nil {
+		return nil, fmt.Errorf("meeting booking event not found")
+	}
+
+	// Get participant time slots using common functionality
+	participantTimeSlots, err := s.prepareAvailableParticipantTimeSlots(ctx, meetingBookingEvent, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find participants with at least one available slot
+	availableParticipants := make([]string, 0)
+	for email, slots := range participantTimeSlots {
+		// Check if any slot is available
+		for _, slot := range slots {
+			if slot.IsAvailable {
+				availableParticipants = append(availableParticipants, email)
+				break
+			}
 		}
-		convertedParticipantTimeSlots[email] = convertedSlots
 	}
 
-	// 4d. Group slots
-	unifiedSlots := make([]*interfaces.TimeSlot, 0)
-	switch meetingBookingEvent.AssignmentMethod {
-	case enum.MeetingBookingAssignmentMethodRoundRobinMaxAvailability:
-		// For round-robin, we want slots that are available for any participant
-		unifiedSlots = unifyTimeSlots(convertedParticipantTimeSlots)
-	default:
-		// Default behavior: same as round-robin
-		unifiedSlots = unifyTimeSlots(convertedParticipantTimeSlots)
-	}
-
-	// Sort slots by start time
-	unifiedSlots = sortTimeSlots(unifiedSlots)
-
-	// Group time slots into day slots
-	var daySlots = convertTimeSlotsToDaySlots(unifiedSlots)
-
-	return &interfaces.CalendarAvailabilityResult{
-		Days: daySlots,
-	}, nil
+	return availableParticipants, nil
 }
