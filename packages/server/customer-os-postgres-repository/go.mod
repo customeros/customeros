@@ -17,7 +17,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.37.0
 	golang.org/x/net v0.39.0
 	gorm.io/datatypes v1.2.5
-	gorm.io/gorm v1.25.12
+	gorm.io/gorm v1.26.0
 )
 
 require (
