@@ -27,13 +27,20 @@ type DaySlot struct {
 }
 
 type calendarAvailabilityResponse struct {
-	Days               []DaySlot `json:"days"`
-	Location           string    `json:"location"`
-	TenantName         string    `json:"tenantName"`
-	TenantLogoURL      string    `json:"tenantLogoUrl"`
-	DurationMins       int64     `json:"durationMins"`
-	BookingTitle       string    `json:"bookingTitle"`
-	BookingDescription string    `json:"bookingDescription"`
+	Days []DaySlot `json:"days"`
+}
+
+type calendarDetailsResponse struct {
+	Location                 string `json:"location"`
+	TenantName               string `json:"tenantName"`
+	TenantLogoURL            string `json:"tenantLogoUrl"`
+	DurationMins             int64  `json:"durationMins"`
+	BookingTitle             string `json:"bookingTitle"`
+	BookingDescription       string `json:"bookingDescription"`
+	BookingFormNameEnabled   bool   `json:"bookingFormNameEnabled"`
+	BookingFormEmailEnabled  bool   `json:"bookingFormEmailEnabled"`
+	BookingFormPhoneEnabled  bool   `json:"bookingFormPhoneEnabled"`
+	BookingFormPhoneRequired bool   `json:"bookingFormPhoneRequired"`
 }
 
 // mapToRestDaySlots converts service response to REST API format
@@ -74,11 +81,12 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 
 		var startTime *time.Time
 		var endTime *time.Time
+		var err error
 
 		// Get and validate startTime
 		startTimeStr := c.Query("startTime")
 		if startTimeStr != "" {
-			startTime, err := utils.UnmarshalDateTime(startTimeStr)
+			startTime, err = utils.UnmarshalDateTime(startTimeStr)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
@@ -92,7 +100,7 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 		// Get and validate endTime
 		endTimeStr := c.Query("endTime")
 		if endTimeStr != "" {
-			endTime, err := utils.UnmarshalDateTime(endTimeStr)
+			endTime, err = utils.UnmarshalDateTime(endTimeStr)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
@@ -161,6 +169,59 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 		)
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
+		// Get calendar availability
+		availabilityResult, err := s.CommonServices.MeetingService.GetCalendarAvailability(ctx, calendarId, startTimeUTC, endTimeUTC, timezone)
+		if err != nil {
+			s.Log.Error("Failed to get calendar availability: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get calendar availability"})
+			return
+		}
+
+		// Convert to REST format
+		restDaySlots := mapToRestDaySlots(availabilityResult)
+
+		response := &calendarAvailabilityResponse{
+			Days: restDaySlots,
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetCalendarDetails(s *cosapi_services.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "GetCalendarDetails")
+		defer spans.Finish()
+
+		// Get and validate calendarId
+		calendarId := c.Query("calendarId")
+		if calendarId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Calendar ID is required"})
+			return
+		}
+
+		// Get meeting booking event to determine tenant
+		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(ctx, calendarId)
+		if err != nil {
+			spans.TraceError(err)
+			s.Log.Error("Failed to get meeting booking event: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Calendar not found"})
+			return
+		}
+		if meetingBookingEvent == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Calendar not found"})
+			return
+		}
+
+		// Set tenant in context
+		ctx = common.WithCustomContext(
+			ctx,
+			&common.CustomContext{
+				Tenant: meetingBookingEvent.Tenant,
+			},
+		)
+		spans.TagTenant(meetingBookingEvent.Tenant)
+
 		// Get tenant settings for workspace name
 		tenantSettings, err := s.CommonServices.TenantSettingsService.GetTenantSettings(ctx)
 		if err != nil {
@@ -177,25 +238,17 @@ func GetCalendarAvailability(s *cosapi_services.Services) gin.HandlerFunc {
 			durationMins = ((durationMins / 5) + 1) * 5
 		}
 
-		// Get calendar availability
-		availabilityResult, err := s.CommonServices.MeetingService.GetCalendarAvailability(ctx, calendarId, startTimeUTC, endTimeUTC, timezone)
-		if err != nil {
-			s.Log.Error("Failed to get calendar availability: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get calendar availability"})
-			return
-		}
-
-		// Convert to REST format
-		restDaySlots := mapToRestDaySlots(availabilityResult)
-
-		response := &calendarAvailabilityResponse{
-			Days:               restDaySlots,
-			Location:           meetingBookingEvent.Location,
-			TenantName:         tenantName,
-			TenantLogoURL:      "", // TODO: Get from tenant service when available
-			DurationMins:       durationMins,
-			BookingTitle:       meetingBookingEvent.Title,
-			BookingDescription: meetingBookingEvent.Description,
+		response := &calendarDetailsResponse{
+			Location:                 meetingBookingEvent.Location,
+			TenantName:               tenantName,
+			TenantLogoURL:            "", // TODO: Get from tenant service when available
+			DurationMins:             durationMins,
+			BookingTitle:             meetingBookingEvent.Title,
+			BookingDescription:       meetingBookingEvent.Description,
+			BookingFormNameEnabled:   meetingBookingEvent.BookingFormNameEnabled,
+			BookingFormEmailEnabled:  meetingBookingEvent.BookingFormEmailEnabled,
+			BookingFormPhoneEnabled:  meetingBookingEvent.BookingFormPhoneEnabled,
+			BookingFormPhoneRequired: meetingBookingEvent.BookingFormPhoneRequired,
 		}
 
 		c.JSON(http.StatusOK, response)

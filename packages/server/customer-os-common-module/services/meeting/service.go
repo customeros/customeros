@@ -271,6 +271,11 @@ func convertTimeSlotsToDaySlots(slots []*interfaces.TimeSlot) []*interfaces.DayS
 		daySlots = append(daySlots, daySlot)
 	}
 
+	// Sort day slots by date in ascending order
+	sort.Slice(daySlots, func(i, j int) bool {
+		return daySlots[i].Date.Before(daySlots[j].Date)
+	})
+
 	return daySlots
 }
 
