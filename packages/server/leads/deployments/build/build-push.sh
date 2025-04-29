@@ -7,7 +7,6 @@ SHA=$3
 PLATFORM=$4
 ARCH=$5
 
-# Log in to registry - we assume credentials are already available
 echo "Building and pushing ${PLATFORM} image..."
 
 # Use Docker Buildx to build and push
@@ -17,7 +16,7 @@ docker buildx build \
   --tag ${REGISTRY}/${IMAGE_NAME}:${SHA}-${ARCH} \
   --provenance=false \
   --file ./packages/server/leads/deployments/build/Containerfile \
-  ./packages/server
+  .
 
 # Get and output the image digest
 digest=$(docker buildx imagetools inspect ${REGISTRY}/${IMAGE_NAME}:${SHA}-${ARCH} --format "{{json .Manifest}}" | jq -r '.digest')
