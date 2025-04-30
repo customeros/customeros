@@ -134,7 +134,7 @@ func (s *sessionManager) routeMessage(ctx context.Context, msg *nats.Msg) {
 	spans.TagString("nats.reply", msg.Reply)
 
 	switch {
-	case msg.Subject == enum.EventWebtrackerSessionNew.String():
+	case msg.Subject == enum.EventWebtrackerSessionCreated.String():
 		s.NewSession(ctx, msg)
 
 	case msg.Subject == enum.EventWebtrackerSessionClosed.String():

@@ -21,6 +21,7 @@ type Contact struct {
 	City          string `gorm:"column:city;type:varchar(255)"`
 	Region        string `gorm:"column:region;type:varchar(255)"`
 	Country       string `gorm:"column:country;type:varchar(255)"`
+	Timezone      string `gorm:"column:timezone;type:varchar(255)"` // FIX
 
 	// Engagement metrics
 	Stage                enum.CustomerJourneyStage `gorm:"column:stage;type:varchar(50);index;default:'target'"`

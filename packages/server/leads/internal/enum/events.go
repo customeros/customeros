@@ -9,17 +9,18 @@ const (
 
 	EventProxyWebtrackerCnameConfigured    Events = "proxy.webtracker.cname.configured"
 	EventProxyWebtrackerCnameNotConfigured Events = "proxy.webtracker.cname.not_configured"
-	EventProxyWebtrackerActive             Events = "proxy.webtracker.active"
-	EventProxyWebtrackerNotActive          Events = "proxy.webtracker.not_active"
+	EventProxyWebtrackerActivated          Events = "proxy.webtracker.activated"
+	EventProxyWebtrackerDeactivated        Events = "proxy.webtracker.deactivated"
 
-	EventWebtrackerSessionNew    Events = "webtracker.session.new"
-	EventWebtrackerSessionClosed Events = "webtracker.session.closed"
+	EventWebtrackerSessionCreated  Events = "webtracker.session.created"
+	EventWebtrackerSessionClosed   Events = "webtracker.session.closed"
+	EventWebtrackerSessionAnalyzed Events = "webtracker.session.analyzed"
 
 	EventWebtrackerVisitorIdentified Events = "webtracker.visitor.identified"
 
-	EventWebtrackerPageView Events = "webtracker.event.page_view"
-	EventWebtrackerPageExit Events = "webtracker.event.page_exit"
-	EventWebtrackerClick    Events = "webtracker.event.click"
+	EventWebtrackerPageView Events = "webtracker.event.page_viewed"
+	EventWebtrackerPageExit Events = "webtracker.event.page_exited"
+	EventWebtrackerClick    Events = "webtracker.event.clicked"
 
 	EventLeadCreated Events = "lead.created"
 
