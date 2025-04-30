@@ -96,9 +96,9 @@ func (r *queryResolver) MeetingBookingEvents(ctx context.Context) ([]*model.Meet
 		return nil, nil
 	}
 	// convert list to map
-	userMap := make(map[string]*neo4jentity.UserEntity)
+	userMapByEmail := make(map[string]*neo4jentity.UserEntity)
 	for _, user := range *users {
-		userMap[user.Id] = &user
+		userMapByEmail[user.DataloaderKey] = &user
 	}
 
 	// enrich with user data
@@ -108,7 +108,7 @@ func (r *queryResolver) MeetingBookingEvents(ctx context.Context) ([]*model.Meet
 			userParticipant := model.MeetingBookingEventUserParticipant{
 				Email: email,
 			}
-			if user, ok := userMap[email]; ok {
+			if user, ok := userMapByEmail[email]; ok {
 				userParticipant.ID = user.Id
 				userParticipant.Name = user.FullName()
 				userParticipant.ProfilePhotoURL = user.ProfilePhotoUrl
