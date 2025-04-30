@@ -2,6 +2,7 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -755,21 +756,20 @@ func (r *userReadRepository) GetUsersByEmailIds(parentCtx context.Context, tenan
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *userReadRepository) GetUsersByEmailAddresses(parentCtx context.Context, tenant string, emailAddresses []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetUsersByEmailAddresses")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "emailAddresses", emailAddresses)
+func (r *userReadRepository) GetUsersByEmailAddresses(ctx context.Context, tenant string, emailAddresses []string) ([]*utils.DbNodeAndId, error) {
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetUsersByEmailAddresses")
+	defer spans.Finish()
+	spans.LogObjectAsJson("emailAddresses", emailAddresses)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 			WHERE toLower(e.email)IN $emailAddresses OR toLower(e.rawEmail) IN $emailAddresses 
-			RETURN u, COALESCE(CASE WHEN e.email IS NOT NULL AND e.email <> '' THEN e.email ELSE e.rawEmail END, e.email) as emailId`
+			RETURN u, COALESCE(CASE WHEN e.email IS NOT NULL AND e.email <> '' THEN e.email ELSE e.rawEmail END, e.email) as emailAddress`
 	params := map[string]any{
 		"tenant":         tenant,
 		"emailAddresses": emailAddresses,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -784,7 +784,7 @@ func (r *userReadRepository) GetUsersByEmailAddresses(parentCtx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
