@@ -40,6 +40,9 @@ var (
 	ErrMeetingContentMissing                         = errors.New("Missing meeting content")
 	ErrCapabilityHostnameNotConfigured               = errors.New("Hostname not configured")
 	ErrCapabilityMissingPrimaryDomainForOrganization = errors.New("Missing primary domain for organization")
+
+	// Meeting errors
+	ErrSlotNotAvailable = errors.New("requested time slot is not available")
 )
 
 func SkipTracing(err error) bool {

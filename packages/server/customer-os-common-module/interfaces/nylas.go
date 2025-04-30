@@ -23,6 +23,9 @@ type NylasService interface {
 	ListCalendars(ctx context.Context, email string) ([]*NylasCalendar, error)
 	GetDefaultCalendar(ctx context.Context, email string) (*NylasCalendar, error)
 	GetCalendarAvailability(ctx context.Context, email, calendarID string, startTime, endTime time.Time, bufferBefore, bufferAfter int) (*NylasAvailabilityResponse, error)
+
+	// Meeting operations
+	CreateEvent(ctx context.Context, meetingData NylasCreateEventRequest, hostEmail, calendarID string, notifyParticipants bool) (*NylasEvent, error)
 }
 
 type NylasCalendarsResponse struct {
@@ -92,5 +95,39 @@ type NylasAvailabilityResponse struct {
 			StartTime int64 `json:"start_time"`
 			EndTime   int64 `json:"end_time"`
 		} `json:"time_slots"`
+	} `json:"data"`
+}
+
+type NylasCreateEventRequest struct {
+	Busy        bool   `json:"busy"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	When        struct {
+		StartTime     int64  `json:"start_time"`
+		EndTime       int64  `json:"end_time"`
+		StartTimezone string `json:"start_timezone"`
+		EndTimezone   string `json:"end_timezone"`
+	} `json:"when"`
+	Location     string                  `json:"location,omitempty"`
+	Participants []NylasEventParticipant `json:"participants"`
+	Resources    []struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	} `json:"resources,omitempty"`
+	Recurrence []string `json:"recurrence,omitempty"`
+}
+
+type NylasEventParticipant struct {
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+type NylasEvent struct {
+	RequestID string `json:"request_id"`
+	Data      struct {
+		Busy       bool   `json:"busy"`
+		CalendarID string `json:"calendar_id"`
+		HtmlLink   string `json:"html_link"`
 	} `json:"data"`
 }

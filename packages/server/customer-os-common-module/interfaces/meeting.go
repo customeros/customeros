@@ -21,6 +21,13 @@ type TimeSlot struct {
 	IsAvailable bool
 }
 
+type BookMeetingResult struct {
+	StartTime time.Time
+	EndTime   time.Time
+	HostEmail string
+	HostName  string
+}
+
 // CalendarAvailabilityResult represents the result of calendar availability calculation
 type CalendarAvailabilityResult struct {
 	Days []*DaySlot
@@ -38,5 +45,7 @@ type MeetingService interface {
 	// - Meeting booking event rules (buffer between meetings, min notice time, etc.)
 	// - Timezone conversion
 	GetCalendarAvailability(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time, timezone string) (*CalendarAvailabilityResult, error)
-	GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time) ([]string, error)
+	GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime, endTime time.Time) ([]string, error)
+
+	BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, name, email, phone string) (*BookMeetingResult, error)
 }
