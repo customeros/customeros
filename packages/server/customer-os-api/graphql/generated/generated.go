@@ -2019,6 +2019,11 @@ type ComplexityRoot struct {
 		StartTime func(childComplexity int) int
 	}
 
+	Timezone struct {
+		Label func(childComplexity int) int
+		Value func(childComplexity int) int
+	}
+
 	User struct {
 		AppSource        func(childComplexity int) int
 		Bot              func(childComplexity int) int
@@ -2466,7 +2471,7 @@ type QueryResolver interface {
 	CalendarAvailability(ctx context.Context, input model.CalendarAvailabilityInput) (*model.CalendarAvailabilityResponse, error)
 	CalendarAvailabilityDetails(ctx context.Context, meetingBookingEventID string) (*model.CalendarAvailabilityDetailsResponse, error)
 	CalendarAvailableHours(ctx context.Context, email string) (*model.UserCalendarAvailability, error)
-	CalendarTimezones(ctx context.Context) ([]string, error)
+	CalendarTimezones(ctx context.Context) ([]*model.Timezone, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
@@ -14359,6 +14364,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.TimeSlot.StartTime(childComplexity), true
 
+	case "Timezone.label":
+		if e.complexity.Timezone.Label == nil {
+			break
+		}
+
+		return e.complexity.Timezone.Label(childComplexity), true
+
+	case "Timezone.value":
+		if e.complexity.Timezone.Value == nil {
+			break
+		}
+
+		return e.complexity.Timezone.Value(childComplexity), true
+
 	case "User.appSource":
 		if e.complexity.User.AppSource == nil {
 			break
@@ -15431,6 +15450,11 @@ input UserCalendarAvailabilityInput {
     sunday: DayAvailabilityInput!
 }
 
+type Timezone {
+    value: String!
+    label: String!
+}
+
 extend type Query {
     """
     Get availability across all users in the tenant for a given time range
@@ -15443,7 +15467,7 @@ extend type Query {
     """
     calendar_available_hours(email: String!): UserCalendarAvailability @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    calendar_timezones: [String!]!
+    calendar_timezones: [Timezone!]!
 }
 
 extend type Mutation {
@@ -102435,9 +102459,9 @@ func (ec *executionContext) _Query_calendar_timezones(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.([]*model.Timezone)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNTimezone2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimezoneᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_calendar_timezones(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -102447,7 +102471,13 @@ func (ec *executionContext) fieldContext_Query_calendar_timezones(_ context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_Timezone_value(ctx, field)
+			case "label":
+				return ec.fieldContext_Timezone_label(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Timezone", field.Name)
 		},
 	}
 	return fc, nil
@@ -119615,6 +119645,94 @@ func (ec *executionContext) fieldContext_TimeSlot_endTime(_ context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Timezone_value(ctx context.Context, field graphql.CollectedField, obj *model.Timezone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timezone_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Timezone_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Timezone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Timezone_label(ctx context.Context, field graphql.CollectedField, obj *model.Timezone) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Timezone_label(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Timezone_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Timezone",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -149350,6 +149468,50 @@ func (ec *executionContext) _TimeSlot(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var timezoneImplementors = []string{"Timezone"}
+
+func (ec *executionContext) _Timezone(ctx context.Context, sel ast.SelectionSet, obj *model.Timezone) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, timezoneImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Timezone")
+		case "value":
+			out.Values[i] = ec._Timezone_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "label":
+			out.Values[i] = ec._Timezone_label(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var userImplementors = []string{"User"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
@@ -156263,6 +156425,60 @@ func (ec *executionContext) unmarshalNTimelineEventType2githubᚗcomᚋcustomero
 
 func (ec *executionContext) marshalNTimelineEventType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx context.Context, sel ast.SelectionSet, v model.TimelineEventType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNTimezone2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimezoneᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Timezone) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTimezone2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimezone(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTimezone2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimezone(ctx context.Context, sel ast.SelectionSet, v *model.Timezone) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Timezone(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {

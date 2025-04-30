@@ -3307,6 +3307,11 @@ type TimeSlot struct {
 	EndTime   time.Time `json:"endTime"`
 }
 
+type Timezone struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `return` object**
 type User struct {

@@ -7,13 +7,13 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"sort"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 )
@@ -161,7 +161,7 @@ func (r *queryResolver) CalendarAvailableHours(ctx context.Context, email string
 }
 
 // CalendarTimezones is the resolver for the calendar_timezones field.
-func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]string, error) {
+func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]*model.Timezone, error) {
 	spans, ctx := telemetry.StartGraphQLSpan(ctx, "QueryResolver.CalendarTimezones", graphql.GetOperationContext(ctx))
 	defer spans.Finish()
 
@@ -169,15 +169,15 @@ func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]string, error)
 	zones := data.Timezones()
 
 	// Verify each timezone is valid
-	validZones := make([]string, 0, len(zones))
+	validZones := make([]*model.Timezone, 0, len(zones))
 	for _, zone := range zones {
 		if _, err := time.LoadLocation(zone); err == nil {
-			validZones = append(validZones, zone)
+			validZones = append(validZones, &model.Timezone{
+				Value: zone,
+				Label: strings.ReplaceAll(zone, "_", " "),
+			})
 		}
 	}
-
-	// Sort the timezones alphabetically
-	sort.Strings(validZones)
 
 	return validZones, nil
 }

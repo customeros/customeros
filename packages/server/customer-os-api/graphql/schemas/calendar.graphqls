@@ -115,6 +115,11 @@ input UserCalendarAvailabilityInput {
     sunday: DayAvailabilityInput!
 }
 
+type Timezone {
+    value: String!
+    label: String!
+}
+
 extend type Query {
     """
     Get availability across all users in the tenant for a given time range
@@ -127,7 +132,7 @@ extend type Query {
     """
     calendar_available_hours(email: String!): UserCalendarAvailability @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    calendar_timezones: [String!]!
+    calendar_timezones: [Timezone!]!
 }
 
 extend type Mutation {
