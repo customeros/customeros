@@ -16,8 +16,8 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
 	cron_config "github.com/customeros/customeros/packages/server/leads/internal/cron/config"
 	"github.com/customeros/customeros/packages/server/leads/internal/logger"
-	"github.com/customeros/customeros/packages/server/leads/internal/repository"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
 // CONSTANTS
@@ -51,17 +51,17 @@ type CronManager struct {
 	k8s      kubernetes.Interface
 	stopCh   chan struct{}
 	jobIDs   map[string]cronv3.EntryID
-	postgres *repository.Repositories
+	services *services.Services
 }
 
-func NewCronManager(cfg *config.Config, log logger.Logger, k8s kubernetes.Interface, postgres *repository.Repositories) *CronManager {
+func NewCronManager(cfg *config.Config, log logger.Logger, k8s kubernetes.Interface, services *services.Services) *CronManager {
 	return &CronManager{
 		cfg:      cfg,
 		log:      log,
 		k8s:      k8s,
 		stopCh:   make(chan struct{}),
 		jobIDs:   make(map[string]cronv3.EntryID),
-		postgres: postgres,
+		services: services,
 	}
 }
 
@@ -173,6 +173,13 @@ func (cm *CronManager) registerJobs(c *cronv3.Cron) {
 			Schedule: cronConfig.CronScheduleHeartbeat,
 			HandlerFunc: func(ctx context.Context) {
 				cm.log.Infof("Cron heartbeat from pod: %s", podName)
+			},
+		},
+		{
+			Name:     "outbox",
+			Schedule: cronConfig.CronScheduleProcessOutboxEvents,
+			HandlerFunc: func(ctx context.Context) {
+				cm.services.OutboxProcessor.ProcessBatch(ctx)
 			},
 		},
 		// Add more jobs here following the same pattern

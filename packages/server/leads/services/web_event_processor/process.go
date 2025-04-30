@@ -52,11 +52,12 @@ func (s *webEventProcessor) Process(ctx context.Context, webtrackerID string, ev
 	// update lastEventAt on webtracker && write webtracker event
 	err = s.logWebtrackerEvent(ctx, webtrackerID, &models.WebTrackerEvent{
 		ID:        utils.GenerateNanoIDWithPrefix("wevt", 16),
-		Event:     proto_mappers.ConvertFromProtoEventType(event.EventType),
+		Event:     mapWebtrackerToLeadEvent(proto_mappers.ConvertFromProtoEventType(event.EventType)),
 		Publisher: enum.WebEventProcessor,
 		Timestamp: event.Timestamp.AsTime(),
 		Tenant:    tenant,
 		SessionID: sessionID,
+		TrackerID: webtrackerID,
 		Payload:   payload,
 	})
 
@@ -96,6 +97,10 @@ func (s *webEventProcessor) newSession(ctx context.Context, webtrackerID string,
 	// Create outbox entry
 	outboxEvent := &models.OutboxEvent{
 		ID:        utils.GenerateEventID(),
+		EntityID:  webtrackerID,
+		Publisher: enum.WebEventProcessor,
+		Tenant:    utils.GetTenantFromContext(ctx),
+		SessionID: sessionID,
 		EventType: enum.EventWebtrackerSessionNew,
 		Payload:   payload,
 		Status:    enum.OutboxPending,
@@ -125,7 +130,11 @@ func (s *webEventProcessor) logWebtrackerEvent(ctx context.Context, webtrackerID
 		// Create an outbox entry to log the event in TimescaleDB
 		outboxEvent := &models.OutboxEvent{
 			ID:        utils.GenerateEventID(),
-			EventType: mapWebtrackerToLeadEvent(event.Event),
+			EntityID:  webtrackerID,
+			Publisher: enum.WebEventProcessor,
+			Tenant:    utils.GetTenantFromContext(ctx),
+			SessionID: event.SessionID,
+			EventType: event.Event,
 			Payload:   event.Payload,
 			Status:    enum.OutboxPending,
 			CreatedAt: time.Now(),
