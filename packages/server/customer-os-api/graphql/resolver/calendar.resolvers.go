@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"sort"
 	"time"
 
@@ -61,81 +62,7 @@ func (r *queryResolver) CalendarTimezones(ctx context.Context) ([]string, error)
 	defer spans.Finish()
 
 	// Define comprehensive list of timezone locations
-	zones := []string{
-		// UTC and GMT
-		"Etc/UTC",
-		"Etc/GMT",
-
-		// Americas (UTC-10 to UTC-3)
-		"America/Adak",         // UTC-10
-		"Pacific/Honolulu",     // UTC-10
-		"America/Anchorage",    // UTC-9
-		"America/Los_Angeles",  // UTC-8
-		"America/Phoenix",      // UTC-7
-		"America/Denver",       // UTC-7
-		"America/Chicago",      // UTC-6
-		"America/Mexico_City",  // UTC-6
-		"America/New_York",     // UTC-5
-		"America/Toronto",      // UTC-5
-		"America/Caracas",      // UTC-4
-		"America/Halifax",      // UTC-4
-		"America/Santiago",     // UTC-4
-		"America/Sao_Paulo",    // UTC-3
-		"America/Buenos_Aires", // UTC-3
-
-		// Europe & Africa (UTC-1 to UTC+3)
-		"Atlantic/Azores",     // UTC-1
-		"Europe/London",       // UTC+0
-		"Europe/Dublin",       // UTC+0
-		"Europe/Lisbon",       // UTC+0
-		"Europe/Paris",        // UTC+1
-		"Europe/Berlin",       // UTC+1
-		"Europe/Madrid",       // UTC+1
-		"Europe/Rome",         // UTC+1
-		"Europe/Amsterdam",    // UTC+1
-		"Europe/Warsaw",       // UTC+1
-		"Europe/Stockholm",    // UTC+1
-		"Europe/Helsinki",     // UTC+2
-		"Europe/Athens",       // UTC+2
-		"Europe/Bucharest",    // UTC+2
-		"Europe/Kyiv",         // UTC+2
-		"Europe/Istanbul",     // UTC+3
-		"Europe/Moscow",       // UTC+3
-		"Africa/Cairo",        // UTC+2
-		"Africa/Johannesburg", // UTC+2
-		"Africa/Nairobi",      // UTC+3
-
-		// Asia (UTC+3 to UTC+9)
-		"Asia/Baghdad",   // UTC+3
-		"Asia/Dubai",     // UTC+4
-		"Asia/Tehran",    // UTC+3:30
-		"Asia/Kabul",     // UTC+4:30
-		"Asia/Karachi",   // UTC+5
-		"Asia/Kolkata",   // UTC+5:30
-		"Asia/Kathmandu", // UTC+5:45
-		"Asia/Dhaka",     // UTC+6
-		"Asia/Yangon",    // UTC+6:30
-		"Asia/Bangkok",   // UTC+7
-		"Asia/Jakarta",   // UTC+7
-		"Asia/Singapore", // UTC+8
-		"Asia/Shanghai",  // UTC+8
-		"Asia/Hong_Kong", // UTC+8
-		"Asia/Taipei",    // UTC+8
-		"Asia/Seoul",     // UTC+9
-		"Asia/Tokyo",     // UTC+9
-
-		// Oceania (UTC+8 to UTC+12)
-		"Australia/Perth",     // UTC+8
-		"Australia/Darwin",    // UTC+9:30
-		"Australia/Brisbane",  // UTC+10
-		"Australia/Adelaide",  // UTC+9:30
-		"Australia/Sydney",    // UTC+10
-		"Australia/Melbourne", // UTC+10
-		"Australia/Hobart",    // UTC+10
-		"Pacific/Noumea",      // UTC+11
-		"Pacific/Auckland",    // UTC+12
-		"Pacific/Fiji",        // UTC+12
-	}
+	zones := data.Timezones()
 
 	// Verify each timezone is valid
 	validZones := make([]string, 0, len(zones))

@@ -1,6 +1,7 @@
 package public
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"net/http"
 	"strconv"
 	"time"
@@ -252,5 +253,14 @@ func GetCalendarDetails(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetTimezones() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		spans, _ := telemetry.StartRestSpan(c.Request.Context(), "GetTimezones")
+		defer spans.Finish()
+
+		c.JSON(http.StatusOK, gin.H{"timezones": data.Timezones()})
 	}
 }
