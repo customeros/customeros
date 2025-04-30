@@ -348,6 +348,19 @@ type Calendar struct {
 	AppSource     string       `json:"appSource"`
 }
 
+type CalendarAvailabilityDetailsResponse struct {
+	Location                 string `json:"location"`
+	TenantName               string `json:"tenantName"`
+	TenantLogoURL            string `json:"tenantLogoUrl"`
+	DurationMins             int64  `json:"durationMins"`
+	BookingTitle             string `json:"bookingTitle"`
+	BookingDescription       string `json:"bookingDescription"`
+	BookingFormNameEnabled   bool   `json:"bookingFormNameEnabled"`
+	BookingFormEmailEnabled  bool   `json:"bookingFormEmailEnabled"`
+	BookingFormPhoneEnabled  bool   `json:"bookingFormPhoneEnabled"`
+	BookingFormPhoneRequired bool   `json:"bookingFormPhoneRequired"`
+}
+
 // Input for calendar availability query
 type CalendarAvailabilityInput struct {
 	MeetingBookingEventID string    `json:"meetingBookingEventId"`
@@ -358,13 +371,7 @@ type CalendarAvailabilityInput struct {
 
 // Response for calendar availability query
 type CalendarAvailabilityResponse struct {
-	Days               []*DaySlot `json:"days"`
-	Location           string     `json:"location"`
-	TenantName         string     `json:"tenantName"`
-	TenantLogoURL      string     `json:"tenantLogoUrl"`
-	DurationMins       int64      `json:"durationMins"`
-	BookingTitle       string     `json:"bookingTitle"`
-	BookingDescription string     `json:"bookingDescription"`
+	Days []*DaySlot `json:"days"`
 }
 
 type Capability struct {

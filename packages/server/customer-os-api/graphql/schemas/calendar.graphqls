@@ -26,12 +26,19 @@ Response for calendar availability query
 """
 type CalendarAvailabilityResponse {
     days:               [DaySlot!]!
+}
+
+type CalendarAvailabilityDetailsResponse {
     location:           String!
     tenantName:         String!
     tenantLogoUrl:      String!
     durationMins:       Int64!
     bookingTitle:       String!
     bookingDescription: String!
+    bookingFormNameEnabled:     Boolean!
+    bookingFormEmailEnabled:    Boolean!
+    bookingFormPhoneEnabled:    Boolean!
+    bookingFormPhoneRequired:   Boolean!
 }
 
 type DaySlot {
@@ -112,7 +119,8 @@ extend type Query {
     """
     Get availability across all users in the tenant for a given time range
     """
-    m(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
+    calendar_availability(input: CalendarAvailabilityInput!): CalendarAvailabilityResponse!
+    calendar_availability_details(meetingBookingEventId: ID!): CalendarAvailabilityDetailsResponse!
 
     """
     Get user's calendar available hours configuration
