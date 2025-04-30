@@ -12,7 +12,7 @@ type Webtracker {
   isCnameConfigured: Boolean!
   isProxyActive: Boolean!
   isArchived: Boolean!
-  lastEventAt: Time!
+  lastEventAt: Time
   createdAt: Time!
   updatedAt: Time
 }

@@ -21,15 +21,13 @@ func (r *mutationResolver) CreateWebtracker(ctx context.Context, tracker graphql
 	defer span.Finish()
 
 	cnameHost := ""
-	switch {
-	case tracker.CnameHost == nil && *tracker.CnameHost == "":
-		// do nothing
-	case utils.IsLowerAlphanumeric(*tracker.CnameHost):
+	if tracker.CnameHost != nil {
 		cnameHost = *tracker.CnameHost
-	default:
-		err := errors.New("Invalid CNAME Host")
-		span.TraceError(err)
-		return nil, err
+		if !utils.IsLowerAlphanumeric(cnameHost) {
+			err := errors.New("Invalid CNAME Host")
+			span.TraceError(err)
+			return nil, err
+		}
 	}
 
 	newTracker := &models.WebTracker{
@@ -38,7 +36,13 @@ func (r *mutationResolver) CreateWebtracker(ctx context.Context, tracker graphql
 		CNAMEHost: cnameHost,
 	}
 
-	return mappers.ToWebtrackerGraphQL(newTracker), nil
+	createdWebtracker, err := r.services.WebtrackerService.CreateWebtracker(ctx, newTracker)
+	if err != nil {
+		span.TraceError(err)
+		return nil, err
+	}
+
+	return mappers.ToWebtrackerGraphQL(createdWebtracker), nil
 }
 
 // UpdateWebtracker is the resolver for the updateWebtracker field.
@@ -46,25 +50,29 @@ func (r *mutationResolver) UpdateWebtracker(ctx context.Context, tracker graphql
 	span, ctx := telemetry.StartGraphQLSpan(ctx, "graphQLResolvers.UpdateWebtracker")
 	defer span.Finish()
 
+	if tracker.ID == nil || *tracker.ID == "" {
+		err := errors.New("ID is required to update webtracker")
+		span.TraceError(err)
+		return nil, err
+	}
+
 	cnameHost := ""
-	switch {
-	case tracker.CnameHost == nil && *tracker.CnameHost == "":
-		err := errors.New("cnameHost is empty")
-		span.TraceError(err)
-		return nil, err
-	case !utils.IsLowerAlphanumeric(*tracker.CnameHost):
-		err := errors.New("Invalid cnameHost")
-		span.TraceError(err)
-		return nil, err
-	default:
+	if tracker.CnameHost != nil {
 		cnameHost = *tracker.CnameHost
-		updatedTracker, err := r.services.WebtrackerService.UpdateCNAMEHost(ctx, cnameHost)
-		if err != nil {
+		if !utils.IsLowerAlphanumeric(cnameHost) {
+			err := errors.New("Invalid CNAME Host")
 			span.TraceError(err)
 			return nil, err
 		}
-		return mappers.ToWebtrackerGraphQL(updatedTracker), nil
 	}
+
+	updatedTracker, err := r.services.WebtrackerService.UpdateCNAMEHost(ctx, cnameHost)
+	if err != nil {
+		span.TraceError(err)
+		return nil, err
+	}
+
+	return mappers.ToWebtrackerGraphQL(updatedTracker), nil
 }
 
 // VerifyWebtrackerCname is the resolver for the verifyWebtrackerCname field.

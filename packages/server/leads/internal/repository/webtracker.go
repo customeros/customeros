@@ -49,6 +49,14 @@ func (r *webTrackerRepository) Create(ctx context.Context, tracker *models.WebTr
 	span, ctx := telemetry.StartPostgresSpan(ctx, "webTrackerRepository.Create")
 	defer span.Finish()
 
+	tenant := utils.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := leads_errors.ErrTenantMissing
+		span.TraceError(err)
+		return err
+	}
+	tracker.Tenant = tenant
+
 	if tracker.ID == "" {
 		tracker.ID = uuid.New().String()
 	}
@@ -60,6 +68,19 @@ func (r *webTrackerRepository) Create(ctx context.Context, tracker *models.WebTr
 func (r *webTrackerRepository) CreateWithTxn(ctx context.Context, txn *gorm.DB, tracker *models.WebTracker) error {
 	span, ctx := telemetry.StartPostgresSpan(ctx, "webTrackerRepository.Create")
 	defer span.Finish()
+
+	tenant := utils.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := leads_errors.ErrTenantMissing
+		span.TraceError(err)
+		return err
+	}
+	tracker.Tenant = tenant
+
+	// Generate ID if not provided
+	if tracker.ID == "" {
+		tracker.ID = uuid.New().String()
+	}
 
 	return txn.Create(tracker).Error
 }
@@ -94,21 +115,13 @@ func (r *webTrackerRepository) GetByDomain(ctx context.Context, domain string) (
 	span, ctx := telemetry.StartPostgresSpan(ctx, "webTrackerRepository.GetByDomain")
 	defer span.Finish()
 
-	tenant := utils.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := leads_errors.ErrTenantMissing
-		span.TraceError(err)
-		return nil, err
-	}
-
 	var tracker models.WebTracker
 	result := r.read.WithContext(ctx).
 		Where("domain = ?", domain).
-		Where("tenant = ?", tenant).
 		First(&tracker)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, leads_errors.ErrWebtrackerNotFound
+			return nil, nil
 		}
 		return nil, result.Error
 	}

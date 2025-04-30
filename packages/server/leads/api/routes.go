@@ -8,32 +8,32 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/customeros/mailstack/api/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/ast"
 
 	"github.com/customeros/customeros/packages/server/leads/api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/leads/api/graphql/resolver"
 	"github.com/customeros/customeros/packages/server/leads/api/handlers"
+	"github.com/customeros/customeros/packages/server/leads/api/middleware"
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
-	"github.com/customeros/customeros/packages/server/leads/internal/repository"
+	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 	"github.com/customeros/customeros/packages/server/leads/services"
 )
 
 // RegisterRoutes sets up all API endpoints
-func RegisterRoutes(ctx context.Context, r *gin.Engine, services *services.Services, repos *repository.Repositories, config *config.AppConfig) {
+func RegisterRoutes(ctx context.Context, r *gin.Engine, services *services.Services, config *config.AppConfig) *handlers.APIHandlers {
 	if services == nil {
 		panic("Services cannot be nil")
 	}
-	if repos == nil {
-		panic("Repositories cannot be nil")
+	if config == nil {
+		panic("Config cannot be nil")
 	}
 
 	// Add recovery middlewares
 	r.Use(gin.Recovery()) // Gin's built-in recovery
 
 	// setup handlers
-	apiHandlers := handlers.InitHandlers(services, repos)
+	apiHandlers := handlers.InitHandlers(services)
 
 	// Health check and status endpoints (no custom context needed)
 	r.GET("/health", handlers.HealthCheck)
@@ -43,9 +43,8 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *services.Servi
 	{
 		// Domain endpoints
 		events := api.Group("/events")
-		events.Use(middleware.TenantValidationMiddleware()) // Tenant validation for domains
-		events.Use(middleware.CustomContextMiddleware())    // Add custom context
-		events.Use(middleware.TracingMiddleware(ctx))       // Add tracing with parent context
+		events.Use(middleware.CustomContextMiddleware()) // Add custom context
+		events.Use(middleware.TracingMiddleware(ctx))    // Add tracing with parent context
 		{
 			events.POST("", apiHandlers.WebEvents.Handle())
 		}
@@ -73,6 +72,8 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *services.Servi
 	{
 		query.POST("", graphqlHandler) // query
 	}
+
+	return apiHandlers
 }
 
 // SetupGraphQLServer configures and returns the GraphQL server and playground handlers
@@ -82,7 +83,9 @@ func SetupGraphQLServer(services *services.Services) (graphqlHandler, playground
 
 	// Create a new schema with your resolvers
 	schema := generated.NewExecutableSchema(generated.Config{
-		Resolvers: resolver,
+		Resolvers:  resolver,
+		Directives: generated.DirectiveRoot{},
+		Complexity: generated.ComplexityRoot{},
 	})
 
 	// Create the GraphQL server with custom options
@@ -103,6 +106,16 @@ func SetupGraphQLServer(services *services.Services) (graphqlHandler, playground
 	// Create playground handler
 	playground := playground.Handler("GraphQL", "/query")
 
-	// Return handlers wrapped for Gin
-	return gin.WrapH(srv), gin.WrapH(playground)
+	// Return handlers wrapped for Gin with our custom middleware
+	return func(c *gin.Context) {
+		// Explicitly add the Gin context to the request context
+		ginCtx := middleware.GinContextToContextMiddleware()
+		ginCtx(c)
+
+		// Add custom middleware to extract tenant from Gin context
+		c.Request = c.Request.WithContext(utils.WithTenantContext(c.Request.Context(), c.GetString("Tenant")))
+
+		// Call the GraphQL handler
+		srv.ServeHTTP(c.Writer, c.Request)
+	}, gin.WrapH(playground)
 }

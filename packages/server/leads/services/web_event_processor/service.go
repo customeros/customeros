@@ -16,18 +16,18 @@ type WebEventProcessor interface {
 
 type webEventProcessor struct {
 	natsConn     *nats_internal.NATSConnections
-	db           *gorm.DB
+	leadsWriteDB *gorm.DB
 	repositories *repository.Repositories
 }
 
 func NewWebEventProcessor(
 	natsConn *nats_internal.NATSConnections,
-	db *gorm.DB,
+	leadsWriteDB *gorm.DB,
 	repositories *repository.Repositories,
 ) WebEventProcessor {
 	return &webEventProcessor{
 		natsConn:     natsConn,
-		db:           db,
+		leadsWriteDB: leadsWriteDB,
 		repositories: repositories,
 	}
 }

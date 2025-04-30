@@ -420,7 +420,7 @@ type Webtracker {
   isCnameConfigured: Boolean!
   isProxyActive: Boolean!
   isArchived: Boolean!
-  lastEventAt: Time!
+  lastEventAt: Time
   createdAt: Time!
   updatedAt: Time
 }
@@ -1766,14 +1766,11 @@ func (ec *executionContext) _Webtracker_lastEventAt(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Webtracker_lastEventAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4174,9 +4171,6 @@ func (ec *executionContext) _Webtracker(ctx context.Context, sel ast.SelectionSe
 			}
 		case "lastEventAt":
 			out.Values[i] = ec._Webtracker_lastEventAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "createdAt":
 			out.Values[i] = ec._Webtracker_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
