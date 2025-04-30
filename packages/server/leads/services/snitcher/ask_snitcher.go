@@ -144,20 +144,20 @@ func (s *SnitcherService) handleSuccessResponse(ctx context.Context, ipAddress s
 }
 
 func (s *SnitcherService) updateIpIntelligenceRecord(ctx context.Context, existingRecord, newRecord *models.IPIntelligence) error {
-	span, ctx := telemetry.StartServiceSpan(ctx, "IPDataService.updateIpIntelligenceRecord")
+	span, ctx := telemetry.StartServiceSpan(ctx, "SnitcherService.updateIpIntelligenceRecord")
 	defer span.Finish()
 
 	updatedRecord := &models.IPIntelligence{
 		ID:           existingRecord.ID,
 		IPAddress:    chooseMostRecent(existingRecord.IPAddress, newRecord.IPAddress),
-		Domain:       existingRecord.Domain,
-		DomainSource: existingRecord.DomainSource,
+		Domain:       chooseMostRecent(existingRecord.Domain, newRecord.Domain),
+		DomainSource: IDENTITY_SOURCE,
 		EmailAddress: existingRecord.EmailAddress,
-		IsMobile:     newRecord.IsMobile,
-		City:         chooseMostRecent(existingRecord.City, newRecord.City),
-		Region:       chooseMostRecent(existingRecord.Region, newRecord.Region),
-		CountryCode:  chooseMostRecent(existingRecord.CountryCode, newRecord.CountryCode),
-		HasThreat:    newRecord.HasThreat,
+		IsMobile:     existingRecord.IsMobile,
+		City:         existingRecord.City,
+		Region:       existingRecord.Region,
+		CountryCode:  existingRecord.CountryCode,
+		HasThreat:    existingRecord.HasThreat,
 		CreatedAt:    existingRecord.CreatedAt,
 		UpdatedAt:    newRecord.UpdatedAt,
 	}

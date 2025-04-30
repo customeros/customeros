@@ -43,7 +43,9 @@ func (r *ipIntelligenceRepository) FindByIP(ctx context.Context, ipAddress strin
 	defer span.Finish()
 
 	var intel models.IPIntelligence
-	err := r.read.WithContext(ctx).
+	// specifically using write db connection here instead of read to ensure updates
+	// are captured in real-time as this is called right after an update in Session Manager
+	err := r.write.WithContext(ctx).
 		Where("ip_address = ?", ipAddress).
 		First(&intel).Error
 	if err != nil {

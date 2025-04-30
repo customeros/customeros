@@ -49,8 +49,17 @@ func (s *webEventProcessor) Process(ctx context.Context, webtrackerID string, ev
 		return
 	}
 
+	// handle identify events
+	if proto_mappers.ConvertFromProtoEventType(event.EventType) == enum.WebTrackerIdentify {
+		err = s.handleIdentifyEvent(ctx, webtrackerID, event)
+		if err != nil {
+			span.TraceError(err)
+			return
+		}
+	}
+
 	// update lastEventAt on webtracker && write webtracker event
-	err = s.logWebtrackerEvent(ctx, webtrackerID, &models.WebTrackerEvent{
+	err = s.createWebtrackerEvent(ctx, webtrackerID, &models.WebTrackerEvent{
 		ID:        utils.GenerateNanoIDWithPrefix("wevt", 16),
 		Event:     mapWebtrackerToLeadEvent(proto_mappers.ConvertFromProtoEventType(event.EventType)),
 		Publisher: enum.WebEventProcessor,
@@ -101,7 +110,7 @@ func (s *webEventProcessor) newSession(ctx context.Context, webtrackerID string,
 		Publisher: enum.WebEventProcessor,
 		Tenant:    utils.GetTenantFromContext(ctx),
 		SessionID: sessionID,
-		EventType: enum.EventWebtrackerSessionNew,
+		EventType: enum.EventWebtrackerCreated,
 		Payload:   payload,
 		Status:    enum.OutboxPending,
 		CreatedAt: time.Now(),
@@ -115,8 +124,8 @@ func (s *webEventProcessor) newSession(ctx context.Context, webtrackerID string,
 	return sessionID, nil
 }
 
-func (s *webEventProcessor) logWebtrackerEvent(ctx context.Context, webtrackerID string, event *models.WebTrackerEvent) error {
-	span, ctx := telemetry.StartServiceSpan(ctx, "webEventProcessor.logWebtrackerEvent")
+func (s *webEventProcessor) createWebtrackerEvent(ctx context.Context, webtrackerID string, event *models.WebTrackerEvent) error {
+	span, ctx := telemetry.StartServiceSpan(ctx, "webEventProcessor.createWebtrackerEvent")
 	defer span.Finish()
 
 	err := s.leadsWriteDB.Transaction(func(tx *gorm.DB) error {
@@ -157,7 +166,7 @@ func (s *webEventProcessor) logWebtrackerEvent(ctx context.Context, webtrackerID
 }
 
 func (s *webEventProcessor) createNewSession(ctx context.Context, webtrackerID string, event *pb.WebTrackerEvent) (string, error) {
-	span, ctx := telemetry.StartServiceSpan(ctx, "webEventProcessor.attachToSession")
+	span, ctx := telemetry.StartServiceSpan(ctx, "webEventProcessor.createNewSession")
 	defer span.Finish()
 
 	// generate new ID
