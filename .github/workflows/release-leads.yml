@@ -1,4 +1,4 @@
-name: Release Workflow
+name: Release Leads Workflow
 
 on:
   workflow_run:
@@ -17,6 +17,7 @@ env:
   REGISTRY: ghcr.io
   REPOSITORY_BASE: ${{ github.repository_owner }}
   IMAGE_NAME: ${{ github.repository_owner }}/customer-os-leads
+  APP_DIR: ./packages/server/leads
 
 jobs:
   check-release-needed:
@@ -25,6 +26,8 @@ jobs:
     runs-on: ubicloud-standard-2
     outputs:
       version_bump: ${{ steps.run_check_script.outputs.version_bump }}
+      app_name: ${{ steps.check.outputs.app_name }}
+      app_path: ${{ steps.check.outputs.app_path }}
 
     steps:
       - name: Checkout code
@@ -54,7 +57,7 @@ jobs:
       - name: Run version script
         id: run_version_script
         # Pass the version_bump type from the previous job as an argument
-        run: ./packages/server/leads/deployments/build/version.sh "${{ needs.check-release-needed.outputs.version_bump }}"
+        run: ./packages/server/leads/deployments/build/version.sh "${{ needs.check-release-needed.outputs.version_bump }}" "${{ needs.check_release_needed.outputs.app_name }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

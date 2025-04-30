@@ -1,10 +1,11 @@
-name: build-leads
+name: Build Leads Workflow
 
 on:
   pull_request:
     paths:
       - packages/server/leads/**
       - .github/workflows/build-leads.yml
+      - .github/workflows/release-leads.yml
 
   push:
     branches:
@@ -12,6 +13,7 @@ on:
     paths:
       - packages/server/leads/**
       - .github/workflows/build-leads.yml
+      - .github/workflows/release-leads.yml
 
   release:
     types: [created, edited]
