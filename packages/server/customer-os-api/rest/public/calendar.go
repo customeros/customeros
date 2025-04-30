@@ -1,20 +1,18 @@
 package public
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-
-	"github.com/gin-gonic/gin"
-
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
 )
 
 type TimeSlot struct {
@@ -42,6 +40,15 @@ type calendarDetailsResponse struct {
 	BookingFormEmailEnabled  bool   `json:"bookingFormEmailEnabled"`
 	BookingFormPhoneEnabled  bool   `json:"bookingFormPhoneEnabled"`
 	BookingFormPhoneRequired bool   `json:"bookingFormPhoneRequired"`
+}
+
+type bookMeetingRequest struct {
+	CalendarId string `json:"calendarId"`
+	StartTime  string `json:"startTime"`
+	Timezone   string `json:"timezone"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
 }
 
 // mapToRestDaySlots converts service response to REST API format
@@ -262,5 +269,76 @@ func GetTimezones() gin.HandlerFunc {
 		defer spans.Finish()
 
 		c.JSON(http.StatusOK, gin.H{"timezones": data.Timezones()})
+	}
+}
+
+func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "BookMeeting")
+		defer spans.Finish()
+
+		var request bookMeetingRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Parse start time
+		startTime, err := utils.UnmarshalDateTime(request.StartTime)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format"})
+			return
+		}
+		if startTime == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Start time is required"})
+			return
+		}
+
+		// Get meeting booking event to determine tenant
+		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(ctx, request.CalendarId)
+		if err != nil {
+			spans.TraceError(err)
+			s.Log.Error("Failed to get meeting booking event: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Calendar not found"})
+			return
+		}
+		if meetingBookingEvent == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Calendar not found"})
+			return
+		}
+
+		// Set tenant in context
+		ctx = common.WithCustomContext(
+			ctx,
+			&common.CustomContext{
+				Tenant: meetingBookingEvent.Tenant,
+			},
+		)
+		spans.TagTenant(meetingBookingEvent.Tenant)
+
+		// Create meeting
+		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone)
+		if err != nil {
+			s.Log.Error("Failed to create meeting: %v", err)
+			if err == coserrors.ErrSlotNotAvailable {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Requested time slot is not available"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create meeting"})
+			}
+			return
+		}
+
+		if bookMeetingResult == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create meeting"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Meeting booked successfully",
+			"startTime": bookMeetingResult.StartTime,
+			"endTime":   bookMeetingResult.EndTime,
+			"hostEmail": bookMeetingResult.HostEmail,
+			"hostName":  bookMeetingResult.HostName,
+		})
 	}
 }

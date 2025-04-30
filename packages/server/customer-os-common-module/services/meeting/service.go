@@ -3,9 +3,11 @@ package meeting
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sort"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -18,16 +20,18 @@ import (
 )
 
 type meetingService struct {
-	log      logger.Logger
-	nylas    interfaces.NylasService
-	postgres *postgresRepository.Repositories
+	log         logger.Logger
+	nylas       interfaces.NylasService
+	userService interfaces.UserService
+	postgres    *postgresRepository.Repositories
 }
 
-func NewMeetingService(log logger.Logger, nylasService interfaces.NylasService, postgresRepository *postgresRepository.Repositories) interfaces.MeetingService {
+func NewMeetingService(log logger.Logger, nylasService interfaces.NylasService, userService interfaces.UserService, postgresRepository *postgresRepository.Repositories) interfaces.MeetingService {
 	return &meetingService{
-		log:      log,
-		nylas:    nylasService,
-		postgres: postgresRepository,
+		log:         log,
+		nylas:       nylasService,
+		userService: userService,
+		postgres:    postgresRepository,
 	}
 }
 
@@ -716,7 +720,7 @@ func (s *meetingService) prepareAvailableParticipantTimeSlots(ctx context.Contex
 }
 
 // GetAvailableCalendarParticipantEmailsForTimeRange returns all participants that are available in the given time range
-func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time) ([]string, error) {
+func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime, endTime time.Time) ([]string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetAvailableCalendarParticipantEmailsForTimeRange")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
@@ -770,4 +774,152 @@ func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx c
 	}
 
 	return availableParticipants, nil
+}
+
+// BookMeeting implements interfaces.MeetingService
+func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone string) (*interfaces.BookMeetingResult, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.BookMeeting")
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", map[string]interface{}{
+		"meetingBookingEventID": meetingBookingEventID,
+		"startTime":             startTime,
+		"timezone":              timezone,
+		"clientName":            clientName,
+		"clientEmail":           clientEmail,
+		"clientPhone":           clientPhone,
+	})
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Get meeting booking event
+	meetingBookingEvent, err := s.postgres.MeetingBookingEventRepository.GetById(ctx, tenant, meetingBookingEventID)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get meeting booking event: %v", err)
+	}
+	if meetingBookingEvent == nil {
+		return nil, fmt.Errorf("meeting booking event not found")
+	}
+
+	if timezone == "" {
+		timezone = postgresEntity.DefaultTimezone
+	}
+
+	// Ensure times are in UTC
+	startTimeInUTC := startTime
+	if startTime.Location() != time.UTC {
+		startTimeInUTC = startTime.UTC()
+	}
+
+	durationMins := int(meetingBookingEvent.DurationMins)
+	if durationMins%5 != 0 {
+		durationMins = ((durationMins / 5) + 1) * 5
+	}
+	// Calculate end time based on meeting duration
+	endTimeInUTC := startTimeInUTC.Add(time.Duration(durationMins) * time.Minute)
+
+	// Get available participant emails
+	availableParticipantEmails, err := s.GetAvailableCalendarParticipantEmailsForTimeRange(ctx, meetingBookingEventID, startTimeInUTC, endTimeInUTC)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get available participant emails: %v", err)
+	}
+	if len(availableParticipantEmails) == 0 {
+		return nil, coserrors.ErrSlotNotAvailable
+	}
+
+	// pick participant
+	hostEmail := ""
+	switch meetingBookingEvent.AssignmentMethod {
+	case enum.MeetingBookingAssignmentMethodRoundRobinMaxAvailability:
+		// pick participant with most availability
+		hostEmail = pickRandomParticipant(availableParticipantEmails)
+	default:
+		// pick first participant
+		hostEmail = pickRandomParticipant(availableParticipantEmails)
+	}
+
+	// get host user name
+	hostName := ""
+	hostUsers, err := s.userService.GetUsersByEmailAddresses(ctx, []string{hostEmail})
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get host user: %v", err)
+	}
+	if len(*hostUsers) > 0 {
+		hostName = (*hostUsers)[0].FullName()
+	}
+
+	calendar, err := s.nylas.GetDefaultCalendar(ctx, hostEmail)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get default calendar: %v", err)
+	}
+
+	// create meeting event
+	createdEvent, err := s.nylas.CreateEvent(ctx, interfaces.NylasCreateEventRequest{
+		Busy:        true,
+		Title:       meetingBookingEvent.Title,
+		Description: meetingBookingEvent.Description,
+		Location:    meetingBookingEvent.Location,
+		Participants: []struct {
+			Name  string `json:"name"`
+			Email string `json:"email"`
+		}{
+			{
+				Email: hostEmail,
+				Name:  hostName,
+			},
+			{
+				Email: clientEmail,
+				Name:  clientName,
+			},
+		},
+		When: struct {
+			StartTime     int64  `json:"start_time"`
+			EndTime       int64  `json:"end_time"`
+			StartTimezone string `json:"start_timezone"`
+			EndTimezone   string `json:"end_timezone"`
+		}{
+			StartTime:     startTimeInUTC.Unix(),
+			EndTime:       endTimeInUTC.Unix(),
+			StartTimezone: "Etc/UTC",
+			EndTimezone:   "Etc/UTC",
+		},
+	}, hostEmail, calendar.ID, meetingBookingEvent.EmailNotificationEnabled)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to create meeting event: %v", err)
+	}
+	if createdEvent == nil {
+		spans.TraceError(fmt.Errorf("failed to create meeting event, createdEvent is nil"))
+		return nil, fmt.Errorf("failed to create meeting event")
+	}
+
+	startTimeInTimeZone, err := utils.GetTimeInTimeZone(startTimeInUTC, timezone)
+	if err != nil {
+		spans.TraceError(err)
+	}
+	endTimeInTimeZone, err := utils.GetTimeInTimeZone(endTimeInUTC, timezone)
+	if err != nil {
+		spans.TraceError(err)
+	}
+	result := interfaces.BookMeetingResult{
+		StartTime: startTimeInTimeZone,
+		EndTime:   endTimeInTimeZone,
+		HostEmail: hostEmail,
+		HostName:  hostName,
+	}
+
+	spans.LogObjectAsJson("result", result)
+	return &result, nil
+}
+
+func pickRandomParticipant(availableParticipantEmails []string) string {
+	return availableParticipantEmails[rand.Intn(len(availableParticipantEmails))]
 }

@@ -109,6 +109,13 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
+		path:      "/calendar/meeting",
+		handler:   public.BookMeeting(s),
+		routeType: RoutePublic,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
 		path:      "/reveal",
 		handler:   h.WebsiteTrackerEvents.Handle(),
 		routeType: RoutePublic,
