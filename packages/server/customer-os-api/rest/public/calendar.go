@@ -3,6 +3,7 @@ package public
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -49,6 +50,11 @@ type bookMeetingRequest struct {
 	Name       string `json:"name"`
 	Email      string `json:"email"`
 	Phone      string `json:"phone"`
+}
+
+type timezoneResponse struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
 }
 
 // mapToRestDaySlots converts service response to REST API format
@@ -268,7 +274,14 @@ func GetTimezones() gin.HandlerFunc {
 		spans, _ := telemetry.StartRestSpan(c.Request.Context(), "GetTimezones")
 		defer spans.Finish()
 
-		c.JSON(http.StatusOK, gin.H{"timezones": data.Timezones()})
+		timezones := make([]timezoneResponse, len(data.Timezones()))
+		for i, timezone := range data.Timezones() {
+			timezones[i] = timezoneResponse{
+				Value: timezone,
+				Label: strings.ReplaceAll(timezone, "_", " "),
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"timezones": timezones})
 	}
 }
 
