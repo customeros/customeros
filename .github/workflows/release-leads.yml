@@ -57,7 +57,7 @@ jobs:
       - name: Run version script
         id: run_version_script
         # Pass the version_bump type from the previous job as an argument
-        run: ./packages/server/leads/deployments/build/version.sh "${{ needs.check-release-needed.outputs.version_bump }}" "${{ needs.check_release_needed.outputs.app_name }}"
+        run: ./packages/server/leads/deployments/build/version.sh "${{ needs.check-release-needed.outputs.version_bump }}" "${{ needs.check-release-needed.outputs.app_name }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
