@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -71,6 +73,34 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 	_, err = r.Services.CommonServices.MeetingService.SetDefaultUserCalendarAvailability(ctx, input.Email, utils.IfNotNilString(input.Timezone))
 	if err != nil {
 		spans.TraceError(err)
+	}
+
+	// Create default meeting booking event
+	meetingBookingEvents, err := r.Services.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		spans.TraceError(err)
+	}
+	if err == nil && len(meetingBookingEvents) == 0 {
+		defaultMeetingBookingEventEntity := postgresEntity.MeetingBookingEvent{
+			ParticipantEmails:                   []string{input.Email},
+			Title:                               "Product overview",
+			DurationMins:                        30,
+			BookingFormNameEnabled:              true,
+			BookingFormEmailEnabled:             true,
+			BookingFormPhoneEnabled:             false,
+			BookingFormPhoneRequired:            false,
+			AssignmentMethod:                    enum.MeetingBookingAssignmentMethodRoundRobinMaxAvailability,
+			BookOptionEnabled:                   false,
+			BookOptionMinNoticeMins:             240,
+			BookOptionDaysInAdvance:             30,
+			BookOptionBufferBetweenMeetingsMins: 15,
+			ShowLogo:                            false,
+			EmailNotificationEnabled:            true,
+		}
+		_, err = r.Services.Repositories.PostgresRepositories.MeetingBookingEventRepository.Save(ctx, &defaultMeetingBookingEventEntity)
+		if err != nil {
+			spans.TraceError(err)
+		}
 	}
 
 	return &model.NylasDetails{Connected: true}, nil
