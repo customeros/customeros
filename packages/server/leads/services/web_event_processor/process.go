@@ -114,7 +114,7 @@ func (s *webEventProcessor) logWebtrackerEvent(ctx context.Context, webtrackerID
 	span, ctx := telemetry.StartServiceSpan(ctx, "webEventProcessor.logWebtrackerEvent")
 	defer span.Finish()
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.leadsWriteDB.Transaction(func(tx *gorm.DB) error {
 		// Update the WebTracker's last event timestamp
 		err := s.repositories.WebTracker.UpdateLastEventAtWithTxn(ctx, tx, webtrackerID, event.Timestamp)
 		if err != nil {

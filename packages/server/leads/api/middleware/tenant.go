@@ -8,6 +8,8 @@ import (
 	"github.com/customeros/customeros/packages/server/leads/internal/utils"
 )
 
+type ginContextKey struct{}
+
 func TenantValidationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tenant := ""

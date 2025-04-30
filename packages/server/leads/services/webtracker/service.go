@@ -21,13 +21,13 @@ type WebtrackerService interface {
 }
 
 type webtrackerService struct {
-	db           *gorm.DB
+	leadsWriteDB *gorm.DB
 	repositories *repository.Repositories
 }
 
-func NewWebtrackerService(leadsDB *gorm.DB, repos *repository.Repositories) WebtrackerService {
+func NewWebtrackerService(leadsWriteDB *gorm.DB, repos *repository.Repositories) WebtrackerService {
 	return &webtrackerService{
-		db:           leadsDB,
+		leadsWriteDB: leadsWriteDB,
 		repositories: repos,
 	}
 }

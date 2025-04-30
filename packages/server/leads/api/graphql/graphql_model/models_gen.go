@@ -38,7 +38,7 @@ type Webtracker struct {
 	IsCnameConfigured bool       `json:"isCnameConfigured"`
 	IsProxyActive     bool       `json:"isProxyActive"`
 	IsArchived        bool       `json:"isArchived"`
-	LastEventAt       time.Time  `json:"lastEventAt"`
+	LastEventAt       *time.Time `json:"lastEventAt,omitempty"`
 	CreatedAt         time.Time  `json:"createdAt"`
 	UpdatedAt         *time.Time `json:"updatedAt,omitempty"`
 }

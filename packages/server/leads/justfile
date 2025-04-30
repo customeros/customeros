@@ -29,5 +29,7 @@ run:
 tidy:
     go mod tidy
 
+warehouse:
+    pgcli postgresql://postgres:password@localhost:5556/warehouse
 
 

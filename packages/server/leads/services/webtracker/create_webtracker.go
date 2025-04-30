@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
 
+	leads_errors "github.com/customeros/customeros/packages/server/leads/errors"
 	"github.com/customeros/customeros/packages/server/leads/internal/enum"
 	"github.com/customeros/customeros/packages/server/leads/internal/models"
 	"github.com/customeros/customeros/packages/server/leads/internal/telemetry"
@@ -30,10 +31,16 @@ func (s *webtrackerService) CreateWebtracker(ctx context.Context, webtracker *mo
 		return nil, err
 	}
 
+	err = s.validateWebtrackerDoesNotExist(ctx, webtracker.Domain)
+	if err != nil {
+		span.TraceError(err)
+		return nil, err
+	}
+
 	webTrackerRecord := buildWebTrackerRecord(webtracker)
 
 	// Use transaction
-	err = s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.leadsWriteDB.Transaction(func(tx *gorm.DB) error {
 		// Create webtracker
 		err := s.repositories.WebTracker.CreateWithTxn(ctx, tx, webTrackerRecord)
 		if err != nil {
@@ -64,6 +71,23 @@ func (s *webtrackerService) CreateWebtracker(ctx context.Context, webtracker *mo
 	}
 
 	return webTrackerRecord, nil
+}
+
+func (s *webtrackerService) validateWebtrackerDoesNotExist(ctx context.Context, domain string) error {
+	span, ctx := telemetry.StartServiceSpan(ctx, "webtrackerService.validateWebtrackerDoesNotExist")
+	defer span.Finish()
+
+	record, err := s.repositories.WebTracker.GetByDomain(ctx, domain)
+	if err != nil {
+		span.TraceError(err)
+		return err
+	}
+	if record != nil {
+		err := leads_errors.ErrWebtrackerExists
+		span.TraceError(err)
+		return err
+	}
+	return nil
 }
 
 func (s *webtrackerService) buildOutboxEventPayload(ctx context.Context, webtracker *models.WebTracker) ([]byte, error) {

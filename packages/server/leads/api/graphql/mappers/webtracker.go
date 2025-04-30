@@ -14,7 +14,7 @@ func ToWebtrackerGraphQL(w *models.WebTracker) *graphql_model.Webtracker {
 		IsCnameConfigured: w.IsCNAMEConfigured,
 		IsProxyActive:     w.IsProxyActive,
 		IsArchived:        w.IsArchived,
-		LastEventAt:       *w.LastEventAt,
+		LastEventAt:       w.LastEventAt,
 		CreatedAt:         w.CreatedAt,
 		UpdatedAt:         w.UpdatedAt,
 	}
@@ -29,7 +29,7 @@ func ToWebtrackerDBModel(dto *graphql_model.Webtracker) *models.WebTracker {
 		IsCNAMEConfigured: dto.IsCnameConfigured,
 		IsProxyActive:     dto.IsProxyActive,
 		IsArchived:        dto.IsArchived,
-		LastEventAt:       &dto.LastEventAt,
+		LastEventAt:       dto.LastEventAt,
 		CreatedAt:         dto.CreatedAt,
 		UpdatedAt:         dto.UpdatedAt,
 	}

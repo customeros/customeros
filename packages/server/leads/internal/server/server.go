@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/customeros/customeros/packages/server/leads/api"
 	"github.com/customeros/customeros/packages/server/leads/api/handlers"
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
 	"github.com/customeros/customeros/packages/server/leads/internal/cron"
@@ -64,14 +65,14 @@ func NewServer(cfg *config.Config, leadsDB *database.DbConnections, warehouseDB 
 	}
 
 	// Initialize services
-	svcs := services.InitServices(natsConn, repos, cfg)
+	svcs := services.InitServices(cfg, leadsDB, natsConn, repos)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	// Initialize API Handlers
-	handlers := handlers.InitHandlers(svcs, repos)
+	// register API Routes
+	handlers := api.RegisterRoutes(context.Background(), router, svcs, cfg.AppConfig)
 
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface
@@ -147,13 +148,14 @@ func (s *Server) Run() error {
 
 	// Start HTTP server in a goroutine with panic recovery
 	go s.wrapGoroutine("http_server", func() {
-		log.Println("Starting HTTP server")
-		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		err := s.httpServer.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
 			log.Printf("❌ HTTP server error: %v", err)
 		}
 	})
 	log.Println("✅ HTTP server started successfully")
-	log.Println("EventStraem is now running. Press Ctrl+C to exit.")
+	log.Printf("Leads is now running and listening on port %s. Press Ctrl+C to exit.", s.httpServer.Addr)
+	fmt.Println("")
 
 	return s.waitForShutdown()
 }

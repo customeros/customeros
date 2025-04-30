@@ -7,6 +7,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/leads/internal/config"
 	"github.com/customeros/customeros/packages/server/leads/internal/database"
+	"github.com/customeros/customeros/packages/server/leads/internal/repository"
 	"github.com/customeros/customeros/packages/server/leads/internal/server"
 )
 
@@ -60,7 +61,7 @@ func main() {
 		log.Fatalf("Openline database initialization failed: %v", err)
 	}
 
-	err = runDBMigration()
+	err = runDBMigration(cfg, leadsDB, warehouseDB)
 	if err != nil {
 		log.Fatalf("Database migration failed...")
 	}
@@ -80,6 +81,19 @@ func main() {
 	}
 }
 
-func runDBMigration() error {
+func runDBMigration(config *config.Config, leadsDB, warehouseDB *database.DbConnections) error {
+	log.Println("Migrating Leads DB...")
+
+	err := repository.MigrateLeadsDB(config.LeadsDatabaseConfig, leadsDB.WriteDB)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Migrating Warehouse DB...")
+	err = repository.MigrateDataWarehouse(config.DataWarehouseConfig, warehouseDB.WriteDB)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
