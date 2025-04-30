@@ -101,6 +101,13 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 	})
 
 	registerRoute(ctx, r, RouteConfig{
+		method:    "GET",
+		path:      "/calendar/timezones",
+		handler:   public.GetTimezones(),
+		routeType: RoutePublic,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      "/reveal",
 		handler:   h.WebsiteTrackerEvents.Handle(),
