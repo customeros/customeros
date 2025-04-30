@@ -290,7 +290,19 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 		if startTime == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Start time is required"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing startTime in request"})
+			return
+		}
+
+		// Email is required
+		if request.Email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing email in request"})
+			return
+		}
+
+		// Calendar id is required
+		if request.CalendarId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing calendarId in request"})
 			return
 		}
 

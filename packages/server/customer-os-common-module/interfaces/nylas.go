@@ -108,16 +108,19 @@ type NylasCreateEventRequest struct {
 		StartTimezone string `json:"start_timezone"`
 		EndTimezone   string `json:"end_timezone"`
 	} `json:"when"`
-	Location     string `json:"location,omitempty"`
-	Participants []struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"participants"`
-	Resources []struct {
+	Location     string                  `json:"location,omitempty"`
+	Participants []NylasEventParticipant `json:"participants"`
+	Resources    []struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	} `json:"resources,omitempty"`
 	Recurrence []string `json:"recurrence,omitempty"`
+}
+
+type NylasEventParticipant struct {
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
 }
 
 type NylasEvent struct {

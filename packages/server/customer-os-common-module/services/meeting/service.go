@@ -867,17 +867,14 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		Title:       meetingBookingEvent.Title,
 		Description: meetingBookingEvent.Description,
 		Location:    meetingBookingEvent.Location,
-		Participants: []struct {
-			Name  string `json:"name"`
-			Email string `json:"email"`
-		}{
+		Participants: []interfaces.NylasEventParticipant{
 			{
 				Email: hostEmail,
-				Name:  hostName,
 			},
 			{
-				Email: clientEmail,
-				Name:  clientName,
+				Email:       clientEmail,
+				Name:        clientName,
+				PhoneNumber: clientPhone,
 			},
 		},
 		When: struct {

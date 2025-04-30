@@ -471,6 +471,7 @@ func (s *nylasService) CreateEvent(ctx context.Context, meetingData interfaces.N
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.CreateEvent")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", meetingData)
+	spans.LogKV("hostEmail", hostEmail, "calendarID", calendarID, "notifyParticipants", notifyParticipants)
 
 	if calendarID == "" {
 		return nil, fmt.Errorf("calendar ID is required")
