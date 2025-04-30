@@ -55,7 +55,16 @@ func (s *webtrackerService) CreateWebtracker(ctx context.Context, webtracker *mo
 			return err
 		}
 
-		event := utils.BuildOutboxEvent(enum.EventWebtrackerCreated, eventPayload)
+		event := &models.OutboxEvent{
+			ID:        utils.GenerateNanoIDWithPrefix("event", 21),
+			EntityID:  webtracker.ID,
+			EventType: enum.EventWebtrackerCreated,
+			Tenant:    utils.GetTenantFromContext(ctx),
+			Payload:   eventPayload,
+			Publisher: enum.WebtrackerService,
+			Status:    enum.OutboxPending,
+			CreatedAt: utils.Now(),
+		}
 
 		err = s.repositories.Outbox.CreateWithTxn(ctx, tx, event)
 		if err != nil {
@@ -116,8 +125,13 @@ func buildWebTrackerRecord(webtracker *models.WebTracker) *models.WebTracker {
 		cnameHost = webtracker.CNAMEHost
 	}
 
+	id := webtracker.ID
+	if id == "" {
+		utils.GenerateNanoIDWithPrefix("trkr", 16)
+	}
+
 	return &models.WebTracker{
-		ID:                utils.GenerateNanoIDWithPrefix("trkr", 16),
+		ID:                id,
 		Domain:            webtracker.Domain,
 		CNAMEHost:         cnameHost,
 		CNAMETarget:       fmt.Sprintf("%s.%s", utils.GenerateNanoID(9), CNAME_TARGET_DOMAIN),

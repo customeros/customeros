@@ -91,7 +91,7 @@ func NewServer(cfg *config.Config, leadsDB *database.DbConnections, warehouseDB 
 		cfg,
 		appLogger,
 		k8sClient,
-		repos,
+		svcs,
 	)
 
 	// If running in Kubernetes, use leader election

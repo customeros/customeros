@@ -25,9 +25,11 @@ func (n *NATSConnections) Close() {
 }
 
 const (
-	LEADS_STREAM = "leads"
-
+	LEADS_STREAM          = "leads"
 	MAX_STREAM_RECONNECTS = -1 // never stop trying to reconnect
+
+	HEADER_TENANT = "X-Tenant"
+	HEADER_USERID = "X-UserId"
 )
 
 // InitNats initializes the NATS connection and sets up streams

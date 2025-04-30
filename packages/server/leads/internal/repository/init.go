@@ -14,7 +14,7 @@ type Repositories struct {
 	APICallLogRepository APICallLogRepository
 	IPIntelligence       IPIntelligenceRepository
 	Outbox               OutboxRepository
-	WebEvent             WebTrackerEventRepository
+	WebTrackerEvent      WebTrackerEventRepository
 	WebTracker           WebTrackerRepository
 }
 
@@ -23,7 +23,7 @@ func InitRepositories(leadsDB, warehouseDB *database.DbConnections) *Repositorie
 		APICallLogRepository: NewAPICallLogRepository(warehouseDB),
 		IPIntelligence:       NewIPIntelligenceRepository(leadsDB),
 		Outbox:               NewOutboxRepository(leadsDB),
-		WebEvent:             NewWebTrackerEventRepository(warehouseDB),
+		WebTrackerEvent:      NewWebTrackerEventRepository(warehouseDB),
 		WebTracker:           NewWebTrackerRepository(leadsDB),
 	}
 }
