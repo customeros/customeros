@@ -3,37 +3,49 @@
 set -e
 echo "--- Running check_release_needed.sh ---"
 
-# Directory path for the specific app (can be passed as argument or set as env var)
-# Should be relative to repository root, e.g. "packages/server/leads"
-APP_DIR=${1:-$APP_DIR}
+# App name is now the primary parameter
+APP_NAME=${1:-$APP_NAME}
 
-if [ -z "$APP_DIR" ]; then
-  echo "Error: No app directory specified. Please provide APP_DIR as first argument or environment variable."
+if [ -z "$APP_NAME" ]; then
+  echo "Error: No app name specified. Please provide APP_NAME as first argument or environment variable."
   exit 1
 fi
 
-# Make sure path doesn't start with "./" as git commands expect paths relative to repo root
-APP_DIR=$(echo "$APP_DIR" | sed 's#^\./##')
+echo "Checking for releases for app: $APP_NAME"
 
-echo "Checking for releases for app: $APP_DIR"
+# Map of app names to their directories in the monorepo
+# This can be moved to a config file if you prefer
+declare -A APP_PATHS
+APP_PATHS["leads"]="packages/server/leads"
+APP_PATHS["users"]="packages/server/users"
+APP_PATHS["admin"]="packages/client/admin"
+# Add other apps as needed
+
+# Get the directory path for the app
+APP_DIR=${APP_PATHS[$APP_NAME]}
+
+if [ -z "$APP_DIR" ]; then
+  echo "Error: No path configured for app '$APP_NAME'. Please add it to the APP_PATHS map."
+  exit 1
+fi
+
+echo "App directory path: $APP_DIR"
 
 # Check if a tag already exists for the current commit (HEAD)
 echo "Checking for existing tags on commit $(git rev-parse HEAD)..."
 existing_tags=$(git tag --points-at HEAD)
 if [ -n "$existing_tags" ]; then
   # Check if there's an app-specific tag in the format app-name-vX.Y.Z
-  app_name=$(basename "$APP_DIR")
-  app_tag_prefix="${app_name}-v"
+  app_tag_prefix="${APP_NAME}-v"
   
   if echo "$existing_tags" | grep -q "$app_tag_prefix"; then
     echo "App-specific tag already exists for this commit: $(echo "$existing_tags" | grep "$app_tag_prefix")"
     echo "version_bump=skip" >> "$GITHUB_OUTPUT"
-    echo "app_path=$APP_DIR" >> "$GITHUB_OUTPUT"
-    echo "app_name=$app_name" >> "$GITHUB_OUTPUT"
+    echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
     echo "--- check_release_needed.sh finished (skipped due to existing app-specific tag) ---"
     exit 0 # Exit successfully, signaling skip
   else
-    echo "No app-specific tag found for $app_name, continuing..."
+    echo "No app-specific tag found for $APP_NAME, continuing..."
   fi
 else
   echo "No existing tag found on this commit."
@@ -46,9 +58,7 @@ echo "Last commit message: $merge_msg"
 
 # Initialize variables
 version_bump="skip" # Default to skip
-app_name=$(basename "$APP_DIR")
-echo "app_name=$app_name" >> "$GITHUB_OUTPUT"
-echo "app_path=$APP_DIR" >> "$GITHUB_OUTPUT"
+echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
 
 # Check if this commit modified files in the specific app directory
 if git diff --name-only HEAD HEAD~1 | grep -q "^${APP_DIR}/"; then
@@ -125,7 +135,7 @@ echo "version_bump=$version_bump" >> "$GITHUB_OUTPUT"
 if [ "$version_bump" == "skip" ]; then
   echo "No version prefix found or no relevant changes. Skipping release."
 else
-  echo "Release is needed for $app_name with a '$version_bump' bump."
+  echo "Release is needed for $APP_NAME with a '$version_bump' bump."
 fi
 
 echo "--- check_release_needed.sh finished ---"
