@@ -25,7 +25,7 @@ type NylasService interface {
 	GetCalendarAvailability(ctx context.Context, email, calendarID string, startTime, endTime time.Time, bufferBefore, bufferAfter int) (*NylasAvailabilityResponse, error)
 
 	// Meeting operations
-	CreateEvent(ctx context.Context, meetingData NylasCreateEventRequest, hostEmail, calendarID string, notifyParticipants bool) (*NylasEvent, error)
+	CreateEvent(ctx context.Context, meetingData NylasCreateEventRequest, hostEmail, calendarID string, notifyParticipants bool) (*NylasEvent, string, error)
 }
 
 type NylasCalendarsResponse struct {
