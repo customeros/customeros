@@ -58,6 +58,11 @@ type timezoneResponse struct {
 	Label string `json:"label"`
 }
 
+type cancelMeetingRequest struct {
+	CalendarId string `json:"calendarId"`
+	Email      string `json:"email"`
+}
+
 // mapToRestDaySlots converts service response to REST API format
 func mapToRestDaySlots(result *interfaces.CalendarAvailabilityResult) []DaySlot {
 	if result == nil || len(result.Days) == 0 {
@@ -378,5 +383,61 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			"hostName":  bookMeetingResult.HostName,
 			"status":    "created",
 		})
+	}
+}
+
+func CancelMeeting(s *cosapi_services.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "CancelMeeting")
+		defer spans.Finish()
+
+		var request cancelMeetingRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			spans.TraceError(err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if request.CalendarId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing calendarId in request"})
+			return
+		}
+
+		if request.Email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing email in request"})
+			return
+		}
+
+		// Get meeting booking event to determine tenant
+		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(ctx, request.CalendarId)
+		if err != nil {
+			spans.TraceError(err)
+			s.Log.Error("Failed to get meeting booking event: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Calendar not found"})
+			return
+		}
+		if meetingBookingEvent == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Calendar not found"})
+			return
+		}
+
+		// Set tenant in context
+		ctx = common.WithCustomContext(
+			ctx,
+			&common.CustomContext{
+				Tenant: meetingBookingEvent.Tenant,
+			},
+		)
+		spans.TagTenant(meetingBookingEvent.Tenant)
+
+		err = s.CommonServices.MeetingService.CancelMeeting(ctx, meetingBookingEvent.ID, request.Email)
+		if err != nil {
+			spans.TraceError(err)
+			s.Log.Error("Failed to cancel meeting: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel meeting"})
+			return
+		}
+
+		c.Status(http.StatusNoContent)
 	}
 }

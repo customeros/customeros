@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -542,4 +543,63 @@ func (s *nylasService) CreateEvent(ctx context.Context, meetingData interfaces.N
 	}
 
 	return &response, string(bodyBytes), nil
+}
+
+func (s *nylasService) DeleteEvent(ctx context.Context, calendarID, hostEmail, eventID string, notifyParticipants bool) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.DeleteEvent")
+	defer spans.Finish()
+	spans.LogKV("calendarID", calendarID, "hostEmail", hostEmail, "eventID", eventID, "notifyParticipants", notifyParticipants)
+
+	// Get Nylas grant ID
+	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, common.GetTenantFromContext(ctx), hostEmail)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to get Nylas grant ID: %v", err)
+	}
+	if grant == nil {
+		return fmt.Errorf("Nylas grant not found")
+	}
+
+	// Create request to Nylas v3 API
+	encodedEventID := url.PathEscape(eventID)
+	url := fmt.Sprintf("%s/v3/grants/%s/events/%s?calendar_id=%s", s.config.APIUrl, grant.NylasGrantId, encodedEventID, calendarID)
+	if notifyParticipants {
+		url = fmt.Sprintf("%s&notify_participants=true", url)
+	} else {
+		url = fmt.Sprintf("%s&notify_participants=false", url)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", url, nil)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// Set headers
+	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
+	req.Header.Set("Accept", "application/json, application/gzip")
+
+	// Make request
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	spans.LogKV("nylas.response", string(bodyBytes))
+	spans.LogKV("nylas.response.statusCode", resp.StatusCode)
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
+		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
+		return fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	return nil
 }
