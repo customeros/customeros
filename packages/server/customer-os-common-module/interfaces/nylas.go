@@ -111,7 +111,7 @@ type NylasCreateEventRequest struct {
 	} `json:"when"`
 	Location     string                  `json:"location,omitempty"`
 	Participants []NylasEventParticipant `json:"participants"`
-	Conferencing NylasConferencing       `json:"conferencing,omitempty"`
+	Conferencing *NylasConferencing      `json:"conferencing,omitempty"`
 	Resources    []struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`

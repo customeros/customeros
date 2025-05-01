@@ -7,12 +7,12 @@ import (
 	"sort"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -23,16 +23,22 @@ type meetingService struct {
 	log         logger.Logger
 	nylas       interfaces.NylasService
 	userService interfaces.UserService
+	verify      interfaces.VerifyService
 	postgres    *postgresRepository.Repositories
 }
 
-func NewMeetingService(log logger.Logger, nylasService interfaces.NylasService, userService interfaces.UserService, postgresRepository *postgresRepository.Repositories) interfaces.MeetingService {
+func NewMeetingService(log logger.Logger, nylasService interfaces.NylasService, userService interfaces.UserService, verifyService interfaces.VerifyService, postgresRepository *postgresRepository.Repositories) interfaces.MeetingService {
 	return &meetingService{
 		log:         log,
 		nylas:       nylasService,
 		userService: userService,
+		verify:      verifyService,
 		postgres:    postgresRepository,
 	}
+}
+
+func (s *meetingService) SetVerifyService(verifyService interfaces.VerifyService) {
+	s.verify = verifyService
 }
 
 func (s *meetingService) GetUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error) {
@@ -811,6 +817,45 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		timezone = postgresEntity.DefaultTimezone
 	}
 
+	// check if meeting already exists
+	existingMeetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to check if meeting already exists: %v", err)
+	}
+	if existingMeetingBookedEvent != nil {
+		startTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.StartTime, timezone)
+		if err != nil {
+			spans.TraceError(err)
+			startTimeInTimeZone = existingMeetingBookedEvent.StartTime
+		}
+		endTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.EndTime, timezone)
+		if err != nil {
+			spans.TraceError(err)
+			endTimeInTimeZone = existingMeetingBookedEvent.EndTime
+		}
+		result := interfaces.BookMeetingResult{
+			StartTime: startTimeInTimeZone,
+			EndTime:   endTimeInTimeZone,
+			HostEmail: existingMeetingBookedEvent.HostEmail,
+			HostName:  existingMeetingBookedEvent.HostName,
+		}
+
+		spans.LogObjectAsJson("result", result)
+		return &result, coserrors.ErrMeetingAlreadyExists
+	}
+
+	// validate client email address
+	emailValidationData, err := s.verify.ValidateEmailWithMailSherpa(ctx, clientEmail)
+	if err != nil {
+		spans.TraceError(err)
+	}
+	if emailValidationData != nil &&
+		(emailValidationData.EmailData.Deliverable == string(verify.EmailDeliverableStatusUndeliverable) ||
+			emailValidationData.Syntax.IsValid == false) {
+		return nil, coserrors.ErrEmailNotDeliverable
+	}
+
 	// Ensure times are in UTC
 	startTimeInUTC := startTime
 	if startTime.Location() != time.UTC {
@@ -889,7 +934,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		},
 	}
 	if enum.IsGoogleMeet(meetingBookingEvent.Location) {
-		createEventRequest.Conferencing = interfaces.NylasConferencing{
+		createEventRequest.Conferencing = &interfaces.NylasConferencing{
 			Provider:   string(interfaces.NylasProviderGoogleMeet),
 			Autocreate: struct{}{},
 		}
@@ -909,6 +954,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		MeetingBookingEventID: meetingBookingEventID,
 		Tenant:                tenant,
 		HostEmail:             hostEmail,
+		HostName:              hostName,
 		ClientEmail:           clientEmail,
 		ClientName:            clientName,
 		ClientPhone:           clientPhone,
@@ -925,10 +971,12 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 	startTimeInTimeZone, err := utils.GetTimeInTimeZone(startTimeInUTC, timezone)
 	if err != nil {
 		spans.TraceError(err)
+		startTimeInTimeZone = startTimeInUTC
 	}
 	endTimeInTimeZone, err := utils.GetTimeInTimeZone(endTimeInUTC, timezone)
 	if err != nil {
 		spans.TraceError(err)
+		endTimeInTimeZone = endTimeInUTC
 	}
 	result := interfaces.BookMeetingResult{
 		StartTime: startTimeInTimeZone,

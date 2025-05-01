@@ -26,6 +26,9 @@ var (
 	ErrDomainConfigurationFailed = errors.New("domain configuration failed")
 	ErrDomainNotFound            = errors.New("domain not found")
 
+	// Email errors
+	ErrEmailNotDeliverable = errors.New("email not deliverable")
+
 	// mailbox errors
 	ErrMailboxExists = errors.New("mailbox already exists")
 
@@ -42,7 +45,8 @@ var (
 	ErrCapabilityMissingPrimaryDomainForOrganization = errors.New("Missing primary domain for organization")
 
 	// Meeting errors
-	ErrSlotNotAvailable = errors.New("requested time slot is not available")
+	ErrSlotNotAvailable     = errors.New("requested time slot is not available")
+	ErrMeetingAlreadyExists = errors.New("meeting already exists")
 )
 
 func SkipTracing(err error) bool {

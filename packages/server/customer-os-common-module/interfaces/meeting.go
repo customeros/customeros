@@ -34,6 +34,8 @@ type CalendarAvailabilityResult struct {
 }
 
 type MeetingService interface {
+	SetVerifyService(verifyService VerifyService)
+
 	GetUserCalendarAvailability(ctx context.Context, email string) (*postgresEntity.UserCalendarAvailability, error)
 	SaveUserCalendarAvailability(ctx context.Context, availability *postgresEntity.UserCalendarAvailability) (*postgresEntity.UserCalendarAvailability, error)
 	SetDefaultUserCalendarAvailability(ctx context.Context, email, timezone string) (*postgresEntity.UserCalendarAvailability, error)
