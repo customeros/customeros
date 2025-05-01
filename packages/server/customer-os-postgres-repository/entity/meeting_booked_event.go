@@ -14,7 +14,7 @@ type MeetingBookedEvent struct {
 	UpdatedAt             time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	MeetingBookingEventID string    `gorm:"column:meeting_booking_event_id;type:varchar(21);not null" json:"meetingBookingEventId"`
 	HostEmail             string    `gorm:"column:host_email;size:255;not null" json:"hostEmail"`
-	HostName              string    `gorm:"column:host_name;type:text;not null" json:"hostName"`
+	HostName              string    `gorm:"column:host_name;type:text" json:"hostName"`
 	ClientEmail           string    `gorm:"column:client_email;size:255;not null" json:"clientEmail"`
 	ClientName            string    `gorm:"column:client_name;type:text;not null" json:"clientName"`
 	ClientPhone           string    `gorm:"column:client_phone;type:text;not null" json:"clientPhone"`
