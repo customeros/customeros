@@ -1,6 +1,7 @@
 package public
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -345,8 +346,19 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone)
 		if err != nil {
 			s.Log.Error("Failed to create meeting: %v", err)
-			if err == coserrors.ErrSlotNotAvailable {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Requested time slot is not available"})
+			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Requested calendar slot is not available."})
+			} else if errors.Is(err, coserrors.ErrEmailNotDeliverable) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Email address is not deliverable. Please provide a valid email address."})
+			} else if errors.Is(err, coserrors.ErrMeetingAlreadyExists) {
+				c.JSON(http.StatusOK, gin.H{
+					"message":   "Meeting already exists",
+					"startTime": bookMeetingResult.StartTime,
+					"endTime":   bookMeetingResult.EndTime,
+					"hostEmail": bookMeetingResult.HostEmail,
+					"hostName":  bookMeetingResult.HostName,
+					"status":    "already_exists",
+				})
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create meeting"})
 			}
@@ -364,6 +376,7 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			"endTime":   bookMeetingResult.EndTime,
 			"hostEmail": bookMeetingResult.HostEmail,
 			"hostName":  bookMeetingResult.HostName,
+			"status":    "created",
 		})
 	}
 }

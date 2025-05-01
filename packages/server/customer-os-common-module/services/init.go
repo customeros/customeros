@@ -247,7 +247,7 @@ func InitCommonServices(
 	googleImpl := google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories)
 	nylasImpl := nylas.NewNylasService(&cfg.External.NylasConfig, googleImpl, postgresRepositories)
 	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
-	meetingImpl := meeting.NewMeetingService(log, nylasImpl, userImpl, postgresRepositories)
+	meetingImpl := meeting.NewMeetingService(log, nylasImpl, userImpl, nil, postgresRepositories)
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
@@ -316,6 +316,7 @@ func InitCommonServices(
 	orgImpl.SetContractService(contractImpl)
 	openSRSImpl.SetMailstackService(mailstackImpl)
 	userImpl.SetMailstack(mailstackImpl)
+	meetingImpl.SetVerifyService(verifyImpl)
 
 	// initialize agent capabilities
 	capabilityImpl := agent_capability.InitCapabilities(

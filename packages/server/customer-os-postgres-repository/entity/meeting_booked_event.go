@@ -8,12 +8,13 @@ import (
 )
 
 type MeetingBookedEvent struct {
-	ID                    string    `gorm:"column:id;type:varchar(24);primaryKey" json:"id"`
+	ID                    string    `gorm:"column:id;type:varchar(25);primaryKey" json:"id"`
 	Tenant                string    `gorm:"column:tenant;size:255;not null;primaryKey" json:"tenant"`
 	CreatedAt             time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt             time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	MeetingBookingEventID string    `gorm:"column:meeting_booking_event_id;type:varchar(21);not null" json:"meetingBookingEventId"`
 	HostEmail             string    `gorm:"column:host_email;size:255;not null" json:"hostEmail"`
+	HostName              string    `gorm:"column:host_name;type:text;not null" json:"hostName"`
 	ClientEmail           string    `gorm:"column:client_email;size:255;not null" json:"clientEmail"`
 	ClientName            string    `gorm:"column:client_name;type:text;not null" json:"clientName"`
 	ClientPhone           string    `gorm:"column:client_phone;type:text;not null" json:"clientPhone"`
@@ -30,7 +31,7 @@ func (MeetingBookedEvent) TableName() string {
 
 // BeforeCreate hook to ensure ID has the correct prefix and validate
 func (u *MeetingBookedEvent) BeforeCreate(tx *gorm.DB) error {
-	u.ID = utils.GenerateNanoIdWithPrefix("mev", 20)
+	u.ID = utils.GenerateNanoIdWithPrefix("mev", 21)
 	return nil
 }
 
