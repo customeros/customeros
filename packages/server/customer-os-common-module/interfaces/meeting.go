@@ -50,4 +50,5 @@ type MeetingService interface {
 	GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime, endTime time.Time) ([]string, error)
 
 	BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, name, email, phone string) (*BookMeetingResult, error)
+	CancelMeeting(ctx context.Context, meetingBookingEventID, clientEmail string) error
 }

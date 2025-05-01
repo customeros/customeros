@@ -953,6 +953,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 	err = s.postgres.MeetingBookedEventRepository.Create(ctx, &postgresEntity.MeetingBookedEvent{
 		MeetingBookingEventID: meetingBookingEventID,
 		Tenant:                tenant,
+		HostCalendarID:        calendar.ID,
 		HostEmail:             hostEmail,
 		HostName:              hostName,
 		ClientEmail:           clientEmail,
@@ -962,6 +963,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		EndTime:               endTimeInUTC,
 		DurationMins:          int64(durationMins),
 		NylasResponse:         nylasResponse,
+		NylasEventID:          createdEvent.Data.ID,
 		Canceled:              false,
 	})
 	if err != nil {
@@ -991,4 +993,64 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 
 func pickRandomParticipant(availableParticipantEmails []string) string {
 	return availableParticipantEmails[rand.Intn(len(availableParticipantEmails))]
+}
+
+// CancelMeeting implements interfaces.MeetingService
+func (s *meetingService) CancelMeeting(ctx context.Context, meetingBookingEventID, clientEmail string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.CancelMeeting")
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", map[string]interface{}{
+		"meetingBookingEventID": meetingBookingEventID,
+		"clientEmail":           clientEmail,
+	})
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// get meeting booking event
+	meetingBookingEvent, err := s.postgres.MeetingBookingEventRepository.GetById(ctx, tenant, meetingBookingEventID)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to get meeting booking event: %v", err)
+	}
+	if meetingBookingEvent == nil {
+		return fmt.Errorf("meeting booking event not found")
+	}
+
+	meetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to get meeting booked event: %v", err)
+	}
+	if meetingBookedEvent == nil {
+		spans.LogKV("result", "no meeting booked event found")
+		return nil
+	}
+	if meetingBookedEvent.Canceled {
+		spans.LogKV("result", "meeting already canceled")
+		return nil
+	}
+
+	// call nylas to delete event
+	if meetingBookedEvent.NylasEventID != "" {
+		err = s.nylas.DeleteEvent(ctx, meetingBookedEvent.HostCalendarID, meetingBookedEvent.HostEmail, meetingBookedEvent.NylasEventID, meetingBookingEvent.EmailNotificationEnabled)
+		if err != nil {
+			spans.TraceError(err)
+			return fmt.Errorf("failed to cancel meeting on nylas: %v", err)
+		}
+	}
+
+	// update meeting booked event as canceled in COS
+	err = s.postgres.MeetingBookedEventRepository.Cancel(ctx, meetingBookedEvent.ID)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to cancel meeting booked event: %v", err)
+	}
+
+	return nil
 }
