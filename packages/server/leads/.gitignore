@@ -1,8 +1,0 @@
-*.dump
-*.test
-*.out
-.envrc
-.idea/
-.vscode/
-leads
-.bin/*
