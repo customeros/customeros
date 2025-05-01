@@ -84,7 +84,7 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 		defaultMeetingBookingEventEntity := postgresEntity.MeetingBookingEvent{
 			ParticipantEmails:                   []string{input.Email},
 			Title:                               "Product overview",
-			Location:                            "Google Meet",
+			Location:                            enum.MeetingLocationGoogleMeet.String(),
 			Description:                         "",
 			DurationMins:                        30,
 			BookingFormNameEnabled:              true,

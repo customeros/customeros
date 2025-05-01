@@ -10,7 +10,8 @@ import (
 type NylasProvider string
 
 const (
-	NylasProviderGoogle NylasProvider = "google"
+	NylasProviderGoogle     NylasProvider = "google"
+	NylasProviderGoogleMeet NylasProvider = "Google Meet"
 )
 
 type NylasService interface {
@@ -110,6 +111,7 @@ type NylasCreateEventRequest struct {
 	} `json:"when"`
 	Location     string                  `json:"location,omitempty"`
 	Participants []NylasEventParticipant `json:"participants"`
+	Conferencing NylasConferencing       `json:"conferencing,omitempty"`
 	Resources    []struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
@@ -121,6 +123,10 @@ type NylasEventParticipant struct {
 	Email       string `json:"email"`
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
+}
+type NylasConferencing struct {
+	Provider   string   `json:"provider"`
+	Autocreate struct{} `json:"autocreate"`
 }
 
 type NylasEvent struct {
