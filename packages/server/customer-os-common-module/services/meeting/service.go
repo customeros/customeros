@@ -862,11 +862,10 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 	}
 
 	// create meeting event
-	createdEvent, nylasResponse, err := s.nylas.CreateEvent(ctx, interfaces.NylasCreateEventRequest{
+	createEventRequest := interfaces.NylasCreateEventRequest{
 		Busy:        true,
 		Title:       meetingBookingEvent.Title,
 		Description: meetingBookingEvent.Description,
-		Location:    meetingBookingEvent.Location,
 		Participants: []interfaces.NylasEventParticipant{
 			{
 				Email: hostEmail,
@@ -888,7 +887,14 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 			StartTimezone: "Etc/UTC",
 			EndTimezone:   "Etc/UTC",
 		},
-	}, hostEmail, calendar.ID, meetingBookingEvent.EmailNotificationEnabled)
+	}
+	if enum.IsGoogleMeet(meetingBookingEvent.Location) {
+		createEventRequest.Conferencing = interfaces.NylasConferencing{
+			Provider:   string(interfaces.NylasProviderGoogleMeet),
+			Autocreate: struct{}{},
+		}
+	}
+	createdEvent, nylasResponse, err := s.nylas.CreateEvent(ctx, createEventRequest, hostEmail, calendar.ID, meetingBookingEvent.EmailNotificationEnabled)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to create meeting event: %v", err)
