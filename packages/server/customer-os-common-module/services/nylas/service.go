@@ -467,31 +467,31 @@ func (s *nylasService) GetCalendarAvailability(ctx context.Context, email, calen
 	return &response, nil
 }
 
-func (s *nylasService) CreateEvent(ctx context.Context, meetingData interfaces.NylasCreateEventRequest, hostEmail, calendarID string, notifyParticipants bool) (*interfaces.NylasEvent, error) {
+func (s *nylasService) CreateEvent(ctx context.Context, meetingData interfaces.NylasCreateEventRequest, hostEmail, calendarID string, notifyParticipants bool) (*interfaces.NylasEvent, string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.CreateEvent")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", meetingData)
 	spans.LogKV("hostEmail", hostEmail, "calendarID", calendarID, "notifyParticipants", notifyParticipants)
 
 	if calendarID == "" {
-		return nil, fmt.Errorf("calendar ID is required")
+		return nil, "", fmt.Errorf("calendar ID is required")
 	}
 
 	// Get Nylas grant ID
 	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, common.GetTenantFromContext(ctx), hostEmail)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to get Nylas grant ID: %v", err)
+		return nil, "", fmt.Errorf("failed to get Nylas grant ID: %v", err)
 	}
 	if grant == nil {
-		return nil, fmt.Errorf("Nylas grant not found")
+		return nil, "", fmt.Errorf("Nylas grant not found")
 	}
 
 	// Marshal request body
 	bodyBytes, err := json.Marshal(meetingData)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to marshal request body: %v", err)
+		return nil, "", fmt.Errorf("failed to marshal request body: %v", err)
 	}
 
 	// Create request to Nylas v3 API
@@ -505,7 +505,7 @@ func (s *nylasService) CreateEvent(ctx context.Context, meetingData interfaces.N
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to create request: %v", err)
+		return nil, "", fmt.Errorf("failed to create request: %v", err)
 	}
 
 	// Set headers
@@ -517,29 +517,29 @@ func (s *nylasService) CreateEvent(ctx context.Context, meetingData interfaces.N
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to make request: %v", err)
+		return nil, "", fmt.Errorf("failed to make request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err = io.ReadAll(resp.Body)
 	if err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to read response body: %v", err)
+		return nil, "", fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	spans.LogKV("nylas.response", string(bodyBytes))
 
 	if resp.StatusCode != http.StatusOK {
 		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
-		return nil, fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(bodyBytes))
+		return nil, "", fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	// Parse response
 	var response interfaces.NylasEvent
 	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&response); err != nil {
 		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+		return nil, "", fmt.Errorf("failed to decode response: %v", err)
 	}
 
-	return &response, nil
+	return &response, string(bodyBytes), nil
 }

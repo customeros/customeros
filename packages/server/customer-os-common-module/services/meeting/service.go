@@ -862,7 +862,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 	}
 
 	// create meeting event
-	createdEvent, err := s.nylas.CreateEvent(ctx, interfaces.NylasCreateEventRequest{
+	createdEvent, nylasResponse, err := s.nylas.CreateEvent(ctx, interfaces.NylasCreateEventRequest{
 		Busy:        true,
 		Title:       meetingBookingEvent.Title,
 		Description: meetingBookingEvent.Description,
@@ -896,6 +896,24 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 	if createdEvent == nil {
 		spans.TraceError(fmt.Errorf("failed to create meeting event, createdEvent is nil"))
 		return nil, fmt.Errorf("failed to create meeting event")
+	}
+
+	// store booked event
+	err = s.postgres.MeetingBookedEventRepository.Create(ctx, &postgresEntity.MeetingBookedEvent{
+		MeetingBookingEventID: meetingBookingEventID,
+		Tenant:                tenant,
+		HostEmail:             hostEmail,
+		ClientEmail:           clientEmail,
+		ClientName:            clientName,
+		ClientPhone:           clientPhone,
+		StartTime:             startTimeInUTC,
+		EndTime:               endTimeInUTC,
+		DurationMins:          int64(durationMins),
+		NylasResponse:         nylasResponse,
+		Canceled:              false,
+	})
+	if err != nil {
+		spans.TraceError(err)
 	}
 
 	startTimeInTimeZone, err := utils.GetTimeInTimeZone(startTimeInUTC, timezone)
