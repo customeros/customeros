@@ -441,6 +441,7 @@ func CancelMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Meeting canceled successfully",
+			"status":  "canceled",
 		})
 	}
 }
