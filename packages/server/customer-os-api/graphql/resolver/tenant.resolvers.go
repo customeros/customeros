@@ -118,12 +118,9 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 
 	spans.LogObjectAsJson("request.input", input)
 
-	//LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
-	//		BaseCurrency:         baseCurrency,
 	dataFields := data_fields.TenantSettingsFields{
-		WorkspaceName:        input.WorkspaceName,
-		WorkspaceLogo:        input.WorkspaceLogo,
-		LogoRepositoryFileId: input.LogoRepositoryFileID,
+		WorkspaceName: input.WorkspaceName,
+		WorkspaceLogo: input.WorkspaceLogo,
 	}
 	if input.BaseCurrency != nil {
 		dataFields.BaseCurrency = utils.StringPtr(input.BaseCurrency.String())

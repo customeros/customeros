@@ -1994,6 +1994,7 @@ type ComplexityRoot struct {
 		LogoURL              func(childComplexity int) int
 		OpportunityStages    func(childComplexity int) int
 		WorkspaceLogo        func(childComplexity int) int
+		WorkspaceLogoURL     func(childComplexity int) int
 		WorkspaceName        func(childComplexity int) int
 	}
 
@@ -14266,6 +14267,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.TenantSettings.WorkspaceLogo(childComplexity), true
 
+	case "TenantSettings.workspaceLogoUrl":
+		if e.complexity.TenantSettings.WorkspaceLogoURL == nil {
+			break
+		}
+
+		return e.complexity.TenantSettings.WorkspaceLogoURL(childComplexity), true
+
 	case "TenantSettings.workspaceName":
 		if e.complexity.TenantSettings.WorkspaceName == nil {
 			break
@@ -19384,12 +19392,13 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoRepositoryFileId:   String
-    baseCurrency:           Currency
-    billingEnabled:         Boolean! @deprecated
-    opportunityStages:      [TenantSettingsOpportunityStageConfiguration!]!
-    workspaceLogo:          String
-    workspaceName:          String
+    logoRepositoryFileId:       String @deprecated(reason: "Use workspaceLogoUrl")
+    baseCurrency:        Currency
+    billingEnabled:      Boolean! @deprecated
+    opportunityStages:   [TenantSettingsOpportunityStageConfiguration!]!
+    workspaceLogo:       String @deprecated(reason: "Use workspaceLogoUrl")
+    workspaceLogoUrl:    String
+    workspaceName:       String
 
     """
     Deprecated
@@ -19565,15 +19574,13 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    """
-    Deprecated
-    """
+    baseCurrency:   Currency
+    workspaceName:  String
+
     patch:                  Boolean @deprecated(reason: "Not used")
-    logoUrl:                String
-    logoRepositoryFileId:   String
-    baseCurrency:           Currency
-    workspaceLogo:          String
-    workspaceName:          String
+    logoUrl:                String @deprecated(reason: "Use workspaceLogoUrl")
+    logoRepositoryFileId:   String @deprecated
+    workspaceLogo:          String @deprecated
     billingEnabled:         Boolean @deprecated
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
@@ -88617,6 +88624,8 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx cont
 				return ec.fieldContext_TenantSettings_opportunityStages(ctx, field)
 			case "workspaceLogo":
 				return ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
+			case "workspaceLogoUrl":
+				return ec.fieldContext_TenantSettings_workspaceLogoUrl(ctx, field)
 			case "workspaceName":
 				return ec.fieldContext_TenantSettings_workspaceName(ctx, field)
 			case "logoUrl":
@@ -110746,6 +110755,8 @@ func (ec *executionContext) fieldContext_Query_tenantSettings(_ context.Context,
 				return ec.fieldContext_TenantSettings_opportunityStages(ctx, field)
 			case "workspaceLogo":
 				return ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
+			case "workspaceLogoUrl":
+				return ec.fieldContext_TenantSettings_workspaceLogoUrl(ctx, field)
 			case "workspaceName":
 				return ec.fieldContext_TenantSettings_workspaceName(ctx, field)
 			case "logoUrl":
@@ -118962,6 +118973,47 @@ func (ec *executionContext) _TenantSettings_workspaceLogo(ctx context.Context, f
 }
 
 func (ec *executionContext) fieldContext_TenantSettings_workspaceLogo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_workspaceLogoUrl(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_workspaceLogoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkspaceLogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_workspaceLogoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TenantSettings",
 		Field:      field,
@@ -131452,13 +131504,27 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"patch", "logoUrl", "logoRepositoryFileId", "baseCurrency", "workspaceLogo", "workspaceName", "billingEnabled"}
+	fieldsInOrder := [...]string{"baseCurrency", "workspaceName", "patch", "logoUrl", "logoRepositoryFileId", "workspaceLogo", "billingEnabled"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "baseCurrency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseCurrency"))
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseCurrency = data
+		case "workspaceName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WorkspaceName = data
 		case "patch":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -131480,13 +131546,6 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 				return it, err
 			}
 			it.LogoRepositoryFileID = data
-		case "baseCurrency":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseCurrency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.BaseCurrency = data
 		case "workspaceLogo":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceLogo"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -131494,13 +131553,6 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 				return it, err
 			}
 			it.WorkspaceLogo = data
-		case "workspaceName":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspaceName"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.WorkspaceName = data
 		case "billingEnabled":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingEnabled"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -149274,6 +149326,8 @@ func (ec *executionContext) _TenantSettings(ctx context.Context, sel ast.Selecti
 			}
 		case "workspaceLogo":
 			out.Values[i] = ec._TenantSettings_workspaceLogo(ctx, field, obj)
+		case "workspaceLogoUrl":
+			out.Values[i] = ec._TenantSettings_workspaceLogoUrl(ctx, field, obj)
 		case "workspaceName":
 			out.Values[i] = ec._TenantSettings_workspaceName(ctx, field, obj)
 		case "logoUrl":

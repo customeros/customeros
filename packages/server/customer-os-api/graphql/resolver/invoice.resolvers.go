@@ -348,7 +348,7 @@ func (r *mutationResolver) InvoiceSimulate(ctx context.Context, input model.Invo
 			}
 			if tenantBillingProfile != nil {
 				provider = model.InvoiceProvider{
-					LogoRepositoryFileID: utils.StringPtr(tenantSettings.LogoRepositoryFileId),
+					LogoRepositoryFileID: utils.StringPtr(tenantSettings.WorkspaceLogo), // TODO alexb replace with LogoIdentifier
 					Name:                 utils.StringPtr(tenantBillingProfile.LegalName),
 					AddressLine1:         utils.StringPtr(tenantBillingProfile.AddressLine1),
 					AddressLine2:         utils.StringPtr(tenantBillingProfile.AddressLine2),

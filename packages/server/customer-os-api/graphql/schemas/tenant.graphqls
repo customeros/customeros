@@ -14,12 +14,13 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoRepositoryFileId:   String
-    baseCurrency:           Currency
-    billingEnabled:         Boolean! @deprecated
-    opportunityStages:      [TenantSettingsOpportunityStageConfiguration!]!
-    workspaceLogo:          String
-    workspaceName:          String
+    logoRepositoryFileId:       String @deprecated(reason: "Use workspaceLogoUrl")
+    baseCurrency:        Currency
+    billingEnabled:      Boolean! @deprecated
+    opportunityStages:   [TenantSettingsOpportunityStageConfiguration!]!
+    workspaceLogo:       String @deprecated(reason: "Use workspaceLogoUrl")
+    workspaceLogoUrl:    String
+    workspaceName:       String
 
     """
     Deprecated
@@ -195,14 +196,12 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    """
-    Deprecated
-    """
+    baseCurrency:   Currency
+    workspaceName:  String
+
     patch:                  Boolean @deprecated(reason: "Not used")
-    logoUrl:                String
-    logoRepositoryFileId:   String
-    baseCurrency:           Currency
-    workspaceLogo:          String
-    workspaceName:          String
+    logoUrl:                String @deprecated(reason: "Use workspaceLogoUrl")
+    logoRepositoryFileId:   String @deprecated
+    workspaceLogo:          String @deprecated
     billingEnabled:         Boolean @deprecated
 }

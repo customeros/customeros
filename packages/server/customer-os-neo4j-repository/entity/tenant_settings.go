@@ -13,6 +13,7 @@ const (
 	TenantSettingsPropertyBaseCurrency             TenantSettingsProperty = "baseCurrency"
 	TenantSettingsPropertyInvoicingPostpaid        TenantSettingsProperty = "invoicingPostpaid"
 	TenantSettingsPropertyWorkspaceLogo            TenantSettingsProperty = "workspaceLogo"
+	TenantSettingsPropertyWorkspaceLogoIdentifier  TenantSettingsProperty = "workspaceLogoIdentifier"
 	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
 	TenantSettingsPropertyEnrichContacts           TenantSettingsProperty = "enrichContacts"
 	TenantSettingsPropertyStripeCustomerPortalLink TenantSettingsProperty = "stripeCustomerPortalLink"
@@ -21,14 +22,21 @@ const (
 
 type TenantSettingsEntity struct {
 	Id                       string
-	LogoRepositoryFileId     string
 	BaseCurrency             enum.Currency
 	InvoicingPostpaid        bool
-	WorkspaceLogo            string
+	WorkspaceLogo            string // Deprecated
+	WorkspaceLogoIdentifier  string
 	WorkspaceName            string
 	CreatedAt                time.Time
 	UpdatedAt                time.Time
 	EnrichContacts           bool
 	StripeCustomerPortalLink string
 	SharedSlackChannelUrl    string
+}
+
+func (t *TenantSettingsEntity) GetWorkspaceLogoCdnUrl() string {
+	if t.WorkspaceLogoIdentifier == "" {
+		return ""
+	}
+	return "base" + "/" + t.WorkspaceLogoIdentifier // TODO alexb implement it
 }
