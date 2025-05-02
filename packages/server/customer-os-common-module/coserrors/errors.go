@@ -47,6 +47,7 @@ var (
 	// Meeting errors
 	ErrSlotNotAvailable     = errors.New("requested time slot is not available")
 	ErrMeetingAlreadyExists = errors.New("meeting already exists")
+	ErrMeetingNotFound      = errors.New("meeting not found")
 )
 
 func SkipTracing(err error) bool {

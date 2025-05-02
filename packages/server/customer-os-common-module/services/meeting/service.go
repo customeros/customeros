@@ -783,7 +783,7 @@ func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx c
 }
 
 // BookMeeting implements interfaces.MeetingService
-func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone string) (*interfaces.BookMeetingResult, error) {
+func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone string, isReschedule bool) (*interfaces.BookMeetingResult, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.BookMeeting")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
@@ -817,32 +817,34 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		timezone = postgresEntity.DefaultTimezone
 	}
 
-	// check if meeting already exists
-	existingMeetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
-	if err != nil {
-		spans.TraceError(err)
-		return nil, fmt.Errorf("failed to check if meeting already exists: %v", err)
-	}
-	if existingMeetingBookedEvent != nil {
-		startTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.StartTime, timezone)
+	if !isReschedule {
+		// check if meeting already exists
+		existingMeetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
 		if err != nil {
 			spans.TraceError(err)
-			startTimeInTimeZone = existingMeetingBookedEvent.StartTime
+			return nil, fmt.Errorf("failed to check if meeting already exists: %v", err)
 		}
-		endTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.EndTime, timezone)
-		if err != nil {
-			spans.TraceError(err)
-			endTimeInTimeZone = existingMeetingBookedEvent.EndTime
-		}
-		result := interfaces.BookMeetingResult{
-			StartTime: startTimeInTimeZone,
-			EndTime:   endTimeInTimeZone,
-			HostEmail: existingMeetingBookedEvent.HostEmail,
-			HostName:  existingMeetingBookedEvent.HostName,
-		}
+		if existingMeetingBookedEvent != nil {
+			startTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.StartTime, timezone)
+			if err != nil {
+				spans.TraceError(err)
+				startTimeInTimeZone = existingMeetingBookedEvent.StartTime
+			}
+			endTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.EndTime, timezone)
+			if err != nil {
+				spans.TraceError(err)
+				endTimeInTimeZone = existingMeetingBookedEvent.EndTime
+			}
+			result := interfaces.BookMeetingResult{
+				StartTime: startTimeInTimeZone,
+				EndTime:   endTimeInTimeZone,
+				HostEmail: existingMeetingBookedEvent.HostEmail,
+				HostName:  existingMeetingBookedEvent.HostName,
+			}
 
-		spans.LogObjectAsJson("result", result)
-		return &result, coserrors.ErrMeetingAlreadyExists
+			spans.LogObjectAsJson("result", result)
+			return &result, coserrors.ErrMeetingAlreadyExists
+		}
 	}
 
 	// validate client email address
@@ -1031,14 +1033,24 @@ func (s *meetingService) CancelMeeting(ctx context.Context, meetingBookingEventI
 		spans.LogKV("result", "no meeting booked event found")
 		return nil
 	}
-	if meetingBookedEvent.Canceled {
-		spans.LogKV("result", "meeting already canceled")
-		return nil
+
+	err = s.cancelBookedMeeting(ctx, meetingBookedEvent, meetingBookingEvent.EmailNotificationEnabled)
+	if err != nil {
+		spans.TraceError(err)
+		return fmt.Errorf("failed to cancel meeting: %v", err)
 	}
+
+	return nil
+}
+
+func (s *meetingService) cancelBookedMeeting(ctx context.Context, meetingBookedEvent *postgresEntity.MeetingBookedEvent, emailNotificationEnabled bool) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.CancelBookedMeeting")
+	defer spans.Finish()
+	spans.TagEntity(meetingBookedEvent.ID)
 
 	// call nylas to delete event
 	if meetingBookedEvent.NylasEventID != "" {
-		err = s.nylas.DeleteEvent(ctx, meetingBookedEvent.HostCalendarID, meetingBookedEvent.HostEmail, meetingBookedEvent.NylasEventID, meetingBookingEvent.EmailNotificationEnabled)
+		err := s.nylas.DeleteEvent(ctx, meetingBookedEvent.HostCalendarID, meetingBookedEvent.HostEmail, meetingBookedEvent.NylasEventID, emailNotificationEnabled)
 		if err != nil {
 			spans.TraceError(err)
 			return fmt.Errorf("failed to cancel meeting on nylas: %v", err)
@@ -1046,11 +1058,65 @@ func (s *meetingService) CancelMeeting(ctx context.Context, meetingBookingEventI
 	}
 
 	// update meeting booked event as canceled in COS
-	err = s.postgres.MeetingBookedEventRepository.Cancel(ctx, meetingBookedEvent.ID)
+	err := s.postgres.MeetingBookedEventRepository.Cancel(ctx, meetingBookedEvent.ID)
 	if err != nil {
 		spans.TraceError(err)
 		return fmt.Errorf("failed to cancel meeting booked event: %v", err)
 	}
 
 	return nil
+}
+
+// RescheduleMeeting implements interfaces.MeetingService
+func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail string) (*interfaces.BookMeetingResult, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.RescheduleMeeting")
+	defer spans.Finish()
+	spans.LogObjectAsJson("request", map[string]interface{}{
+		"meetingBookingEventID": meetingBookingEventID,
+		"startTime":             startTime,
+		"timezone":              timezone,
+		"email":                 clientEmail,
+	})
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	meetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get meeting booked event: %v", err)
+	}
+	if meetingBookedEvent == nil {
+		spans.LogKV("result", "no meeting booked event found")
+		return nil, coserrors.ErrMeetingNotFound
+	}
+
+	bookedMeeting, err := s.BookMeeting(ctx, meetingBookingEventID, startTime, timezone, meetingBookedEvent.ClientName, meetingBookedEvent.ClientEmail, meetingBookedEvent.ClientPhone, true)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to book meeting: %v", err)
+	}
+
+	// get meeting booking event
+	meetingBookingEvent, err := s.postgres.MeetingBookingEventRepository.GetById(ctx, tenant, meetingBookingEventID)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get meeting booking event: %v", err)
+	}
+	if meetingBookingEvent == nil {
+		return nil, fmt.Errorf("meeting booking event not found")
+	}
+
+	err = s.cancelBookedMeeting(ctx, meetingBookedEvent, meetingBookingEvent.EmailNotificationEnabled)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to cancel meeting: %v", err)
+	}
+
+	return bookedMeeting, nil
 }
