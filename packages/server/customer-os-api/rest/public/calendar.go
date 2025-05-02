@@ -51,6 +51,7 @@ type bookMeetingRequest struct {
 	Name       string `json:"name"`
 	Email      string `json:"email"`
 	Phone      string `json:"phone"`
+	Reason     string `json:"reason"`
 }
 
 type timezoneResponse struct {
@@ -348,7 +349,7 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
 		// Create meeting
-		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone)
+		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone, "", false)
 		if err != nil {
 			s.Log.Error("Failed to create meeting: %v", err)
 			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
@@ -440,6 +441,94 @@ func CancelMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Meeting canceled successfully",
+		})
+	}
+}
+
+func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "RescheduleMeeting")
+		defer spans.Finish()
+
+		var request bookMeetingRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Parse start time
+		startTime, err := utils.UnmarshalDateTime(request.StartTime)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start time format"})
+			return
+		}
+		if startTime == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing startTime in request"})
+			return
+		}
+
+		// Email is required
+		if request.Email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing email in request"})
+			return
+		}
+
+		// Calendar id is required
+		if request.CalendarId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing calendarId in request"})
+			return
+		}
+
+		// Get meeting booking event to determine tenant
+		meetingBookingEvent, err := s.Repositories.PostgresRepositories.MeetingBookingEventRepository.GetByIdCrossTenant(ctx, request.CalendarId)
+		if err != nil {
+			spans.TraceError(err)
+			s.Log.Error("Failed to get meeting booking event: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Calendar not found"})
+			return
+		}
+		if meetingBookingEvent == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Calendar not found"})
+			return
+		}
+
+		// Set tenant in context
+		ctx = common.WithCustomContext(
+			ctx,
+			&common.CustomContext{
+				Tenant: meetingBookingEvent.Tenant,
+			},
+		)
+		spans.TagTenant(meetingBookingEvent.Tenant)
+
+		// Create meeting
+		bookMeetingResult, err := s.CommonServices.MeetingService.RescheduleMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Email, request.Name, request.Phone, request.Reason)
+		if err != nil {
+			s.Log.Error("Failed to reschedule meeting: %v", err)
+			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Requested calendar slot is not available."})
+			} else if errors.Is(err, coserrors.ErrEmailNotDeliverable) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Email address is not deliverable. Please provide a valid email address."})
+			} else if errors.Is(err, coserrors.ErrMeetingNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Active meeting for this email not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reschedule meeting"})
+			}
+			return
+		}
+
+		if bookMeetingResult == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reschedule meeting"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Meeting rescheduled successfully",
+			"startTime": bookMeetingResult.StartTime,
+			"endTime":   bookMeetingResult.EndTime,
+			"hostEmail": bookMeetingResult.HostEmail,
+			"hostName":  bookMeetingResult.HostName,
+			"status":    "rescheduled",
 		})
 	}
 }

@@ -115,6 +115,13 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 	})
 
 	registerRoute(ctx, r, RouteConfig{
+		method:    "PUT",
+		path:      "/calendar/meeting",
+		handler:   public.RescheduleMeeting(s),
+		routeType: RoutePublic,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
 		path:      "/calendar/meeting",
 		handler:   public.CancelMeeting(s),

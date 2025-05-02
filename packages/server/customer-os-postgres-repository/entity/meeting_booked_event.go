@@ -19,6 +19,7 @@ type MeetingBookedEvent struct {
 	ClientEmail           string    `gorm:"column:client_email;size:255;not null" json:"clientEmail"`
 	ClientName            string    `gorm:"column:client_name;type:text;not null" json:"clientName"`
 	ClientPhone           string    `gorm:"column:client_phone;type:text;not null" json:"clientPhone"`
+	ClientReason          string    `gorm:"column:client_reason;type:text" json:"clientReason"`
 	StartTime             time.Time `gorm:"column:start_time;type:timestamp;not null" json:"startTime"`
 	EndTime               time.Time `gorm:"column:end_time;type:timestamp;not null" json:"endTime"`
 	DurationMins          int64     `gorm:"column:duration_mins;not null" json:"durationMins"`
