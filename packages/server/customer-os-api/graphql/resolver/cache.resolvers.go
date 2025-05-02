@@ -113,6 +113,16 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		response.CdnLogoURL = tenantSettings.GetWorkspaceLogoCdnUrl()
 	}
 
+	if tenantSettings != nil && tenantSettings.WorkspaceLogo != "" {
+		attachmentById, err := r.Services.CommonServices.AttachmentService.GetById(ctx, tenantSettings.WorkspaceLogo)
+		if err != nil {
+			spans.TraceError(err)
+			graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant logo attachment by id")
+			return nil, nil
+		}
+		response.CdnLogoURL = attachmentById.CdnUrl
+	}
+
 	// set is first login (if user first and last login are same)
 	if userEntity.FirstLogin != nil && userEntity.LastLogin != nil && userEntity.FirstLogin.Equal(*userEntity.LastLogin) {
 		response.IsFirstLogin = true
