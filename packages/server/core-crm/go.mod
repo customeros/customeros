@@ -116,7 +116,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.0 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.1 // indirect
 	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.6.0 // indirect
