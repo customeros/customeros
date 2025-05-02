@@ -783,7 +783,7 @@ func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx c
 }
 
 // BookMeeting implements interfaces.MeetingService
-func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone string, isReschedule bool) (*interfaces.BookMeetingResult, error) {
+func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone, reason string, isReschedule bool) (*interfaces.BookMeetingResult, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.BookMeeting")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
@@ -793,6 +793,8 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		"clientName":            clientName,
 		"clientEmail":           clientEmail,
 		"clientPhone":           clientPhone,
+		"reason":                reason,
+		"isReschedule":          isReschedule,
 	})
 
 	// validate tenant
@@ -961,6 +963,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		ClientEmail:           clientEmail,
 		ClientName:            clientName,
 		ClientPhone:           clientPhone,
+		ClientReason:          reason,
 		StartTime:             startTimeInUTC,
 		EndTime:               endTimeInUTC,
 		DurationMins:          int64(durationMins),
@@ -1068,7 +1071,7 @@ func (s *meetingService) cancelBookedMeeting(ctx context.Context, meetingBookedE
 }
 
 // RescheduleMeeting implements interfaces.MeetingService
-func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail string) (*interfaces.BookMeetingResult, error) {
+func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail, clientName, clientPhone, rescheduleReason string) (*interfaces.BookMeetingResult, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.RescheduleMeeting")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
@@ -1076,6 +1079,9 @@ func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEv
 		"startTime":             startTime,
 		"timezone":              timezone,
 		"email":                 clientEmail,
+		"clientName":            clientName,
+		"clientPhone":           clientPhone,
+		"rescheduleReason":      rescheduleReason,
 	})
 
 	// validate tenant
@@ -1096,7 +1102,7 @@ func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEv
 		return nil, coserrors.ErrMeetingNotFound
 	}
 
-	bookedMeeting, err := s.BookMeeting(ctx, meetingBookingEventID, startTime, timezone, meetingBookedEvent.ClientName, meetingBookedEvent.ClientEmail, meetingBookedEvent.ClientPhone, true)
+	bookedMeeting, err := s.BookMeeting(ctx, meetingBookingEventID, startTime, timezone, clientName, clientEmail, clientPhone, rescheduleReason, true)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to book meeting: %v", err)

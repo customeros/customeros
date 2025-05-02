@@ -51,6 +51,7 @@ type bookMeetingRequest struct {
 	Name       string `json:"name"`
 	Email      string `json:"email"`
 	Phone      string `json:"phone"`
+	Reason     string `json:"reason"`
 }
 
 type timezoneResponse struct {
@@ -348,7 +349,7 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
 		// Create meeting
-		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone, false)
+		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone, "", false)
 		if err != nil {
 			s.Log.Error("Failed to create meeting: %v", err)
 			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
@@ -501,7 +502,7 @@ func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
 		// Create meeting
-		bookMeetingResult, err := s.CommonServices.MeetingService.RescheduleMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Email)
+		bookMeetingResult, err := s.CommonServices.MeetingService.RescheduleMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Email, request.Name, request.Phone, request.Reason)
 		if err != nil {
 			s.Log.Error("Failed to reschedule meeting: %v", err)
 			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
