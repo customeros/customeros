@@ -176,7 +176,7 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 		targetPath := fmt.Sprintf("%s/%s", tenant, interfaces.WorkspacePath)
 
 		// Upload the logo using the media service
-		storageKey, err := h.services.CommonServices.MediaService.UploadImageDataToR2(ctx, data, targetPath, multipartFileHeader.Filename, true)
+		storageKey, err := h.services.CommonServices.MediaService.UploadImageDataToR2(ctx, data, targetPath, multipartFileHeader.Filename, false)
 		if err != nil {
 			message := fmt.Sprintf("Error uploading workspace logo: %v", err)
 			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
@@ -186,16 +186,15 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 		// Get the public URL
 		publicUrl := h.services.CommonServices.MediaService.GetPublicURL(storageKey)
 
-		if publicUrl != "" {
-			err = h.services.CommonServices.TenantSettingsService.UpdateTenantSettings(ctx, data_fields.TenantSettingsFields{
-				WorkspaceLogoUrl: &publicUrl,
-			})
-			if err != nil {
-				spans.TraceError(err)
-				message := fmt.Sprintf("Error updating tenant settings")
-				h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
-				return
-			}
+		err = h.services.CommonServices.TenantSettingsService.UpdateTenantSettings(ctx, data_fields.TenantSettingsFields{
+			WorkspaceLogoUrl: &publicUrl,
+			WorkspaceLogoKey: &storageKey,
+		})
+		if err != nil {
+			spans.TraceError(err)
+			message := fmt.Sprintf("Error updating tenant settings")
+			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
+			return
 		}
 
 		// Return both storage key and public URL

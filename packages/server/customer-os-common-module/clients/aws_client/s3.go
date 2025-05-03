@@ -2,8 +2,6 @@ package aws_client
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -19,7 +17,6 @@ type S3Client interface {
 	ListFiles(ctx context.Context, bucket string) ([]string, error)
 	ChangeRegion(ctx context.Context, region string)
 	Delete(ctx context.Context, bucket, key string) error
-	GetEndpoint() string
 }
 
 type s3Client struct {
@@ -114,8 +111,4 @@ func (s *s3Client) Delete(ctx context.Context, bucket, key string) error {
 		Key:    aws.String(key),
 	})
 	return err
-}
-
-func (s *s3Client) GetEndpoint() string {
-	return utils.IfNotNilString(*s.Config.Endpoint)
 }

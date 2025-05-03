@@ -5,6 +5,7 @@ type TenantSettingsFields struct {
 	InvoicingPostpaid *bool   `json:"invoicingPostpaid,omitempty"`
 	BaseCurrency      *string `json:"baseCurrency,omitempty"`
 	WorkspaceLogoUrl  *string `json:"workspaceLogoUrl,omitempty"`
+	WorkspaceLogoKey  *string `json:"workspaceLogoKey,omitempty"`
 	WorkspaceName     *string `json:"workspaceName,omitempty"`
 	WorkspaceLogo     *string `json:"workspaceLogo,omitempty"` // Deprecated
 }
@@ -15,5 +16,6 @@ func (fields TenantSettingsFields) IsEmpty() bool {
 		fields.BaseCurrency == nil &&
 		fields.WorkspaceLogo == nil &&
 		fields.WorkspaceLogoUrl == nil &&
+		fields.WorkspaceLogoKey == nil &&
 		fields.WorkspaceName == nil
 }

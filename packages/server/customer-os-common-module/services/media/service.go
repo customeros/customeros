@@ -2,8 +2,8 @@ package media
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -162,26 +162,28 @@ func (s *mediaService) UploadImageDataToR2(ctx context.Context, data []byte, r2F
 		return "", err
 	}
 
-	storageFileName := fileName
+	// prepare file name for r2 storage
+	storedFileName := fileName
 	if generateNewFileName {
 		fileExt := filepath.Ext(fileName)
-		storageFileName = utils.GenerateLowerAlphaNumeric(20)
+		storedFileName = utils.GenerateLowerAlphaNumeric(20)
 		if fileExt != "" {
-			storageFileName = storageFileName + fileExt
+			storedFileName = storedFileName + fileExt
 		}
 	}
 
-	// Construct storage key without bucket name since it's handled by the storage service
-	storageKey := fmt.Sprintf("%s/%s", r2FilePath, storageFileName)
-	spans.LogKV("storageKey", storageKey)
-
+	// prepare content type
 	contentType := getContentTypeFromExtension(fileName)
 	spans.LogKV("contentType", contentType)
+
+	// Construct storage key without bucket name since it's handled by the storage service
+	storageKey := fmt.Sprintf("%s/%s", r2FilePath, storedFileName)
+	spans.LogKV("storageKey", storageKey)
 
 	// Store the file in the storage service
 	if err := s.r2ImageStoragePublic.Upload(ctx, storageKey, data, contentType); err != nil {
 		spans.TraceError(err)
-		return "", fmt.Errorf("failed to upload attachment: %w", err)
+		return "", errors.Wrap(err, "failed to upload file to r2")
 	}
 
 	return storageKey, nil
@@ -238,6 +240,6 @@ func getContentTypeFromExtension(fileName string) string {
 	}
 }
 
-func (s *mediaService) GetPublicURL(storageKey string) string {
+func (s *mediaService) GetR2PublicURL(storageKey string) string {
 	return s.r2ImageStoragePublic.GetPublicURL(storageKey)
 }

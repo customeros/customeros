@@ -14,5 +14,5 @@ type MediaService interface {
 
 	UploadImageDataToR2(ctx context.Context, data []byte, r2FilePath, fileName string, generateNewFileName bool) (string, error)
 
-	GetPublicURL(storageKey string) string
+	GetR2PublicURL(storageKey string) string
 }
