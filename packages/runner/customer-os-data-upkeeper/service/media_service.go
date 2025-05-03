@@ -148,7 +148,7 @@ func (s *mediaService) downloadCompanyLogo(ctx context.Context, globalOrgId uint
 	spans.LogKV("imagePath", imagePath)
 	spans.LogKV("globalOrgId", globalOrgId)
 
-	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
+	imagePath, err := s.commonServices.MediaService.UploadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			spans.TraceError(err)
@@ -181,7 +181,7 @@ func (s *mediaService) downloadCompanyIcon(ctx context.Context, globalOrgId uint
 	spans.LogKV("imagePath", imagePath)
 	spans.LogKV("globalOrgId", globalOrgId)
 
-	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
+	imagePath, err := s.commonServices.MediaService.UploadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			spans.TraceError(err)
@@ -214,7 +214,7 @@ func (s *mediaService) downloadContactPhoto(ctx context.Context, globalContactId
 	spans.LogKV("imagePath", imagePath)
 	spans.LogKV("globalContactId", globalContactId)
 
-	imagePath, err := s.commonServices.MediaService.DownloadImageToS3(ctx, imageUrl, BUCKET, imagePath)
+	imagePath, err := s.commonServices.MediaService.UploadImageToS3(ctx, imageUrl, BUCKET, imagePath)
 	if err != nil {
 		if !errors.Is(err, coserrors.ErrResourceNotFound) && !errors.Is(err, coserrors.ErrResourceForbidden) {
 			spans.TraceError(err)

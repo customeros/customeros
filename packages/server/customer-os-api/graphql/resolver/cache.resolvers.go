@@ -109,8 +109,8 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		return nil, nil
 	}
 
-	if tenantSettings != nil && tenantSettings.LogoRepositoryFileId != "" {
-		attachmentById, err := r.Services.CommonServices.AttachmentService.GetById(ctx, tenantSettings.LogoRepositoryFileId)
+	if tenantSettings != nil && tenantSettings.WorkspaceLogo != "" {
+		attachmentById, err := r.Services.CommonServices.AttachmentService.GetById(ctx, tenantSettings.WorkspaceLogo)
 		if err != nil {
 			spans.TraceError(err)
 			graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant logo attachment by id")

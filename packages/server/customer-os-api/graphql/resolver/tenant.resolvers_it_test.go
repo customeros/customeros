@@ -131,8 +131,7 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
-		LogoRepositoryFileId: "logoRepositoryFileId",
-		BaseCurrency:         neo4jenum.CurrencyUSD,
+		BaseCurrency: neo4jenum.CurrencyUSD,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tenant/get_tenant_settings"))
@@ -147,7 +146,6 @@ func TestQueryResolver_GetTenantSettings(t *testing.T) {
 	require.NotNil(t, tenantGraphqlResponse)
 
 	tenantSettings := tenantGraphqlResponse.TenantSettings
-	require.Equal(t, "logoRepositoryFileId", *tenantSettings.LogoRepositoryFileID)
 	require.Equal(t, model.CurrencyUsd, *tenantSettings.BaseCurrency)
 }
 

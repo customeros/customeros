@@ -36,6 +36,21 @@ func GenerateLowerAlpha(length int) string {
 	return string(bytes)
 }
 
+func GenerateLowerAlphaNumeric(length int) string {
+	if length < 1 {
+		return ""
+	}
+	bytes := make([]byte, length)
+	for i := range bytes {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charsetLowerAlphaNumeric))))
+		if err != nil {
+			panic(err)
+		}
+		bytes[i] = charsetLowerAlphaNumeric[num.Int64()]
+	}
+	return string(bytes)
+}
+
 func GenerateKey(length int, includeSpecial bool) string {
 	alphaNumericLength := length
 	if includeSpecial {

@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/aws/aws-sdk-go/aws"

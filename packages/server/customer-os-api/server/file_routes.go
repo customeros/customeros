@@ -59,4 +59,12 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 		routeType: RouteFiles,
 		services:  s,
 	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/workspace-logo", FilePath),
+		handler:   h.Files.UploadWorkspaceLogo(),
+		routeType: RouteFiles,
+		services:  s,
+	})
 }

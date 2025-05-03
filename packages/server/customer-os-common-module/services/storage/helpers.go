@@ -22,7 +22,7 @@ func NewS3StorageService(awsRegion, accessKeyID, accessKeySecret, bucketName str
 }
 
 // NewR2StorageService creates a StorageService configured for Cloudflare R2
-func NewR2StorageService(accountID, accessKeyID, accessKeySecret, bucketName string, isPublic bool) interfaces.StorageService {
+func NewR2StorageService(accountID, accessKeyID, accessKeySecret, bucketName, cdnDomain string, isPublic bool) interfaces.StorageService {
 	r2Client := aws_client.NewS3Client(&aws.Config{
 		Endpoint:         aws.String("https://" + accountID + ".r2.cloudflarestorage.com"),
 		Region:           aws.String("auto"),
@@ -33,5 +33,6 @@ func NewR2StorageService(accountID, accessKeyID, accessKeySecret, bucketName str
 	return NewStorageService(r2Client, StorageConfig{
 		BucketName: bucketName,
 		IsPublic:   isPublic,
+		CDNDomain:  cdnDomain,
 	})
 }

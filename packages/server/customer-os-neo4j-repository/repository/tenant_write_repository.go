@@ -255,10 +255,6 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 		cypher += ", ts.baseCurrency=$baseCurrency"
 		params["baseCurrency"] = *data.BaseCurrency
 	}
-	if data.LogoRepositoryFileId != nil {
-		cypher += ", ts.logoRepositoryFileId=$logoRepositoryFileId"
-		params["logoRepositoryFileId"] = *data.LogoRepositoryFileId
-	}
 	if data.WorkspaceLogo != nil {
 		cypher += ", ts.workspaceLogo=$workspaceLogo"
 		params["workspaceLogo"] = *data.WorkspaceLogo
@@ -266,6 +262,10 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	if data.WorkspaceName != nil {
 		cypher += ", ts.workspaceName=$workspaceName"
 		params["workspaceName"] = *data.WorkspaceName
+	}
+	if data.WorkspaceLogoUrl != nil {
+		cypher += ", ts.workspaceLogoUrl=$workspaceLogoUrl"
+		params["workspaceLogoUrl"] = *data.WorkspaceLogoUrl
 	}
 
 	span.LogFields(log.String("cypher", cypher))

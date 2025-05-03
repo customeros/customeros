@@ -14,11 +14,10 @@ func MapEntityToTenantSettings(entity *neo4jentity.TenantSettingsEntity) *model.
 		return nil
 	}
 	return &model.TenantSettings{
-		LogoRepositoryFileID: utils.StringPtrNillable(entity.LogoRepositoryFileId),
-		BaseCurrency:         utils.ToPtr(mapper.MapCurrencyToModel(entity.BaseCurrency)),
-		LogoURL:              entity.LogoRepositoryFileId,
-		WorkspaceLogo:        utils.StringPtrNillable(entity.WorkspaceLogo),
-		WorkspaceName:        utils.StringPtrNillable(entity.WorkspaceName),
+		BaseCurrency:     utils.ToPtr(mapper.MapCurrencyToModel(entity.BaseCurrency)),
+		WorkspaceLogo:    utils.StringPtrNillable(entity.WorkspaceLogo),
+		WorkspaceName:    utils.StringPtrNillable(entity.WorkspaceName),
+		WorkspaceLogoURL: utils.StringPtrNillable(entity.WorkspaceLogoUrl),
 	}
 }
 

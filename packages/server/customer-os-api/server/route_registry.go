@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
@@ -75,8 +76,17 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 		)
 
 	case RouteFiles:
+		if strings.Contains(config.path, "workspace-logo") {
+			middlewares = append(middlewares,
+				security.ApiKeyCheckerHTTP(
+					config.services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository,
+					config.services.Cfg.App.AppKey,
+					security.WithCache(config.cache),
+				))
+		}
 		middlewares = append(middlewares,
 			config.services.JWTService.GetJWTTenantUserEnhancer(),
+			enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
 			security.TenantUserContextEnhancer(
 				config.services.Repositories.Neo4jRepositories,
 				security.WithCache(config.cache),

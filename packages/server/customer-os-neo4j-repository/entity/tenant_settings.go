@@ -9,26 +9,29 @@ import (
 type TenantSettingsProperty string
 
 const (
-	TenantSettingsPropertyLogoRepositoryFileId     TenantSettingsProperty = "logoRepositoryFileId"
 	TenantSettingsPropertyBaseCurrency             TenantSettingsProperty = "baseCurrency"
 	TenantSettingsPropertyInvoicingPostpaid        TenantSettingsProperty = "invoicingPostpaid"
-	TenantSettingsPropertyWorkspaceLogo            TenantSettingsProperty = "workspaceLogo"
+	TenantSettingsPropertyWorkspaceLogoUrl         TenantSettingsProperty = "workspaceLogoUrl"
 	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
 	TenantSettingsPropertyEnrichContacts           TenantSettingsProperty = "enrichContacts"
 	TenantSettingsPropertyStripeCustomerPortalLink TenantSettingsProperty = "stripeCustomerPortalLink"
 	TenantSettingsPropertySlackChannelUrl          TenantSettingsProperty = "slackChannelUrl"
+	// Deprecated
+	TenantSettingsPropertyWorkspaceLogo TenantSettingsProperty = "workspaceLogo"
 )
 
 type TenantSettingsEntity struct {
 	Id                       string
-	LogoRepositoryFileId     string
 	BaseCurrency             enum.Currency
 	InvoicingPostpaid        bool
-	WorkspaceLogo            string
+	WorkspaceLogoUrl         string
 	WorkspaceName            string
 	CreatedAt                time.Time
 	UpdatedAt                time.Time
 	EnrichContacts           bool
 	StripeCustomerPortalLink string
 	SharedSlackChannelUrl    string
+
+	// Deprecated
+	WorkspaceLogo string
 }
