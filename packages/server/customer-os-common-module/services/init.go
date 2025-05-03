@@ -251,7 +251,7 @@ func InitCommonServices(
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
-	mediaImpl := media.NewMediaService(postgresRepositories)
+	mediaImpl := media.NewMediaService(postgresRepositories, &cfg.Infrastructure.R2StorageConfig)
 	novuImpl := novu.NewNovuService(cfg.External.NovuConfig.ApiKey)
 	openSRSImpl := opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories)
 	phoneNumberImpl := phone_number.NewPhoneNumberService(neo4jRepositories, eventsImpl)

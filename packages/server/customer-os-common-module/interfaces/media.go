@@ -4,6 +4,15 @@ import (
 	"context"
 )
 
+const (
+	WorkspacePath   = "workspace"
+	UserProfilePath = "user-profile"
+)
+
 type MediaService interface {
-	DownloadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error)
+	UploadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error)
+
+	UploadImageDataToR2(ctx context.Context, data []byte, r2FilePath, fileName string, generateNewFileName bool) (string, error)
+
+	GetPublicURL(storageKey string) string
 }

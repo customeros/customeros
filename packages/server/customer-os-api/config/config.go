@@ -54,6 +54,7 @@ type CommonConfig struct {
 	Temporal          commonconf.TemporalConfig
 	CrustData         commonconf.CrustDataConfig
 	NylasConfig       commonconf.NylasConfig
+	R2Config          commonconf.R2StorageConfig
 }
 
 type AppConfig struct {
@@ -124,6 +125,7 @@ func InitConfig() (*Config, error) {
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
+			R2StorageConfig:     cmnCfg.R2Config,
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,

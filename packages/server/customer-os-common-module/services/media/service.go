@@ -3,42 +3,58 @@ package media
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/storage"
 )
 
 const (
-	AWS_REGION = "eu-west-1"
+	AWS_REGION            = "eu-west-1"
+	R2_IMAGES_BUCKET_NAME = "images"
 )
 
 type mediaService struct {
-	postgresRepository *postgres_repository.Repositories
-	s3client           aws_client.S3Client
+	postgresRepository   *postgres_repository.Repositories
+	s3client             aws_client.S3Client
+	r2ImageStoragePublic interfaces.StorageService
 }
 
-func NewMediaService(postgres *postgres_repository.Repositories) interfaces.MediaService {
+func NewMediaService(postgres *postgres_repository.Repositories, cfg *config.R2StorageConfig) interfaces.MediaService {
 	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String(AWS_REGION)})
+	r2ImageStorage := storage.NewR2StorageService(
+		cfg.AccountID,
+		cfg.AccessKeyID,
+		cfg.AccessKeySecret,
+		R2_IMAGES_BUCKET_NAME,
+		cfg.CDNDomainImages,
+		true,
+	)
 
 	return &mediaService{
-		postgresRepository: postgres,
-		s3client:           s3,
+		postgresRepository:   postgres,
+		s3client:             s3,
+		r2ImageStoragePublic: r2ImageStorage,
 	}
 }
 
-// DownloadImageToS3 downloads an image from a URL directly to an S3 bucket
+// UploadImageToS3 downloads an image from a URL directly to an S3 bucket
 // using the existing S3Client implementation
-func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "MediaService.DownloadImageToS3")
+func (s *mediaService) UploadImageToS3(ctx context.Context, imageURL, bucketName, s3FilePath string) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MediaService.UploadImageToS3")
 	defer spans.Finish()
 	spans.LogKV("url", imageURL)
 	spans.LogKV("bucket", bucketName)
@@ -109,19 +125,7 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 	}
 
 	if contentType == "" {
-		ext := strings.ToLower(filepath.Ext(s3FilePath))
-		switch ext {
-		case ".jpg", ".jpeg":
-			contentType = "image/jpeg"
-		case ".png":
-			contentType = "image/png"
-		case ".gif":
-			contentType = "image/gif"
-		case ".webp":
-			contentType = "image/webp"
-		default:
-			contentType = "image/jpeg" // fallback
-		}
+		contentType = getContentTypeFromExtension(s3FilePath)
 	}
 
 	// Upload directly to S3 using the provided S3Client
@@ -137,6 +141,50 @@ func (s *mediaService) DownloadImageToS3(ctx context.Context, imageURL, bucketNa
 	}
 
 	return s3FilePath, nil
+}
+
+func (s *mediaService) UploadImageDataToR2(ctx context.Context, data []byte, r2FilePath, fileName string, generateNewFileName bool) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MediaService.UploadImageDataToR2")
+	defer spans.Finish()
+	spans.LogKV("r2FilePath", r2FilePath)
+	spans.LogKV("fileName", fileName)
+	spans.LogKV("generateNewFileName", generateNewFileName)
+
+	if r2FilePath == "" {
+		err := errors.New("r2FilePath cannot be empty")
+		spans.TraceError(err)
+		return "", err
+	}
+
+	if fileName == "" {
+		err := errors.New("fileName cannot be empty")
+		spans.TraceError(err)
+		return "", err
+	}
+
+	storageFileName := fileName
+	if generateNewFileName {
+		fileExt := filepath.Ext(fileName)
+		storageFileName = utils.GenerateLowerAlphaNumeric(20)
+		if fileExt != "" {
+			storageFileName = storageFileName + fileExt
+		}
+	}
+
+	// Construct storage key without bucket name since it's handled by the storage service
+	storageKey := fmt.Sprintf("%s/%s", r2FilePath, storageFileName)
+	spans.LogKV("storageKey", storageKey)
+
+	contentType := getContentTypeFromExtension(fileName)
+	spans.LogKV("contentType", contentType)
+
+	// Store the file in the storage service
+	if err := s.r2ImageStoragePublic.Upload(ctx, storageKey, data, contentType); err != nil {
+		spans.TraceError(err)
+		return "", fmt.Errorf("failed to upload attachment: %w", err)
+	}
+
+	return storageKey, nil
 }
 
 // detectExtension determines the appropriate file extension based on content type
@@ -171,4 +219,25 @@ func detectExtension(contentType, url string) string {
 	// If we still can't determine the extension, default to .jpg
 	// since it's a common image format
 	return ".jpg"
+}
+
+// getContentTypeFromExtension determines the content type based on file extension
+func getContentTypeFromExtension(fileName string) string {
+	ext := strings.ToLower(filepath.Ext(fileName))
+	switch ext {
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	default:
+		return "image/jpeg" // fallback
+	}
+}
+
+func (s *mediaService) GetPublicURL(storageKey string) string {
+	return s.r2ImageStoragePublic.GetPublicURL(storageKey)
 }

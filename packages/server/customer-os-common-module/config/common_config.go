@@ -22,6 +22,7 @@ type InfrastructureConfig struct {
 	JaegerConfig        telemetry.JaegerConfig
 	OpenTelemetryConfig telemetry.OpenTelemetryConfig
 	LoggerConfig        logger.Config
+	R2StorageConfig     R2StorageConfig
 }
 
 type InternalServicesConfig struct {
