@@ -184,7 +184,7 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 		}
 
 		// Get the public URL
-		publicUrl := h.services.CommonServices.MediaService.GetPublicURL(storageKey)
+		publicUrl := h.services.CommonServices.MediaService.GetR2PublicURL(storageKey)
 
 		err = h.services.CommonServices.TenantSettingsService.UpdateTenantSettings(ctx, data_fields.TenantSettingsFields{
 			WorkspaceLogoUrl: &publicUrl,
