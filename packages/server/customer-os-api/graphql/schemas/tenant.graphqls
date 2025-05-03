@@ -14,17 +14,14 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoRepositoryFileId:       String @deprecated(reason: "Use workspaceLogoUrl")
     baseCurrency:        Currency
-    billingEnabled:      Boolean! @deprecated
     opportunityStages:   [TenantSettingsOpportunityStageConfiguration!]!
-    workspaceLogo:       String @deprecated(reason: "Use workspaceLogoUrl")
     workspaceLogoUrl:    String
     workspaceName:       String
 
-    """
-    Deprecated
-    """
+    billingEnabled:         Boolean! @deprecated
+    logoRepositoryFileId:   String @deprecated(reason: "Use workspaceLogoUrl")
+    workspaceLogo:          String @deprecated(reason: "Use workspaceLogoUrl")
     logoUrl:                String! @deprecated(reason: "Use logoRepositoryFileId")
 }
 

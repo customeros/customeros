@@ -2,6 +2,7 @@ package files
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -184,6 +185,18 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 
 		// Get the public URL
 		publicUrl := h.services.CommonServices.MediaService.GetPublicURL(storageKey)
+
+		if publicUrl != "" {
+			err = h.services.CommonServices.TenantSettingsService.UpdateTenantSettings(ctx, data_fields.TenantSettingsFields{
+				WorkspaceLogoUrl: &publicUrl,
+			})
+			if err != nil {
+				spans.TraceError(err)
+				message := fmt.Sprintf("Error updating tenant settings")
+				h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
+				return
+			}
+		}
 
 		// Return both storage key and public URL
 		resp := struct {

@@ -3241,15 +3241,14 @@ type TenantInput struct {
 }
 
 type TenantSettings struct {
-	LogoRepositoryFileID *string                                        `json:"logoRepositoryFileId,omitempty"`
 	BaseCurrency         *Currency                                      `json:"baseCurrency,omitempty"`
-	BillingEnabled       bool                                           `json:"billingEnabled"`
 	OpportunityStages    []*TenantSettingsOpportunityStageConfiguration `json:"opportunityStages"`
-	WorkspaceLogo        *string                                        `json:"workspaceLogo,omitempty"`
 	WorkspaceLogoURL     *string                                        `json:"workspaceLogoUrl,omitempty"`
 	WorkspaceName        *string                                        `json:"workspaceName,omitempty"`
-	// Deprecated
-	LogoURL string `json:"logoUrl"`
+	BillingEnabled       bool                                           `json:"billingEnabled"`
+	LogoRepositoryFileID *string                                        `json:"logoRepositoryFileId,omitempty"`
+	WorkspaceLogo        *string                                        `json:"workspaceLogo,omitempty"`
+	LogoURL              string                                         `json:"logoUrl"`
 }
 
 type TenantSettingsInput struct {

@@ -263,9 +263,9 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 		cypher += ", ts.workspaceName=$workspaceName"
 		params["workspaceName"] = *data.WorkspaceName
 	}
-	if data.WorkspaceLogoIdentifier != nil {
-		cypher += ", ts.workspaceLogoIdentifier=$workspaceLogoIdentifier"
-		params["workspaceLogoIdentifier"] = *data.WorkspaceLogoIdentifier
+	if data.WorkspaceLogoUrl != nil {
+		cypher += ", ts.workspaceLogoUrl=$workspaceLogoUrl"
+		params["workspaceLogoUrl"] = *data.WorkspaceLogoUrl
 	}
 
 	span.LogFields(log.String("cypher", cypher))

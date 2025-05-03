@@ -19392,17 +19392,14 @@ extend type Mutation {
 }
 
 type TenantSettings {
-    logoRepositoryFileId:       String @deprecated(reason: "Use workspaceLogoUrl")
     baseCurrency:        Currency
-    billingEnabled:      Boolean! @deprecated
     opportunityStages:   [TenantSettingsOpportunityStageConfiguration!]!
-    workspaceLogo:       String @deprecated(reason: "Use workspaceLogoUrl")
     workspaceLogoUrl:    String
     workspaceName:       String
 
-    """
-    Deprecated
-    """
+    billingEnabled:         Boolean! @deprecated
+    logoRepositoryFileId:   String @deprecated(reason: "Use workspaceLogoUrl")
+    workspaceLogo:          String @deprecated(reason: "Use workspaceLogoUrl")
     logoUrl:                String! @deprecated(reason: "Use logoRepositoryFileId")
 }
 
@@ -88614,20 +88611,20 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "logoRepositoryFileId":
-				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
 			case "baseCurrency":
 				return ec.fieldContext_TenantSettings_baseCurrency(ctx, field)
-			case "billingEnabled":
-				return ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
 			case "opportunityStages":
 				return ec.fieldContext_TenantSettings_opportunityStages(ctx, field)
-			case "workspaceLogo":
-				return ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
 			case "workspaceLogoUrl":
 				return ec.fieldContext_TenantSettings_workspaceLogoUrl(ctx, field)
 			case "workspaceName":
 				return ec.fieldContext_TenantSettings_workspaceName(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
+			case "logoRepositoryFileId":
+				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
+			case "workspaceLogo":
+				return ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
 			}
@@ -110745,20 +110742,20 @@ func (ec *executionContext) fieldContext_Query_tenantSettings(_ context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "logoRepositoryFileId":
-				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
 			case "baseCurrency":
 				return ec.fieldContext_TenantSettings_baseCurrency(ctx, field)
-			case "billingEnabled":
-				return ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
 			case "opportunityStages":
 				return ec.fieldContext_TenantSettings_opportunityStages(ctx, field)
-			case "workspaceLogo":
-				return ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
 			case "workspaceLogoUrl":
 				return ec.fieldContext_TenantSettings_workspaceLogoUrl(ctx, field)
 			case "workspaceName":
 				return ec.fieldContext_TenantSettings_workspaceName(ctx, field)
+			case "billingEnabled":
+				return ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
+			case "logoRepositoryFileId":
+				return ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
+			case "workspaceLogo":
+				return ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
 			case "logoUrl":
 				return ec.fieldContext_TenantSettings_logoUrl(ctx, field)
 			}
@@ -118760,47 +118757,6 @@ func (ec *executionContext) fieldContext_TenantImpersonateDetails_personal(_ con
 	return fc, nil
 }
 
-func (ec *executionContext) _TenantSettings_logoRepositoryFileId(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LogoRepositoryFileID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TenantSettings_logoRepositoryFileId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TenantSettings",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _TenantSettings_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_TenantSettings_baseCurrency(ctx, field)
 	if err != nil {
@@ -118837,50 +118793,6 @@ func (ec *executionContext) fieldContext_TenantSettings_baseCurrency(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Currency does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TenantSettings_billingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.BillingEnabled, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TenantSettings_billingEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TenantSettings",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -118939,47 +118851,6 @@ func (ec *executionContext) fieldContext_TenantSettings_opportunityStages(_ cont
 				return ec.fieldContext_TenantSettingsOpportunityStageConfiguration_likelihoodRate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TenantSettingsOpportunityStageConfiguration", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TenantSettings_workspaceLogo(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.WorkspaceLogo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TenantSettings_workspaceLogo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TenantSettings",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -119055,6 +118926,132 @@ func (ec *executionContext) _TenantSettings_workspaceName(ctx context.Context, f
 }
 
 func (ec *executionContext) fieldContext_TenantSettings_workspaceName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_billingEnabled(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_billingEnabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BillingEnabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_billingEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_logoRepositoryFileId(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_logoRepositoryFileId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoRepositoryFileID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_logoRepositoryFileId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantSettings_workspaceLogo(ctx context.Context, field graphql.CollectedField, obj *model.TenantSettings) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantSettings_workspaceLogo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkspaceLogo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantSettings_workspaceLogo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TenantSettings",
 		Field:      field,
@@ -149310,26 +149307,26 @@ func (ec *executionContext) _TenantSettings(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TenantSettings")
-		case "logoRepositoryFileId":
-			out.Values[i] = ec._TenantSettings_logoRepositoryFileId(ctx, field, obj)
 		case "baseCurrency":
 			out.Values[i] = ec._TenantSettings_baseCurrency(ctx, field, obj)
-		case "billingEnabled":
-			out.Values[i] = ec._TenantSettings_billingEnabled(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "opportunityStages":
 			out.Values[i] = ec._TenantSettings_opportunityStages(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "workspaceLogo":
-			out.Values[i] = ec._TenantSettings_workspaceLogo(ctx, field, obj)
 		case "workspaceLogoUrl":
 			out.Values[i] = ec._TenantSettings_workspaceLogoUrl(ctx, field, obj)
 		case "workspaceName":
 			out.Values[i] = ec._TenantSettings_workspaceName(ctx, field, obj)
+		case "billingEnabled":
+			out.Values[i] = ec._TenantSettings_billingEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logoRepositoryFileId":
+			out.Values[i] = ec._TenantSettings_logoRepositoryFileId(ctx, field, obj)
+		case "workspaceLogo":
+			out.Values[i] = ec._TenantSettings_workspaceLogo(ctx, field, obj)
 		case "logoUrl":
 			out.Values[i] = ec._TenantSettings_logoUrl(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

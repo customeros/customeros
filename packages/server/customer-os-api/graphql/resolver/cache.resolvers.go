@@ -109,10 +109,6 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		return nil, nil
 	}
 
-	if tenantSettings != nil && tenantSettings.WorkspaceLogoIdentifier != "" {
-		response.CdnLogoURL = tenantSettings.GetWorkspaceLogoCdnUrl()
-	}
-
 	if tenantSettings != nil && tenantSettings.WorkspaceLogo != "" {
 		attachmentById, err := r.Services.CommonServices.AttachmentService.GetById(ctx, tenantSettings.WorkspaceLogo)
 		if err != nil {
