@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -30,9 +28,8 @@ func NewFlowSenderWriteRepository(driver *neo4j.DriverWithContext, database stri
 }
 
 func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *neo4j_entity.FlowSenderEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderWriteRepository.Merge")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowSenderWriteRepository.Merge")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})
@@ -51,8 +48,8 @@ func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *neo4j
 		"updatedAt": utils.NowIfZero(entity.UpdatedAt),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -72,11 +69,10 @@ func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *neo4j
 }
 
 func (r *flowSenderWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderWriteRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowSenderWriteRepository.Delete")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -87,8 +83,8 @@ func (r *flowSenderWriteRepositoryImpl) Delete(ctx context.Context, id string) e
 		"id":     id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -101,7 +97,7 @@ func (r *flowSenderWriteRepositoryImpl) Delete(ctx context.Context, id string) e
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

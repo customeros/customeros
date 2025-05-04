@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type LogEntryWriteRepository interface {
@@ -29,12 +27,11 @@ func NewLogEntryWriteRepository(driver *neo4j.DriverWithContext, database string
 }
 
 func (r *logEntryWriteRepository) CreateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, logEntryId string, data data_fields.LogEntryFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryWriteRepository.CreateInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, logEntryId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LogEntryWriteRepository.CreateInTx")
+	defer spans.Finish()
+
+	spans.TagEntity(logEntryId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
 							MERGE (l:LogEntry {id:$logEntryId})<-[:LOGGED]-(o)
@@ -68,25 +65,24 @@ func (r *logEntryWriteRepository) CreateInTx(ctx context.Context, tx *neo4j.Mana
 		"contentType":  utils.IfNotNilString(data.ContentType),
 		"authorUserId": utils.IfNotNilString(data.AuthorUserId),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *logEntryWriteRepository) UpdateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, logEntryId string, data data_fields.LogEntryFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryWriteRepository.UpdateInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, logEntryId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LogEntryWriteRepository.UpdateInTx")
+	defer spans.Finish()
+
+	spans.TagEntity(logEntryId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (l:LogEntry_%s {id:$logEntryId}) SET l.updatedAt=datetime()`, tenant)
 	params := map[string]any{
@@ -106,8 +102,8 @@ func (r *logEntryWriteRepository) UpdateInTx(ctx context.Context, tx *neo4j.Mana
 		cypher += ", l.contentType=$contentType"
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -118,7 +114,7 @@ func (r *logEntryWriteRepository) UpdateInTx(ctx context.Context, tx *neo4j.Mana
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

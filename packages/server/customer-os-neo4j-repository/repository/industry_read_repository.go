@@ -3,12 +3,11 @@ package neo4j_repository
 import (
 	context2 "context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -31,10 +30,10 @@ func NewIndustryReadRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *industryReadRepository) GetAllForOrganizationIds(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryReadRepository.GetAllForOrganizationIds")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationIds", fmt.Sprintf("%v", organizationIds)))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IndustryReadRepository.GetAllForOrganizationIds")
+	defer spans.Finish()
+
+	spans.LogKV("organizationIds", fmt.Sprintf("%v", organizationIds))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_INDUSTRY]->(i:Industry) 
 				WHERE o.id in $organizationIds RETURN i, o.id`
@@ -44,8 +43,8 @@ func (r *industryReadRepository) GetAllForOrganizationIds(ctx context.Context, t
 		"organizationIds": organizationIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -55,17 +54,16 @@ func (r *industryReadRepository) GetAllForOrganizationIds(ctx context.Context, t
 		return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *industryReadRepository) GetInUseIndustries(ctx context2.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryReadRepository.GetInUseIndustries")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IndustryReadRepository.GetInUseIndustries")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})-[:HAS_INDUSTRY]->(i:Industry) 
 				RETURN DISTINCT i ORDER BY i.code`
@@ -74,8 +72,8 @@ func (r *industryReadRepository) GetInUseIndustries(ctx context2.Context, tenant
 		"tenant": tenant,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -85,26 +83,26 @@ func (r *industryReadRepository) GetInUseIndustries(ctx context2.Context, tenant
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), err
 }
 
 func (r *industryReadRepository) GetByCode(ctx context.Context, code string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryReadRepository.GetByCode")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("code", code))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IndustryReadRepository.GetByCode")
+	defer spans.Finish()
+
+	spans.LogKV("code", code)
 
 	cypher := `MATCH (i:Industry {code:$code}) RETURN i`
 	params := map[string]any{
 		"code": code,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -117,7 +115,7 @@ func (r *industryReadRepository) GetByCode(ctx context.Context, code string) (*d
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if len(result.([]*dbtype.Node)) == 0 {

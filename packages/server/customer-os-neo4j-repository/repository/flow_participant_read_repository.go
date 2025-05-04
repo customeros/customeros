@@ -6,13 +6,11 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -34,12 +32,11 @@ func NewFlowParticipantReadRepository(driver *neo4j.DriverWithContext, database 
 }
 
 func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.GetList")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowParticipantReadRepository.GetList")
+	defer spans.Finish()
 
 	if len(flowIds) > 0 {
-		span.LogFields(log.String("flowIds", fmt.Sprintf("%v", flowIds)))
+		spans.LogKV("flowIds", fmt.Sprintf("%v", flowIds))
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -55,8 +52,8 @@ func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds 
 	}
 	cypher += "RETURN fc, f.id"
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -69,10 +66,10 @@ func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds 
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	if len(result.([]*utils.DbNodeAndId)) == 0 {
 		return nil, nil
 	}
@@ -80,9 +77,8 @@ func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds 
 }
 
 func (r flowParticipantReadRepositoryImpl) CountWithStatus(ctx context.Context, flowId string, status neo4j_entity.FlowParticipantStatus) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.CountWithStatus")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowParticipantReadRepository.CountWithStatus")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -92,8 +88,8 @@ func (r flowParticipantReadRepositoryImpl) CountWithStatus(ctx context.Context, 
 		"flowId": flowId,
 		"status": status,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -109,16 +105,17 @@ func (r flowParticipantReadRepositoryImpl) CountWithStatus(ctx context.Context, 
 		return 0, err
 	}
 	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
-	span.LogFields(log.Int64("result", organizationsCount))
+	spans.LogKV("result", organizationsCount)
 	return organizationsCount, nil
 }
 
 func (r flowParticipantReadRepositoryImpl) Identify(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.Identify")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowParticipantReadRepository.Identify")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
+	spans.LogKV("flowId", flowId)
+	spans.LogKV("entityId", entityId)
+	spans.LogKV("entityType", entityType.String())
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -130,8 +127,8 @@ func (r flowParticipantReadRepositoryImpl) Identify(ctx context.Context, flowId,
 		"entityType": entityType.String(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -153,11 +150,10 @@ func (r flowParticipantReadRepositoryImpl) Identify(ctx context.Context, flowId,
 }
 
 func (r flowParticipantReadRepositoryImpl) GetById(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowParticipantReadRepository.GetById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -167,8 +163,8 @@ func (r flowParticipantReadRepositoryImpl) GetById(ctx context.Context, id strin
 		"id":     id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)

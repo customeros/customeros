@@ -3,13 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -41,12 +40,11 @@ func NewCustomFieldWriteRepository(driver *neo4j.DriverWithContext, database str
 }
 
 func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Context, tenant, organizationId string, data CustomFieldCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldWriteRepository.AddCustomFieldToOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldWriteRepository.AddCustomFieldToOrganization")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
+	spans.LogObjectAsJson("data", data)
 
 	nodeLabel := enum.NodeLabelForCustomFieldDataType(data.CustomFieldDataType)
 	propertyName := enum.PropertyNameForCustomFieldDataType(data.CustomFieldDataType)
@@ -81,12 +79,12 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 		"value":          data.CustomFieldValue.RealValue(),
 		"templateId":     data.TemplateId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

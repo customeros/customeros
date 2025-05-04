@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -45,17 +44,15 @@ func (r *commonReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GenerateId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.GenerateId")
+	defer spans.Finish()
 
 	id := ""
 	for {
 		id = uuid.New().String()
 		exists, err := r.ExistsById(ctx, tenant, id, label)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if !exists {
@@ -63,17 +60,16 @@ func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label str
 		}
 	}
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	return id, nil
 }
 
 func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id), log.String("label", label))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.ExistsById")
+	defer spans.Finish()
+
+	spans.LogKV("id", id, "label", label)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -82,26 +78,25 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 		return r.ExistsByIdInTx(ctx, &tx, tenant, id, label)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
-	span.LogFields(log.Bool("result.exists", result.(bool)))
+	spans.LogKV("result.exists", result.(bool))
 	return result.(bool), nil
 }
 
 func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsByIdInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id), log.String("label", label))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.ExistsByIdInTx")
+	defer spans.Finish()
+
+	spans.LogKV("id", id, "label", label)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n.id LIMIT 1`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -115,23 +110,22 @@ func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx *neo4j.Man
 	})
 
 	nodeFound := result != nil && len(result.([]string)) > 0
-	span.LogFields(log.Bool("result.exists", nodeFound))
+	spans.LogKV("result.exists", nodeFound)
 	return nodeFound, err
 }
 
 func (r *commonReadRepository) GetById(ctx context.Context, tenant, id, label string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GetById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id), log.String("label", label))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("id", id, "label", label)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -141,29 +135,28 @@ func (r *commonReadRepository) GetById(ctx context.Context, tenant, id, label st
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.found", false))
+		spans.TraceError(err)
+		spans.LogKV("result.found", false)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.IsLinkedWith")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("relationship", relationship))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.IsLinkedWith")
+	defer spans.Finish()
+
+	spans.LogKV("relationship", relationship, "parentId", parentId, "parentType", parentType, "childId", childId, "childType", childType)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$parentId})-[:%s]->(m:%s_%s {id:$childId}) RETURN n.id LIMIT 1`, parentType.Neo4jLabel(), tenant, relationship, childType.Neo4jLabel(), tenant)
 	params := map[string]any{
 		"parentId": parentId,
 		"childId":  childId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -176,20 +169,19 @@ func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentI
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error executing neo4j query"))
-		span.LogFields(log.Bool("result.found", false))
+		spans.TraceError(errors.Wrap(err, "error executing neo4j query"))
+		spans.LogKV("result.found", false)
 		return false, err
 	}
-	span.LogFields(log.Bool("result.found", result.(bool)))
+	spans.LogKV("result.found", result.(bool))
 	return result.(bool), err
 }
 
 func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedToId", linkedToId), log.String("linkedToLabel", linkedToLabel), log.String("linkRelationship", linkRelationship))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.ExistsById")
+	defer spans.Finish()
+
+	spans.LogKV("id", id, "label", label, "linkedToId", linkedToId, "linkedToLabel", linkedToLabel, "linkRelationship", linkRelationship)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})-`, label)
 	if linkRelationship != "" {
@@ -200,8 +192,8 @@ func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, i
 		"id":         id,
 		"linkedToId": linkedToId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -214,19 +206,18 @@ func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, i
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
-	span.LogFields(log.Bool("result.exists", result.(bool)))
+	spans.LogKV("result.exists", result.(bool))
 	return result.(bool), err
 }
 
 func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedFromId", linkedFromId), log.String("linkedFromLabel", linkedFromLabel), log.String("linkRelationship", linkRelationship))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.ExistsById")
+	defer spans.Finish()
+
+	spans.LogKV("id", id, "label", label, "linkedFromId", linkedFromId, "linkedFromLabel", linkedFromLabel, "linkRelationship", linkRelationship)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})<-`, label)
 	if linkRelationship != "" {
@@ -237,8 +228,8 @@ func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant,
 		"id":           id,
 		"linkedFromId": linkedFromId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -251,18 +242,18 @@ func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant,
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
-	span.LogFields(log.Bool("result.exists", result.(bool)))
+	spans.LogKV("result.exists", result.(bool))
 	return result.(bool), err
 }
 
 func (r *commonReadRepository) ExecuteIntegrityCheckerQuery(ctx context.Context, name, cypherQuery string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jRepository.ExecuteIntegrityCheckerQuery")
-	defer span.Finish()
-	span.SetTag("checker-name", name)
-	span.LogFields(log.String("cypherQuery", cypherQuery))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "Neo4jRepository.ExecuteIntegrityCheckerQuery")
+	defer spans.Finish()
+	spans.LogKV("checker-name", name)
+	spans.LogKV("cypherQuery", cypherQuery)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -272,25 +263,24 @@ func (r *commonReadRepository) ExecuteIntegrityCheckerQuery(ctx context.Context,
 		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
-	span.LogFields(log.Int64("output - records", countFoundRecords.(int64)))
+	spans.LogKV("output - records", countFoundRecords.(int64))
 	return countFoundRecords.(int64), err
 }
 
 func (r *commonReadRepository) GetDbNodesLinkedTo(ctx context.Context, tenant, linkToId, linkedToLabel, linkRelationship string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GetDbNodesLinkedTo")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("linkToId", linkToId), log.String("linkedToLabel", linkedToLabel), log.String("linkRelationship", linkRelationship))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommonReadRepository.GetDbNodesLinkedTo")
+	defer spans.Finish()
+
+	spans.LogKV("linkToId", linkToId, "linkedToLabel", linkedToLabel, "linkRelationship", linkRelationship)
 
 	cypher := fmt.Sprintf(`MATCH (to:%s_%s {id:$linkToId})<-[:%s]-(n) RETURN n`, linkedToLabel, tenant, linkRelationship)
 	params := map[string]any{
 		"linkToId": linkToId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -300,7 +290,7 @@ func (r *commonReadRepository) GetDbNodesLinkedTo(ctx context.Context, tenant, l
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return result.([]*dbtype.Node), nil

@@ -7,13 +7,11 @@ import (
 	"sync"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 const (
@@ -54,10 +52,10 @@ func NewTaskReadRepository(driver *neo4j.DriverWithContext, database string) Tas
 }
 
 func (r *taskReadRepository) GetById(ctx context.Context, tenant, taskId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, taskId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.TagEntity(taskId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
 				RETURN tsk`
@@ -66,8 +64,8 @@ func (r *taskReadRepository) GetById(ctx context.Context, tenant, taskId string)
 		"taskId": taskId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -83,10 +81,10 @@ func (r *taskReadRepository) GetById(ctx context.Context, tenant, taskId string)
 }
 
 func (r *taskReadRepository) GetAllByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetAllByIds")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "ids", ids)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.GetAllByIds")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("ids", ids)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
 				WHERE tsk.id IN $ids
@@ -96,8 +94,8 @@ func (r *taskReadRepository) GetAllByIds(ctx context.Context, tenant string, ids
 		"ids":    ids,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -107,17 +105,16 @@ func (r *taskReadRepository) GetAllByIds(ctx context.Context, tenant string, ids
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(dbRecords.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(dbRecords.([]*dbtype.Node)))
 	return dbRecords.([]*dbtype.Node), err
 }
 
 func (r *taskReadRepository) CountByTenant(ctx context.Context, tenant string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.CountByTenant")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.CountByTenant")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
 				WHERE tsk.hide = false OR tsk.hide IS NULL
@@ -126,8 +123,8 @@ func (r *taskReadRepository) CountByTenant(ctx context.Context, tenant string) (
 		"tenant": tenant,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -144,20 +141,20 @@ func (r *taskReadRepository) CountByTenant(ctx context.Context, tenant string) (
 		return record.Values[0].(int64), nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return 0, err
 	}
-	span.LogFields(log.Int64("result", count.(int64)))
+	spans.LogKV("result", count.(int64))
 	return count.(int64), nil
 }
 
 func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, limit int, where *model.Filter, sort *model.SortBy) (*utils.StringsWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.SearchTasks")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("limit", limit))
-	tracing.LogObjectAsJson(span, "where", where)
-	tracing.LogObjectAsJson(span, "sort", sort)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.SearchTasks")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogObjectAsJson("where", where)
+	spans.LogObjectAsJson("sort", sort)
 
 	taskFilterCypher, taskFilterParams := "", make(map[string]interface{})
 	userAuthorFilterCypher, userAuthorFilterParams := "", make(map[string]interface{})
@@ -376,13 +373,12 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 
 	wg.Add(1)
 	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.SearchTasks.CountQuery")
-		defer span.Finish()
+		spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.SearchTasks.CountQuery")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		tracing.LogObjectAsJson(span, "params", params)
-		span.LogFields(log.String("countQuery", countQuery))
+		spans.LogObjectAsJson("params", params)
+		spans.LogKV("countQuery", countQuery)
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
 		defer session.Close(ctx)
@@ -397,7 +393,7 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 		})
 
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -407,13 +403,12 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 
 	wg.Add(1)
 	go func(ctx context.Context, result *utils.StringsWithTotalCount) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.SearchTasks.SelectQuery")
-		defer span.Finish()
+		spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.SearchTasks.SelectQuery")
+		defer spans.Finish()
 		defer wg.Done()
-		tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		tracing.LogObjectAsJson(span, "params", params)
-		span.LogFields(log.String("selectQuery", selectQuery))
+		spans.LogObjectAsJson("params", params)
+		spans.LogKV("selectQuery", selectQuery)
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
 		defer session.Close(ctx)
@@ -428,7 +423,7 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 		})
 
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			setError(err)
 			return
 		}
@@ -442,7 +437,8 @@ func (r *taskReadRepository) SearchTasks(ctx context.Context, tenant string, lim
 		return nil, firstErr
 	}
 
-	span.LogFields(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
+	spans.LogKV("result.count", len(stringsWithTotalCount.Strings))
+	spans.LogKV("result.totalCount", stringsWithTotalCount.Count)
 
 	return stringsWithTotalCount, nil
 }
@@ -478,10 +474,10 @@ func createTimeFilter(filter *model.Filter, cypherFilter *utils.CypherFilter, ne
 }
 
 func (r *taskReadRepository) GetTasksForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetTasksForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "opportunityIds", opportunityIds)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.GetTasksForOpportunities")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("opportunityIds", opportunityIds)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)-[:LINKED_TO]->(opp:Opportunity)
 				WHERE opp.id IN $opportunityIds
@@ -492,8 +488,8 @@ func (r *taskReadRepository) GetTasksForOpportunities(ctx context.Context, tenan
 		"opportunityIds": opportunityIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -506,19 +502,19 @@ func (r *taskReadRepository) GetTasksForOpportunities(ctx context.Context, tenan
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	dbNodeAndIds := result.([]*utils.DbNodeAndId)
-	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	spans.LogKV("result.count", len(dbNodeAndIds))
 	return dbNodeAndIds, err
 }
 
 func (r *taskReadRepository) GetHiddenTasks(ctx context.Context, hiddenDaysAgo int) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskReadRepository.GetHiddenTasks")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogKV("hiddenDaysAgo", hiddenDaysAgo)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskReadRepository.GetHiddenTasks")
+	defer spans.Finish()
+
+	spans.LogKV("hiddenDaysAgo", hiddenDaysAgo)
 
 	cypher := `MATCH (:Tenant)<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
 				WHERE tsk.hide = true AND tsk.hiddenAt < datetime() - duration({days:$hiddenDaysAgo})
@@ -527,8 +523,8 @@ func (r *taskReadRepository) GetHiddenTasks(ctx context.Context, hiddenDaysAgo i
 		"hiddenDaysAgo": hiddenDaysAgo,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -542,11 +538,11 @@ func (r *taskReadRepository) GetHiddenTasks(ctx context.Context, hiddenDaysAgo i
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogKV("result.count", len(result.([]string)))
+	spans.LogKV("result.count", len(result.([]string)))
 	return result.([]string), nil
 
 }

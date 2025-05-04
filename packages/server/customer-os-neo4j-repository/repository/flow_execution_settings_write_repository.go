@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -29,9 +27,8 @@ func NewFlowExecutionSettingsWriteRepository(driver *neo4j.DriverWithContext, da
 }
 
 func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowExecutionSettingsEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionSettingsWriteRepository.Merge")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowExecutionSettingsWriteRepository.Merge")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -65,8 +62,8 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 		"userId":  entity.UserId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	if tx == nil {
 		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -80,7 +77,7 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -88,7 +85,7 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 	} else {
 		queryResult, err := (*tx).Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)

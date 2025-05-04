@@ -3,13 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type FlowExecutionSettingsReadRepository interface {
@@ -26,11 +24,11 @@ func NewFlowExecutionSettingsReadRepository(driver *neo4j.DriverWithContext, dat
 }
 
 func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId, entityType string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetForEntity")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowReadRepository.GetForEntity")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId), log.String("entityId", entityId))
+	spans.LogKV("flowId", flowId)
+	spans.LogKV("entityId", entityId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -42,8 +40,8 @@ func (r flowExecutionSettingsReadRepositoryImpl) GetForEntity(ctx context.Contex
 		"entityType": entityType,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)

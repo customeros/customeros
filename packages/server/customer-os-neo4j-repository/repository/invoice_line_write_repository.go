@@ -3,12 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -47,15 +46,14 @@ func NewInvoiceLineWriteRepository(driver *neo4j.DriverWithContext, database str
 }
 
 func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineWriteRepository.CreateInvoiceLine")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceLineId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceLineWriteRepository.CreateInvoiceLine")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceLineId", invoiceLineId)
 
 	if invoiceLineId == "" || invoiceId == "" {
 		err := fmt.Errorf("invoiceLineId or invoiceId is empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -104,14 +102,14 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tx *
 		"serviceLineItemParentId": data.ServiceLineItemParentId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantWriteRepository interface {
@@ -41,11 +39,10 @@ func NewTenantWriteRepository(driver *neo4j.DriverWithContext, database string) 
 }
 
 func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Context, tx neo4j.ManagedTransaction, tenant neo4jentity.TenantEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantIfNotExistAndReturn")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant.Name)
-	tracing.LogObjectAsJson(span, "inputTenantEntity", tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantWriteRepository.CreateTenantIfNotExistAndReturn")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("inputTenantEntity", tenant)
 
 	cypher := `MERGE (t:Tenant {name:$name}) 
 		 ON CREATE SET 
@@ -71,12 +68,12 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 		"enrichContacts":    true,
 		"currency":          enum.CurrencyUSD.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	queryResult, err := tx.Run(ctx, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -84,10 +81,8 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 }
 
 func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantBillingProfile")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantWriteRepository.CreateTenantBillingProfile")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
@@ -134,22 +129,21 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"canPayWithBankTransfer": utils.IfNotNilBool(data.CanPayWithBankTransfer),
 		"check":                  utils.IfNotNilBool(data.Check),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
 							SET tbp.updatedAt=datetime()
@@ -220,22 +214,21 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 		params["check"] = *data.Check
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant string, data data_fields.TenantSettingsFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantSettings")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantWriteRepository.UpdateTenantSettings")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("data", data)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})
 				MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$tenant})
@@ -272,22 +265,21 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 		params["workspaceLogoKey"] = *data.WorkspaceLogoKey
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.HardDelete")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "tenant", tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantWriteRepository.HardDelete")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("tenant", tenant)
 
 	nodeWithTenantSuffix := []string{
 		commonmodel.NodeLabelTenantBillingProfile,
@@ -336,7 +328,7 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 	for _, nodeLabel := range nodeWithTenantSuffix {
 		err := utils.ExecuteWriteQuery(ctx, *r.driver, fmt.Sprintf(`MATCH (n:%s_%s) DETACH DELETE n`, nodeLabel, tenant), nil)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -344,28 +336,28 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 	//drop TenantSettings
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:TenantSettings{tenant: $tenant}) DETACH DELETE t`, map[string]any{"tenant": tenant})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	//drop TenantMetadata
 	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:TenantMetadata{tenantName: $tenant}) DETACH DELETE t`, map[string]any{"tenant": tenant})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	//drop External systems
 	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (e:ExternalSystem)-[r:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t:Tenant{name: $tenant}) DELETE r, e`, map[string]any{"tenant": tenant})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	//drop workspaces
 	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (w:Workspace)<-[r:HAS_WORKSPACE]-(t:Tenant{name: $tenant}) DELETE r, w`, map[string]any{"tenant": tenant})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -375,14 +367,14 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 					with au, r, t
 					delete r`, map[string]any{"tenant": tenant})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	//drop tenant
 	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:Tenant{name: $tenant}) DELETE t`, map[string]any{"tenant": tenant})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -390,10 +382,8 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 }
 
 func (r *tenantWriteRepository) MarkOnboardingChecked(ctx context.Context, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.MarkOnboardingChecked")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantWriteRepository.MarkOnboardingChecked")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})
 				SET t.techOnboardingCheckedAt=datetime()
@@ -401,5 +391,5 @@ func (r *tenantWriteRepository) MarkOnboardingChecked(ctx context.Context, tenan
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, spans)
 }

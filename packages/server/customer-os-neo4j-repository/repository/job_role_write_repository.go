@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type JobRoleWriteRepository interface {
@@ -35,11 +33,11 @@ func NewJobRoleWriteRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.LinkWithUser")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("userId", userId), log.String("jobRoleId", jobRoleId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleWriteRepository.LinkWithUser")
+	defer spans.Finish()
+
+	spans.LogKV("userId", userId)
+	spans.LogKV("jobRoleId", jobRoleId)
 
 	cypher := fmt.Sprintf(`MATCH (u:User_%s {id: $userId})
               MERGE (jr:JobRole:JobRole_%s {id: $jobRoleId})
@@ -49,23 +47,23 @@ func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userI
 		"userId":    userId,
 		"jobRoleId": jobRoleId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, jobRoleId, contactId, organizationId string, data data_fields.JobRoleFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.LinkContactWithOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleWriteRepository.LinkContactWithOrganization")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId)
+	spans.LogKV("organizationId", organizationId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), 
 		  								(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) 
@@ -98,27 +96,26 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 		"endedAt":        utils.TimePtrAsAny(data.EndedAt),
 		"primary":        utils.IfNotNilBool(data.Primary),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *jobRoleWriteRepository) CreateJobRoleForContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, jobRoleId, contactId string, data data_fields.JobRoleFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.CreateJobRoleForContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contactId", contactId))
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleWriteRepository.CreateJobRoleForContact")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 		 MERGE (c)-[:WORKS_AS]->(jr:JobRole {id:$jobRoleId}) 
@@ -147,24 +144,23 @@ func (r *jobRoleWriteRepository) CreateJobRoleForContact(ctx context.Context, tx
 		"endedAt":     utils.TimePtrAsAny(data.EndedAt),
 		"primary":     utils.IfNotNilBool(data.Primary),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *jobRoleWriteRepository) UpdateJobRoleDetails(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, roleId string, data data_fields.JobRoleFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.UpdateJobRoleDetails")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.UpdateJobRoleDetails")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (jr:JobRole_%s {id:$roleId})
 			SET jr.updatedAt=datetime()`, tenant)
@@ -202,24 +198,23 @@ func (r *jobRoleWriteRepository) UpdateJobRoleDetails(ctx context.Context, tx *n
 		params["endedAt"] = *data.EndedAt
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *jobRoleWriteRepository) DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.DeleteJobRoleInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.DeleteJobRoleInTx")
+	defer spans.Finish()
 
 	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
@@ -234,9 +229,8 @@ func (r *jobRoleWriteRepository) DeleteJobRoleInTx(ctx context.Context, tx neo4j
 }
 
 func (r *jobRoleWriteRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx")
+	defer spans.Finish()
 
 	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[:WORKS_AS]->(r:JobRole)
@@ -249,24 +243,23 @@ func (r *jobRoleWriteRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx co
 		"skipRoleId": skipRoleId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *jobRoleWriteRepository) LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, roleId string, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.LinkWithOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.LinkWithOrganization")
+	defer spans.Finish()
 
 	cypher := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(r:JobRole {id:$roleId})<-[:WORKS_AS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
@@ -282,24 +275,23 @@ func (r *jobRoleWriteRepository) LinkWithOrganization(ctx context.Context, tx *n
 		"organizationId": organizationId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *jobRoleWriteRepository) SetJobRolePrimaryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, roleId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.SetJobRolePrimaryInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.SetJobRolePrimaryInTx")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (j:JobRole_%s {id:$roleId})
 			SET j.primary=true,
@@ -308,15 +300,15 @@ func (r *jobRoleWriteRepository) SetJobRolePrimaryInTx(ctx context.Context, tx *
 		"roleId": roleId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		return nil, err
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

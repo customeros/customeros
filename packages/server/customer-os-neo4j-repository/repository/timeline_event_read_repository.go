@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pkg/errors"
 	"time"
 )
@@ -54,18 +53,17 @@ func (r *timelineEventReadRepository) prepareReadSession(ctx context.Context) ne
 }
 
 func (r *timelineEventReadRepository) GetTimelineEvent(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventReadRepository.GetTimelineEventsWithIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventReadRepository.GetTimelineEventsWithIds")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	cypher := fmt.Sprintf(`MATCH (a:TimelineEvent{id: $id}) WHERE a:TimelineEvent_%s RETURN a`, tenant)
 	params := map[string]any{
 		"id": id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -76,20 +74,19 @@ func (r *timelineEventReadRepository) GetTimelineEvent(ctx context.Context, tena
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
 	})
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
 }
 
 func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.Context, tenant, organizationId string) (*time.Time, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventReadRepository.CalculateAndGetLastTouchPoint")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventReadRepository.CalculateAndGetLastTouchPoint")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
 
 	params := map[string]any{
 		"tenant":                                  tenant,
@@ -143,8 +140,8 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 		} 
 		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -157,7 +154,7 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, "", err
 	}
 
@@ -168,7 +165,7 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 			return utils.TimePtr(t), records.([]*neo4j.Record)[0].Values[1].(string), nil
 		} else {
 			err = errors.New(fmt.Sprintf("Value %v associated to timeline event id %s is not of type time.Time", records.([]*neo4j.Record)[0].Values[0], records.([]*neo4j.Record)[0].Values[1].(string)))
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, "", nil
 		}
 	}
@@ -176,11 +173,12 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 }
 
 func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Context, tenant, contactId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsForContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contactId", contactId), log.String("startingDate", startingDate.String()), log.Int("size", size))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventRepository.GetTimelineEventsForContact")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId)
+	spans.LogKV("startingDate", startingDate.String())
+	spans.LogKV("size", size)
 
 	params := map[string]any{
 		"tenant":       tenant,
@@ -221,8 +219,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -247,11 +245,10 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 }
 
 func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx context.Context, tenant string, contactId string, labels []string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contactId", contactId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForContact")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId)
 
 	params := map[string]any{
 		"tenant":      tenant,
@@ -288,8 +285,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 		" RETURN count(distinct timelineEvent)",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -308,11 +305,12 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 }
 
 func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx context.Context, tenant, organizationId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsForOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId), log.String("startingDate", startingDate.String()), log.Int("size", size))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventRepository.GetTimelineEventsForOrganization")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("startingDate", startingDate.String())
+	spans.LogKV("size", size)
 
 	params := map[string]any{
 		"tenant":                        tenant,
@@ -395,8 +393,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx conte
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -421,11 +419,10 @@ func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx conte
 }
 
 func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization(ctx context.Context, tenant string, organizationId string, labels []string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForOrganization")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
 
 	params := map[string]any{
 		"tenant":                        tenant,
@@ -500,8 +497,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization
 		" RETURN count(distinct timelineEvent)",
 		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -520,17 +517,15 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization
 }
 
 func (r *timelineEventReadRepository) GetTimelineEventsWithIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsWithIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TimelineEventRepository.GetTimelineEventsWithIds")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (a:TimelineEvent) WHERE a.id in $ids AND a:TimelineEvent_%s RETURN a`, tenant)
 	params := map[string]any{
 		"ids": ids,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)

@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantAndOpportunityId struct {
@@ -36,10 +34,10 @@ type opportunityReadRepository struct {
 }
 
 func (r *opportunityReadRepository) GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity)
 				WHERE op.internalStage=$internalStage AND op.renewedAt < $now
@@ -50,25 +48,25 @@ func (r *opportunityReadRepository) GetPreviousClosedWonRenewalOpportunityForCon
 		"now":           utils.Now(),
 		"internalStage": enum.OpportunityInternalStageClosedWon.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	result, err := session.Run(ctx, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result.Next(ctx) {
 		node := result.Record().Values[0].(dbtype.Node)
-		span.LogFields(log.Bool("result.found", true))
+		spans.LogKV("result.found", true)
 		return &node, nil
 	}
 
-	span.LogFields(log.Bool("result.found", false))
+	spans.LogKV("result.found", false)
 	return nil, nil
 }
 
@@ -84,17 +82,17 @@ func (r *opportunityReadRepository) prepareReadSession(ctx context.Context) neo4
 }
 
 func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetOpportunityById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityReadRepository.GetOpportunityById")
+	defer spans.Finish()
+
+	spans.TagEntity(opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$id}) WHERE op:Opportunity_%s RETURN op`, tenant)
 	params := map[string]any{
 		"id": opportunityId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -104,18 +102,18 @@ func (r *opportunityReadRepository) GetOpportunityById(ctx context.Context, tx *
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunityForContract")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunityForContract")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WHERE op.internalStage=$internalStage
@@ -125,34 +123,34 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx c
 		"contractId":    contractId,
 		"internalStage": enum.OpportunityInternalStageOpen.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	result, err := session.Run(ctx, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result.Next(ctx) {
 		node := result.Record().Values[0].(dbtype.Node)
-		span.LogFields(log.Bool("result.found", true))
+		spans.LogKV("result.found", true)
 		return &node, nil
 	}
 
-	span.LogFields(log.Bool("result.found", false))
+	spans.LogKV("result.found", false)
 	return nil, nil
 }
 
 func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string, includeDraftContracts bool) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
-	span.LogFields(log.Bool("includeDraftContracts", includeDraftContracts))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("includeDraftContracts", includeDraftContracts)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
 				WHERE op:RenewalOpportunity AND op.internalStage=$internalStage AND (c.status<>$draftStatus OR $includeDraftContracts)
@@ -164,8 +162,8 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization
 		"draftStatus":           enum.ContractStatusDraft.String(),
 		"includeDraftContracts": includeDraftContracts,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -178,18 +176,18 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetRenewalOpportunitiesForClosingAsLost")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractRepository.GetRenewalOpportunitiesForClosingAsLost")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WHERE 
@@ -204,8 +202,8 @@ func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx 
 		"internalStageOpen": enum.OpportunityInternalStageOpen.String(),
 		"limit":             limit,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -229,14 +227,13 @@ func (r *opportunityReadRepository) GetRenewalOpportunitiesForClosingAsLost(ctx 
 				OpportunityId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *opportunityReadRepository) GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForContracts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityRepository.GetForContracts")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 			WHERE c.id IN $contractIds
@@ -245,7 +242,8 @@ func (r *opportunityReadRepository) GetForContracts(ctx context.Context, tenant 
 		"tenant":      tenant,
 		"contractIds": contractIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -264,9 +262,8 @@ func (r *opportunityReadRepository) GetForContracts(ctx context.Context, tenant 
 }
 
 func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityRepository.GetForOrganizations")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 			WHERE org.id IN $orgIds
@@ -275,8 +272,8 @@ func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, ten
 		"tenant": tenant,
 		"orgIds": organizationIds,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -295,9 +292,8 @@ func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, ten
 }
 
 func (r *opportunityReadRepository) GetForTasks(ctx context.Context, tenant string, taskIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForTasks")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityRepository.GetForTasks")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)-[:LINKED_TO]->(op:Opportunity)
 			WHERE tsk.id IN $taskIds
@@ -306,8 +302,8 @@ func (r *opportunityReadRepository) GetForTasks(ctx context.Context, tenant stri
 		"tenant":  tenant,
 		"taskIds": taskIds,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -322,14 +318,13 @@ func (r *opportunityReadRepository) GetForTasks(ctx context.Context, tenant stri
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganization(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetPaginatedOpportunitiesLinkedToAnOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OpportunityRepository.GetPaginatedOpportunitiesLinkedToAnOrganization")
+	defer spans.Finish()
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -344,10 +339,10 @@ func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganizat
 		"skip":   skip,
 		"limit":  limit,
 	}
-	span.LogFields(log.String("countCypher", countCypher))
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-	tracing.LogObjectAsJson(span, "countParams", countParams)
+	spans.LogKV("countCypher", countCypher)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
+	spans.LogObjectAsJson("countParams", countParams)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -367,12 +362,12 @@ func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganizat
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
-	span.LogFields(log.Int("result.count", len(dbNodesWithTotalCount.Nodes)))
+	spans.LogKV("result.count", len(dbNodesWithTotalCount.Nodes))
 	return dbNodesWithTotalCount, nil
 }

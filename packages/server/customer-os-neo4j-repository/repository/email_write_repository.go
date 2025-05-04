@@ -7,11 +7,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
@@ -60,12 +59,11 @@ func NewEmailWriteRepository(driver *neo4j.DriverWithContext, database string) E
 }
 
 func (r *emailWriteRepository) CreateEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, emailId string, data EmailCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.CreateEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.CreateEmail")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
               MERGE (e:Email:Email_%s {id:$id})
@@ -81,8 +79,8 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tx *neo4j.Manage
 		"source":    utils.StringFirstNonEmpty(data.Source.String(), constants.SourceOpenline),
 		"createdAt": utils.NowIfZero(data.CreatedAt),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -92,19 +90,18 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tx *neo4j.Manage
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, emailId string, data data_fields.EmailValidationFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.EmailValidated")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.EmailValidated")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 		SET e.email = CASE WHEN $email <> '' THEN $email ELSE e.email END,
@@ -165,22 +162,21 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"source":             neo4j_entity.DataSourceOpenline.String(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, emailId string, primary bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.LinkWithContact")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
@@ -197,8 +193,8 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tx *neo4j.Ma
 		"emailId":   emailId,
 		"primary":   primary,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -208,18 +204,17 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tx *neo4j.Ma
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, emailId string, primary bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.LinkWithOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
@@ -233,8 +228,8 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tx *neo
 		"emailId":        emailId,
 		"primary":        primary,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -244,18 +239,17 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tx *neo
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId, emailId string, primary bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithUser")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.LinkWithUser")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
@@ -269,8 +263,8 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tx *neo4j.Manag
 		"emailId": emailId,
 		"primary": primary,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -280,18 +274,17 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tx *neo4j.Manag
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.CleanEmailValidation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.CleanEmailValidation")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
 				WHERE e:Email_%s
@@ -323,23 +316,22 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 		"id":     emailId,
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, usedId, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromUser")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, usedId)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.UnlinkFromUser")
+	defer spans.Finish()
+
+	spans.TagEntity(usedId)
+	spans.LogKV("email", email)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})-[rel:HAS]->(e:Email)
 				WHERE e.email = $email OR e.rawEmail = $email
@@ -350,8 +342,8 @@ func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tx *neo4j.Man
 		"email":  email,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -361,19 +353,18 @@ func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tx *neo4j.Man
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, contactId)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.UnlinkFromContact")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
+	spans.LogKV("email", email)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[rel:HAS]->(e:Email)
 				WHERE e.email = $email OR e.rawEmail = $email
@@ -397,8 +388,8 @@ func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tx *neo4j.
 		"email":     email,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -408,19 +399,18 @@ func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tx *neo4j.
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, organizationId)
-	span.LogKV("email", email)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.UnlinkFromOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("email", email)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})-[rel:HAS]->(e:Email)
 				WHERE e.email = $email OR e.rawEmail = $email
@@ -432,8 +422,8 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tx *n
 		"email":          email,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -443,15 +433,15 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tx *n
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *emailWriteRepository) DeleteOrphanEmail(ctx context.Context, tenant, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.DeleteOrphanEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.DeleteOrphanEmail")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[r:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
 				OPTIONAL MATCH (e)-[r2]-(d:Domain)
@@ -461,22 +451,21 @@ func (r *emailWriteRepository) DeleteOrphanEmail(ctx context.Context, tenant, em
 		"id":     emailId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *emailWriteRepository) SetPrimaryForEntity(ctx context.Context, tenant, entityId, email string, entityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.SetPrimaryForEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("entityId", entityId, "email", email, "entityType", entityType.String())
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.SetPrimaryForEntity")
+	defer spans.Finish()
+
+	spans.LogKV("entityId", entityId, "email", email, "entityType", entityType.String())
 
 	cypher := fmt.Sprintf(`MATCH (entity:%s {id:$entityId})-[rel:HAS]->(e:Email)
 				WHERE e.email = $email OR e.rawEmail = $email
@@ -492,21 +481,21 @@ func (r *emailWriteRepository) SetPrimaryForEntity(ctx context.Context, tenant, 
 		"email":    email,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *emailWriteRepository) SetDeliverableByEmailForAllTenants(ctx context.Context, email string, deliverable EmailDeliverableStatus) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.SetDeliverableByEmailForAllTenants")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogKV("email", email, "deliverable", deliverable)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailWriteRepository.SetDeliverableByEmailForAllTenants")
+	defer spans.Finish()
+
+	spans.LogKV("email", email, "deliverable", deliverable)
 
 	cypher := `MATCH (e:Email) WHERE e.email = $email OR e.rawEmail = $email
 				SET e.deliverable = $deliverable, e.updatedAt = datetime()`
@@ -515,12 +504,12 @@ func (r *emailWriteRepository) SetDeliverableByEmailForAllTenants(ctx context.Co
 		"deliverable": deliverable,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type AttachmentWriteRepository interface {
@@ -31,14 +29,13 @@ func NewAttachmentWriteRepository(driver *neo4j.DriverWithContext, database stri
 }
 
 func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, cdnUrl, basePath, fileName, mimeType string, size int64, createdAt *time.Time, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentWriteRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(
-		log.String("id", id),
-		log.String("fileName", fileName),
-		log.String("mimeType", mimeType),
-		log.Int64("size", size))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AttachmentWriteRepository.Create")
+	defer spans.Finish()
+
+	spans.LogKV("id", id,
+		"fileName", fileName,
+		"mimeType", mimeType,
+		"size", size)
 
 	id = utils.NewUUIDIfEmpty(id)
 
@@ -71,22 +68,22 @@ func (r *attachmentWriteRepository) Create(ctx context.Context, tx neo4j.Managed
 		"appSource": appSource,
 	}
 
-	span.LogFields(log.String("cypher", fmt.Sprintf(cypher, tenant)))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", fmt.Sprintf(cypher, tenant))
+	spans.LogObjectAsJson("params", params)
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, tenant), params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	result, err := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.found", false))
+		spans.TraceError(err)
+		spans.LogKV("result.found", false)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result, nil
 }

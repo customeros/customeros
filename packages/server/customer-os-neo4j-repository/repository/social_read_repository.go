@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantSocialIdAndEntityId struct {
@@ -43,10 +41,10 @@ func (r *socialReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *socialReadRepository) GetById(ctx context.Context, tenant, socialId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, socialId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.TagEntity(socialId)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -55,8 +53,8 @@ func (r *socialReadRepository) GetById(ctx context.Context, tenant, socialId str
 	params := map[string]any{
 		"socialId": socialId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -66,17 +64,19 @@ func (r *socialReadRepository) GetById(ctx context.Context, tenant, socialId str
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *socialReadRepository) GetDuplicatedSocialsForEntityType(ctx context.Context, linkedEntityNodeLabel string, minutesSinceLastUpdate, limit int) ([]TenantSocialIdAndEntityId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetDuplicatedSocialsForEntityType")
-	defer span.Finish()
-	span.LogFields(log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.Int("minutesSinceLastUpdate", minutesSinceLastUpdate), log.Int("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialReadRepository.GetDuplicatedSocialsForEntityType")
+	defer spans.Finish()
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogKV("minutesSinceLastUpdate", minutesSinceLastUpdate)
+	spans.LogKV("limit", limit)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant)--(e:%s)-[:HAS]->(s:Social)
 					WHERE s.updatedAt < datetime() - duration({minutes: $minutesSinceLastUpdate})
@@ -88,8 +88,8 @@ func (r *socialReadRepository) GetDuplicatedSocialsForEntityType(ctx context.Con
 		"minutesSinceLastUpdate": minutesSinceLastUpdate,
 		"limit":                  limit,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -114,14 +114,16 @@ func (r *socialReadRepository) GetDuplicatedSocialsForEntityType(ctx context.Con
 				SocialId:       v.Values[2].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *socialReadRepository) GetEmptySocialsForEntityType(ctx context.Context, linkedEntityNodeLabel string, minutesSinceLastUpdate, limit int) ([]TenantSocialIdAndEntityId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetDuplicatedSocialsForEntityType")
-	defer span.Finish()
-	span.LogFields(log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.Int("minutesSinceLastUpdate", minutesSinceLastUpdate), log.Int("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialReadRepository.GetDuplicatedSocialsForEntityType")
+	defer spans.Finish()
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogKV("minutesSinceLastUpdate", minutesSinceLastUpdate)
+	spans.LogKV("limit", limit)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant)--(e:%s)-[:HAS]->(s:Social)
 					WHERE s.updatedAt < datetime() - duration({minutes: $minutesSinceLastUpdate})
@@ -131,8 +133,8 @@ func (r *socialReadRepository) GetEmptySocialsForEntityType(ctx context.Context,
 		"minutesSinceLastUpdate": minutesSinceLastUpdate,
 		"limit":                  limit,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -157,14 +159,13 @@ func (r *socialReadRepository) GetEmptySocialsForEntityType(ctx context.Context,
 				SocialId:       v.Values[2].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetAllForEntities")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialReadRepository.GetAllForEntities")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -176,8 +177,8 @@ func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant str
 		"entityIds": linkedEntityIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -190,14 +191,13 @@ func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant str
 		return nil, err
 	}
 	dbNodeAndIds := result.([]*utils.DbNodeAndId)
-	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	spans.LogKV("result.count", len(dbNodeAndIds))
 	return dbNodeAndIds, err
 }
 
 func (r *socialReadRepository) GetAllLinkedinForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetAllLinkedinForEntities")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialReadRepository.GetAllLinkedinForEntities")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -209,8 +209,8 @@ func (r *socialReadRepository) GetAllLinkedinForEntities(ctx context.Context, te
 		"entityIds": linkedEntityIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -220,10 +220,10 @@ func (r *socialReadRepository) GetAllLinkedinForEntities(ctx context.Context, te
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	dbNodeAndIds := result.([]*utils.DbNodeAndId)
-	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	spans.LogKV("result.count", len(dbNodeAndIds))
 	return dbNodeAndIds, err
 }

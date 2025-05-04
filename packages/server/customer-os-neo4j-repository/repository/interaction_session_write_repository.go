@@ -7,11 +7,9 @@ import (
 
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -34,12 +32,11 @@ func NewInteractionSessionWriteRepository(driver *neo4j.DriverWithContext, datab
 }
 
 func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data neo4j_entity.InteractionSessionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.CreateInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, interactionSessionId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionWriteRepository.CreateInTx")
+	defer spans.Finish()
+
+	spans.LogKV("interactionSessionId", interactionSessionId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MERGE (i:InteractionSession:InteractionSession_%s {id:$interactionSessionId}) 
 							ON CREATE SET 
@@ -67,12 +64,12 @@ func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx n
 		"status":               data.Status.String(),
 		"name":                 data.Name,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := tx.Run(ctx, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -80,11 +77,10 @@ func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx n
 }
 
 func (r *interactionSessionWriteRepository) MergeByIdentifierAndChannel(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, sessionType commonenum.InteractionSessionType, channel commonenum.InteractionSessionChannel, source, appSource string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.MergeByIdentifierAndChannel")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("identifier", identifier, "channel", channel, "sessionType", sessionType, "source", source, "appSource", appSource)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionWriteRepository.MergeByIdentifierAndChannel")
+	defer spans.Finish()
+
+	spans.LogKV("identifier", identifier, "channel", channel, "sessionType", sessionType, "source", source, "appSource", appSource)
 
 	cypher := ""
 	if identifier == "" {
@@ -124,8 +120,8 @@ func (r *interactionSessionWriteRepository) MergeByIdentifierAndChannel(ctx cont
 		"channel":    channel,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		qr, err := tx.Run(ctx, cypher, params)
@@ -135,7 +131,7 @@ func (r *interactionSessionWriteRepository) MergeByIdentifierAndChannel(ctx cont
 		return utils.ExtractSingleRecordFirstValueAsString(ctx, qr, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 

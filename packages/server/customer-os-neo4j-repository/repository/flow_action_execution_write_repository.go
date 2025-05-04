@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -32,9 +30,8 @@ func NewFlowActionExecutionWriteRepository(driver *neo4j.DriverWithContext, data
 }
 
 func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowActionExecutionEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.Merge")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionWriteRepository.Merge")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -89,8 +86,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		"error":           entity.Error,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		qr, err := tx.Run(ctx, cypher, params)
@@ -100,7 +97,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -108,9 +105,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 }
 
 func (r *flowActionExecutionWriteRepositoryImpl) RelinkWithActions(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.RelinkWithActions")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionWriteRepository.RelinkWithActions")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -124,8 +120,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) RelinkWithActions(ctx context.C
 		"tenant": tenant,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -135,7 +131,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) RelinkWithActions(ctx context.C
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -143,11 +139,10 @@ func (r *flowActionExecutionWriteRepositoryImpl) RelinkWithActions(ctx context.C
 }
 
 func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionWriteRepository.Delete")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -158,8 +153,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, tx 
 		"id":     id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -169,7 +164,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, tx 
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -177,11 +172,10 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, tx 
 }
 
 func (r *flowActionExecutionWriteRepositoryImpl) DeleteScheduledForFlow(ctx context.Context, flowId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.DeleteScheduledForFlow")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionWriteRepository.DeleteScheduledForFlow")
+	defer spans.Finish()
 
-	span.LogFields(log.String("flowId", flowId))
+	spans.LogKV("flowId", flowId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -192,8 +186,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) DeleteScheduledForFlow(ctx cont
 		"flowId": flowId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -206,7 +200,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) DeleteScheduledForFlow(ctx cont
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

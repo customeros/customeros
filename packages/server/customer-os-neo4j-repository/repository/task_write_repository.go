@@ -6,10 +6,8 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
 )
 
 type TaskWriteRepository interface {
@@ -35,11 +33,11 @@ func NewTaskWriteRepository(driver *neo4j.DriverWithContext, database string) Ta
 }
 
 func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, taskId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.Create")
+	defer spans.Finish()
+
+	spans.TagEntity(taskId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId}) 
@@ -73,15 +71,15 @@ func (r *taskWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTrans
 		"hide":            false,
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
 
 func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId string, data data_fields.TaskFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, taskId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.Update")
+	defer spans.Finish()
+
+	spans.TagEntity(taskId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
 		 	SET	tsk.updatedAt = datetime() `
@@ -107,15 +105,15 @@ func (r *taskWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTrans
 		params["dueAt"] = utils.TimePtrAsAny(data.DueAt)
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
 
 func (r *taskWriteRepository) SetOpportunities(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, opportunityIds []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.SetOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, taskId)
-	tracing.LogObjectAsJson(span, "opportunityIds", opportunityIds)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.SetOpportunities")
+	defer spans.Finish()
+
+	spans.TagEntity(taskId)
+	spans.LogObjectAsJson("opportunityIds", opportunityIds)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
 				OPTIONAL MATCH (tsk)-[r:LINKED_TO]->(o:Opportunity)
@@ -132,15 +130,15 @@ func (r *taskWriteRepository) SetOpportunities(ctx context.Context, tx *neo4j.Ma
 		"opportunityIds": opportunityIds,
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
 
 func (r *taskWriteRepository) SetUserAssignees(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string, userIds []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.SetUserAssignees")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, taskId)
-	tracing.LogObjectAsJson(span, "userIds", userIds)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.SetUserAssignees")
+	defer spans.Finish()
+
+	spans.TagEntity(taskId)
+	spans.LogObjectAsJson("userIds", userIds)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
 				OPTIONAL MATCH (tsk)-[r:ASSIGNED_TO]->(u:User)
@@ -160,14 +158,14 @@ func (r *taskWriteRepository) SetUserAssignees(ctx context.Context, tx *neo4j.Ma
 		"userIds": userIds,
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
 
 func (r *taskWriteRepository) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, taskId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.Hide")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, taskId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.Hide")
+	defer spans.Finish()
+
+	spans.TagEntity(taskId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task {id:$taskId})
 		SET tsk.hide = true, tsk.hiddenAt = datetime()`
@@ -176,14 +174,14 @@ func (r *taskWriteRepository) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 		"taskId": taskId,
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
 
 func (r *taskWriteRepository) PermanentDeleteHiddenTasks(ctx context.Context, tx *neo4j.ManagedTransaction, taskIds []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TaskWriteRepository.PermanentDeleteHiddenTasks")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "taskIds", taskIds)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TaskWriteRepository.PermanentDeleteHiddenTasks")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("taskIds", taskIds)
 
 	cypher := `MATCH (:Tenant)<-[:TASK_BELONGS_TO_TENANT]-(tsk:Task)
 		WHERE tsk.hide = true AND tsk.id IN $taskIds
@@ -192,7 +190,7 @@ func (r *taskWriteRepository) PermanentDeleteHiddenTasks(ctx context.Context, tx
 		"taskIds": taskIds,
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }
 
 func (r *taskWriteRepository) AddOpportunity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, taskId, opportunityId string) error {
@@ -210,5 +208,5 @@ func (r *taskWriteRepository) AddOpportunity(ctx context.Context, tx *neo4j.Mana
 		"opportunityId": opportunityId,
 	}
 
-	return LogAndExecuteWriteQueryInTxV2(ctx, tx, r.driver, r.database, cypher, params, spans)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }

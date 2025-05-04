@@ -3,8 +3,8 @@ package neo4j_entity
 import (
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -160,9 +160,9 @@ func (o OrganizationEntity) Labels(tenant string) []string {
 }
 
 func OrganizationStageAndRelationshipCompatible(ctx context.Context, stageStr, relationshipStr string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationStageAndRelationshipCompatible")
-	defer span.Finish()
-	span.LogKV("stage", stageStr, "relationship", relationshipStr)
+	spans, ctx := telemetry.StartSpan(ctx, "OrganizationStageAndRelationshipCompatible")
+	defer spans.Finish()
+	spans.LogKV("stage", stageStr, "relationship", relationshipStr)
 
 	stage := enum.OrganizationStage(stageStr)
 	relationship := enum.OrganizationRelationship(relationshipStr)

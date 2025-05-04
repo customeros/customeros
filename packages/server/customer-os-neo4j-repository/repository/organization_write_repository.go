@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 	"strings"
 	"time"
@@ -53,14 +52,12 @@ func NewOrganizationWriteRepository(driver *neo4j.DriverWithContext, database st
 }
 
 func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.Save")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.Save")
+	defer spans.Finish()
 
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	spans.TagEntity(organizationId)
 
-	tracing.LogObjectAsJson(span, "data", data)
+	spans.LogObjectAsJson("data", data)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
@@ -84,12 +81,12 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			"lastTouchpointType": neo4jenum.TouchpointTypeActionCreated.String(),
 		}
 
-		span.LogFields(log.String("cypherCreate", cypherCreate))
-		tracing.LogObjectAsJson(span, "paramsCreate", paramsCreate)
+		spans.LogKV("cypherCreate", cypherCreate)
+		spans.LogObjectAsJson("paramsCreate", paramsCreate)
 
 		_, err := tx.Run(ctx, cypherCreate, paramsCreate)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -215,12 +212,12 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		}
 		cypherUpdate += `org.updatedAt = datetime()`
 
-		span.LogFields(log.String("cypherUpdate", cypherUpdate))
-		tracing.LogObjectAsJson(span, "paramsUpdate", paramsUpdate)
+		spans.LogKV("cypherUpdate", cypherUpdate)
+		spans.LogObjectAsJson("paramsUpdate", paramsUpdate)
 
 		_, err = tx.Run(ctx, cypherUpdate, paramsUpdate)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -231,11 +228,10 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 }
 
 func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithDomain")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.LinkWithDomain")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
 
 	cypher := `MATCH (d:Domain {domain: $domain}) 
 				MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
@@ -252,27 +248,26 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 		"organizationId": organizationId,
 		"domain":         strings.ToLower(domain),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		resultWithContext, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, resultWithContext, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
-	span.LogFields(log.Bool("result", result.(bool)))
+	spans.LogKV("result", result.(bool))
 	return result.(bool), err
 }
 
 func (r *organizationWriteRepository) UnlinkDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkDomain")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UnlinkDomain")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		 MATCH (org)-[rel:HAS_DOMAIN]->(d:Domain {domain:$domain})
@@ -283,26 +278,25 @@ func (r *organizationWriteRepository) UnlinkDomain(ctx context.Context, tx *neo4
 		"organizationId": organizationId,
 		"domain":         strings.ToLower(domain),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReplaceOwner")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.ReplaceOwner")
+	defer spans.Finish()
 
-	span.LogFields(log.String("organizationId", organizationId), log.String("userId", userId))
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("userId", userId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
@@ -320,14 +314,14 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4
 		"source":         constants.SourceOpenline,
 		"now":            utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -335,7 +329,7 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -343,12 +337,11 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4
 }
 
 func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetVisibility")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.Bool("hide", hide))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.SetVisibility")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("hide", hide)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
 			WHERE org:Organization_%s
@@ -361,22 +354,23 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 		"hide":   hide,
 		"now":    utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateLastTouchpoint")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateLastTouchpoint")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("touchpointId", touchpointId)
+	spans.LogKV("touchpointAt", touchpointAt)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		 SET 	org.updatedAt = CASE WHEN org.lastTouchpointId <> $touchpointId THEN datetime() ELSE org.updatedAt END,
@@ -390,23 +384,22 @@ func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, 
 		"touchpointId":   touchpointId,
 		"touchpointType": touchpointType,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetCustomerOsIdIfMissing")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("customerOsId", customerOsId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.SetCustomerOsIdIfMissing")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("customerOsId", customerOsId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		 SET org.customerOsId = CASE WHEN (org.customerOsId IS NULL OR org.customerOsId = '') AND $customerOsId <> '' THEN $customerOsId ELSE org.customerOsId END,
@@ -416,23 +409,23 @@ func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Conte
 		"organizationId": organizationId,
 		"customerOsId":   customerOsId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId, subOrganizationType string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithParentOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, subOrganizationId)
-	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationType", subOrganizationType))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.LinkWithParentOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(subOrganizationId)
+	spans.LogKV("parentOrganizationId", parentOrganizationId)
+	spans.LogKV("subOrganizationType", subOrganizationType)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId}),
 		 			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization {id:$subOrganizationId}) 
@@ -447,26 +440,25 @@ func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Con
 		"parentOrganizationId": parentOrganizationId,
 		"type":                 subOrganizationType,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkParentOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, subOrganizationId)
-	span.LogFields(log.String("parentOrganizationId", parentOrganizationId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UnlinkParentOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(subOrganizationId)
+	spans.LogKV("parentOrganizationId", parentOrganizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId})<-[rel:SUBSIDIARY_OF]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 		 		DELETE rel
@@ -477,25 +469,24 @@ func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Conte
 		"subOrganizationId":    subOrganizationId,
 		"parentOrganizationId": parentOrganizationId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateArr")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateArr")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
 
 	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
 				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract) WHERE c.status <> $statusDraft
@@ -508,23 +499,24 @@ func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, org
 		"organizationId": organizationId,
 		"statusDraft":    neo4jenum.ContractStatusDraft.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateRenewalSummary")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("likelihood", utils.IfNotNilString(likelihood)), log.Object("likelihoodOrder", likelihoodOrder), log.Object("nextRenewalDate", nextRenewalDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateRenewalSummary")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("likelihood", utils.IfNotNilString(likelihood))
+	spans.LogKV("likelihoodOrder", likelihoodOrder)
+	spans.LogKV("nextRenewalDate", nextRenewalDate)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 				SET org.derivedRenewalLikelihood = $derivedRenewalLikelihood,
@@ -539,23 +531,22 @@ func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, 
 		"derivedNextRenewalAt":          utils.TimePtrAsAny(nextRenewalDate),
 		"now":                           utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.WebScrapeRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("url", url))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.WebScrapeRequested")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("url", url)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		 	SET org.webScrapeLastRequestedAt=$requestedAt, 
@@ -568,22 +559,21 @@ func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, te
 		"attempt":        attempt,
 		"requestedAt":    requestedAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationOnboardingStatusFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateOnboardingStatus")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, organizationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateOnboardingStatus")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR (org.onboardingStatus <> $status AND $status IS NULL) THEN datetime() ELSE org.onboardingUpdatedAt END,
@@ -603,26 +593,26 @@ func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context
 		params["status"] = nil
 		params["statusOrder"] = nil
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateTimeProperty")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("property", property), log.Object("value", value))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateTimeProperty")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("property", property)
+	spans.LogObjectAsJson("value", value)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
 			SET org.%s = $value`, property)
@@ -632,23 +622,23 @@ func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, te
 		"property":       property,
 		"value":          utils.TimePtrAsAny(value),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("property", property), log.Float64("value", value))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("property", property)
+	spans.LogKV("value", value)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
 			SET org.%s = $value`, property)
@@ -658,23 +648,23 @@ func (r *organizationWriteRepository) UpdateFloatProperty(ctx context.Context, t
 		"property":       property,
 		"value":          value,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("property", property), log.String("value", value))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
+	spans.LogKV("property", property)
+	spans.LogKV("value", value)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
 			SET org.%s = $value`, property)
@@ -684,20 +674,19 @@ func (r *organizationWriteRepository) UpdateStringProperty(ctx context.Context, 
 		"property":       property,
 		"value":          value,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.Delete")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (org:Organization {id:$organizationId})-[currentRel:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MERGE (org)-[newRel:ARCHIVED]->(t)
@@ -710,14 +699,14 @@ func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.Man
 		"now":            utils.Now(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	span.LogFields(log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 
@@ -725,7 +714,7 @@ func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.Man
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -733,11 +722,10 @@ func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.Man
 }
 
 func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ResetEnrichAttempts")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, organizationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.ResetEnrichAttempts")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
 
 	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id: $organizationId})
 	WHERE o.enrichedAt IS NULL
@@ -746,8 +734,8 @@ func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, t
 		"tenant":         tenant,
 		"organizationId": organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -757,17 +745,15 @@ func (r *organizationWriteRepository) ResetEnrichAttempts(ctx context.Context, t
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *organizationWriteRepository) RefreshContactCountByOrgId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.RefreshContactCountByOrgId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.RefreshContactCountByOrgId")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 			WITH org
@@ -780,8 +766,8 @@ func (r *organizationWriteRepository) RefreshContactCountByOrgId(ctx context.Con
 		"organizationId": organizationId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -791,17 +777,15 @@ func (r *organizationWriteRepository) RefreshContactCountByOrgId(ctx context.Con
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *organizationWriteRepository) RefreshContactCountByContactId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.RefreshContactCountByContactId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationWriteRepository.RefreshContactCountByContactId")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(:Contact {id:$contactId})--(:JobRole)--(org:Organization)
 			WITH org
@@ -814,8 +798,8 @@ func (r *organizationWriteRepository) RefreshContactCountByContactId(ctx context
 		"contactId": contactId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -825,7 +809,7 @@ func (r *organizationWriteRepository) RefreshContactCountByContactId(ctx context
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

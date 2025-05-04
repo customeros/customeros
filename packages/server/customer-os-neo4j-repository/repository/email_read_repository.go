@@ -3,13 +3,12 @@ package neo4j_repository
 import (
 	"fmt"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -49,18 +48,17 @@ func (r *emailReadRepository) prepareReadSession(ctx context.Context) neo4j.Sess
 }
 
 func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, email string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailIdIfExists")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("email", email))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetEmailIdIfExists")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	cypher := fmt.Sprintf(`MATCH (e:Email_%s) WHERE (lower(e.email) = lower($email) OR lower(e.rawEmail) = lower($email)) AND $email <> '' RETURN e.id ORDER BY e.createdAt LIMIT 1`, tenant)
 	params := map[string]any{
 		"email": email,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -73,31 +71,30 @@ func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tx *neo4j.
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if len(result.([]*db.Record)) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return "", nil
 	}
-	span.LogFields(log.String("result", result.([]*db.Record)[0].Values[0].(string)))
+	spans.LogKV("result", result.([]*db.Record)[0].Values[0].(string))
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
 func (r *emailReadRepository) GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailForUser")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("userId", userId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetEmailForUser")
+	defer spans.Finish()
+
+	spans.LogKV("userId", userId)
 
 	cypher := fmt.Sprintf("MATCH (e:Email_%s)<-[:HAS]-(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WHERE u:User_%s return e", tenant, tenant)
 	params := map[string]any{
 		"userId": userId,
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -110,33 +107,32 @@ func (r *emailReadRepository) GetEmailForUser(ctx context.Context, tenant string
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("emailId", emailId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("emailId", emailId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId}) return e`
 	params := map[string]any{
 		"tenant":  tenant,
 		"emailId": emailId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -148,16 +144,15 @@ func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId strin
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", dbRecord != nil))
+	spans.LogKV("result.found", dbRecord != nil)
 	return dbRecord.(*dbtype.Node), err
 }
 
 func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetFirstByEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("email", email))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailRepository.GetFirstByEmail")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) 
 		       WHERE e.rawEmail = $email OR e.email = $email RETURN e ORDER BY e.createdAt LIMIT 1`
@@ -165,8 +160,8 @@ func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email
 		"tenant": tenant,
 		"email":  email,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -177,26 +172,24 @@ func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email
 	})
 
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
 
 	if dbRecord == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return dbRecord.(*dbtype.Node), err
 }
 
 func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds")
+	defer spans.Finish()
 
 	cypher := ""
 	switch entityType {
@@ -215,8 +208,8 @@ func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Con
 		"entityIds": entityIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -235,10 +228,8 @@ func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Con
 }
 
 func (r *emailReadRepository) GetPrimaryEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetPrimaryEmailNodesForLinkedEntityIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetPrimaryEmailNodesForLinkedEntityIds")
+	defer spans.Finish()
 
 	cypher := ""
 	switch entityType {
@@ -257,8 +248,8 @@ func (r *emailReadRepository) GetPrimaryEmailNodesForLinkedEntityIds(ctx context
 		"entityIds": entityIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -277,13 +268,12 @@ func (r *emailReadRepository) GetPrimaryEmailNodesForLinkedEntityIds(ctx context
 }
 
 func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInSeconds, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailsForValidation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(
-		log.Int("delayFromLastUpdateInSeconds", delayFromLastUpdateInSeconds),
-		log.Int("delayFromLastValidationAttemptInMinutes", delayFromLastValidationAttemptInMinutes),
-		log.Int("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetEmailsForValidation")
+	defer spans.Finish()
+
+	spans.LogKV("delayFromLastUpdateInSeconds", delayFromLastUpdateInSeconds)
+	spans.LogKV("delayFromLastValidationAttemptInMinutes", delayFromLastValidationAttemptInMinutes)
+	spans.LogKV("limit", limit)
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
 				WHERE
@@ -315,8 +305,8 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 		"delayForRetryValidationInDays":           7,
 		"limit":                                   limit,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -339,16 +329,17 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 				EmailId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.IsLinkedToEntityByEmailAddress")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("email", email), log.String("entityId", entityId), log.String("entityType", entityType.String()))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.IsLinkedToEntityByEmailAddress")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
+	spans.LogKV("entityId", entityId)
+	spans.LogKV("entityType", entityType.String())
 
 	cypher := ""
 	switch entityType {
@@ -370,8 +361,8 @@ func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context
 		"email":    email,
 		"entityId": entityId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -390,10 +381,11 @@ func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context
 }
 
 func (r *emailReadRepository) GetOrphanEmailNodes(ctx context.Context, limit, hoursFromLastUpdate int) ([]TenantAndEmailId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetOrphanEmailNodes")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit), log.Int("hoursFromLastUpdate", hoursFromLastUpdate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetOrphanEmailNodes")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogKV("hoursFromLastUpdate", hoursFromLastUpdate)
 
 	cypher := `MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
 				WHERE e.updatedAt < datetime() - duration({hours: $hoursFromLastUpdate})
@@ -407,8 +399,8 @@ func (r *emailReadRepository) GetOrphanEmailNodes(ctx context.Context, limit, ho
 		"hoursFromLastUpdate": hoursFromLastUpdate,
 		"limit":               limit,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -421,7 +413,7 @@ func (r *emailReadRepository) GetOrphanEmailNodes(ctx context.Context, limit, ho
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	output := make([]TenantAndEmailId, 0)
@@ -432,16 +424,15 @@ func (r *emailReadRepository) GetOrphanEmailNodes(ctx context.Context, limit, ho
 				EmailId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *emailReadRepository) IsOrphanEmail(ctx context.Context, tenant, emailId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.IsOrphanEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, emailId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.IsOrphanEmail")
+	defer spans.Finish()
+
+	spans.TagEntity(emailId)
 
 	cypher := `MATCH (:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 				OPTIONAL MATCH (e)--(other) 
@@ -452,8 +443,8 @@ func (r *emailReadRepository) IsOrphanEmail(ctx context.Context, tenant, emailId
 	params := map[string]any{
 		"emailId": emailId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -463,24 +454,22 @@ func (r *emailReadRepository) IsOrphanEmail(ctx context.Context, tenant, emailId
 		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 	return result.(bool), err
 }
 
 func (r *emailReadRepository) GetTestEmailForFlows(ctx context.Context, tenant string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetTestEmailForFlows")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "EmailReadRepository.GetTestEmailForFlows")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`match (t:Tenant{name:$tenant})--(e:Email_%s) where e.rawEmail =~ ".*testcustomeros.com" return e.rawEmail`, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -493,13 +482,13 @@ func (r *emailReadRepository) GetTestEmailForFlows(ctx context.Context, tenant s
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if len(result.([]*db.Record)) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return "", nil
 	}
-	span.LogFields(log.String("result", result.([]*db.Record)[0].Values[0].(string)))
+	spans.LogKV("result", result.([]*db.Record)[0].Values[0].(string))
 	return result.([]*db.Record)[0].Values[0].(string), err
 }

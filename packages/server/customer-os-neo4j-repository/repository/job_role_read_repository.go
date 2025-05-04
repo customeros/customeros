@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type JobRoleReadRepository interface {
@@ -42,9 +40,8 @@ func NewJobRoleReadRepository(driver *neo4j.DriverWithContext, database string) 
 }
 
 func (r *jobRoleReadRepository) GetAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetAllForContact")
+	defer spans.Finish()
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, `
@@ -73,9 +70,8 @@ func (r *jobRoleReadRepository) GetAllForContact(ctx context.Context, session ne
 }
 
 func (r *jobRoleReadRepository) GetAllForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForContacts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetAllForContacts")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -101,9 +97,8 @@ func (r *jobRoleReadRepository) GetAllForContacts(ctx context.Context, tenant st
 }
 
 func (r *jobRoleReadRepository) GetAllForUsers(ctx context.Context, tenant string, userIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForUsers")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetAllForUsers")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -129,9 +124,8 @@ func (r *jobRoleReadRepository) GetAllForUsers(ctx context.Context, tenant strin
 }
 
 func (r *jobRoleReadRepository) GetAllForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetAllForOrganization")
+	defer spans.Finish()
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, `
@@ -160,9 +154,8 @@ func (r *jobRoleReadRepository) GetAllForOrganization(ctx context.Context, sessi
 }
 
 func (r *jobRoleReadRepository) GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetAllForOrganizations")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -188,9 +181,8 @@ func (r *jobRoleReadRepository) GetAllForOrganizations(ctx context.Context, tena
 }
 
 func (r *jobRoleReadRepository) ExistsForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.ExistsForContactAndOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.ExistsForContactAndOrganization")
+	defer spans.Finish()
 
 	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 			  			(o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -201,8 +193,8 @@ func (r *jobRoleReadRepository) ExistsForContactAndOrganization(ctx context.Cont
 		"organizationId": organizationId,
 		"tenant":         tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -217,14 +209,13 @@ func (r *jobRoleReadRepository) ExistsForContactAndOrganization(ctx context.Cont
 	if err != nil {
 		return false, err
 	}
-	span.LogFields(log.Bool("result.found", len(records.([]*neo4j.Record)) > 0))
+	spans.LogKV("result.found", len(records.([]*neo4j.Record)) > 0)
 	return len(records.([]*neo4j.Record)) > 0, err
 }
 
 func (r *jobRoleReadRepository) GetAllForContactWithOrganizationId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForContactWithOrganizationId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetAllForContactWithOrganizationId")
+	defer spans.Finish()
 
 	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 			  			(c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(o:Organization)
@@ -234,8 +225,8 @@ func (r *jobRoleReadRepository) GetAllForContactWithOrganizationId(ctx context.C
 		"tenant":    tenant,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -245,25 +236,24 @@ func (r *jobRoleReadRepository) GetAllForContactWithOrganizationId(ctx context.C
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *jobRoleReadRepository) GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetByIds")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetByIds")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (job:JobRole_%s) WHERE job.id IN $ids RETURN job`, tenant)
 	params := map[string]interface{}{
 		"ids": ids,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -276,18 +266,17 @@ func (r *jobRoleReadRepository) GetByIds(ctx context.Context, tenant string, ids
 		}
 	})
 	if err != nil {
-		span.LogFields(log.Int("result.count", 0))
+		spans.LogKV("result.count", 0)
 		return nil, err
 	}
 	nodes := result.([]*dbtype.Node)
-	span.LogFields(log.Int("result.count", len(nodes)))
+	spans.LogKV("result.count", len(nodes))
 	return nodes, err
 }
 
 func (r *jobRoleReadRepository) GetJobRoleForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetJobRoleForContactAndOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetJobRoleForContactAndOrganization")
+	defer spans.Finish()
 
 	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 			  	(o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -298,8 +287,8 @@ func (r *jobRoleReadRepository) GetJobRoleForContactAndOrganization(ctx context.
 		"organizationId": organizationId,
 		"tenant":         tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -309,7 +298,7 @@ func (r *jobRoleReadRepository) GetJobRoleForContactAndOrganization(ctx context.
 		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if result == nil {
@@ -319,9 +308,8 @@ func (r *jobRoleReadRepository) GetJobRoleForContactAndOrganization(ctx context.
 }
 
 func (r *jobRoleReadRepository) GetJobRoleForContactWithoutOrganization(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetJobRoleForContactWithoutOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetJobRoleForContactWithoutOrganization")
+	defer spans.Finish()
 
 	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 			  	(c)-[:WORKS_AS]->(j:JobRole)
@@ -331,8 +319,8 @@ func (r *jobRoleReadRepository) GetJobRoleForContactWithoutOrganization(ctx cont
 		"contactId": contactId,
 		"tenant":    tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -342,7 +330,7 @@ func (r *jobRoleReadRepository) GetJobRoleForContactWithoutOrganization(ctx cont
 		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if result == nil {
@@ -352,17 +340,16 @@ func (r *jobRoleReadRepository) GetJobRoleForContactWithoutOrganization(ctx cont
 }
 
 func (r *jobRoleReadRepository) GetById(ctx context.Context, tenant string, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "JobRoleRepository.GetById")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (job:JobRole_%s) WHERE job.id = $id RETURN job`, tenant)
 	params := map[string]interface{}{
 		"id": id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -372,7 +359,7 @@ func (r *jobRoleReadRepository) GetById(ctx context.Context, tenant string, id s
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return result.(*dbtype.Node), err

@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type IssueWriteRepository interface {
@@ -38,12 +36,11 @@ func NewIssueWriteRepository(driver *neo4j.DriverWithContext, database string) I
 }
 
 func (r *issueWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId string, data data_fields.IssueFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.Create")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, issueId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.Create")
+	defer spans.Finish()
+
+	spans.LogKV("issueId", issueId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}) 
@@ -91,8 +88,8 @@ func (r *issueWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTran
 		"submittedByOrganizationId": utils.IfNotNilString(data.SubmittedByOrganizationId),
 		"submittedByUserId":         utils.IfNotNilString(data.SubmittedByUserId),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -100,19 +97,18 @@ func (r *issueWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTran
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId string, data data_fields.IssueFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.Create")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, issueId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.Create")
+	defer spans.Finish()
+
+	spans.TagEntity(issueId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
 		 	SET	i.updatedAt = datetime() `
@@ -142,8 +138,8 @@ func (r *issueWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTran
 		params["priority"] = *data.Priority
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -154,19 +150,18 @@ func (r *issueWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTran
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserAssignee")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, issueId)
-	span.LogKV("userId", userId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.AddUserAssignee")
+	defer spans.Finish()
+
+	spans.TagEntity(issueId)
+	spans.LogKV("userId", userId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
@@ -177,8 +172,8 @@ func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tx *neo4j.Ma
 		"issueId": issueId,
 		"userId":  userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -189,19 +184,18 @@ func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tx *neo4j.Ma
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserFollower")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, issueId)
-	span.LogFields(log.String("userId", userId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.AddUserFollower")
+	defer spans.Finish()
+
+	spans.TagEntity(issueId)
+	spans.LogKV("userId", userId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
@@ -212,8 +206,8 @@ func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tx *neo4j.Ma
 		"issueId": issueId,
 		"userId":  userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -224,19 +218,18 @@ func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tx *neo4j.Ma
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserAssignee")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, issueId)
-	span.LogFields(log.String("userId", userId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.RemoveUserAssignee")
+	defer spans.Finish()
+
+	spans.TagEntity(issueId)
+	spans.LogKV("userId", userId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
@@ -248,8 +241,8 @@ func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tx *neo4j
 		"issueId": issueId,
 		"userId":  userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -260,19 +253,18 @@ func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tx *neo4j
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserFollower")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, issueId)
-	span.LogFields(log.String("userId", userId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.RemoveUserFollower")
+	defer spans.Finish()
+
+	spans.TagEntity(issueId)
+	spans.LogKV("userId", userId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
@@ -284,8 +276,8 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tx *neo4j
 		"issueId": issueId,
 		"userId":  userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -296,19 +288,18 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tx *neo4j
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.ReportedByOrganizationWithGroupId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
-	span.LogFields(log.String("groupId", groupId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.ReportedByOrganizationWithGroupId")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("groupId", groupId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) 
 			   OPTIONAL MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {groupId:$groupId}) 
@@ -318,8 +309,8 @@ func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Con
 		"organizationId": organizationId,
 		"groupId":        groupId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -329,19 +320,18 @@ func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Con
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveReportedByOrganizationWithGroupId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("organizationId", organizationId))
-	span.LogFields(log.String("groupId", groupId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.RemoveReportedByOrganizationWithGroupId")
+	defer spans.Finish()
+
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("groupId", groupId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})<-[r:REPORTED_BY]-(i:Issue{groupId:$groupId}) 
 			   DELETE r`
@@ -350,8 +340,8 @@ func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx conte
 		"organizationId": organizationId,
 		"groupId":        groupId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -361,15 +351,15 @@ func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx conte
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *issueWriteRepository) LinkUnthreadIssuesToOrganizationByGroupId(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.LinkUnthreadIssuesToOrganizationByGroupId")
-	defer span.Finish()
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IssueWriteRepository.LinkUnthreadIssuesToOrganizationByGroupId")
+	defer spans.Finish()
 
 	cypher := `match (t:Tenant)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem{id:"unthread"})<-[:IS_LINKED_WITH]-(i:Issue)
 			   with t, i
@@ -378,12 +368,12 @@ func (r *issueWriteRepository) LinkUnthreadIssuesToOrganizationByGroupId(ctx con
 			   MERGE (i)-[:REPORTED_BY]->(o)
 				SET o.updatedAt = datetime()`
 	params := map[string]any{}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

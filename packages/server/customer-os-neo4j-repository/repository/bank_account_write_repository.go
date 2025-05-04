@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type BankAccountWriteRepository interface {
@@ -30,15 +28,14 @@ func NewBankAccountWriteRepository(driver *neo4j.DriverWithContext, database str
 }
 
 func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tenant string, data data_fields.BankAccountFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountWriteRepository.CreateBankAccount")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "BankAccountWriteRepository.CreateBankAccount")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("data", data)
 
 	if data.ID == "" {
 		err := fmt.Errorf("missing bank account id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -77,26 +74,25 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 		"routingNumber":       utils.IfNotNilString(data.RoutingNumber),
 		"otherDetails":        utils.IfNotNilString(data.OtherDetails),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *bankAccountWriteRepository) UpdateBankAccount(ctx context.Context, tenant string, data data_fields.BankAccountFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountWriteRepository.UpdateBankAccount")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "BankAccountWriteRepository.UpdateBankAccount")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("data", data)
 
 	if data.ID == "" {
 		err := fmt.Errorf("missing bank account id")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -148,21 +144,19 @@ func (r *bankAccountWriteRepository) UpdateBankAccount(ctx context.Context, tena
 		params["otherDetails"] = *data.OtherDetails
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *bankAccountWriteRepository) DeleteBankAccount(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountWriteRepository.DeleteBankAccount")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "BankAccountWriteRepository.DeleteBankAccount")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[r:HAS_BANK_ACCOUNT]->(ba:BankAccount {id:$bankAccountId}) 
 							DELETE r, ba`
@@ -170,12 +164,12 @@ func (r *bankAccountWriteRepository) DeleteBankAccount(ctx context.Context, tena
 		"tenant":        tenant,
 		"bankAccountId": id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

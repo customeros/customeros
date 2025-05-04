@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -33,12 +32,11 @@ func NewServiceLineItemWriteRepository(driver *neo4j.DriverWithContext, database
 }
 
 func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.CreateForContract")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, serviceLineItemId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemWriteRepository.CreateForContract")
+	defer spans.Finish()
+
+	spans.TagEntity(serviceLineItemId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							MERGE (c)-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$serviceLineItemId})
@@ -82,8 +80,8 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		params["billed"] = ""
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -91,19 +89,18 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Update")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemWriteRepository.Update")
+	defer spans.Finish()
+
+	spans.TagEntity(serviceLineItemId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem_%s {id:$serviceLineItemId})
 							SET sli.updatedAt=datetime()`, tenant)
@@ -142,8 +139,8 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.M
 		params["comments"] = *data.Comments
 		cypher += `, sli.comments = $comments`
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -151,18 +148,17 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.M
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Delete")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemWriteRepository.Delete")
+	defer spans.Finish()
+
+	spans.TagEntity(serviceLineItemId)
 
 	cypher := `MATCH (sli:ServiceLineItem {id:$serviceLineItemId})<-[:HAS_SERVICE]-(c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 							WHERE sli:ServiceLineItem
@@ -174,8 +170,8 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tx *neo4j.M
 		"serviceLineItemId": serviceLineItemId,
 		"now":               utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -183,19 +179,19 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tx *neo4j.M
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Close")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, serviceLineItemId)
-	span.LogFields(log.Object("endedAt", endedAt), log.Bool("isCanceled", isCanceled))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemWriteRepository.Close")
+	defer spans.Finish()
+
+	spans.TagEntity(serviceLineItemId)
+	spans.LogObjectAsJson("endedAt", endedAt)
+	spans.LogKV("isCanceled", isCanceled)
 
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
@@ -209,8 +205,8 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tx *neo4j.Ma
 		params["isCanceled"] = isCanceled
 		cypher += `, sli.isCanceled = $isCanceled`
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -218,18 +214,17 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tx *neo4j.Ma
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, parentId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.AdjustEndDates")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag("parentId", parentId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemWriteRepository.AdjustEndDates")
+	defer spans.Finish()
+
+	spans.LogKV("parentId", parentId)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {parentId: $parentId})
 									WHERE sli:ServiceLineItem_%s
@@ -249,8 +244,8 @@ func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tx 
 	params := map[string]any{
 		"parentId": parentId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -258,7 +253,7 @@ func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tx 
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

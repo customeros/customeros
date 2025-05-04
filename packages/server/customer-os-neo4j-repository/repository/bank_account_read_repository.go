@@ -2,12 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type BankAccountReadRepository interface {
@@ -32,18 +30,16 @@ func (r *bankAccountReadRepository) prepareReadSession(ctx context.Context) neo4
 }
 
 func (r *bankAccountReadRepository) GetBankAccounts(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountReadRepository.GetBankAccounts")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "BankAccountReadRepository.GetBankAccounts")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BANK_ACCOUNT]->(ba:BankAccount)
 			RETURN ba ORDER BY ba.createdAt ASC`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -57,7 +53,7 @@ func (r *bankAccountReadRepository) GetBankAccounts(ctx context.Context, tenant 
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	if result == nil {
 		return nil, nil
 	}
@@ -65,10 +61,8 @@ func (r *bankAccountReadRepository) GetBankAccounts(ctx context.Context, tenant 
 }
 
 func (r *bankAccountReadRepository) GetBankAccountById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountReadRepository.GetBankAccountById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "BankAccountReadRepository.GetBankAccountById")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BANK_ACCOUNT]->(ba:BankAccount {id:$id})
 			RETURN ba`
@@ -76,8 +70,8 @@ func (r *bankAccountReadRepository) GetBankAccountById(ctx context.Context, tena
 		"tenant": tenant,
 		"id":     id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -88,11 +82,11 @@ func (r *bankAccountReadRepository) GetBankAccountById(ctx context.Context, tena
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.found", false))
+		spans.TraceError(err)
+		spans.LogKV("result.found", false)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }

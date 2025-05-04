@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ContactWriteRepository interface {
@@ -29,12 +27,11 @@ func NewContactWriteRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string, data data_fields.ContactFields, updateOnlyIfEmpty bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.SaveContactInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactWriteRepository.SaveContactInTx")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
+	spans.LogObjectAsJson("data", data)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		cypher := fmt.Sprintf(`
@@ -92,8 +89,8 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 			params["hide"] = *data.Hide
 		}
 
-		span.LogFields(log.String("cypher", cypher))
-		tracing.LogObjectAsJson(span, "params", params)
+		spans.LogKV("cypher", cypher)
+		spans.LogObjectAsJson("params", params)
 
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
@@ -104,18 +101,17 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.ResetEnrichAttempts")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, contactId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactWriteRepository.ResetEnrichAttempts")
+	defer spans.Finish()
+
+	spans.TagEntity(contactId)
 
 	cypher := `MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
 	WHERE c.enrichedAt IS NULL
@@ -124,8 +120,8 @@ func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tx *ne
 		"tenant":    tenant,
 		"contactId": contactId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -135,7 +131,7 @@ func (r *contactWriteRepository) ResetEnrichAttempts(ctx context.Context, tx *ne
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

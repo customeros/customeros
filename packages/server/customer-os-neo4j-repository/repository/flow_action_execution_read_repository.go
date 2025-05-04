@@ -7,14 +7,12 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type FlowActionExecutionReadRepository interface {
@@ -41,11 +39,10 @@ func NewFlowActionExecutionReadRepository(driver *neo4j.DriverWithContext, datab
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetExecution")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetExecution")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -55,8 +52,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id 
 		"id":     id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -70,23 +67,22 @@ func (r *flowActionExecutionReadRepositoryImpl) GetById(ctx context.Context, id 
 	})
 
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 
 	return result.(*dbtype.Node), nil
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetExecution")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetExecution")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -99,8 +95,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context
 		"entityType": entityType.String(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -119,9 +115,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetForParticipants(ctx context.Context, participantIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForParticipants")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetForParticipants")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -131,8 +126,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForParticipants(ctx context.C
 		"participantIds": participantIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -143,7 +138,7 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForParticipants(ctx context.C
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -151,9 +146,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForParticipants(ctx context.C
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForEntity")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetForEntity")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -165,8 +159,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context
 		"entityType": entityType.String(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -177,7 +171,7 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -185,17 +179,16 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.Context, before time.Time) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetScheduledBefore")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetScheduledBefore")
+	defer spans.Finish()
 
 	cypher := `MATCH (f:Flow {status: 'ON'})-[:HAS]->(:FlowAction)-[:HAS_EXECUTION]->(fae:FlowActionExecution) where fae.status = 'SCHEDULED' and fae.scheduledAt < $before RETURN fae order by fae.scheduledAt limit 100`
 	params := map[string]any{
 		"before": before,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -208,17 +201,16 @@ func (r *flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.C
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startTime, endTime time.Time) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetByMailboxAndTimeInterval")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetByMailboxAndTimeInterval")
+	defer spans.Finish()
 
 	cypher := `
 		MATCH (f:FlowActionExecution)
@@ -232,8 +224,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx 
 		"endTime":   endTime,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -244,25 +236,26 @@ func (r *flowActionExecutionReadRepositoryImpl) GetByMailboxAndTimeInterval(ctx 
 	})
 
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 
 	return result.(*dbtype.Node), nil
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetForEntityWithActionType(ctx context.Context, entityId string, entityType model.EntityType, actionType neo4jentity.FlowActionType) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForEntityWithActionType")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetForEntityWithActionType")
+	defer spans.Finish()
 
-	span.LogFields(log.String("entityId", entityId), log.Object("entityType", entityType), log.Object("actionType", actionType))
+	spans.LogKV("entityId", entityId)
+	spans.LogObjectAsJson("entityType", entityType)
+	spans.LogObjectAsJson("actionType", actionType)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -276,8 +269,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntityWithActionType(ctx c
 		"actionType": actionType,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -287,21 +280,20 @@ func (r *flowActionExecutionReadRepositoryImpl) GetForEntityWithActionType(ctx c
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetFirstSlotForMailbox")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetFirstSlotForMailbox")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("mailbox", mailbox))
+	spans.LogKV("mailbox", mailbox)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -311,8 +303,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx conte
 		"mailbox": mailbox,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	if tx == nil {
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -350,11 +342,10 @@ func (r *flowActionExecutionReadRepositoryImpl) GetFirstSlotForMailbox(ctx conte
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetLastScheduledForMailbox")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetLastScheduledForMailbox")
+	defer spans.Finish()
 
-	span.LogFields(log.String("mailbox", mailbox))
+	spans.LogKV("mailbox", mailbox)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -364,8 +355,8 @@ func (r *flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx c
 		"mailbox": mailbox,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	if tx == nil {
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -403,11 +394,12 @@ func (r *flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx c
 }
 
 func (r *flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startDate, endDate time.Time) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay")
+	defer spans.Finish()
 
-	span.LogFields(log.String("mailbox", mailbox), log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans.LogKV("mailbox", mailbox)
+	spans.LogObjectAsJson("startDate", startDate)
+	spans.LogObjectAsJson("endDate", endDate)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -419,8 +411,8 @@ func (r *flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx 
 		"endDate":   endDate,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -437,26 +429,26 @@ func (r *flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx 
 			return queryResult.Single(ctx)
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return 0, err
 		}
 
 		count := queryResult.(*db.Record).Values[0].(int64)
-		span.LogFields(log.Int64("result", count))
+		spans.LogKV("result", count)
 		return count, nil
 	} else {
 		queryResult, err := (*tx).Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return 0, err
 		}
 		single, err := queryResult.Single(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return 0, err
 		}
 		count := single.Values[0].(int64)
-		span.LogFields(log.Int64("result", count))
+		spans.LogKV("result", count)
 		return count, nil
 	}
 }

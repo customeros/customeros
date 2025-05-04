@@ -2,11 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type StateReadRepository interface {
@@ -26,9 +25,9 @@ func NewStateReadRepository(driver *neo4j.DriverWithContext, database string) St
 }
 
 func (r *stateReadRepository) GetStatesByCountryId(ctx context.Context, countryId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindFirstUserWithRolesByEmail")
-	defer span.Finish()
-	span.LogFields(log.String("countryId", countryId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "StateReadRepository.GetStatesByCountryId")
+	defer spans.Finish()
+	spans.LogKV("countryId", countryId)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)

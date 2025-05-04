@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type FlowSenderReadRepository interface {
@@ -29,12 +27,11 @@ func NewFlowSenderReadRepository(driver *neo4j.DriverWithContext, database strin
 }
 
 func (r flowSenderReadRepositoryImpl) GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetList")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowSenderReadRepository.GetList")
+	defer spans.Finish()
 
 	if len(flowIds) > 0 {
-		span.LogFields(log.String("flowIds", fmt.Sprintf("%v", flowIds)))
+		spans.LogKV("flowIds", fmt.Sprintf("%v", flowIds))
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -50,8 +47,8 @@ func (r flowSenderReadRepositoryImpl) GetList(ctx context.Context, flowIds []str
 	}
 	cypher += "RETURN fs, f.id"
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -64,10 +61,10 @@ func (r flowSenderReadRepositoryImpl) GetList(ctx context.Context, flowIds []str
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	if len(result.([]*utils.DbNodeAndId)) == 0 {
 		return nil, nil
 	}
@@ -75,11 +72,10 @@ func (r flowSenderReadRepositoryImpl) GetList(ctx context.Context, flowIds []str
 }
 
 func (r flowSenderReadRepositoryImpl) GetById(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowSenderReadRepository.GetById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -89,8 +85,8 @@ func (r flowSenderReadRepositoryImpl) GetById(ctx context.Context, id string) (*
 		"id":     id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -112,11 +108,10 @@ func (r flowSenderReadRepositoryImpl) GetById(ctx context.Context, id string) (*
 }
 
 func (r flowSenderReadRepositoryImpl) GetFlowBySenderId(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetFlowBySenderId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowSenderReadRepository.GetFlowBySenderId")
+	defer spans.Finish()
 
-	span.LogFields(log.String("id", id))
+	spans.LogKV("id", id)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -126,8 +121,8 @@ func (r flowSenderReadRepositoryImpl) GetFlowBySenderId(ctx context.Context, id 
 		"id":     id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -149,11 +144,10 @@ func (r flowSenderReadRepositoryImpl) GetFlowBySenderId(ctx context.Context, id 
 }
 
 func (r flowSenderReadRepositoryImpl) GetUsersUsedInFlows(ctx context.Context, userIds []string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetUsersUsedInFlows")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowSenderReadRepository.GetUsersUsedInFlows")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("userIds", userIds))
+	spans.LogObjectAsJson("userIds", userIds)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -163,8 +157,8 @@ func (r flowSenderReadRepositoryImpl) GetUsersUsedInFlows(ctx context.Context, u
 		"userIds": userIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)

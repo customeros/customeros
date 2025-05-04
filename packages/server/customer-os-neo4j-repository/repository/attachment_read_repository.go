@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type AttachmentReadRepository interface {
@@ -31,18 +29,18 @@ func NewAttachmentReadRepository(driver *neo4j.DriverWithContext, database strin
 }
 
 func (r *attachmentReadRepository) GetById(ctx context.Context, tenant, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentReadRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AttachmentReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	cypher := fmt.Sprintf("MATCH (a:Attachment_%s {id:$id}) RETURN a", tenant)
 	params := map[string]any{
 		"id": id,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -53,26 +51,25 @@ func (r *attachmentReadRepository) GetById(ctx context.Context, tenant, id strin
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.found", false))
+		spans.TraceError(err)
+		spans.LogKV("result.found", false)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *attachmentReadRepository) GetFor(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityRelation *neo4jenum.EntityRelation, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentReadRepository.GetFor")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(
-		log.String("entityType", entityType.String()),
-		log.Int("ids.count", len(ids)))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AttachmentReadRepository.GetFor")
+	defer spans.Finish()
+
+	spans.LogKV("entityType", entityType.String(),
+		"ids.count", len(ids))
 	if entityRelation != nil {
-		span.LogFields(log.String("entityRelation", entityRelation.String()))
+		spans.LogKV("entityRelation", entityRelation.String())
 	}
-	tracing.LogObjectAsJson(span, "ids", ids)
+	spans.LogObjectAsJson("ids", ids)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s)-`, entityType.Neo4jLabel(), tenant)
 
@@ -89,8 +86,8 @@ func (r *attachmentReadRepository) GetFor(ctx context.Context, tenant string, en
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -101,12 +98,12 @@ func (r *attachmentReadRepository) GetFor(ctx context.Context, tenant string, en
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Int("result.count", 0))
+		spans.TraceError(err)
+		spans.LogKV("result.count", 0)
 		return nil, err
 	}
 
 	resultArray := result.([]*utils.DbNodeAndId)
-	span.LogFields(log.Int("result.count", len(resultArray)))
+	spans.LogKV("result.count", len(resultArray))
 	return resultArray, nil
 }

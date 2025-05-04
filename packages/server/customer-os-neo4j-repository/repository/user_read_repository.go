@@ -2,17 +2,15 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -78,17 +76,16 @@ func (r *userReadRepository) prepareReadSession(ctx context.Context) neo4j.Sessi
 }
 
 func (r *userReadRepository) GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllForTenant")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetAllForTenant")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u `
 	params := map[string]any{
 		"tenant": tenant,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -103,28 +100,27 @@ func (r *userReadRepository) GetAllForTenant(ctx context.Context, tenant string)
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
-	span.LogFields(log.Int("result.count", len(dbNodes)))
+	spans.LogKV("result.count", len(dbNodes))
 	return dbNodes, nil
 }
 
 func (r *userReadRepository) GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetByIds")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetByIds")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) where u.id in $ids RETURN u`
 	params := map[string]any{
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -140,30 +136,29 @@ func (r *userReadRepository) GetByIds(ctx context.Context, tenant string, ids []
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
-	span.LogFields(log.Int("result.count", len(dbNodes)))
+	spans.LogKV("result.count", len(dbNodes))
 	return dbNodes, nil
 }
 
 func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetUserById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetUserById")
+	defer spans.Finish()
 
-	span.LogFields(log.String("userId", userId))
+	spans.LogKV("userId", userId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id}) RETURN u`
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -182,17 +177,16 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 }
 
 func (u *userReadRepository) FindPlatformOwners(ctx context.Context) ([]*AuthenticatedUserInTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindPlatformOwners")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.FindPlatformOwners")
+	defer spans.Finish()
 
 	cypher := `MATCH (e:Email)-[:HAS{primary:true}]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant{name:"customerosai"}), (au)--(a:Authentication{provider:"google"})
 			WHERE 'PLATFORM_OWNER' in u.roles
 			RETURN t.name, au.id, u.id, u.roles, e.rawEmail, u.firstName, u.lastName ORDER BY u.createdAt ASC`
 	params := map[string]any{}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
@@ -205,7 +199,7 @@ func (u *userReadRepository) FindPlatformOwners(ctx context.Context) ([]*Authent
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -247,9 +241,8 @@ func (u *userReadRepository) FindPlatformOwners(ctx context.Context) ([]*Authent
 }
 
 func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindAllUsersWithRoles")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.FindAllUsersWithRoles")
+	defer spans.Finish()
 
 	cypher := `MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
 			WHERE e.email=$email OR e.rawEmail=$email
@@ -257,8 +250,8 @@ func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, e
 	params := map[string]any{
 		"email": email,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
@@ -271,7 +264,7 @@ func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, e
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -307,10 +300,10 @@ func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, e
 }
 
 func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, email string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetCurrentTenantByUserEmail")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetCurrentTenantByUserEmail")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	cypher := `MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
 				WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
@@ -321,8 +314,8 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 		"email": strings.ToLower(email),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
@@ -335,26 +328,25 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	if len(records.([]string)) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return "", nil
 	}
-	span.LogFields(log.Bool("result.found", true))
-	span.LogFields(log.String("result.tenant", records.([]string)[0]))
+	spans.LogKV("result.found", true)
+	spans.LogKV("result.tenant", records.([]string)[0])
 	return records.([]string)[0], nil
 }
 
 func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindFirstUserWithRolesByEmail")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.FindFirstUserWithRolesByEmail")
+	defer spans.Finish()
 
-	span.LogFields(log.String("email", email))
-	span.LogFields(log.String("tenant", tenant))
+	spans.LogKV("email", email)
+	spans.LogKV("tenant", tenant)
 
 	cypher := fmt.Sprintf(`
 			MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant {name: $tenant})
@@ -364,8 +356,8 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		"email":  strings.ToLower(email),
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
@@ -378,10 +370,10 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogKV("result.count", len(records.([]*neo4j.Record)))
+	spans.LogKV("result.count", len(records.([]*neo4j.Record)))
 	if len(records.([]*neo4j.Record)) > 0 {
 		authenticatedUserId := records.([]*neo4j.Record)[0].Values[1].(string)
 		userId := records.([]*neo4j.Record)[0].Values[2].(string)
@@ -398,7 +390,7 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 			UserId:              userId,
 			Roles:               roles,
 		}
-		tracing.LogObjectAsJson(span, "result", output)
+		spans.LogObjectAsJson("result", output)
 		return &output, nil
 	} else {
 		return nil, nil
@@ -414,9 +406,8 @@ func (u *userReadRepository) toStringList(values []interface{}) []string {
 }
 
 func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAuthenticatedUserInTenant")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetAuthenticatedUserInTenant")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -428,8 +419,8 @@ func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, a
 		"email":      strings.ToLower(email),
 		"authUserId": authUserId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -442,23 +433,22 @@ func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, a
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetFirstUserByEmail")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetFirstUserByEmail")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
 			WHERE e.email=$email OR e.rawEmail=$email
@@ -467,8 +457,8 @@ func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, em
 		"tenant": tenant,
 		"email":  email,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -481,23 +471,22 @@ func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, em
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) FindTestUser(ctx context.Context) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindTestUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.FindTestUser")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -507,8 +496,8 @@ func (r *userReadRepository) FindTestUser(ctx context.Context) (*dbtype.Node, er
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -521,23 +510,22 @@ func (r *userReadRepository) FindTestUser(ctx context.Context) (*dbtype.Node, er
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllOwnersForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetAllOwnersForOrganizations")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
@@ -546,8 +534,8 @@ func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, t
 		"tenant":          tenant,
 		"organizationIds": organizationIDs,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -566,17 +554,16 @@ func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, t
 }
 
 func (r *userReadRepository) GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetOwnerForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetOwnerForOrganization")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:OWNS]-(u:User) RETURN u`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -599,9 +586,8 @@ func (r *userReadRepository) GetOwnerForOrganization(ctx context.Context, tenant
 }
 
 func (r *userReadRepository) GetOwnerForContact(parentCtx context.Context, tenant, contactId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetOwnerForContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetOwnerForContact")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
 			RETURN u`
@@ -610,8 +596,8 @@ func (r *userReadRepository) GetOwnerForContact(parentCtx context.Context, tenan
 		"contactId": contactId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -621,22 +607,21 @@ func (r *userReadRepository) GetOwnerForContact(parentCtx context.Context, tenan
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetCreatorForNote(parentCtx context.Context, tenant, noteId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetCreatorForNote")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetCreatorForNote")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
 			RETURN u`
@@ -645,8 +630,8 @@ func (r *userReadRepository) GetCreatorForNote(parentCtx context.Context, tenant
 		"noteId": noteId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -656,22 +641,21 @@ func (r *userReadRepository) GetCreatorForNote(parentCtx context.Context, tenant
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetPaginatedCustomerUsers(parentCtx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetPaginatedCustomerUsers")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetPaginatedCustomerUsers")
+	defer spans.Finish()
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -715,21 +699,21 @@ func (r *userReadRepository) GetPaginatedCustomerUsers(parentCtx context.Context
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
-	span.LogFields(log.Int("result.count", len(dbNodesWithTotalCount.Nodes)))
+	spans.LogKV("result.count", len(dbNodesWithTotalCount.Nodes))
 	return dbNodesWithTotalCount, nil
 }
 
 func (r *userReadRepository) GetUsersByEmailIds(parentCtx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetUsersByEmailIds")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "emailIds", emailIds)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetUsersByEmailIds")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("emailIds", emailIds)
 	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 			WHERE e.id IN $emailIds
 			RETURN u, e.id as emailId ORDER BY u.firstName, u.lastName`
@@ -737,8 +721,8 @@ func (r *userReadRepository) GetUsersByEmailIds(parentCtx context.Context, tenan
 		"tenant":   tenant,
 		"emailIds": emailIds,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -789,9 +773,8 @@ func (r *userReadRepository) GetUsersByEmailAddresses(ctx context.Context, tenan
 }
 
 func (r *userReadRepository) GetAllForPhoneNumbers(parentCtx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllForPhoneNumbers")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllForPhoneNumbers")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -817,9 +800,8 @@ func (r *userReadRepository) GetAllForPhoneNumbers(parentCtx context.Context, te
 }
 
 func (r *userReadRepository) GetAllOwnersForOpportunities(parentCtx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllOwnersForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllOwnersForOpportunities")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:OWNS]->(op:Opportunity)
 			WHERE op.id IN $opportunityIds
@@ -828,7 +810,8 @@ func (r *userReadRepository) GetAllOwnersForOpportunities(parentCtx context.Cont
 		"tenant":         tenant,
 		"opportunityIds": opportunityIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -847,9 +830,8 @@ func (r *userReadRepository) GetAllOwnersForOpportunities(parentCtx context.Cont
 }
 
 func (r *userReadRepository) GetAllCreatorsForOpportunities(parentCtx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllCreatorsForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllCreatorsForOpportunities")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CREATED_BY]-(op:Opportunity)
 			WHERE op.id IN $opportunityIds
@@ -858,7 +840,8 @@ func (r *userReadRepository) GetAllCreatorsForOpportunities(parentCtx context.Co
 		"tenant":         tenant,
 		"opportunityIds": opportunityIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -877,9 +860,8 @@ func (r *userReadRepository) GetAllCreatorsForOpportunities(parentCtx context.Co
 }
 
 func (r *userReadRepository) GetAllCreatorsForServiceLineItems(parentCtx context.Context, tenant string, serviceLineItemIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllCreatorsForServiceLineItems")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllCreatorsForServiceLineItems")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CREATED_BY]-(sli:ServiceLineItem)
 			WHERE sli.id IN serviceLineItemIds
@@ -888,7 +870,8 @@ func (r *userReadRepository) GetAllCreatorsForServiceLineItems(parentCtx context
 		"tenant":             tenant,
 		"serviceLineItemIds": serviceLineItemIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -907,9 +890,8 @@ func (r *userReadRepository) GetAllCreatorsForServiceLineItems(parentCtx context
 }
 
 func (r *userReadRepository) GetAllCreatorsForContracts(parentCtx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllCreatorsForContracts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllCreatorsForContracts")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CREATED_BY]-(c:Contract)
 			WHERE c.id IN $contractIds
@@ -918,7 +900,8 @@ func (r *userReadRepository) GetAllCreatorsForContracts(parentCtx context.Contex
 		"tenant":      tenant,
 		"contractIds": contractIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -937,9 +920,8 @@ func (r *userReadRepository) GetAllCreatorsForContracts(parentCtx context.Contex
 }
 
 func (r *userReadRepository) GetAllCreatorsForTasks(ctx context.Context, tenant string, taskIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllCreatorsForTasks")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetAllCreatorsForTasks")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CREATED_BY]-(tsk:Task)
 			WHERE tsk.id IN $taskIds
@@ -948,7 +930,8 @@ func (r *userReadRepository) GetAllCreatorsForTasks(ctx context.Context, tenant 
 		"tenant":  tenant,
 		"taskIds": taskIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -967,9 +950,8 @@ func (r *userReadRepository) GetAllCreatorsForTasks(ctx context.Context, tenant 
 }
 
 func (r *userReadRepository) GetAllAssigneesForTasks(ctx context.Context, tenant string, taskIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllAssigneesForTasks")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetAllAssigneesForTasks")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:ASSIGNED_TO]-(tsk:Task)
 			WHERE tsk.id IN $taskIds
@@ -978,7 +960,8 @@ func (r *userReadRepository) GetAllAssigneesForTasks(ctx context.Context, tenant
 		"tenant":  tenant,
 		"taskIds": taskIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -997,15 +980,15 @@ func (r *userReadRepository) GetAllAssigneesForTasks(ctx context.Context, tenant
 }
 
 func (r *userReadRepository) GetAllAuthorsForLogEntries(parentCtx context.Context, tenant string, logEntryIDs []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllAuthorsForLogEntries")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("logEntryIDs", logEntryIDs))
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllAuthorsForLogEntries")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("logEntryIDs", logEntryIDs)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CREATED_BY]-(l:LogEntry_%s)
 			WHERE l.id IN $logEntryIDs
 			RETURN u, l.id as logEntryId`, tenant)
-	span.LogFields(log.String("cypher", cypher))
+	spans.LogKV("cypher", cypher)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -1028,10 +1011,10 @@ func (r *userReadRepository) GetAllAuthorsForLogEntries(parentCtx context.Contex
 }
 
 func (r *userReadRepository) GetAllAuthorsForComments(parentCtx context.Context, tenant string, commentIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetAllAuthorsForComments")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("commentIds", commentIds))
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetAllAuthorsForComments")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("commentIds", commentIds)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CREATED_BY]-(c:Comment_%s)
 			WHERE c.id IN $commentIds
@@ -1040,7 +1023,8 @@ func (r *userReadRepository) GetAllAuthorsForComments(parentCtx context.Context,
 		"tenant":     tenant,
 		"commentIds": commentIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -1059,10 +1043,10 @@ func (r *userReadRepository) GetAllAuthorsForComments(parentCtx context.Context,
 }
 
 func (r *userReadRepository) GetAllSendersForFlowSenders(ctx context.Context, tenant string, flowSenderIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllSendersForFlowSenders")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("flowSenderIds", flowSenderIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetAllSendersForFlowSenders")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("flowSenderIds", flowSenderIds)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:HAS]-(fs:FlowSender_%s)
 			WHERE fs.id IN $flowSenderIds
@@ -1071,7 +1055,8 @@ func (r *userReadRepository) GetAllSendersForFlowSenders(ctx context.Context, te
 		"tenant":        tenant,
 		"flowSenderIds": flowSenderIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -1090,10 +1075,10 @@ func (r *userReadRepository) GetAllSendersForFlowSenders(ctx context.Context, te
 }
 
 func (r *userReadRepository) GetUsersConnectedForContacts(ctx context.Context, tenant string, contactsIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetUsersConnectedForContacts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("contactsIds", contactsIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetUsersConnectedForContacts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("contactsIds", contactsIds)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CONNECTED_WITH]-(c:Contact_%s)
 			WHERE c.id IN $contactsIds
@@ -1102,7 +1087,8 @@ func (r *userReadRepository) GetUsersConnectedForContacts(ctx context.Context, t
 		"tenant":      tenant,
 		"contactsIds": contactsIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -1121,9 +1107,8 @@ func (r *userReadRepository) GetUsersConnectedForContacts(ctx context.Context, t
 }
 
 func (r *userReadRepository) GetDistinctOrganizationOwners(parentCtx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetDistinctOrganizationOwners")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetDistinctOrganizationOwners")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -1148,15 +1133,15 @@ func (r *userReadRepository) GetDistinctOrganizationOwners(parentCtx context.Con
 }
 
 func (r *userReadRepository) GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetUsers")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserReadRepository.GetUsers")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("ids", ids)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)
 			WHERE u.id IN $ids
 			RETURN u`
-	span.LogFields(log.String("cypher", cypher))
+	spans.LogKV("cypher", cypher)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -1178,9 +1163,8 @@ func (r *userReadRepository) GetUsers(ctx context.Context, tenant string, ids []
 }
 
 func (r *userReadRepository) GetOwnerForContract(parentCtx context.Context, tenant, contractId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetOwnerForContract")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetOwnerForContract")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})<-[:OWNS]-(u:User)
 			RETURN u`
@@ -1189,8 +1173,8 @@ func (r *userReadRepository) GetOwnerForContract(parentCtx context.Context, tena
 		"contractId": contractId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -1200,22 +1184,21 @@ func (r *userReadRepository) GetOwnerForContract(parentCtx context.Context, tena
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetOwnerForReminder(parentCtx context.Context, tenant, reminderId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.GetOwnerForReminder")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "UserReadRepository.GetOwnerForReminder")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$reminderId})-[:REMINDER_BELONGS_TO_USER]->(u:User)
 			RETURN u`
@@ -1224,8 +1207,8 @@ func (r *userReadRepository) GetOwnerForReminder(parentCtx context.Context, tena
 		"reminderId": reminderId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -1235,14 +1218,14 @@ func (r *userReadRepository) GetOwnerForReminder(parentCtx context.Context, tena
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }

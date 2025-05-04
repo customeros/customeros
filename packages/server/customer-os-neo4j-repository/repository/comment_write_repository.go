@@ -3,13 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"time"
 )
 
@@ -46,12 +45,11 @@ func NewCommentWriteRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *commentWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, commentId string, data data_fields.CommentFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentWriteRepository.Create")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, commentId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommentWriteRepository.Create")
+	defer spans.Finish()
+
+	spans.LogKV("commentId", commentId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							OPTIONAL MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$commentedIssueId})
@@ -84,8 +82,8 @@ func (r *commentWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTr
 		"commentedIssueId": utils.IfNotNilString(data.CommentedIssueId),
 		"authorUserId":     utils.IfNotNilString(data.AuthorUserId),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -96,19 +94,18 @@ func (r *commentWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTr
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *commentWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, commentId string, data data_fields.CommentFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentWriteRepository.Update")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, commentId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommentWriteRepository.Update")
+	defer spans.Finish()
+
+	spans.TagEntity(commentId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (c:Comment_%s {id:$commentId})
 		 	SET updatedAt = datetime()`, tenant)
@@ -124,8 +121,8 @@ func (r *commentWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTr
 		params["contentType"] = *data.ContentType
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -136,7 +133,7 @@ func (r *commentWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTr
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

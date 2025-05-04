@@ -1,13 +1,12 @@
 package neo4j_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -34,11 +33,10 @@ func (r *invoiceLineReadRepository) prepareReadSession(ctx context.Context) neo4
 }
 
 func (r *invoiceLineReadRepository) GetAllForInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, invoiceId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineReadRepository.GetAllForInvoice")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("invoiceId", invoiceId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceLineReadRepository.GetAllForInvoice")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice{id:$invoiceId})-[:HAS_INVOICE_LINE]->(il:InvoiceLine)
 		 RETURN il ORDER BY il.name`
@@ -46,8 +44,8 @@ func (r *invoiceLineReadRepository) GetAllForInvoice(ctx context.Context, tx *ne
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -57,19 +55,18 @@ func (r *invoiceLineReadRepository) GetAllForInvoice(ctx context.Context, tx *ne
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), err
 }
 
 func (r *invoiceLineReadRepository) GetAllForInvoices(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineReadRepository.GetAllForInvoice")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceLineReadRepository.GetAllForInvoice")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("ids", ids)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)-[:HAS_INVOICE_LINE]->(il:InvoiceLine)
 		 WHERE i.id IN $ids 
@@ -78,8 +75,8 @@ func (r *invoiceLineReadRepository) GetAllForInvoices(ctx context.Context, tenan
 		"tenant": tenant,
 		"ids":    ids,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -92,19 +89,18 @@ func (r *invoiceLineReadRepository) GetAllForInvoices(ctx context.Context, tenan
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx context.Context, tenant, sliParentId string) (*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("sliParentId", sliParentId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceLineReadRepository.GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId")
+	defer spans.Finish()
+
+	spans.LogKV("sliParentId", sliParentId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)-[:HAS_INVOICE_LINE]->(il:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem {parentId:$parentId})
 		WHERE NOT i.status IN $skipStatuses AND i.dryRun = false
@@ -114,8 +110,8 @@ func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLi
 		"parentId":     sliParentId,
 		"skipStatuses": []string{neo4jenum.InvoiceStatusInitialized.String()},
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -128,10 +124,10 @@ func (r *invoiceLineReadRepository) GetLatestInvoiceLineWithInvoiceIdByServiceLi
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	if len(result.([]*utils.DbNodeAndId)) == 0 {
 		return nil, nil
 	}

@@ -2,11 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"time"
 )
 
@@ -32,14 +31,14 @@ func (r *countryWriteRepository) prepareWriteSession(ctx context.Context) neo4j.
 }
 
 func (r *countryWriteRepository) CreateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string, createdAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetDefaultCountryCodeA3")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "id", id)
-	tracing.LogObjectAsJson(span, "name", name)
-	tracing.LogObjectAsJson(span, "codeA2", codeA2)
-	tracing.LogObjectAsJson(span, "codeA3", codeA3)
-	tracing.LogObjectAsJson(span, "phoneCode", phoneCode)
-	tracing.LogObjectAsJson(span, "createdAt", createdAt)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CountryReadRepository.GetDefaultCountryCodeA3")
+	defer spans.Finish()
+	spans.LogObjectAsJson("id", id)
+	spans.LogObjectAsJson("name", name)
+	spans.LogObjectAsJson("codeA2", codeA2)
+	spans.LogObjectAsJson("codeA3", codeA3)
+	spans.LogObjectAsJson("phoneCode", phoneCode)
+	spans.LogObjectAsJson("createdAt", createdAt)
 
 	cypher := " MERGE (c:Country {id: $id})" +
 		" ON CREATE SET c.name=$name, " +
@@ -56,28 +55,28 @@ func (r *countryWriteRepository) CreateCountry(ctx context.Context, id, name, co
 		"phoneCode": phoneCode,
 		"createdAt": createdAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *countryWriteRepository) UpdateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetDefaultCountryCodeA3")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "id", id)
-	tracing.LogObjectAsJson(span, "name", name)
-	tracing.LogObjectAsJson(span, "codeA2", codeA2)
-	tracing.LogObjectAsJson(span, "codeA3", codeA3)
-	tracing.LogObjectAsJson(span, "phoneCode", phoneCode)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CountryReadRepository.GetDefaultCountryCodeA3")
+	defer spans.Finish()
+	spans.LogObjectAsJson("id", id)
+	spans.LogObjectAsJson("name", name)
+	spans.LogObjectAsJson("codeA2", codeA2)
+	spans.LogObjectAsJson("codeA3", codeA3)
+	spans.LogObjectAsJson("phoneCode", phoneCode)
 
 	cypher := `
 			MATCH (c:Country {id:$id})
@@ -93,15 +92,15 @@ func (r *countryWriteRepository) UpdateCountry(ctx context.Context, id, name, co
 		"codeA3":    codeA3,
 		"phoneCode": phoneCode,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
