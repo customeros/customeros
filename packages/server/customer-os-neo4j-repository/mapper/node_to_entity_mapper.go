@@ -339,6 +339,7 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *neo4j_entity.TenantSe
 		InvoicingPostpaid:        utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyInvoicingPostpaid)),
 		WorkspaceLogo:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceLogo)),
 		WorkspaceLogoUrl:         utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceLogoUrl)),
+		WorkspaceLogoKey:         utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceLogoKey)),
 		WorkspaceName:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceName)),
 		BaseCurrency:             enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyBaseCurrency))),
 		EnrichContacts:           utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyEnrichContacts)),

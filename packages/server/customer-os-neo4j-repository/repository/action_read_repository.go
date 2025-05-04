@@ -6,12 +6,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ActionReadRepository interface {
@@ -31,11 +29,15 @@ func NewActionReadRepository(driver *neo4j.DriverWithContext, database string) A
 	}
 }
 
+func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
+	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
 func (r *actionReadRepository) GetFor(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetFor")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.String("entityIds", fmt.Sprintf("%v", entityIds)))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ActionReadRepository.GetFor")
+	defer spans.Finish()
+	spans.LogKV("entityType", entityType.String())
+	spans.LogKV("entityIds", fmt.Sprintf("%v", entityIds))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -47,8 +49,8 @@ func (r *actionReadRepository) GetFor(ctx context.Context, tenant string, entity
 		"tenant":    tenant,
 		"entityIds": entityIds,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -58,24 +60,18 @@ func (r *actionReadRepository) GetFor(ctx context.Context, tenant string, entity
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
-	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-}
-
 func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetLastAction")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagEntity(span, entityId)
-	span.LogFields(
-		log.String("entityType", entityType.String()),
-		log.String("actionType", string(actionType)))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ActionReadRepository.GetLastAction")
+	defer spans.Finish()
+	spans.TagEntity(entityId)
+	spans.LogKV("entityType", entityType.String())
+	spans.LogKV("actionType", string(actionType))
 
 	cypher := fmt.Sprintf(`MATCH  (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += `WITH n
@@ -85,8 +81,8 @@ func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entity
 		"entityId": entityId,
 		"type":     actionType,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -99,7 +95,7 @@ func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entity
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if result == nil {

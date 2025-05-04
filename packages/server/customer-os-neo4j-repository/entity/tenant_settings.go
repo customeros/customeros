@@ -11,6 +11,7 @@ type TenantSettingsProperty string
 const (
 	TenantSettingsPropertyBaseCurrency             TenantSettingsProperty = "baseCurrency"
 	TenantSettingsPropertyInvoicingPostpaid        TenantSettingsProperty = "invoicingPostpaid"
+	TenantSettingsPropertyWorkspaceLogoKey         TenantSettingsProperty = "workspaceLogoKey"
 	TenantSettingsPropertyWorkspaceLogoUrl         TenantSettingsProperty = "workspaceLogoUrl"
 	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
 	TenantSettingsPropertyEnrichContacts           TenantSettingsProperty = "enrichContacts"
@@ -25,6 +26,7 @@ type TenantSettingsEntity struct {
 	BaseCurrency             enum.Currency
 	InvoicingPostpaid        bool
 	WorkspaceLogoUrl         string
+	WorkspaceLogoKey         string
 	WorkspaceName            string
 	CreatedAt                time.Time
 	UpdatedAt                time.Time
