@@ -3,12 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -39,11 +38,10 @@ func (r *serviceLineItemReadRepository) prepareReadSession(ctx context.Context) 
 }
 
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsForContract")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsForContract")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem)
 							WHERE sli:ServiceLineItem_%s
@@ -52,8 +50,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContract(ctx conte
 		"tenant":     tenant,
 		"contractId": contractId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -66,19 +64,18 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContract(ctx conte
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*neo4j.Node))))
+	spans.LogKV("result.count", len(result.([]*neo4j.Node)))
 	return result.([]*neo4j.Node), nil
 }
 
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemsForContracts")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("contractIds", contractIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemRepository.GetServiceLineItemsForContracts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("contractIds", contractIds)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE c.id IN $contractIds and sli:ServiceLineItem_%s
@@ -87,7 +84,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx cont
 		"tenant":      tenant,
 		"contractIds": contractIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -106,11 +104,10 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx cont
 }
 
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForInvoiceLines(ctx context.Context, tenant string, invoiceLineIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemsForInvoiceLines")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("invoiceLineIds", invoiceLineIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemRepository.GetServiceLineItemsForInvoiceLines")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("invoiceLineIds", invoiceLineIds)
 
 	cypher := fmt.Sprintf(`MATCH (il:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem)
 			WHERE il.id IN $invoiceLineIds and sli:ServiceLineItem_%s
@@ -119,7 +116,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForInvoiceLines(ctx c
 		"tenant":         tenant,
 		"invoiceLineIds": invoiceLineIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -138,11 +136,10 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForInvoiceLines(ctx c
 }
 
 func (r *serviceLineItemReadRepository) GetServiceLineItemsByParentId(ctx context.Context, tenant, sliParentId string) ([]*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsByParentId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("sliParentId", sliParentId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsByParentId")
+	defer spans.Finish()
+
+	spans.LogKV("sliParentId", sliParentId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem {parentId:$parentId})
 							WHERE sli:ServiceLineItem_%s
@@ -151,8 +148,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsByParentId(ctx contex
 		"tenant":   tenant,
 		"parentId": sliParentId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -165,26 +162,25 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsByParentId(ctx contex
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*neo4j.Node))))
+	spans.LogKV("result.count", len(result.([]*neo4j.Node)))
 	return result.([]*neo4j.Node), nil
 }
 
 func (r *serviceLineItemReadRepository) GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemReadRepository.GetServiceLineItemById")
+	defer spans.Finish()
+
+	spans.TagEntity(serviceLineItemId)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id}) WHERE sli:ServiceLineItem_%s RETURN sli`, tenant)
 	params := map[string]any{
 		"id": serviceLineItemId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -197,19 +193,19 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemById(ctx context.Conte
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetLatestServiceLineItemByParentId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("serviceLineItemParentId", serviceLineItemParentId), log.Object("beforeDate", beforeDate))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemReadRepository.GetLatestServiceLineItemByParentId")
+	defer spans.Finish()
+
+	spans.LogKV("serviceLineItemParentId", serviceLineItemParentId)
+	spans.LogObjectAsJson("beforeDate", beforeDate)
 
 	params := map[string]any{
 		"tenant":   tenant,
@@ -222,8 +218,8 @@ func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx c
 	}
 	cypher += ` RETURN sli ORDER BY sli.startedAt DESC LIMIT 1`
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -236,26 +232,25 @@ func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx c
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *serviceLineItemReadRepository) WasServiceLineItemInvoiced(ctx context.Context, tenant, serviceLineItemId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.WasServiceLineItemInvoiced")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ServiceLineItemReadRepository.WasServiceLineItemInvoiced")
+	defer spans.Finish()
+
+	spans.TagEntity(serviceLineItemId)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id})<-[:INVOICED]-(il:InvoiceLine)--(i:Invoice {dryRun:false}) WHERE sli:ServiceLineItem_%s RETURN count(sli)`, tenant)
 	params := map[string]any{
 		"id": serviceLineItemId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -265,14 +260,14 @@ func (r *serviceLineItemReadRepository) WasServiceLineItemInvoiced(ctx context.C
 		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
 	})
 	if err != nil {
-		span.LogFields(log.Bool("result.found", false))
-		tracing.TraceErr(span, err)
+		spans.LogKV("result.found", false)
+		spans.TraceError(err)
 		return false, err
 	}
 	if result.(int64) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return false, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return true, nil
 }

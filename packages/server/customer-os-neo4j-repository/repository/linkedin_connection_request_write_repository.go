@@ -5,11 +5,9 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -31,11 +29,10 @@ func NewLinkedinConnectionRequestWriteRepository(driver *neo4j.DriverWithContext
 }
 
 func (r *linkedinConnectionRequestWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, input *neo4j_entity.LinkedinConnectionRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkedinConnectionRequestWriteRepository.Save")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LinkedinConnectionRequestWriteRepository.Save")
+	defer spans.Finish()
 
-	tracing.LogObjectAsJson(span, "input", input)
+	spans.LogObjectAsJson("input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -65,12 +62,12 @@ func (r *linkedinConnectionRequestWriteRepository) Save(ctx context.Context, tx 
 			"scheduledAt":  input.ScheduledAt,
 			"status":       input.Status,
 		}
-		span.LogFields(log.String("cypher", cypher))
-		tracing.LogObjectAsJson(span, "params", params)
+		spans.LogKV("cypher", cypher)
+		spans.LogObjectAsJson("params", params)
 
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 

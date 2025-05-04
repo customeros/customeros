@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -65,12 +64,11 @@ func NewLocationWriteRepository(driver *neo4j.DriverWithContext, database string
 }
 
 func (r *locationRepository) CreateLocation(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, locationId string, data data_fields.LocationFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.CreateLocation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, locationId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationWriteRepository.CreateLocation")
+	defer spans.Finish()
+
+	spans.TagEntity(locationId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id}) 
@@ -130,25 +128,24 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tx *neo4j.Manag
 		"timeZone":      data.TimeZone,
 		"utcOffset":     data.UtcOffset,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locationId string, data LocationUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.UpdateLocation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, locationId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationWriteRepository.UpdateLocation")
+	defer spans.Finish()
+
+	spans.TagEntity(locationId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$id})
 			WHERE l:Location_%s
@@ -199,22 +196,21 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 		"utcOffset":    data.AddressDetails.UtcOffset,
 		"overwrite":    data.Source == constants.SourceOpenline,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *locationRepository) FailLocationValidation(ctx context.Context, tenant, locationId, validationError string, validatedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.FailLocationValidation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, locationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationWriteRepository.FailLocationValidation")
+	defer spans.Finish()
+
+	spans.TagEntity(locationId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
 		 		SET l.validationError = $validationError,
@@ -226,22 +222,21 @@ func (r *locationRepository) FailLocationValidation(ctx context.Context, tenant,
 		"validationError": validationError,
 		"validatedAt":     validatedAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *locationRepository) LocationValidated(ctx context.Context, tenant, locationId string, data AddressDetails, validatedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LocationValidated")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, locationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationWriteRepository.LocationValidated")
+	defer spans.Finish()
+
+	spans.TagEntity(locationId)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -292,23 +287,22 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 		"timeZone":        data.TimeZone,
 		"utcOffset":       data.UtcOffset,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *locationRepository) LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, locationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, locationId)
-	span.LogFields(log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationWriteRepository.LinkWithOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(locationId)
+	spans.LogKV("organizationId", organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}),
 				(t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$locationId})
@@ -319,25 +313,24 @@ func (r *locationRepository) LinkWithOrganization(ctx context.Context, tx *neo4j
 		"locationId":     locationId,
 		"organizationId": organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *locationRepository) LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, locationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, locationId)
-	span.LogFields(log.String("contactId", contactId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationWriteRepository.LinkWithContact")
+	defer spans.Finish()
+
+	spans.TagEntity(locationId)
+	spans.LogKV("contactId", contactId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
 				(t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$locationId})
@@ -348,14 +341,14 @@ func (r *locationRepository) LinkWithContact(ctx context.Context, tx *neo4j.Mana
 		"locationId": locationId,
 		"contactId":  contactId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

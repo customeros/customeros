@@ -2,13 +2,11 @@ package neo4j_repository
 
 import (
 	"context"
-	"github.com/opentracing/opentracing-go/log"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -30,10 +28,8 @@ func NewWorkspaceWriteRepository(driver *neo4j.DriverWithContext, database strin
 }
 
 func (r *workspaceWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceWriteRepository.Merge")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "WorkspaceWriteRepository.Merge")
+	defer spans.Finish()
 
 	cypher := `
 				MATCH (t:Tenant {name: $tenant}) 
@@ -55,8 +51,8 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedT
 		"source":    utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
 		"appSource": workspace.AppSource,
 	}
-	tracing.LogObjectAsJson(span, "params", params)
-	span.LogFields(log.String("cypher", cypher))
+	spans.LogObjectAsJson("params", params)
+	spans.LogKV("cypher", cypher)
 
 	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		qr, err := tx.Run(ctx, cypher, params)
@@ -66,7 +62,7 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedT
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

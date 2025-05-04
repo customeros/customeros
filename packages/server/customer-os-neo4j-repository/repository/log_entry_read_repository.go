@@ -2,12 +2,11 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -32,18 +31,17 @@ func (r *logEntryReadRepository) prepareReadSession(ctx context.Context) neo4j.S
 }
 
 func (r *logEntryReadRepository) GetById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryReadRepository.GetById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LogEntryReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	cypher := fmt.Sprintf(`MATCH (l:LogEntry {id:$id}) WHERE l:LogEntry_%s return l`, tenant)
 	params := map[string]any{
 		"id": id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -53,10 +51,10 @@ func (r *logEntryReadRepository) GetById(ctx context.Context, tenant, id string)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
-		span.LogFields(log.Bool("result.found", false))
-		tracing.TraceErr(span, err)
+		spans.LogKV("result.found", false)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }

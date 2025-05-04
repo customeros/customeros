@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -34,12 +33,12 @@ func NewLinkedinConnectionRequestReadRepository(driver *neo4j.DriverWithContext,
 }
 
 func (r *linkedinConnectionRequestReadRepository) GetPendingRequestByUserForSocialUrl(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId, socialUrl string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LinkedinConnectionRequestReadRepository.GetPendingRequestByUserForSocialUrl")
+	defer spans.Finish()
 
-	span.LogFields(log.String("tenant", tenant), log.String("userId", userId), log.String("socialUrl", socialUrl))
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("userId", userId)
+	spans.LogKV("socialUrl", socialUrl)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(l:LinkedinConnectionRequest_%s) where l.status = 'PENDING' and l.userId = $userId and l.socialUrl = $socialUrl return l`, tenant)
 
@@ -48,8 +47,8 @@ func (r *linkedinConnectionRequestReadRepository) GetPendingRequestByUserForSoci
 		"userId":    userId,
 		"socialUrl": socialUrl,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -60,7 +59,7 @@ func (r *linkedinConnectionRequestReadRepository) GetPendingRequestByUserForSoci
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -68,11 +67,10 @@ func (r *linkedinConnectionRequestReadRepository) GetPendingRequestByUserForSoci
 }
 
 func (r *linkedinConnectionRequestReadRepository) GetLastScheduledForUser(ctx context.Context, tx *neo4j.ManagedTransaction, userId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetLastScheduledForUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.GetLastScheduledForUser")
+	defer spans.Finish()
 
-	span.LogFields(log.Object("userId", userId))
+	spans.LogKV("userId", userId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -82,8 +80,8 @@ func (r *linkedinConnectionRequestReadRepository) GetLastScheduledForUser(ctx co
 		"userId": userId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -103,11 +101,12 @@ func (r *linkedinConnectionRequestReadRepository) GetLastScheduledForUser(ctx co
 }
 
 func (r *linkedinConnectionRequestReadRepository) CountRequestsPerUserPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, userId string, startDate, endDate time.Time) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.CountRequestsPerUserPerDay")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "FlowActionExecutionReadRepository.CountRequestsPerUserPerDay")
+	defer spans.Finish()
 
-	span.LogFields(log.String("userId", userId), log.Object("startDate", startDate), log.Object("endDate", endDate))
+	spans.LogKV("userId", userId)
+	spans.LogObjectAsJson("startDate", startDate)
+	spans.LogObjectAsJson("endDate", endDate)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -119,8 +118,8 @@ func (r *linkedinConnectionRequestReadRepository) CountRequestsPerUserPerDay(ctx
 		"endDate":   endDate,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	queryResult, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -131,11 +130,11 @@ func (r *linkedinConnectionRequestReadRepository) CountRequestsPerUserPerDay(ctx
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return 0, err
 	}
 
 	count := queryResult.(*db.Record).Values[0].(int64)
-	span.LogFields(log.Int64("result", count))
+	spans.LogKV("result", count)
 	return count, nil
 }

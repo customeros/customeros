@@ -7,13 +7,11 @@ import (
 	"time"
 
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
@@ -91,18 +89,16 @@ func (r *organizationReadRepository) prepareReadSession(ctx context.Context) neo
 }
 
 func (r *organizationReadRepository) CountByTenant(ctx context.Context, tenant string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.CountByTenant")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.CountByTenant")
+	defer spans.Finish()
 
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
 			RETURN count(org)`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("query", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -118,24 +114,23 @@ func (r *organizationReadRepository) CountByTenant(ctx context.Context, tenant s
 		return 0, err
 	}
 	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
-	span.LogFields(log.Int64("result", organizationsCount))
+	spans.LogKV("result", organizationsCount)
 	return organizationsCount, nil
 }
 
 func (r *organizationReadRepository) GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, organizationId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(organizationId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) RETURN org`
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -148,19 +143,18 @@ func (r *organizationReadRepository) GetOrganization(ctx context.Context, tenant
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *organizationReadRepository) GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationIdsConnectedToInteractionEvent")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("interactionEventId", interactionEventId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationIdsConnectedToInteractionEvent")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
 
 	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}),
 				(t:Tenant {name:$tenant})
@@ -178,8 +172,8 @@ func (r *organizationReadRepository) GetOrganizationIdsConnectedToInteractionEve
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -192,19 +186,18 @@ func (r *organizationReadRepository) GetOrganizationIdsConnectedToInteractionEve
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]string))))
+	spans.LogKV("result.count", len(result.([]string)))
 	return result.([]string), err
 }
 
 func (r *organizationReadRepository) GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByOpportunityId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("opportunityId", opportunityId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByOpportunityId")
+	defer spans.Finish()
+
+	spans.LogKV("opportunityId", opportunityId)
 
 	cypher := `MATCH (op:Opportunity {id:$id})
 				MATCH (t:Tenant {name:$tenant})
@@ -216,8 +209,8 @@ func (r *organizationReadRepository) GetOrganizationByOpportunityId(ctx context.
 		"tenant": tenant,
 		"id":     opportunityId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("query", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -230,25 +223,24 @@ func (r *organizationReadRepository) GetOrganizationByOpportunityId(ctx context.
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	records := result.([]*dbtype.Node)
 	if len(records) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else {
-		span.LogFields(log.Bool("result.found", true))
+		spans.LogKV("result.found", true)
 		return records[0], nil
 	}
 }
 
 func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByContactId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contactId", contactId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByContactId")
+	defer spans.Finish()
+
+	spans.LogKV("contactId", contactId)
 
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), 
 				(t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
@@ -258,8 +250,8 @@ func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Cont
 		"tenant":    tenant,
 		"contactId": contactId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("query", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -272,25 +264,24 @@ func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Cont
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	records := result.([]*dbtype.Node)
 	if len(records) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else {
-		span.LogFields(log.Bool("result.found", true))
+		spans.LogKV("result.found", true)
 		return records[0], nil
 	}
 }
 
 func (r *organizationReadRepository) GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByContractId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByContractId")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$id})
 			RETURN org limit 1`
@@ -298,8 +289,8 @@ func (r *organizationReadRepository) GetOrganizationByContractId(ctx context.Con
 		"tenant": tenant,
 		"id":     contractId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("query", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -312,25 +303,24 @@ func (r *organizationReadRepository) GetOrganizationByContractId(ctx context.Con
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	records := result.([]*dbtype.Node)
 	if len(records) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else {
-		span.LogFields(log.Bool("result.found", true))
+		spans.LogKV("result.found", true)
 		return records[0], nil
 	}
 }
 
 func (r *organizationReadRepository) GetOrganizationByInvoiceId(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByInvoiceId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("invoiceId", invoiceId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByInvoiceId")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(inv:Invoice {id:$invoiceId})<-[:HAS_INVOICE]-(c:Contract)<-[:HAS_CONTRACT]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 			RETURN org`
@@ -338,8 +328,8 @@ func (r *organizationReadRepository) GetOrganizationByInvoiceId(ctx context.Cont
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -352,25 +342,24 @@ func (r *organizationReadRepository) GetOrganizationByInvoiceId(ctx context.Cont
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	records := result.([]*dbtype.Node)
 	if len(records) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else {
-		span.LogFields(log.Bool("result.found", true))
+		spans.LogKV("result.found", true)
 		return records[0], nil
 	}
 }
 
 func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByCustomerOsId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("customerOsId", customerOsId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByCustomerOsId")
+	defer spans.Finish()
+
+	spans.LogKV("customerOsId", customerOsId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {customerOsId:$customerOsId})
 			RETURN org`
@@ -378,8 +367,8 @@ func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.C
 		"tenant":       tenant,
 		"customerOsId": customerOsId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -392,23 +381,22 @@ func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.C
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *organizationReadRepository) GetOrganizationByIdOrCustomerOsId(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("id", id))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 			WHERE org.customerOsId = $id OR org.id = $id RETURN org`
@@ -416,8 +404,8 @@ func (r *organizationReadRepository) GetOrganizationByIdOrCustomerOsId(ctx conte
 		"tenant": tenant,
 		"id":     id,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -430,31 +418,30 @@ func (r *organizationReadRepository) GetOrganizationByIdOrCustomerOsId(ctx conte
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByReferenceId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("referenceId", referenceId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByReferenceId")
+	defer spans.Finish()
+
+	spans.LogKV("referenceId", referenceId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {referenceId:$referenceId}) RETURN org`
 	params := map[string]any{
 		"tenant":      tenant,
 		"referenceId": referenceId,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -467,30 +454,30 @@ func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Co
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, domain string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("domain", domain))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
+	defer spans.Finish()
+
+	spans.LogKV("domain", domain)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domain}) RETURN o limit 1`
 	params := map[string]any{
 		"tenant": tenant,
 		"domain": domain,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -503,23 +490,22 @@ func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if len(result.([]*dbtype.Node)) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.([]*dbtype.Node)[0], err
 }
 
 func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationBySocialUrl")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("socialUrl", socialUrl)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationBySocialUrl")
+	defer spans.Finish()
+
+	spans.LogKV("socialUrl", socialUrl)
 
 	if socialUrl == "" || socialUrl == "/" {
 		return nil, nil
@@ -533,7 +519,7 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 		urlWithoutSlash = socialUrl
 		urlWithSlash = socialUrl + "/"
 	}
-	span.LogKV("urlWithoutSlash", urlWithoutSlash, "urlWithSlash", urlWithSlash)
+	spans.LogKV("urlWithoutSlash", urlWithoutSlash, "urlWithSlash", urlWithSlash)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(s:Social)
 				WHERE s.url = $urlWithoutSlash OR s.url = $urlWithSlash
@@ -555,7 +541,7 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 		}
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 	if err != nil {
@@ -563,22 +549,22 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 
 	return result.(*dbtype.Node), err
 }
 
 func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByLinkedIn")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("url", url), log.String("alias", alias), log.String("externalId", externalId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsByLinkedIn")
+	defer spans.Finish()
+
+	spans.LogKV("url", url, "alias", alias, "externalId", externalId)
 
 	if !strings.Contains(url, "linkedin.com") {
-		span.LogFields(log.Int("result.count", 0))
+		spans.LogKV("result.count", 0)
 		return nil, nil
 	}
 
@@ -610,8 +596,8 @@ func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Cont
 		"externalId":   externalId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -624,20 +610,19 @@ func (r *organizationReadRepository) GetOrganizationsByLinkedIn(ctx context.Cont
 		}
 	})
 	if err != nil {
-		span.LogFields(log.Int("result.count", 0))
+		spans.LogKV("result.count", 0)
 		return nil, err
 	}
 	nodes := result.([]*dbtype.Node)
-	span.LogFields(log.Int("result.count", len(nodes)))
+	spans.LogKV("result.count", len(nodes))
 	return nodes, err
 }
 
 func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetForApiCache")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("skip", skip), log.Object("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetForApiCache")
+	defer spans.Finish()
+
+	spans.LogKV("skip", skip, "limit", limit)
 
 	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
 				WHERE o.hide = false
@@ -665,8 +650,8 @@ func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant 
 		"limit":  limit,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -679,7 +664,7 @@ func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant 
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -714,10 +699,8 @@ func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant 
 }
 
 func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetPatchesForApiCache")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetPatchesForApiCache")
+	defer spans.Finish()
 
 	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 				where o.updatedAt > $lastPatchTimestamp
@@ -755,8 +738,8 @@ func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, 
 		"lastPatchTimestamp": lastPatchTimestamp,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -769,7 +752,7 @@ func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, 
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -804,11 +787,10 @@ func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, 
 }
 
 func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForInvoices")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("invoiceIds", invoiceIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetAllForInvoices")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceIds", invoiceIds)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(:Contract)<-[:HAS_CONTRACT]-(o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 				WHERE i.id IN $invoiceIds
@@ -818,8 +800,8 @@ func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tena
 		"invoiceIds": invoiceIds,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -834,16 +816,15 @@ func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tena
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *organizationReadRepository) GetAllForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForContracts")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("contractIds", contractIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetAllForContracts")
+	defer spans.Finish()
+
+	spans.LogKV("contractIds", contractIds)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
 				WHERE c.id IN $contractIds
@@ -853,8 +834,8 @@ func (r *organizationReadRepository) GetAllForContracts(ctx context.Context, ten
 		"contractIds": contractIds,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -869,16 +850,15 @@ func (r *organizationReadRepository) GetAllForContracts(ctx context.Context, ten
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForSlackChannels")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetAllForSlackChannels")
+	defer spans.Finish()
+
+	spans.LogKV("slackChannelIds", slackChannelIds)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})-[:ORGANIZATION_BELONGS_TO_TENANT]->(o:Organization)
 				WHERE o.slackChannelId IN $slackChannelIds
@@ -888,8 +868,8 @@ func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context,
 		"slackChannelIds": slackChannelIds,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -904,16 +884,15 @@ func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *organizationReadRepository) GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForOpportunities")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("opportunityIds", opportunityIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetAllForOpportunities")
+	defer spans.Finish()
+
+	spans.LogKV("opportunityIds", opportunityIds)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 				WHERE op.id IN $opportunityIds
@@ -923,8 +902,8 @@ func (r *organizationReadRepository) GetAllForOpportunities(ctx context.Context,
 		"opportunityIds": opportunityIds,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -939,15 +918,15 @@ func (r *organizationReadRepository) GetAllForOpportunities(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodeAndId)))
 	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) 
 				WITH t, org, collect(c) as contracts, collect(op) as ops 
@@ -960,8 +939,8 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ct
 		"liveStatus": neo4jenum.ContractStatusLive.String(),
 		"limit":      limit,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -984,15 +963,16 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ct
 				OrganizationId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogKV("delayInMinutes", delayInMinutes)
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) 
 				WHERE NOT (org)-[:HAS_DOMAIN]->(:Domain) AND 
@@ -1007,8 +987,8 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1031,15 +1011,16 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 				OrganizationId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForEnrichByDomain")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsForEnrichByDomain")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogKV("delayInMinutes", delayInMinutes)
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {primary:true})
 				WHERE 	org.enrichedAt IS NULL AND
@@ -1056,8 +1037,8 @@ func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx conte
 		"delayInMinutes": delayInMinutes,
 		"maxAttempts":    1,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1081,15 +1062,16 @@ func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx conte
 				Param1:         v.Values[2].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit), log.Int("delayFromPreviousCheckMin", delayFromPreviousCheckMin))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogKV("delayFromPreviousCheckMin", delayFromPreviousCheckMin)
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE org.hide = false AND
@@ -1102,8 +1084,8 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 		"limit":                     limit,
 		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1126,15 +1108,16 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 				OrganizationId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Context, tenants []string, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForIcpCheck")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit), log.Int("delayFromPreviousCheckMin", delayFromPreviousCheckMin))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsForIcpCheck")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogKV("delayFromPreviousCheckMin", delayFromPreviousCheckMin)
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE t.name IN $tenants AND 
@@ -1156,8 +1139,8 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 		"icpNotSet":                 commonenum.IcpNotSet.String(),
 		"leadStage":                 neo4jenum.Lead.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1180,16 +1163,15 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 				OrganizationId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *organizationReadRepository) GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("contactIds", contactIds))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts")
+	defer spans.Finish()
+
+	spans.LogKV("contactIds", contactIds)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole {primary:true})-[:ROLE_IN]->(o:Organization)
 				WHERE c.id IN $contactIds AND o.hide = false
@@ -1199,8 +1181,8 @@ func (r *organizationReadRepository) GetPrimaryOrganizationsWithJobRoleForContac
 		"contactIds": contactIds,
 	}
 
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1212,16 +1194,15 @@ func (r *organizationReadRepository) GetPrimaryOrganizationsWithJobRoleForContac
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodePairAndId))))
+	spans.LogKV("result.count", len(result.([]*utils.DbNodePairAndId)))
 	return result.([]*utils.DbNodePairAndId), err
 }
 
 func (r *organizationReadRepository) GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetHiddenOrganizationIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("hiddenAfter", hiddenAfter.String()))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetHiddenOrganizationIds")
+	defer spans.Finish()
+
+	spans.LogKV("hiddenAfter", hiddenAfter.String())
 
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 				WHERE org.hide = true AND org.hiddenAt > $hiddenAfter
@@ -1230,8 +1211,8 @@ func (r *organizationReadRepository) GetHiddenOrganizationIds(ctx context.Contex
 		"tenant":      tenant,
 		"hiddenAfter": hiddenAfter,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1244,19 +1225,18 @@ func (r *organizationReadRepository) GetHiddenOrganizationIds(ctx context.Contex
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]string))))
+	spans.LogKV("result.count", len(result.([]string)))
 	return result.([]string), err
 }
 
 func (r *organizationReadRepository) GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetMergedOrganizationIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("mergedAfter", mergedAfter.String()))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetMergedOrganizationIds")
+	defer spans.Finish()
+
+	spans.LogKV("mergedAfter", mergedAfter.String())
 
 	cypher := `MATCH (org:MergedOrganization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 				WHERE org.updatedAt >= $mergedAfter
@@ -1265,8 +1245,8 @@ func (r *organizationReadRepository) GetMergedOrganizationIds(ctx context.Contex
 		"tenant":      tenant,
 		"mergedAfter": mergedAfter,
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1279,18 +1259,16 @@ func (r *organizationReadRepository) GetMergedOrganizationIds(ctx context.Contex
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]string))))
+	spans.LogKV("result.count", len(result.([]string)))
 	return result.([]string), err
 }
 
 func (r *organizationReadRepository) GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetOrganizationsWithEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactReadRepository.GetOrganizationsWithEmail")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1312,16 +1290,15 @@ func (r *organizationReadRepository) GetOrganizationsWithEmail(ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), err
 }
 
 func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetActiveOrganizationIdsByDomain")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("domains", strings.Join(domains, ",")))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetActiveOrganizationIdsByDomain")
+	defer spans.Finish()
+
+	spans.LogKV("domains", strings.Join(domains, ","))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain)
 				WHERE d.domain IN $domains AND o.hide = false
@@ -1330,8 +1307,8 @@ func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx contex
 		"tenant":  tenant,
 		"domains": domains,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1344,7 +1321,7 @@ func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx contex
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	output := make(map[string]string)
@@ -1355,10 +1332,8 @@ func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx contex
 }
 
 func (r *organizationReadRepository) GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLinkedSubOrganizations")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetLinkedSubOrganizations")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization)<-[rel:%s]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 								WHERE parent.id IN $parentOrganizationIds
@@ -1367,8 +1342,8 @@ func (r *organizationReadRepository) GetLinkedSubOrganizations(ctx context.Conte
 		"tenant":                tenant,
 		"parentOrganizationIds": parentOrganizationIds,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1387,11 +1362,8 @@ func (r *organizationReadRepository) GetLinkedSubOrganizations(ctx context.Conte
 }
 
 func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLinkedParentOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetLinkedParentOrganizations")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization)-[rel:%s]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 			WHERE sub.id IN $organizationIds
@@ -1401,8 +1373,8 @@ func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Co
 		"organizationIds": organizationIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1421,9 +1393,8 @@ func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Co
 }
 
 func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
 				RETURN t.name, org.id`
@@ -1431,8 +1402,8 @@ func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ct
 	params := map[string]any{
 		"domain": domain,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1455,16 +1426,15 @@ func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ct
 				OrganizationId: v.Values[1].(string),
 			})
 	}
-	span.LogFields(log.Int("result.count", len(output)))
+	spans.LogKV("result.count", len(output))
 	return output, nil
 }
 
 func (r *organizationReadRepository) GetOrganizationsByStage(ctx context.Context, tenant string, stage neo4jenum.OrganizationStage) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByStage")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("stage", stage.String()))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsByStage")
+	defer spans.Finish()
+
+	spans.LogKV("stage", stage.String())
 
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			WHERE org.hide = false AND org.stage = $stage
@@ -1473,8 +1443,8 @@ func (r *organizationReadRepository) GetOrganizationsByStage(ctx context.Context
 		"tenant": tenant,
 		"stage":  stage.String(),
 	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -1487,11 +1457,11 @@ func (r *organizationReadRepository) GetOrganizationsByStage(ctx context.Context
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 
 	return result.([]*dbtype.Node), nil
 }

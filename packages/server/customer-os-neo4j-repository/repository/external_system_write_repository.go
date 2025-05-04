@@ -2,12 +2,11 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -36,11 +35,11 @@ func (r *externalSystemWriteRepository) prepareWriteSession(ctx context.Context)
 }
 
 func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, externalSystemId, externalSystemName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.CreateIfNotExists")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("externalSystemName", externalSystemName))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemWriteRepository.CreateIfNotExists")
+	defer spans.Finish()
+
+	spans.LogKV("externalSystemId", externalSystemId)
+	spans.LogKV("externalSystemName", externalSystemName)
 
 	cypher := fmt.Sprintf(`MATCH(t:Tenant {name:$tenant})
 							MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
@@ -51,8 +50,8 @@ func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, t
 		"externalSystemName": utils.FirstNotEmpty(externalSystemName, externalSystemId),
 		"now":                utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -62,19 +61,19 @@ func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, t
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *externalSystemWriteRepository) LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.LinkWithEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
-	tracing.LogObjectAsJson(span, "externalSystem", externalSystem)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemWriteRepository.LinkWithEntity")
+	defer spans.Finish()
+
+	spans.LogKV("linkedEntityId", linkedEntityId)
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogObjectAsJson("externalSystem", externalSystem)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
@@ -86,12 +85,12 @@ func (r *externalSystemWriteRepository) LinkWithEntity(ctx context.Context, tena
 }
 
 func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.LinkWithEntityInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
-	tracing.LogObjectAsJson(span, "externalSystem", externalSystem)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemWriteRepository.LinkWithEntityInTx")
+	defer spans.Finish()
+
+	spans.LogKV("linkedEntityId", linkedEntityId)
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogObjectAsJson("externalSystem", externalSystem)
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$entityId}),
 			(t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
@@ -114,8 +113,8 @@ func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, 
 		"syncDate":         utils.TimePtrAsAny(externalSystem.SyncDate),
 		"entityId":         linkedEntityId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -125,18 +124,19 @@ func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, 
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.SetProperty")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("propertyName", propertyName), log.Object("propertyValue", propertyValue))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemWriteRepository.SetProperty")
+	defer spans.Finish()
+
+	spans.LogKV("externalSystemId", externalSystemId)
+	spans.LogKV("propertyName", propertyName)
+	spans.LogObjectAsJson("propertyValue", propertyValue)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 		SET e.%s=$propertyValue, e.updatedAt=datetime()`, propertyName)
@@ -145,26 +145,24 @@ func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant,
 		"externalSystemId": externalSystemId,
 		"propertyValue":    propertyValue,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *externalSystemWriteRepository) SetPrimaryExternalId(ctx context.Context, tenant, externalSystemId string, externalId, linkedEntityNodeLabel, linkedEntityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.SetPrimaryExternalId")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(
-		log.String("externalSystemId", externalSystemId),
-		log.String("externalId", externalId),
-		log.String("linkedEntityNodeLabel", linkedEntityNodeLabel),
-		log.String("linkedEntityId", linkedEntityId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemWriteRepository.SetPrimaryExternalId")
+	defer spans.Finish()
+
+	spans.LogKV("externalSystemId", externalSystemId)
+	spans.LogKV("externalId", externalId)
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogKV("linkedEntityId", linkedEntityId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 		MATCH (n:%s {id:$linkedEntityId})
@@ -182,12 +180,12 @@ func (r *externalSystemWriteRepository) SetPrimaryExternalId(ctx context.Context
 		"linkedEntityId":   linkedEntityId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

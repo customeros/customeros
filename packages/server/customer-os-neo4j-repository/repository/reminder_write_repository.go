@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type ReminderUpdateFields struct {
@@ -41,11 +40,10 @@ func NewReminderWriteRepository(driver *neo4j.DriverWithContext, database string
 }
 
 func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content string, createdAt, dueDate time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.CreateReminder")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ReminderWriteRepository.CreateReminder")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
@@ -82,17 +80,16 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 	}
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.UpdateReminder")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ReminderWriteRepository.UpdateReminder")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	if data.Content == nil && data.DueDate == nil && data.Dismissed == nil {
 		return nil
@@ -123,17 +120,16 @@ func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *reminderWriteRepository) DeleteReminder(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.DeleteReminder")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ReminderWriteRepository.DeleteReminder")
+	defer spans.Finish()
+
+	spans.TagEntity(id)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
 				DETACH DELETE r`
@@ -144,7 +140,7 @@ func (r *reminderWriteRepository) DeleteReminder(ctx context.Context, tenant, id
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

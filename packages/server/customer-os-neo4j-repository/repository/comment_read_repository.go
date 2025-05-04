@@ -2,11 +2,9 @@ package neo4j_repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type CommentReadRepository interface {
@@ -26,10 +24,8 @@ func NewCommentReadRepository(driver *neo4j.DriverWithContext, database string) 
 }
 
 func (r *commentReadRepository) GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetAllForIssues")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommentRepository.GetAllForIssues")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)<-[:COMMENTED]-(c:Comment) 
 				WHERE i.id IN $issueIds
@@ -38,7 +34,8 @@ func (r *commentReadRepository) GetAllForIssues(ctx context.Context, tenant stri
 		"tenant":   tenant,
 		"issueIds": issueIds,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -50,7 +47,7 @@ func (r *commentReadRepository) GetAllForIssues(ctx context.Context, tenant stri
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), nil

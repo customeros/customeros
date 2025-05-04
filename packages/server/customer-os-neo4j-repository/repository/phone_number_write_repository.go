@@ -2,13 +2,12 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"golang.org/x/net/context"
 	"time"
 )
@@ -53,12 +52,11 @@ func NewPhoneNumberWriteRepository(driver *neo4j.DriverWithContext, database str
 }
 
 func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.CreatePhoneNumber")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.CreatePhoneNumber")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) 
@@ -77,22 +75,21 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 		"createdAt":      data.CreatedAt,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, source string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.UpdatePhoneNumber")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.UpdatePhoneNumber")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
 				WHERE p:PhoneNumber_%s
@@ -103,22 +100,21 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 		"tenant":         tenant,
 		"rawPhoneNumber": rawPhoneNumber,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.FailPhoneNumberValidation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.FailPhoneNumberValidation")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
 				WHERE p:PhoneNumber_%s
@@ -130,23 +126,22 @@ func (r *phoneNumberWriteRepository) FailPhoneNumberValidation(ctx context.Conte
 		"tenant":          tenant,
 		"validationError": validationError,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) PhoneNumberValidated(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberValidateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.PhoneNumberValidated")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.PhoneNumberValidated")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
 				WHERE p:PhoneNumber_%s
@@ -181,22 +176,21 @@ func (r *phoneNumberWriteRepository) PhoneNumberValidated(ctx context.Context, t
 		"appSource":       data.AppSource,
 		"source":          data.Source,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.LinkWithContact")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.LinkWithContact")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
@@ -212,22 +206,21 @@ func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant
 		"label":         label,
 		"primary":       primary,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.LinkWithOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.LinkWithOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
@@ -243,22 +236,21 @@ func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, t
 		"label":          label,
 		"primary":        primary,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.LinkWithUser")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.LinkWithUser")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
@@ -274,22 +266,21 @@ func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, u
 		"label":         label,
 		"primary":       primary,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) CleanPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.CleanPhoneNumberValidation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.CleanPhoneNumberValidation")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
 				WHERE p:PhoneNumber_%s
@@ -301,20 +292,19 @@ func (r *phoneNumberWriteRepository) CleanPhoneNumberValidation(ctx context.Cont
 		"id":     phoneNumberId,
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *phoneNumberWriteRepository) RemoveRelationship(ctx context.Context, entityType commonModel.EntityType, tenant, entityId, phoneNumber string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.RemoveRelationship")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.RemoveRelationship")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -336,8 +326,8 @@ func (r *phoneNumberWriteRepository) RemoveRelationship(ctx context.Context, ent
 		"phoneNumber": phoneNumber,
 		"tenant":      tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -350,9 +340,8 @@ func (r *phoneNumberWriteRepository) RemoveRelationship(ctx context.Context, ent
 }
 
 func (r *phoneNumberWriteRepository) RemoveRelationshipById(ctx context.Context, entityType commonModel.EntityType, tenant, entityId, phoneNumberId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.RemoveRelationshipById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberWriteRepository.RemoveRelationshipById")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -373,8 +362,8 @@ func (r *phoneNumberWriteRepository) RemoveRelationshipById(ctx context.Context,
 		"phoneNumberId": phoneNumberId,
 		"tenant":        tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)

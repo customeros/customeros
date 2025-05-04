@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type WorkspaceReadRepository interface {
@@ -30,10 +28,8 @@ func NewWorkspaceReadRepository(driver *neo4j.DriverWithContext, database string
 }
 
 func (r *workspaceReadRepository) GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceReadRepository.GetAllForTenant")
-	defer span.Finish()
-
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "WorkspaceReadRepository.GetAllForTenant")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -43,26 +39,24 @@ func (r *workspaceReadRepository) GetAllForTenant(ctx context.Context, tenant st
 		"tenant": tenant,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *workspaceReadRepository) GetByName(ctx context.Context, tenant, name string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceReadRepository.GetByName")
-	defer span.Finish()
-
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "WorkspaceReadRepository.GetByName")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -86,17 +80,16 @@ func (r *workspaceReadRepository) GetByName(ctx context.Context, tenant, name st
 }
 
 func (r *workspaceReadRepository) GetByNameCrossTenant(ctx context.Context, name string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceReadRepository.GetByNameCrossTenant")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "WorkspaceReadRepository.GetByNameCrossTenant")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant)--(w:Workspace{name:$workspaceName}) return w`
 	params := map[string]any{
 		"workspaceName": name,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -106,11 +99,11 @@ func (r *workspaceReadRepository) GetByNameCrossTenant(ctx context.Context, name
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		span.LogFields(log.Bool("result.found", false))
-		tracing.TraceErr(span, err)
+		spans.LogKV("result.found", false)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }

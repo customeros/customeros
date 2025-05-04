@@ -5,11 +5,9 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -31,12 +29,11 @@ func NewMarkdownEventWriteRepository(driver *neo4j.DriverWithContext, database s
 }
 
 func (r *markdownEventWriteRepository) CreateInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, markdownEventId string, data data_fields.MarkdownEventFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MarkdownEventWriteRepository.CreateInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, markdownEventId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "MarkdownEventWriteRepository.CreateInTx")
+	defer spans.Finish()
+
+	spans.TagEntity(markdownEventId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
 							MERGE (m:MarkdownEvent {id:$markdownEventId})<-[:HAS_MARKDOWN_EVENT]-(o)
@@ -64,8 +61,8 @@ func (r *markdownEventWriteRepository) CreateInTx(ctx context.Context, tx *neo4j
 	} else {
 		params["source"] = neo4j_entity.DataSourceOpenline.String()
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -75,7 +72,7 @@ func (r *markdownEventWriteRepository) CreateInTx(ctx context.Context, tx *neo4j
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

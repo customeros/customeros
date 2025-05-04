@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantReadRepository interface {
@@ -42,14 +40,14 @@ func (r *tenantReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *tenantReadRepository) GetAll(ctx context.Context) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetAll")
-	defer span.Finish()
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetAll")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant) return t`
 	params := map[string]any{}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -59,18 +57,18 @@ func (r *tenantReadRepository) GetAll(ctx context.Context) ([]*dbtype.Node, erro
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) TenantExists(ctx context.Context, tenantName string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.TenantExists")
-	defer span.Finish()
-	span.LogFields(log.String("tenantName", tenantName))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantRepository.TenantExists")
+	defer spans.Finish()
+	spans.LogKV("tenantName", tenantName)
 
 	session := (*r.driver).NewSession(
 		ctx,
@@ -103,17 +101,15 @@ func (r *tenantReadRepository) TenantExists(ctx context.Context, tenantName stri
 }
 
 func (r *tenantReadRepository) GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantByName")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantByName")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant}) RETURN t`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -128,26 +124,24 @@ func (r *tenantReadRepository) GetTenantByName(ctx context.Context, tenant strin
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantByNameIgnoreCase(ctx context.Context, tenant string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantByNameIgnoreCase")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantByNameIgnoreCase")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant) where lower(t.name) = lower($tenant)  RETURN t`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -162,18 +156,17 @@ func (r *tenantReadRepository) GetTenantByNameIgnoreCase(ctx context.Context, te
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context, workspaceName, workspaceProvider string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForWorkspaceProvider")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantForWorkspaceProvider")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant)-[:HAS_WORKSPACE]->(w:Workspace)
 			WHERE w.name=$name AND w.provider=$provider
@@ -183,8 +176,8 @@ func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context
 		"provider": workspaceProvider,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -202,18 +195,17 @@ func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, workspaceName string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForWorkspace")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantForWorkspace")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant)-[:HAS_WORKSPACE]->(w:Workspace)
 			WHERE w.name=$name 
@@ -222,8 +214,8 @@ func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, worksp
 		"name": workspaceName,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -237,25 +229,25 @@ func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, worksp
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
-	tracing.LogObjectAsJson(span, "result", result.(*dbtype.Node))
+	spans.LogKV("result.found", true)
+	spans.LogObjectAsJson("result", result.(*dbtype.Node))
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantForUserEmail(ctx context.Context, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForUserEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.String("email", email))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantForUserEmail")
+	defer spans.Finish()
+
+	spans.LogKV("email", email)
 
 	cypher := `MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(:User)-[:HAS]->(e:Email)
 		WHERE e.email=$email OR e.rawEmail=$email
@@ -263,8 +255,8 @@ func (r *tenantReadRepository) GetTenantForUserEmail(ctx context.Context, email 
 	params := map[string]any{
 		"email": email,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -281,27 +273,25 @@ func (r *tenantReadRepository) GetTenantForUserEmail(ctx context.Context, email 
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantSettings(ctx context.Context, tenant string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantSettings")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantSettings")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_SETTINGS]->(ts:TenantSettings)
 			RETURN ts`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -316,27 +306,25 @@ func (r *tenantReadRepository) GetTenantSettings(ctx context.Context, tenant str
 	}
 
 	if result == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantBillingProfiles(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantBillingProfiles")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantBillingProfiles")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile)
 			RETURN tbp ORDER BY tbp.createdAt ASC`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -350,7 +338,7 @@ func (r *tenantReadRepository) GetTenantBillingProfiles(ctx context.Context, ten
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	if result == nil {
 		return nil, nil
 	}
@@ -358,10 +346,8 @@ func (r *tenantReadRepository) GetTenantBillingProfiles(ctx context.Context, ten
 }
 
 func (r *tenantReadRepository) GetTenantBillingProfileById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantBillingProfileById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantBillingProfileById")
+	defer spans.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$id})
 			RETURN tbp`
@@ -369,8 +355,8 @@ func (r *tenantReadRepository) GetTenantBillingProfileById(ctx context.Context, 
 		"tenant": tenant,
 		"id":     id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -381,20 +367,21 @@ func (r *tenantReadRepository) GetTenantBillingProfileById(ctx context.Context, 
 	})
 
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.found", false))
+		spans.TraceError(err)
+		spans.LogKV("result.found", false)
 		return nil, err
 	}
 
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) GetTenantsForOnboardingCheck(ctx context.Context, limit, delayFromPreviousCheckHours int) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantsForOnboardingCheck")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit), log.Int("delayFromPreviousCheckHours", delayFromPreviousCheckHours))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantReadRepository.GetTenantsForOnboardingCheck")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
+	spans.LogKV("delayFromPreviousCheckHours", delayFromPreviousCheckHours)
 
 	cypher := `MATCH (t:Tenant)
 			WHERE t.active = true
@@ -408,8 +395,8 @@ func (r *tenantReadRepository) GetTenantsForOnboardingCheck(ctx context.Context,
 		"delayFromCreationMin":        15,
 		"delayFromPreviousCheckHours": delayFromPreviousCheckHours,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -423,7 +410,7 @@ func (r *tenantReadRepository) GetTenantsForOnboardingCheck(ctx context.Context,
 		return nil, err
 	}
 
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	if result == nil {
 		return nil, nil
 	}

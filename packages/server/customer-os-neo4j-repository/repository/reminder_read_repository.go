@@ -5,12 +5,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ReminderReadRepository interface {
@@ -36,9 +34,8 @@ func NewReminderReadRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *reminderReadRepository) GetReminderById(ctx context.Context, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetReminderById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ReminderReadRepository.GetReminderById")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -47,8 +44,8 @@ func (r *reminderReadRepository) GetReminderById(ctx context.Context, id string)
 		"tenant": tenant,
 		"id":     id,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -59,18 +56,17 @@ func (r *reminderReadRepository) GetReminderById(ctx context.Context, id string)
 
 	})
 	if err != nil {
-		span.LogFields(log.Bool("result.found", false))
-		tracing.TraceErr(span, err)
+		spans.LogKV("result.found", false)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Bool("result.found", result != nil))
+	spans.LogKV("result.found", result != nil)
 	return result.(*dbtype.Node), nil
 }
 
 func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Context, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersOrderByDueDateAsc")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ReminderReadRepository.GetRemindersOrderByDueDateAsc")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -88,8 +84,8 @@ func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Conte
 		"tenant":         tenant,
 		"organizationId": organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -99,25 +95,24 @@ func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Conte
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *reminderReadRepository) GetReadyToSend(ctx context.Context, dueDate time.Time) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetReadyToSend")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ReminderReadRepository.GetReadyToSend")
+	defer spans.Finish()
 
 	cypher := `MATCH (r:Reminder) WHERE r.dismissed = false and r.sent = false AND r.dueDate <= $dueDate RETURN r ORDER BY r.dueDate ASC`
 
 	params := map[string]any{
 		"dueDate": dueDate,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -127,9 +122,9 @@ func (r *reminderReadRepository) GetReadyToSend(ctx context.Context, dueDate tim
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), nil
 }

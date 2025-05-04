@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type DomainReadRepository interface {
@@ -34,16 +32,15 @@ func (r *domainReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *domainReadRepository) GetDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainReadRepository.GetDomain")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DomainReadRepository.GetDomain")
+	defer spans.Finish()
 
 	cypher := `MATCH (d:Domain {domain:$domain}) RETURN d`
 	params := map[string]any{
 		"domain": domain,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -56,21 +53,20 @@ func (r *domainReadRepository) GetDomain(ctx context.Context, tx *neo4j.ManagedT
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	if len(result.([]*dbtype.Node)) == 0 {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return result.([]*dbtype.Node)[0], nil
 }
 
 func (r *domainReadRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainRepository.GetForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DomainRepository.GetForOrganizations")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain)
 			WHERE o.id IN $organizationIds
@@ -79,11 +75,11 @@ func (r *domainReadRepository) GetForOrganizations(ctx context.Context, tenant s
 		"tenant":          tenant,
 		"organizationIds": organizationIds,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params, func(err error) {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	})
 	if err != nil {
 		return nil, err
@@ -92,10 +88,11 @@ func (r *domainReadRepository) GetForOrganizations(ctx context.Context, tenant s
 }
 
 func (r *domainReadRepository) GetDomainsForPrimaryCheck(ctx context.Context, delayFromPreviousCheckInDays, limit int) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainReadRepository.GetDomainsForPrimaryCheck")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("delayFromPreviousCheckInDays", delayFromPreviousCheckInDays), log.Int("limit", limit))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "DomainReadRepository.GetDomainsForPrimaryCheck")
+	defer spans.Finish()
+
+	spans.LogKV("delayFromPreviousCheckInDays", delayFromPreviousCheckInDays)
+	spans.LogKV("limit", limit)
 
 	cypher := `MATCH (d:Domain)
 		WHERE d.techPrimaryDomainCheckRequestedAt IS NULL OR d.techPrimaryDomainCheckRequestedAt < datetime() - duration({days:$delayFromPreviousCheckInDays})
@@ -107,8 +104,8 @@ func (r *domainReadRepository) GetDomainsForPrimaryCheck(ctx context.Context, de
 		"limit":                        limit,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -120,6 +117,6 @@ func (r *domainReadRepository) GetDomainsForPrimaryCheck(ctx context.Context, de
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(domains.([]string))))
+	spans.LogKV("result.count", len(domains.([]string)))
 	return domains.([]string), err
 }

@@ -3,14 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 )
 
 type TagWriteRepository interface {
@@ -34,9 +32,8 @@ func NewTagWriteRepository(driver *neo4j.DriverWithContext, database string) Tag
 }
 
 func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.Merge")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TagWriteRepository.Merge")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -61,19 +58,19 @@ func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransac
 		"colorCode":  tag.ColorCode,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -81,11 +78,12 @@ func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransac
 }
 
 func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, entityId string, entityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.LinkTagByIdToEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("tagId", tagId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TagWriteRepository.LinkTagByIdToEntity")
+	defer spans.Finish()
+
+	spans.LogKV("tagId", tagId)
+	spans.LogKV("entityId", entityId)
+	spans.LogKV("entityType", entityType.String())
 
 	cypher := fmt.Sprintf(`
 		MATCH (e:%s {id:$entityId}),
@@ -101,19 +99,19 @@ func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tx *neo4j.
 		"entityId": entityId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -121,11 +119,12 @@ func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tx *neo4j.
 }
 
 func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, entityId string, entityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UnlinkTagByIdFromEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("tagId", tagId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TagWriteRepository.UnlinkTagByIdFromEntity")
+	defer spans.Finish()
+
+	spans.LogKV("tagId", tagId)
+	spans.LogKV("entityId", entityId)
+	spans.LogKV("entityType", entityType.String())
 
 	cypher := fmt.Sprintf(`
 		MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})<-[rel:TAGGED]-(e:%s {id:$entityId})
@@ -137,19 +136,19 @@ func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tx *ne
 		"entityId": entityId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return nil, err
 		}
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -157,11 +156,10 @@ func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tx *ne
 }
 
 func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UnlinkAllAndDelete")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("tagId", tagId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TagWriteRepository.UnlinkAllAndDelete")
+	defer spans.Finish()
+
+	spans.LogKV("tagId", tagId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId}) DETACH DELETE tag`
 	params := map[string]any{
@@ -169,15 +167,14 @@ func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tag
 		"tagId":  tagId,
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, spans)
 }
 
 func (r *tagWriteRepository) Update(ctx context.Context, tenant, tagId string, name, colorCode *string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UpdateName")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, tagId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TagWriteRepository.UpdateName")
+	defer spans.Finish()
+
+	spans.TagEntity(tagId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId})
 				SET tag.updatedAt=datetime()`
@@ -194,5 +191,5 @@ func (r *tagWriteRepository) Update(ctx context.Context, tenant, tagId string, n
 		params["colorCode"] = *colorCode
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, spans)
 }

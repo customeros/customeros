@@ -3,12 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type InteractionSessionReadRepository interface {
@@ -31,18 +29,18 @@ func NewInteractionSessionReadRepository(driver *neo4j.DriverWithContext, databa
 }
 
 func (r *interactionSessionReadRepository) GetForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetForInteractionEvent")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("interactionEventId", interactionEventId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionReadRepository.GetForInteractionEvent")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
 
 	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent_%s{id: $id})-[:PART_OF]->(s:InteractionSession_%s) 
 		 RETURN s`, tenant, tenant)
 	params := map[string]any{
 		"id": interactionEventId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -64,11 +62,10 @@ func (r *interactionSessionReadRepository) GetForInteractionEvent(ctx context.Co
 }
 
 func (r *interactionSessionReadRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetAllForInteractionEvents")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionReadRepository.GetAllForInteractionEvents")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("ids", ids)
 
 	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent)-[:PART_OF]->(s:InteractionSession_%s) 
 		 WHERE e.id IN $ids AND e:InteractionEvent_%s
@@ -76,7 +73,8 @@ func (r *interactionSessionReadRepository) GetAllForInteractionEvents(ctx contex
 	params := map[string]any{
 		"ids": ids,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -95,12 +93,11 @@ func (r *interactionSessionReadRepository) GetAllForInteractionEvents(ctx contex
 }
 
 func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context.Context, tenant, identifier, channel string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetByIdentifierAndChannel")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "identifier", identifier)
-	tracing.LogObjectAsJson(span, "channel", channel)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionReadRepository.GetByIdentifierAndChannel")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("identifier", identifier)
+	spans.LogObjectAsJson("channel", channel)
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionSession_%s {identifier:$identifier, channel:$channel}) RETURN i LIMIT 1`, tenant)
 	params := map[string]any{
@@ -108,8 +105,8 @@ func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context
 		"identifier": identifier,
 		"channel":    channel,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -131,9 +128,8 @@ func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context
 }
 
 func (r *interactionSessionReadRepository) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetAttendedByParticipantsForInteractionSessions")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionReadRepository.GetAttendedByParticipantsForInteractionSessions")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

@@ -5,11 +5,9 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type CustomFieldTemplateSaveFields struct {
@@ -51,11 +49,10 @@ func NewCustomFieldTemplateWriteRepository(driver *neo4j.DriverWithContext, data
 }
 
 func (r *customFieldTemplateWriteRepository) Save(ctx context.Context, tenant, customFieldTemplateId string, data CustomFieldTemplateSaveFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateWriteRepository.Save")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldTemplateWriteRepository.Save")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`
 		MATCH (t:Tenant {name:$tenant})
@@ -105,22 +102,21 @@ func (r *customFieldTemplateWriteRepository) Save(ctx context.Context, tenant, c
 		params["max"] = data.Max
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *customFieldTemplateWriteRepository) Delete(ctx context.Context, tenant, customFieldTemplateId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateWriteRepository.Delete")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, customFieldTemplateId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CustomFieldTemplateWriteRepository.Delete")
+	defer spans.Finish()
+
+	spans.TagEntity(customFieldTemplateId)
 
 	cypher := `
 		MATCH (t:Tenant {name:$tenant})<-[rel:CUSTOM_FIELD_TEMPLATE_BELONGS_TO_TENANT]-(cft:CustomFieldTemplate {id:$customFieldTemplateId})
@@ -131,12 +127,12 @@ func (r *customFieldTemplateWriteRepository) Delete(ctx context.Context, tenant,
 		"customFieldTemplateId": customFieldTemplateId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

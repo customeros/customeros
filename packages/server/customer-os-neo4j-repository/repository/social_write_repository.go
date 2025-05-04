@@ -3,13 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -44,12 +43,12 @@ func NewSocialWriteRepository(driver *neo4j.DriverWithContext, database string) 
 }
 
 func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialForEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialWriteRepository.MergeSocialForEntity")
+	defer spans.Finish()
+
+	spans.LogKV("linkedEntityId", linkedEntityId)
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`
 		MATCH (e:%s {id:$entityId})
@@ -82,8 +81,8 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tx *ne
 		"source":         data.SourceFields.Source,
 		"appSource":      data.SourceFields.AppSource,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -93,18 +92,17 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tx *ne
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.PermanentlyDelete")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, socialId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialWriteRepository.PermanentlyDelete")
+	defer spans.Finish()
+
+	spans.TagEntity(socialId)
 
 	cypher := fmt.Sprintf(
 		`MATCH (soc:Social_%s {id:$socialId})<-[r:HAS]-(n:Organization|Contact|MergedContact|MergedOrganization)
@@ -115,15 +113,16 @@ func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, s
 		"socialId": socialId,
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, spans)
 }
 
 func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.RemoveSocialForEntityById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.String("socialId", socialId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialWriteRepository.RemoveSocialForEntityById")
+	defer spans.Finish()
+
+	spans.LogKV("linkedEntityId", linkedEntityId)
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogKV("socialId", socialId)
 
 	// delete social only if has no other relations
 	cypher := fmt.Sprintf(`
@@ -137,15 +136,16 @@ func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, t
 		"socialId": socialId,
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, spans)
 }
 
 func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.RemoveSocialForEntityByUrl")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.String("socialUrl", socialUrl))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialWriteRepository.RemoveSocialForEntityByUrl")
+	defer spans.Finish()
+
+	spans.LogKV("linkedEntityId", linkedEntityId)
+	spans.LogKV("linkedEntityNodeLabel", linkedEntityNodeLabel)
+	spans.LogKV("socialUrl", socialUrl)
 
 	// delete social only if has no other relations
 	cypher := fmt.Sprintf(`
@@ -159,15 +159,14 @@ func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, 
 		"url":      socialUrl,
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, spans)
 }
 
 func (r *socialWriteRepository) Update(ctx context.Context, tenant, socialId, url string, alias, externalId *string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.Update")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, socialId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "SocialWriteRepository.Update")
+	defer spans.Finish()
+
+	spans.TagEntity(socialId)
 
 	params := map[string]any{
 		"id":  socialId,
@@ -189,8 +188,8 @@ func (r *socialWriteRepository) Update(ctx context.Context, tenant, socialId, ur
 				SET n.updatedAt = datetime()
 			RETURN DISTINCT soc`
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)

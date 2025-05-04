@@ -1,9 +1,9 @@
 package neo4j_repository
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+
 	"golang.org/x/net/context"
 )
 
@@ -24,10 +24,8 @@ func NewIndustryWriteRepository(driver *neo4j.DriverWithContext, database string
 }
 
 func (r *industryWriteRepository) ReplaceForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, industryCode string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryWriteRepository.ReplaceForOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "IndustryWriteRepository.ReplaceForOrganization")
+	defer spans.Finish()
 
 	cypher := `MATCH (o:Organization {id: $organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name: $tenant})
 				MATCH (i:Industry {code: $industryCode})
@@ -42,5 +40,5 @@ func (r *industryWriteRepository) ReplaceForOrganization(ctx context.Context, tx
 		"industryCode":   industryCode,
 	}
 
-	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, span)
+	return LogAndExecuteWriteQueryInTx(ctx, tx, r.driver, r.database, cypher, params, spans)
 }

@@ -2,11 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
 )
 
 type LocationReadRepository interface {
@@ -29,9 +28,8 @@ func NewLocationReadRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *locationReadRepository) GetAllForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationReadRepository.GetAllForContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationReadRepository.GetAllForContact")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -53,9 +51,8 @@ func (r *locationReadRepository) GetAllForContact(ctx context.Context, tenant, c
 }
 
 func (r *locationReadRepository) GetAllForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationReadRepository.GetAllForContacts")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationReadRepository.GetAllForContacts")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -81,9 +78,8 @@ func (r *locationReadRepository) GetAllForContacts(ctx context.Context, tenant s
 }
 
 func (r *locationReadRepository) GetAllForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationReadRepository.GetAllForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationReadRepository.GetAllForOrganization")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -105,9 +101,8 @@ func (r *locationReadRepository) GetAllForOrganization(ctx context.Context, tena
 }
 
 func (r *locationReadRepository) GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationReadRepository.GetAllForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationReadRepository.GetAllForOrganizations")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

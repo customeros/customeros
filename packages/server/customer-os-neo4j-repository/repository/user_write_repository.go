@@ -5,11 +5,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -48,11 +47,11 @@ func (r *userWriteRepository) prepareWriteSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUserInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserWriteRepository.CreateUserInTx")
+	defer spans.Finish()
+
+	spans.TagEntity(userId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
@@ -87,8 +86,8 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.Mana
 		"source":          utils.IfNotNilString(data.Source),
 		"appSource":       utils.IfNotNilString(data.AppSource),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -98,18 +97,18 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.Mana
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, userId string, data data_fields.UserFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.UpdateUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserWriteRepository.UpdateUser")
+	defer spans.Finish()
+
+	spans.TagEntity(userId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id}) SET u.updatedAt=datetime()`
 	params := map[string]any{
@@ -166,8 +165,8 @@ func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.Mana
 		cypher += ", u.onboardingMailstackStepCompleted=$onboardingMailstackStepCompleted"
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
@@ -180,32 +179,32 @@ func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.Mana
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *userWriteRepository) AddRole(c context.Context, userId, role string) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.AddRole")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	span.LogFields(log.String("role", role))
+	spans, ctx := telemetry.StartNeo4jSpan(c, "UserWriteRepository.AddRole")
+	defer spans.Finish()
+
+	spans.TagEntity(userId)
+	spans.LogKV("role", role)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
 
 	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	defer tx.Close(ctx)
 
 	err = r.AddRoleInTx(ctx, tx, userId, role)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		_ = tx.Rollback(ctx)
 		return err
 	}
@@ -213,7 +212,7 @@ func (r *userWriteRepository) AddRole(c context.Context, userId, role string) er
 	err = tx.Commit(ctx)
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -221,11 +220,11 @@ func (r *userWriteRepository) AddRole(c context.Context, userId, role string) er
 }
 
 func (r *userWriteRepository) AddRoleInTx(c context.Context, tx neo4j.ManagedTransaction, userId, role string) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.AddRoleInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	span.LogFields(log.String("role", role))
+	spans, ctx := telemetry.StartNeo4jSpan(c, "UserWriteRepository.AddRoleInTx")
+	defer spans.Finish()
+
+	spans.TagEntity(userId)
+	spans.LogKV("role", role)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -243,22 +242,22 @@ func (r *userWriteRepository) AddRoleInTx(c context.Context, tx neo4j.ManagedTra
 		"role":   role,
 		"userId": userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	if err := utils.ExecuteQueryInTx(ctx, tx, cypher, params); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *userWriteRepository) RemoveRole(c context.Context, tenant, userId, role string) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.RemoveRole")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	span.LogFields(log.String("role", role))
+	spans, ctx := telemetry.StartNeo4jSpan(c, "UserWriteRepository.RemoveRole")
+	defer spans.Finish()
+
+	spans.TagEntity(userId)
+	spans.LogKV("role", role)
 
 	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 		 	SET u.roles = [item IN u.roles WHERE item <> $role],
@@ -268,21 +267,21 @@ func (r *userWriteRepository) RemoveRole(c context.Context, tenant, userId, role
 		"role":   role,
 		"userId": userId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *userWriteRepository) RegisterLogin(ctx context.Context, tenant, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.RegisterLogin")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, userId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserWriteRepository.RegisterLogin")
+	defer spans.Finish()
+
+	spans.TagEntity(userId)
 
 	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET u.lastLogin = $now,
@@ -292,12 +291,12 @@ func (r *userWriteRepository) RegisterLogin(ctx context.Context, tenant, userId 
 		"tenant": tenant,
 		"now":    utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }

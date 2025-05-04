@@ -2,14 +2,13 @@ package neo4j_repository
 
 import (
 	"fmt"
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -39,18 +38,17 @@ func (r *phoneNumberReadRepository) prepareReadSession(ctx context.Context) neo4
 }
 
 func (r *phoneNumberReadRepository) GetPhoneNumberIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetPhoneNumberIdIfExists")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("phoneNumber", phoneNumber))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberReadRepository.GetPhoneNumberIdIfExists")
+	defer spans.Finish()
+
+	spans.LogKV("phoneNumber", phoneNumber)
 
 	cypher := fmt.Sprintf(`MATCH (p:PhoneNumber_%s) WHERE p.e164 = $phoneNumber OR p.rawPhoneNumber = $phoneNumber RETURN p.id LIMIT 1`, tenant)
 	params := map[string]any{
 		"phoneNumber": phoneNumber,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -63,23 +61,22 @@ func (r *phoneNumberReadRepository) GetPhoneNumberIdIfExists(ctx context.Context
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if len(result.([]*db.Record)) == 0 {
-		span.LogFields(log.String("result", ""))
+		spans.LogKV("result", "")
 		return "", nil
 	}
-	span.LogFields(log.String("result", result.([]*db.Record)[0].Values[0].(string)))
+	spans.LogKV("result", result.([]*db.Record)[0].Values[0].(string))
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
 func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber")
+	defer spans.Finish()
+
+	spans.TagEntity(phoneNumberId)
 
 	cypher := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 				OPTIONAL MATCH (p)-[:LINKED_TO]->(c:Country)
@@ -89,8 +86,8 @@ func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.C
 		"tenant":        tenant,
 		"phoneNumberId": phoneNumberId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -103,27 +100,26 @@ func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.C
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
-	span.LogFields(log.String("result", result.(string)))
+	spans.LogKV("result", result.(string))
 	return result.(string), nil
 }
 
 func (r *phoneNumberReadRepository) GetById(ctx context.Context, tenant, phoneNumberId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetById")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberReadRepository.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("phoneNumberId", phoneNumberId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId}) return p`
 	params := map[string]any{
 		"tenant":        tenant,
 		"phoneNumberId": phoneNumberId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -142,10 +138,8 @@ func (r *phoneNumberReadRepository) GetById(ctx context.Context, tenant, phoneNu
 }
 
 func (r *phoneNumberReadRepository) GetAllForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetAllForLinkedEntityIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberReadRepository.GetAllForLinkedEntityIds")
+	defer spans.Finish()
 
 	cypher := ""
 	switch entityType {
@@ -164,8 +158,8 @@ func (r *phoneNumberReadRepository) GetAllForLinkedEntityIds(ctx context.Context
 		"entityIds": entityIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -184,16 +178,15 @@ func (r *phoneNumberReadRepository) GetAllForLinkedEntityIds(ctx context.Context
 }
 
 func (r *phoneNumberReadRepository) Exists(ctx context.Context, tenant string, e164 string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.Exists")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberReadRepository.Exists")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
 	params := map[string]any{
 		"e164": e164,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -213,16 +206,15 @@ func (r *phoneNumberReadRepository) Exists(ctx context.Context, tenant string, e
 }
 
 func (r *phoneNumberReadRepository) GetByPhoneNumber(ctx context.Context, tenant, e164 string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetByPhoneNumber")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "PhoneNumberReadRepository.GetByPhoneNumber")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf("MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1", tenant)
 	params := map[string]any{
 		"e164": e164,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

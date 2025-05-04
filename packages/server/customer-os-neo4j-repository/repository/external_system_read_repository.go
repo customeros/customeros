@@ -2,12 +2,11 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"golang.org/x/net/context"
 )
 
@@ -35,11 +34,12 @@ func (r *externalSystemReadRepository) prepareReadSession(ctx context.Context) n
 }
 
 func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetFirstExternalIdForLinkedEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("entityId", entityId), log.String("entityLabel", entityLabel))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemReadRepository.GetFirstExternalIdForLinkedEntity")
+	defer spans.Finish()
+
+	spans.LogKV("externalSystemId", externalSystemId)
+	spans.LogKV("entityId", entityId)
+	spans.LogKV("entityLabel", entityLabel)
 
 	cypher := fmt.Sprintf(`
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
@@ -50,8 +50,8 @@ func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx con
 		"externalSystemId": externalSystemId,
 		"entityId":         entityId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -64,12 +64,12 @@ func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx con
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]string))))
+	spans.LogKV("result.count", len(result.([]string)))
 	if len(result.([]string)) > 0 {
-		span.LogFields(log.String("result.externalId", result.([]string)[0]))
+		spans.LogKV("result.externalId", result.([]string)[0])
 		return result.([]string)[0], nil
 	} else {
 		return "", nil
@@ -77,11 +77,12 @@ func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx con
 }
 
 func (r *externalSystemReadRepository) GetAllExternalIdsForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("entityId", entityId), log.String("entityLabel", entityLabel))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity")
+	defer spans.Finish()
+
+	spans.LogKV("externalSystemId", externalSystemId)
+	spans.LogKV("entityId", entityId)
+	spans.LogKV("entityLabel", entityLabel)
 
 	cypher := fmt.Sprintf(`
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})
@@ -92,8 +93,8 @@ func (r *externalSystemReadRepository) GetAllExternalIdsForLinkedEntity(ctx cont
 		"entityId":         entityId,
 		"externalSystemId": externalSystemId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -106,25 +107,23 @@ func (r *externalSystemReadRepository) GetAllExternalIdsForLinkedEntity(ctx cont
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]string))))
+	spans.LogKV("result.count", len(result.([]string)))
 	return result.([]string), nil
 }
 
 func (r *externalSystemReadRepository) GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetAllForTenant")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemReadRepository.GetAllForTenant")
+	defer spans.Finish()
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem) RETURN ext`
 	params := map[string]any{
 		"tenant": tenant,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -137,18 +136,18 @@ func (r *externalSystemReadRepository) GetAllForTenant(ctx context.Context, tena
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.count", len(result.([]*dbtype.Node)))
 	return result.([]*dbtype.Node), err
 }
 
 func (r *externalSystemReadRepository) GetFor(ctx context.Context, tenant string, ids []string, label string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetFor")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("label", label))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ExternalSystemReadRepository.GetFor")
+	defer spans.Finish()
+
+	spans.LogKV("label", label)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem)<-[rel:IS_LINKED_WITH]-(n:%s)
 			WHERE n.id IN $ids RETURN e, rel, n.id order by e.id, rel.syncDate`, label)
@@ -157,8 +156,8 @@ func (r *externalSystemReadRepository) GetFor(ctx context.Context, tenant string
 		"ids":    ids,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)

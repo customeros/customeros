@@ -3,13 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -103,12 +102,11 @@ func NewInvoiceWriteRepository(driver *neo4j.DriverWithContext, database string)
 }
 
 func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.CreateInvoiceForContract")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.CreateInvoiceForContract")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
@@ -153,24 +151,23 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"status":               data.Status.String(),
 		"note":                 data.Note,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceFillFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.FillInvoice")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.FillInvoice")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (i:Invoice_%s {id:$invoiceId}) 
 							SET 
@@ -244,24 +241,23 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.Mana
 		"providerBankAccountOtherDetails":  data.ProviderBankAccountOtherDetails,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.UpdateInvoice")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.UpdateInvoice")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 				SET i.updatedAt=datetime()`
@@ -284,24 +280,23 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tx *neo4j.Ma
 		params["paymentLinkValidUntil"] = utils.TimePtrAsAny(data.PaymentLinkValidUntil)
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, repositoryFileId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoicingCycleWriteRepository.Update")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice_%s {id:$id}) 
 							SET 
@@ -313,24 +308,23 @@ func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tx *ne
 		"repositoryFileId": repositoryFileId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.MarkPayNotificationRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.MarkPayNotificationRequested")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 				SET i.techPayNotificationRequestedAt=$requestedAt`
@@ -339,22 +333,21 @@ func (r *invoiceWriteRepository) MarkPayNotificationRequested(ctx context.Contex
 		"invoiceId":   invoiceId,
 		"requestedAt": requestedAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 							WHERE i:Invoice_%s
@@ -365,22 +358,21 @@ func (r *invoiceWriteRepository) SetPaidInvoiceNotificationSentAt(ctx context.Co
 		"now":       utils.Now(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) SetVoidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 							WHERE i:Invoice_%s
@@ -391,22 +383,21 @@ func (r *invoiceWriteRepository) SetVoidInvoiceNotificationSentAt(ctx context.Co
 		"now":       utils.Now(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetPayInvoiceNotificationSentAt")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceWriteRepository.SetPayInvoiceNotificationSentAt")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 							WHERE i:Invoice_%s
@@ -417,22 +408,22 @@ func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Con
 		"now":       utils.Now(),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) DeletePreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeletePreviewCycleInvoices")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contractId", contractId), log.String("skipInvoiceId", skipInvoiceId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceReadRepository.DeletePreviewCycleInvoices")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
+	spans.LogKV("skipInvoiceId", skipInvoiceId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract{id:$contractId})-[:HAS_INVOICE]->(i:Invoice {dryRun:true, preview: true, offCycle: false})
 							   WHERE i.id <> $skipInvoiceId
@@ -443,23 +434,23 @@ func (r *invoiceWriteRepository) DeletePreviewCycleInvoices(ctx context.Context,
 		"contractId":    contractId,
 		"skipInvoiceId": skipInvoiceId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *invoiceWriteRepository) DeletePreviewCycleInitializedInvoices(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId, skipInvoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeletePreviewCycleInitializedInvoices")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contractId", contractId), log.String("skipInvoiceId", skipInvoiceId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceReadRepository.DeletePreviewCycleInitializedInvoices")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
+	spans.LogKV("skipInvoiceId", skipInvoiceId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract{id:$contractId})-[:HAS_INVOICE]->(i:Invoice {dryRun:true, preview: true, offCycle: false})
 							   WHERE i.id <> $skipInvoiceId and i.status=$initializedStatus
@@ -471,24 +462,23 @@ func (r *invoiceWriteRepository) DeletePreviewCycleInitializedInvoices(ctx conte
 		"skipInvoiceId":     skipInvoiceId,
 		"initializedStatus": neo4jenum.InvoiceStatusInitialized.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *invoiceWriteRepository) DeleteDryRunInvoice(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeleteDryRunInvoice")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("invoiceId", invoiceId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InvoiceReadRepository.DeleteDryRunInvoice")
+	defer spans.Finish()
+
+	spans.LogKV("invoiceId", invoiceId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId, dryRun:true})
 			   OPTIONAL MATCH (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine) 
@@ -497,12 +487,12 @@ func (r *invoiceWriteRepository) DeleteDryRunInvoice(ctx context.Context, tenant
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

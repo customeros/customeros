@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+
 	"time"
 )
 
@@ -62,12 +61,11 @@ func NewInteractionEventWriteRepository(driver *neo4j.DriverWithContext, databas
 }
 
 func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId string, data neo4jentity.InteractionEventEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.CreateInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionEventWriteRepository.CreateInTx")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MERGE (i:InteractionEvent:InteractionEvent_%s {id:$interactionEventId}) 
 							ON CREATE SET 
@@ -109,12 +107,12 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 		"hide":               data.Hide,
 		"overwrite":          data.Source == constants.SourceOpenline,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := tx.Run(ctx, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -122,12 +120,11 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 }
 
 func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, interactionEventId string, data InteractionEventUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.Update")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionEventWriteRepository.Update")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent:InteractionEvent_%s {id:$interactionEventId})
 		 	SET	
@@ -152,23 +149,22 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 		"hide":               data.Hide,
 		"overwrite":          data.Source == constants.SourceOpenline,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *interactionEventWriteRepository) MergeByExternalSystem(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.MergeByExternalSystem")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("source", source, "appSource", appSource)
-	tracing.LogObjectAsJson(span, "message", message)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionEventWriteRepository.MergeByExternalSystem")
+	defer spans.Finish()
+
+	spans.LogKV("source", source, "appSource", appSource)
+	spans.LogObjectAsJson("message", message)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
 		 MERGE (ie:InteractionEvent_%s {source:$source, channel:$channel})-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e) 
@@ -210,8 +206,8 @@ func (r *interactionEventWriteRepository) MergeByExternalSystem(ctx context.Cont
 		params["contentType"] = "text/plain"
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		qr, err := tx.Run(ctx, cypher, params)
@@ -221,7 +217,7 @@ func (r *interactionEventWriteRepository) MergeByExternalSystem(ctx context.Cont
 		return utils.ExtractSingleRecordFirstValueAsString(ctx, qr, err)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -229,12 +225,11 @@ func (r *interactionEventWriteRepository) MergeByExternalSystem(ctx context.Cont
 }
 
 func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.LinkInteractionEventToSession")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, interactionEventId)
-	span.LogKV("interactionSessionId", interactionSessionId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionEventWriteRepository.LinkInteractionEventToSession")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
+	spans.LogKV("interactionSessionId", interactionSessionId)
 
 	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
 		 MATCH (is:InteractionSession_%s {id:$interactionSessionId}) 
@@ -246,8 +241,8 @@ func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx cont
 		"interactionSessionId": interactionSessionId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -257,18 +252,17 @@ func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx cont
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.InteractionEventSentByEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, interactionEventId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionEventWriteRepository.InteractionEventSentByEmail")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
 
 	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
 		 MATCH (e:Email_%s {id: $emailId})
@@ -280,8 +274,8 @@ func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx contex
 		"emailId":            emailId,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -291,18 +285,17 @@ func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx contex
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err
 }
 
 func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, sentType string, emailIds []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.InteractionEventSentToEmails")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, interactionEventId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionEventWriteRepository.InteractionEventSentToEmails")
+	defer spans.Finish()
+
+	spans.LogKV("interactionEventId", interactionEventId)
 
 	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
 		 MATCH (e:Email_%s) WHERE e.id in $emailIds
@@ -315,8 +308,8 @@ func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx conte
 		"emailIds":           emailIds,
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
@@ -326,7 +319,7 @@ func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx conte
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
 	return err

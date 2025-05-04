@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantHasWorkspace struct {
@@ -40,9 +38,8 @@ func NewAuthenticationReadRepository(driver *neo4j.DriverWithContext, database s
 }
 
 func (r *authenticationReadRepository) GetByAuthIdAndProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetPlayerByAuthIdProvider")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationReadRepository.GetPlayerByAuthIdProvider")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -52,8 +49,8 @@ func (r *authenticationReadRepository) GetByAuthIdAndProvider(ctx context.Contex
 		"authId":   authId,
 		"provider": provider,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
@@ -61,26 +58,26 @@ func (r *authenticationReadRepository) GetByAuthIdAndProvider(ctx context.Contex
 	})
 
 	if err != nil && err.Error() == "Result contains no more records" {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
 
 	if dbRecord == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return dbRecord.(*dbtype.Node), err
 }
 
 func (r *authenticationReadRepository) GetByAuthId(ctx context.Context, authId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetByAuthId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogKV("authId", authId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationReadRepository.GetByAuthId")
+	defer spans.Finish()
+
+	spans.LogKV("authId", authId)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -89,8 +86,8 @@ func (r *authenticationReadRepository) GetByAuthId(ctx context.Context, authId s
 	params := map[string]any{
 		"authId": authId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -103,22 +100,21 @@ func (r *authenticationReadRepository) GetByAuthId(ctx context.Context, authId s
 		return nil, fmt.Errorf("error getting player by authId: %w", err)
 	}
 
-	span.LogFields(log.Int("result.found", len(result.([]*dbtype.Node))))
+	spans.LogKV("result.found", len(result.([]*dbtype.Node)))
 
 	return result.([]*dbtype.Node), nil
 }
 
 func (r *authenticationReadRepository) GetAuthUser(ctx context.Context, authId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetAuthUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationReadRepository.GetAuthUser")
+	defer spans.Finish()
 
 	cypher := fmt.Sprintf(`MATCH (a:Authentication {id: $authId})-[:%s]->(u:AuthenticationUser) RETURN u`, model.HAS.String())
 	params := map[string]any{
 		"authId": authId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -136,19 +132,18 @@ func (r *authenticationReadRepository) GetAuthUser(ctx context.Context, authId s
 
 	data := result.(*neo4j.Node)
 	if data == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
-	span.LogFields(log.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 
 	return data, nil
 }
 
 func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetTenants")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationReadRepository.GetTenants")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -157,8 +152,8 @@ func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserI
 	params := map[string]any{
 		"authUserId": authUserId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -173,19 +168,18 @@ func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserI
 
 	data := result.([]*dbtype.Node)
 	if data == nil {
-		span.LogFields(log.Bool("result.found", false))
+		spans.LogKV("result.count", 0)
 		return nil, nil
 	}
 
-	span.LogFields(log.Int("result.found", len(data)))
+	spans.LogKV("result.count", len(data))
 
 	return data, nil
 }
 
 func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Context, authUserId string) ([]*TenantHasWorkspace, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetTenantsForImpersonation")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "AuthenticationReadRepository.GetTenantsForImpersonation")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -201,8 +195,8 @@ func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Co
 	params := map[string]any{
 		"authUserId": authUserId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
@@ -212,7 +206,7 @@ func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Co
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("error getting users for player: %w", err)
 	}
 

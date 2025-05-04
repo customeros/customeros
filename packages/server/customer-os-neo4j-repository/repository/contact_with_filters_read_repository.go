@@ -2,13 +2,12 @@ package neo4j_repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"strings"
 )
 
@@ -60,11 +59,10 @@ func (r *contactWithFiltersReadRepository) prepareReadSession(ctx context.Contex
 }
 
 func (r *contactWithFiltersReadRepository) GetFilteredContactIds(ctx context.Context, tenant string, filter *model.Filter) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWithFiltersReadRepository.GetFilteredContactIds")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	tracing.LogObjectAsJson(span, "filter", filter)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactWithFiltersReadRepository.GetFilteredContactIds")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("filter", filter)
 
 	params := map[string]any{
 		"tenant": tenant,
@@ -193,8 +191,8 @@ func (r *contactWithFiltersReadRepository) GetFilteredContactIds(ctx context.Con
 	params = utils.MergeMaps(params, locationFilterParams)
 	params = utils.MergeMaps(params, socialFilterParams)
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
@@ -207,10 +205,10 @@ func (r *contactWithFiltersReadRepository) GetFilteredContactIds(ctx context.Con
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Int("result.count", 0))
+		spans.TraceError(err)
+		spans.LogKV("result.count", 0)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]string))))
+	spans.LogKV("result.count", len(result.([]string)))
 	return result.([]string), err
 }

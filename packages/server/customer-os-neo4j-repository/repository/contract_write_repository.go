@@ -7,12 +7,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ContractWriteRepository interface {
@@ -44,12 +42,11 @@ func NewContractWriteRepository(driver *neo4j.DriverWithContext, database string
 }
 
 func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string, data data_fields.ContractSaveFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganization")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.CreateForOrganization")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})
 							MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})<-[:HAS_CONTRACT]-(org)
@@ -120,26 +117,25 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tx 
 		"approved":               utils.IfNotNilBool(data.Approved),
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *contractWriteRepository) UpdateContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string, data data_fields.ContractSaveFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContract")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.UpdateContract")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
+	spans.LogObjectAsJson("data", data)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET 
@@ -278,25 +274,24 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tx *neo4j.
 		params["approved"] = *data.Approved
 	}
 
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, contractId, status string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateStatus")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.UpdateStatus")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET 
@@ -308,22 +303,21 @@ func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, cont
 		"contractId": contractId,
 		"status":     status,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SuspendActiveRenewalOpportunity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.SuspendActiveRenewalOpportunity")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				SET op.internalStage=$internalStageSuspended, 
@@ -335,22 +329,21 @@ func (r *contractWriteRepository) SuspendActiveRenewalOpportunity(ctx context.Co
 		"contractId":             contractId,
 		"internalStageSuspended": "SUSPENDED",
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.ActivateSuspendedRenewalOpportunity")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.ActivateSuspendedRenewalOpportunity")
+	defer spans.Finish()
+
+	spans.LogKV("contractId", contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:SUSPENDED_RENEWAL]->(op:RenewalOpportunity)
 				SET op.internalStage=$internalStage, 
@@ -362,23 +355,21 @@ func (r *contractWriteRepository) ActivateSuspendedRenewalOpportunity(ctx contex
 		"contractId":    contractId,
 		"internalStage": neo4jenum.OpportunityInternalStageOpen.String(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) ContractCausedOnboardingStatusChange(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.ContractCausedOnboardingStatusChange")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.ContractCausedOnboardingStatusChange")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET ct.triggeredOnboardingStatusChange=true`
@@ -386,25 +377,24 @@ func (r *contractWriteRepository) ContractCausedOnboardingStatusChange(ctx conte
 		"tenant":     tenant,
 		"contractId": contractId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *contractWriteRepository) MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkStatusRenewalRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.MarkStatusRenewalRequested")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET ct.techStatusRenewalRequestedAt=$now`
@@ -413,22 +403,21 @@ func (r *contractWriteRepository) MarkStatusRenewalRequested(ctx context.Context
 		"contractId": contractId,
 		"now":        utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkRolloutRenewalRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.MarkRolloutRenewalRequested")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET ct.techRolloutRenewalRequestedAt=$now`
@@ -437,22 +426,21 @@ func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Contex
 		"contractId": contractId,
 		"now":        utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkCycleInvoicingRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.MarkCycleInvoicingRequested")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 				SET c.techInvoicingStartedAt=$invoicingStartedAt`
@@ -461,22 +449,21 @@ func (r *contractWriteRepository) MarkCycleInvoicingRequested(ctx context.Contex
 		"contractId":         contractId,
 		"invoicingStartedAt": invoicingStartedAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkOffCycleInvoicingRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.MarkOffCycleInvoicingRequested")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 				SET c.techOffCycleInvoicingStartedAt=$invoicingStartedAt`
@@ -485,22 +472,21 @@ func (r *contractWriteRepository) MarkOffCycleInvoicingRequested(ctx context.Con
 		"contractId":         contractId,
 		"invoicingStartedAt": invoicingStartedAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) MarkNextPreviewInvoicingRequested(ctx context.Context, tenant, contractId string, nextPreviewInvoiceRequestedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkNextPreviewInvoicingRequested")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.MarkNextPreviewInvoicingRequested")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 				SET c.techNextPreviewInvoiceRequestedAt=$nextPreviewInvoiceRequestedAt`
@@ -509,22 +495,21 @@ func (r *contractWriteRepository) MarkNextPreviewInvoicingRequested(ctx context.
 		"contractId":                    contractId,
 		"nextPreviewInvoiceRequestedAt": nextPreviewInvoiceRequestedAt,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SoftDelete")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.SoftDelete")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 			SET ct.updatedAt=$deletedAt,
@@ -539,8 +524,8 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 		"contractId": contractId,
 		"deletedAt":  utils.Now(),
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -549,16 +534,16 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
 
 func (r *contractWriteRepository) SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SetLtv")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContractWriteRepository.SetLtv")
+	defer spans.Finish()
+
+	spans.TagEntity(contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET ct.ltv=$ltv, ct.updatedAt=datetime()`
@@ -567,12 +552,12 @@ func (r *contractWriteRepository) SetLtv(ctx context.Context, tenant, contractId
 		"contractId": contractId,
 		"ltv":        ltv,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 	return err
 }
