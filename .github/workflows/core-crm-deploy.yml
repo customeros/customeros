@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - otter
-    paths-ignore:
-      - "**.md"
+    paths:
+      - "packages/server/core-crm/**"
 
 env:
   APP_NAME: core-crm
@@ -80,7 +80,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.LEADS_DEPLOY_KEY }}
+          password: ${{ secrets.DEPLOY_TRIGGER_GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         if: env.RELEASE_NEEDED == 'true'
