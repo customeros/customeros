@@ -38,4 +38,4 @@ jobs:
 
       - name: Build Go Binary
         run: |
-          ./deployment/runners/build.sh -p ${{ env.APP_PATH }}
+          ./deployment/runners/build.sh -g -p ${{ env.APP_PATH }}
