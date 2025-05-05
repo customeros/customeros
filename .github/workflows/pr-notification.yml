@@ -1,0 +1,31 @@
+name: PR Notifications
+
+on:
+  pull_request:
+    types: [opened, synchronize, review_submitted, closed, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+  issue_comment:
+    types: [created]
+
+jobs:
+  notify:
+    if: github.event.pull_request.draft == false || github.event.action == 'ready_for_review'
+    runs-on: ubicloud-standard-2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: npm install @actions/core @actions/github
+
+      - name: Run PR Notification Script
+        run: node ./deployment/runners/pr-notification.js
+        env:
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
