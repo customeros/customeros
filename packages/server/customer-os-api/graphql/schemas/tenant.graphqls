@@ -193,8 +193,9 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    baseCurrency:   Currency
-    workspaceName:  String
+    baseCurrency:       Currency
+    workspaceName:      String
+    workspaceLogoUrl:   String
 
     patch:                  Boolean @deprecated(reason: "Not used")
     logoUrl:                String @deprecated(reason: "Use workspaceLogoUrl")
