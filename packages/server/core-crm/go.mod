@@ -14,7 +14,7 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250504171220-a3d354c2ec9a
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250422171625-b9f0106c7d32
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250422171625-b9f0106c7d32
-	github.com/customeros/mailstack v0.2.20
+	github.com/customeros/mailstack v0.2.21
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/nats-io/nats.go v1.42.0
