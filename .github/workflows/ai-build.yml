@@ -1,0 +1,38 @@
+name: AI Build (PR)
+
+on:
+  pull_request:
+    paths:
+      - "packages/server/ai/**"
+      - "packages/server/customer-os-common-module/**"
+      - "packages/server/customer-os-neo4j-repository/**"
+      - "packages/server/customer-os-postgres-repository/**"
+
+env:
+  APP_PATH: packages/server/ai
+  CGO_ENABLED: 0
+  LANG: C.UTF-8
+  LC_ALL: C.UTF-8
+
+permissions:
+  pull-requests: read
+
+jobs:
+  build:
+    runs-on: ubicloud-standard-2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: ubicloud/setup-go@v5
+        with:
+          go-version: 1.24.2
+          cache: true
+        env:
+          GOPROXY: "direct"
+          GOSUMDB: "off"
+
+      - name: Build Go Binary
+        run: |
+          ./deployment/runners/build.sh -g ${{ env.APP_PATH }}

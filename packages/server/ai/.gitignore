@@ -1,0 +1,8 @@
+*.dump
+*.test
+*.out
+.envrc
+.idea/
+.vscode/
+ai
+.bin

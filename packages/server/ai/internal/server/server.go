@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -17,26 +16,22 @@ import (
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_db "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/customeros/customeros/packages/server/core-crm/api"
-	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
-	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
-	"github.com/customeros/customeros/packages/server/core-crm/internal/database"
-	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
-	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
+	"github.com/customeros/customeros/packages/server/ai/internal/config"
+	"github.com/customeros/customeros/packages/server/ai/internal/cron"
+	"github.com/customeros/customeros/packages/server/ai/internal/database"
+	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
+	nats_internal "github.com/customeros/customeros/packages/server/ai/nats"
 )
 
 type Server struct {
 	config                *config.Config
 	logger                logger.Logger
 	natsConn              *nats_internal.NATSConnections
-	httpServer            *http.Server
-	router                *gin.Engine
 	cronMgr               *cron.CronManager
 	services              *services.CommonServices
 	postgresRepositories  *postgres_repository.Repositories
@@ -48,7 +43,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	// Initialize logger
 	appLogger := logger.NewAppLogger(&cfg.CommonConfig.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
-	appLogger.WithName("core-crm")
+	appLogger.WithName("ai")
 
 	// Initialize OpenTelemetry
 	err := telemetry.InitOpenTelemetry(context.Background(), cfg.Telemetry)
@@ -86,14 +81,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	}
 
 	// Initialize services
-	services := services.InitCommonServices(appLogger, neo4jRepos, postgresRepos, warehouseRepos, cfg.CommonConfig, natsConn, nil)
-
-	// Initialize Gin
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
-
-	// register API Routes
-	api.RegisterRoutes(context.Background(), router, services, cfg.AppConfig)
+	// TODO
 
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface
@@ -139,15 +127,10 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	}
 
 	return &Server{
-		config:   cfg,
-		natsConn: natsConn,
-		router:   router,
-		httpServer: &http.Server{
-			Addr:    ":" + cfg.AppConfig.APIPort,
-			Handler: router,
-		},
+		config:                cfg,
+		natsConn:              natsConn,
 		cronMgr:               cronManager,
-		services:              services,
+		services:              nil,
 		postgresRepositories:  postgresRepos,
 		neo4jRepositories:     neo4jRepos,
 		warehouseRepositories: warehouseRepos,
@@ -166,16 +149,6 @@ func (s *Server) Run() error {
 		return fmt.Errorf("failed to start services: %w", err)
 	}
 	log.Println("✅ Services started successfully")
-
-	// Start HTTP server in a goroutine with panic recovery
-	go s.wrapGoroutine("http_server", func() {
-		err := s.httpServer.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			log.Printf("❌ HTTP server error: %v", err)
-		}
-	})
-	log.Println("✅ HTTP server started successfully")
-	log.Printf("Core CRM is now running and listening on port %s. Press Ctrl+C to exit.", s.httpServer.Addr)
 	fmt.Println("")
 
 	return s.waitForShutdown()
@@ -199,14 +172,6 @@ func (s *Server) waitForShutdown() error {
 	// Stop cron manager
 	s.cronMgr.Stop()
 	log.Println("Shutdown complete")
-
-	// Shut down HTTP server
-	log.Println("Shutting down HTTP server...")
-	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("❌ HTTP server shutdown error: %v", err)
-	} else {
-		log.Println("✅ HTTP server shut down successfully")
-	}
 
 	// Close NATS connection
 	if s.natsConn != nil {
