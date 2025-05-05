@@ -19,7 +19,7 @@ func MapEntityToTenantSettings(entity *neo4jentity.TenantSettingsEntity) *model.
 		WorkspaceName: utils.StringPtrNillable(entity.WorkspaceName),
 	}
 	if entity.WorkspaceLogoKey != "" {
-		tenantSettings.WorkspaceLogoURL = utils.StringPtrNillable(entity.WorkspaceLogoKey + entity.WorkspaceLogoKey)
+		tenantSettings.WorkspaceLogoURL = utils.StringPtrNillable(entity.GetWorkspaceLogoUrl())
 	}
 	return &tenantSettings
 }
