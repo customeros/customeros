@@ -29,7 +29,7 @@ require (
 	github.com/emersion/go-message v0.18.2
 	github.com/forPelevin/gomoji v1.3.0
 	github.com/gin-gonic/gin v1.10.0
-	github.com/google/generative-ai-go v0.19.0
+	github.com/google/generative-ai-go v0.20.1
 	github.com/google/uuid v1.6.0
 	github.com/h2non/filetype v1.1.3
 	github.com/matoous/go-nanoid/v2 v2.1.0
