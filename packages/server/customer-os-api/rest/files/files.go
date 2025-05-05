@@ -140,6 +140,8 @@ func (h *FileHandler) GetJWT() gin.HandlerFunc {
 
 func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
+
 		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "UploadWorkspaceLogo")
 		defer spans.Finish()
 

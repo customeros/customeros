@@ -637,10 +637,15 @@ func (s *registrationService) setDefaultWorkspaceDetails(ctx context.Context) er
 
 	err := s.setDefaultTenantWorkspaceName(ctx)
 	if err != nil {
+		spans.TraceError(err)
 		return err
 	}
 
-	// TODO set default workspace logo
+	err = s.setDefaultTenantWorkspaceLogo(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
 
 	return nil
 }
@@ -694,6 +699,31 @@ func (s *registrationService) setDefaultTenantWorkspaceName(ctx context.Context)
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (s *registrationService) setDefaultTenantWorkspaceLogo(ctx context.Context) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "RegistrationService.setDefaultTenantWorkspaceLogo")
+	defer spans.Finish()
+
+	// check if logo is already set
+	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+	if tenantSettings.WorkspaceLogoKey != "" {
+		return nil
+	}
+
+	// TODO alexb continue here
+	//// get logo url
+	//domains, err := s.workspace.GetWorkspaceDomainsForTenant(ctx)
+	//if err != nil {
+	//	spans.TraceError(err)
+	//	return err
+	//}
 
 	return nil
 }
