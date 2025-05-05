@@ -13,7 +13,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
 
 require (
-	github.com/99designs/gqlgen v0.17.72
+	github.com/99designs/gqlgen v0.17.73
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250422171625-b9f0106c7d32
