@@ -142,7 +142,7 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
 
-		spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "UploadWorkspaceLogo")
+		spans, ctx := telemetry.StartRestSpan(ctx, "UploadWorkspaceLogo")
 		defer spans.Finish()
 
 		// Get the file from the request
