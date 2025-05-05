@@ -75,7 +75,7 @@ func GetAPIKey(s *cosapi_services.Services) gin.HandlerFunc {
 
 		apiKey, err := GetApiKeyForTenant(ctx, s, tenant)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			c.JSON(500, gin.H{"error": err.Error()}); return
 		}
 
 		c.JSON(200, apiKey)
