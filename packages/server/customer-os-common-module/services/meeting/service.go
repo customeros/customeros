@@ -1144,6 +1144,7 @@ func (s *meetingService) getMeetingBookedEvent(ctx context.Context, meetingBooki
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to check if meeting already exists: %v", err)
 	}
+
 	if existingMeetingBookedEvent == nil {
 		return nil, nil
 	}
@@ -1152,7 +1153,7 @@ func (s *meetingService) getMeetingBookedEvent(ctx context.Context, meetingBooki
 	if err != nil {
 		spans.TraceError(err)
 	}
-	if nylasEvent == nil {
+	if nylasEvent == nil || nylasEvent.Data.Status == "cancelled" {
 		err = s.CancelMeeting(ctx, meetingBookingEventID, clientEmail)
 		if err != nil {
 			spans.TraceError(err)

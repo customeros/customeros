@@ -138,5 +138,6 @@ type NylasEvent struct {
 		CalendarID string `json:"calendar_id"`
 		HtmlLink   string `json:"html_link"`
 		ID         string `json:"id"`
+		Status     string `json:"status"`
 	} `json:"data"`
 }
