@@ -603,3 +603,66 @@ func (s *nylasService) DeleteEvent(ctx context.Context, calendarID, hostEmail, e
 
 	return nil
 }
+
+func (s *nylasService) GetEvent(ctx context.Context, calendarID, hostEmail, eventID string) (*interfaces.NylasEvent, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NylasService.GetEvent")
+	defer spans.Finish()
+	spans.LogKV("calendarID", calendarID, "hostEmail", hostEmail, "eventID", eventID)
+
+	// Get Nylas grant ID
+	grant, err := s.postgres.NylasGrantRepository.GetByTenantAndEmail(ctx, common.GetTenantFromContext(ctx), hostEmail)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to get Nylas grant ID: %v", err)
+	}
+	if grant == nil {
+		return nil, fmt.Errorf("Nylas grant not found")
+	}
+
+	// Create request to Nylas v3 API
+	encodedEventID := url.PathEscape(eventID)
+	url := fmt.Sprintf("%s/v3/grants/%s/events/%s?calendar_id=%s", s.config.APIUrl, grant.NylasGrantId, encodedEventID, calendarID)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// Set headers
+	req.Header.Set("Authorization", "Bearer "+s.config.APIKey)
+	req.Header.Set("Accept", "application/json, application/gzip")
+
+	// Make request
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	spans.LogKV("nylas.response", string(bodyBytes))
+	spans.LogKV("nylas.response.statusCode", resp.StatusCode)
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	} else if resp.StatusCode != http.StatusOK {
+		spans.TraceError(fmt.Errorf("unexpected status code: %d", resp.StatusCode))
+		return nil, fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	// Parse response
+	var response interfaces.NylasEvent
+	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&response); err != nil {
+		spans.TraceError(err)
+		return nil, fmt.Errorf("failed to decode response: %v", err)
+	}
+
+	return &response, nil
+}

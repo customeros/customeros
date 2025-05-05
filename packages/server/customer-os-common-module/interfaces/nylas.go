@@ -28,6 +28,7 @@ type NylasService interface {
 	// Meeting operations
 	CreateEvent(ctx context.Context, meetingData NylasCreateEventRequest, hostEmail, calendarID string, notifyParticipants bool) (*NylasEvent, string, error)
 	DeleteEvent(ctx context.Context, calendarID, hostEmail, eventID string, notifyParticipants bool) error
+	GetEvent(ctx context.Context, calendarID, hostEmail, eventID string) (*NylasEvent, error)
 }
 
 type NylasCalendarsResponse struct {
@@ -137,5 +138,6 @@ type NylasEvent struct {
 		CalendarID string `json:"calendar_id"`
 		HtmlLink   string `json:"html_link"`
 		ID         string `json:"id"`
+		Status     string `json:"status"`
 	} `json:"data"`
 }
