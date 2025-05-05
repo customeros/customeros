@@ -10,7 +10,9 @@ ARCH=${5:-"arm64"}
 REPO=$6
 APP_PATH=$7
 
-CONTAINERFILE_PATH="./${APP_PATH}/deployments/build/Containerfile"
+cd ${APP_PATH}
+
+CONTAINERFILE_PATH="./deployments/build/Containerfile"
 
 # Ensure required variables are set
 if [ -z "$REGISTRY" ] || [ -z "$IMAGE_NAME" ] || [ -z "$VERSION" ]; then

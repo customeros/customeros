@@ -6,6 +6,9 @@ on:
       - otter
     paths:
       - "packages/runner/customer-os-data-upkeeper/**"
+      - "packages/server/customer-os-common-module/**"
+      - "packages/server/customer-os-neo4j-repository/**"
+      - "packages/server/customer-os-postgres-repository/**"
 
 env:
   APP_PATH: packages/runner/customer-os-data-upkeeper
