@@ -1,4 +1,4 @@
-package inbox_errors
+package core_errors
 
 import "errors"
 

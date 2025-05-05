@@ -1,0 +1,30 @@
+input WebtrackerSaveInput {
+  id: String
+  domain: String!
+  cnameHost: String
+}
+
+type Webtracker {
+  id: String!
+  domain: String!
+  cnameHost: String!
+  cnameTarget: String!
+  isCnameConfigured: Boolean!
+  isProxyActive: Boolean!
+  isArchived: Boolean!
+  lastEventAt: Time
+  createdAt: Time!
+  updatedAt: Time
+}
+
+extend type Mutation {
+  createWebtracker(tracker: WebtrackerSaveInput!): Webtracker!
+  updateWebtracker(tracker: WebtrackerSaveInput!): Webtracker!
+  verifyWebtrackerCname(id: String!): Boolean!
+  archiveWebtracker(id: String!): Boolean!
+}
+
+extend type Query {
+  webtracker(id: String!): Webtracker
+  webtrackers: [Webtracker!]!
+}
