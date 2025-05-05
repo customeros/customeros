@@ -13,4 +13,6 @@ const (
 	FileStoreFileDownloadUrlTemplate = UrlCustomerOsApi + "/files/v1/files/%s/download"
 
 	S3ImagesCDN = "https://customer-os-images.b-cdn.net/"
+
+	R2ImagesCDN = "https://images.customeros.ai/"
 )

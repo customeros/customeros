@@ -13,12 +13,15 @@ func MapEntityToTenantSettings(entity *neo4jentity.TenantSettingsEntity) *model.
 	if entity == nil {
 		return nil
 	}
-	return &model.TenantSettings{
-		BaseCurrency:     utils.ToPtr(mapper.MapCurrencyToModel(entity.BaseCurrency)),
-		WorkspaceLogo:    utils.StringPtrNillable(entity.WorkspaceLogo),
-		WorkspaceName:    utils.StringPtrNillable(entity.WorkspaceName),
-		WorkspaceLogoURL: utils.StringPtrNillable(entity.WorkspaceLogoUrl),
+	tenantSettings := model.TenantSettings{
+		BaseCurrency:  utils.ToPtr(mapper.MapCurrencyToModel(entity.BaseCurrency)),
+		WorkspaceLogo: utils.StringPtrNillable(entity.WorkspaceLogo),
+		WorkspaceName: utils.StringPtrNillable(entity.WorkspaceName),
 	}
+	if entity.WorkspaceLogoKey != "" {
+		tenantSettings.WorkspaceLogoURL = utils.StringPtrNillable(entity.WorkspaceLogoKey + entity.WorkspaceLogoKey)
+	}
+	return &tenantSettings
 }
 
 func MapEntitiesToTenantSettingsOpportunityStages(entities []*postgresEntity.TenantSettingsOpportunityStage) []*model.TenantSettingsOpportunityStageConfiguration {
