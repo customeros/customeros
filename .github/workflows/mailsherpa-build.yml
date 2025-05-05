@@ -6,6 +6,8 @@ on:
       - otter
     paths:
       - "packages/server/mailsherpa-api/**"
+      - "packages/server/customer-os-common-module/**"
+      - "packages/server/customer-os-postgres-repository/**"
 
 env:
   APP_PATH: packages/server/mailsherpa-api
