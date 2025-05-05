@@ -35,7 +35,7 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mrz1836/postmark v1.7.3
-	github.com/nats-io/nats.go v1.41.2
+	github.com/nats-io/nats.go v1.42.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
 	github.com/nyaruka/phonenumbers v1.6.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
