@@ -100,8 +100,8 @@ github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
 github.com/customeros/mailsherpa v0.3.9 h1:i+usip3f5A3IgryzeiYTzZWDxI1fRxp4VxXWGpTDd7c=
 github.com/customeros/mailsherpa v0.3.9/go.mod h1:3PVCXCWUQQ6lTjxFtPs4KlFKteME14hD5GFNiElB7Fk=
-github.com/customeros/mailstack v0.2.20 h1:voZsh0E/9B4R0fOmY8edJKjJKMxej0SFuHhcE+yu8/8=
-github.com/customeros/mailstack v0.2.20/go.mod h1:KKdso1Oy+xa1LI1/e17AO2BSxKIvGgvRP3MIowH88ls=
+github.com/customeros/mailstack v0.2.21 h1:PflJI55g9CtSFvI+qxdb3UbJGMEHouoAHB5Dk1HEU70=
+github.com/customeros/mailstack v0.2.21/go.mod h1:KKdso1Oy+xa1LI1/e17AO2BSxKIvGgvRP3MIowH88ls=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
