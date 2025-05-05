@@ -783,7 +783,7 @@ func (s *meetingService) GetAvailableCalendarParticipantEmailsForTimeRange(ctx c
 }
 
 // BookMeeting implements interfaces.MeetingService
-func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone, reason string, isReschedule bool) (*interfaces.BookMeetingResult, error) {
+func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientName, clientEmail, clientPhone, reason string) (*interfaces.BookMeetingResult, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.BookMeeting")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
@@ -794,7 +794,6 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		"clientEmail":           clientEmail,
 		"clientPhone":           clientPhone,
 		"reason":                reason,
-		"isReschedule":          isReschedule,
 	})
 
 	// validate tenant
@@ -817,37 +816,6 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 
 	if timezone == "" {
 		timezone = postgresEntity.DefaultTimezone
-	}
-
-	if !isReschedule {
-		// check if meeting already exists
-		existingMeetingBookedEvent, err := s.getMeetingBookedEvent(ctx, meetingBookingEventID, clientEmail)
-		if err != nil {
-			spans.TraceError(err)
-			return nil, fmt.Errorf("failed to check if meeting already exists: %v", err)
-		}
-		if existingMeetingBookedEvent != nil {
-			startTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.StartTime, timezone)
-			if err != nil {
-				spans.TraceError(err)
-				startTimeInTimeZone = existingMeetingBookedEvent.StartTime
-			}
-			endTimeInTimeZone, err := utils.GetTimeInTimeZone(existingMeetingBookedEvent.EndTime, timezone)
-			if err != nil {
-				spans.TraceError(err)
-				endTimeInTimeZone = existingMeetingBookedEvent.EndTime
-			}
-			result := interfaces.BookMeetingResult{
-				StartTime: startTimeInTimeZone,
-				EndTime:   endTimeInTimeZone,
-				HostEmail: existingMeetingBookedEvent.HostEmail,
-				HostName:  existingMeetingBookedEvent.HostName,
-				EventID:   existingMeetingBookedEvent.NylasEventID,
-			}
-
-			spans.LogObjectAsJson("result", result)
-			return &result, coserrors.ErrMeetingAlreadyExists
-		}
 	}
 
 	// validate client email address
@@ -1072,7 +1040,7 @@ func (s *meetingService) cancelBookedMeeting(ctx context.Context, meetingBookedE
 }
 
 // RescheduleMeeting implements interfaces.MeetingService
-func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail, clientName, clientPhone, rescheduleReason string) (*interfaces.BookMeetingResult, error) {
+func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail, clientName, clientPhone, rescheduleReason, eventID string) (*interfaces.BookMeetingResult, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.RescheduleMeeting")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
@@ -1083,6 +1051,7 @@ func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEv
 		"clientName":            clientName,
 		"clientPhone":           clientPhone,
 		"rescheduleReason":      rescheduleReason,
+		"eventID":               eventID,
 	})
 
 	// validate tenant
@@ -1093,18 +1062,20 @@ func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEv
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	meetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
+	meetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetByEventID(ctx, tenant, meetingBookingEventID, eventID)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to get meeting booked event: %v", err)
 	}
 	if meetingBookedEvent == nil {
-		spans.LogKV("meetingBookedEventId", "not-found")
-	} else {
-		spans.LogKV("meetingBookedEventId", meetingBookedEvent.ID)
+		return nil, coserrors.ErrMeetingNotFound
 	}
 
-	bookedMeeting, err := s.BookMeeting(ctx, meetingBookingEventID, startTime, timezone, clientName, clientEmail, clientPhone, rescheduleReason, true)
+	if meetingBookedEvent.ClientEmail != clientEmail {
+		return nil, fmt.Errorf("meeting event does not match given email")
+	}
+
+	bookedMeeting, err := s.BookMeeting(ctx, meetingBookingEventID, startTime, timezone, clientName, clientEmail, clientPhone, rescheduleReason)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to book meeting: %v", err)
@@ -1133,14 +1104,16 @@ func (s *meetingService) RescheduleMeeting(ctx context.Context, meetingBookingEv
 
 // get meeting booked event by meeting booking event id and client email
 // also check nylas event id, if not found cancel the event
-func (s *meetingService) getMeetingBookedEvent(ctx context.Context, meetingBookingEventID, clientEmail string) (*postgresEntity.MeetingBookedEvent, error) {
+func (s *meetingService) cancelMeetingIfNylasEventNotFoundOrCancelled(ctx context.Context, meetingBookingEventID, eventID string) (*postgresEntity.MeetingBookedEvent, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.getMeetingBookedEvent")
 	defer spans.Finish()
+	spans.LogKV("meetingBookingEventID", meetingBookingEventID)
+	spans.LogKV("eventID", eventID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// check if meeting already exists
-	existingMeetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
+	existingMeetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetByEventID(ctx, tenant, meetingBookingEventID, eventID)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, fmt.Errorf("failed to check if meeting already exists: %v", err)
@@ -1155,7 +1128,7 @@ func (s *meetingService) getMeetingBookedEvent(ctx context.Context, meetingBooki
 		spans.TraceError(err)
 	}
 	if nylasEvent == nil || nylasEvent.Data.Status == "cancelled" {
-		err = s.CancelMeeting(ctx, meetingBookingEventID, clientEmail)
+		err = s.CancelMeeting(ctx, meetingBookingEventID, eventID)
 		if err != nil {
 			spans.TraceError(err)
 		}

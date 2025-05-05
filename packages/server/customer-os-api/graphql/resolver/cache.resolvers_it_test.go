@@ -121,7 +121,7 @@ func TestQueryGlobalCache_Has_Logo(t *testing.T) {
 	})
 
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
-		LogoRepositoryFileId: "1",
+		WorkspaceLogoKey: "path/to/logo.png",
 	})
 	neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		Id:     "1",

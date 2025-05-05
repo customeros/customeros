@@ -5,17 +5,15 @@ import (
 	"errors"
 
 	telemetry "github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
 )
 
 type MeetingBookedEventRepository interface {
-	Create(ctx context.Context, meetingBookedEvent *postgres_entity.MeetingBookedEvent) error
+	Create(ctx context.Context, meetingBookedEvent *postgresEntity.MeetingBookedEvent) error
 	Cancel(ctx context.Context, id string) error
-	DeleteByConditions(ctx context.Context, conditions *postgres_entity.MeetingBookedEvent) error
-	GetByEventID(ctx context.Context, tenant, meetingBookingEventID, eventID string) (*postgres_entity.MeetingBookedEvent, error)
-	GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx context.Context, tenant, meetingBookingEventID, clientEmail string) (*postgres_entity.MeetingBookedEvent, error)
+	DeleteByConditions(ctx context.Context, conditions *postgresEntity.MeetingBookedEvent) error
+	GetByEventID(ctx context.Context, tenant, meetingBookingEventID, eventID string) (*postgresEntity.MeetingBookedEvent, error)
 }
 
 type meetingBookedEventRepository struct {
@@ -26,32 +24,11 @@ func NewMeetingBookedEventRepository(gormDb *gorm.DB) MeetingBookedEventReposito
 	return &meetingBookedEventRepository{gormDb: gormDb}
 }
 
-func (r *meetingBookedEventRepository) Create(ctx context.Context, meetingBookedEvent *postgres_entity.MeetingBookedEvent) error {
+func (r *meetingBookedEventRepository) Create(ctx context.Context, meetingBookedEvent *postgresEntity.MeetingBookedEvent) error {
 	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookedEventRepository.Create")
 	defer spans.Finish()
 
 	return r.gormDb.Create(meetingBookedEvent).Error
-}
-
-func (r *meetingBookedEventRepository) GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx context.Context, tenant, meetingBookingEventID, clientEmail string) (*postgres_entity.MeetingBookedEvent, error) {
-	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail")
-	defer spans.Finish()
-	spans.LogKV("meetingBookingEventID", meetingBookingEventID)
-	spans.LogKV("clientEmail", clientEmail)
-
-	var meetingBookedEvent postgres_entity.MeetingBookedEvent
-	err := r.gormDb.Where("tenant = ? AND meeting_booking_event_id = ? AND client_email = ? AND canceled = false AND start_time > ?", tenant, meetingBookingEventID, clientEmail, utils.Now()).
-		Order("start_time ASC").
-		First(&meetingBookedEvent).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		spans.TraceError(err)
-		return nil, err
-	}
-
-	return &meetingBookedEvent, nil
 }
 
 func (r *meetingBookedEventRepository) Cancel(ctx context.Context, id string) error {
@@ -59,15 +36,15 @@ func (r *meetingBookedEventRepository) Cancel(ctx context.Context, id string) er
 	defer spans.Finish()
 	spans.TagEntity(id)
 
-	return r.gormDb.Model(&postgres_entity.MeetingBookedEvent{}).Where("id = ?", id).Update("canceled", true).Error
+	return r.gormDb.Model(&postgresEntity.MeetingBookedEvent{}).Where("id = ?", id).Update("canceled", true).Error
 }
 
-func (r *meetingBookedEventRepository) DeleteByConditions(ctx context.Context, conditions *postgres_entity.MeetingBookedEvent) error {
+func (r *meetingBookedEventRepository) DeleteByConditions(ctx context.Context, conditions *postgresEntity.MeetingBookedEvent) error {
 	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookedEventRepository.DeleteByConditions")
 	defer spans.Finish()
 	spans.LogObjectAsJson("conditions", conditions)
 
-	query := r.gormDb.Model(&postgres_entity.MeetingBookedEvent{})
+	query := r.gormDb.Model(&postgresEntity.MeetingBookedEvent{})
 
 	// Build where conditions based on provided fields
 	if conditions.Tenant != "" {
@@ -83,16 +60,16 @@ func (r *meetingBookedEventRepository) DeleteByConditions(ctx context.Context, c
 		query = query.Where("start_time = ?", conditions.StartTime)
 	}
 
-	return query.Delete(&postgres_entity.MeetingBookedEvent{}).Error
+	return query.Delete(&postgresEntity.MeetingBookedEvent{}).Error
 }
 
-func (r *meetingBookedEventRepository) GetByEventID(ctx context.Context, tenant, meetingBookingEventID, eventID string) (*postgres_entity.MeetingBookedEvent, error) {
+func (r *meetingBookedEventRepository) GetByEventID(ctx context.Context, tenant, meetingBookingEventID, eventID string) (*postgresEntity.MeetingBookedEvent, error) {
 	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookedEventRepository.GetByEventID")
 	defer spans.Finish()
 	spans.LogKV("meetingBookingEventID", meetingBookingEventID)
 	spans.LogKV("eventID", eventID)
 
-	var meetingBookedEvent postgres_entity.MeetingBookedEvent
+	var meetingBookedEvent postgresEntity.MeetingBookedEvent
 	err := r.gormDb.Where("tenant = ? AND meeting_booking_event_id = ? AND nylas_event_id = ?", tenant, meetingBookingEventID, eventID).First(&meetingBookedEvent).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

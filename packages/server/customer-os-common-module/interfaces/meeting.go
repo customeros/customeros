@@ -50,7 +50,7 @@ type MeetingService interface {
 	GetCalendarAvailability(ctx context.Context, meetingBookingEventID string, startTime time.Time, endTime time.Time, timezone string) (*CalendarAvailabilityResult, error)
 	GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime, endTime time.Time) ([]string, error)
 
-	BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, name, email, phone, reason string, isReschedule bool) (*BookMeetingResult, error)
+	BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, name, email, phone, reason string) (*BookMeetingResult, error)
 	CancelMeeting(ctx context.Context, meetingBookingEventID, eventID string) error
-	RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail, clientName, clientPhone, rescheduleReason string) (*BookMeetingResult, error)
+	RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail, clientName, clientPhone, rescheduleReason, eventID string) (*BookMeetingResult, error)
 }
