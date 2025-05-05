@@ -89,7 +89,7 @@ func (s *ObjectStorageService) Delete(ctx context.Context, key string) error {
 func (s *ObjectStorageService) GetPublicURL(key string) string {
 	// Use CDN domain if provided
 	if s.cdnDomain != "" {
-		return "https://" + s.cdnDomain + "/" + key
+		return s.cdnDomain + key
 	}
 
 	return ""

@@ -3,10 +3,12 @@ package media
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
+	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
@@ -188,6 +190,80 @@ func (s *mediaService) UploadImageDataToR2(ctx context.Context, data []byte, r2F
 	return storageKey, nil
 }
 
+func (s *mediaService) UploadImageToR2(ctx context.Context, imageURL string, r2FilePath string, generateNewFileName bool) (string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MediaService.UploadImageToR2")
+	defer spans.Finish()
+	spans.LogKV("imageURL", imageURL)
+	spans.LogKV("r2FilePath", r2FilePath)
+	spans.LogKV("generateNewFileName", generateNewFileName)
+
+	if imageURL == "" {
+		err := errors.New("imageURL cannot be empty")
+		spans.TraceError(err)
+		return "", err
+	}
+	if r2FilePath == "" {
+		err := errors.New("r2FilePath cannot be empty")
+		spans.TraceError(err)
+		return "", err
+	}
+
+	// Get the image from the URL
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
+	if err != nil {
+		spans.TraceError(err)
+		return "", err
+	}
+
+	// Add User-Agent to avoid being blocked
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+	req.Header.Set("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		spans.TraceError(err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// Check if request was successful
+	if resp.StatusCode != http.StatusOK {
+		spans.LogKV("response.statusCode", resp.StatusCode)
+		switch {
+		case resp.StatusCode == http.StatusNotFound:
+			return "", coserrors.ErrResourceNotFound
+		case resp.StatusCode == http.StatusForbidden:
+			return "", coserrors.ErrResourceForbidden
+		default:
+			err := errors.New("failed to download image")
+			spans.TraceError(err)
+			return "", err
+		}
+	}
+
+	// Read the entire response body
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		spans.TraceError(err)
+		return "", errors.Wrap(err, "failed to read image data")
+	}
+
+	// Extract filename from URL
+	fileName := filepath.Base(imageURL)
+	if fileName == "" || fileName == "." {
+		// If we can't get a filename from URL, generate one with extension based on content type
+		contentType := resp.Header.Get("Content-Type")
+		ext := detectExtension(contentType, imageURL)
+		fileName = "image" + ext
+	}
+
+	// Upload to R2 using the existing method
+	return s.UploadImageDataToR2(ctx, data, r2FilePath, fileName, generateNewFileName)
+}
+
 // detectExtension determines the appropriate file extension based on content type
 // and falls back to extracting from URL if content type is not recognized
 func detectExtension(contentType, url string) string {
@@ -239,6 +315,6 @@ func getContentTypeFromExtension(fileName string) string {
 	}
 }
 
-func (s *mediaService) GetR2PublicURL(storageKey string) string {
+func (s *mediaService) GetR2ImagePublicURL(storageKey string) string {
 	return s.r2ImageStoragePublic.GetPublicURL(storageKey)
 }
