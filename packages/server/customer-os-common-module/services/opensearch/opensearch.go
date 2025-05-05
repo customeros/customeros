@@ -542,7 +542,7 @@ func (c *opensearchService) ensureIndexExists(ctx context.Context, indexName, ma
 			responseBody, _ := io.ReadAll(createRes.Body)
 			errorMsg := fmt.Sprintf("failed to create index, status: %d, response: %s",
 				createRes.StatusCode, string(responseBody))
-			err := fmt.Errorf(errorMsg)
+			err = errors.New(errorMsg)
 			spans.TraceError(err)
 			return err
 		}

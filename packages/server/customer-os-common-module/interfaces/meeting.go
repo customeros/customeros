@@ -26,6 +26,7 @@ type BookMeetingResult struct {
 	EndTime   time.Time
 	HostEmail string
 	HostName  string
+	EventID   string
 }
 
 // CalendarAvailabilityResult represents the result of calendar availability calculation
@@ -50,6 +51,6 @@ type MeetingService interface {
 	GetAvailableCalendarParticipantEmailsForTimeRange(ctx context.Context, meetingBookingEventID string, startTime, endTime time.Time) ([]string, error)
 
 	BookMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, name, email, phone, reason string, isReschedule bool) (*BookMeetingResult, error)
-	CancelMeeting(ctx context.Context, meetingBookingEventID, clientEmail string) error
+	CancelMeeting(ctx context.Context, meetingBookingEventID, eventID string) error
 	RescheduleMeeting(ctx context.Context, meetingBookingEventID string, startTime time.Time, timezone, clientEmail, clientName, clientPhone, rescheduleReason string) (*BookMeetingResult, error)
 }

@@ -12,9 +12,10 @@ import (
 
 type MeetingBookedEventRepository interface {
 	Create(ctx context.Context, meetingBookedEvent *postgres_entity.MeetingBookedEvent) error
-	GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx context.Context, tenant, meetingBookingEventID, clientEmail string) (*postgres_entity.MeetingBookedEvent, error)
 	Cancel(ctx context.Context, id string) error
 	DeleteByConditions(ctx context.Context, conditions *postgres_entity.MeetingBookedEvent) error
+	GetByEventID(ctx context.Context, tenant, meetingBookingEventID, eventID string) (*postgres_entity.MeetingBookedEvent, error)
+	GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx context.Context, tenant, meetingBookingEventID, clientEmail string) (*postgres_entity.MeetingBookedEvent, error)
 }
 
 type meetingBookedEventRepository struct {
@@ -83,4 +84,25 @@ func (r *meetingBookedEventRepository) DeleteByConditions(ctx context.Context, c
 	}
 
 	return query.Delete(&postgres_entity.MeetingBookedEvent{}).Error
+}
+
+func (r *meetingBookedEventRepository) GetByEventID(ctx context.Context, tenant, meetingBookingEventID, eventID string) (*postgres_entity.MeetingBookedEvent, error) {
+	spans, _ := telemetry.StartPostgresSpan(ctx, "MeetingBookedEventRepository.GetByEventID")
+	defer spans.Finish()
+	spans.LogKV("meetingBookingEventID", meetingBookingEventID)
+	spans.LogKV("eventID", eventID)
+
+	var meetingBookedEvent postgres_entity.MeetingBookedEvent
+	err := r.gormDb.Where("tenant = ? AND meeting_booking_event_id = ? AND nylas_event_id = ?", tenant, meetingBookingEventID, eventID).First(&meetingBookedEvent).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			spans.LogKV("result.found", false)
+			return nil, nil
+		}
+		spans.TraceError(err)
+		return nil, err
+	}
+
+	spans.LogKV("result.found", true)
+	return &meetingBookedEvent, nil
 }

@@ -1,8 +1,6 @@
 module github.com/customeros/customeros/packages/runner/sync-customer-os-data
 
-go 1.23.8
-
-toolchain go1.24.1
+go 1.24.2
 
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../../server/customer-os-common-module
 

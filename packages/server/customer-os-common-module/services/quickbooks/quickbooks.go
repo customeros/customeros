@@ -185,7 +185,7 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 	// Check for a successful response
 	if resp.StatusCode != http.StatusOK {
 		errMsg := fmt.Sprintf("revoke quickbooks request returned status %d", resp.StatusCode)
-		spans.TraceError(fmt.Errorf(errMsg))
+		spans.TraceError(errors.New(errMsg))
 	}
 
 	// http.StatusBadRequest is returned when revoking access from already removed app
