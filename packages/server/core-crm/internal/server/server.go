@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -16,12 +17,14 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/customeros/customeros/packages/server/core-crm/api"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/repository"
@@ -32,6 +35,8 @@ type Server struct {
 	config                *config.Config
 	logger                logger.Logger
 	natsConn              *nats_internal.NATSConnections
+	httpServer            *http.Server
+	router                *gin.Engine
 	cronMgr               *cron.CronManager
 	services              *services.CommonServices
 	postgresRepositories  *postgres_repository.Repositories
@@ -86,6 +91,13 @@ func NewServer(cfg *config.Config, warehouseDB *gorm.DB) (*Server, error) {
 	// Initialize services
 	services := services.InitCommonServices(appLogger, neo4jRepos, postgresRepos, cfg.CommonConfig, natsConn, nil)
 
+	// Initialize Gin
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+
+	// register API Routes
+	api.RegisterRoutes(context.Background(), router, services, cfg.AppConfig)
+
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface
 	k8sConfig, err := rest.InClusterConfig()
@@ -130,8 +142,13 @@ func NewServer(cfg *config.Config, warehouseDB *gorm.DB) (*Server, error) {
 	}
 
 	return &Server{
-		config:               cfg,
-		natsConn:             natsConn,
+		config:   cfg,
+		natsConn: natsConn,
+		router:   router,
+		httpServer: &http.Server{
+			Addr:    ":" + cfg.AppConfig.APIPort,
+			Handler: router,
+		},
 		cronMgr:              cronManager,
 		services:             services,
 		postgresRepositories: postgresRepos,
@@ -151,6 +168,17 @@ func (s *Server) Run() error {
 		return fmt.Errorf("failed to start services: %w", err)
 	}
 	log.Println("✅ Services started successfully")
+
+	// Start HTTP server in a goroutine with panic recovery
+	go s.wrapGoroutine("http_server", func() {
+		err := s.httpServer.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Printf("❌ HTTP server error: %v", err)
+		}
+	})
+	log.Println("✅ HTTP server started successfully")
+	log.Printf("Core CRM is now running and listening on port %s. Press Ctrl+C to exit.", s.httpServer.Addr)
+	fmt.Println("")
 
 	return s.waitForShutdown()
 }
@@ -173,6 +201,14 @@ func (s *Server) waitForShutdown() error {
 	// Stop cron manager
 	s.cronMgr.Stop()
 	log.Println("Shutdown complete")
+
+	// Shut down HTTP server
+	log.Println("Shutting down HTTP server...")
+	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("❌ HTTP server shutdown error: %v", err)
+	} else {
+		log.Println("✅ HTTP server shut down successfully")
+	}
 
 	// Close NATS connection
 	if s.natsConn != nil {
