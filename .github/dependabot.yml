@@ -165,7 +165,7 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/mailstack"
+    directory: "/packages/server/core-crm"
     schedule:
       interval: "daily"
       time: "04:00"
@@ -173,7 +173,8 @@ updates:
     labels:
       - "go"
       - "dependencies"
-      - "app/mailstack"
+      - "app/core-crm"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
+
