@@ -14,5 +14,5 @@ const (
 
 	S3ImagesCDN = "https://customer-os-images.b-cdn.net/"
 
-	R2ImagesCDN = "https://images.customeros.ai/"
+	R2ImagesCDN = "https://images.cust.cx/"
 )
