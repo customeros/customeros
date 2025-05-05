@@ -259,10 +259,15 @@ func GetCalendarDetails(s *cosapi_services.Services) gin.HandlerFunc {
 			durationMins = ((durationMins / 5) + 1) * 5
 		}
 
+		tenantLogoURL := ""
+		if meetingBookingEvent.ShowLogo {
+			tenantLogoURL = tenantSettings.GetWorkspaceLogoUrl()
+		}
+
 		response := &calendarDetailsResponse{
 			Location:                 meetingBookingEvent.Location,
 			TenantName:               tenantName,
-			TenantLogoURL:            "", // TODO: Get from tenant service when available
+			TenantLogoURL:            tenantLogoURL,
 			DurationMins:             durationMins,
 			BookingTitle:             meetingBookingEvent.Title,
 			BookingDescription:       meetingBookingEvent.Description,
