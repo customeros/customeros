@@ -40,7 +40,6 @@ func NewMediaService(postgres *postgres_repository.Repositories, cfg *config.R2S
 		cfg.AccessKeyID,
 		cfg.AccessKeySecret,
 		R2_IMAGES_BUCKET_NAME,
-		cfg.CDNDomainImages,
 		true,
 	)
 

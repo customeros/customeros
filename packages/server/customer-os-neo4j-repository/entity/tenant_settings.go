@@ -3,6 +3,7 @@ package neo4j_entity
 import (
 	"time"
 
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
@@ -12,7 +13,6 @@ const (
 	TenantSettingsPropertyBaseCurrency             TenantSettingsProperty = "baseCurrency"
 	TenantSettingsPropertyInvoicingPostpaid        TenantSettingsProperty = "invoicingPostpaid"
 	TenantSettingsPropertyWorkspaceLogoKey         TenantSettingsProperty = "workspaceLogoKey"
-	TenantSettingsPropertyWorkspaceLogoUrl         TenantSettingsProperty = "workspaceLogoUrl"
 	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
 	TenantSettingsPropertyEnrichContacts           TenantSettingsProperty = "enrichContacts"
 	TenantSettingsPropertyStripeCustomerPortalLink TenantSettingsProperty = "stripeCustomerPortalLink"
@@ -25,7 +25,6 @@ type TenantSettingsEntity struct {
 	Id                       string
 	BaseCurrency             enum.Currency
 	InvoicingPostpaid        bool
-	WorkspaceLogoUrl         string
 	WorkspaceLogoKey         string
 	WorkspaceName            string
 	CreatedAt                time.Time
@@ -36,4 +35,11 @@ type TenantSettingsEntity struct {
 
 	// Deprecated
 	WorkspaceLogo string
+}
+
+func (e *TenantSettingsEntity) GetWorkspaceLogoUrl() string {
+	if e.WorkspaceLogoKey == "" {
+		return ""
+	}
+	return commonconstants.R2ImagesCDN + e.WorkspaceLogoKey
 }
