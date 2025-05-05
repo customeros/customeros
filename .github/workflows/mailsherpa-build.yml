@@ -6,8 +6,6 @@ on:
       - otter
     paths:
       - "packages/server/mailsherpa-api/**"
-    paths-ignore:
-      - "**.md"
 
 env:
   APP_PATH: packages/server/mailsherpa-api

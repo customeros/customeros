@@ -6,8 +6,6 @@ on:
       - otter
     paths:
       - "packages/runner/customer-os-data-upkeeper/**"
-    paths-ignore:
-      - "**.md"
 
 env:
   APP_PATH: packages/runner/customer-os-data-upkeeper

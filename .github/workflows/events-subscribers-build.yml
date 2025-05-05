@@ -6,8 +6,6 @@ on:
       - otter
     paths:
       - "packages/server/events-subscribers/**"
-    paths-ignore:
-      - "**.md"
 
 env:
   APP_PATH: packages/server/events-subscribers
