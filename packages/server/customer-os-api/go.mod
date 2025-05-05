@@ -1,8 +1,6 @@
 module github.com/customeros/customeros/packages/server/customer-os-api
 
-go 1.23.8
-
-toolchain go1.24.1
+go 1.24.2
 
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
@@ -114,7 +112,7 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect

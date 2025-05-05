@@ -64,6 +64,16 @@ type cancelMeetingRequest struct {
 	Email      string `json:"email"`
 }
 
+type BookedMeetingResponse struct {
+	Message   string    `json:"message"`
+	Status    string    `json:"status"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	HostEmail string    `json:"hostEmail"`
+	HostName  string    `json:"hostName"`
+	EventId   string    `json:"eventId"`
+}
+
 // mapToRestDaySlots converts service response to REST API format
 func mapToRestDaySlots(result *interfaces.CalendarAvailabilityResult) []DaySlot {
 	if result == nil || len(result.Days) == 0 {
@@ -362,13 +372,14 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			} else if errors.Is(err, coserrors.ErrEmailNotDeliverable) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Email address is not deliverable. Please provide a valid email address."})
 			} else if errors.Is(err, coserrors.ErrMeetingAlreadyExists) {
-				c.JSON(http.StatusOK, gin.H{
-					"message":   "Meeting already exists",
-					"startTime": bookMeetingResult.StartTime,
-					"endTime":   bookMeetingResult.EndTime,
-					"hostEmail": bookMeetingResult.HostEmail,
-					"hostName":  bookMeetingResult.HostName,
-					"status":    "already_exists",
+				c.JSON(http.StatusOK, BookedMeetingResponse{
+					Message:   "Meeting already exists",
+					StartTime: bookMeetingResult.StartTime,
+					EndTime:   bookMeetingResult.EndTime,
+					HostEmail: bookMeetingResult.HostEmail,
+					HostName:  bookMeetingResult.HostName,
+					EventId:   bookMeetingResult.EventId,
+					Status:    "already_exists",
 				})
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create meeting"})
@@ -381,13 +392,14 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"message":   "Meeting booked successfully",
-			"startTime": bookMeetingResult.StartTime,
-			"endTime":   bookMeetingResult.EndTime,
-			"hostEmail": bookMeetingResult.HostEmail,
-			"hostName":  bookMeetingResult.HostName,
-			"status":    "created",
+		c.JSON(http.StatusOK, BookedMeetingResponse{
+			Message:   "Meeting booked successfully",
+			StartTime: bookMeetingResult.StartTime,
+			EndTime:   bookMeetingResult.EndTime,
+			HostEmail: bookMeetingResult.HostEmail,
+			HostName:  bookMeetingResult.HostName,
+			EventId:   bookMeetingResult.EventId,
+			Status:    "created",
 		})
 	}
 }
@@ -528,13 +540,14 @@ func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"message":   "Meeting rescheduled successfully",
-			"startTime": bookMeetingResult.StartTime,
-			"endTime":   bookMeetingResult.EndTime,
-			"hostEmail": bookMeetingResult.HostEmail,
-			"hostName":  bookMeetingResult.HostName,
-			"status":    "rescheduled",
+		c.JSON(http.StatusOK, BookedMeetingResponse{
+			Message:   "Meeting rescheduled successfully",
+			StartTime: bookMeetingResult.StartTime,
+			EndTime:   bookMeetingResult.EndTime,
+			HostEmail: bookMeetingResult.HostEmail,
+			HostName:  bookMeetingResult.HostName,
+			EventId:   bookMeetingResult.EventId,
+			Status:    "rescheduled",
 		})
 	}
 }

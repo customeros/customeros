@@ -26,6 +26,7 @@ type BookMeetingResult struct {
 	EndTime   time.Time
 	HostEmail string
 	HostName  string
+	EventId   string
 }
 
 // CalendarAvailabilityResult represents the result of calendar availability calculation

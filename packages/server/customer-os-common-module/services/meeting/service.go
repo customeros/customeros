@@ -842,6 +842,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 				EndTime:   endTimeInTimeZone,
 				HostEmail: existingMeetingBookedEvent.HostEmail,
 				HostName:  existingMeetingBookedEvent.HostName,
+				EventId:   existingMeetingBookedEvent.NylasEventID,
 			}
 
 			spans.LogObjectAsJson("result", result)
@@ -990,6 +991,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		EndTime:   endTimeInTimeZone,
 		HostEmail: hostEmail,
 		HostName:  hostName,
+		EventId:   createdEvent.Data.ID,
 	}
 
 	spans.LogObjectAsJson("result", result)

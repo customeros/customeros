@@ -1,8 +1,6 @@
 module github.com/customeros/customeros/packages/server/customer-os-webhooks
 
-go 1.23.8
-
-toolchain go1.24.1
+go 1.24.2
 
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
