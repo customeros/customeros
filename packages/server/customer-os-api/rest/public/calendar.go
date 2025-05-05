@@ -52,6 +52,7 @@ type bookMeetingRequest struct {
 	Email      string `json:"email"`
 	Phone      string `json:"phone"`
 	Reason     string `json:"reason"`
+	EventId    string `json:"eventId"`
 }
 
 type timezoneResponse struct {
@@ -62,7 +63,6 @@ type timezoneResponse struct {
 type cancelMeetingRequest struct {
 	CalendarId string `json:"calendarId"`
 	EventId    string `json:"eventId"`
-	Email      string `json:"email"` //previously used, to be removed
 }
 
 type BookedMeetingResponse struct {
@@ -365,7 +365,7 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
 		// Create meeting
-		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone, "", false)
+		bookMeetingResult, err := s.CommonServices.MeetingService.BookMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Name, request.Email, request.Phone, "")
 		if err != nil {
 			s.Log.Error("Failed to create meeting: %v", err)
 			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
@@ -496,6 +496,12 @@ func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
+		// Event id is required
+		if request.EventId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing eventId in request"})
+			return
+		}
+
 		// Calendar id is required
 		if request.CalendarId == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "missing calendarId in request"})
@@ -525,7 +531,7 @@ func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
 		// Create meeting
-		bookMeetingResult, err := s.CommonServices.MeetingService.RescheduleMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Email, request.Name, request.Phone, request.Reason)
+		bookMeetingResult, err := s.CommonServices.MeetingService.RescheduleMeeting(ctx, meetingBookingEvent.ID, *startTime, request.Timezone, request.Email, request.Name, request.Phone, request.Reason, request.EventId)
 		if err != nil {
 			s.Log.Error("Failed to reschedule meeting: %v", err)
 			if errors.Is(err, coserrors.ErrSlotNotAvailable) {
@@ -533,7 +539,7 @@ func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			} else if errors.Is(err, coserrors.ErrEmailNotDeliverable) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Email address is not deliverable. Please provide a valid email address."})
 			} else if errors.Is(err, coserrors.ErrMeetingNotFound) {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Active meeting for this email not found"})
+				c.JSON(http.StatusNotFound, gin.H{"error": "Calendar event not found"})
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reschedule meeting"})
 			}
