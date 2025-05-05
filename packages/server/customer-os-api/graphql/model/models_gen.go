@@ -3254,6 +3254,7 @@ type TenantSettings struct {
 type TenantSettingsInput struct {
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
 	WorkspaceName        *string   `json:"workspaceName,omitempty"`
+	WorkspaceLogoURL     *string   `json:"workspaceLogoUrl,omitempty"`
 	Patch                *bool     `json:"patch,omitempty"`
 	LogoURL              *string   `json:"logoUrl,omitempty"`
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`

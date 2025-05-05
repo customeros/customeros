@@ -587,12 +587,18 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		"result.defaultTenant", defaultTenant,
 		"result.userId", userId)
 
+	apiKey, err := GetApiKeyForTenant(ctx, services, currentTenant)
+	if err != nil {
+		spans.TraceError(errors.Wrap(err, "GetApiKeyForTenant"))
+	}
+
 	ginContext.JSON(http.StatusOK, gin.H{
 		"email":         signInRequest.LoggedInEmail,
 		"authUserId":    authUserId,
 		"currentTenant": currentTenant,
 		"defaultTenant": defaultTenant,
 		"userId":        userId,
+		"apiKey":        apiKey,
 	})
 }
 

@@ -73,27 +73,39 @@ func GetAPIKey(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant := tenantValue.(string)
 		spans.TagTenant(tenant)
 
-		apiKey, err := s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
+		apiKey, err := GetApiKeyForTenant(ctx, s, tenant)
 		if err != nil {
-			spans.TraceError(errors.Wrap(err, "GetFirstApiKeyForTenant"))
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		if apiKey == nil {
-			err = s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenant)
-			if err != nil {
-				spans.TraceError(errors.Wrap(err, "CreateApiKey"))
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-			apiKey, err = s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
-			if err != nil {
-				spans.TraceError(errors.Wrap(err, "GetFirstApiKeyForTenant"))
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
+			c.JSON(500, gin.H{"error": err.Error()}); return
 		}
 
-		c.JSON(200, apiKey.Key)
+		c.JSON(200, apiKey)
 	}
+}
+
+func GetApiKeyForTenant(ctx context.Context, s *cosapi_services.Services, tenant string) (string, error) {
+	spans, ctx := telemetry.StartRestSpan(ctx, "GetApiKeyForTenant")
+	defer spans.Finish()
+
+	apiKey, err := s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
+	if err != nil {
+		spans.TraceError(errors.Wrap(err, "GetFirstApiKeyForTenant"))
+		return "", err
+	}
+	if apiKey == nil {
+		err = s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenant)
+		if err != nil {
+			spans.TraceError(errors.Wrap(err, "CreateApiKey"))
+			return "", err
+		}
+		apiKey, err = s.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
+		if err != nil {
+			spans.TraceError(errors.Wrap(err, "GetFirstApiKeyForTenant"))
+			return "", err
+		}
+	}
+	if apiKey == nil {
+		spans.TraceError(errors.New("api key is nil"))
+		return "", errors.New("api key not found")
+	}
+	return apiKey.Key, nil
 }
