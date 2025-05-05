@@ -1,16 +1,16 @@
-name: Core CRM Build (PR)
+name: Integrity Checker Build (PR)
 
 on:
   pull_request:
     branches:
       - otter
     paths:
-      - "packages/server/core-crm/**"
+      - "packages/runner/integrity-checker/**"
     paths-ignore:
       - "**.md"
 
 env:
-  APP_PATH: packages/server/core-crm
+  APP_PATH: packages/runner/integrity-checker
   CGO_ENABLED: 0
   LANG: C.UTF-8
   LC_ALL: C.UTF-8
@@ -34,10 +34,6 @@ jobs:
           GOPROXY: "direct"
           GOSUMDB: "off"
 
-      - name: Install dependencies
-        run: |
-          ./deployment/runners/install-dependencies.sh
-
       - name: Build Go Binary
         run: |
-          ./deployment/runners/build.sh ${{ env.APP_PATH }}
+          ./deployment/runners/build.sh -p -g ${{ env.APP_PATH }}

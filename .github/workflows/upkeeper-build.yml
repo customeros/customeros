@@ -1,16 +1,16 @@
-name: Core CRM Build (PR)
+name: Upkeeper Build (PR)
 
 on:
   pull_request:
     branches:
       - otter
     paths:
-      - "packages/server/core-crm/**"
+      - "packages/runner/customer-os-data-upkeeper/**"
     paths-ignore:
       - "**.md"
 
 env:
-  APP_PATH: packages/server/core-crm
+  APP_PATH: packages/runner/customer-os-data-upkeeper
   CGO_ENABLED: 0
   LANG: C.UTF-8
   LC_ALL: C.UTF-8
@@ -40,4 +40,4 @@ jobs:
 
       - name: Build Go Binary
         run: |
-          ./deployment/runners/build.sh ${{ env.APP_PATH }}
+          ./deployment/runners/build.sh -p ${{ env.APP_PATH }}

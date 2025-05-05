@@ -1,16 +1,17 @@
-name: Core CRM Build (PR)
+name: CustomerOS API Build (PR)
 
 on:
   pull_request:
     branches:
       - otter
     paths:
-      - "packages/server/core-crm/**"
+      - "packages/server/customer-os-api/**"
     paths-ignore:
       - "**.md"
 
 env:
-  APP_PATH: packages/server/core-crm
+  APP_PATH: packages/server/customer-os-api
+  GQL_PATH: ${{ env.APP_PATH }}/gqlgen.yml
   CGO_ENABLED: 0
   LANG: C.UTF-8
   LC_ALL: C.UTF-8
@@ -40,4 +41,4 @@ jobs:
 
       - name: Build Go Binary
         run: |
-          ./deployment/runners/build.sh ${{ env.APP_PATH }}
+          ./deployment/runners/build.sh -p ${{ env.APP_PATH }} ${{ env.GQLGEN_PATH }}
