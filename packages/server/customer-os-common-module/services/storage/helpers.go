@@ -3,6 +3,7 @@ package storage
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -33,5 +34,6 @@ func NewR2StorageService(accountID, accessKeyID, accessKeySecret, bucketName str
 	return NewStorageService(r2Client, StorageConfig{
 		BucketName: bucketName,
 		IsPublic:   isPublic,
+		CDNDomain:  constants.R2ImagesCDN,
 	})
 }
