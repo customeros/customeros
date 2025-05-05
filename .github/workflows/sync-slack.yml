@@ -6,8 +6,6 @@ on:
       - otter
     paths:
       - "packages/runner/sync-slack/**"
-    paths-ignore:
-      - "**.md"
 
 env:
   APP_PATH: packages/runner/sync-slack

@@ -6,8 +6,6 @@ on:
       - otter
     paths:
       - "packages/server/customer-os-api/**"
-    paths-ignore:
-      - "**.md"
 
 env:
   APP_PATH: packages/server/customer-os-api

@@ -6,8 +6,6 @@ on:
       - otter
     paths:
       - "packages/runner/integrity-checker/**"
-    paths-ignore:
-      - "**.md"
 
 env:
   APP_PATH: packages/runner/integrity-checker
