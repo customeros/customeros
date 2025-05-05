@@ -14,7 +14,6 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	services "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
@@ -28,6 +27,7 @@ import (
 	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/repository"
+	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
 	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
 )
 
@@ -51,7 +51,7 @@ func NewServer(cfg *config.Config, warehouseDB *gorm.DB) (*Server, error) {
 	appLogger.WithName("core-crm")
 
 	// Initialize OpenTelemetry
-	err := telemetry.InitOpenTelemetry(context.Background(), &cfg.CommonConfig.Infrastructure.OpenTelemetryConfig)
+	err := telemetry.InitOpenTelemetry(context.Background(), cfg.Telemetry)
 	if err != nil {
 		log.Printf("Warning: Could not initialize OpenTelemetry: %s", err.Error())
 	}
