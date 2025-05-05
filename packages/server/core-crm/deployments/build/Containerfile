@@ -15,6 +15,7 @@ RUN go mod download
 
 # Copy the source code
 COPY ./ ./
+COPY ../customer-os-common-module /customer-os-common-module/
 
 # Build the application
 RUN go mod tidy && \
