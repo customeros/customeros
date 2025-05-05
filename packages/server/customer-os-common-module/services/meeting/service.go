@@ -842,7 +842,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 				EndTime:   endTimeInTimeZone,
 				HostEmail: existingMeetingBookedEvent.HostEmail,
 				HostName:  existingMeetingBookedEvent.HostName,
-				EventId:   existingMeetingBookedEvent.NylasEventID,
+				EventID:   existingMeetingBookedEvent.NylasEventID,
 			}
 
 			spans.LogObjectAsJson("result", result)
@@ -991,7 +991,7 @@ func (s *meetingService) BookMeeting(ctx context.Context, meetingBookingEventID 
 		EndTime:   endTimeInTimeZone,
 		HostEmail: hostEmail,
 		HostName:  hostName,
-		EventId:   createdEvent.Data.ID,
+		EventID:   createdEvent.Data.ID,
 	}
 
 	spans.LogObjectAsJson("result", result)
@@ -1003,12 +1003,12 @@ func pickRandomParticipant(availableParticipantEmails []string) string {
 }
 
 // CancelMeeting implements interfaces.MeetingService
-func (s *meetingService) CancelMeeting(ctx context.Context, meetingBookingEventID, clientEmail string) error {
+func (s *meetingService) CancelMeeting(ctx context.Context, meetingBookingEventID, eventID string) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.CancelMeeting")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", map[string]interface{}{
 		"meetingBookingEventID": meetingBookingEventID,
-		"clientEmail":           clientEmail,
+		"eventID":               eventID,
 	})
 
 	// validate tenant
@@ -1029,14 +1029,13 @@ func (s *meetingService) CancelMeeting(ctx context.Context, meetingBookingEventI
 		return fmt.Errorf("meeting booking event not found")
 	}
 
-	meetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetActiveFirstUpcomingByMeetingBookingEventIDAndClientEmail(ctx, tenant, meetingBookingEventID, clientEmail)
+	meetingBookedEvent, err := s.postgres.MeetingBookedEventRepository.GetByEventID(ctx, tenant, meetingBookingEventID, eventID)
 	if err != nil {
 		spans.TraceError(err)
 		return fmt.Errorf("failed to get meeting booked event: %v", err)
 	}
 	if meetingBookedEvent == nil {
-		spans.LogKV("result", "no meeting booked event found")
-		return nil
+		return coserrors.ErrMeetingNotFound
 	}
 
 	err = s.cancelBookedMeeting(ctx, meetingBookedEvent, meetingBookingEvent.EmailNotificationEnabled)
