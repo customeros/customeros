@@ -3,7 +3,7 @@ package config
 type PostgresConfig struct {
 	Host            string `env:"POSTGRES_HOST,required"`
 	Port            string `env:"POSTGRES_PORT,required"`
-	ReadPort        string `ent:"POSTGRES_READ_PORT"`
+	ReadPort        string `env:"POSTGRES_READ_PORT"`
 	User            string `env:"POSTGRES_USER,required"`
 	Db              string `env:"POSTGRES_DB,required"`
 	Password        string `env:"POSTGRES_PASSWORD,required"`
