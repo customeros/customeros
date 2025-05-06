@@ -65,7 +65,7 @@ type cancelMeetingRequest struct {
 	EventId    string `json:"eventId"`
 }
 
-type BookedMeetingResponse struct {
+type MeetingResponse struct {
 	Message   string    `json:"message"`
 	Status    string    `json:"status"`
 	StartTime time.Time `json:"startTime"`
@@ -373,7 +373,7 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			} else if errors.Is(err, coserrors.ErrEmailNotDeliverable) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Email address is not deliverable. Please provide a valid email address."})
 			} else if errors.Is(err, coserrors.ErrMeetingAlreadyExists) {
-				c.JSON(http.StatusOK, BookedMeetingResponse{
+				c.JSON(http.StatusOK, MeetingResponse{
 					Message:   "Meeting already exists",
 					StartTime: bookMeetingResult.StartTime,
 					EndTime:   bookMeetingResult.EndTime,
@@ -393,7 +393,7 @@ func BookMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, BookedMeetingResponse{
+		c.JSON(http.StatusOK, MeetingResponse{
 			Message:   "Meeting booked successfully",
 			StartTime: bookMeetingResult.StartTime,
 			EndTime:   bookMeetingResult.EndTime,
@@ -449,6 +449,19 @@ func CancelMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 		)
 		spans.TagTenant(meetingBookingEvent.Tenant)
 
+		// Get requested meeting details to include in response
+		bookedMeeting, err := s.Repositories.PostgresRepositories.MeetingBookedEventRepository.GetByEventID(ctx, meetingBookingEvent.Tenant, meetingBookingEvent.ID, request.EventId)
+		if err != nil {
+			spans.TraceError(err)
+			s.Log.Error("Failed to get booked meeting: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel meeting"})
+			return
+		}
+		if bookedMeeting == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Meeting not found"})
+			return
+		}
+
 		err = s.CommonServices.MeetingService.CancelMeeting(ctx, meetingBookingEvent.ID, request.EventId)
 		if err != nil {
 			spans.TraceError(err)
@@ -461,9 +474,14 @@ func CancelMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Meeting cancelled successfully",
-			"status":  "cancelled",
+		c.JSON(http.StatusOK, MeetingResponse{
+			Message:   "Meeting cancelled successfully",
+			Status:    "cancelled",
+			StartTime: bookedMeeting.StartTime,
+			EndTime:   bookedMeeting.EndTime,
+			HostEmail: bookedMeeting.HostEmail,
+			HostName:  bookedMeeting.HostName,
+			EventId:   request.EventId,
 		})
 	}
 }
@@ -551,7 +569,7 @@ func RescheduleMeeting(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, BookedMeetingResponse{
+		c.JSON(http.StatusOK, MeetingResponse{
 			Message:   "Meeting rescheduled successfully",
 			StartTime: bookMeetingResult.StartTime,
 			EndTime:   bookMeetingResult.EndTime,
