@@ -1,12 +1,12 @@
-name: CustomerOS API Deploy
+name: Upkeeper Deploy
 on:
   push:
     tags:
       - "v*.*.*"
 env:
-  APP_NAME: customer-os-api
-  APP_PATH: packages/server/customer-os-api
-  IMAGE_NAME: customer-os-api
+  APP_NAME: upkeeper
+  APP_PATH: packages/runner/customer-os-data-upkeeper
+  IMAGE_NAME: customer-os-data-upkeeper
   REGISTRY: ghcr.io
   CGO_ENABLED: 0
   LANG: C.UTF-8
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build Go binary
         run: |
-          ./deployment/runners/build.sh -p ${{ env.APP_PATH }} ${{ env.GQL_PATH }}
+          ./deployment/runners/build.sh -p -g ${{ env.APP_PATH }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3

@@ -1,0 +1,37 @@
+# Build stage
+FROM golang:1.24.2-alpine3.21 AS builder
+
+# Set the working directory - use the actual app directory path
+WORKDIR /app/packages/runner/customer-os-data-upkeeper
+
+# Set environment variables for optimized builds
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=arm64
+
+# Copy the entire monorepo for dependency resolution
+COPY . /app/
+
+# Now that we have the full context, download dependencies
+RUN cd /app/packages/runner/customer-os-data-upkeeper && go mod download
+
+# Build the application 
+RUN cd /app/packages/runner/customer-os-data-upkeeper && \
+    go mod tidy && \
+    go build -ldflags="-s -w" -o /go/bin/app .
+
+# Final stage - using standard distroless
+FROM gcr.io/distroless/static:nonroot
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the binary and required files
+COPY --from=builder /go/bin/app ./app
+COPY --from=builder /app/packages/runner/customer-os-data-upkeeper/.env ./.env
+
+# Use nonroot user
+USER nonroot:nonroot
+
+# Run the application directly
+ENTRYPOINT ["/app/app"]
