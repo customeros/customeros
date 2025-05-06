@@ -15,7 +15,7 @@ on:
 
 env:
   APP_PATH: packages/server/customer-os-api
-  GQL_PATH: ${{ env.APP_PATH }}/gqlgen.yml
+  GQL_PATH: packages/server/customer-os-api/gqlgen.yml
   CGO_ENABLED: 0
   LANG: C.UTF-8
   LC_ALL: C.UTF-8
@@ -45,4 +45,4 @@ jobs:
 
       - name: Build Go Binary
         run: |
-          ./deployment/runners/build.sh -p ${{ env.APP_PATH }} ${{ env.GQLGEN_PATH }}
+          ./deployment/runners/build.sh -p ${{ env.APP_PATH }} ${{ env.GQL_PATH }}
