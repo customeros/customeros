@@ -14,7 +14,7 @@ on:
 
 env:
   APP_PATH: packages/server/customer-os-api
-  GQL_PATH: packages/server/customer-os-api/gqlgen.yml
+  GQL_PATH: gqlgen.yml
   CGO_ENABLED: 0
   LANG: C.UTF-8
   LC_ALL: C.UTF-8
