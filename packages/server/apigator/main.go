@@ -10,14 +10,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-
 	"github.com/caarlos0/env/v6"
-	"github.com/customeros/customeros/packages/server/apigator/config"
-	entities "github.com/customeros/customeros/packages/server/apigator/entity"
-	"github.com/customeros/customeros/packages/server/apigator/logger"
-	apigator_service "github.com/customeros/customeros/packages/server/apigator/service"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -26,6 +21,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+
+	"github.com/customeros/customeros/packages/server/apigator/config"
+	entities "github.com/customeros/customeros/packages/server/apigator/entity"
+	"github.com/customeros/customeros/packages/server/apigator/logger"
+	apigator_service "github.com/customeros/customeros/packages/server/apigator/service"
 )
 
 func main() {
@@ -51,8 +51,7 @@ func main() {
 
 	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
 		Infrastructure: commonConfig.InfrastructureConfig{
-			PostgresConfig:      cfg.PostgresConfig,
-			PostgresAsyncConfig: cfg.PostgresAsyncConfig,
+			PostgresConfig: cfg.PostgresConfig,
 		},
 	})
 	if err != nil {

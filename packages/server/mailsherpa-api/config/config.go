@@ -7,14 +7,13 @@ import (
 )
 
 type Config struct {
-	ApiPort             string `env:"PORT"`
-	AppKey              string `env:"APP_KEY" envDefault:"" validate:"required"`
-	PostgresConfig      config.PostgresConfig
-	PostgresAsyncConfig config.PostgresAsyncConfig
-	Jaeger              telemetry.JaegerConfig
-	OpenTelemetry       telemetry.OpenTelemetryConfig
-	Logger              logger.Config
-	EmailConfig         EmailConfig
+	ApiPort        string `env:"PORT"`
+	AppKey         string `env:"APP_KEY" envDefault:"" validate:"required"`
+	PostgresConfig config.PostgresConfig
+	Jaeger         telemetry.JaegerConfig
+	OpenTelemetry  telemetry.OpenTelemetryConfig
+	Logger         logger.Config
+	EmailConfig    EmailConfig
 }
 
 type EmailConfig struct {

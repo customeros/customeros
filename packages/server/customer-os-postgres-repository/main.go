@@ -11,8 +11,7 @@ import (
 )
 
 type Config struct {
-	PostgresConfig      common_config.PostgresConfig
-	PostgresAsyncConfig common_config.PostgresAsyncConfig
+	PostgresConfig common_config.PostgresConfig
 }
 
 func main() {

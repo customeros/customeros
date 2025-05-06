@@ -22,7 +22,17 @@ func InitPostgres(cfg *CommonConfig) (*PostgresDB, error) {
 	var err error
 	db := &PostgresDB{}
 
-	db.SqlDB, db.GormDB, err = NewPostgresDBConn(cfg.Infrastructure.PostgresConfig.Host, cfg.Infrastructure.PostgresConfig.Port, cfg.Infrastructure.PostgresConfig.User, cfg.Infrastructure.PostgresConfig.Password, cfg.Infrastructure.PostgresConfig.Db, cfg.Infrastructure.PostgresConfig.LogLevel, cfg.Infrastructure.PostgresConfig.MaxConn, cfg.Infrastructure.PostgresConfig.MaxIdleConn, cfg.Infrastructure.PostgresConfig.ConnMaxLifetime)
+	db.SqlDB, db.GormDB, err = NewPostgresDBConn(
+		cfg.Infrastructure.PostgresConfig.Host,
+		cfg.Infrastructure.PostgresConfig.Port,
+		cfg.Infrastructure.PostgresConfig.User,
+		cfg.Infrastructure.PostgresConfig.Password,
+		cfg.Infrastructure.PostgresConfig.Db,
+		cfg.Infrastructure.PostgresConfig.LogLevel,
+		cfg.Infrastructure.PostgresConfig.MaxConn,
+		cfg.Infrastructure.PostgresConfig.MaxIdleConn,
+		cfg.Infrastructure.PostgresConfig.ConnMaxLifetime,
+	)
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 		return nil, err

@@ -8,8 +8,7 @@ import (
 )
 
 type Repositories struct {
-	Db      *gorm.DB
-	AsyncDb *gorm.DB
+	Db *gorm.DB
 
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository

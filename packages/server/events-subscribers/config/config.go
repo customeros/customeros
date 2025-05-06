@@ -24,7 +24,6 @@ type CommonConfig struct {
 	Jaeger           telemetry.JaegerConfig
 	OpenTelemetry    telemetry.OpenTelemetryConfig
 	Postgres         commonconf.PostgresConfig
-	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
 	RabbitMQ         commonconf.RabbitMQConfig
 	OpensearchConfig commonconf.OpensearchConfig
@@ -71,7 +70,6 @@ func Load() *Config {
 			JaegerConfig:        cmnCfg.Jaeger,
 			OpenTelemetryConfig: cmnCfg.OpenTelemetry,
 			PostgresConfig:      cmnCfg.Postgres,
-			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
 			RabbitMQConfig:      cmnCfg.RabbitMQ,
 			OpensearchConfig:    cmnCfg.OpensearchConfig,
