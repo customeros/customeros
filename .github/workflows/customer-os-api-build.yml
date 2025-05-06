@@ -8,9 +8,6 @@ on:
       - "packages/server/customer-os-common-module/**"
       - "packages/server/customer-os-neo4j-repository/**"
       - "packages/server/customer-os-postgres-repository/**"
-  push:
-    tags:
-      - 'v*'
 
 env:
   APP_PATH: packages/server/customer-os-api
