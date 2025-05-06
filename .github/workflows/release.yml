@@ -1,0 +1,48 @@
+name: CustomerOS API Release
+
+on:
+  push:
+    branches:
+      - otter
+
+env:
+  CGO_ENABLED: 0
+  LANG: C.UTF-8
+  LC_ALL: C.UTF-8
+
+permissions:
+  contents: write
+  pull-requests: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubicloud-standard-2
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if release is required
+        run: |
+          ./deployment/runners/check-release-needed.sh
+
+      - name: Generate version number
+        if: env.RELEASE_NEEDED == 'true'
+        id: version
+        run: |
+          ./deployment/runners/generate-version.sh
+
+      - name: Create and push tag
+        if: env.RELEASE_NEEDED == 'true'
+        run: |
+          ./deployment/runners/create-release-tag.sh
+
+      - name: Create release
+        if: env.RELEASE_NEEDED == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
+          generate_release_notes: true

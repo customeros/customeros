@@ -2,8 +2,6 @@ name: Core CRM Build (PR)
 
 on:
   pull_request:
-    branches:
-      - otter
     paths:
       - "packages/server/core-crm/**"
       - "packages/server/customer-os-common-module/**"

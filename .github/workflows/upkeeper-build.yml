@@ -2,8 +2,6 @@ name: Upkeeper Build (PR)
 
 on:
   pull_request:
-    branches:
-      - otter
     paths:
       - "packages/runner/customer-os-data-upkeeper/**"
       - "packages/server/customer-os-common-module/**"
