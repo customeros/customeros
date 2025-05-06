@@ -2,8 +2,6 @@ name: CustomerOS API Build (PR)
 
 on:
   pull_request:
-    branches:
-      - otter
     paths:
       - "packages/server/customer-os-api/**"
       - "packages/server/customer-os-common-module/**"
