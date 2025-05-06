@@ -1,12 +1,12 @@
-name: APIgator API Deploy
+name: Core CRM Deploy
 on:
   push:
     tags:
       - "v*.*.*"
 env:
-  APP_NAME: apigator
-  APP_PATH: packages/server/apigator
-  IMAGE_NAME: apigator
+  APP_NAME: core-crm
+  APP_PATH: packages/server/core-crm
+  IMAGE_NAME: core-crm
   REGISTRY: ghcr.io
   CGO_ENABLED: 0
   LANG: C.UTF-8
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build Go binary
         run: |
-          ./deployment/runners/build.sh -g -p ${{ env.APP_PATH }}
+          ./deployment/runners/build.sh ${{ env.APP_PATH }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
