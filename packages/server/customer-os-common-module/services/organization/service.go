@@ -49,6 +49,7 @@ func NewOrganizationService(log logger.Logger,
 ) interfaces.OrganizationService {
 	return &organizationService{
 		log:             log,
+		natsConn:        natsConn,
 		postgres:        postgres,
 		neo4j:           neo4j,
 		events:          events,
