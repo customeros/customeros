@@ -9,6 +9,9 @@ ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=arm64
 
+# Install tzdata
+RUN apk add --no-cache tzdata
+
 # Copy the entire monorepo for dependency resolution
 COPY . /app/
 
