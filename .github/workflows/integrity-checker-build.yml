@@ -2,8 +2,6 @@ name: Integrity Checker Build (PR)
 
 on:
   pull_request:
-    branches:
-      - otter
     paths:
       - "packages/runner/integrity-checker/**"
       - "packages/server/customer-os-common-module/**"

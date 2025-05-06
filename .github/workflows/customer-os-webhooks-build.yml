@@ -2,8 +2,6 @@ name: CustomerOS Webhooks Build (PR)
 
 on:
   pull_request:
-    branches:
-      - otter
     paths:
       - "packages/server/customer-os-webhooks/**"
       - "packages/server/customer-os-common-module/**"

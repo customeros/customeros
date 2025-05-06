@@ -2,8 +2,6 @@ name: Events Subscribers Build (PR)
 
 on:
   pull_request:
-    branches:
-      - otter
     paths:
       - "packages/server/events-subscribers/**"
       - "packages/server/customer-os-common-module/**"
