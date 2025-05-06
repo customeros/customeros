@@ -5,6 +5,7 @@ on:
     branches:
       - otter
     paths:
+      - ".github/workflows/customer-os-api-deploy.yml"
       - "packages/server/customer-os-api/**"
       - "packages/server/customer-os-common-module/**"
       - "packages/server/customer-os-neo4j-repository/**"
