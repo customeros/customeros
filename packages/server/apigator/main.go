@@ -175,6 +175,12 @@ func validate(
 			return
 		}
 
+		// ✅ Skip for bypass paths (set by NGINX, never by client)
+		if c.GetHeader("X-Internal-Bypass") == "true" {
+			c.Status(http.StatusOK)
+			return
+		}
+
 		if isIntrospectionQuery(c.Request) {
 			c.Next()
 			return
