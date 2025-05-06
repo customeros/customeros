@@ -178,7 +178,7 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 		targetPath := fmt.Sprintf("%s/%s", tenant, interfaces.WorkspacePath)
 
 		// Upload the logo using the media service
-		storageKey, err := h.services.CommonServices.MediaService.UploadImageDataToR2(ctx, data, targetPath, multipartFileHeader.Filename, false)
+		storageKey, err := h.services.CommonServices.MediaService.UploadImageDataToR2(ctx, data, targetPath, multipartFileHeader.Filename, true)
 		if err != nil {
 			message := fmt.Sprintf("Error uploading workspace logo: %v", err)
 			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
