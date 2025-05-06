@@ -21,7 +21,8 @@ func main() {
 	warehouseDB, err := database.InitDatabase(&database.DatabaseConfig{
 		DBName:          cfg.DataWarehouseConfig.DBName,
 		Host:            cfg.DataWarehouseConfig.Host,
-		Port:            cfg.DataWarehouseConfig.Port,
+		ReadPort:        cfg.DataWarehouseConfig.ReadPort,
+		WritePort:       cfg.DataWarehouseConfig.WritePort,
 		User:            cfg.DataWarehouseConfig.User,
 		Password:        cfg.DataWarehouseConfig.Password,
 		MaxConn:         cfg.DataWarehouseConfig.MaxConn,
