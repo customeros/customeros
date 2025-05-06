@@ -1,4 +1,4 @@
-name: CustomerOS API Release
+name: CustomerOS Monorepo Release
 
 on:
   push:
@@ -16,13 +16,14 @@ permissions:
   packages: write
 
 jobs:
-  deploy:
+  create-release:
     runs-on: ubicloud-standard-2
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.DEPLOY_TRIGGER_GITHUB_TOKEN }}
 
       - name: Check if release is required
         run: |
