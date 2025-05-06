@@ -36,7 +36,8 @@ type organizationService struct {
 	subscriptions   []*nats.Subscription
 }
 
-func NewOrganizationService(log logger.Logger,
+func NewOrganizationService(
+	log logger.Logger,
 	natsConn *nats_core.NATSConnections,
 	postgres *postgres_repository.Repositories,
 	neo4j *neo4j_repository.Repositories,
