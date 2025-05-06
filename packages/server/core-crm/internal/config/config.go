@@ -13,7 +13,8 @@ type NATSConfig struct {
 
 type DataWarehouseConfig struct {
 	Host            string `env:"WAREHOUSE_DB_HOST,required"`
-	Port            string `env:"WAREHOUSE_DB_PORT,required"`
+	ReadPort        string `env:"WAREHOUSE_DB_READ_PORT,required"`
+	WritePort       string `env:"WAREHOUSE_DB_WRITE_PORT,required"`
 	User            string `env:"WAREHOUSE_DB_USER,required"`
 	DBName          string `env:"WAREHOUSE_DB_NAME,required"`
 	Password        string `env:"WAREHOUSE_DB_PASSWORD,required"`

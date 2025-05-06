@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -14,7 +15,8 @@ import (
 
 type DatabaseConfig struct {
 	Host            string
-	Port            string
+	ReadPort        string
+	WritePort       string
 	User            string
 	DBName          string
 	Password        string
@@ -25,44 +27,84 @@ type DatabaseConfig struct {
 	SSLMode         string
 }
 
-func NewConnection(dbConfig *DatabaseConfig) (*gorm.DB, error) {
+type DatabaseConnection struct {
+	ReadDB  *gorm.DB
+	WriteDB *gorm.DB
+}
+
+func NewConnection(dbConfig *DatabaseConfig) (*DatabaseConnection, error) {
 	validateConfig(dbConfig)
 
-	connectString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.DBName)
+	// Create write connection
+	writeConnectString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		dbConfig.Host, dbConfig.WritePort, dbConfig.User, dbConfig.Password, dbConfig.DBName, dbConfig.SSLMode)
 
-	gormDb, err := gorm.Open(postgres.Open(connectString), &gorm.Config{
+	writeDB, err := gorm.Open(postgres.Open(writeConnectString), &gorm.Config{
 		AllowGlobalUpdate: true,
 		Logger:            initLog(dbConfig.LogLevel),
 	})
 	if err != nil {
-		log.Printf("Error opening DB: %v", err)
+		log.Printf("Error opening write DB: %v", err)
 		return nil, err
 	}
 
-	// Configure connection pool
-	sqlDB, err := gormDb.DB()
+	// Configure write connection pool
+	writeSqlDB, err := writeDB.DB()
 	if err != nil {
-		log.Printf("Error getting DB: %v", err)
+		log.Printf("Error getting write DB: %v", err)
 		return nil, err
 	}
 
-	// Test the connection
-	if err = sqlDB.Ping(); err != nil {
-		log.Printf("Error pinging DB: %v", err)
+	// Test the write connection
+	if err = writeSqlDB.Ping(); err != nil {
+		log.Printf("Error pinging write DB: %v", err)
 		return nil, err
 	}
 
+	// Create read connection
+	readConnectString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		dbConfig.Host, dbConfig.ReadPort, dbConfig.User, dbConfig.Password, dbConfig.DBName, dbConfig.SSLMode)
+
+	readDB, err := gorm.Open(postgres.Open(readConnectString), &gorm.Config{
+		Logger: initLog(dbConfig.LogLevel),
+	})
+	if err != nil {
+		log.Printf("Error opening read DB: %v", err)
+		return nil, err
+	}
+
+	// Configure read connection pool
+	readSqlDB, err := readDB.DB()
+	if err != nil {
+		log.Printf("Error getting read DB: %v", err)
+		return nil, err
+	}
+
+	// Test the read connection
+	if err = readSqlDB.Ping(); err != nil {
+		log.Printf("Error pinging read DB: %v", err)
+		return nil, err
+	}
+
+	// Configure both connection pools
+	configureConnectionPool(writeSqlDB, dbConfig)
+	configureConnectionPool(readSqlDB, dbConfig)
+
+	return &DatabaseConnection{
+		ReadDB:  readDB,
+		WriteDB: writeDB,
+	}, nil
+}
+
+func configureConnectionPool(db *sql.DB, config *DatabaseConfig) {
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool
-	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConn)
+	db.SetMaxIdleConns(config.MaxIdleConn)
 
 	// SetMaxOpenConns sets the maximum number of open connections to the database
-	sqlDB.SetMaxOpenConns(dbConfig.MaxConn)
+	db.SetMaxOpenConns(config.MaxConn)
 
 	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused
-	sqlDB.SetConnMaxLifetime(time.Duration(dbConfig.ConnMaxLifetime) * time.Hour)
-
-	return gormDb, nil
+	db.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Hour)
 }
 
 func validateConfig(config *DatabaseConfig) {
@@ -71,8 +113,10 @@ func validateConfig(config *DatabaseConfig) {
 		log.Fatalf("Database config is nil")
 	case config.Host == "":
 		log.Fatalf("Database host config is empty")
-	case config.Port == "":
-		log.Fatalf("Database port config is empty")
+	case config.ReadPort == "":
+		log.Fatalf("Database read port config is empty")
+	case config.WritePort == "":
+		log.Fatalf("Database write port config is empty")
 	case config.User == "":
 		log.Fatalf("Database user config is empty")
 	case config.Password == "":

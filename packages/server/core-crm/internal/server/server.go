@@ -19,13 +19,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/customeros/customeros/packages/server/core-crm/api"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
+	"github.com/customeros/customeros/packages/server/core-crm/internal/database"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/repository"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
 	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
@@ -44,7 +44,7 @@ type Server struct {
 	warehouseRepositories *repository.Repositories
 }
 
-func NewServer(cfg *config.Config, warehouseDB *gorm.DB) (*Server, error) {
+func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*Server, error) {
 	// Initialize logger
 	appLogger := logger.NewAppLogger(&cfg.CommonConfig.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
