@@ -10,10 +10,9 @@ type Config struct {
 	ApiPort string `env:"PORT"`
 	AppKey  string `env:"APP_KEY"`
 
-	PostgresConfig      config.PostgresConfig
-	PostgresAsyncConfig config.PostgresAsyncConfig
-	Neo4jConfig         config.Neo4jConfig
-	Jaeger              telemetry.JaegerConfig
-	OpenTelemetry       telemetry.OpenTelemetryConfig
-	Logger              logger.Config
+	PostgresConfig config.PostgresConfig
+	Neo4jConfig    config.Neo4jConfig
+	Jaeger         telemetry.JaegerConfig
+	OpenTelemetry  telemetry.OpenTelemetryConfig
+	Logger         logger.Config
 }

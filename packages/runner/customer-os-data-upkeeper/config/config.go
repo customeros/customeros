@@ -25,7 +25,6 @@ type CommonConfig struct {
 	CustomerOsApi     commonconf.CustomerOsApiConfig
 	BetterContact     commonconf.BetterContactConfig
 	Postgres          commonconf.PostgresConfig
-	PostgresAsync     commonconf.PostgresAsyncConfig
 	Neo4j             commonconf.Neo4jConfig
 	Mailsherpa        commonconf.MailSherpaApiConfig
 	MailstackApi      commonconf.MailstackApiConfig
@@ -98,7 +97,6 @@ func Load() *Config {
 			OpenTelemetryConfig: cmnCfg.OpenTelemetry,
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 			PostgresConfig:      cmnCfg.Postgres,
-			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
 			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
 			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,

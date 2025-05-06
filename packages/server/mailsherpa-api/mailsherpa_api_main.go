@@ -47,8 +47,7 @@ func main() {
 	// Initialize postgres db
 	postgresDb, err := commonconf.InitPostgres(&commonconf.CommonConfig{
 		Infrastructure: commonconf.InfrastructureConfig{
-			PostgresConfig:      cfg.PostgresConfig,
-			PostgresAsyncConfig: cfg.PostgresAsyncConfig,
+			PostgresConfig: cfg.PostgresConfig,
 		},
 	})
 	if err != nil {
