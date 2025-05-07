@@ -43,7 +43,12 @@ func (r *apiCallLogRepository) Create(ctx context.Context, log *postgres_entity.
 		log.ID = utils.GenerateNanoIdWithPrefix("api", 21)
 	}
 
-	return r.write.WithContext(ctx).Create(log).Error
+	err := r.write.WithContext(ctx).Create(log).Error
+	if err != nil {
+		span.TraceError(err)
+		return err
+	}
+	return nil
 }
 
 func (r *apiCallLogRepository) GetByID(ctx context.Context, id string) (*postgres_entity.APICallLog, error) {
