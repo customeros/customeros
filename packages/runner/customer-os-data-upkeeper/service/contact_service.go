@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -910,10 +913,6 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 	}
 
 	for _, record := range betterContactRequestsWithoutResponse {
-
-		// Create HTTP client
-		client := &http.Client{}
-
 		// Create POST request
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s?api_key=%s", s.cfg.Common.External.BetterContactConfig.Url+"/"+record.RequestID, s.cfg.Common.External.BetterContactConfig.ApiKey), nil)
 		if err != nil {
@@ -924,8 +923,12 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		// Set headers
 		req.Header.Set("Content-Type", "application/json")
 
+		// Create HTTP client
+		clientTimeout := 30 * time.Second
+		httpClient := clients.NewLoggingClient(s.commonServices.WarehouseRepositories.APICallLogRepository, enum.VendorBetterContact, &clientTimeout)
+
 		// Perform the request
-		resp, err := client.Do(req)
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			spans.TraceError(err)
 			return

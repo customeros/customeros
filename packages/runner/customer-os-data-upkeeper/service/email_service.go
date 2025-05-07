@@ -6,6 +6,8 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"io"
 	"net/http"
@@ -74,9 +76,6 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 	}
 
 	for _, record := range enrowRequestsWithoutResponse {
-		// Create HTTP client
-		client := &http.Client{}
-
 		// Create POST request
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/email/verify/single?id=%s", s.cfg.Common.External.EnrowConfig.ApiUrl, url.QueryEscape(record.RequestID)), nil)
 		if err != nil {
@@ -89,8 +88,12 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
 
+		// Create HTTP client
+		clientTimeout := 30 * time.Second
+		httpClient := clients.NewLoggingClient(s.commonServices.WarehouseRepositories.APICallLogRepository, enum.VendorEnrow, &clientTimeout)
+
 		// Perform the request
-		resp, err := client.Do(req)
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			spans.TraceError(err)
 			return
@@ -454,8 +457,10 @@ func (s *emailService) callScrubbyIo(ctx context.Context, email string) (Scrubby
 	req.Header.Set("Content-Type", "application/json")
 
 	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.commonServices.WarehouseRepositories.APICallLogRepository, enum.VendorScrubbyIo, &clientTimeout)
+
+	response, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "failed to perform request"))
 		return ScrubbyIoResponse{}, err

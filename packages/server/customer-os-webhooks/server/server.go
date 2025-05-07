@@ -3,6 +3,9 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"os"
 	"os/signal"
 	"syscall"
@@ -72,14 +75,22 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	defer neo4jDriver.Close(ctx)
 
+	// Initialize warehouse DB
+	warehouseDB, err := database.InitDatabase(database.DatabaseConfigFromWarehouseDbConfig(server.cfg.Common.Infrastructure.DataWarehouseConfig))
+	if err != nil {
+		return fmt.Errorf("failed opening connection to warehouse db: %w", err)
+	}
+
 	// Setting up CommonServices & repositories
 	repos := repository.InitRepos(&neo4jDriver, postgresDb, server.cfg.Common.Infrastructure.Neo4jConfig.Database)
+
+	warehouseRepositories := postgres_repository.InitWarehouseRepositories(warehouseDB)
 
 	commonServices := commonservice.InitCommonServices(
 		server.log,
 		repos.Neo4jRepositories,
 		repos.PostgresRepositories,
-		nil,
+		warehouseRepositories,
 		&server.cfg.Common,
 		nil,
 		&commonservice.InitOptions{
