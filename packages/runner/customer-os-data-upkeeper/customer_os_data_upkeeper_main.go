@@ -68,14 +68,19 @@ func main() {
 		if err := repositories.PostgresRepositories.MigrateOpenlineDB(); err != nil {
 			appLogger.Fatalf("Database migration failed: %v", err)
 		}
-		appLogger.Info("Database migration completed successfully")
+		appLogger.Info("Openline database migration completed successfully")
+
+		if err = repositories.WarehouseRepositories.MigrateDataWarehouse(); err != nil {
+			appLogger.Fatalf("Data warehouse migration failed: %v", err)
+		}
+		appLogger.Info("Data warehouse migration completed successfully")
 	}
 
 	cntnr := &container.Container{
 		Cfg:            cfg,
 		Log:            appLogger,
 		Repositories:   repositories,
-		CommonServices: commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, nil, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
+		CommonServices: commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, repositories.WarehouseRepositories, cfg.Common, nil, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
 	}
 	cntnr.AgentProducers = agent_producers.InitAgentProducers(cntnr.CommonServices)
 

@@ -5,6 +5,8 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
@@ -77,13 +79,19 @@ type Services struct {
 	UserService                 cosapi_interfaces.UserService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, warehouseDb *database.DbConnections, cfg *config.Config) *Services {
 	repositories := repository.InitRepos(driver, cfg.Common.Infrastructure.Neo4jConfig.Database, postgresDB)
+
+	var warehouseRepositories *postgres_repository.WarehouseRepositories
+	if warehouseDb != nil {
+		warehouseRepositories = postgres_repository.InitWarehouseRepositories(warehouseDb)
+	}
 
 	commonServices := commonService.InitCommonServices(
 		log,
 		repositories.Neo4jRepositories,
 		repositories.PostgresRepositories,
+		warehouseRepositories,
 		cfg.Common,
 		nil,
 		&commonService.InitOptions{LoadPersonalEmailProviders: true},

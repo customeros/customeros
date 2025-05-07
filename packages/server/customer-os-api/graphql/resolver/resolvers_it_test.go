@@ -115,6 +115,7 @@ func prepareClient() {
 		appLogger,
 		driver,
 		postgresDB,
+		nil,
 		&config.Config{Common: &commonConfig.CommonConfig{
 			Infrastructure: commonConfig.InfrastructureConfig{
 				RabbitMQConfig: commonConfig.RabbitMQConfig{

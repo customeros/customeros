@@ -309,7 +309,7 @@ func (u *userReadRepository) GetCurrentTenantByUserEmail(ctx context.Context, em
 				WHERE toLower(e.email)=$email OR toLower(e.rawEmail)=$email
 				WITH COALESCE(au.currentTenant, au.defaultTenant) as tenant
 				WHERE tenant IS NOT NULL 
-				RETURN tenant`
+				RETURN tenant LIMIT 1`
 	params := map[string]interface{}{
 		"email": strings.ToLower(email),
 	}

@@ -83,12 +83,13 @@ import (
 
 type CommonServices struct {
 	// Core infrastructure
-	Logger               logger.Logger
-	Cache                *caches.Cache
-	Events               *events.EventsService
-	Opensearch           interfaces.OpensearchService
-	Neo4jRepositories    *neo4j_repository.Repositories
-	PostgresRepositories *postgres_repository.Repositories
+	Logger                logger.Logger
+	Cache                 *caches.Cache
+	Events                *events.EventsService
+	Opensearch            interfaces.OpensearchService
+	Neo4jRepositories     *neo4j_repository.Repositories
+	PostgresRepositories  *postgres_repository.Repositories
+	WarehouseRepositories *postgres_repository.WarehouseRepositories
 
 	// Services
 	AuthenticationService      interfaces.AuthenticationService
@@ -198,6 +199,7 @@ func InitCommonServices(
 	log logger.Logger,
 	neo4jRepositories *neo4j_repository.Repositories,
 	postgresRepositories *postgres_repository.Repositories,
+	warehouseRepositories *postgres_repository.WarehouseRepositories,
 	cfg *config.CommonConfig,
 	natsConn *nats_internal.NATSConnections,
 	options *InitOptions,
@@ -371,12 +373,13 @@ func InitCommonServices(
 	// Initialize CommonServices struct
 	common := CommonServices{
 		// Core components
-		Logger:               log,
-		Cache:                cacheImpl,
-		Events:               eventsImpl,
-		Opensearch:           opensearchImpl,
-		Neo4jRepositories:    neo4jRepositories,
-		PostgresRepositories: postgresRepositories,
+		Logger:                log,
+		Cache:                 cacheImpl,
+		Events:                eventsImpl,
+		Opensearch:            opensearchImpl,
+		Neo4jRepositories:     neo4jRepositories,
+		PostgresRepositories:  postgresRepositories,
+		WarehouseRepositories: warehouseRepositories,
 
 		// All other services (alphabetically)
 		AuthenticationService:      authenticationImpl,

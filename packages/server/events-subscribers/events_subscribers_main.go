@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	"io"
 	"os"
 	"os/signal"
@@ -35,6 +36,7 @@ type App struct {
 	events        *events.EventsService
 	postgresDB    *commonConfig.PostgresDB
 	neo4jDriver   *neo4j.DriverWithContext
+	warehouseDB   *database.DbConnections
 }
 
 func NewApp() *App {
@@ -110,6 +112,13 @@ func (a *App) initDatabases() error {
 	}
 	a.neo4jDriver = &driver
 
+	// Initialize warehouse DB
+	warehouseDB, err := database.InitDatabase(database.DatabaseConfigFromWarehouseDbConfig(a.config.Common.Infrastructure.DataWarehouseConfig))
+	if err != nil {
+		return fmt.Errorf("failed opening connection to warehouse db: %w", err)
+	}
+	a.warehouseDB = warehouseDB
+
 	return nil
 }
 
@@ -117,12 +126,14 @@ func (a *App) initServices() error {
 	// Initialize repositories
 	postgresRepositories := postgres_repository.InitRepositories(a.postgresDB)
 	neo4jRepositories := neo4j_repository.InitNeo4jRepositories(a.neo4jDriver, a.config.Common.Infrastructure.Neo4jConfig.Database)
+	warehouseRepositories := postgres_repository.InitWarehouseRepositories(a.warehouseDB)
 
 	// Initialize common services
 	commonServices := service.InitCommonServices(
 		a.logger,
 		neo4jRepositories,
 		postgresRepositories,
+		warehouseRepositories,
 		&a.config.Common,
 		nil,
 		&service.InitOptions{LoadPersonalEmailProviders: true},
