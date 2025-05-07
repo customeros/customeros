@@ -2,20 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	"io"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-
-	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/worker"
-	"github.com/opentracing/opentracing-go"
-	"github.com/robfig/cron"
-	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
@@ -23,6 +15,13 @@ import (
 	localcron "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	agent_producers "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/worker"
+	"github.com/opentracing/opentracing-go"
+	"github.com/robfig/cron"
 )
 
 func main() {
@@ -44,9 +43,15 @@ func main() {
 	// Initialize postgres db
 	postgresDb, err := commonConfig.InitPostgres(cfg.Common)
 	if err != nil {
-		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+		appLogger.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
 	defer postgresDb.Close()
+
+	// Init warehouse db
+	warehouseDbConns, err := database.InitDatabase(database.DatabaseConfigFromWarehouseDbConfig(cfg.Common.Infrastructure.DataWarehouseConfig))
+	if err != nil {
+		appLogger.Fatalf("failed opening connection to warehouse db: %v", err.Error())
+	}
 
 	// Neo4j DB
 	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Common.Infrastructure.Neo4jConfig)
@@ -55,7 +60,7 @@ func main() {
 	}
 	defer (neo4jDriver).Close(ctx)
 
-	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb)
+	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb, warehouseDbConns.WriteDB)
 
 	// Check if migration is requested
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {

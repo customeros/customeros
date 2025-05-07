@@ -7,8 +7,7 @@ import (
 )
 
 type Repositories struct {
-	Db          *gorm.DB
-	WarehouseDB *gorm.DB
+	Db *gorm.DB
 
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
@@ -251,14 +250,4 @@ func (r *Repositories) MigrateOpenlineDB() error {
 	}
 
 	return nil
-}
-
-func (r *Repositories) MigrateDataWarehouse() error {
-	if r.WarehouseDB == nil {
-		return nil
-	}
-	err := r.WarehouseDB.AutoMigrate(
-		&postgres_entity.APICallLog{},
-	)
-	return err
 }
