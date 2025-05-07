@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go/log"
 	"io"
@@ -25,14 +27,16 @@ import (
 )
 
 type slackService struct {
-	log                  logger.Logger
-	postgresRepositories *postgres_repository.Repositories
+	log                   logger.Logger
+	postgresRepositories  *postgres_repository.Repositories
+	warehouseRepositories *postgres_repository.WarehouseRepositories
 }
 
-func NewSlackService(log logger.Logger, postgres *postgres_repository.Repositories) interfaces.SlackService {
+func NewSlackService(log logger.Logger, postgres *postgres_repository.Repositories, warehouse *postgres_repository.WarehouseRepositories) interfaces.SlackService {
 	return &slackService{
-		log:                  log,
-		postgresRepositories: postgres,
+		log:                   log,
+		postgresRepositories:  postgres,
+		warehouseRepositories: warehouse,
 	}
 }
 
@@ -123,9 +127,6 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 		return err
 	}
 
-	// Create HTTP client
-	client := &http.Client{}
-
 	requestBody := map[string]interface{}{
 		"channel":      channel,
 		"unfurl_links": false,
@@ -174,8 +175,12 @@ func (s *slackService) SendMessageFromBot(ctx context.Context, channel, blocks s
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+botApiKey)
 
+	// Create HTTP client
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorSlack, &clientTimeout)
+
 	// Perform the request
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "failed to perform POST request"))
 		return fmt.Errorf("failed to perform POST request: %v", err)
@@ -284,9 +289,12 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfac
 	req.Header.Add("Authorization", "Bearer "+token)
 	req.Header.Add("Content-Type", "application/json")
 
+	// Create HTTP client
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorSlack, &clientTimeout)
+
 	// Execute the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, err
@@ -354,9 +362,12 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId s
 	req.Header.Add("Authorization", "Bearer "+token)
 	req.Header.Add("Content-Type", "application/json")
 
+	// Create HTTP client
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorSlack, &clientTimeout)
+
 	// Execute the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return err
@@ -420,9 +431,12 @@ func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, channelId 
 	req.Header.Add("Authorization", "Bearer "+token)
 	req.Header.Add("Content-Type", "application/json")
 
+	// Create HTTP client
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorSlack, &clientTimeout)
+
 	// Execute the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}

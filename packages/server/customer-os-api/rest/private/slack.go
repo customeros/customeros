@@ -3,11 +3,14 @@ package private
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
@@ -128,8 +131,9 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		request.Header.Set("Content-Length", fmt.Sprint(len(requestBody)))
 
 		// Perform the HTTP request
-		client := &http.Client{}
-		resp, err := client.Do(request)
+		clientTimeout := 30 * time.Second
+		httpClient := clients.NewLoggingClient(s.CommonServices.WarehouseRepositories.APICallLogRepository, enum.VendorSlack, &clientTimeout)
+		resp, err := httpClient.Do(request)
 		if err != nil {
 			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -217,8 +221,9 @@ func RevokeSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		request.Header.Set("Authorization", "Bearer "+slackSettingsEntity.AccessToken)
 
-		client := &http.Client{}
-		resp, err := client.Do(request)
+		clientTimeout := 30 * time.Second
+		httpClient := clients.NewLoggingClient(s.CommonServices.WarehouseRepositories.APICallLogRepository, enum.VendorSlack, &clientTimeout)
+		resp, err := httpClient.Do(request)
 		if err != nil {
 			spans.TraceError(err)
 			responseHandler.HandleError(c, http.StatusInternalServerError, nil)

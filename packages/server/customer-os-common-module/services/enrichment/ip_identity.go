@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"io"
 	"net/http"
@@ -18,7 +20,6 @@ import (
 const (
 	CACHE_LOOKBACK_DAYS = 30
 	MAX_RESPONSE_SIZE   = 1 * 1024 * 1024 // 1MB
-	HTTP_TIMEOUT        = 30 * time.Second
 )
 
 func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfaces.SnitcherResponse, error) {
@@ -81,11 +82,6 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 		return nil, nil, err
 	}
 
-	// Create HTTP client with timeout
-	client := &http.Client{
-		Timeout: HTTP_TIMEOUT,
-	}
-
 	// Create POST request with context
 	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.SnitcherConfig.Url, ip), nil)
 	if err != nil {
@@ -97,8 +93,12 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+s.config.SnitcherConfig.ApiKey)
 
+	// Create HTTP client with timeout
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepository.APICallLogRepository, enum.VendorSnitcher, &clientTimeout)
+
 	// Perform the request
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, nil, fmt.Errorf("failed to perform POST request: %w", err)
