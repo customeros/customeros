@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	"io"
 	"net/http"
 	"os"
@@ -106,8 +107,14 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 
+	// Init warehouse db
+	warehouseDbConns, err := database.InitDatabase(database.DatabaseConfigFromWarehouseDbConfig(server.cfg.Common.Infrastructure.DataWarehouseConfig))
+	if err != nil {
+		server.log.Fatalf("failed opening connection to warehouse db: %v", err.Error())
+	}
+
 	// Set up services
-	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg)
+	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, warehouseDbConns, server.cfg)
 
 	// Set up handlers
 	restHandlers := rest_handlers.InitRestHandlers(serviceContainer)

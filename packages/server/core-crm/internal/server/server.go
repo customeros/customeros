@@ -15,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	services "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_db "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
@@ -26,7 +27,6 @@ import (
 	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/database"
-	"github.com/customeros/customeros/packages/server/core-crm/internal/repository"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
 	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
 )
@@ -41,7 +41,7 @@ type Server struct {
 	services              *services.CommonServices
 	postgresRepositories  *postgres_repository.Repositories
 	neo4jRepositories     *neo4j_repository.Repositories
-	warehouseRepositories *repository.Repositories
+	warehouseRepositories *postgres_repository.WarehouseRepositories
 }
 
 func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*Server, error) {
@@ -82,6 +82,11 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		return nil, err
 	}
 
+	warehouseRepos := postgres_repository.InitWarehouseRepositories(&postgres_db.DbConnections{
+		ReadDB:  warehouseDB.ReadDB,
+		WriteDB: warehouseDB.WriteDB,
+	})
+
 	// Initialize NATS Streams
 	natsConn, err := nats_internal.InitNats(cfg.NATSConfig, cfg.AppConfig.Environment)
 	if err != nil {
@@ -89,7 +94,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	}
 
 	// Initialize services
-	services := services.InitCommonServices(appLogger, neo4jRepos, postgresRepos, cfg.CommonConfig, natsConn, nil)
+	services := services.InitCommonServices(appLogger, neo4jRepos, postgresRepos, warehouseRepos, cfg.CommonConfig, natsConn, nil)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
@@ -149,11 +154,12 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 			Addr:    ":" + cfg.AppConfig.APIPort,
 			Handler: router,
 		},
-		cronMgr:              cronManager,
-		services:             services,
-		postgresRepositories: postgresRepos,
-		neo4jRepositories:    neo4jRepos,
-		logger:               appLogger,
+		cronMgr:               cronManager,
+		services:              services,
+		postgresRepositories:  postgresRepos,
+		neo4jRepositories:     neo4jRepos,
+		warehouseRepositories: warehouseRepos,
+		logger:                appLogger,
 	}, nil
 }
 

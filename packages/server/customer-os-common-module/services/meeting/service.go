@@ -624,35 +624,35 @@ func (s *meetingService) prepareAvailableParticipantTimeSlots(ctx context.Contex
 	// 2c. Apply booking option restrictions for minimum notice and maximum advance if enabled
 	bufferBefore := 0
 	bufferAfter := 0
+	minNoticeTime := utils.Now().Add(time.Duration(1) * time.Minute)
+	maxAdvanceTime := utils.Now().AddDate(0, 0, 365)
 	if meetingBookingEvent.BookOptionEnabled {
 		bufferBefore = int(meetingBookingEvent.BookOptionBufferBetweenMeetingsMins)
 		bufferAfter = int(meetingBookingEvent.BookOptionBufferBetweenMeetingsMins)
 
-		now := utils.Now()
 		minNotice := meetingBookingEvent.BookOptionMinNoticeMins
-		if minNotice < 0 {
-			minNotice = 0
+		if minNotice <= 0 {
+			minNotice = 1
 		}
 		maxAdvance := meetingBookingEvent.BookOptionDaysInAdvance
-		if maxAdvance < 0 {
-			maxAdvance = 0
+		if maxAdvance <= 0 {
+			maxAdvance = 365
 		}
-		minNoticeTime := now.Add(time.Duration(minNotice) * time.Minute)
-		maxAdvanceTime := now.AddDate(0, 0, int(maxAdvance))
+		minNoticeTime = utils.Now().Add(time.Duration(minNotice) * time.Minute)
+		maxAdvanceTime = utils.Now().AddDate(0, 0, int(maxAdvance))
+	}
+	// Apply restrictions to all participants' slots
+	for _, slots := range participantTimeSlots {
+		for _, slot := range slots {
+			// Mark slot as unavailable if it's before minimum notice time
+			if slot.StartTime.Before(minNoticeTime) {
+				slot.IsAvailable = false
+				continue
+			}
 
-		// Apply restrictions to all participants' slots
-		for _, slots := range participantTimeSlots {
-			for _, slot := range slots {
-				// Mark slot as unavailable if it's before minimum notice time
-				if slot.StartTime.Before(minNoticeTime) {
-					slot.IsAvailable = false
-					continue
-				}
-
-				// Mark slot as unavailable if it's after maximum advance time
-				if maxAdvance > 0 && slot.StartTime.After(maxAdvanceTime) {
-					slot.IsAvailable = false
-				}
+			// Mark slot as unavailable if it's after maximum advance time
+			if slot.StartTime.After(maxAdvanceTime) {
+				slot.IsAvailable = false
 			}
 		}
 	}

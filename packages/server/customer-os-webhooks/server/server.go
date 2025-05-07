@@ -79,6 +79,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log,
 		repos.Neo4jRepositories,
 		repos.PostgresRepositories,
+		nil,
 		&server.cfg.Common,
 		nil,
 		&commonservice.InitOptions{

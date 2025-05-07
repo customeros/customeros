@@ -48,6 +48,7 @@ type CommonConfig struct {
 	JinaConfig       commonconf.JinaConfig
 	GeminiConfig     commonconf.GeminiConfig
 	Groq             commonconf.GroqConfig
+	DataWarehouse    commonconf.DataWarehouseConfig
 }
 
 func Load() *Config {
@@ -73,6 +74,7 @@ func Load() *Config {
 			Neo4jConfig:         cmnCfg.Neo4j,
 			RabbitMQConfig:      cmnCfg.RabbitMQ,
 			OpensearchConfig:    cmnCfg.OpensearchConfig,
+			DataWarehouseConfig: cmnCfg.DataWarehouse,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,

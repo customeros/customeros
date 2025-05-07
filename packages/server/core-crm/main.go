@@ -19,16 +19,16 @@ func main() {
 
 	// Setup the data warehouse
 	warehouseDB, err := database.InitDatabase(&database.DatabaseConfig{
-		DBName:          cfg.DataWarehouseConfig.DBName,
-		Host:            cfg.DataWarehouseConfig.Host,
-		ReadPort:        cfg.DataWarehouseConfig.ReadPort,
-		WritePort:       cfg.DataWarehouseConfig.WritePort,
-		User:            cfg.DataWarehouseConfig.User,
-		Password:        cfg.DataWarehouseConfig.Password,
-		MaxConn:         cfg.DataWarehouseConfig.MaxConn,
-		MaxIdleConn:     cfg.DataWarehouseConfig.MaxIdleConn,
-		ConnMaxLifetime: cfg.DataWarehouseConfig.ConnMaxLifetime,
-		LogLevel:        cfg.DataWarehouseConfig.LogLevel,
+		DBName:          cfg.CommonConfig.Infrastructure.DataWarehouseConfig.DBName,
+		Host:            cfg.CommonConfig.Infrastructure.DataWarehouseConfig.Host,
+		ReadPort:        cfg.CommonConfig.Infrastructure.DataWarehouseConfig.ReadPort,
+		WritePort:       cfg.CommonConfig.Infrastructure.DataWarehouseConfig.WritePort,
+		User:            cfg.CommonConfig.Infrastructure.DataWarehouseConfig.User,
+		Password:        cfg.CommonConfig.Infrastructure.DataWarehouseConfig.Password,
+		MaxConn:         cfg.CommonConfig.Infrastructure.DataWarehouseConfig.MaxConn,
+		MaxIdleConn:     cfg.CommonConfig.Infrastructure.DataWarehouseConfig.MaxIdleConn,
+		ConnMaxLifetime: cfg.CommonConfig.Infrastructure.DataWarehouseConfig.ConnMaxLifetime,
+		LogLevel:        cfg.CommonConfig.Infrastructure.DataWarehouseConfig.LogLevel,
 	})
 	if err != nil {
 		log.Fatalf("Warehouse database initialization failed: %v", err)

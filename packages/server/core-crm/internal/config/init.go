@@ -12,32 +12,32 @@ import (
 )
 
 type Config struct {
-	AppConfig           *AppConfig
-	Telemetry           *telemetry.OpenTelemetryConfig
-	NATSConfig          *NATSConfig
-	DataWarehouseConfig *DataWarehouseConfig
-	CommonConfig        *commonconf.CommonConfig
+	AppConfig    *AppConfig
+	Telemetry    *telemetry.OpenTelemetryConfig
+	NATSConfig   *NATSConfig
+	CommonConfig *commonconf.CommonConfig
 }
 
 type CommonConfig struct {
-	Logger   logger.Config
-	Postgres commonconf.PostgresConfig
-	Neo4j    commonconf.Neo4jConfig
+	Logger              logger.Config
+	Postgres            commonconf.PostgresConfig
+	Neo4j               commonconf.Neo4jConfig
+	DataWarehouseConfig commonconf.DataWarehouseConfig
 }
 
 func InitConfig() (*Config, error) {
 	commonCfg := &CommonConfig{}
 
 	config := &Config{
-		AppConfig:           &AppConfig{},
-		Telemetry:           &telemetry.OpenTelemetryConfig{},
-		NATSConfig:          &NATSConfig{},
-		DataWarehouseConfig: &DataWarehouseConfig{},
+		AppConfig:  &AppConfig{},
+		Telemetry:  &telemetry.OpenTelemetryConfig{},
+		NATSConfig: &NATSConfig{},
 		CommonConfig: &commonconf.CommonConfig{
 			Infrastructure: commonconf.InfrastructureConfig{
-				LoggerConfig:   commonCfg.Logger,
-				PostgresConfig: commonCfg.Postgres,
-				Neo4jConfig:    commonCfg.Neo4j,
+				LoggerConfig:        commonCfg.Logger,
+				PostgresConfig:      commonCfg.Postgres,
+				Neo4jConfig:         commonCfg.Neo4j,
+				DataWarehouseConfig: commonCfg.DataWarehouseConfig,
 			},
 		},
 	}
