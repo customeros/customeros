@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -26,14 +28,16 @@ import (
 )
 
 type quickbooksService struct {
-	postgres *postgres_repository.Repositories
-	qbConfig *config.QuickbooksConfig
+	postgres              *postgres_repository.Repositories
+	warehouseRepositories *postgres_repository.WarehouseRepositories
+	qbConfig              *config.QuickbooksConfig
 }
 
-func NewQuickbooksService(qbConfig *config.QuickbooksConfig, postgres *postgres_repository.Repositories) interfaces.QuickbooksService {
+func NewQuickbooksService(qbConfig *config.QuickbooksConfig, postgres *postgres_repository.Repositories, warehouse *postgres_repository.WarehouseRepositories) interfaces.QuickbooksService {
 	return &quickbooksService{
-		qbConfig: qbConfig,
-		postgres: postgres,
+		qbConfig:              qbConfig,
+		postgres:              postgres,
+		warehouseRepositories: warehouse,
 	}
 }
 
@@ -57,9 +61,12 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 	request.Header.Set("Authorization", "Basic "+toString)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
+	// Create HTTP client
+	clientTimeout := 15 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorQuickbooks, &clientTimeout)
+
 	// Perform the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(request)
+	resp, err := httpClient.Do(request)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, err
@@ -165,9 +172,12 @@ func (s *quickbooksService) RevokeAccess(ctx context.Context) error {
 	req.Header.Set("Authorization", "Basic "+encodedCreds)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
+	// Create HTTP client
+	clientTimeout := 15 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorQuickbooks, &clientTimeout)
+
 	// Execute the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return fmt.Errorf("failed to send revoke request: %w", err)
@@ -630,9 +640,12 @@ func (s *quickbooksService) performRequest(ctx context.Context, qbSettings *post
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+qbSettings.AccessToken)
 
+	// Create HTTP client
+	clientTimeout := 15 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorQuickbooks, &clientTimeout)
+
 	// Perform the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return nil, err

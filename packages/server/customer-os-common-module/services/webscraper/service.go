@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
@@ -24,15 +26,21 @@ import (
 type webscraperService struct {
 	config               *config.JinaConfig
 	postgresRepositories *postgres_repository.Repositories
+	warehouse            *postgres_repository.WarehouseRepositories
 	aiService            interfaces.AIService
 	visitedURLs          sync.Map
 	limiter              chan struct{}
 }
 
-func NewWebscraperService(config *config.JinaConfig, postgres *postgres_repository.Repositories, aiService interfaces.AIService) interfaces.WebscraperService {
+func NewWebscraperService(
+	config *config.JinaConfig,
+	postgres *postgres_repository.Repositories,
+	warehouse *postgres_repository.WarehouseRepositories,
+	aiService interfaces.AIService) interfaces.WebscraperService {
 	return &webscraperService{
 		config:               config,
 		postgresRepositories: postgres,
+		warehouse:            warehouse,
 		aiService:            aiService,
 		limiter:              make(chan struct{}, 5),
 	}
@@ -188,12 +196,10 @@ func (s *webscraperService) fetchPage(ctx context.Context, url string) (string, 
 	req.Header.Set("X-Retain-Images", "none")      // Don't retain images
 	req.Header.Set("X-With-Links-Summary", "true") // Include links summary
 
-	// Add a timeout
-	client := &http.Client{
-		Timeout: 60 * time.Second,
-	}
+	clientTimeout := 60 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouse.APICallLogRepository, enum.VendorJina, &clientTimeout)
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return "", err

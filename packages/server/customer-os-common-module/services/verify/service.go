@@ -20,6 +20,7 @@ import (
 type verifyService struct {
 	log        logger.Logger
 	postgres   *postgres_repository.Repositories
+	warehouse  *postgres_repository.WarehouseRepositories
 	cfg        *config.CommonConfig
 	enrichment interfaces.EnrichmentService
 	USClient   *extract.Client
@@ -29,12 +30,14 @@ type verifyService struct {
 func NewVerifyService(
 	log logger.Logger,
 	postgres *postgres_repository.Repositories,
+	warehouse *postgres_repository.WarehouseRepositories,
 	config *config.CommonConfig,
 	enrichment interfaces.EnrichmentService,
 ) interfaces.VerifyService {
 	return &verifyService{
 		log:        log,
 		postgres:   postgres,
+		warehouse:  warehouse,
 		cfg:        config,
 		enrichment: enrichment,
 		USClient: wireup.BuildUSExtractAPIClient(

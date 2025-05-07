@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go/log"
 	"io"
@@ -133,9 +135,6 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 		return "", "", nil, err
 	}
 
-	// Create HTTP client
-	client := &http.Client{}
-
 	// Create POST request
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s?api_key=%s", s.config.BetterContactConfig.Url, s.config.BetterContactConfig.ApiKey), bytes.NewBuffer(requestBody))
 	if err != nil {
@@ -146,8 +145,11 @@ func (s *enrichmentService) FindWorkEmailWithBetterContact(ctx context.Context, 
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
 
+	clientTimeout := 15 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouse.APICallLogRepository, enum.VendorBetterContact, &clientTimeout)
+
 	// Perform the request
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "failed to perform bettercontact POST request"))
 		return "", "", nil, err
