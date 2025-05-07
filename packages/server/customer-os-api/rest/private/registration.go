@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
 	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"io"
 	"log"
@@ -15,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	common_enum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
@@ -188,7 +189,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 				return
 			}
 
-			signInRequest.Provider = common_enum.WorkspaceProviderMagicLink.String()
+			signInRequest.Provider = commonenum.WorkspaceProviderMagicLink.String()
 			signInRequest.LoggedInEmail = magicLink.Email
 		} else {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -246,7 +247,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 
 	spans.LogObjectAsJson("request", signInRequest)
 
-	firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
+	firstName, lastName, err := validateRequestAtProvider(ctx, services, config, signInRequest)
 	if err != nil {
 		spans.TraceError(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -667,9 +668,9 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 
 		workspaceProvider := ""
 		if revokeRequest.MailboxProvider == model.MailboxProviderGoogleWorkspace.String() {
-			workspaceProvider = common_enum.WorkspaceProviderGoogle.String()
+			workspaceProvider = commonenum.WorkspaceProviderGoogle.String()
 		} else if revokeRequest.MailboxProvider == model.MailboxProviderOutlook.String() {
-			workspaceProvider = common_enum.WorkspaceProviderAzure.String()
+			workspaceProvider = commonenum.WorkspaceProviderAzure.String()
 		}
 		spans.LogKV("workspaceProvider", workspaceProvider)
 
@@ -688,8 +689,9 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 			// Handle revocation based on provider
 			var revocationURL string
 			var headers map[string]string
+			vendor := commonenum.VendorNotSet
 			switch workspaceProvider {
-			case common_enum.WorkspaceProviderGoogle.String():
+			case commonenum.WorkspaceProviderGoogle.String():
 				// Decrypt the access token before revoking
 				decryptedAccessToken, err := postgres_entity.DecryptToken(s.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, oauthToken.AccessToken)
 				if err != nil {
@@ -701,11 +703,13 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				headers = map[string]string{
 					"Content-Type": "application/x-www-form-urlencoded",
 				}
-			case common_enum.WorkspaceProviderAzure.String():
+				vendor = commonenum.VendorGoogle
+			case commonenum.WorkspaceProviderAzure.String():
 				revocationURL = "https://graph.microsoft.com/v1.0/me/revokeSignInSessions"
 				headers = map[string]string{
 					"Authorization": fmt.Sprintf("Bearer %s", oauthToken.AccessToken),
 				}
+				vendor = commonenum.VendorMicrosoft
 			}
 			spans.LogKV("revocationURL", revocationURL)
 
@@ -721,8 +725,9 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 					req.Header.Add(key, value)
 				}
 
-				client := &http.Client{}
-				resp, err := client.Do(req)
+				clientTimeout := 30 * time.Second
+				httpClient := clients.NewLoggingClient(s.CommonServices.WarehouseRepositories.APICallLogRepository, vendor, &clientTimeout)
+				resp, err := httpClient.Do(req)
 				if err != nil {
 					spans.TraceError(err)
 					c.JSON(http.StatusInternalServerError, gin.H{})
@@ -734,7 +739,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				spans.LogKV("response.body", string(body))
 
 				// For Google, if token is already revoked (invalid_token error), we can proceed
-				if workspaceProvider == common_enum.WorkspaceProviderGoogle.String() {
+				if workspaceProvider == commonenum.WorkspaceProviderGoogle.String() {
 					var errorResponse struct {
 						Error            string `json:"error"`
 						ErrorDescription string `json:"error_description"`
@@ -753,7 +758,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 				}
 
 				// For Google, also revoke the refresh token
-				if workspaceProvider == common_enum.WorkspaceProviderGoogle.String() {
+				if workspaceProvider == commonenum.WorkspaceProviderGoogle.String() {
 					// Decrypt the refresh token before revoking
 					decryptedRefreshToken, err := postgres_entity.DecryptToken(s.Cfg.Common.Infrastructure.GoogleOAuthConfig.EncryptionKey, oauthToken.RefreshToken)
 					if err != nil {
@@ -773,7 +778,8 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 						req.Header.Add(key, value)
 					}
 
-					resp, err = client.Do(req)
+					httpClient = clients.NewLoggingClient(s.CommonServices.WarehouseRepositories.APICallLogRepository, commonenum.VendorGoogle, &clientTimeout)
+					resp, err = httpClient.Do(req)
 					if err != nil {
 						spans.TraceError(err)
 						c.JSON(http.StatusInternalServerError, gin.H{})
@@ -815,13 +821,13 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
-func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest SignInRequest) (string, string, error) {
-	spans, ctx := telemetry.StartRestSpan(c, "Registration.validateRequestAtProvider")
+func validateRequestAtProvider(ctx context.Context, services *cosapi_services.Services, config *config.Config, signInRequest SignInRequest) (string, string, error) {
+	spans, ctx := telemetry.StartRestSpan(ctx, "Registration.validateRequestAtProvider")
 	defer spans.Finish()
 
-	if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
+	if signInRequest.Provider == commonenum.WorkspaceProviderMagicLink.String() {
 		return "", "", nil
-	} else if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderGoogle.String() {
 		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
 			spans.TraceError(err)
@@ -829,8 +835,7 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 		}
 
 		return userInfo.GivenName, userInfo.FamilyName, nil
-	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
-		client := &http.Client{}
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderAzure.String() {
 		// Create a GET request with the Authorization header.
 		req, err := http.NewRequest("GET", "https://graph.microsoft.com/oidc/userinfo", nil)
 		if err != nil {
@@ -840,7 +845,9 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 
 		req.Header.Set("Authorization", "Bearer "+signInRequest.OAuthToken.AccessToken)
 
-		resp, err := client.Do(req)
+		clientTimeout := 30 * time.Second
+		httpClient := clients.NewLoggingClient(services.CommonServices.WarehouseRepositories.APICallLogRepository, commonenum.VendorMicrosoft, &clientTimeout)
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			spans.TraceError(err)
 			return "", "", err
@@ -922,13 +929,13 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 
 	if len(existingUser.Roles) > 0 {
 		for _, role := range existingUser.Roles {
-			if role == common_enum.UserRoleUser.String() {
+			if role == commonenum.UserRoleUser.String() {
 				userRoleFound = true
 			}
-			if role == common_enum.UserRoleOwner.String() {
+			if role == commonenum.UserRoleOwner.String() {
 				ownerRoleFound = true
 			}
-			if role == common_enum.UserRoleImpersonated.String() {
+			if role == commonenum.UserRoleImpersonated.String() {
 				impersonatedRoleFound = true
 			}
 		}
@@ -936,14 +943,14 @@ func addDefaultMissingRoles(c context.Context, services *cosapi_services.Service
 
 	if !impersonatedRoleFound {
 		if !userRoleFound {
-			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, common_enum.UserRoleUser.String())
+			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, commonenum.UserRoleUser.String())
 			if err != nil {
 				spans.TraceError(err)
 				return err
 			}
 		}
 		if !ownerRoleFound {
-			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, common_enum.UserRoleOwner.String())
+			err := services.Repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, commonenum.UserRoleOwner.String())
 			if err != nil {
 				spans.TraceError(err)
 				return err
@@ -1276,13 +1283,13 @@ func handleGoogleOAuthToken(ctx context.Context, services *cosapi_services.Servi
 
 	var err error
 
-	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, common_enum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
+	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, commonenum.SourceGmail.String(), signInRequest.OAuthTokenForEmail)
 	newOAuthToken := false
 	if oauthToken == nil {
 		oauthToken = &postgres_entity.OAuthTokenEntity{}
 		newOAuthToken = true
 	}
-	oauthToken.Provider = common_enum.SourceGmail.String()
+	oauthToken.Provider = commonenum.SourceGmail.String()
 	oauthToken.TenantName = defaultTenant
 	oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 	oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
@@ -1322,11 +1329,11 @@ func handleAzureOAuthToken(ctx context.Context, services *cosapi_services.Servic
 	spans, ctx := telemetry.StartRestSpan(ctx, "handleAzureOAuthToken")
 	defer spans.Finish()
 
-	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, common_enum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
+	oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmailAndProvider(ctx, defaultTenant, commonenum.SourceOutlook.String(), signInRequest.OAuthTokenForEmail)
 	if oauthToken == nil {
 		oauthToken = &postgres_entity.OAuthTokenEntity{}
 	}
-	oauthToken.Provider = common_enum.SourceOutlook.String()
+	oauthToken.Provider = commonenum.SourceOutlook.String()
 	oauthToken.TenantName = defaultTenant
 	oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 	oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
@@ -1352,11 +1359,11 @@ func handleOAuthTokenSync(ctx context.Context, services *cosapi_services.Service
 	var err error
 
 	switch signInRequest.Provider {
-	case common_enum.WorkspaceProviderGoogle.String():
+	case commonenum.WorkspaceProviderGoogle.String():
 		err = handleGoogleOAuthToken(ctx, services, signInRequest, defaultTenant, userId)
-	case common_enum.WorkspaceProviderAzure.String():
+	case commonenum.WorkspaceProviderAzure.String():
 		err = handleAzureOAuthToken(ctx, services, signInRequest, defaultTenant, userId)
-	case common_enum.WorkspaceProviderMagicLink.String():
+	case commonenum.WorkspaceProviderMagicLink.String():
 		// No action needed for magic link
 	default:
 		spans.TraceError(fmt.Errorf("unsupported provider: %s", signInRequest.Provider))

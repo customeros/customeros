@@ -29,6 +29,7 @@ type enrichmentService struct {
 	events               *events.EventsService
 	postgres             *postgres_repository.Repositories
 	neo4jRepository      *neo4j_repository.Repositories
+	warehouseRepository  *postgres_repository.WarehouseRepositories
 	contactService       interfaces.ContactService
 	domainService        interfaces.DomainService
 	locationService      interfaces.LocationService
@@ -43,6 +44,7 @@ func NewEnrichmentService(
 	cache *caches.Cache,
 	events *events.EventsService,
 	postgres *postgres_repository.Repositories,
+	warehouse *postgres_repository.WarehouseRepositories,
 	neo4j *neo4j_repository.Repositories,
 	contactService interfaces.ContactService,
 	domainService interfaces.DomainService,
@@ -57,6 +59,7 @@ func NewEnrichmentService(
 		cache:                cache,
 		events:               events,
 		postgres:             postgres,
+		warehouseRepository:  warehouse,
 		neo4jRepository:      neo4j,
 		contactService:       contactService,
 		domainService:        domainService,
