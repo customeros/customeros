@@ -1,24 +1,27 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 // deprecated
 type Repositories struct {
-	PostgresRepositories *postgresRepository.Repositories
-	Neo4jRepositories    *neo4jRepository.Repositories
+	PostgresRepositories  *postgresRepository.Repositories
+	Neo4jRepositories     *neo4jRepository.Repositories
+	WarehouseRepositories *postgresRepository.WarehouseRepositories
 }
 
 // deprecated
-func InitRepositories(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB) *Repositories {
+func InitRepositories(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, warehouseDB *database.DbConnections) *Repositories {
 	repositories := Repositories{
-		PostgresRepositories: postgresRepository.InitRepositories(postgresDB),
-		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, cfg.Common.Infrastructure.Neo4jConfig.Database),
+		PostgresRepositories:  postgresRepository.InitRepositories(postgresDB),
+		Neo4jRepositories:     neo4jRepository.InitNeo4jRepositories(driver, cfg.Common.Infrastructure.Neo4jConfig.Database),
+		WarehouseRepositories: postgresRepository.InitWarehouseRepositories(warehouseDB),
 	}
 	return &repositories
 }

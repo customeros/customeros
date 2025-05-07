@@ -2,9 +2,8 @@ package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"gorm.io/gorm"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"gorm.io/gorm"
 )
 
 type Repositories struct {
@@ -169,8 +168,8 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	return repositories
 }
 
-func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
-	err := postgresDB.GormDB.AutoMigrate(
+func (r *Repositories) MigrateOpenlineDB() error {
+	err := r.Db.AutoMigrate(
 		&postgres_entity.Agent{},
 		&postgres_entity.AgentExecution{},
 		&postgres_entity.AgentPlay{},

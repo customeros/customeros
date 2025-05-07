@@ -25,6 +25,7 @@ type CommonConfig struct {
 	CustomerOsApi     commonconf.CustomerOsApiConfig
 	BetterContact     commonconf.BetterContactConfig
 	Postgres          commonconf.PostgresConfig
+	DataWarehouse     commonconf.DataWarehouseConfig
 	Neo4j             commonconf.Neo4jConfig
 	Mailsherpa        commonconf.MailSherpaApiConfig
 	MailstackApi      commonconf.MailstackApiConfig
@@ -101,6 +102,7 @@ func Load() *Config {
 			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
 			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
 			OpensearchConfig:    cmnCfg.OpensearchConfig,
+			DataWarehouseConfig: cmnCfg.DataWarehouse,
 		},
 		External: commonconf.ExternalServicesConfig{
 			EnrowConfig:         cmnCfg.Enrow,
