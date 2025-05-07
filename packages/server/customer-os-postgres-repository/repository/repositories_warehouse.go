@@ -9,6 +9,8 @@ import (
 type WarehouseRepositories struct {
 	ReadDb  *gorm.DB
 	WriteDb *gorm.DB
+
+	APICallLogRepository APICallLogRepository
 }
 
 func InitWarehouseRepositories(dbConns *database.DbConnections) *WarehouseRepositories {
@@ -16,6 +18,8 @@ func InitWarehouseRepositories(dbConns *database.DbConnections) *WarehouseReposi
 		ReadDb:  dbConns.ReadDB,
 		WriteDb: dbConns.WriteDB,
 	}
+
+	repositories.APICallLogRepository = NewAPICallLogRepository(dbConns)
 
 	return repositories
 }

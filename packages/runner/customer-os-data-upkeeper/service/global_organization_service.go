@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+
 	"github.com/biter777/countries"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
@@ -547,10 +549,13 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 
 	// Make the HTTP request, retry once if response status is 502
 	var response *http.Response
-	client := &http.Client{}
+
+	// Create HTTP client
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.commonServices.WarehouseRepositories.APICallLogRepository, enum.VendorScrapin, &clientTimeout)
 
 	// Make the HTTP request
-	response, err = client.Do(req)
+	response, err = httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(errors.Wrap(err, "failed to perform request"))
 		return err
