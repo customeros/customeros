@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -11,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var knowIpDataBadResponseMessages = []string{"is a reserved IP address"}
@@ -70,9 +73,6 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 		return nil, err
 	}
 
-	// Create HTTP client
-	client := &http.Client{}
-
 	// Create IPData request
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.External.IpDataConfig.ApiUrl, ip, s.cfg.External.IpDataConfig.ApiKey), nil)
 	if err != nil {
@@ -83,8 +83,12 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
 
+	// Create HTTP client
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouse.APICallLogRepository, enum.VendorIPData, &clientTimeout)
+
 	// Perform the request
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "failed to perform GET request for IPData")
 		spans.TraceError(wrappedErr)

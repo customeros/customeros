@@ -95,7 +95,7 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 
 	// Create HTTP client with timeout
 	clientTimeout := 30 * time.Second
-	httpClient := clients.NewLoggingClient(s.warehouseRepository.APICallLogRepository, enum.VendorSnitcher, &clientTimeout)
+	httpClient := clients.NewLoggingClient(s.warehouse.APICallLogRepository, enum.VendorSnitcher, &clientTimeout)
 
 	// Perform the request
 	resp, err := httpClient.Do(req)

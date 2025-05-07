@@ -13,4 +13,7 @@ const (
 	VendorGoogle        APIVendor = "Google"
 	VendorMicrosoft     APIVendor = "Microsoft"
 	VendorSlack         APIVendor = "Slack"
+	VendorJina          APIVendor = "Jina"
+	VendorQuickbooks    APIVendor = "Quickbooks"
+	VendorCrustData     APIVendor = "Crust Data"
 )

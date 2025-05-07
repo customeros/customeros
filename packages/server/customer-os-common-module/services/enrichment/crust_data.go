@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go/log"
 	"io"
@@ -42,18 +44,21 @@ type ErrorResponse struct {
 }
 
 type crustDataService struct {
-	log      logger.Logger
-	config   *config.CrustDataConfig
-	postgres *postgres_repository.Repositories
+	log       logger.Logger
+	config    *config.CrustDataConfig
+	postgres  *postgres_repository.Repositories
+	warehouse *postgres_repository.WarehouseRepositories
 }
 
 func NewCrustDataService(log logger.Logger,
 	config *config.CrustDataConfig,
-	postgres *postgres_repository.Repositories) *crustDataService {
+	postgres *postgres_repository.Repositories,
+	warehouse *postgres_repository.WarehouseRepositories) *crustDataService {
 	return &crustDataService{
-		log:      log,
-		config:   config,
-		postgres: postgres,
+		log:       log,
+		config:    config,
+		postgres:  postgres,
+		warehouse: warehouse,
 	}
 }
 
@@ -173,9 +178,11 @@ func (s *crustDataService) callCrustDataFilterByCompanyAndJobTitle(ctx context.C
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", s.config.ApiKey)
 
+	clientTimeout := 30 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouse.APICallLogRepository, enum.VendorCrustData, &clientTimeout)
+
 	// Make request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return "", fmt.Errorf("failed to make request: %w", err)

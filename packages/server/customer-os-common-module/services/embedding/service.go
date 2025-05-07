@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"io"
 	"net/http"
 	"time"
@@ -16,16 +19,18 @@ import (
 )
 
 type embeddingService struct {
-	config            *config.JinaConfig
-	aiService         interfaces.AIService
-	opensearchService interfaces.OpensearchService
+	config                *config.JinaConfig
+	aiService             interfaces.AIService
+	opensearchService     interfaces.OpensearchService
+	warehouseRepositories *postgres_repository.WarehouseRepositories
 }
 
-func NewEmbeddingService(config *config.JinaConfig, aiService interfaces.AIService, opensearch interfaces.OpensearchService) interfaces.EmbeddingService {
+func NewEmbeddingService(config *config.JinaConfig, aiService interfaces.AIService, opensearch interfaces.OpensearchService, warehouse *postgres_repository.WarehouseRepositories) interfaces.EmbeddingService {
 	return &embeddingService{
-		config:            config,
-		aiService:         aiService,
-		opensearchService: opensearch,
+		config:                config,
+		aiService:             aiService,
+		opensearchService:     opensearch,
+		warehouseRepositories: warehouse,
 	}
 }
 
@@ -52,8 +57,11 @@ func (s *embeddingService) postRequest(ctx context.Context, body any, url string
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", authorization)
 
-	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Do(req)
+	// Create HTTP client
+	clientTimeout := 15 * time.Second
+	httpClient := clients.NewLoggingClient(s.warehouseRepositories.APICallLogRepository, enum.VendorJina, &clientTimeout)
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		spans.TraceError(err)
 		return "", err
