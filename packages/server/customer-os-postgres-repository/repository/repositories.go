@@ -2,13 +2,13 @@ package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"gorm.io/gorm"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	Db *gorm.DB
+	Db          *gorm.DB
+	WarehouseDB *gorm.DB
 
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
@@ -169,8 +169,8 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 	return repositories
 }
 
-func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
-	err := postgresDB.GormDB.AutoMigrate(
+func (r *Repositories) MigrateOpenlineDB() error {
+	err := r.Db.AutoMigrate(
 		&postgres_entity.Agent{},
 		&postgres_entity.AgentExecution{},
 		&postgres_entity.AgentPlay{},
@@ -251,4 +251,14 @@ func (r *Repositories) AutoMigrate(postgresDB *config.PostgresDB) error {
 	}
 
 	return nil
+}
+
+func (r *Repositories) MigrateDataWarehouse() error {
+	if r.WarehouseDB == nil {
+		return nil
+	}
+	err := r.WarehouseDB.AutoMigrate(
+		&postgres_entity.APICallLog{},
+	)
+	return err
 }

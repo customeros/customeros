@@ -60,7 +60,7 @@ func main() {
 	// Check if migration is requested
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
 		appLogger.Info("Running database migration...")
-		if err := repositories.PostgresRepositories.AutoMigrate(postgresDb); err != nil {
+		if err := repositories.PostgresRepositories.MigrateOpenlineDB(); err != nil {
 			appLogger.Fatalf("Database migration failed: %v", err)
 		}
 		appLogger.Info("Database migration completed successfully")

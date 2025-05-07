@@ -13,6 +13,7 @@ type CommonConfig struct {
 
 type InfrastructureConfig struct {
 	PostgresConfig      PostgresConfig
+	DataWarehouseConfig DataWarehouseConfig
 	Neo4jConfig         Neo4jConfig
 	GoogleOAuthConfig   GoogleOAuthConfig
 	AzureOAuthConfig    AzureOAuthConfig

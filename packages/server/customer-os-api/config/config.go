@@ -24,6 +24,7 @@ type CommonConfig struct {
 	OpenTelemetry  telemetry.OpenTelemetryConfig
 	RabbitMQConfig commonconf.RabbitMQConfig
 	Postgres       commonconf.PostgresConfig
+	DataWarehouse  commonconf.DataWarehouseConfig
 	Neo4j          commonconf.Neo4jConfig
 	Opensearch     commonconf.OpensearchConfig
 	CosApi         commonconf.CustomerOsApiConfig
@@ -124,6 +125,7 @@ func InitConfig() (*Config, error) {
 			PostgresConfig:      cmnCfg.Postgres,
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 			R2StorageConfig:     cmnCfg.R2Config,
+			DataWarehouseConfig: cmnCfg.DataWarehouse,
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,
