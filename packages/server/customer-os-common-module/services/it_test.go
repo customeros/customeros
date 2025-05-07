@@ -86,7 +86,7 @@ func createPostgresTables(db *gorm.DB) {
 		GormDB: db,
 	}
 
-	err := postgresrepository.InitRepositories(&postgresDB).MigrateOpenlineDB(&postgresDB)
+	err := postgresrepository.InitRepositories(&postgresDB).MigrateOpenlineDB()
 	if err != nil {
 		panic(err)
 	}

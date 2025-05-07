@@ -24,7 +24,7 @@ func main() {
 	defer postgresDb.Close()
 
 	repo := postgres_repository.InitRepositories(postgresDb)
-	if err = repo.MigrateOpenlineDB(postgresDb); err != nil {
+	if err = repo.MigrateOpenlineDB(); err != nil {
 		log.Fatalf("failed to run auto-migration: %v", err)
 	}
 

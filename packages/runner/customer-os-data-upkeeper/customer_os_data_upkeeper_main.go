@@ -60,7 +60,7 @@ func main() {
 	}
 	defer (neo4jDriver).Close(ctx)
 
-	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb, warehouseDbConns.WriteDB)
+	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb, warehouseDbConns)
 
 	// Check if migration is requested
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
