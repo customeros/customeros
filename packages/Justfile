@@ -1,7 +1,7 @@
 # Common module paths
 server_modules := "server/customer-os-postgres-repository server/customer-os-common-module server/events-subscribers server/customer-os-api server/customer-os-neo4j-repository server/customer-os-webhooks server/mailsherpa-api server/core-crm"
 
-runner_modules := "runner/customer-os-data-upkeeper runner/sync-customer-os-data runner/sync-slack runner/integrity-checker"
+runner_modules := "runner/customer-os-data-upkeeper runner/integrity-checker"
 
 bin_dir := "bin"
 

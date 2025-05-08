@@ -1,7 +1,0 @@
-*.dump
-*.test
-*.out
-.envrc
-.idea/
-.vscode/
-inbox
