@@ -66,10 +66,10 @@ type MeetingBookingEvent struct {
 	BookOptionDaysInAdvance             int64 `gorm:"column:book_option_days_in_advance;not null;default:0" json:"bookOptionDaysInAdvance"`
 	BookOptionMinNoticeMins             int64 `gorm:"column:book_option_min_notice_mins;not null;default:0" json:"bookOptionMinNoticeMins"`
 
-	EmailNotificationEnabled        bool                                `gorm:"column:email_notification_enabled;not null;default:false" json:"emailNotificationEnabled"`
+	EmailNotificationEnabled        bool                                `gorm:"column:email_notification_enabled;not null;default:true" json:"emailNotificationEnabled"`
 	Location                        string                              `gorm:"column:location;size:255;not null;default:''" json:"location"`
 	AssignmentMethod                enum.MeetingBookingAssignmentMethod `gorm:"column:assignment_method;size:255;not null;default:''" json:"assignmentMethod"`
-	ShowLogo                        bool                                `gorm:"column:show_logo;not null;default:false" json:"showLogo"`
+	ShowLogo                        bool                                `gorm:"column:show_logo;not null;default:true" json:"showLogo"`
 	BookingConfirmationRedirectLink string                              `gorm:"column:booking_confirmation_redirect_link;size:255;not null;default:''" json:"bookingConfirmationRedirectLink"`
 }
 
