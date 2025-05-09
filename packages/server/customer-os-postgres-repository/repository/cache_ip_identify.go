@@ -2,9 +2,8 @@ package postgres_repository
 
 import (
 	"context"
-	"time"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
@@ -25,7 +24,7 @@ func NewCacheIPIdentifyRepository(gormDb *gorm.DB) CacheIPIdentifyRepository {
 }
 
 func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_entity.CacheIPIdentify) error {
-	spans, ctx := telemetry.StartPostgresSpan(ctx, "CacheSnitcherRepository.Create")
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "cacheIPIdentifyRepository.Create")
 	defer spans.Finish()
 	spans.LogObjectAsJson("ipData", ipData)
 
@@ -45,11 +44,11 @@ func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_
 }
 
 func (r *cacheIPIdentifyRepository) FindByIP(ctx context.Context, ip string, cacheLookBackInDays int) (*postgres_entity.CacheIPIdentify, error) {
-	spans, ctx := telemetry.StartPostgresSpan(ctx, "CacheSnitcherRepository.FindByIP")
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "cacheIPIdentifyRepository.FindByIP")
 	defer spans.Finish()
 	spans.LogKV("ip", ip, "cacheLookBackInDays", cacheLookBackInDays)
 
-	lookBackDate := time.Now().AddDate(0, 0, -cacheLookBackInDays)
+	lookBackDate := utils.Now().AddDate(0, 0, -cacheLookBackInDays)
 
 	var result postgres_entity.CacheIPIdentify
 	err := r.db.
