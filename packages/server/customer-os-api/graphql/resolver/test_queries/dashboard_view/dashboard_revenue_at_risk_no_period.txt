@@ -1,6 +1,0 @@
-query GetDashboard_RevenueAtRisk {
-  dashboard_RevenueAtRisk {
-    highConfidence
-    atRisk
-  }
-}
