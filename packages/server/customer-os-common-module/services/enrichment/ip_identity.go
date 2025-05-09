@@ -28,7 +28,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 
 	spans.LogKV("ip", ip)
 
-	// check caching
+	// check cache if ip exists
 	results, err := s.postgres.CacheIPIdentifyRepository.FindByIP(ctx, ip, CACHE_LOOKBACK_DAYS)
 	if err != nil {
 		spans.TraceError(err)
@@ -37,7 +37,7 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 
 	if results != nil && results.SnitcherData != "" && results.Domain != "" {
 		var snitcherResponse interfaces.SnitcherResponse
-		err := json.Unmarshal([]byte(results.SnitcherData), &snitcherResponse)
+		err = json.Unmarshal([]byte(results.SnitcherData), &snitcherResponse)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling snitcher response: %w", err)
 		}
@@ -72,7 +72,6 @@ func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfa
 func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*interfaces.SnitcherResponse, *string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.callSnitcher")
 	defer spans.Finish()
-
 	spans.LogKV("ip", ip)
 
 	// validate if snitcher is configured
@@ -81,6 +80,8 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 		spans.TraceError(err)
 		return nil, nil, err
 	}
+	spans.LogKV("snitcher.url", s.config.SnitcherConfig.Url)
+	spans.LogKV("snitcher.apiKey", utils.Mask(s.config.SnitcherConfig.ApiKey))
 
 	// Create POST request with context
 	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/company/find?ip=%s", s.config.SnitcherConfig.Url, ip), nil)
@@ -129,7 +130,7 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 
 	// Parse the response
 	var snitcherResponse interfaces.SnitcherResponse
-	if err := json.Unmarshal(responseBody, &snitcherResponse); err != nil {
+	if err = json.Unmarshal(responseBody, &snitcherResponse); err != nil {
 		spans.TraceError(err)
 		spans.LogKV("json.response.parsing", string(responseBody))
 		return nil, nil, fmt.Errorf("failed to parse snitcher response: %w", err)
