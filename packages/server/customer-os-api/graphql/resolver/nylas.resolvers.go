@@ -96,7 +96,7 @@ func (r *mutationResolver) NylasConnect(ctx context.Context, input model.NylasCo
 			BookOptionMinNoticeMins:             240,
 			BookOptionDaysInAdvance:             30,
 			BookOptionBufferBetweenMeetingsMins: 15,
-			ShowLogo:                            false,
+			ShowLogo:                            true,
 			EmailNotificationEnabled:            true,
 		}
 		_, err = r.Services.Repositories.PostgresRepositories.MeetingBookingEventRepository.Save(ctx, &defaultMeetingBookingEventEntity)
