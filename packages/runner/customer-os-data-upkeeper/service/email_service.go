@@ -329,11 +329,15 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 			s.log.Errorf("Failed to get request %s: %v", requestID, err)
 			continue
 		}
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    request.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
 
 		// If there are no unprocessed records, mark the request as completed
 		if unprocessedCount == 0 && request.Status != postgresentity.EmailValidationRequestBulkStatusCompleted {
 			// generate csv result file
-			csvContent, err := s.generateBulkEmailValidationResponseCSVFileContent(ctx, requestID)
+			csvContent, err := s.generateBulkEmailValidationResponseCSVFileContent(innerCtx, requestID)
 			if err != nil {
 				spans.TraceError(errors.Wrap(err, "Error generating CSV content"))
 				s.log.Errorf("Failed to generate CSV content for request %s: %v", requestID, err.Error())
@@ -346,7 +350,7 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 			// Upload result file to S3
 			basePath := fmt.Sprintf("/EMAIL_VALIDATION/BULK/%d", utils.Now().Year())
 
-			fileDTO, err := s.commonServices.FileService.UploadSingleFileBytesDirect(ctx, basePath, requestID, requestID+".csv", &csvContent, false)
+			fileDTO, err := s.commonServices.FileService.UploadSingleFileBytesDirect(innerCtx, basePath, requestID, requestID+".csv", &csvContent, false)
 			if err != nil {
 				spans.TraceError(errors.Wrap(err, "UploadSingleFileBytes"))
 				continue
@@ -357,7 +361,7 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 				continue
 			}
 
-			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(ctx, requestID, fileDTO.ID)
+			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(innerCtx, requestID, fileDTO.ID)
 			if err != nil {
 				spans.TraceError(errors.Wrap(err, "Error marking request as completed"))
 				s.log.Errorf("Failed to mark request %s as completed: %v", requestID, err)
