@@ -1,12 +1,12 @@
-name: Core CRM Deploy
+name: AI Deploy
 on:
   push:
     tags:
       - "v*.*.*"
 env:
-  APP_NAME: core-crm
-  APP_PATH: packages/server/core-crm
-  IMAGE_NAME: core-crm
+  APP_NAME: ai
+  APP_PATH: packages/server/ai
+  IMAGE_NAME: ai
   REGISTRY: ghcr.io
   CGO_ENABLED: 0
   LANG: C.UTF-8
