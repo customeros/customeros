@@ -15,7 +15,8 @@ require (
 	github.com/testcontainers/testcontainers-go v0.37.0
 	golang.org/x/net v0.40.0
 	gorm.io/datatypes v1.2.5
-	gorm.io/gorm v1.26.0
+	gorm.io/driver/postgres v1.5.11
+	gorm.io/gorm v1.26.1
 )
 
 require (
@@ -129,5 +130,4 @@ require (
 	google.golang.org/grpc v1.72.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
-	gorm.io/driver/postgres v1.5.11 // indirect
 )
