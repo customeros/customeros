@@ -8,7 +8,7 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
+	"github.com/customeros/customeros/packages/server/ai/internal/config"
 )
 
 type NATSConnections struct {
