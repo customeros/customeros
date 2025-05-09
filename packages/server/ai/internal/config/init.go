@@ -4,42 +4,40 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
-	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	common_config "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/joho/godotenv"
 
+	"github.com/customeros/customeros/packages/server/ai/internal/logger"
 	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
 )
 
 type Config struct {
-	AppConfig    *AppConfig
-	Telemetry    *telemetry.OpenTelemetryConfig
-	NATSConfig   *NATSConfig
-	CommonConfig *commonconf.CommonConfig
-}
-
-type CommonConfig struct {
-	Logger              logger.Config
-	Postgres            commonconf.PostgresConfig
-	Neo4j               commonconf.Neo4jConfig
-	DataWarehouseConfig commonconf.DataWarehouseConfig
+	AppConfig     *AppConfig
+	Telemetry     *telemetry.OpenTelemetryConfig
+	Logger        *logger.Config
+	Postgres      common_config.PostgresConfig
+	Neo4j         common_config.Neo4jConfig
+	DataWarehouse common_config.DataWarehouseConfig
+	NATS          *NATSConfig
+	Anthropic     *AnthropicConfig
+	Deepseek      *DeepseekConfig
+	Groq          *GroqConfig
+	Gemini        *GeminiConfig
 }
 
 func InitConfig() (*Config, error) {
-	commonCfg := &CommonConfig{}
-
 	config := &Config{
-		AppConfig:  &AppConfig{},
-		Telemetry:  &telemetry.OpenTelemetryConfig{},
-		NATSConfig: &NATSConfig{},
-		CommonConfig: &commonconf.CommonConfig{
-			Infrastructure: commonconf.InfrastructureConfig{
-				LoggerConfig:        commonCfg.Logger,
-				PostgresConfig:      commonCfg.Postgres,
-				Neo4jConfig:         commonCfg.Neo4j,
-				DataWarehouseConfig: commonCfg.DataWarehouseConfig,
-			},
-		},
+		AppConfig:     &AppConfig{},
+		Telemetry:     &telemetry.OpenTelemetryConfig{},
+		Logger:        &logger.Config{},
+		NATS:          &NATSConfig{},
+		Anthropic:     &AnthropicConfig{},
+		Deepseek:      &DeepseekConfig{},
+		Groq:          &GroqConfig{},
+		Gemini:        &GeminiConfig{},
+		Postgres:      common_config.PostgresConfig{},
+		Neo4j:         common_config.Neo4jConfig{},
+		DataWarehouse: common_config.DataWarehouseConfig{},
 	}
 
 	err := godotenv.Load()
@@ -47,9 +45,6 @@ func InitConfig() (*Config, error) {
 		log.Print("Unable to load .env file")
 	}
 	if err := env.Parse(config); err != nil {
-		log.Fatalf("%+v", err)
-	}
-	if err := env.Parse(commonCfg); err != nil {
 		log.Fatalf("%+v", err)
 	}
 

@@ -10,9 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	services "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_db "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -24,8 +21,11 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
 	"github.com/customeros/customeros/packages/server/ai/internal/cron"
 	"github.com/customeros/customeros/packages/server/ai/internal/database"
+	"github.com/customeros/customeros/packages/server/ai/internal/logger"
+	"github.com/customeros/customeros/packages/server/ai/internal/repository"
 	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
 	nats_internal "github.com/customeros/customeros/packages/server/ai/nats"
+	"github.com/customeros/customeros/packages/server/ai/services"
 )
 
 type Server struct {
@@ -33,7 +33,7 @@ type Server struct {
 	logger                logger.Logger
 	natsConn              *nats_internal.NATSConnections
 	cronMgr               *cron.CronManager
-	services              *services.CommonServices
+	services              *services.Services
 	postgresRepositories  *postgres_repository.Repositories
 	neo4jRepositories     *neo4j_repository.Repositories
 	warehouseRepositories *postgres_repository.WarehouseRepositories
@@ -41,7 +41,7 @@ type Server struct {
 
 func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*Server, error) {
 	// Initialize logger
-	appLogger := logger.NewAppLogger(&cfg.CommonConfig.Infrastructure.LoggerConfig)
+	appLogger := logger.NewAppLogger(cfg.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName("ai")
 
@@ -51,37 +51,27 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		log.Printf("Warning: Could not initialize OpenTelemetry: %s", err.Error())
 	}
 
-	// Initialize DBs
-	openlineDB, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
-		Infrastructure: commonConfig.InfrastructureConfig{
-			PostgresConfig: cfg.CommonConfig.Infrastructure.PostgresConfig,
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed opening connection to postgres: %w", err)
-	}
-
-	neoDriver, err := commonConfig.NewNeo4jDriver(cfg.CommonConfig.Infrastructure.Neo4jConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed opening connection to neo4j: %w", err)
-	}
-
 	// Initialize repositories
-	postgresRepos := postgres_repository.InitRepositories(openlineDB)
-	neo4jRepos := neo4j_repository.InitNeo4jRepositories(&neoDriver, cfg.CommonConfig.Infrastructure.Neo4jConfig.Database)
 	warehouseRepos := postgres_repository.InitWarehouseRepositories(&postgres_db.DbConnections{
 		ReadDB:  warehouseDB.ReadDB,
 		WriteDB: warehouseDB.WriteDB,
 	})
 
+	repos := repository.InitRepositories()
+
 	// Initialize NATS Streams
-	natsConn, err := nats_internal.InitNats(cfg.NATSConfig, cfg.AppConfig.Environment)
+	natsConn, err := nats_internal.InitNats(cfg.NATS, cfg.AppConfig.Environment)
 	if err != nil {
 		log.Fatalf("Failed to initialize NATS: %v", err)
 	}
 
 	// Initialize services
-	// TODO
+	services := services.InitServices(
+		cfg,
+		repos,
+		warehouseRepos,
+		natsConn,
+	)
 
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface
@@ -130,9 +120,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		config:                cfg,
 		natsConn:              natsConn,
 		cronMgr:               cronManager,
-		services:              nil,
-		postgresRepositories:  postgresRepos,
-		neo4jRepositories:     neo4jRepos,
+		services:              services,
 		warehouseRepositories: warehouseRepos,
 		logger:                appLogger,
 	}, nil

@@ -194,7 +194,6 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleLinkUnthreadIssues, GroupUnthreadIssues, linkUnthreadIssues, "linkUnthreadIssues")
 	addJob(cont.Cfg.App.Cron.CronScheduleCheckDomains, GroupDomain, checkDomains, "checkDomains")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
-	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
 }
 
 // HELPER FUNCTIONS
@@ -367,10 +366,6 @@ func enrichGlobalOrganization(cont *container.Container) {
 
 func sendReminders(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SendReminders()
-}
-
-func processWebSessions(cont *container.Container) {
-	cont.AgentProducers.NewWebSessionProducer.Execute()
 }
 
 func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {

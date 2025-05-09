@@ -5,10 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 
@@ -22,7 +21,6 @@ type ScrapedWebpageRepository interface {
 	GetWebpagesWithoutLinks(ctx context.Context, limit int) ([]*postgres_entity.ScrapedWebpage, error)
 	SetLinks(ctx context.Context, url string, links []string) error
 	SetContent(ctx context.Context, url string, content string) error
-	SetContentStage(ctx context.Context, url string, contentStage enum.CustomerJourneyStage) error
 	SetWebpageTopics(ctx context.Context, url string, topics []string) error
 	SetWebpageCategory(ctx context.Context, url string, category enum.WebpageCategory) error
 }
@@ -152,25 +150,6 @@ func (r *scrapedWebpageRepository) SetContent(ctx context.Context, url string, c
 		Where("url = ?", url).
 		Update("content", content).
 		Error
-
-	if err != nil {
-		spans.TraceError(err)
-		return err
-	}
-
-	return nil
-}
-
-func (r *scrapedWebpageRepository) SetContentStage(ctx context.Context, url string, contentStage enum.CustomerJourneyStage) error {
-	spans, ctx := telemetry.StartPostgresSpan(ctx, "ScrapedWebpageRepository.SetContentStage")
-	defer spans.Finish()
-	spans.LogKV("url", url, "contentStage", contentStage)
-
-	err := r.gormDb.Model(&postgres_entity.ScrapedWebpage{}).
-		Where("url = ?", url).
-		Update("content_stage", contentStage).
-		Error
-
 	if err != nil {
 		spans.TraceError(err)
 		return err
@@ -189,7 +168,6 @@ func (r *scrapedWebpageRepository) SetWebpageTopics(ctx context.Context, url str
 		Where("url = ?", url).
 		Update("topics", pq.StringArray(topics)).
 		Error
-
 	if err != nil {
 		spans.TraceError(err)
 		return err
@@ -207,7 +185,6 @@ func (r *scrapedWebpageRepository) SetWebpageCategory(ctx context.Context, url s
 		Where("url = ?", url).
 		Update("category", category.String()).
 		Error
-
 	if err != nil {
 		spans.TraceError(err)
 		return err
