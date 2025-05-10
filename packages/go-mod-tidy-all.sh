@@ -17,6 +17,8 @@ cd ../apigator
 go mod tidy
 cd ../core-crm
 go mod tidy
+cd ../ai
+go mod tidy
 cd ../..
 cd runner
 cd customer-os-data-upkeeper
