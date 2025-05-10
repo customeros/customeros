@@ -3,13 +3,17 @@ package email
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go/log"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/pkg/errors"
 
@@ -27,19 +31,23 @@ import (
 
 type emailService struct {
 	neo4j         *neo4j_repository.Repositories
+	postgres      *postgres_repository.Repositories
 	events        *events.EventsService
 	contact       interfaces.ContactService
 	org           interfaces.OrganizationService
 	domainService interfaces.DomainService
+	cache         *caches.Cache
 }
 
-func NewEmailService(neo4j *neo4j_repository.Repositories, events *events.EventsService, contact interfaces.ContactService, org interfaces.OrganizationService, domainService interfaces.DomainService) interfaces.EmailService {
+func NewEmailService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, contact interfaces.ContactService, org interfaces.OrganizationService, domainService interfaces.DomainService, cache *caches.Cache) interfaces.EmailService {
 	return &emailService{
 		neo4j:         neo4j,
+		postgres:      postgres,
 		events:        events,
 		contact:       contact,
 		org:           org,
 		domainService: domainService,
+		cache:         cache,
 	}
 }
 
@@ -104,7 +112,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 				spans.TraceError(err)
 				return nil, err
 			}
-			err = s.neo4j.EmailWriteRepository.CreateEmail(ctx, txWithPostCommit.Tx, tenant, emailId, neo4jrepository.EmailCreateFields{
+			err = s.neo4j.EmailWriteRepository.CreateEmail(ctx, txWithPostCommit.Tx, tenant, emailId, neo4j_repository.EmailCreateFields{
 				RawEmail:  emailFields.Email,
 				CreatedAt: createdAt,
 				Source:    emailFields.Source,
@@ -649,4 +657,58 @@ func (s *emailService) RequestEmailValidation(ctx context.Context, emailId strin
 		spans.TraceError(errors.Wrap(err, "Error publishing email validation request"))
 	}
 	return err
+}
+
+func (s *emailService) IsPersonalEmailProvider(ctx context.Context, emailAddress string) bool {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailService.IsPersonalEmailProvider")
+	defer spans.Finish()
+
+	spans.LogKV("emailAddress", emailAddress)
+	emailAddress = strings.ToLower(emailAddress)
+
+	emailValidation := mailvalidate.ValidateEmailSyntax(emailAddress)
+
+	// check if personal email providers are loaded in cache
+	personalEmailProviders := s.cache.GetPersonalEmailProviders()
+	if len(personalEmailProviders) == 0 {
+		// get personal email providers from personal_email_providers table
+		personalEmailProviderEntities, err := s.postgres.PersonalEmailProviderRepository.GetPersonalEmailProviders(ctx)
+		if err != nil {
+			spans.TraceError(err)
+			return false
+		}
+		// convert to slice of strings
+		personalEmailProviders = make([]string, 0, len(personalEmailProviderEntities))
+		for _, v := range personalEmailProviderEntities {
+			personalEmailProviders = append(personalEmailProviders, v.ProviderDomain)
+		}
+		// set personal email providers in cache
+		s.cache.SetPersonalEmailProviders(personalEmailProviders)
+	}
+
+	domain := utils.ExtractDomain(emailAddress)
+	if s.cache.IsPersonalEmailProvider(domain) {
+		spans.LogFields(log.Bool("result.isPersonalEmailProvider", true))
+		return true
+	}
+
+	if emailValidation.IsFreeAccount {
+		spans.LogFields(log.Bool("result.IsFreeAccount", true))
+		return true
+	}
+
+	if emailValidation.IsSystemGenerated {
+		spans.LogFields(log.Bool("result.IsSystemGenerated", true))
+		return true
+	}
+
+	// domain of the email address is not top level domain
+	if emailValidation.Domain != domain {
+		spans.LogFields(log.Bool("result.nonTopLevelDomain", true))
+		return true
+	}
+
+	spans.LogFields(log.Bool("result.isPersonalEmailProvider", false))
+	return false
+
 }

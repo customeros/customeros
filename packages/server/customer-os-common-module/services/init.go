@@ -280,7 +280,7 @@ func InitCommonServices(
 
 	// Complex dependencies (ordered by dependency chain)
 	authenticationImpl := authentication.NewAuthenticationService(neo4jRepositories, nil, nil)
-	emailImpl := email.NewEmailService(neo4jRepositories, eventsImpl, nil, nil, nil)
+	emailImpl := email.NewEmailService(neo4jRepositories, postgresRepositories, eventsImpl, nil, nil, nil, cacheImpl)
 	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)

@@ -27,6 +27,8 @@ type EmailService interface {
 	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType model.EntityType, entityIds []string) (*neo4j_entity.EmailEntities, error)
 	UpdateEmailValidationDetails(ctx context.Context, emailId string, validationFields data_fields.EmailValidationFields) error
 	RequestEmailValidation(ctx context.Context, emailId string) error
+
+	IsPersonalEmailProvider(ctx context.Context, email string) bool
 }
 
 type EmailFields struct {

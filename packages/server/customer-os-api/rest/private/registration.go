@@ -41,7 +41,7 @@ import (
 
 func RML(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
+		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(c.Request.Context(), 30*time.Second)
 		defer cancel()
 
 		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "RML")
@@ -151,12 +151,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 
 func PML(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// todo move to server init?
-		personalEmailProviders, err := s.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders(c.Request.Context())
-		if err != nil {
-			panic(err)
-		}
-		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
+		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(c.Request.Context(), 30*time.Second)
 		defer cancel()
 
 		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "PML")
@@ -171,6 +166,8 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 			})
 			return
 		}
+
+		var err error
 
 		if signInRequest.Code != "" {
 			magicLink, err = s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, signInRequest.Code)
@@ -197,7 +194,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 			})
 		}
 
-		signIn(ctx, s, c, signInRequest, personalEmailProviders, s.Cfg)
+		signIn(ctx, s, c, signInRequest, s.Cfg)
 
 		err = s.Repositories.PostgresRepositories.MagicLinkRepository.Delete(ctx, magicLink.ID)
 		if err != nil {
@@ -210,19 +207,14 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 
 func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(context.Background(), 30*time.Second)
+		contextWithTimeout, cancel := common_utils.GetContextWithTimeout(c.Request.Context(), 30*time.Second)
 		defer cancel()
-
-		personalEmailProviders, err := s.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders(contextWithTimeout)
-		if err != nil {
-			panic(err)
-		}
 
 		spans, ctx := telemetry.StartRestSpan(contextWithTimeout, "Signin")
 		defer spans.Finish()
 
 		var signInRequest SignInRequest
-		if err = c.BindJSON(&signInRequest); err != nil {
+		if err := c.BindJSON(&signInRequest); err != nil {
 			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
@@ -230,11 +222,11 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 
-		signIn(ctx, s, c, signInRequest, personalEmailProviders, s.Cfg)
+		signIn(ctx, s, c, signInRequest, s.Cfg)
 	}
 }
 
-func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
+func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, config *config.Config) {
 	spans, ctx := telemetry.StartRestSpan(ctx, "signIn")
 	defer spans.Finish()
 
@@ -372,20 +364,11 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			}
 
 			if tenants == nil || len(tenants) == 0 {
+				isPersonalEmail = services.CommonServices.EmailService.IsPersonalEmailProvider(ctx, signInRequest.LoggedInEmail)
+				spans.LogKV("isPersonalEmail", isPersonalEmail)
 
 				domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
 				spans.LogKV("domainExtractedFromEmail", domain)
-
-				// check if the user is using a personal email provider
-				for _, personalEmailProviderItem := range personalEmailProviders {
-					domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-					personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-					if domainLowercase == personalEmailProviderDomainLowercase {
-						isPersonalEmail = true
-						break
-					}
-				}
-				spans.LogKV("isPersonalEmail", isPersonalEmail)
 
 				if !isPersonalEmail {
 					tenantWithWorkspace, err := services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
