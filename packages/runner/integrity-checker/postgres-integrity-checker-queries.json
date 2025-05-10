@@ -5,7 +5,7 @@
       "queries": [
         {
           "name": "Meeting scheduling records with non-existent tenants",
-          "query": "SELECT COUNT(*) FROM meeting_booking_events ms WHERE NOT EXISTS (SELECT 1 FROM tenant t WHERE t.id = ms.tenant_id)"
+          "query": "SELECT COUNT(*) FROM meeting_booking_events ms WHERE NOT EXISTS (SELECT 1 FROM tenant t WHERE t.name = ms.tenant)"
         }
       ]
     },
