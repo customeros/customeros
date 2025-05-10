@@ -143,6 +143,7 @@ func StartSpan(ctx context.Context, operationName string, opts ...SpanOptions) (
 	} else {
 		ctx, otelSpan = tracer.Start(ctx, operationName)
 	}
+	otelSpan.SetAttributes(attribute.String("name", operationName))
 
 	setDefaultServiceSpanAttributes(ctx, otelSpan)
 
