@@ -299,7 +299,7 @@ func (c *IdentifyWebsiteVisitorCapability) tryIdentifyFromEnrichment(
 		if err != nil {
 			return enum.CapabilityExecutionError, *result, errors.Wrap(err, "failed to publish web visitor not identified event")
 		}
-		return enum.CapabilityExecutionCompleted, *result, nil
+		return enum.CapabilityExecutionStop, *result, nil
 	}
 
 	// Update the web session with identified domain
