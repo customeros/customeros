@@ -25,7 +25,6 @@ const (
 func (s *enrichmentService) IPIdentity(ctx context.Context, ip string) (*interfaces.SnitcherResponse, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "EnrichmentService.IPIdentity")
 	defer spans.Finish()
-
 	spans.LogKV("ip", ip)
 
 	// check cache if ip exists
@@ -115,9 +114,10 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 
 	// Check status code
 	spans.LogKV("response.statusCode", resp.StatusCode)
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
+		// expected status codes 200 - company found, 404 - company not found
 		spans.LogKV("result.rawSnitcherResponse", string(responseBody))
-		return nil, nil, fmt.Errorf("snitcher API returned non-200 status code: %d", resp.StatusCode)
+		return nil, nil, fmt.Errorf("snitcher API returned unexpected status code: %d", resp.StatusCode)
 	}
 
 	// Validate and compact JSON
