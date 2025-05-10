@@ -121,7 +121,7 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 		return enum.CapabilityExecutionError, result, err
 	}
 	if primaryDomain == "" {
-		return enum.CapabilityExecutionError, result, coserrors.ErrCapabilityMissingPrimaryDomainForOrganization
+		return enum.CapabilityExecutionRetry, result, coserrors.ErrCapabilityMissingPrimaryDomainForOrganization
 	}
 	company, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
