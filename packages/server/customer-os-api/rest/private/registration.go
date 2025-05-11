@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
-	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients"
+	commonconfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
@@ -249,6 +250,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	}
 
 	isNewTenant := false
+	isNewUser := false
 	isPersonalEmail := false
 
 	var currentTenant string
@@ -335,6 +337,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 
 			// auth doesn't exist at all
 			if authId == "" {
+				isNewUser = true
 				// create auth + user
 				authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
 					AuthId:     signInRequest.LoggedInEmail,
@@ -467,8 +470,11 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				spans.LogKV("user.found", true)
 			} else {
 				spans.LogKV("user.found", false)
-
 				userId, err = services.CommonServices.AuthenticationService.CreateUserInTenant(ctx, txWithPostCommit, defaultTenant, false, authUserId, signInRequest.LoggedInEmail, firstName, lastName)
+				if err != nil {
+					return nil, err
+				}
+				isNewUser = true
 			}
 
 			return nil, nil
@@ -521,10 +527,15 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					spans.TraceError(err)
 				}
 
-				err = sendTenantRegistrationSlackNotification(ctx, config.Common.External.SlackConfig, defaultTenant)
+				err = sendNewTenantRegistrationSlackNotification(ctx, config.Common.External.SlackConfig, defaultTenant, signInRequest.LoggedInEmail)
 				if err != nil {
 					spans.TraceError(err)
 				}
+			}
+		} else if isNewUser {
+			err = sendNewUserRegistrationSlackNotification(ctx, config.Common.External.SlackConfig, currentTenant, signInRequest.LoggedInEmail)
+			if err != nil {
+				spans.TraceError(err)
 			}
 		}
 
@@ -1355,15 +1366,44 @@ func handleOAuthTokenSync(ctx context.Context, services *cosapi_services.Service
 	return err
 }
 
-func sendTenantRegistrationSlackNotification(ctx context.Context, cfg commonconfig.SlackConfig, tenant string) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "sendTenantRegistrationSlackNotification")
+func sendNewTenantRegistrationSlackNotification(ctx context.Context, cfg commonconfig.SlackConfig, tenant, userEmail string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "sendNewTenantRegistrationSlackNotification")
 	defer spans.Finish()
 
 	// Create a struct to hold the JSON data
 	type SlackMessage struct {
 		Text string `json:"text"`
 	}
-	message := SlackMessage{Text: fmt.Sprintf("New tenant registered: %s", tenant)}
+	message := SlackMessage{Text: fmt.Sprintf("🏢 New tenant registration!\n• Tenant: %s\n• User: %s", tenant, userEmail)}
+	// Convert struct to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		spans.TraceError(err)
+		return err
+	}
+
+	// Send POST request
+	resp, err := http.Post(cfg.NotifyNewTenantRegisteredHook, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	spans.LogKV("result.status", resp.Status)
+
+	return nil
+}
+
+func sendNewUserRegistrationSlackNotification(ctx context.Context, cfg commonconfig.SlackConfig, tenant, userEmail string) error {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "sendNewUserRegistrationSlackNotification")
+	defer spans.Finish()
+
+	// Create a struct to hold the JSON data
+	type SlackMessage struct {
+		Text string `json:"text"`
+	}
+	message := SlackMessage{Text: fmt.Sprintf("👤 New user first sign-in!\n• User: %s\n• Tenant: %s", userEmail, tenant)}
 	// Convert struct to JSON
 	jsonData, err := json.Marshal(message)
 	if err != nil {
