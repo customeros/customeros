@@ -55,6 +55,7 @@ type CommonConfig struct {
 	CrustData         commonconf.CrustDataConfig
 	NylasConfig       commonconf.NylasConfig
 	R2Config          commonconf.R2StorageConfig
+	NatsConfig        commonconf.NATSConfig
 }
 
 type AppConfig struct {
@@ -70,6 +71,7 @@ type AppConfig struct {
 	MetricsPort                            string   `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
 	GraphQL                                GraphQLConfig
 	Observability                          ObservabilityConfig
+	Environment                            string `env:"ENVIRONMENT,required" envDefault:"dev"`
 }
 
 // Config helpers
@@ -126,6 +128,7 @@ func InitConfig() (*Config, error) {
 			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
 			R2StorageConfig:     cmnCfg.R2Config,
 			DataWarehouseConfig: cmnCfg.DataWarehouse,
+			NatsConfig:          cmnCfg.NatsConfig,
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,

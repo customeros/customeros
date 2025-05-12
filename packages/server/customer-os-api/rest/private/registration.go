@@ -5,6 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
+	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"log"
 	"net/http"
@@ -421,6 +426,16 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						return nil, err
 					}
 
+					// publish tenant created event
+					primaryDomain := domain
+					if isPersonalEmail {
+						primaryDomain = ""
+					}
+					err = publishTenantCreatedEvent(ctx, services, tenantEntity.Name, primaryDomain)
+					if err != nil {
+						spans.TraceError(err)
+					}
+
 					currentTenant = tenantEntity.Name
 					defaultTenant = tenantEntity.Name
 
@@ -595,6 +610,36 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		"userId":        userId,
 		"apiKey":        apiKey,
 	})
+}
+
+func publishTenantCreatedEvent(ctx context.Context, services *cosapi_services.Services, tenant, domain string) error {
+	span, ctx := telemetry.StartRestSpan(ctx, "Registration.publishTenantCreatedEvent")
+	defer span.Finish()
+
+	tenantCreatedEvent := &pb.TenantCreated{
+		Timestamp: timestamppb.Now(),
+		Tenant:    tenant,
+		Domain:    domain,
+	}
+
+	data, err := proto.Marshal(tenantCreatedEvent)
+	if err != nil {
+		span.TraceError(err)
+		return fmt.Errorf("failed to marshal tenant: %w", err)
+	}
+
+	// Create nats message with headers
+	msg := nats.NewMsg(commonenum.EventTenantCreated.String())
+	msg.Data = data
+	msg.Header.Set(string(nats_common.NATS_HEADER_TENANT), tenant)
+
+	_, err = services.CommonServices.NATSConnections.JS.PublishMsg(msg)
+	if err != nil {
+		span.TraceError(err)
+		return fmt.Errorf("failed to publish tenant created event: %w", err)
+	}
+
+	return nil
 }
 
 func initializeUserInTenant(ctx context.Context, services *cosapi_services.Services, userId string) (*string, error) {

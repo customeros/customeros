@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	"log"
 	"net/http"
 	"os"
@@ -28,13 +29,12 @@ import (
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/database"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
-	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
 )
 
 type Server struct {
 	config                *config.Config
 	logger                logger.Logger
-	natsConn              *nats_internal.NATSConnections
+	natsConn              *nats_common.NATSConnections
 	httpServer            *http.Server
 	router                *gin.Engine
 	cronMgr               *cron.CronManager
@@ -80,7 +80,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	})
 
 	// Initialize NATS Streams
-	natsConn, err := nats_internal.InitNats(cfg.NATSConfig, cfg.AppConfig.Environment)
+	natsConn, err := nats_common.InitNats(&cfg.CommonConfig.Infrastructure.NatsConfig, cfg.AppConfig.Environment)
 	if err != nil {
 		log.Fatalf("Failed to initialize NATS: %v", err)
 	}

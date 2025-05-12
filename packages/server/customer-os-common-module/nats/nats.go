@@ -1,14 +1,13 @@
-package nats_internal
+package nats_common
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/nats-io/nats.go"
-
-	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
 )
 
 type NATSConnections struct {
@@ -23,14 +22,20 @@ func (n *NATSConnections) Close() {
 	}
 }
 
-const (
-	CORE_STREAM = "core"
+type NatsHeader string
 
+const (
+	CORE_STREAM           = "core"
 	MAX_STREAM_RECONNECTS = -1 // never stop trying to reconnect
+
+	NATS_HEADER_TENANT NatsHeader = "X-Tenant"
 )
 
 // InitNats initializes the NATS connection and sets up streams
 func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, error) {
+	if config == nil {
+		return nil, fmt.Errorf("NATS config is nil")
+	}
 	replicas := 3
 	if environment != "production" {
 		replicas = 1
