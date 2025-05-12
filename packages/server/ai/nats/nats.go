@@ -89,7 +89,7 @@ func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, 
 
 func setupNATSStreams(js nats.JetStreamContext, replicas int) error {
 	persistedSubjects := []string{
-		"core.>",
+		"ai.>",
 	}
 	return setupWorkQueueStream(js, AI_STREAM, persistedSubjects, replicas)
 }
