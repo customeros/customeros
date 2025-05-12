@@ -1124,7 +1124,7 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 				org.hide = false AND
 				org.techIcpCheckedAt IS NULL AND
 				(org.icpFit IS NULL OR org.icpFit = $icpNotSet) AND
-				org.stage = $leadStage AND
+				org.stage = $targetStage AND
 				org.createdAt < datetime() - duration({minutes: $delayFromCreatedAt}) AND
 				(org.techIcpCheckRequestedAt IS NULL OR org.techIcpCheckRequestedAt < datetime() - duration({minutes: $delayFromPreviousCheckMin}))
 				RETURN t.name, org.id
@@ -1137,7 +1137,7 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
 		"delayFromCreatedAt":        5,
 		"icpNotSet":                 commonenum.IcpNotSet.String(),
-		"leadStage":                 commonenum.Target.String(),
+		"targetStage":               commonenum.Target.String(),
 	}
 	spans.LogKV("cypher", cypher)
 	spans.LogObjectAsJson("params", params)
