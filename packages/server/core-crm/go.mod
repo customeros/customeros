@@ -11,9 +11,9 @@ replace github.com/customeros/customeros/packages/server/customer-os-common-modu
 require (
 	github.com/99designs/gqlgen v0.17.73
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250504171220-a3d354c2ec9a
-	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250422171625-b9f0106c7d32
-	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250422171625-b9f0106c7d32
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250512171648-ebf2777022e6
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250512171648-ebf2777022e6
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/mailstack v0.2.22
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1

@@ -286,7 +286,7 @@ func InitCommonServices(
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
-	orgImpl := organization.NewOrganizationService(log, natsConn, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
+	orgImpl := organization.NewOrganizationService(log, natsConn, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl, emailImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, postgresRepositories, contractImpl)
