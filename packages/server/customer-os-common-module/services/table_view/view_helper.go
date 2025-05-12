@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
@@ -89,8 +88,6 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, userId string) []postgre
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-
-
 	var defaultViewDefinitions []postgres_entity.TableViewDefinition
 	defaultViewDefinitions = append(defaultViewDefinitions, upcomingInvoicesTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, pastInvoicesTableViewDefinition)
@@ -104,9 +101,9 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, userId string) []postgre
 	defaultViewDefinitions = append(defaultViewDefinitions, flowsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, flowContactsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, tasksTableViewDefinition)
-        if !hasSharedPresets {
-            defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
-        }
+	if !hasSharedPresets {
+		defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
+	}
 
 	return defaultViewDefinitions
 }
@@ -196,7 +193,7 @@ func DefaultTableViewDefinitionCustomers() (postgres_entity.TableViewDefinition,
 		Order:          1,
 		Icon:           "CheckHeart",
 		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, neo4jenum.OrganizationRelationshipCustomer),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}}]}`, enum.Customer),
 		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
@@ -219,7 +216,7 @@ func DefaultTableViewDefinitionTargets() (postgres_entity.TableViewDefinition, e
 		Order:          1,
 		Icon:           "Target05",
 		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}},{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, enum.Target, neo4jenum.OrganizationRelationshipProspect),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}}]}`, enum.Target),
 		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
@@ -265,7 +262,7 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts() (postgres_entity.Ta
 		Order:          0,
 		Icon:           "HeartHand",
 		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}},{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, enum.Target, neo4jenum.OrganizationRelationshipProspect),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}}]}`, enum.Target),
 		Sorting:        `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
@@ -432,8 +429,6 @@ func DefaultTableViewDefinitionMyTasks(userId string) (postgres_entity.TableView
 		IsShared:       false,
 	}, nil
 }
-
-
 
 func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns {
 	switch tableId {

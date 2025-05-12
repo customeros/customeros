@@ -97,6 +97,7 @@ type OrganizationRecord struct {
 
 	// Relationship status with the organization
 	// example: customer
+	// Deprecated, to be removed
 	Relationship string `json:"relationship,omitempty"`
 
 	// Current stage in the organization lifecycle

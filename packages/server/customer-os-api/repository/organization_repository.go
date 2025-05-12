@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -53,11 +53,11 @@ func (r *organizationRepository) CountCustomers(ctx context.Context, tenant stri
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false AND org.relationship = $customerRelationship
+			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false AND org.stage = $customer
 			RETURN count(org)`,
 			map[string]any{
-				"tenant":               tenant,
-				"customerRelationship": neo4jenum.OrganizationRelationshipCustomer,
+				"tenant":   tenant,
+				"customer": enum.Customer,
 			}); err != nil {
 			return nil, err
 		} else {

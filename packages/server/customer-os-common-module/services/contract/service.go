@@ -540,8 +540,7 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 
 		if !activeContractFound {
 			_, err = s.organization.Save(ctx, nil, &orgEntity.ID, data_fields.OrganizationFields{
-				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipFormerCustomer),
-				Stage:        utils.ToPtr(enum.Target),
+				Stage: utils.ToPtr(enum.Target),
 			})
 			if err != nil {
 				spans.TraceError(err)

@@ -101,28 +101,6 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByPrimaryDomain(t *testing.T)
 	assertSearch(t, searchBy, "domain4", commonModel.ComparisonOperatorNotContains, 4, 3)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_FilterByRelationship(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: enum.OrganizationRelationshipProspect})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Relationship: enum.OrganizationRelationshipCustomer})
-
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsRelationship
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 4, 1)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 4, 3)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 4, 2)
-	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipProspect.String(), enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorNotIn, 4, 2)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_FilterByOnboardingStatus(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -905,31 +883,6 @@ func TestQueryResolver_UIOrganizationsSearch_SortByPrimaryDomain(t *testing.T) {
 
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByRelationship(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Relationship: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Relationship: "a"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Relationship: "b"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ab", Relationship: "ab"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "c", Relationship: "c"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "aa", Relationship: "aa"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "abc", Relationship: "abc"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ba", Relationship: "ba"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "z", Relationship: "z"})
-
-	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
-	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByOnboardingStatus(t *testing.T) {

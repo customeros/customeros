@@ -17,7 +17,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -257,11 +256,10 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			organizationDataFields.EmployeeGrowthRate = utils.StringPtr(orgInput.EmployeeGrowthRate)
 			organizationDataFields.LeadSource = utils.StringPtr(utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source))
 			if orgInput.IsCustomer {
-				organizationDataFields.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer)
+				organizationDataFields.Stage = utils.ToPtr(enum.Customer)
 			} else {
 				if !matchingOrganizationExists {
 					organizationDataFields.Stage = utils.ToPtr(enum.Target)
-					organizationDataFields.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
 				}
 			}
 		}

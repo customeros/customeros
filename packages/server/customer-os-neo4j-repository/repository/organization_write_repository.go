@@ -175,10 +175,6 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			cypherUpdate += `org.slackChannelId = $slackChannelId,`
 			paramsUpdate["slackChannelId"] = *data.SlackChannelId
 		}
-		if data.Relationship != nil {
-			cypherUpdate += `org.relationship = $relationship,`
-			paramsUpdate["relationship"] = data.Relationship.String()
-		}
 		if data.Stage != nil {
 			cypherUpdate += `org.stage = $stage,`
 			cypherUpdate += `org.stageUpdatedAt = CASE WHEN (org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`

@@ -5,7 +5,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/pkg/errors"
@@ -148,7 +147,6 @@ func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organ
 	spans.TagEntity(organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
-		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
 		Stage:         utils.ToPtr(enum.Target),
 		IcpFit:        utils.ToPtr(enum.IcpIsFit),
 		IcpFitReasons: &reasons,
