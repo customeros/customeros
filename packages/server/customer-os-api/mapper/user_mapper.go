@@ -12,21 +12,22 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 	if userEntity == nil {
 		return nil
 	}
-	return &model.User{
-		ID:              userEntity.Id,
-		FirstName:       userEntity.FirstName,
-		LastName:        userEntity.LastName,
-		Name:            utils.StringPtr(userEntity.FullName()),
-		Timezone:        utils.StringPtrNillable(userEntity.Timezone),
-		CreatedAt:       userEntity.CreatedAt,
-		UpdatedAt:       userEntity.UpdatedAt,
-		Source:          enummapper.MapDataSourceToModel(userEntity.Source),
-		Roles:           MapRolesToModel(userEntity.Roles),
-		AppSource:       userEntity.AppSource,
-		Internal:        userEntity.Internal,
-		Bot:             userEntity.Bot,
-		Test:            userEntity.Test,
-		ProfilePhotoURL: utils.StringPtr(userEntity.ProfilePhotoUrl),
+	user := model.User{
+		ID:                userEntity.Id,
+		FirstName:         userEntity.FirstName,
+		LastName:          userEntity.LastName,
+		Name:              utils.StringPtr(userEntity.FullName()),
+		Timezone:          utils.StringPtrNillable(userEntity.Timezone),
+		CreatedAt:         userEntity.CreatedAt,
+		UpdatedAt:         userEntity.UpdatedAt,
+		Source:            enummapper.MapDataSourceToModel(userEntity.Source),
+		Roles:             MapRolesToModel(userEntity.Roles),
+		AppSource:         userEntity.AppSource,
+		Internal:          userEntity.Internal,
+		Bot:               userEntity.Bot,
+		Test:              userEntity.Test,
+		ProfilePhotoURL:   utils.StringPtr(userEntity.ProfilePhotoUrl),
+		ProfilePhotoURLV2: utils.StringPtrNillable(userEntity.GetProfilePhotoUrl()),
 		Onboarding: &model.UserOnboardingDetails{
 			ShowOnboardingPage:               userEntity.OnboardingDetails.ShowOnboardingPage,
 			OnboardingInboundStepCompleted:   userEntity.OnboardingDetails.OnboardingInboundStepCompleted,
@@ -35,6 +36,7 @@ func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 			OnboardingMailstackStepCompleted: userEntity.OnboardingDetails.OnboardingMailstackStepCompleted,
 		},
 	}
+	return &user
 }
 
 func MapRoleToModel(role string) model.Role {

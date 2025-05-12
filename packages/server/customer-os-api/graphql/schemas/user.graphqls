@@ -43,7 +43,8 @@ type User {
   bot: Boolean! #not a human user
   test: Boolean! #test user
   timezone: String
-  profilePhotoUrl: String
+  profilePhotoUrl: String @deprecated(reason: "Use profilePhotoUrlV2")
+  profilePhotoUrlV2: String
 
   roles: [Role!]! @goField(forceResolver: true)
 
@@ -123,7 +124,7 @@ input UserInput {
   lastName: String!
   name: String
   timezone: String
-  profilePhotoUrl: String
+  profilePhotoUrl: String @deprecated
 
   """
   The email address of the customerOS user.
@@ -147,7 +148,7 @@ input UserInput {
 input UserUpdateInput {
   id: ID!
   name: String
-  profilePhotoUrl: String
+  profilePhotoUrl: String @deprecated
 }
 
 input UserOnboardingDetailsInput {

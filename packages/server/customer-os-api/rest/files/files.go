@@ -209,3 +209,89 @@ func (h *FileHandler) UploadWorkspaceLogo() gin.HandlerFunc {
 		h.responseHandler.HandleSuccess(c, resp)
 	}
 }
+
+func (h *FileHandler) UploadUserProfilePhoto() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := common.WithCustomContextFromGinRequest(c, constants.AppSourceCustomerOsApi)
+
+		spans, ctx := telemetry.StartRestSpan(ctx, "UploadUserProfilePhoto")
+		defer spans.Finish()
+
+		tenant := common.GetTenantFromContext(ctx)
+		if tenant == "" {
+			message := "missing tenant"
+			spans.TraceError(fmt.Errorf("missing tenant"))
+			h.responseHandler.AbortAndHandleError(c, http.StatusForbidden, &message)
+			return
+		}
+		userId := common.GetUserIdFromContext(ctx)
+		if userId == "" {
+			message := "missing user"
+			spans.TraceError(fmt.Errorf("missing user"))
+			h.responseHandler.AbortAndHandleError(c, http.StatusForbidden, &message)
+			return
+		}
+
+		// Get the file from the request
+		multipartFileHeader, err := c.FormFile("file")
+		if err != nil {
+			spans.TraceError(err)
+			message := "missing field file"
+			h.responseHandler.AbortAndHandleError(c, http.StatusBadRequest, &message)
+			return
+		}
+
+		// Open the file
+		file, err := multipartFileHeader.Open()
+		if err != nil {
+			spans.TraceError(err)
+			message := fmt.Sprintf("Error opening file: %v", err)
+			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+		defer file.Close()
+
+		// Read the file data
+		data := make([]byte, multipartFileHeader.Size)
+		_, err = file.Read(data)
+		if err != nil {
+			spans.TraceError(err)
+			message := fmt.Sprintf("Error reading file: %v", err)
+			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+
+		targetPath := fmt.Sprintf("%s/%s", tenant, interfaces.UserProfilePath)
+
+		// Upload the logo using the media service
+		storageKey, err := h.services.CommonServices.MediaService.UploadImageDataToR2(ctx, data, targetPath, multipartFileHeader.Filename, true)
+		if err != nil {
+			message := fmt.Sprintf("Error uploading user profile logo: %v", err)
+			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+
+		// Get the public URL
+		publicUrl := h.services.CommonServices.MediaService.GetR2ImagePublicURL(storageKey)
+
+		_, err = h.services.CommonServices.UserService.Save(ctx, nil, &userId, data_fields.UserFields{
+			ProfilePhotoKey: &storageKey,
+		})
+		if err != nil {
+			spans.TraceError(err)
+			message := fmt.Sprintf("Error updating user profile photo")
+			h.responseHandler.AbortAndHandleError(c, http.StatusInternalServerError, &message)
+			return
+		}
+
+		// Return both storage key and public URL
+		resp := struct {
+			PublicURL string `json:"publicUrl"`
+		}{
+			PublicURL: publicUrl,
+		}
+
+		spans.LogObjectAsJson("response", resp)
+		h.responseHandler.HandleSuccess(c, resp)
+	}
+}

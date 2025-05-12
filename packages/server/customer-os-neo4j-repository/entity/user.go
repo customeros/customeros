@@ -1,6 +1,7 @@
 package neo4j_entity
 
 import (
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ const (
 	UserPropertyOnboardingOutboundStepCompleted  UserProperty = "onboardingOutboundStepCompleted"
 	UserPropertyOnboardingCrmStepCompleted       UserProperty = "onboardingCrmStepCompleted"
 	UserPropertyOnboardingMailstackStepCompleted UserProperty = "onboardingMailstackStepCompleted"
+	UserPropertyProfilePhotoKey                  UserProperty = "profilePhotoKey"
 )
 
 type UserEntity struct {
@@ -30,7 +32,7 @@ type UserEntity struct {
 	AppSource       string     `neo4jDb:"property:appSource;lookupName:APP_SOURCE;supportCaseSensitive:false"`
 	Roles           []string   `neo4jDb:"property:roles;lookupName:ROLES;supportCaseSensitive:false"`
 	Timezone        string     `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
-	ProfilePhotoUrl string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
+	ProfilePhotoKey string
 	LastLogin       *time.Time
 	FirstLogin      *time.Time
 	Internal        bool
@@ -44,6 +46,9 @@ type UserEntity struct {
 	// Indirect properties
 	DefaultForPlayer bool
 	Tenant           string
+
+	// Deprecated
+	ProfilePhotoUrl string
 }
 
 type UserOnboardingDetails struct {
@@ -84,4 +89,11 @@ func (u UserEntity) FullName() string {
 		return last
 	}
 	return ""
+}
+
+func (u UserEntity) GetProfilePhotoUrl() string {
+	if u.ProfilePhotoKey == "" {
+		return ""
+	}
+	return commonconstants.R2ImagesCDN + u.ProfilePhotoKey
 }

@@ -1911,29 +1911,30 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		AppSource        func(childComplexity int) int
-		Bot              func(childComplexity int) int
-		Calendars        func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		Emails           func(childComplexity int) int
-		FirstName        func(childComplexity int) int
-		HasLinkedInToken func(childComplexity int) int
-		ID               func(childComplexity int) int
-		Internal         func(childComplexity int) int
-		JobRoles         func(childComplexity int) int
-		LastName         func(childComplexity int) int
-		Mailboxes        func(childComplexity int) int
-		MailboxesV2      func(childComplexity int) int
-		Name             func(childComplexity int) int
-		Onboarding       func(childComplexity int) int
-		PhoneNumbers     func(childComplexity int) int
-		ProfilePhotoURL  func(childComplexity int) int
-		Roles            func(childComplexity int) int
-		Source           func(childComplexity int) int
-		SourceOfTruth    func(childComplexity int) int
-		Test             func(childComplexity int) int
-		Timezone         func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
+		AppSource         func(childComplexity int) int
+		Bot               func(childComplexity int) int
+		Calendars         func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		Emails            func(childComplexity int) int
+		FirstName         func(childComplexity int) int
+		HasLinkedInToken  func(childComplexity int) int
+		ID                func(childComplexity int) int
+		Internal          func(childComplexity int) int
+		JobRoles          func(childComplexity int) int
+		LastName          func(childComplexity int) int
+		Mailboxes         func(childComplexity int) int
+		MailboxesV2       func(childComplexity int) int
+		Name              func(childComplexity int) int
+		Onboarding        func(childComplexity int) int
+		PhoneNumbers      func(childComplexity int) int
+		ProfilePhotoURL   func(childComplexity int) int
+		ProfilePhotoURLV2 func(childComplexity int) int
+		Roles             func(childComplexity int) int
+		Source            func(childComplexity int) int
+		SourceOfTruth     func(childComplexity int) int
+		Test              func(childComplexity int) int
+		Timezone          func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
 	}
 
 	UserCalendarAvailability struct {
@@ -13876,6 +13877,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.User.ProfilePhotoURL(childComplexity), true
 
+	case "User.profilePhotoUrlV2":
+		if e.complexity.User.ProfilePhotoURLV2 == nil {
+			break
+		}
+
+		return e.complexity.User.ProfilePhotoURLV2(childComplexity), true
+
 	case "User.roles":
 		if e.complexity.User.Roles == nil {
 			break
@@ -18935,7 +18943,8 @@ type User {
   bot: Boolean! #not a human user
   test: Boolean! #test user
   timezone: String
-  profilePhotoUrl: String
+  profilePhotoUrl: String @deprecated(reason: "Use profilePhotoUrlV2")
+  profilePhotoUrlV2: String
 
   roles: [Role!]! @goField(forceResolver: true)
 
@@ -19015,7 +19024,7 @@ input UserInput {
   lastName: String!
   name: String
   timezone: String
-  profilePhotoUrl: String
+  profilePhotoUrl: String @deprecated
 
   """
   The email address of the customerOS user.
@@ -19039,7 +19048,7 @@ input UserInput {
 input UserUpdateInput {
   id: ID!
   name: String
-  profilePhotoUrl: String
+  profilePhotoUrl: String @deprecated
 }
 
 input UserOnboardingDetailsInput {
@@ -29613,6 +29622,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, fie
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -34965,6 +34976,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, fi
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -36607,6 +36620,8 @@ func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Contex
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -36758,6 +36773,8 @@ func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field 
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -39729,6 +39746,8 @@ func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, f
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -40025,6 +40044,8 @@ func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -45057,6 +45078,8 @@ func (ec *executionContext) fieldContext_Email_users(_ context.Context, field gr
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -50429,6 +50452,8 @@ func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, fiel
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -50873,6 +50898,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -61922,6 +61949,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, f
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -85180,6 +85209,8 @@ func (ec *executionContext) fieldContext_Mutation_user_UpdateOnboardingDetails(c
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -85317,6 +85348,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -86081,6 +86114,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -87959,6 +87994,8 @@ func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -88082,6 +88119,8 @@ func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, fi
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -90461,6 +90500,8 @@ func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, f
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -95674,6 +95715,8 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.C
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -97332,6 +97375,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, fi
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -104241,6 +104286,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ con
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -106845,6 +106892,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -106982,6 +107031,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -107119,6 +107170,8 @@ func (ec *executionContext) fieldContext_Query_user_Current(_ context.Context, f
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -107548,6 +107601,8 @@ func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -109106,6 +109161,8 @@ func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Con
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -115935,6 +115992,47 @@ func (ec *executionContext) fieldContext_User_profilePhotoUrl(_ context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _User_profilePhotoUrlV2(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProfilePhotoURLV2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_profilePhotoUrlV2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_roles(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_roles(ctx, field)
 	if err != nil {
@@ -117545,6 +117643,8 @@ func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, fie
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -117725,6 +117825,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ conte
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
 				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "profilePhotoUrlV2":
+				return ec.fieldContext_User_profilePhotoUrlV2(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
 			case "emails":
@@ -144319,6 +144421,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_timezone(ctx, field, obj)
 		case "profilePhotoUrl":
 			out.Values[i] = ec._User_profilePhotoUrl(ctx, field, obj)
+		case "profilePhotoUrlV2":
+			out.Values[i] = ec._User_profilePhotoUrlV2(ctx, field, obj)
 		case "roles":
 			field := field
 

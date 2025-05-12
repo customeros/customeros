@@ -67,4 +67,12 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 		routeType: RouteFiles,
 		services:  s,
 	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/user-profile-photo", FilePath),
+		handler:   h.Files.UploadUserProfilePhoto(),
+		routeType: RouteFiles,
+		services:  s,
+	})
 }

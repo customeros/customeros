@@ -82,6 +82,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx *neo4j.Mana
 		"bot":             utils.IfNotNilBool(data.Bot),
 		"roles":           roles,
 		"profilePhotoUrl": utils.IfNotNilString(data.ProfilePhotoUrl),
+		"profilePhotoKey": utils.IfNotNilString(data.ProfilePhotoKey),
 		"timezone":        utils.IfNotNilString(data.Timezone),
 		"source":          utils.IfNotNilString(data.Source),
 		"appSource":       utils.IfNotNilString(data.AppSource),
@@ -131,6 +132,10 @@ func (r *userWriteRepository) UpdateUserInTx(ctx context.Context, tx *neo4j.Mana
 	if data.ProfilePhotoUrl != nil {
 		params["profilePhotoUrl"] = *data.ProfilePhotoUrl
 		cypher += ", u.profilePhotoUrl=$profilePhotoUrl"
+	}
+	if data.ProfilePhotoKey != nil {
+		params["profilePhotoKey"] = *data.ProfilePhotoKey
+		cypher += ", u.profilePhotoKey=$profilePhotoKey"
 	}
 	if data.Bot != nil {
 		params["bot"] = *data.Bot

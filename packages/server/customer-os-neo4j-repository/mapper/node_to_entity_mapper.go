@@ -219,6 +219,7 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *neo4j_entity.UserEntity {
 		Test:            utils.GetBoolPropOrFalse(props, "test"),
 		Bot:             utils.GetBoolPropOrFalse(props, "bot"),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
+		ProfilePhotoKey: utils.GetStringPropOrEmpty(props, string(neo4j_entity.UserPropertyProfilePhotoKey)),
 		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
 		LastLogin:       utils.GetTimePropOrNil(props, string(neo4j_entity.UserPropertyLastLogin)),
 		FirstLogin:      utils.GetTimePropOrNil(props, string(neo4j_entity.UserPropertyFirstLogin)),
