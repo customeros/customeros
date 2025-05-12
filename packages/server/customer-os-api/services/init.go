@@ -4,6 +4,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -87,13 +88,19 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		warehouseRepositories = postgres_repository.InitWarehouseRepositories(warehouseDb)
 	}
 
+	// Initialize NATS Streams
+	natsConn, err := nats_common.InitNats(&cfg.Common.Infrastructure.NatsConfig, cfg.App.Environment)
+	if err != nil {
+		log.Fatalf("Failed to initialize NATS: %v", err)
+	}
+
 	commonServices := commonService.InitCommonServices(
 		log,
 		repositories.Neo4jRepositories,
 		repositories.PostgresRepositories,
 		warehouseRepositories,
 		cfg.Common,
-		nil,
+		natsConn,
 		&commonService.InitOptions{LoadPersonalEmailProviders: true},
 	)
 

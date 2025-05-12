@@ -3,9 +3,9 @@ package organization
 import (
 	"context"
 	"fmt"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	"reflect"
 
-	nats_core "github.com/customeros/customeros/packages/server/core-crm/nats"
 	"github.com/customeros/customeros/packages/server/core-crm/proto/pb"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -23,7 +23,7 @@ import (
 
 type organizationService struct {
 	log             logger.Logger
-	natsConn        *nats_core.NATSConnections
+	natsConn        *nats_common.NATSConnections
 	postgres        *postgres_repository.Repositories
 	neo4j           *neo4j_repository.Repositories
 	events          *events.EventsService
@@ -38,7 +38,7 @@ type organizationService struct {
 
 func NewOrganizationService(
 	log logger.Logger,
-	natsConn *nats_core.NATSConnections,
+	natsConn *nats_common.NATSConnections,
 	postgres *postgres_repository.Repositories,
 	neo4j *neo4j_repository.Repositories,
 	events *events.EventsService,
@@ -158,5 +158,5 @@ func (s *organizationService) SetContractService(contractService interfaces.Cont
 }
 
 func (s *organizationService) IsInitialized() bool {
-	return utils.IsInitialized(s, reflect.TypeOf((*nats_core.NATSConnections)(nil)))
+	return utils.IsInitialized(s, reflect.TypeOf((*nats_common.NATSConnections)(nil)))
 }

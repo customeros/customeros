@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
@@ -67,19 +68,18 @@ func (e *tenantRepository) GetHashID(ctx context.Context, tenantName string) (st
 }
 
 func (e *tenantRepository) Create(ctx context.Context, tenantEntity postgres_entity.Tenant) (*postgres_entity.Tenant, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.Create")
+	span, _ := telemetry.StartPostgresSpan(ctx, "TenantRepository.Create")
 	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	if tenantEntity.Name == "" {
-		return nil, fmt.Errorf("No tenant name, cannot create tenant")
+		return nil, fmt.Errorf("no tenant name, cannot create tenant")
 	}
 
 	tenantEntity.HashID = utils.GenerateHashId(tenantEntity.Name, 12)
 
 	err := e.gormDb.Create(&tenantEntity).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return nil, errors.Wrap(err, "failed to create tenant")
 	}
 

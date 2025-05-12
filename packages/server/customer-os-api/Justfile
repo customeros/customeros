@@ -4,6 +4,7 @@ help:
     @echo "  build       - Build the application"
     @echo "  debug       - Start application in debug mode using Delve"
     @echo "  gen-api     - Generate GraphQL code using gqlgen"
+    @echo "  gen-proto-common - Generate Protobuf code for common module"
     @echo "  generate    - Run all code generation tasks"
     @echo "  run         - Run the application server"
     @echo "  test        - Run tests"
@@ -18,7 +19,17 @@ debug:
 gen-api:
     go run github.com/99designs/gqlgen generate --config ./gqlgen.yml
 
-generate: gen-api
+gen-proto-common:
+    find ../customer-os-common-module/proto -name "*.proto" -type f -exec \
+    protoc \
+    --proto_path=../customer-os-common-module/proto \
+    --go_out=../customer-os-common-module/proto/pb \
+    --go_opt=module=github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb \
+    --go-grpc_out=../customer-os-common-module/proto/pb \
+    --go-grpc_opt=module=github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb \
+    {} \;
+
+generate: gen-api gen-proto-common
 
 run:
     go run customer_os_api_main.go

@@ -23,6 +23,7 @@ type InfrastructureConfig struct {
 	OpenTelemetryConfig telemetry.OpenTelemetryConfig
 	LoggerConfig        logger.Config
 	R2StorageConfig     R2StorageConfig
+	NatsConfig          NATSConfig
 }
 
 type InternalServicesConfig struct {

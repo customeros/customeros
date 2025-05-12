@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package customer_os_common;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb";
+
+message TenantCreated {
+  google.protobuf.Timestamp timestamp = 1;
+  string tenant = 2;
+  string domain = 3;
+}
+

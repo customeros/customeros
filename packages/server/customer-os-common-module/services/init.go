@@ -6,7 +6,7 @@ import (
 	"log"
 	"reflect"
 
-	nats_internal "github.com/customeros/customeros/packages/server/core-crm/nats"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -90,6 +90,7 @@ type CommonServices struct {
 	Neo4jRepositories     *neo4j_repository.Repositories
 	PostgresRepositories  *postgres_repository.Repositories
 	WarehouseRepositories *postgres_repository.WarehouseRepositories
+	NATSConnections       *nats_common.NATSConnections
 
 	// Services
 	AuthenticationService      interfaces.AuthenticationService
@@ -201,7 +202,7 @@ func InitCommonServices(
 	postgresRepositories *postgres_repository.Repositories,
 	warehouseRepositories *postgres_repository.WarehouseRepositories,
 	cfg *config.CommonConfig,
-	natsConn *nats_internal.NATSConnections,
+	natsConn *nats_common.NATSConnections,
 	options *InitOptions,
 ) *CommonServices {
 	var err error
@@ -380,6 +381,7 @@ func InitCommonServices(
 		Neo4jRepositories:     neo4jRepositories,
 		PostgresRepositories:  postgresRepositories,
 		WarehouseRepositories: warehouseRepositories,
+		NATSConnections:       natsConn,
 
 		// All other services (alphabetically)
 		AuthenticationService:      authenticationImpl,
