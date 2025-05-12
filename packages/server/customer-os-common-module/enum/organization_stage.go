@@ -54,13 +54,13 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return Customer
 	case NotAFit.String():
 		return NotAFit
+
 	case Lead.String():
 		return Lead
 	case Engaged.String():
 		return Engaged
 	case Unqualified.String():
 		return Unqualified
-
 	case Onboarding.String():
 		return Onboarding
 	case InitialValue.String():

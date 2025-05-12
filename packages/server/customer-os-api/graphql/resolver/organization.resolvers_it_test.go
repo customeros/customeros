@@ -104,8 +104,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 		EmployeeGrowthRate: "10%",
 		LogoUrl:            "https://www.openline.ai/logo.png",
 		IconUrl:            "https://www.openline.ai/icon.png",
-		Relationship:       neo4jenum.OrganizationRelationshipCustomer,
-		Stage:              neo4jenum.Lead,
+		Stage:              enum.Target,
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:    "DONE",
 			Comments:  "some comments",

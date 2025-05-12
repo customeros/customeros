@@ -9,7 +9,6 @@ import (
 	"time"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neoenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -544,11 +543,10 @@ func (s *enrichmentService) updateContactWithScrapInEnrichDetails(ctx context.Co
 		// step 3 if not found - create organization
 		if organizationDbNode == nil {
 			orgId, err := s.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-				Name:         utils.StringPtr(scrapinContactResponse.Company.Name),
-				Website:      utils.StringPtr(scrapinContactResponse.Company.WebsiteUrl),
-				Relationship: utils.ToPtr(neoenum.OrganizationRelationshipProspect),
-				Stage:        utils.ToPtr(enum.Target),
-				AppSource:    utils.StringPtr(string(enum.SourceScrapin)),
+				Name:      utils.StringPtr(scrapinContactResponse.Company.Name),
+				Website:   utils.StringPtr(scrapinContactResponse.Company.WebsiteUrl),
+				Stage:     utils.ToPtr(enum.Target),
+				AppSource: utils.StringPtr(string(enum.SourceScrapin)),
 			})
 			if err != nil {
 				spans.TraceError(errors.Wrap(err, "OrganizationClient.UpsertOrganization"))

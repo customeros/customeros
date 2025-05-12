@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/opentracing/opentracing-go/log"
@@ -25,7 +25,6 @@ const (
 	SearchSortParamCountry                = "COUNTRY"
 	SearchSortParamOnboardingStatus       = "ONBOARDING_STATUS"
 	SearchSortParamIsCustomer             = "IS_CUSTOMER"
-	SearchSortParamRelationship           = "RELATIONSHIP"
 	SearchSortParamStage                  = "STAGE"
 	SearchSortParamIndustry               = "INDUSTRY"
 	SearchSortParamName                   = "NAME"
@@ -130,8 +129,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
-			} else if filter.Filter.Property == SearchSortParamRelationship && filter.Filter.Value.ArrayStr != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamIndustry && filter.Filter.Value.ArrayStr != nil {
@@ -154,9 +151,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				externalId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				if (*filter.Filter.Value.ArrayBool)[0] {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("stage", enum.Customer.String()))
 				} else {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("stage", enum.Customer.String()))
 				}
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
@@ -343,14 +340,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 	}
-	if sort != nil && sort.By == SearchSortParamRelationship {
-		if sort.Direction == commonmodel.SortingDirectionAsc {
-			query += ", CASE WHEN o.relationship <> '' AND NOT o.relationship IS NULL THEN o.relationship ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as RELATIONSHIP_FOR_SORTING "
-		} else {
-			query += ", o.relationship as RELATIONSHIP_FOR_SORTING "
-		}
-		aliases += ", RELATIONSHIP_FOR_SORTING "
-	}
 	if sort != nil && sort.By == SearchSortParamStage {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			query += ", CASE WHEN o.stage <> '' AND NOT o.stage IS NULL THEN o.stage ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
@@ -422,8 +411,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else {
 				query += " ORDER BY toLower(NAME_FOR_SORTING) " + string(sort.Direction)
 			}
-		} else if sort.By == SearchSortParamRelationship {
-			query += " ORDER BY RELATIONSHIP_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamStage {
 			query += " ORDER BY STAGE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamIndustry {
@@ -563,8 +550,6 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == SearchSortParamWebsite {
 				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
-			} else if filter.Filter.Property == SearchSortParamRelationship && filter.Filter.Value.ArrayStr != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamIndustry && filter.Filter.Value.ArrayStr != nil {
@@ -585,9 +570,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
 				if (*filter.Filter.Value.ArrayBool)[0] {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("stage", enum.Customer.String()))
 				} else {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.OrganizationRelationshipCustomer.String()))
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("stage", enum.Customer.String()))
 				}
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)

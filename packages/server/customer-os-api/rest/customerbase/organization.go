@@ -3,7 +3,6 @@ package customerbase
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"net/http"
 	"strings"
 
@@ -19,8 +18,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
@@ -251,44 +248,20 @@ func (h *OrganizationHandler) validateOrganizationRequest(c *gin.Context, reques
 }
 
 func (h *OrganizationHandler) buildOrganizationFields(request CreateOrganizationRequest) data_fields.OrganizationFields {
-	relationship := model.OrganizationRelationshipProspect
-	if request.Relationship != "" && model.OrganizationRelationship(request.Relationship).IsValid() {
-		relationship = model.OrganizationRelationship(request.Relationship)
-	}
-
 	fields := data_fields.OrganizationFields{
-		Name:         utils.StringPtr(request.Name),
-		ReferenceId:  utils.StringPtr(request.CustomId),
-		Website:      utils.StringPtr(request.Website),
-		Source:       utils.StringPtr(string(neo4jentity.DataSourceOpenline)),
-		AppSource:    utils.StringPtr(constants.AppSourceCustomerOsApiRest),
-		LeadSource:   utils.StringPtr(request.LeadSource),
-		Relationship: utils.ToPtr(enummapper.MapRelationshipFromModel(relationship)),
+		Name:        utils.StringPtr(request.Name),
+		ReferenceId: utils.StringPtr(request.CustomId),
+		Website:     utils.StringPtr(request.Website),
+		Source:      utils.StringPtr(string(neo4jentity.DataSourceOpenline)),
+		AppSource:   utils.StringPtr(constants.AppSourceCustomerOsApiRest),
+		LeadSource:  utils.StringPtr(request.LeadSource),
 	}
 
 	if request.LinkedinUrl != "" {
 		fields.LinkedInUrl = utils.StringPtr(request.LinkedinUrl)
 	}
 
-	// Set stage based on relationship
-	fields.Stage = h.determineOrganizationStage(relationship)
-
 	return fields
-}
-
-func (h *OrganizationHandler) determineOrganizationStage(relationship model.OrganizationRelationship) *enum.OrganizationStage {
-	var stage model.OrganizationStage
-	switch relationship {
-	case model.OrganizationRelationshipCustomer:
-		stage = model.OrganizationStageOnboarding
-	case model.OrganizationRelationshipProspect:
-		stage = model.OrganizationStageLead
-	case model.OrganizationRelationshipNotAFit:
-		stage = model.OrganizationStageUnqualified
-	case model.OrganizationRelationshipFormerCustomer:
-		stage = model.OrganizationStageTarget
-	}
-	return utils.ToPtr(enummapper.MapStageFromModel(stage))
 }
 
 func (h *OrganizationHandler) retrieveOrganization(c *gin.Context, orgID string) (OrganizationRecord, APIStatus) {
@@ -425,13 +398,12 @@ func (h *OrganizationHandler) enrichOrganizationWithExternalLinks(ctx context.Co
 
 func (h *OrganizationHandler) mapOrganizationEntityToResult(entity *neo4jentity.OrganizationEntity) OrganizationRecord {
 	return OrganizationRecord{
-		ID:           entity.ID,
-		CustomId:     entity.ReferenceId,
-		CosId:        entity.CustomerOsId,
-		Name:         entity.Name,
-		Website:      entity.Website,
-		LeadSource:   entity.LeadSource,
-		Relationship: entity.Relationship.String(),
-		Stage:        entity.Stage.String(),
+		ID:         entity.ID,
+		CustomId:   entity.ReferenceId,
+		CosId:      entity.CustomerOsId,
+		Name:       entity.Name,
+		Website:    entity.Website,
+		LeadSource: entity.LeadSource,
+		Stage:      entity.Stage.String(),
 	}
 }

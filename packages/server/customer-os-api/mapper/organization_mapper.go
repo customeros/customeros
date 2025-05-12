@@ -69,7 +69,6 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Hide:             entity.Hide,
 		Notes:            utils.StringPtr(entity.Note),
 		Stage:            utils.ToPtr(enummapper.MapStageToModel(entity.Stage)),
-		Relationship:     utils.ToPtr(enummapper.MapRelationshipToModel(entity.Relationship)),
 		LeadSource:       utils.StringPtr(entity.LeadSource),
 		StageLastUpdated: entity.StageUpdatedAt,
 		EnrichDetails:    prepareOrganizationEnrichDetails(entity.EnrichDetails.EnrichRequestedAt, entity.EnrichDetails.EnrichedAt, entity.EnrichDetails.EnrichFailedAt),
@@ -145,9 +144,6 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_f
 	}
 	if input.Stage != nil {
 		mapped.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
-	}
-	if input.Relationship != nil {
-		mapped.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(*input.Relationship))
 	}
 	if input.LastFundingRound != nil {
 		mapped.LastFundingRound = utils.ToPtr(enummapper.MapFundingRoundFromModel(input.LastFundingRound))

@@ -6,7 +6,6 @@ import (
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
@@ -119,7 +118,6 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 			organizationFields := data_fields.OrganizationFields{
 				LeadSource:    utils.StringPtr(leadSource),
 				Stage:         utils.ToPtr(stage),
-				Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
 				PrimaryDomain: &domain,
 				Source:        utils.StringPtr(source),
 			}

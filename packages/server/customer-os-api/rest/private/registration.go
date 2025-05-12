@@ -28,7 +28,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
@@ -1198,11 +1197,10 @@ func createOrganizationAndContact(ctx context.Context, services *cosapi_services
 
 		if organizationByDomain == nil {
 			organizationId, err = services.CommonServices.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-				Domains:      []string{domain},
-				Name:         common_utils.StringPtr(domain),
-				Relationship: common_utils.ToPtr(enum.OrganizationRelationshipProspect),
-				Stage:        common_utils.ToPtr(commonenum.Target),
-				LeadSource:   common_utils.StringPtr(leadSource),
+				Domains:    []string{domain},
+				Name:       common_utils.StringPtr(domain),
+				Stage:      common_utils.ToPtr(commonenum.Target),
+				LeadSource: common_utils.StringPtr(leadSource),
 			})
 			if err != nil {
 				spans.TraceError(err)

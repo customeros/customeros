@@ -2,48 +2,46 @@ package data_fields
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 )
 
 type OrganizationFields struct {
-	GlobalOrgId        *uint64                             `json:"globalOrgId,omitempty"`
-	AppSource          *string                             `json:"appSource,omitempty"`
-	Source             *string                             `json:"source,omitempty"`
-	ExternalSystem     *model.ExternalSystem               `json:"externalSystem,omitempty"`
-	Name               *string                             `json:"name,omitempty"`
-	Website            *string                             `json:"website,omitempty"`
-	PrimaryDomain      *string                             `json:"primaryDomain,omitempty"`
-	Domains            []string                            `json:"domains,omitempty"`
-	Stage              *enum.OrganizationStage             `json:"stage,omitempty"`
-	Relationship       *neo4jenum.OrganizationRelationship `json:"relationship,omitempty"`
-	CustomerOsId       *string                             `json:"customerOsId,omitempty"`
-	Hide               *bool                               `json:"hide,omitempty"`
-	Description        *string                             `json:"description,omitempty"`
-	Industry           *string                             `json:"industry,omitempty"`
-	IndustryCode       *string                             `json:"industryCode,omitempty"`
-	IndustryName       *string                             `json:"industryName,omitempty"` // industry name used only for logging, do not set manually
-	LastFundingRound   *string                             `json:"lastFundingRound,omitempty"`
-	LastFundingAmount  *string                             `json:"lastFundingAmount,omitempty"`
-	ReferenceId        *string                             `json:"referenceId,omitempty"`
-	Note               *string                             `json:"note,omitempty"`
-	IsPublic           *bool                               `json:"isPublic,omitempty"`
-	Employees          *int64                              `json:"employees,omitempty"`
-	Market             *string                             `json:"market,omitempty"`
-	YearFounded        *int64                              `json:"yearFounded,omitempty"`
-	Headquarters       *string                             `json:"headquarters,omitempty"`
-	LogoUrl            *string                             `json:"logoUrl,omitempty"`
-	IconUrl            *string                             `json:"iconUrl,omitempty"`
-	EmployeeGrowthRate *string                             `json:"employeeGrowthRate,omitempty"`
-	SlackChannelId     *string                             `json:"slackChannelId,omitempty"`
-	LeadSource         *string                             `json:"leadSource,omitempty"`
-	IcpFit             *enum.IcpFit                        `json:"icpFit,omitempty"`
-	IcpFitReasons      *[]string                           `json:"icpFitReasons,omitempty"`
-	EnrichDomain       *string                             `json:"enrichDomain,omitempty"`
-	EnrichSource       *string                             `json:"enrichSource,omitempty"`
-	OwnerId            *string                             `json:"ownerId,omitempty"`
-	LinkedInUrl        *string                             `json:"linkedInUrl,omitempty"`
-	LinkedInAlias      *string                             `json:"linkedInAlias,omitempty"`
+	GlobalOrgId        *uint64                 `json:"globalOrgId,omitempty"`
+	AppSource          *string                 `json:"appSource,omitempty"`
+	Source             *string                 `json:"source,omitempty"`
+	ExternalSystem     *model.ExternalSystem   `json:"externalSystem,omitempty"`
+	Name               *string                 `json:"name,omitempty"`
+	Website            *string                 `json:"website,omitempty"`
+	PrimaryDomain      *string                 `json:"primaryDomain,omitempty"`
+	Domains            []string                `json:"domains,omitempty"`
+	Stage              *enum.OrganizationStage `json:"stage,omitempty"`
+	CustomerOsId       *string                 `json:"customerOsId,omitempty"`
+	Hide               *bool                   `json:"hide,omitempty"`
+	Description        *string                 `json:"description,omitempty"`
+	Industry           *string                 `json:"industry,omitempty"`
+	IndustryCode       *string                 `json:"industryCode,omitempty"`
+	IndustryName       *string                 `json:"industryName,omitempty"` // industry name used only for logging, do not set manually
+	LastFundingRound   *string                 `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  *string                 `json:"lastFundingAmount,omitempty"`
+	ReferenceId        *string                 `json:"referenceId,omitempty"`
+	Note               *string                 `json:"note,omitempty"`
+	IsPublic           *bool                   `json:"isPublic,omitempty"`
+	Employees          *int64                  `json:"employees,omitempty"`
+	Market             *string                 `json:"market,omitempty"`
+	YearFounded        *int64                  `json:"yearFounded,omitempty"`
+	Headquarters       *string                 `json:"headquarters,omitempty"`
+	LogoUrl            *string                 `json:"logoUrl,omitempty"`
+	IconUrl            *string                 `json:"iconUrl,omitempty"`
+	EmployeeGrowthRate *string                 `json:"employeeGrowthRate,omitempty"`
+	SlackChannelId     *string                 `json:"slackChannelId,omitempty"`
+	LeadSource         *string                 `json:"leadSource,omitempty"`
+	IcpFit             *enum.IcpFit            `json:"icpFit,omitempty"`
+	IcpFitReasons      *[]string               `json:"icpFitReasons,omitempty"`
+	EnrichDomain       *string                 `json:"enrichDomain,omitempty"`
+	EnrichSource       *string                 `json:"enrichSource,omitempty"`
+	OwnerId            *string                 `json:"ownerId,omitempty"`
+	LinkedInUrl        *string                 `json:"linkedInUrl,omitempty"`
+	LinkedInAlias      *string                 `json:"linkedInAlias,omitempty"`
 }
 
 func (fields OrganizationFields) ExternalSystemAvailable() bool {
@@ -53,13 +51,6 @@ func (fields OrganizationFields) ExternalSystemAvailable() bool {
 func (fields OrganizationFields) GetStageStr() string {
 	if fields.Stage != nil {
 		return fields.Stage.String()
-	}
-	return ""
-}
-
-func (fields OrganizationFields) GetRelationshipStr() string {
-	if fields.Relationship != nil {
-		return fields.Relationship.String()
 	}
 	return ""
 }

@@ -372,11 +372,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 
-		if input.Relationship == nil {
-			input.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
-		}
 		if input.Stage == nil {
-			input.Stage = utils.ToPtr(input.Relationship.DefaultStage())
+			input.Stage = utils.ToPtr(enum.Target)
 		}
 	}
 
@@ -1719,33 +1716,35 @@ func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields
 	spans, _ := telemetry.StartServiceSpan(ctx, "OrganizationService.adjustIcpFitFields")
 	defer spans.Finish()
 
-	if dataFields.Relationship != nil {
-		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipNotAFit {
+	if dataFields.Stage != nil {
+		if currentOrganizationEntity.Stage == *dataFields.Stage {
+			spans.LogKV("stage", "same")
+			return
+		}
+
+		if *dataFields.Stage == enum.NotAFit {
 			dataFields.IcpFit = utils.ToPtr(enum.IcpNotFit)
 			if currentOrganizationEntity.IcpFit == enum.IcpIsFit && dataFields.IcpFitReasons == nil {
 				dataFields.IcpFitReasons = utils.ToPtr([]string{})
 			}
-		}
-		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipCustomer {
+		} else if *dataFields.Stage == enum.Customer {
+			dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
+			if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
+				dataFields.IcpFitReasons = utils.ToPtr([]string{})
+			}
+		} else if *dataFields.Stage == enum.Target {
+			dataFields.IcpFit = utils.ToPtr(enum.IcpNotSet)
+			dataFields.IcpFitReasons = utils.ToPtr([]string{})
+		} else if *dataFields.Stage != enum.Target {
 			dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
 			if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
 				dataFields.IcpFitReasons = utils.ToPtr([]string{})
 			}
 		}
-		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipProspect || *dataFields.Relationship == neo4jenum.OrganizationRelationshipFormerCustomer {
-			if dataFields.Stage != nil {
-				if *dataFields.Stage == enum.Target {
-					dataFields.IcpFit = utils.ToPtr(enum.IcpNotSet)
-					dataFields.IcpFitReasons = utils.ToPtr([]string{})
-				} else if *dataFields.Stage != enum.Target {
-					dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
-					if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
-						dataFields.IcpFitReasons = utils.ToPtr([]string{})
-					}
-				}
-			}
-		}
+	} else {
+		spans.LogKV("stage", "not set")
 	}
+
 }
 
 func (s *organizationService) GetGlobalOrganizationsByTenantOrganizationId(ctx context.Context, organizationId string) ([]*postgres_entity.GlobalOrganization, error) {

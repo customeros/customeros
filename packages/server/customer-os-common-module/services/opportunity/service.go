@@ -693,7 +693,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 
 			// set organization stage to target if an opportunity
 			if opportunityEntity.IsNBO() {
-				if organizationEntity.Relationship == neo4jenum.OrganizationRelationshipProspect && organizationEntity.Stage == enum.Opportunity {
+				if organizationEntity.Stage == enum.Opportunity {
 					_, err = s.organization.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
 						Stage: utils.ToPtr(enum.Target),
 					})

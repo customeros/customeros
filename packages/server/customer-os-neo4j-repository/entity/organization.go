@@ -90,9 +90,6 @@ type OrganizationEntity struct {
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 	OrganizationInternalFields         OrganizationInternalFields
 	DerivedData                        DerivedData
-
-	// Deprecated
-	Relationship enum.OrganizationRelationship `neo4jDb:"property:relationship;lookupName:RELATIONSHIP;supportCaseSensitive:false"`
 }
 
 type DerivedData struct {

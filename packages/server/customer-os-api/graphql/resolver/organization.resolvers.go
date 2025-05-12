@@ -94,9 +94,6 @@ func (r *mutationResolver) OrganizationSaveByGlobalOrganization(ctx context.Cont
 		if input.Stage != nil {
 			dataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
 		}
-		if input.Relationship != nil {
-			dataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(*input.Relationship))
-		}
 	}
 	organizationId, err := r.Services.CommonServices.OrganizationService.CreateFromGlobalOrganization(ctx, nil, uint64(globalOrganizationID), dataFields)
 	if err != nil {
@@ -536,36 +533,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	// set stage if updated
 	if input.Stage != nil {
 		organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
-		// set default for relationship if stage is updated
-		if *input.Stage == model.OrganizationStageUnqualified {
-			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit))
-		} else if *input.Stage == model.OrganizationStageOnboarding {
-			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer))
-		} else if *input.Stage == model.OrganizationStagePendingChurn {
-			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer))
-		}
 	}
-	// if relationship is not set to default value, update it
-	if organizationDataFields.GetRelationshipStr() == "" {
-		if input.Relationship != nil {
-			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(*input.Relationship))
-		} else if input.IsCustomer != nil && *input.IsCustomer {
-			organizationDataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer))
-		}
-	}
-	// set stage if relationship is updated from current db value
-	if organizationDataFields.GetStageStr() == "" {
-		if organizationDataFields.GetRelationshipStr() != "" && organizationDataFields.GetRelationshipStr() != organizationEntity.Relationship.String() {
-			if organizationDataFields.GetRelationshipStr() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
-				organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageUnqualified))
-			} else if organizationDataFields.GetRelationshipStr() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
-				organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageOnboarding))
-			} else if organizationDataFields.GetRelationshipStr() == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
-				organizationDataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(model.OrganizationStageTarget))
-			}
-		}
-	}
-
 	if input.Logo != nil {
 		organizationDataFields.LogoUrl = input.Logo
 	}
