@@ -584,10 +584,9 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 			if organizationDbNode != nil {
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 				// Make organization customer if it's not already
-				if organizationEntity.Relationship != neo4jenum.OrganizationRelationshipCustomer && organizationEntity.Stage != enum.Trial {
-					_, err := s.organization.Save(ctx, txWithPostCommit, &organizationEntity.ID, data_fields.OrganizationFields{
-						Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer),
-						Stage:        utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer.DefaultStage()),
+				if organizationEntity.Stage != enum.Customer && organizationEntity.Stage != enum.NotAFit {
+					_, err = s.organization.Save(ctx, txWithPostCommit, &organizationEntity.ID, data_fields.OrganizationFields{
+						Stage: utils.ToPtr(enum.Customer),
 					})
 					if err != nil {
 						spans.TraceError(err)
@@ -692,9 +691,9 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 				}
 			}
 
-			// set organization stage to target if still engaged
+			// set organization stage to target if an opportunity
 			if opportunityEntity.IsNBO() {
-				if organizationEntity.Relationship == neo4jenum.OrganizationRelationshipProspect && organizationEntity.Stage == enum.Engaged {
+				if organizationEntity.Relationship == neo4jenum.OrganizationRelationshipProspect && organizationEntity.Stage == enum.Opportunity {
 					_, err = s.organization.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
 						Stage: utils.ToPtr(enum.Target),
 					})

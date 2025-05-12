@@ -38,28 +38,10 @@ func (e OrganizationStage) String() string {
 
 func DecodeOrganizationStage(str string) OrganizationStage {
 	switch str {
-	case Lead.String():
-		return Lead
 	case Target.String():
 		return Target
-	case Engaged.String():
-		return Engaged
-	case Unqualified.String():
-		return Unqualified
 	case ReadyToBuy.String():
 		return ReadyToBuy
-	case Onboarding.String():
-		return Onboarding
-	case InitialValue.String():
-		return InitialValue
-	case RecurringValue.String():
-		return RecurringValue
-	case MaxValue.String():
-		return MaxValue
-	case PendingChurn.String():
-		return PendingChurn
-	case Trial.String():
-		return Trial
 	case Education.String():
 		return Education
 	case Solution.String():
@@ -72,6 +54,25 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return Customer
 	case NotAFit.String():
 		return NotAFit
+	case Lead.String():
+		return Lead
+	case Engaged.String():
+		return Engaged
+	case Unqualified.String():
+		return Unqualified
+
+	case Onboarding.String():
+		return Onboarding
+	case InitialValue.String():
+		return InitialValue
+	case RecurringValue.String():
+		return RecurringValue
+	case MaxValue.String():
+		return MaxValue
+	case PendingChurn.String():
+		return PendingChurn
+	case Trial.String():
+		return Trial
 	default:
 		return ""
 	}

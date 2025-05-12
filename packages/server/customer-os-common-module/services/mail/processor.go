@@ -103,7 +103,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 		}
 
 		if organizationNode == nil {
-			stage := commonenum.Lead
+			stage := commonenum.Target
 			leadSource := ""
 
 			if source == neo4jentity.DataSourceGmail.String() {
@@ -112,7 +112,6 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 				leadSource = "Outlook"
 			} else if source == neo4jentity.DataSourceMailstack.String() {
 				leadSource = "Mailstack"
-				stage = commonenum.Target
 			} else {
 				leadSource = "Email"
 			}

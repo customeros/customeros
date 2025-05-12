@@ -1734,10 +1734,10 @@ func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields
 		}
 		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipProspect || *dataFields.Relationship == neo4jenum.OrganizationRelationshipFormerCustomer {
 			if dataFields.Stage != nil {
-				if *dataFields.Stage == enum.Lead {
+				if *dataFields.Stage == enum.Target {
 					dataFields.IcpFit = utils.ToPtr(enum.IcpNotSet)
 					dataFields.IcpFitReasons = utils.ToPtr([]string{})
-				} else if *dataFields.Stage != enum.Lead {
+				} else if *dataFields.Stage != enum.Target {
 					dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
 					if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
 						dataFields.IcpFitReasons = utils.ToPtr([]string{})
