@@ -3211,14 +3211,15 @@ type User struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName        string  `json:"lastName"`
-	Name            *string `json:"name,omitempty"`
-	Internal        bool    `json:"internal"`
-	Bot             bool    `json:"bot"`
-	Test            bool    `json:"test"`
-	Timezone        *string `json:"timezone,omitempty"`
-	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
-	Roles           []Role  `json:"roles"`
+	LastName          string  `json:"lastName"`
+	Name              *string `json:"name,omitempty"`
+	Internal          bool    `json:"internal"`
+	Bot               bool    `json:"bot"`
+	Test              bool    `json:"test"`
+	Timezone          *string `json:"timezone,omitempty"`
+	ProfilePhotoURL   *string `json:"profilePhotoUrl,omitempty"`
+	ProfilePhotoURLV2 *string `json:"profilePhotoUrlV2,omitempty"`
+	Roles             []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails           []*Email               `json:"emails,omitempty"`

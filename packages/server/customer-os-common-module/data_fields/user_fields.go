@@ -19,11 +19,13 @@ type UserFields struct {
 	FirstName                        *string               `json:"firstName,omitempty"`
 	LastName                         *string               `json:"lastName,omitempty"`
 	Timezone                         *string               `json:"timezone,omitempty"`
-	ProfilePhotoUrl                  *string               `json:"profilePhotoUrl,omitempty"`
 	Internal                         *bool                 `json:"internal,omitempty"`
 	Test                             *bool                 `json:"test,omitempty"`
 	Bot                              *bool                 `json:"bot,omitempty"`
 	Roles                            *[]string             `json:"roles,omitempty"`
+	ProfilePhotoKey                  *string               `json:"profilePhotoKey,omitempty"`
+	// Deprecated
+	ProfilePhotoUrl *string `json:"profilePhotoUrl,omitempty"`
 }
 
 func (fields UserFields) ExternalSystemAvailable() bool {
