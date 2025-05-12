@@ -24,7 +24,7 @@ func (n *NATSConnections) Close() {
 }
 
 const (
-	CORE_STREAM = "core"
+	AI_STREAM = "ai"
 
 	MAX_STREAM_RECONNECTS = -1 // never stop trying to reconnect
 )
@@ -37,7 +37,7 @@ func InitNats(config *config.NATSConfig, environment string) (*NATSConnections, 
 	}
 
 	opts := []nats.Option{
-		nats.Name(CORE_STREAM),
+		nats.Name(AI_STREAM),
 		nats.MaxReconnects(MAX_STREAM_RECONNECTS),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
 			log.Printf("NATS disconnected: %v", err)
@@ -91,7 +91,7 @@ func setupNATSStreams(js nats.JetStreamContext, replicas int) error {
 	persistedSubjects := []string{
 		"core.>",
 	}
-	return setupWorkQueueStream(js, CORE_STREAM, persistedSubjects, replicas)
+	return setupWorkQueueStream(js, AI_STREAM, persistedSubjects, replicas)
 }
 
 func setupWorkQueueStream(js nats.JetStreamContext, streamName string, subjects []string, replicas int) error {

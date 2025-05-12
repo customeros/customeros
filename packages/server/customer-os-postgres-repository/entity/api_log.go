@@ -1,8 +1,9 @@
 package postgres_entity
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
 type APICallLog struct {
@@ -10,7 +11,6 @@ type APICallLog struct {
 	Vendor       enum.APIVendor `gorm:"column:vendor;type:varchar(255);index;not null"`
 	Method       string         `gorm:"column:method;type:varchar(255);not null"`
 	URL          string         `gorm:"column:url;type:varchar(255);not null"`
-	RequestID    string         `gorm:"column:request_id;type:varchar(55);not null"`
 	RequestBody  []byte         `gorm:"column:request_body;type:bytea"`
 	Timestamp    time.Time      `gorm:"column:timestamp;type:timestamptz;not null"`
 	Duration     int            `gorm:"column:duration;type:int;not null"`

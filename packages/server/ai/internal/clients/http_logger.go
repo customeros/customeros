@@ -9,16 +9,16 @@ import (
 	"os"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/ai/internal/utils"
 )
 
 // Define the interface for the repository
 func NewLoggingClient(repo postgres_repository.APICallLogRepository, vendor enum.APIVendor, timeout *time.Duration) *http.Client {
-	client := &http.Client{
+	client := http.Client{
 		Transport: &dbLoggingTransport{
 			base:   http.DefaultTransport,
 			vendor: vendor,
@@ -30,7 +30,7 @@ func NewLoggingClient(repo postgres_repository.APICallLogRepository, vendor enum
 		client.Timeout = *timeout
 	}
 
-	return client
+	return &client
 }
 
 type dbLoggingTransport struct {
@@ -40,6 +40,8 @@ type dbLoggingTransport struct {
 }
 
 func (t *dbLoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	requestID := utils.GenerateAPIRequestID()
+
 	// Capture request body for logging
 	var requestBodyBytes []byte
 	if req.Body != nil && req.Header.Get("Content-Type") != "multipart/form-data" {
@@ -65,8 +67,8 @@ func (t *dbLoggingTransport) RoundTrip(req *http.Request) (*http.Response, error
 
 	// Prepare log entry
 	logEntry := &postgres_entity.APICallLog{
-		ID:          utils.GenerateNanoIdWithPrefix("api", 21),
-		Vendor:      t.vendor,
+		ID:          requestID,
+		Vendor:      enum.APIVendor(t.vendor),
 		Method:      req.Method,
 		URL:         req.URL.String(),
 		RequestBody: requestBodyBytes,

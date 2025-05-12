@@ -3,17 +3,22 @@ package enum
 type APIVendor string
 
 const (
-	VendorNotSet        APIVendor = "Not Set"
-	VendorIPData        APIVendor = "IP Data"
-	VendorSnitcher      APIVendor = "Snitcher"
-	VendorScrapin       APIVendor = "Scrapin"
-	VendorEnrow         APIVendor = "Enrow"
+	VendorAnthropic     APIVendor = "Anthropic"
 	VendorBetterContact APIVendor = "BetterContact"
-	VendorScrubbyIo     APIVendor = "ScrubbyIo"
-	VendorGoogle        APIVendor = "Google"
-	VendorMicrosoft     APIVendor = "Microsoft"
-	VendorSlack         APIVendor = "Slack"
-	VendorJina          APIVendor = "Jina"
-	VendorQuickbooks    APIVendor = "Quickbooks"
 	VendorCrustData     APIVendor = "Crust Data"
+	VendorDeepseek      APIVendor = "Deepseek"
+	VendorEnrow         APIVendor = "Enrow"
+	VendorGemini        APIVendor = "Gemini"
+	VendorGoogle        APIVendor = "Google"
+	VendorGroq          APIVendor = "Groq"
+	VendorIPData        APIVendor = "IP Data"
+	VendorJina          APIVendor = "Jina"
+	VendorMicrosoft     APIVendor = "Microsoft"
+	VendorQuickbooks    APIVendor = "Quickbooks"
+	VendorScrapin       APIVendor = "Scrapin"
+	VendorScrubbyIo     APIVendor = "ScrubbyIo"
+	VendorSlack         APIVendor = "Slack"
+	VendorSnitcher      APIVendor = "Snitcher"
+
+	VendorNotSet APIVendor = "Not Set"
 )

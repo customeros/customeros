@@ -3,7 +3,6 @@ package agent_capability
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"sort"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/mailvalidate"
-
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -20,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
@@ -193,12 +191,11 @@ type Session struct {
 }
 
 type PageVisit struct {
-	SessionID    string                    `json:"sessionId"`
-	IPAddress    string                    `json:"ipAddress"`
-	Url          string                    `json:"url"`
-	StageSignal  enum.CustomerJourneyStage `json:"stageSignal"`
-	PageCategory enum.WebpageCategory      `json:"pageCategory"`
-	Topics       []string                  `json:"topics"`
+	SessionID    string               `json:"sessionId"`
+	IPAddress    string               `json:"ipAddress"`
+	Url          string               `json:"url"`
+	PageCategory enum.WebpageCategory `json:"pageCategory"`
+	Topics       []string             `json:"topics"`
 
 	EntryTimestamp time.Time `json:"entryTimestamp"`
 	ExitTimestamp  time.Time `json:"exitTimestamp"`
@@ -315,13 +312,6 @@ func (c *AnalyzeWebSessionCapability) processPageVisit(ctx context.Context, sess
 	if content == "" {
 		return visit, nil
 	}
-
-	contentStage, err := c.webscraperService.ClassifyContentStage(ctx, page, &content)
-	if err != nil {
-		spans.TraceError(err)
-		return visit, err
-	}
-	visit.StageSignal = contentStage
 
 	pageTopics, err := c.webscraperService.ClassifyWebpageTopics(ctx, page, &content)
 	if err != nil {
