@@ -3,9 +3,7 @@ package neo4j_entity
 import (
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	"golang.org/x/net/context"
 	"time"
 )
 
@@ -71,8 +69,7 @@ type OrganizationEntity struct {
 	SlackChannelId     string
 	LogoUrl            string
 	IconUrl            string
-	Relationship       enum.OrganizationRelationship `neo4jDb:"property:relationship;lookupName:RELATIONSHIP;supportCaseSensitive:false"`
-	Stage              enum.OrganizationStage        `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
+	Stage              commonenum.OrganizationStage `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
 	StageUpdatedAt     *time.Time
 	LeadSource         string `neo4jDb:"property:leadSource;lookupName:LEAD_SOURCE;supportCaseSensitive:true"`
 	IcpFit             commonenum.IcpFit
@@ -93,6 +90,9 @@ type OrganizationEntity struct {
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 	OrganizationInternalFields         OrganizationInternalFields
 	DerivedData                        DerivedData
+
+	// Deprecated
+	Relationship enum.OrganizationRelationship `neo4jDb:"property:relationship;lookupName:RELATIONSHIP;supportCaseSensitive:false"`
 }
 
 type DerivedData struct {
@@ -157,32 +157,6 @@ func (o OrganizationEntity) Labels(tenant string) []string {
 		o.EntityLabel(),
 		o.EntityLabel() + "_" + tenant,
 	}
-}
-
-func OrganizationStageAndRelationshipCompatible(ctx context.Context, stageStr, relationshipStr string) bool {
-	spans, ctx := telemetry.StartSpan(ctx, "OrganizationStageAndRelationshipCompatible")
-	defer spans.Finish()
-	spans.LogKV("stage", stageStr, "relationship", relationshipStr)
-
-	stage := enum.OrganizationStage(stageStr)
-	relationship := enum.OrganizationRelationship(relationshipStr)
-
-	if stage == "" || relationship == "" {
-		return true
-	}
-
-	if relationship == enum.OrganizationRelationshipNotAFit && stage != enum.Unqualified {
-		return false
-	} else if relationship == enum.OrganizationRelationshipFormerCustomer && stage != enum.Target {
-		return false
-	} else if relationship == enum.OrganizationRelationshipProspect && stage != enum.Lead && stage != enum.Target &&
-		stage != enum.Engaged && stage != enum.ReadyToBuy && stage != enum.Trial {
-		return false
-	} else if relationship == enum.OrganizationRelationshipCustomer && stage != enum.Onboarding && stage != enum.InitialValue &&
-		stage != enum.RecurringValue && stage != enum.MaxValue && stage != enum.PendingChurn {
-		return false
-	}
-	return true
 }
 
 func (o OrganizationEntity) IsHidden() bool {

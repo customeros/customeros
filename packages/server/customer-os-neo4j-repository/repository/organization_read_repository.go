@@ -69,7 +69,7 @@ type OrganizationReadRepository interface {
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error)
-	GetOrganizationsByStage(ctx context.Context, tenant string, stage neo4jenum.OrganizationStage) ([]*dbtype.Node, error)
+	GetOrganizationsByStage(ctx context.Context, tenant string, stage commonenum.OrganizationStage) ([]*dbtype.Node, error)
 }
 
 type organizationReadRepository struct {
@@ -1137,7 +1137,7 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
 		"delayFromCreatedAt":        5,
 		"icpNotSet":                 commonenum.IcpNotSet.String(),
-		"leadStage":                 neo4jenum.Lead.String(),
+		"leadStage":                 commonenum.Lead.String(),
 	}
 	spans.LogKV("cypher", cypher)
 	spans.LogObjectAsJson("params", params)
@@ -1430,7 +1430,7 @@ func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ct
 	return output, nil
 }
 
-func (r *organizationReadRepository) GetOrganizationsByStage(ctx context.Context, tenant string, stage neo4jenum.OrganizationStage) ([]*dbtype.Node, error) {
+func (r *organizationReadRepository) GetOrganizationsByStage(ctx context.Context, tenant string, stage commonenum.OrganizationStage) ([]*dbtype.Node, error) {
 	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationReadRepository.GetOrganizationsByStage")
 	defer spans.Finish()
 

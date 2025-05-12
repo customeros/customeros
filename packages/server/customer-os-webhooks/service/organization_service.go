@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"strings"
 	"sync"
 	"time"
@@ -259,7 +260,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				organizationDataFields.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer)
 			} else {
 				if !matchingOrganizationExists {
-					organizationDataFields.Stage = utils.ToPtr(neo4jenum.Trial)
+					organizationDataFields.Stage = utils.ToPtr(enum.Target)
 					organizationDataFields.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
 				}
 			}

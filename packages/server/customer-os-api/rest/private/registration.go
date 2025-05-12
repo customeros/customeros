@@ -1201,7 +1201,7 @@ func createOrganizationAndContact(ctx context.Context, services *cosapi_services
 				Domains:      []string{domain},
 				Name:         common_utils.StringPtr(domain),
 				Relationship: common_utils.ToPtr(enum.OrganizationRelationshipProspect),
-				Stage:        common_utils.ToPtr(enum.Trial),
+				Stage:        common_utils.ToPtr(commonenum.Target),
 				LeadSource:   common_utils.StringPtr(leadSource),
 			})
 			if err != nil {

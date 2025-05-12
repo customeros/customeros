@@ -15,7 +15,7 @@ type OrganizationFields struct {
 	Website            *string                             `json:"website,omitempty"`
 	PrimaryDomain      *string                             `json:"primaryDomain,omitempty"`
 	Domains            []string                            `json:"domains,omitempty"`
-	Stage              *neo4jenum.OrganizationStage        `json:"stage,omitempty"`
+	Stage              *enum.OrganizationStage             `json:"stage,omitempty"`
 	Relationship       *neo4jenum.OrganizationRelationship `json:"relationship,omitempty"`
 	CustomerOsId       *string                             `json:"customerOsId,omitempty"`
 	Hide               *bool                               `json:"hide,omitempty"`

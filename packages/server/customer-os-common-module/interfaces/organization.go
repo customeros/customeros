@@ -2,10 +2,10 @@ package interfaces
 
 import (
 	"context"
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
@@ -43,7 +43,7 @@ type OrganizationService interface {
 	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4j_entity.OrganizationEntities, error)
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
-	GetOrganizationsByStage(ctx context.Context, stage enum.OrganizationStage) (*neo4j_entity.OrganizationEntities, error)
+	GetOrganizationsByStage(ctx context.Context, stage commonenum.OrganizationStage) (*neo4j_entity.OrganizationEntities, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)

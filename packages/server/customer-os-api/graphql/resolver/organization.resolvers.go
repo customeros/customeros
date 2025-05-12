@@ -566,21 +566,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		}
 	}
 
-	// validate relationship and stage compatibility
-	stage := utils.FirstNotEmptyString(organizationDataFields.GetStageStr(), organizationEntity.Stage.String())
-	relationship := utils.FirstNotEmptyString(organizationDataFields.GetRelationshipStr(), organizationEntity.Relationship.String())
-	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stage, relationship) {
-		err := errors.New("Stage and Relationship are not compatible")
-		spans.TraceError(err)
-		graphql.AddErrorf(ctx, "Stage and Relationship are not compatible")
-		return &model.Organization{
-			Metadata: &model.Metadata{
-				ID: input.ID,
-			},
-			ID: input.ID,
-		}, nil
-	}
-
 	if input.Logo != nil {
 		organizationDataFields.LogoUrl = input.Logo
 	}
