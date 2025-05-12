@@ -1137,7 +1137,7 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
 		"delayFromCreatedAt":        5,
 		"icpNotSet":                 commonenum.IcpNotSet.String(),
-		"leadStage":                 commonenum.Lead.String(),
+		"leadStage":                 commonenum.Target.String(),
 	}
 	spans.LogKV("cypher", cypher)
 	spans.LogObjectAsJson("params", params)

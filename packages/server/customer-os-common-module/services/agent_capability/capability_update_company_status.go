@@ -167,8 +167,7 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 	spans.TagEntity(organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
-		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipNotAFit),
-		Stage:         utils.ToPtr(enum.Unqualified),
+		Stage:         utils.ToPtr(enum.NotAFit),
 		IcpFit:        utils.ToPtr(enum.IcpNotFit),
 		IcpFitReasons: &reasons,
 	})

@@ -691,6 +691,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 				}
 			}
 
+			// TODO this to be changed
 			// set organization stage to target if still engaged
 			if opportunityEntity.IsNBO() {
 				if organizationEntity.Relationship == neo4jenum.OrganizationRelationshipProspect && organizationEntity.Stage == enum.Engaged {
