@@ -279,7 +279,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		// check if shared presets exist
 		hasSharedPreset := table_view.CheckSharedPresetsExist(tableViewDefinitions)
 
-		for _, def := range table_view.DefaultTableViewDefinitions(hasSharedPreset) {
+		for _, def := range table_view.DefaultTableViewDefinitions(hasSharedPreset, userId) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
@@ -489,7 +489,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !tasksFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionTasks()
+		tvDef, err := table_view.DefaultTableViewDefinitionMyTasks(userId)
 		if err != nil {
 			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for tasks"))
 		} else {
@@ -499,6 +499,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
 	}
+
 
 	if viewsUpdated {
 		updatedResult := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)

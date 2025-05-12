@@ -10,7 +10,7 @@ import (
 )
 
 // ColumnView represents a column in a table view with type and width.
-func DefaultTableViewDefinitions(hasSharedPresets bool) []postgres_entity.TableViewDefinition {
+func DefaultTableViewDefinitions(hasSharedPresets bool, userId string) []postgres_entity.TableViewDefinition {
 	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices()
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -83,11 +83,13 @@ func DefaultTableViewDefinitions(hasSharedPresets bool) []postgres_entity.TableV
 		return []postgres_entity.TableViewDefinition{}
 	}
 
-	tasksTableViewDefinition, err := DefaultTableViewDefinitionTasks()
+	tasksTableViewDefinition, err := DefaultTableViewDefinitionMyTasks(userId)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
 	}
+
+
 
 	var defaultViewDefinitions []postgres_entity.TableViewDefinition
 	defaultViewDefinitions = append(defaultViewDefinitions, upcomingInvoicesTableViewDefinition)
@@ -102,9 +104,9 @@ func DefaultTableViewDefinitions(hasSharedPresets bool) []postgres_entity.TableV
 	defaultViewDefinitions = append(defaultViewDefinitions, flowsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, flowContactsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, tasksTableViewDefinition)
-	if !hasSharedPresets {
-		defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
-	}
+        if !hasSharedPresets {
+            defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
+        }
 
 	return defaultViewDefinitions
 }
@@ -408,7 +410,7 @@ func DefaultTableViewDefinitionFlowContactsV2(flowId string) (postgres_entity.Ta
 	}, nil
 }
 
-func DefaultTableViewDefinitionTasks() (postgres_entity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionMyTasks(userId string) (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeTasks)
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
@@ -424,12 +426,14 @@ func DefaultTableViewDefinitionTasks() (postgres_entity.TableViewDefinition, err
 		Order:          10,
 		Icon:           "ClipboardCheck",
 		Filters:        ``,
-		DefaultFilters: ``,
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"property":"TASKS_ASSIGNEES","active":true,"operation":"IN","value":["%s"]}}]}`, userId),
 		Sorting:        `{"id": "TASKS_UPDATED_AT", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
 	}, nil
 }
+
+
 
 func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns {
 	switch tableId {
