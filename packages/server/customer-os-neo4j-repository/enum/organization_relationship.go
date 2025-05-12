@@ -1,5 +1,7 @@
 package enum
 
+import commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+
 type OrganizationRelationship string
 
 const (
@@ -36,17 +38,6 @@ func (e OrganizationRelationship) IsValid() bool {
 	return false
 }
 
-func (e OrganizationRelationship) DefaultStage() OrganizationStage {
-	switch e {
-	case OrganizationRelationshipProspect:
-		return Lead
-	case OrganizationRelationshipCustomer:
-		return Onboarding
-	case OrganizationRelationshipNotAFit:
-		return Unqualified
-	case OrganizationRelationshipFormerCustomer:
-		return Target
-	default:
-		return ""
-	}
+func (e OrganizationRelationship) DefaultStage() commonenum.OrganizationStage {
+	return commonenum.Target
 }

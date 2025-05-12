@@ -3,6 +3,7 @@ package mail
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -102,7 +103,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 		}
 
 		if organizationNode == nil {
-			stage := neo4jenum.Lead
+			stage := commonenum.Lead
 			leadSource := ""
 
 			if source == neo4jentity.DataSourceGmail.String() {
@@ -111,7 +112,7 @@ func (s *mailService) GetOrganizationIdForEmail(ctx context.Context, txWithPostC
 				leadSource = "Outlook"
 			} else if source == neo4jentity.DataSourceMailstack.String() {
 				leadSource = "Mailstack"
-				stage = neo4jenum.Target
+				stage = commonenum.Target
 			} else {
 				leadSource = "Email"
 			}

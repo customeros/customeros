@@ -3,6 +3,7 @@ package table_view
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -216,7 +217,7 @@ func DefaultTableViewDefinitionTargets() (postgres_entity.TableViewDefinition, e
 		Order:          1,
 		Icon:           "Target05",
 		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}},{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, neo4jenum.Target, neo4jenum.OrganizationRelationshipProspect),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}},{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, enum.Target, neo4jenum.OrganizationRelationshipProspect),
 		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,
@@ -262,7 +263,7 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts() (postgres_entity.Ta
 		Order:          0,
 		Icon:           "HeartHand",
 		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}},{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, neo4jenum.Target, neo4jenum.OrganizationRelationshipProspect),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}},{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_RELATIONSHIP","value":["%s"],"active":true}}]}`, enum.Target, neo4jenum.OrganizationRelationshipProspect),
 		Sorting:        `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       false,

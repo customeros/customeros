@@ -3,6 +3,7 @@ package customerbase
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"net/http"
 	"strings"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neoEnum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -276,7 +276,7 @@ func (h *OrganizationHandler) buildOrganizationFields(request CreateOrganization
 	return fields
 }
 
-func (h *OrganizationHandler) determineOrganizationStage(relationship model.OrganizationRelationship) *neoEnum.OrganizationStage {
+func (h *OrganizationHandler) determineOrganizationStage(relationship model.OrganizationRelationship) *enum.OrganizationStage {
 	var stage model.OrganizationStage
 	switch relationship {
 	case model.OrganizationRelationshipCustomer:

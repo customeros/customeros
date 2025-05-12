@@ -547,7 +547,7 @@ func (s *enrichmentService) updateContactWithScrapInEnrichDetails(ctx context.Co
 				Name:         utils.StringPtr(scrapinContactResponse.Company.Name),
 				Website:      utils.StringPtr(scrapinContactResponse.Company.WebsiteUrl),
 				Relationship: utils.ToPtr(neoenum.OrganizationRelationshipProspect),
-				Stage:        utils.ToPtr(neoenum.Lead),
+				Stage:        utils.ToPtr(enum.Lead),
 				AppSource:    utils.StringPtr(string(enum.SourceScrapin)),
 			})
 			if err != nil {

@@ -5978,36 +5978,48 @@ func (e OrganizationRelationship) MarshalJSON() ([]byte, error) {
 type OrganizationStage string
 
 const (
+	OrganizationStageTarget         OrganizationStage = "TARGET"
+	OrganizationStageEducation      OrganizationStage = "EDUCATION"
+	OrganizationStageSolution       OrganizationStage = "SOLUTION"
+	OrganizationStageEvaluation     OrganizationStage = "EVALUATION"
+	OrganizationStageReadyToBuy     OrganizationStage = "READY_TO_BUY"
+	OrganizationStageOpportunity    OrganizationStage = "OPPORTUNITY"
+	OrganizationStageCustomer       OrganizationStage = "CUSTOMER"
+	OrganizationStageNotAFit        OrganizationStage = "NOT_A_FIT"
 	OrganizationStageEngaged        OrganizationStage = "ENGAGED"
 	OrganizationStageInitialValue   OrganizationStage = "INITIAL_VALUE"
 	OrganizationStageLead           OrganizationStage = "LEAD"
 	OrganizationStageMaxValue       OrganizationStage = "MAX_VALUE"
 	OrganizationStageOnboarding     OrganizationStage = "ONBOARDING"
 	OrganizationStagePendingChurn   OrganizationStage = "PENDING_CHURN"
-	OrganizationStageReadyToBuy     OrganizationStage = "READY_TO_BUY"
 	OrganizationStageRecurringValue OrganizationStage = "RECURRING_VALUE"
-	OrganizationStageTarget         OrganizationStage = "TARGET"
 	OrganizationStageTrial          OrganizationStage = "TRIAL"
 	OrganizationStageUnqualified    OrganizationStage = "UNQUALIFIED"
 )
 
 var AllOrganizationStage = []OrganizationStage{
+	OrganizationStageTarget,
+	OrganizationStageEducation,
+	OrganizationStageSolution,
+	OrganizationStageEvaluation,
+	OrganizationStageReadyToBuy,
+	OrganizationStageOpportunity,
+	OrganizationStageCustomer,
+	OrganizationStageNotAFit,
 	OrganizationStageEngaged,
 	OrganizationStageInitialValue,
 	OrganizationStageLead,
 	OrganizationStageMaxValue,
 	OrganizationStageOnboarding,
 	OrganizationStagePendingChurn,
-	OrganizationStageReadyToBuy,
 	OrganizationStageRecurringValue,
-	OrganizationStageTarget,
 	OrganizationStageTrial,
 	OrganizationStageUnqualified,
 }
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case OrganizationStageEngaged, OrganizationStageInitialValue, OrganizationStageLead, OrganizationStageMaxValue, OrganizationStageOnboarding, OrganizationStagePendingChurn, OrganizationStageReadyToBuy, OrganizationStageRecurringValue, OrganizationStageTarget, OrganizationStageTrial, OrganizationStageUnqualified:
+	case OrganizationStageTarget, OrganizationStageEducation, OrganizationStageSolution, OrganizationStageEvaluation, OrganizationStageReadyToBuy, OrganizationStageOpportunity, OrganizationStageCustomer, OrganizationStageNotAFit, OrganizationStageEngaged, OrganizationStageInitialValue, OrganizationStageLead, OrganizationStageMaxValue, OrganizationStageOnboarding, OrganizationStagePendingChurn, OrganizationStageRecurringValue, OrganizationStageTrial, OrganizationStageUnqualified:
 		return true
 	}
 	return false

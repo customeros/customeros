@@ -380,12 +380,6 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 	}
 
-	err = s.validateRelationshipAndStageCompatibility(ctx, input, existingOrganizationEntity)
-	if err != nil {
-		spans.TraceError(err)
-		return "", err
-	}
-
 	// generate customerOsId if not provided or if it is empty in the db
 	if createFlow || (existingOrganizationEntity != nil && existingOrganizationEntity.CustomerOsId == "") {
 		customerOsId, err := s.generateCustomerOSId(ctx, tenant)
@@ -608,29 +602,6 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	return organizationId, nil
-}
-
-func (s *organizationService) validateRelationshipAndStageCompatibility(ctx context.Context, input data_fields.OrganizationFields, existingOrganizationEntity *neo4jentity.OrganizationEntity) error {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.validateRelationshipAndStageCompatibility")
-	defer spans.Finish()
-
-	// validate stage and relationship combination all the time (from input or existing computed )
-	stageStr := input.GetStageStr()
-	relationshipStr := input.GetRelationshipStr()
-	if stageStr != "" || relationshipStr != "" {
-		if stageStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
-			stageStr = existingOrganizationEntity.Stage.String()
-		}
-		if relationshipStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
-			relationshipStr = existingOrganizationEntity.Relationship.String()
-		}
-	}
-	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stageStr, relationshipStr) {
-		err := errors.New("Stage and Relationship are not compatible")
-		spans.TraceError(err)
-		return err
-	}
-	return nil
 }
 
 func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error {
@@ -1696,7 +1667,7 @@ func (s *organizationService) calculateLtv(ctx context.Context, tenant string, o
 	return nil
 }
 
-func (s *organizationService) GetOrganizationsByStage(ctx context.Context, stage neo4jenum.OrganizationStage) (*neo4jentity.OrganizationEntities, error) {
+func (s *organizationService) GetOrganizationsByStage(ctx context.Context, stage enum.OrganizationStage) (*neo4jentity.OrganizationEntities, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetOrganizationsByStage")
 	defer spans.Finish()
 
@@ -1763,10 +1734,10 @@ func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields
 		}
 		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipProspect || *dataFields.Relationship == neo4jenum.OrganizationRelationshipFormerCustomer {
 			if dataFields.Stage != nil {
-				if *dataFields.Stage == neo4jenum.Lead {
+				if *dataFields.Stage == enum.Lead {
 					dataFields.IcpFit = utils.ToPtr(enum.IcpNotSet)
 					dataFields.IcpFitReasons = utils.ToPtr([]string{})
-				} else if *dataFields.Stage != neo4jenum.Lead {
+				} else if *dataFields.Stage != enum.Lead {
 					dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
 					if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
 						dataFields.IcpFitReasons = utils.ToPtr([]string{})

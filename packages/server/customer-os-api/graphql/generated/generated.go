@@ -17729,7 +17729,7 @@ type Organization implements MetadataInterface {
     yearFounded:            Int64
     stage:                  OrganizationStage
     stageLastUpdated:       Time
-    relationship:           OrganizationRelationship
+    relationship:           OrganizationRelationship @deprecated
     leadSource:             String
     icpFit:                 IcpFit
 
@@ -17874,7 +17874,7 @@ input OrganizationSaveInput {
     yearFounded:        Int64
     slackChannelId:     String
     stage:              OrganizationStage
-    relationship:       OrganizationRelationship
+    relationship:       OrganizationRelationship @deprecated
     leadSource:         String
     icpFit:             Boolean @deprecated
 
@@ -17907,7 +17907,7 @@ input OrganizationInput {
     slackChannelId:     String
     appSource:     String
     stage:         OrganizationStage
-    relationship:  OrganizationRelationship
+    relationship:  OrganizationRelationship @deprecated
     leadSource:    String
 
     """
@@ -17964,7 +17964,7 @@ input OrganizationUpdateInput {
     yearFounded:        Int64
     slackChannelId:     String
     stage:              OrganizationStage
-    relationship:       OrganizationRelationship
+    relationship:       OrganizationRelationship @deprecated
     icpFit:             Boolean @deprecated
 
     """
@@ -18081,22 +18081,29 @@ enum OrganizationRelationship {
 }
 
 enum OrganizationStage {
-    ENGAGED
-    INITIAL_VALUE
-    LEAD
-    MAX_VALUE
-    ONBOARDING
-    PENDING_CHURN
-    READY_TO_BUY
-    RECURRING_VALUE
     TARGET
-    TRIAL
-    UNQUALIFIED
+    EDUCATION
+    SOLUTION
+    EVALUATION
+    READY_TO_BUY
+    OPPORTUNITY
+    CUSTOMER
+    NOT_A_FIT
+
+    ENGAGED @deprecated
+    INITIAL_VALUE @deprecated
+    LEAD @deprecated
+    MAX_VALUE @deprecated
+    ONBOARDING @deprecated
+    PENDING_CHURN @deprecated
+    RECURRING_VALUE @deprecated
+    TRIAL @deprecated
+    UNQUALIFIED @deprecated
 }
 
 input OrganizationSaveInputFromGlobalOrg {
     stage:              OrganizationStage
-    relationship:       OrganizationRelationship
+    relationship:       OrganizationRelationship @deprecated
 }`, BuiltIn: false},
 	{Name: "../schemas/organizationV2.graphqls", Input: `extend type Query {
     ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant

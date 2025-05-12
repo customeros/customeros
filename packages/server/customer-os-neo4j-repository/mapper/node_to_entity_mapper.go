@@ -267,7 +267,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *neo4j_entity.Organizati
 		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
 		IconUrl:            utils.GetStringPropOrEmpty(props, "iconUrl"),
 		Relationship:       enum.DecodeOrganizationRelationship(utils.GetStringPropOrEmpty(props, "relationship")),
-		Stage:              enum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
+		Stage:              commonenum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
 		StageUpdatedAt:     utils.GetTimePropOrNil(props, "stageUpdatedAt"),
 		LeadSource:         utils.GetStringPropOrEmpty(props, "leadSource"),
 		IcpFit:             commonenum.DecodeIcpFit(utils.GetStringPropOrEmpty(props, string(neo4j_entity.OrganizationPropertyIcpFit))),

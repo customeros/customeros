@@ -149,7 +149,7 @@ func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organ
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
 		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
-		Stage:         utils.ToPtr(neo4jenum.Target),
+		Stage:         utils.ToPtr(enum.Target),
 		IcpFit:        utils.ToPtr(enum.IcpIsFit),
 		IcpFitReasons: &reasons,
 	})
@@ -168,7 +168,7 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
 		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipNotAFit),
-		Stage:         utils.ToPtr(neo4jenum.Unqualified),
+		Stage:         utils.ToPtr(enum.Unqualified),
 		IcpFit:        utils.ToPtr(enum.IcpNotFit),
 		IcpFitReasons: &reasons,
 	})
