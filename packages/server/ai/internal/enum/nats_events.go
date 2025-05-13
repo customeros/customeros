@@ -8,6 +8,7 @@ const (
 	EventRequestWebpageClassification NatsEvents = "ai.request.webpage_classification"
 	EventRequestWebpageIntent         NatsEvents = "ai.request.webpage_intent"
 	EventWebpageClassified            NatsEvents = "webpage.classified"
+	EventWebpageProfiled              NatsEvents = "webpage.profiled"
 )
 
 func (e NatsEvents) String() string {

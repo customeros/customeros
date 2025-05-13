@@ -15,9 +15,11 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/services/gemini"
 	"github.com/customeros/customeros/packages/server/ai/services/groq"
 	"github.com/customeros/customeros/packages/server/ai/services/webpage_classification"
+	"github.com/customeros/customeros/packages/server/ai/services/webpage_intent_profiler"
 )
 
 type Services struct {
+	WebpageIntentProfiler interfaces.NatsService
 	WebpageClassification interfaces.NatsService
 }
 
@@ -38,6 +40,9 @@ func InitServices(
 		WebpageClassification: webpage_classification.NewWebpageClassificationService(
 			natsConn, anthropic, deepseek, groq, gemini,
 		),
+		WebpageIntentProfiler: webpage_intent_profiler.NewWebpageIntentProfiler(
+			natsConn, anthropic, deepseek, groq, gemini,
+		),
 	}
 
 	return services
@@ -49,6 +54,7 @@ func (s *Services) Start(ctx context.Context) error {
 		starter func(context.Context) error
 	}{
 		{"Webpage Classifier", s.WebpageClassification.Start},
+		{"Webpage Intent Profiler", s.WebpageIntentProfiler.Start},
 	}
 
 	for _, svc := range services {
@@ -66,6 +72,7 @@ func (s *Services) Stop(ctx context.Context) {
 		stopper func(context.Context)
 	}{
 		{"Webpage Classifier", func(ctx context.Context) { s.WebpageClassification.Stop() }},
+		{"Webpage Intent Profiler", func(ctx context.Context) { s.WebpageIntentProfiler.Stop() }},
 	}
 
 	for _, service := range services {

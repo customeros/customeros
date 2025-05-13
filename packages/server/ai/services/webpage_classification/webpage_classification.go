@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	MODEL             = enum.AIModelAnthropicSonnet
 	MODEL_TEMPERATURE = 0.2
 	MAX_TOKENS        = 1024
 	RETRIES           = 2
@@ -48,7 +49,7 @@ func (s *webpageClassification) handleWebpageClassification(ctx context.Context,
 
 	// askAI
 	aiRequest := buildAIRequest(message)
-	resp, err := s.askAI.AskAI(ctx, aiRequest)
+	resp, err := s.ai.AskAI(ctx, aiRequest)
 	if err != nil {
 		span.TraceError(err)
 		return err
@@ -87,7 +88,7 @@ func (s *webpageClassification) publishWebpageClassifiedEvent(ctx context.Contex
 		PrimaryTopic:        record.PrimaryTopic,
 		SecondaryTopics:     record.SecondaryTopics,
 		SolutionFocus:       record.SolutionFocus,
-		ContentType:         string(record.ContentType),
+		ContentType:         string(record.ContentType), // TODO change to enum
 		IndustryVertical:    record.IndustryVertical,
 		KeyPainPoints:       record.KeyPainPoints,
 		ValueProposition:    record.ValueProposition,
@@ -138,7 +139,7 @@ func (s *webpageClassification) parseWebpageClassification(ctx context.Context, 
 	}
 
 	resp := &WebpageClassification{}
-	err := json.Unmarshal([]byte(*response), &resp)
+	err := json.Unmarshal([]byte(*response), resp)
 	if err != nil {
 		span.TraceError(err)
 		return nil, err
@@ -169,7 +170,7 @@ func (s *webpageClassification) parseNatsMessage(ctx context.Context, msg *nats.
 }
 
 func buildAIRequest(message *pb.RequestWebpageClassification) *interfaces.AskAIRequest {
-	systemPrompt := `I'm will provide you with the scraped content of a webpage along with some metadata about the company it belongs to.  Your job is to classify the content based on:
+	systemPrompt := `I will provide you with the scraped content of a webpage along with some metadata about the company it belongs to.  Your job is to classify the content based on:
 	- Primary Topic
 	- Secondary Topics (0-3 values)
 	- The Solution(s) the content is focused on (1-3 values)
@@ -227,7 +228,7 @@ func buildAIRequest(message *pb.RequestWebpageClassification) *interfaces.AskAIR
 	prompt := p.String()
 
 	askAI := &interfaces.AskAIRequest{
-		Model:            enum.AIModelAnthropicSonnet,
+		Model:            MODEL,
 		SystemPrompt:     &systemPrompt,
 		Prompt:           &prompt,
 		ModelTemperature: utils.Float32Ptr(MODEL_TEMPERATURE),
