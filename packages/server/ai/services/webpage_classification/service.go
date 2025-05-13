@@ -94,7 +94,7 @@ func (s *webpageClassification) Start(ctx context.Context) error {
 	return nil
 }
 
-// processRawEvents continuously processes raw email events
+// processRawEvents continuously processes webpage classification events
 func (s *webpageClassification) processRawEvents(ctx context.Context, sub *nats.Subscription) {
 	log.Println("Webpage Classification Service started")
 	for {
