@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message IPAddressVerifyRequest { string ip_address = 1; }
+
+message IPAddressVerifyResponse {
+  string ip_address = 1;
+  string city = 2;
+  string region = 3;
+  string country_code = 4;
+  bool is_threat = 5;
+  string error_message = 6;
+}

@@ -1,21 +1,22 @@
+proto_dir := "../proto"
+
 build:
     go build -o .bin/app .
 
 db:
-    pgcli postgresql://postgres:password@localhost:5555/mailstack
+    pgcli postgresql://postgres:password@localhost:5555/ai
 
 debug:
     dlv debug . -- server
 
 gen-proto:
-    find ./proto -name "*.proto" -type f -exec \
+    find {{proto_dir}} -name "*.proto" -type f -exec \
     protoc \
-    --proto_path=./proto \
-    --go_out=./proto/pb \
-    --go_opt=module=github.com/customeros/customeros/packages/server/ai/proto/pb \
-    --go-grpc_out=./proto/pb \
-    --go-grpc_opt=module=github.com/customeros/customeros/packages/server/ai/proto/pb \
+    --proto_path={{proto_dir}} \
+    --go_out=./internal/proto/pb \
+    --go_opt=paths=source_relative \
     {} \;
+
 
 run:
     go run main.go

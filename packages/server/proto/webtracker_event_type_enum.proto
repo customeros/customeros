@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+enum WebTrackerEventType {
+  WEB_TRACKER_EVENT_UNSPECIFIED = 0;
+  WEB_TRACKER_PAGE_EXIT = 1;
+  WEB_TRACKER_PAGE_VIEW = 2;
+  WEB_TRACKER_CLICK = 3;
+  WEB_TRACKER_IDENTIFY = 4;
+}

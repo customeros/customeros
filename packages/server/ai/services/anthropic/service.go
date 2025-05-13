@@ -19,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/interfaces"
 	"github.com/customeros/customeros/packages/server/ai/internal/clients"
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
-	"github.com/customeros/customeros/packages/server/ai/proto/pb"
+	"github.com/customeros/customeros/packages/server/ai/internal/enum"
 	"github.com/customeros/customeros/packages/server/ai/services/common"
 )
 
@@ -31,7 +31,6 @@ const (
 )
 
 type AnthropicService struct {
-	interfaces.LLMClient
 	config *config.AnthropicConfig
 	client *http.Client
 }
@@ -44,12 +43,12 @@ func NewAnthropicService(cfg *config.AnthropicConfig, warehouseRepos *postgres_r
 	}
 }
 
-func (c *AnthropicService) Ask(ctx context.Context, message *pb.AskAI) (*string, error) {
+func (c *AnthropicService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "AnthropicService.Ask")
 	defer span.Finish()
 	span.LogObjectAsJson("request", message)
 
-	if message.Model != pb.AIModel_AI_MODEL_ANTHROPIC_HAIKU && message.Model != pb.AIModel_AI_MODEL_ANTHROPIC_SONNET {
+	if message.Model != enum.AIModelAnthropicHaiku && message.Model != enum.AIModelAnthropicSonnet {
 		err := errors.New("model not an anthropic model")
 		span.TraceError(err)
 		return nil, err
@@ -179,7 +178,7 @@ func (c *AnthropicService) executeWithRetry(ctx context.Context, reqBody Anthrop
 	return "", lastErr
 }
 
-func buildRequest(message *pb.AskAI) AnthropicApiRequest {
+func buildRequest(message interfaces.AskAIRequest) AnthropicApiRequest {
 	req := AnthropicApiRequest{
 		Model:       message.Model.String(),
 		Messages:    []Message{{Role: "user", Content: message.Prompt}},

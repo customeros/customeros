@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message WebpageProfiled {
+  string content_id = 1;
+  uint32 problem_recognition_score = 2;
+  uint32 solution_research_score = 3;
+  uint32 evaluation_score = 4;
+  uint32 purchase_readiness_score = 5;
+}

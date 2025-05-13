@@ -3,8 +3,10 @@ package enum
 type NatsEvents string
 
 const (
-	EventIdentifyVisitor  NatsEvents = "webtracker.visitor.identify"
-	EventAIRequestGeneric NatsEvents = "ai.request.generic"
+	EventIdentifyVisitor              NatsEvents = "webtracker.visitor.identify"
+	EventAIRequestGeneric             NatsEvents = "ai.request.generic"
+	EventRequestWebpageClassification NatsEvents = "ai.request.webpage_classification"
+	EventRequestWebpageIntent         NatsEvents = "ai.request.webpage_intent"
 )
 
 func (e NatsEvents) String() string {

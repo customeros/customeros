@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./pb";
+
+enum ServiceName {
+  SERVICE_UNKNOWN = 0;
+  LEADS_PROXY_MANAGER_SERVICE = 1;
+}
+
+// ErrorEvent message for publishing error information
+message ErrorEvent {
+  google.protobuf.Timestamp timestamp = 1;
+  string subject = 2;
+  string email_id = 3;
+  string error_message = 4;
+  bytes raw_data = 5;
+  ServiceName service = 6;
+}

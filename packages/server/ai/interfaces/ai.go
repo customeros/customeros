@@ -6,8 +6,8 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/internal/enum"
 )
 
-type LLMClient interface {
-	Ask(ctx context.Context, request AskAIRequest) (*string, error)
+type AIService interface {
+	AskAI(ctx context.Context, message AskAIRequest) (*string, error)
 }
 
 type AskAIRequest struct {

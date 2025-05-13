@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message RequestWebpageIntent { string content_id = 1; }

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message WebtrackerVisitorIdentified {
+  string session_id = 1;
+  string tracker_id = 2;
+  string visitor_id = 3;
+  string ip = 4;
+  string domain = 5;
+  string email = 6;
+}

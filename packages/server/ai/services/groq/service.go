@@ -17,12 +17,11 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/interfaces"
 	"github.com/customeros/customeros/packages/server/ai/internal/clients"
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
-	"github.com/customeros/customeros/packages/server/ai/proto/pb"
+	"github.com/customeros/customeros/packages/server/ai/internal/enum"
 	"github.com/customeros/customeros/packages/server/ai/services/common"
 )
 
 type GroqService struct {
-	interfaces.LLMClient
 	config *config.GroqConfig
 	client *http.Client
 }
@@ -35,7 +34,7 @@ func NewGroqService(cfg *config.GroqConfig, warehouseRepos *postgres_repository.
 	}
 }
 
-func (c *GroqService) Ask(ctx context.Context, message *pb.AskAI) (*string, error) {
+func (c *GroqService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "GroqService.Ask")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", message)
@@ -191,10 +190,10 @@ func (c *GroqService) executeWithRetry(ctx context.Context, reqBody GroqRequest)
 	return nil, lastErr
 }
 
-func buildRequest(message *pb.AskAI) GroqRequest {
+func buildRequest(message interfaces.AskAIRequest) GroqRequest {
 	var outputFormat string
 	switch message.OutputFormat {
-	case pb.AIOutputFormat_AI_OUTPUT_JSON:
+	case enum.AIOutputJson:
 		outputFormat = "json_object"
 	default:
 		outputFormat = "text"

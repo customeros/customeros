@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message ProxyWebtrackerCnameConfigured {
+  string tenant = 1;
+  string tracker_id = 2;
+  string cname_host = 3;
+  string cname_target = 4;
+}
