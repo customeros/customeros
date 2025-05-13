@@ -116,7 +116,7 @@ func (s *organizationService) processOrganizationEvents(ctx context.Context, sub
 			log.Println("Organization event processor shutting down")
 			return
 		default:
-			s.processOrganizationBatch(ctx, sub)
+			s.processOrganizationBatch(sub)
 		}
 	}
 }
@@ -129,12 +129,12 @@ func (s *organizationService) processWebtrackerVisitorIdentifiedEvents(ctx conte
 			log.Println("Webtracker visitor identified event processor shutting down")
 			return
 		default:
-			s.processWebtrackerVisitorIdentifiedEventsBatch(ctx, sub)
+			s.processWebtrackerVisitorIdentifiedEventsBatch(sub)
 		}
 	}
 }
 
-func (s *organizationService) processOrganizationBatch(ctx context.Context, sub *nats.Subscription) {
+func (s *organizationService) processOrganizationBatch(sub *nats.Subscription) {
 	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
 	if err != nil {
 		s.handleFetchError(err)
@@ -142,13 +142,13 @@ func (s *organizationService) processOrganizationBatch(ctx context.Context, sub 
 	}
 
 	for _, msg := range msgs {
-		msgCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		msgCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		s.handleOrganizationMessage(msgCtx, msg)
 		cancel()
 	}
 }
 
-func (s *organizationService) processWebtrackerVisitorIdentifiedEventsBatch(ctx context.Context, sub *nats.Subscription) {
+func (s *organizationService) processWebtrackerVisitorIdentifiedEventsBatch(sub *nats.Subscription) {
 	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
 	if err != nil {
 		s.handleFetchError(err)
@@ -156,7 +156,7 @@ func (s *organizationService) processWebtrackerVisitorIdentifiedEventsBatch(ctx 
 	}
 
 	for _, msg := range msgs {
-		msgCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		msgCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		s.handleWebtrackerVisitorIdentifiedMessage(msgCtx, msg)
 		cancel()
 	}
@@ -173,7 +173,7 @@ func (s *organizationService) handleFetchError(err error) {
 
 func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = common.WithCustomContextFromNats(ctx, msg)
-	spans, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleOrganizationMessage")
+	spans, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleOrganizationMessage", telemetry.WithNewRoot())
 	defer spans.Finish()
 
 	if msg == nil {
@@ -203,7 +203,7 @@ func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg
 
 func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = common.WithCustomContextFromNats(ctx, msg)
-	span, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleWebtrackerVisitorIdentifiedMessage")
+	span, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleWebtrackerVisitorIdentifiedMessage", telemetry.WithNewRoot())
 	defer span.Finish()
 
 	if msg == nil {
