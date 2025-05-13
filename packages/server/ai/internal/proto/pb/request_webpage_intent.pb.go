@@ -24,6 +24,9 @@ const (
 type RequestWebpageIntent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ContentId     string                 `protobuf:"bytes,1,opt,name=content_id,json=contentId,proto3" json:"content_id,omitempty"`
+	Domain        string                 `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	Url           string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -65,14 +68,38 @@ func (x *RequestWebpageIntent) GetContentId() string {
 	return ""
 }
 
+func (x *RequestWebpageIntent) GetDomain() string {
+	if x != nil {
+		return x.Domain
+	}
+	return ""
+}
+
+func (x *RequestWebpageIntent) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *RequestWebpageIntent) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
 var File_request_webpage_intent_proto protoreflect.FileDescriptor
 
 const file_request_webpage_intent_proto_rawDesc = "" +
 	"\n" +
-	"\x1crequest_webpage_intent.proto\x12\x02pb\"5\n" +
+	"\x1crequest_webpage_intent.proto\x12\x02pb\"y\n" +
 	"\x14RequestWebpageIntent\x12\x1d\n" +
 	"\n" +
-	"content_id\x18\x01 \x01(\tR\tcontentIdB\x06Z\x04./pbb\x06proto3"
+	"content_id\x18\x01 \x01(\tR\tcontentId\x12\x16\n" +
+	"\x06domain\x18\x02 \x01(\tR\x06domain\x12\x10\n" +
+	"\x03url\x18\x03 \x01(\tR\x03url\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontentB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_request_webpage_intent_proto_rawDescOnce sync.Once

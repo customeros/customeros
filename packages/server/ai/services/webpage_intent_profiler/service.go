@@ -1,4 +1,4 @@
-package webpage_classification
+package webpage_intent_profiler
 
 import (
 	"context"
@@ -23,13 +23,13 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/services/groq"
 )
 
-type webpageClassification struct {
+type webpageIntentProfiler struct {
 	natsConn  *nats_internal.NATSConnections
 	ai        interfaces.AIService
 	warehouse *postgres_repository.WarehouseRepositories
 }
 
-func NewWebpageClassificationService(
+func NewWebpageIntentProfiler(
 	natsConn *nats_internal.NATSConnections,
 	anthropic *anthropic.AnthropicService,
 	deepseek *deepseek.DeepseekService,
@@ -37,20 +37,20 @@ func NewWebpageClassificationService(
 	gemini *gemini.GeminiService,
 ) interfaces.NatsService {
 	askAI := ai.NewAIService(anthropic, deepseek, groq, gemini)
-	return &webpageClassification{
+	return &webpageIntentProfiler{
 		natsConn: natsConn,
 		ai:       askAI,
 	}
 }
 
-var SUBSCRIBED_SUBJECT = enum.EventRequestWebpageClassification.String()
+var SUBSCRIBED_SUBJECT = enum.EventRequestWebpageIntent.String()
 
 const (
 	// queue group
-	QUEUE_GROUP = "webpage-classification-service"
+	QUEUE_GROUP = "webpage-intent-profiler-service"
 
 	// consumer config
-	CONSUMER_NAME         = "webpage-classification-consumer"
+	CONSUMER_NAME         = "webpage-intent-profiler-consumer"
 	ACK_WAIT              = 30 * time.Second
 	MAX_DELIVERY_ATTEMPTS = 5
 	MAX_ACK_PENDING       = 100
@@ -60,8 +60,8 @@ const (
 )
 
 // Start begins listening for webpage classification events and processing them
-func (s *webpageClassification) Start(ctx context.Context) error {
-	// Create durable consumer for processing emails
+func (s *webpageIntentProfiler) Start(ctx context.Context) error {
+	// Create durable consumer for processing webpage intent events
 	_, err := s.natsConn.JS.AddConsumer(nats_internal.AI_STREAM, &nats.ConsumerConfig{
 		Durable:       CONSUMER_NAME,
 		DeliverGroup:  QUEUE_GROUP,
@@ -93,12 +93,12 @@ func (s *webpageClassification) Start(ctx context.Context) error {
 }
 
 // processRawEvents continuously processes webpage classification events
-func (s *webpageClassification) processRawEvents(ctx context.Context, sub *nats.Subscription) {
-	log.Println("Webpage Classification Service started")
+func (s *webpageIntentProfiler) processRawEvents(ctx context.Context, sub *nats.Subscription) {
+	log.Println("Webpage Intent Profiler started")
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Webpage Classification Service shutting down")
+			log.Println("Webpage Intent Profiler shutting down")
 			return
 		default:
 			s.processBatch(ctx, sub)
@@ -107,7 +107,7 @@ func (s *webpageClassification) processRawEvents(ctx context.Context, sub *nats.
 }
 
 // processBatch fetches and processes a batch of messages
-func (s *webpageClassification) processBatch(ctx context.Context, sub *nats.Subscription) {
+func (s *webpageIntentProfiler) processBatch(ctx context.Context, sub *nats.Subscription) {
 	// Fetch messages batch
 	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
 	if err != nil {
@@ -123,7 +123,7 @@ func (s *webpageClassification) processBatch(ctx context.Context, sub *nats.Subs
 }
 
 // handleFetchError handles errors that occur during message fetching
-func (s *webpageClassification) handleFetchError(err error) {
+func (s *webpageIntentProfiler) handleFetchError(err error) {
 	if errors.Is(err, nats.ErrTimeout) {
 		// No messages available, this is normal
 		return
@@ -133,9 +133,9 @@ func (s *webpageClassification) handleFetchError(err error) {
 }
 
 // processMessage processes a single webpage classification message
-func (s *webpageClassification) routeMessage(ctx context.Context, msg *nats.Msg) {
+func (s *webpageIntentProfiler) routeMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = utils.WithCustomContextFromNats(ctx, msg)
-	spans, ctx := telemetry.StartServiceSpan(ctx, "webpageClassification.processMessage")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "webpageIntentProfiler.processMessage")
 	defer spans.Finish()
 
 	if msg == nil {
@@ -146,8 +146,8 @@ func (s *webpageClassification) routeMessage(ctx context.Context, msg *nats.Msg)
 
 	var err error
 	switch msg.Subject {
-	case enum.EventRequestWebpageClassification.String():
-		err = s.handleWebpageClassification(ctx, msg)
+	case enum.EventRequestWebpageIntent.String():
+		err = s.handleWebpageIntentRequest(ctx, msg)
 	default:
 		err = errors.ErrUnsupported
 	}
@@ -165,7 +165,7 @@ func (s *webpageClassification) routeMessage(ctx context.Context, msg *nats.Msg)
 }
 
 // handleProcessingError deals with errors during webpage classification processing
-func (s *webpageClassification) handleProcessingError(ctx context.Context, msg *nats.Msg, err error) {
+func (s *webpageIntentProfiler) handleProcessingError(ctx context.Context, msg *nats.Msg, err error) {
 	metadata, _ := msg.Metadata()
 
 	// Check if we should retry
@@ -181,7 +181,7 @@ func (s *webpageClassification) handleProcessingError(ctx context.Context, msg *
 }
 
 // Close gracefully shuts down the service
-func (s *webpageClassification) Stop() {
+func (s *webpageIntentProfiler) Stop() {
 	if s.natsConn != nil {
 		s.natsConn.Close()
 	}
