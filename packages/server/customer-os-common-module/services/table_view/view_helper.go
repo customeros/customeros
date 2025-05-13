@@ -194,29 +194,6 @@ func DefaultTableViewDefinitionCustomers() (postgres_entity.TableViewDefinition,
 	}, nil
 }
 
-// func DefaultTableViewDefinitionTargets() (postgres_entity.TableViewDefinition, error) {
-// 	columns := DefaultColumns(postgres_entity.TableIDTypeTargets)
-// 	jsonData, err := json.Marshal(columns)
-// 	if err != nil {
-// 		fmt.Println("Error serializing data:", err)
-// 		return postgres_entity.TableViewDefinition{}, err
-// 	}
-
-// 	return postgres_entity.TableViewDefinition{
-// 		TableType:      string(postgres_entity.TableViewTypeOrganizations),
-// 		TableId:        string(postgres_entity.TableIDTypeTargets),
-// 		Name:           "Targets",
-// 		ColumnsJson:    string(jsonData),
-// 		Order:          1,
-// 		Icon:           "Target05",
-// 		Filters:        ``,
-// 		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}}]}`, enum.Target),
-// 		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
-// 		IsPreset:       true,
-// 		IsShared:       false,
-// 	}, nil
-// }
-
 func DefaultTableViewDefinitionContacts() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeContacts)
 	jsonData, err := json.Marshal(columns)
@@ -470,27 +447,6 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCreatedDate), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
-	// case postgres_entity.TableIDTypeTargets:
-	// 	return postgres_entity.Columns{
-	// 		Columns: []postgres_entity.ColumnView{
-	// 			{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsAvatar), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsName), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 20, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsSocials), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCreatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLeadSource), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsEmployeeCount), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsYearFounded), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIsPublic), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsStage), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLinkedinFollowerCount), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsContactCount), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 			{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
-	// 		},
-	// 	}
 	case postgres_entity.TableIDTypeUpcomingInvoices:
 		return postgres_entity.Columns{
 			Columns: []postgres_entity.ColumnView{
@@ -525,27 +481,20 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeContactsAvatar), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeContactsName), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 3, ColumnType: string(postgres_entity.ColumnViewTypeContactsOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeContactsLinkedin), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeContactsEmails), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 22, ColumnType: string(postgres_entity.ColumnViewTypeContactsPersonalEmails), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 23, ColumnType: string(postgres_entity.ColumnViewTypeContactsPrimaryEmail), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeContactsPrimaryEmail), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeContactsPhoneNumbers), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeContactsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeContactsRegion), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeContactsLinkedin), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeContactsJobTitle), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeContactsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeContactsCity), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeContactsJobTitle), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeContactsTimeInCurrentRole), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeContactsLinkedinFollowerCount), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeContactsConnections), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 21, ColumnType: string(postgres_entity.ColumnViewTypeContactsFlows), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeContactsPersona), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeContactsLastInteraction), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeContactsSkills), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeContactsSchools), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeContactsLanguages), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeContactsExperience), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 24, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 26, ColumnType: string(postgres_entity.ColumnViewTypeContactsCreatedAt), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeContactsUpdatedAt), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeContactsRegion), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeContactsTags), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeContactsTimeInCurrentRole), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeContactsLinkedinFollowerCount), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeContactsConnections), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeContactsFlows), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeContactsLastInteraction), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case postgres_entity.TableIDTypeContactsForTargetOrganizations:
