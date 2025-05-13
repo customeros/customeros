@@ -96,9 +96,16 @@ func (s *organizationService) Start(ctx context.Context) error {
 
 	// Start processing for both subscriptions
 	go s.processOrganizationEvents(ctx, orgSub)
-	go s.processWebtrackerEvents(ctx, webSub)
+	go s.processWebtrackerVisitorIdentifiedEvents(ctx, webSub)
 
 	return nil
+}
+
+// Stop gracefully shuts down the service
+func (s *organizationService) Stop() {
+	if s.natsConn != nil {
+		s.natsConn.Close()
+	}
 }
 
 func (s *organizationService) processOrganizationEvents(ctx context.Context, sub *nats.Subscription) {
@@ -114,15 +121,15 @@ func (s *organizationService) processOrganizationEvents(ctx context.Context, sub
 	}
 }
 
-func (s *organizationService) processWebtrackerEvents(ctx context.Context, sub *nats.Subscription) {
-	log.Println("Webtracker event processor started")
+func (s *organizationService) processWebtrackerVisitorIdentifiedEvents(ctx context.Context, sub *nats.Subscription) {
+	log.Println("Webtracker visitor identified event processor started")
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Webtracker event processor shutting down")
+			log.Println("Webtracker visitor identified event processor shutting down")
 			return
 		default:
-			s.processWebtrackerBatch(ctx, sub)
+			s.processWebtrackerVisitorIdentifiedEventsBatch(ctx, sub)
 		}
 	}
 }
@@ -141,7 +148,7 @@ func (s *organizationService) processOrganizationBatch(ctx context.Context, sub 
 	}
 }
 
-func (s *organizationService) processWebtrackerBatch(ctx context.Context, sub *nats.Subscription) {
+func (s *organizationService) processWebtrackerVisitorIdentifiedEventsBatch(ctx context.Context, sub *nats.Subscription) {
 	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
 	if err != nil {
 		s.handleFetchError(err)
@@ -150,7 +157,7 @@ func (s *organizationService) processWebtrackerBatch(ctx context.Context, sub *n
 
 	for _, msg := range msgs {
 		msgCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-		s.handleWebtrackerMessage(msgCtx, msg)
+		s.handleWebtrackerVisitorIdentifiedMessage(msgCtx, msg)
 		cancel()
 	}
 }
@@ -194,9 +201,9 @@ func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg
 	msg.Ack()
 }
 
-func (s *organizationService) handleWebtrackerMessage(ctx context.Context, msg *nats.Msg) {
+func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = common.WithCustomContextFromNats(ctx, msg)
-	span, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleWebtrackerMessage")
+	span, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleWebtrackerVisitorIdentifiedMessage")
 	defer span.Finish()
 
 	if msg == nil {
@@ -209,7 +216,9 @@ func (s *organizationService) handleWebtrackerMessage(ctx context.Context, msg *
 	// validate tenant
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
-		s.handleProcessingError(ctx, msg, errors.New("tenant not set in nats message"))
+		err := errors.New("tenant not set in nats header")
+		span.TraceError(err)
+		s.handleProcessingError(ctx, msg, err)
 		return
 	}
 
@@ -227,6 +236,7 @@ func (s *organizationService) handleWebtrackerMessage(ctx context.Context, msg *
 		globalOrganization, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, request.Domain)
 		if err != nil {
 			span.TraceError(errors.Wrap(err, "failed to find global organization by primary domain"))
+			s.handleProcessingError(ctx, msg, err)
 			return
 		}
 		if globalOrganization != nil {
@@ -234,10 +244,10 @@ func (s *organizationService) handleWebtrackerMessage(ctx context.Context, msg *
 			orgId, err := s.CreateFromGlobalOrganization(ctx, nil, globalOrganization.ID, data_fields.OrganizationFields{})
 			if err != nil {
 				span.TraceError(errors.Wrap(err, "failed to create organization from global organization"))
+				s.handleProcessingError(ctx, msg, err)
 				return
 			}
 			span.LogKV("result.orgId", orgId)
-			return
 		} else {
 			// if not found, create a new organization with the domain
 			orgId, err := s.Save(ctx, nil, nil, data_fields.OrganizationFields{
@@ -245,20 +255,22 @@ func (s *organizationService) handleWebtrackerMessage(ctx context.Context, msg *
 			})
 			if err != nil {
 				span.TraceError(errors.Wrap(err, "failed to create organization from domain"))
+				s.handleProcessingError(ctx, msg, err)
 				return
 			}
 			span.LogKV("result.orgId", orgId)
-			return
 		}
 	} else if request.Email != "" {
 		emailValidation := mailvalidate.ValidateEmailSyntax(request.Email)
 		if !emailValidation.IsValid {
 			span.LogKV("result", "invalid email")
+			msg.Ack()
 			return
 		}
 		isPersonalEmailProvider := s.emailService.IsPersonalEmailProvider(ctx, request.Email)
 		if isPersonalEmailProvider {
 			span.LogKV("result", "personal email provider")
+			msg.Ack()
 			return
 		}
 		// if not a personal email provider, create a new organization with the email domain
@@ -268,10 +280,10 @@ func (s *organizationService) handleWebtrackerMessage(ctx context.Context, msg *
 		})
 		if err != nil {
 			span.TraceError(errors.Wrap(err, "failed to create organization from email"))
+			s.handleProcessingError(ctx, msg, err)
 			return
 		}
 		span.LogKV("result.orgId", orgId)
-		return
 	}
 
 	msg.Ack()
@@ -300,11 +312,4 @@ func (s *organizationService) sendOrganizationResponse(ctx context.Context, req 
 		return
 	}
 	req.Respond(respMessage)
-}
-
-// Stop gracefully shuts down the service
-func (s *organizationService) Stop() {
-	if s.natsConn != nil {
-		s.natsConn.Close()
-	}
 }
