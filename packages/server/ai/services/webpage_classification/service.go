@@ -166,7 +166,7 @@ func (s *webpageClassification) routeMessage(ctx context.Context, msg *nats.Msg)
 	return
 }
 
-// handleProcessingError deals with errors during email processing
+// handleProcessingError deals with errors during webpage classification processing
 func (s *webpageClassification) handleProcessingError(ctx context.Context, msg *nats.Msg, err error) {
 	metadata, _ := msg.Metadata()
 
