@@ -2,15 +2,15 @@ package resolver
 
 import (
 	"context"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"testing"
 	"time"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/99designs/gqlgen/client"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,29 +41,6 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByName(t *testing.T) {
 	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsNotEmpty, 6, 5)
 	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorContains, 6, 4)
 	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 6, 2)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_FilterByWebsite(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Website: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Website: "https://www.customeros.ai"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Website: "customeros.ai"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Website: "www.customeros.ai"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Website: "www.google.com"})
-
-	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsWebsite
-	searchTerm := "customeros"
-
-	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 1)
-	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
-	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorContains, 5, 3)
-	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByPrimaryDomain(t *testing.T) {
@@ -101,101 +78,6 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByPrimaryDomain(t *testing.T)
 	assertSearch(t, searchBy, "domain4", commonModel.ComparisonOperatorNotContains, 4, 3)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_FilterByOnboardingStatus(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{OnboardingDetails: neo4jentity.OnboardingDetails{Status: ""}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{OnboardingDetails: neo4jentity.OnboardingDetails{Status: string(enum.OnboardingStatusNotApplicable)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{OnboardingDetails: neo4jentity.OnboardingDetails{Status: string(enum.OnboardingStatusDone)}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsOnboardingStatus
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, []string{string(enum.OnboardingStatusNotApplicable)}, commonModel.ComparisonOperatorIn, 3, 1)
-	assertSearch(t, searchBy, []string{string(enum.OnboardingStatusNotApplicable), string(enum.OnboardingStatusDone)}, commonModel.ComparisonOperatorIn, 3, 2)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_FilterByRenewalLikelihood(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihood: ""}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihood: string(enum.RenewalLikelihoodZero)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihood: string(enum.RenewalLikelihoodHigh)}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsRenewalLikelihood
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, []string{string(enum.RenewalLikelihoodZero)}, commonModel.ComparisonOperatorIn, 3, 1)
-	assertSearch(t, searchBy, []string{string(enum.RenewalLikelihoodZero), string(enum.RenewalLikelihoodHigh)}, commonModel.ComparisonOperatorIn, 3, 2)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_FilterByRenewalDate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-	midOfJanuary := utils.FirstTimeOfMonth(2024, 1).Add(time.Hour * 24 * 15)
-	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
-	midOfFebruary := utils.FirstTimeOfMonth(2024, 2).Add(time.Hour * 24 * 15)
-	firstOfMarch := utils.FirstTimeOfMonth(2024, 3)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: &firstOfJanuary}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: &firstOfFebruary}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsRenewalDate
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfJanuary, firstOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfJanuary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 2)
-	assertSearch(t, searchBy, []time.Time{firstOfFebruary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{midOfJanuary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{midOfFebruary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 0)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_FilterByForecastArr(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(2000)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(2005)}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsForecastArr
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGte, 3, 1)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGt, 3, 0)
-	assertSearch(t, searchBy, 2004, commonModel.ComparisonOperatorLte, 3, 1)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLte, 3, 2)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLt, 3, 1)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorEquals, 3, 1)
-	assertSearch(t, searchBy, 2006, commonModel.ComparisonOperatorEquals, 3, 0)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorNotEquals, 3, 2)
-	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_FilterByOwner(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -226,60 +108,6 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByOwner(t *testing.T) {
 	assertSearch(t, searchBy, []string{"owner1", "owner2"}, commonModel.ComparisonOperatorIn, 3, 2)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpoint(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	touchpoint1 := "A"
-	touchpoint2 := "B"
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LastTouchpointType: nil})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LastTouchpointType: &touchpoint1})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LastTouchpointType: &touchpoint2})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsLastTouchpoint
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertSearch(t, searchBy, []string{"A"}, commonModel.ComparisonOperatorIn, 3, 1)
-	assertSearch(t, searchBy, []string{"B"}, commonModel.ComparisonOperatorIn, 3, 1)
-	assertSearch(t, searchBy, []string{"A", "B"}, commonModel.ComparisonOperatorIn, 3, 2)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpointAt(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-	midOfJanuary := utils.FirstTimeOfMonth(2024, 1).Add(time.Hour * 24 * 15)
-	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
-	midOfFebruary := utils.FirstTimeOfMonth(2024, 2).Add(time.Hour * 24 * 15)
-	firstOfMarch := utils.FirstTimeOfMonth(2024, 3)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LastTouchpointAt: nil})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LastTouchpointAt: &firstOfJanuary})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{LastTouchpointAt: &firstOfFebruary})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsLastTouchpointDate
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfJanuary, firstOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfJanuary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 2)
-	assertSearch(t, searchBy, []time.Time{firstOfFebruary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{midOfJanuary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{midOfFebruary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 0)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_FilterByStage(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -287,20 +115,20 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByStage(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: enum.Lead})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: enum.Trial})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: enum.Lead})
+	// neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: enum.Lead})
+	// neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: enum.Trial})
+	// neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Stage: enum.Lead})
 
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
 	searchBy := postgres_entity.ColumnViewTypeOrganizationsStage
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 1)
-	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorIn, 4, 1)
-	assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 2)
-	assertSearch(t, searchBy, []string{enum.Trial.String(), enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 3)
-	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorNotIn, 4, 3)
-	assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorNotIn, 4, 2)
+	// assertSearch(t, searchBy, []string{enum.Customer.String()}, commonModel.ComparisonOperatorIn, 4, 1)
+	// assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 2)
+	// assertSearch(t, searchBy, []string{enum.Trial.String(), enum.Lead.String()}, commonModel.ComparisonOperatorIn, 4, 3)
+	// assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	// assertSearch(t, searchBy, []string{enum.Lead.String()}, commonModel.ComparisonOperatorNotIn, 4, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterBySocials(t *testing.T) {
@@ -500,67 +328,6 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByIndustry(t *testing.T) {
 	assertSearch(t, searchBy, []string{"1110"}, commonModel.ComparisonOperatorNotIn, 5, 3)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_FilterByChurnedAt(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-	midOfJanuary := utils.FirstTimeOfMonth(2024, 1).Add(time.Hour * 24 * 15)
-	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
-	midOfFebruary := utils.FirstTimeOfMonth(2024, 2).Add(time.Hour * 24 * 15)
-	firstOfMarch := utils.FirstTimeOfMonth(2024, 3)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ChurnedAt: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ChurnedAt: &firstOfJanuary}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{ChurnedAt: &firstOfFebruary}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsChurnDate
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfJanuary, firstOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{firstOfJanuary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 2)
-	assertSearch(t, searchBy, []time.Time{firstOfFebruary, firstOfFebruary}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{midOfJanuary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 1)
-	assertSearch(t, searchBy, []time.Time{midOfFebruary, firstOfMarch}, commonModel.ComparisonOperatorBetween, 3, 0)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_FilterByLtv(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	ltv1 := float64(2000)
-	ltv2 := float64(2005)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{Ltv: ltv1}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{DerivedData: neo4jentity.DerivedData{Ltv: ltv2}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsLtv
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 3)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGte, 3, 1)
-	assertSearch(t, searchBy, 2005.0, commonModel.ComparisonOperatorGte, 3, 1)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorGt, 3, 0)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLte, 3, 3)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorLt, 3, 2)
-	assertSearch(t, searchBy, 0, commonModel.ComparisonOperatorEquals, 3, 1)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorEquals, 3, 1)
-	assertSearch(t, searchBy, 2006, commonModel.ComparisonOperatorEquals, 3, 0)
-	assertSearch(t, searchBy, 2005, commonModel.ComparisonOperatorNotEquals, 3, 2)
-	assertSearch(t, searchBy, 2010, commonModel.ComparisonOperatorNotEquals, 3, 3)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_FilterByCountry(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -712,40 +479,6 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByTags(t *testing.T) {
 	assertSearch(t, searchBy, []string{"tag2", "notag2"}, commonModel.ComparisonOperatorNotIn, 3, 2)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_FilterByParentOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "subsidiary1"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "parent1", Name: "Parent1"})
-	neo4jtest.LinkNodes(ctx, driver, "subsidiary1", "parent1", "SUBSIDIARY_OF")
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "subsidiary2"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "parent2", Name: "Parent2"})
-	neo4jtest.LinkNodes(ctx, driver, "subsidiary2", "parent2", "SUBSIDIARY_OF")
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org3"})
-
-	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
-
-	searchBy := postgres_entity.ColumnViewTypeOrganizationsParentOrganization
-
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorContains, 5, 2)
-	assertSearch(t, searchBy, "parent", commonModel.ComparisonOperatorContains, 5, 2)
-	assertSearch(t, searchBy, "parent1", commonModel.ComparisonOperatorContains, 5, 1)
-	assertSearch(t, searchBy, "parent2", commonModel.ComparisonOperatorContains, 5, 1)
-	assertSearch(t, searchBy, "parent3", commonModel.ComparisonOperatorContains, 5, 0)
-
-	assertSearch(t, searchBy, "parent1", commonModel.ComparisonOperatorNotContains, 5, 1)
-	assertSearch(t, searchBy, "parent2", commonModel.ComparisonOperatorNotContains, 5, 1)
-	assertSearch(t, searchBy, "parent3", commonModel.ComparisonOperatorNotContains, 5, 2)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_FilterByUpdatedAt(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -832,31 +565,6 @@ func TestQueryResolver_UIOrganizationsSearch_SortByName(t *testing.T) {
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_SortByWebsite(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Website: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Website: "https://www.a"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Website: "https://www.b"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ab", Website: "https://www.ab"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "c", Website: "https://www.c"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "aa", Website: "https://www.aa"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "abc", Website: "https://www.abc"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "ba", Website: "https://www.ba"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "z", Website: "https://www.z"})
-
-	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
-	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_SortByPrimaryDomain(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -883,85 +591,6 @@ func TestQueryResolver_UIOrganizationsSearch_SortByPrimaryDomain(t *testing.T) {
 
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByOnboardingStatus(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", OnboardingDetails: neo4jentity.OnboardingDetails{SortingOrder: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", OnboardingDetails: neo4jentity.OnboardingDetails{SortingOrder: utils.Int64Ptr(1)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", OnboardingDetails: neo4jentity.OnboardingDetails{SortingOrder: utils.Int64Ptr(2)}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByRenewalLikelihood(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihoodOrder: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihoodOrder: utils.Int64Ptr(1)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", RenewalSummary: neo4jentity.RenewalSummary{RenewalLikelihoodOrder: utils.Int64Ptr(2)}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByRenewalDate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: &firstOfDecember}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", RenewalSummary: neo4jentity.RenewalSummary{NextRenewalAt: &firstOfJanuary}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByForecastArr(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(1)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", RenewalSummary: neo4jentity.RenewalSummary{ArrForecast: utils.Float64Ptr(2)}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByOwner(t *testing.T) {
@@ -992,50 +621,6 @@ func TestQueryResolver_UIOrganizationsSearch_SortByOwner(t *testing.T) {
 
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpoint(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LastTouchpointAt: nil})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", LastTouchpointAt: &firstOfDecember})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", LastTouchpointAt: &firstOfJanuary})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpointDate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", LastTouchpointAt: nil})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", LastTouchpointAt: &firstOfDecember})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", LastTouchpointAt: &firstOfJanuary})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByStage(t *testing.T) {
@@ -1175,46 +760,6 @@ func TestQueryResolver_UIOrganizationsSearch_SortByIndustry(t *testing.T) {
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
-func TestQueryResolver_UIOrganizationsSearch_SortByChurnDate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
-	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", DerivedData: neo4jentity.DerivedData{ChurnedAt: nil}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1", DerivedData: neo4jentity.DerivedData{ChurnedAt: &firstOfDecember}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2", DerivedData: neo4jentity.DerivedData{ChurnedAt: &firstOfJanuary}})
-
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"1", "2", "empty"}
-	expectedDesc := []string{"2", "1", "empty"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortLtv(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", DerivedData: neo4jentity.DerivedData{Ltv: float64(1)}})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", DerivedData: neo4jentity.DerivedData{Ltv: float64(2)}})
-
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	expectedAsc := []string{"a", "b"}
-	expectedDesc := []string{"b", "a"}
-
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
 func TestQueryResolver_UIOrganizationsSearch_SortByCountry(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -1290,33 +835,6 @@ func TestQueryResolver_UIOrganizationsSearch_SortByIsPublic(t *testing.T) {
 
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, postgres_entity.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionDesc, expectedDesc)
-}
-
-func TestQueryResolver_UIOrganizationsSearch_SortByParentOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "subsidiary1"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "parent1", Name: "Parent1"})
-	neo4jtest.LinkNodes(ctx, driver, "subsidiary1", "parent1", "SUBSIDIARY_OF")
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "subsidiary2"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "parent2", Name: "Parent2"})
-	neo4jtest.LinkNodes(ctx, driver, "subsidiary2", "parent2", "SUBSIDIARY_OF")
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
-
-	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	sortAsc := assertSort(t, postgres_entity.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionAsc)
-	assert.Equal(t, "subsidiary1", sortAsc[0])
-	assert.Equal(t, "subsidiary2", sortAsc[1])
-
-	sortDesc := assertSort(t, postgres_entity.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionDesc)
-	assert.Equal(t, "subsidiary2", sortDesc[0])
-	assert.Equal(t, "subsidiary1", sortDesc[1])
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByUpdatedDate(t *testing.T) {

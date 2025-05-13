@@ -19130,7 +19130,6 @@ enum TableViewType {
 enum TableIdType {
     ORGANIZATIONS
     CUSTOMERS
-    TARGETS
     UPCOMING_INVOICES
     PAST_INVOICES
     CONTACTS
@@ -19157,16 +19156,8 @@ enum ColumnViewType {
 
     ORGANIZATIONS_AVATAR # no search, no sort
     ORGANIZATIONS_NAME #search, sort done
-    ORGANIZATIONS_WEBSITE #search, sort done #deprecated
     ORGANIZATIONS_PRIMARY_DOMAINS
-    ORGANIZATIONS_RELATIONSHIP #search, sort done
-    ORGANIZATIONS_ONBOARDING_STATUS #search, sort done
-    ORGANIZATIONS_RENEWAL_LIKELIHOOD #search, sort done
-    ORGANIZATIONS_RENEWAL_DATE #search, sort done
-    ORGANIZATIONS_FORECAST_ARR #search, sort done
     ORGANIZATIONS_OWNER #search, sort done
-    ORGANIZATIONS_LAST_TOUCHPOINT #search, sort done
-    ORGANIZATIONS_LAST_TOUCHPOINT_DATE #search, sort done
     ORGANIZATIONS_STAGE #search, sort done
     ORGANIZATIONS_CONTACT_COUNT #deprecated
     ORGANIZATIONS_SOCIALS #search done, no sort
@@ -19175,16 +19166,14 @@ enum ColumnViewType {
     ORGANIZATIONS_EMPLOYEE_COUNT #search, sort done
     ORGANIZATIONS_YEAR_FOUNDED #search, sort done
     ORGANIZATIONS_INDUSTRY #search, sort done
-    ORGANIZATIONS_CHURN_DATE #search, sort done
-    ORGANIZATIONS_LTV #search, sort done
     ORGANIZATIONS_COUNTRY #search, sort done
     ORGANIZATIONS_CITY #search, sort done
     ORGANIZATIONS_HEADQUARTERS #deprecated
     ORGANIZATIONS_IS_PUBLIC #search, sort done
     ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT #no search, no sort
     ORGANIZATIONS_TAGS #search done, no sort
-    ORGANIZATIONS_PARENT_ORGANIZATION #search done
     ORGANIZATIONS_UPDATED_DATE #search, sort done
+    ORGANIZATIONS_ICP_FIT
 
     CONTACTS_AVATAR
     CONTACTS_NAME

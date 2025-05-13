@@ -197,7 +197,7 @@ services:
     networks:
       - openline
     ports:
-      - "31311:31311"  # NUI Web UI port
+      - "31311:31311" # NUI Web UI port
     environment:
       - NATS_URL=nats://nats:4222
     volumes:
@@ -327,29 +327,6 @@ services:
       - openline
     ports:
       - "11006:3000"
-
-  customer-os-api:
-    image: ghcr.io/customeros/customeros/customer-os-api:latest
-    networks:
-      - openline
-    ports:
-      - "10000:10000"
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_ASYNC_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - RABBITMQ_URL=amqp://guest:guest@host.docker.internal:5672
-
-  customer-os-webhooks:
-    image: ghcr.io/customeros/customeros/customer-os-webhooks:latest
-    networks:
-      - openline
-    ports:
-      - "10004:10004"
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   prometheus:
     image: prom/prometheus:v2.48.1
