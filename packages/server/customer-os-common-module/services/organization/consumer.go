@@ -79,7 +79,7 @@ func (s *organizationService) Start(ctx context.Context) error {
 	orgSub, err := s.natsConn.JS.PullSubscribe(
 		ORGANIZATION_SUBJECT,
 		ORGANIZATION_CONSUMER_NAME,
-		nats.Bind("CUSTOMER_OS_STREAM", ORGANIZATION_CONSUMER_NAME),
+		nats.Bind(nats_common.CORE_STREAM, ORGANIZATION_CONSUMER_NAME),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create organization subscription: %w", err)
@@ -88,14 +88,11 @@ func (s *organizationService) Start(ctx context.Context) error {
 	webSub, err := s.natsConn.JS.PullSubscribe(
 		WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT,
 		WEBTRACKER_CONSUMER_NAME,
-		nats.Bind("CUSTOMER_OS_STREAM", WEBTRACKER_CONSUMER_NAME),
+		nats.Bind(nats_common.LEADS_STREAM, WEBTRACKER_CONSUMER_NAME),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create webtracker subscription: %w", err)
 	}
-
-	// Keep track of subscriptions for cleanup
-	s.subscriptions = []*nats.Subscription{orgSub, webSub}
 
 	// Start processing for both subscriptions
 	go s.processOrganizationEvents(ctx, orgSub)
@@ -303,4 +300,11 @@ func (s *organizationService) sendOrganizationResponse(ctx context.Context, req 
 		return
 	}
 	req.Respond(respMessage)
+}
+
+// Stop gracefully shuts down the service
+func (s *organizationService) Stop() {
+	if s.natsConn != nil {
+		s.natsConn.Close()
+	}
 }

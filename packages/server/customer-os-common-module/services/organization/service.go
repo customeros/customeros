@@ -26,7 +26,6 @@ type organizationService struct {
 	currencyService interfaces.CurrencyService
 	contractService interfaces.ContractService
 	emailService    interfaces.EmailService
-	subscriptions   []*nats.Subscription
 }
 
 func NewOrganizationService(
@@ -54,7 +53,6 @@ func NewOrganizationService(
 		social:          social,
 		currencyService: currencyService,
 		emailService:    emailService,
-		subscriptions:   make([]*nats.Subscription, 0),
 	}
 }
 
