@@ -10,7 +10,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/nats-io/nats.go"
 )
 
 type organizationService struct {
@@ -26,7 +25,6 @@ type organizationService struct {
 	currencyService interfaces.CurrencyService
 	contractService interfaces.ContractService
 	emailService    interfaces.EmailService
-	subscriptions   []*nats.Subscription
 }
 
 func NewOrganizationService(
@@ -54,7 +52,6 @@ func NewOrganizationService(
 		social:          social,
 		currencyService: currencyService,
 		emailService:    emailService,
-		subscriptions:   make([]*nats.Subscription, 0),
 	}
 }
 
