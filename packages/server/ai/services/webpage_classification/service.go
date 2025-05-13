@@ -134,7 +134,7 @@ func (s *webpageClassification) handleFetchError(err error) {
 	time.Sleep(ERR_BACKOFF) // Small backoff on error
 }
 
-// processMessage processes a single email message
+// processMessage processes a single webpage classification message
 func (s *webpageClassification) routeMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = utils.WithCustomContextFromNats(ctx, msg)
 	spans, ctx := telemetry.StartServiceSpan(ctx, "webpageClassification.processMessage")
