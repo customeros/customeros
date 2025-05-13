@@ -18,7 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/interfaces"
 	"github.com/customeros/customeros/packages/server/ai/internal/clients"
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
-	"github.com/customeros/customeros/packages/server/ai/proto/pb"
+	"github.com/customeros/customeros/packages/server/ai/internal/enum"
 	"github.com/customeros/customeros/packages/server/ai/services/common"
 )
 
@@ -28,7 +28,6 @@ const (
 )
 
 type DeepseekService struct {
-	interfaces.LLMClient
 	config *config.DeepseekConfig
 	client *http.Client
 }
@@ -42,12 +41,12 @@ func NewDeepseekService(cfg *config.DeepseekConfig, warehouseRepos *postgres_rep
 	}
 }
 
-func (c *DeepseekService) Ask(ctx context.Context, message *pb.AskAI) (*string, error) {
+func (c *DeepseekService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "DeepseekService.Ask")
 	defer span.Finish()
 	span.LogObjectAsJson("request", message)
 
-	if message.Model != pb.AIModel_AI_MODEL_DEEPSEEK_CHAT {
+	if message.Model != enum.AIModelDeepseekChat {
 		err := errors.New("model not a deepseek model")
 		span.TraceError(err)
 		return nil, err
@@ -142,7 +141,7 @@ func (c *DeepseekService) processResponse(ctx context.Context, resp *http.Respon
 	return &response, nil
 }
 
-func buildRequest(message *pb.AskAI) *DeepseekRequest {
+func buildRequest(message interfaces.AskAIRequest) *DeepseekRequest {
 	sysPromptStr := "You are a helpful assistant."
 	if message.SystemPrompt != nil {
 		sysPromptStr = *message.SystemPrompt

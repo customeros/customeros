@@ -20,7 +20,6 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/internal/clients"
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
 	"github.com/customeros/customeros/packages/server/ai/internal/utils"
-	"github.com/customeros/customeros/packages/server/ai/proto/pb"
 	"github.com/customeros/customeros/packages/server/ai/services/common"
 )
 
@@ -32,7 +31,6 @@ const (
 )
 
 type GeminiService struct {
-	interfaces.LLMClient
 	config         *config.GeminiConfig
 	warehouseRepos *postgres_repository.WarehouseRepositories
 	httpClient     *http.Client // Store your custom HTTP client
@@ -47,7 +45,7 @@ func NewGeminiService(cfg *config.GeminiConfig, warehouseRepos *postgres_reposit
 	}
 }
 
-func (s *GeminiService) Ask(ctx context.Context, message *pb.AskAI) (*string, error) {
+func (s *GeminiService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "GeminiService.Ask")
 	defer span.Finish()
 	span.LogObjectAsJson("request", message)
@@ -98,7 +96,7 @@ func (s *GeminiService) createClient(ctx context.Context) (*genai.Client, error)
 	return client, nil
 }
 
-func applyGenerationConfig(model *genai.GenerativeModel, message *pb.AskAI) {
+func applyGenerationConfig(model *genai.GenerativeModel, message interfaces.AskAIRequest) {
 	config := &genai.GenerationConfig{}
 
 	// Set temperature
@@ -149,7 +147,7 @@ func (s *GeminiService) processResponse(resp *genai.GenerateContentResponse) (st
 	return respStr, nil
 }
 
-func (s *GeminiService) executeWithRetry(ctx context.Context, message *pb.AskAI, modelName string) (string, error) {
+func (s *GeminiService) executeWithRetry(ctx context.Context, message interfaces.AskAIRequest, modelName string) (string, error) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "GeminiService.executeWithRetry")
 	defer span.Finish()
 
@@ -224,7 +222,7 @@ func (s *GeminiService) executeWithRetry(ctx context.Context, message *pb.AskAI,
 	return "", lastErr
 }
 
-func (s *GeminiService) logGeminiCall(message *pb.AskAI, resp *genai.GenerateContentResponse, ctx context.Context, modelName string) {
+func (s *GeminiService) logGeminiCall(message interfaces.AskAIRequest, resp *genai.GenerateContentResponse, ctx context.Context, modelName string) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "GeminiService.logGeminiCall")
 	defer span.Finish()
 

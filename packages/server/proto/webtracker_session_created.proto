@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "webtracker_event_type_enum.proto";
+
+package pb;
+option go_package = "./pb";
+
+message WebtrackerSessionCreated {
+  string session_id = 1;
+  string tracker_id = 2;
+  string visitor_id = 3;
+  string ip = 4;
+  WebTrackerEventType event_type = 5;
+  string event_data = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  string href = 8;
+  string referrer = 9;
+  string user_agent = 10;
+  string language = 11;
+}

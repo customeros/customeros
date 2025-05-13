@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message WebTrackerSessionClosed { string session_id = 1; }

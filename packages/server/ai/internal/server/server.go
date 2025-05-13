@@ -22,9 +22,9 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/internal/cron"
 	"github.com/customeros/customeros/packages/server/ai/internal/database"
 	"github.com/customeros/customeros/packages/server/ai/internal/logger"
+	nats_internal "github.com/customeros/customeros/packages/server/ai/internal/nats"
 	"github.com/customeros/customeros/packages/server/ai/internal/repository"
 	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
-	nats_internal "github.com/customeros/customeros/packages/server/ai/nats"
 	"github.com/customeros/customeros/packages/server/ai/services"
 )
 

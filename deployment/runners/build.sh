@@ -62,13 +62,11 @@ fi
 
 if [ "$GENERATE_PROTOBUF" = true ]; then
   echo "Generating protobuf code..."
-  find ./proto -name "*.proto" -type f -exec \
+  find ../proto -name "*.proto" -type f -exec \
     protoc \
-    --proto_path=./proto \
-    --go_out=./proto/pb \
-    --go_opt=module=github.com/customeros/customeros/${APP_PATH}/proto/pb \
-    --go-grpc_out=./proto/pb \
-    --go-grpc_opt=module=github.com/customeros/${APP_PATH}/proto/pb \
+    --proto_path=../proto \
+    --go_out=./internal/proto/pb \
+    --go_opt=paths=source_relative \
     {} \;
 else
   echo "Skipping protobuf code generation..."

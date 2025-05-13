@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message WebpageClassified {
+  string content_id = 1;
+  string primary_topic = 2;
+  repeated string secondary_topics = 3;
+  repeated string solution_focus = 4;
+  string content_type = 5;
+  string industry_vertical = 6;
+  repeated string key_pain_points = 7;
+  string value_proposition = 8;
+  repeated string referenced_customers = 9;
+}

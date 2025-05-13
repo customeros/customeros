@@ -6,14 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/proto"
 
+	"github.com/customeros/customeros/packages/server/ai/interfaces"
+	"github.com/customeros/customeros/packages/server/ai/internal/enum"
 	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/ai/internal/utils"
-	"github.com/customeros/customeros/packages/server/ai/proto/pb"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 	DEFAULT_MAX_TOKENS  = 1024
 )
 
-func (s *aiService) askAI(ctx context.Context, message *pb.AskAI) (*string, error) {
+func (s *aiService) AskAI(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAI")
 	defer spans.Finish()
 
@@ -82,7 +81,7 @@ func (s *aiService) askAI(ctx context.Context, message *pb.AskAI) (*string, erro
 	return nil, fmt.Errorf("askAI failed after %d attempts with no specific error and invalid response", *message.Retries)
 }
 
-func (s *aiService) validateAIRequest(ctx context.Context, request *pb.AskAI) error {
+func (s *aiService) validateAIRequest(ctx context.Context, request interfaces.AskAIRequest) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.validateAIRequest")
 	defer spans.Finish()
 
@@ -105,11 +104,11 @@ func (s *aiService) validateAIRequest(ctx context.Context, request *pb.AskAI) er
 
 	if request.Retries == nil {
 		maxRetries := MAX_ATTEMPTS
-		request.Retries = utils.Int32Ptr(maxRetries)
+		request.Retries = &maxRetries
 	}
 
 	// If JSON output is requested, enhance the system prompt with JSON validation requirements
-	if request.OutputFormat == pb.AIOutputFormat_AI_OUTPUT_JSON && request.SystemPrompt != nil {
+	if request.OutputFormat == enum.AIOutputJson && request.SystemPrompt != nil {
 		enhancedPrompt := *request.SystemPrompt + `
 
 CRITICAL JSON FORMATTING REQUIREMENTS:
@@ -143,7 +142,7 @@ Remember: NEVER return incomplete JSON. If you need more tokens, make the respon
 	return nil
 }
 
-func (s *aiService) askAIWithRetry(ctx context.Context, message *pb.AskAI) (*string, error) {
+func (s *aiService) askAIWithRetry(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askAIWithRetry")
 	defer spans.Finish()
 
@@ -152,8 +151,8 @@ func (s *aiService) askAIWithRetry(ctx context.Context, message *pb.AskAI) (*str
 
 	switch message.Model {
 	case
-		pb.AIModel_AI_MODEL_ANTHROPIC_HAIKU,
-		pb.AIModel_AI_MODEL_ANTHROPIC_SONNET:
+		enum.AIModelAnthropicHaiku,
+		enum.AIModelAnthropicSonnet:
 
 		result, err = s.anthropic.Ask(ctx, message)
 		if err != nil {
@@ -161,7 +160,7 @@ func (s *aiService) askAIWithRetry(ctx context.Context, message *pb.AskAI) (*str
 			return nil, err
 		}
 
-	case pb.AIModel_AI_MODEL_DEEPSEEK_CHAT:
+	case enum.AIModelDeepseekChat:
 		result, err = s.deepseek.Ask(ctx, message)
 		if err != nil {
 			spans.TraceError(err)
@@ -169,12 +168,12 @@ func (s *aiService) askAIWithRetry(ctx context.Context, message *pb.AskAI) (*str
 		}
 
 	case
-		pb.AIModel_AI_MODEL_DEEPSEEK_QWEN,
-		pb.AIModel_AI_MODEL_GEMMA,
-		pb.AIModel_AI_MODEL_LLAMA_8B,
-		pb.AIModel_AI_MODEL_LLAMA_70B,
-		pb.AIModel_AI_MODEL_MIXTRAL,
-		pb.AIModel_AI_MODEL_WHISPER:
+		enum.AIModelDeepseekQwen,
+		enum.AIModelGemma,
+		enum.AIModelLlama8B,
+		enum.AIModelLlama70B,
+		enum.AIModelMixtral,
+		enum.AIModelWhisper:
 
 		result, err = s.groq.Ask(ctx, message)
 		if err != nil {
@@ -183,8 +182,8 @@ func (s *aiService) askAIWithRetry(ctx context.Context, message *pb.AskAI) (*str
 		}
 
 	case
-		pb.AIModel_AI_MODEL_GEMINI,
-		pb.AIModel_AI_MODEL_GEMINI_LITE:
+		enum.AIModelGemini,
+		enum.AIModelGeminiLite:
 		result, err = s.gemini.Ask(ctx, message)
 		if err != nil {
 			spans.TraceError(err)
@@ -203,13 +202,13 @@ func (s *aiService) askAIWithRetry(ctx context.Context, message *pb.AskAI) (*str
 
 	var processedResult *string
 	switch message.OutputFormat {
-	case pb.AIOutputFormat_AI_OUTPUT_TEXT:
+	case enum.AIOutputText:
 		answer := strings.TrimPrefix(*result, `"""`)
 		answer = strings.TrimSuffix(answer, `"""`)
 		processedResult = &answer
 		spans.LogKV("result.plain", answer)
 
-	case pb.AIOutputFormat_AI_OUTPUT_JSON:
+	case enum.AIOutputJson:
 		processedResult = s.extractJsonFromAiResponse(result)
 		spans.LogFields(
 			log.String("result.plain", utils.IfNotNilString(result)),
@@ -239,17 +238,4 @@ func (s *aiService) extractJsonFromAiResponse(result *string) *string {
 	}
 
 	return result
-}
-
-func (s *aiService) parseAskAIMessage(ctx context.Context, msg *nats.Msg) (*pb.AskAI, error) {
-	span, ctx := telemetry.StartServiceSpan(ctx, "aiService.parseAskAIMessage")
-	defer span.Finish()
-
-	message := &pb.AskAI{}
-	err := proto.Unmarshal(msg.Data, message)
-	if err != nil {
-		span.TraceError(err)
-		return nil, err
-	}
-	return message, nil
 }

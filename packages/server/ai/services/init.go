@@ -7,22 +7,18 @@ import (
 
 	"github.com/customeros/customeros/packages/server/ai/interfaces"
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
+	nats_internal "github.com/customeros/customeros/packages/server/ai/internal/nats"
 	"github.com/customeros/customeros/packages/server/ai/internal/repository"
 	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
-	nats_internal "github.com/customeros/customeros/packages/server/ai/nats"
 	"github.com/customeros/customeros/packages/server/ai/services/anthropic"
-	ai "github.com/customeros/customeros/packages/server/ai/services/ask_ai"
 	"github.com/customeros/customeros/packages/server/ai/services/deepseek"
 	"github.com/customeros/customeros/packages/server/ai/services/gemini"
 	"github.com/customeros/customeros/packages/server/ai/services/groq"
+	"github.com/customeros/customeros/packages/server/ai/services/webpage_classification"
 )
 
 type Services struct {
-	AskAI     interfaces.NatsService
-	Anthropic *anthropic.AnthropicService
-	Deepseek  *deepseek.DeepseekService
-	Gemini    *gemini.GeminiService
-	Groq      *groq.GroqService
+	WebpageClassification interfaces.NatsService
 }
 
 func InitServices(
@@ -31,21 +27,19 @@ func InitServices(
 	warehouseRepos *postgres_repository.WarehouseRepositories,
 	natsConn *nats_internal.NATSConnections,
 ) *Services {
+	// model providers
+	anthropic := anthropic.NewAnthropicService(config.Anthropic, warehouseRepos)
+	deepseek := deepseek.NewDeepseekService(config.Deepseek, warehouseRepos)
+	gemini := gemini.NewGeminiService(config.Gemini, warehouseRepos)
+	groq := groq.NewGroqService(config.Groq, warehouseRepos)
+
+	// AI-enabled services
 	services := &Services{
-		Anthropic: anthropic.NewAnthropicService(config.Anthropic, warehouseRepos),
-		Deepseek:  deepseek.NewDeepseekService(config.Deepseek, warehouseRepos),
-		Gemini:    gemini.NewGeminiService(config.Gemini, warehouseRepos),
-		Groq:      groq.NewGroqService(config.Groq, warehouseRepos),
+		WebpageClassification: webpage_classification.NewWebpageClassificationService(
+			natsConn, anthropic, deepseek, groq, gemini, repositories,
+		),
 	}
 
-	services.AskAI = ai.NewAIService(
-		natsConn,
-		services.Anthropic,
-		services.Deepseek,
-		services.Groq,
-		services.Gemini,
-		repositories,
-	)
 	return services
 }
 
@@ -53,7 +47,7 @@ func (s *Services) Start(ctx context.Context) error {
 	span, ctx := telemetry.StartServiceSpan(ctx, "Services.Start")
 	defer span.Finish()
 
-	err := s.AskAI.Start(ctx)
+	err := s.WebpageClassification.Start(ctx)
 	if err != nil {
 		span.TraceError(err)
 		return err
