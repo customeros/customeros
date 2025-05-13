@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -101,35 +102,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
-			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains) {
 				domainFilter.Filters = append(domainFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.DomainPropertyDomain), filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsRelationship) {
-				createInOrEmptyStringFilter(filter, organizationFilter, "relationship")
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus) {
-				createInOrEmptyStringFilter(filter, organizationFilter, "onboardingStatus")
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood) {
-				createInOrEmptyStringFilter(filter, organizationFilter, "derivedRenewalLikelihood")
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsRenewalDate) {
-				createTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsForecastArr) {
-				createNumberCypherFilter(filter, organizationFilter, "renewalForecastArr")
-			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsOwner) {
 				createInOrEmptyStringFilter(filter, userFilter, "id")
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint) {
-				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointType))
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate) {
-				createTimeFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointAt))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsStage) {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyStage))
@@ -154,12 +131,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsIndustry) {
 				createInOrEmptyStringFilter(filter, industryFilter, string(neo4jentity.IndustryPropertyCode))
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsChurnDate) {
-				createTimeFilter(filter, organizationFilter, "derivedChurnedAt")
-			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLtv) {
-				createNumberCypherFilter(filter, organizationFilter, "derivedLtv")
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsCountry) {
 				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
@@ -188,9 +159,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsHeadquarters) {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
-				parentOrganizationFilter.Filters = append(parentOrganizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
-			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsUpdatedDate) {
 				createTimeFilter(filter, organizationFilter, "updatedAt")
 			}
@@ -201,9 +169,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				organizationFilter.LogicalOperator = utils.OR
 				if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
-				}
-				if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
 				}
 			}
 		}
@@ -334,9 +299,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if locationFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) || sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCity))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
-		if parentOrganizationFilterCypher != "" || sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
-			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(po:Organization_%s) WITH *`, tenant)
-		}
 		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 		if organizationFilterCypher != "" {
 			selectQuery += ` AND ` + organizationFilterCypher
@@ -372,13 +334,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 					aliases += "CASE WHEN trim(o.name) <> \"\" and not o.name is null THEN toLower(trim(o.name)) ELSE '' END as SORT_BY "
 				}
 			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(o.website) <> \"\" and not o.website is null THEN toLower(trim(o.website)) ELSE '𠀀' END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN trim(o.website) <> \"\" and not o.website is null THEN toLower(trim(o.website)) ELSE '' END as SORT_BY "
-				}
-			}
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains) {
 				if sort.Direction == commonmodel.SortingDirectionAsc {
 					aliases += "CASE WHEN d.domain <> \"\" and not d.domain is null THEN toLower(d.domain) ELSE '𠀀' END as SORT_BY "
@@ -386,60 +341,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 					aliases += "CASE WHEN d.domain <> \"\" and not d.domain is null THEN toLower(d.domain) ELSE '' END as SORT_BY "
 				}
 			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsRelationship) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.relationship <> \"\" and not o.relationship is null THEN toLower(o.relationship) ELSE '𠀀' END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.relationship <> \"\" and not o.relationship is null THEN toLower(o.relationship) ELSE '' END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE 9999 END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE -1 END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsRenewalDate) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.derivedNextRenewalAt <> \"\" and not o.derivedNextRenewalAt is null THEN o.derivedNextRenewalAt ELSE datetime({year:2100}) END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.derivedNextRenewalAt <> \"\" and not o.derivedNextRenewalAt is null THEN o.derivedNextRenewalAt ELSE datetime({year:1900}) END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsForecastArr) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE 9999 END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE -1 END as SORT_BY "
-				}
-			}
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsOwner) {
 				if sort.Direction == commonmodel.SortingDirectionAsc {
 					aliases += `CASE WHEN (COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(trim(COALESCE(u.firstName, '') + COALESCE(u.lastName, ''))) ELSE '𠀀' END as SORT_BY `
 				} else {
 					aliases += `CASE WHEN (COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(trim(COALESCE(u.firstName, '') + COALESCE(u.lastName, ''))) ELSE '' END as SORT_BY `
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
 				}
 			}
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsStage) {
@@ -491,20 +397,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 					aliases += `CASE WHEN i.name <> "" and not i.name is null THEN toLower(i.name) ELSE '' END as SORT_BY `
 				}
 			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsChurnDate) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.derivedChurnedAt <> \"\" and not o.derivedChurnedAt is null THEN o.derivedChurnedAt ELSE datetime({year:2100}) END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.derivedChurnedAt <> \"\" and not o.derivedChurnedAt is null THEN o.derivedChurnedAt ELSE datetime({year:1900}) END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLtv) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE 9999999999999999 END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE -9999999999999999 END as SORT_BY "
-				}
-			}
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) {
 				if sort.Direction == commonmodel.SortingDirectionAsc {
 					aliases += `CASE WHEN trim(l.country) <> '' AND NOT l.country IS NULL AND NOT l.countryCodeA2 IS NULL AND l.countryCodeA2 <> '' THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY `
@@ -524,13 +416,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 					aliases += "CASE WHEN o.isPublic = true THEN 0 ELSE CASE WHEN o.isPublic = false THEN 1 ELSE 2 END END as SORT_BY "
 				} else {
 					aliases += "CASE WHEN o.isPublic = false THEN 2 ELSE CASE WHEN o.isPublic = true THEN 1 ELSE 0 END END as SORT_BY "
-				}
-			}
-			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
-				if sort.Direction == commonmodel.SortingDirectionAsc {
-					aliases += "CASE WHEN trim(po.name) <> \"\" and not po.name is null THEN toLower(trim(po.name)) ELSE '𠀀' END as SORT_BY "
-				} else {
-					aliases += "CASE WHEN trim(po.name) <> \"\" and not po.name is null THEN toLower(trim(po.name)) ELSE '' END as SORT_BY "
 				}
 			}
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsUpdatedDate) {

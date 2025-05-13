@@ -295,7 +295,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	// check all organization table view definitions are created
 	pastInvoicesFound, upcomingInvoiceFound := false, false
-	organizationFound, customersFound, targetsFound := false, false, false
+	organizationFound, customersFound := false, false
 	contactsFound, contactsForTargetOrganizationsFound := false, false
 	opportunitiesFound, opportunitiesRecordsFound, contractsFound := false, false, false
 	flowSequencesFound, flowContactsFound := false, false
@@ -309,10 +309,6 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeOrganizations) && !def.IsShared {
 			spans.LogKV("organizationTableId", def.ID)
 			organizationFound = true
-		}
-		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeTargets) && !def.IsShared {
-			spans.LogKV("targetsTableId", def.ID)
-			targetsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContacts) && !def.IsShared {
 			spans.LogKV("contactsTableId", def.ID)
@@ -372,17 +368,6 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		tvDef, err := table_view.DefaultTableViewDefinitionCustomers()
 		if err != nil {
 			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for customers"))
-		} else {
-			viewsUpdated = true
-			tvDef.Tenant = tenant
-			tvDef.UserId = userId
-			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-		}
-	}
-	if !targetsFound {
-		tvDef, err := table_view.DefaultTableViewDefinitionTargets()
-		if err != nil {
-			spans.TraceError(pkgerrors.Wrap(err, "Failed to create default table view definition for targets"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -499,7 +484,6 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
 	}
-
 
 	if viewsUpdated {
 		updatedResult := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)

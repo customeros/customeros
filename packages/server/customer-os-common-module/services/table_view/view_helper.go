@@ -3,6 +3,7 @@ package table_view
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -23,12 +24,6 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, userId string) []postgre
 	}
 
 	customersTableViewDefinition, err := DefaultTableViewDefinitionCustomers()
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgres_entity.TableViewDefinition{}
-	}
-
-	targetsTableViewDefinition, err := DefaultTableViewDefinitionTargets()
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgres_entity.TableViewDefinition{}
@@ -93,7 +88,6 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, userId string) []postgre
 	defaultViewDefinitions = append(defaultViewDefinitions, pastInvoicesTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, organizationsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, customersTableViewDefinition)
-	defaultViewDefinitions = append(defaultViewDefinitions, targetsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, contactsTableViewDefinition)
 	defaultViewDefinitions = append(defaultViewDefinitions, contactsForTargetOrganizations)
 	defaultViewDefinitions = append(defaultViewDefinitions, contractsTableViewDefinition)
@@ -200,28 +194,28 @@ func DefaultTableViewDefinitionCustomers() (postgres_entity.TableViewDefinition,
 	}, nil
 }
 
-func DefaultTableViewDefinitionTargets() (postgres_entity.TableViewDefinition, error) {
-	columns := DefaultColumns(postgres_entity.TableIDTypeTargets)
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		fmt.Println("Error serializing data:", err)
-		return postgres_entity.TableViewDefinition{}, err
-	}
+// func DefaultTableViewDefinitionTargets() (postgres_entity.TableViewDefinition, error) {
+// 	columns := DefaultColumns(postgres_entity.TableIDTypeTargets)
+// 	jsonData, err := json.Marshal(columns)
+// 	if err != nil {
+// 		fmt.Println("Error serializing data:", err)
+// 		return postgres_entity.TableViewDefinition{}, err
+// 	}
 
-	return postgres_entity.TableViewDefinition{
-		TableType:      string(postgres_entity.TableViewTypeOrganizations),
-		TableId:        string(postgres_entity.TableIDTypeTargets),
-		Name:           "Targets",
-		ColumnsJson:    string(jsonData),
-		Order:          1,
-		Icon:           "Target05",
-		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}}]}`, enum.Target),
-		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
-		IsPreset:       true,
-		IsShared:       false,
-	}, nil
-}
+// 	return postgres_entity.TableViewDefinition{
+// 		TableType:      string(postgres_entity.TableViewTypeOrganizations),
+// 		TableId:        string(postgres_entity.TableIDTypeTargets),
+// 		Name:           "Targets",
+// 		ColumnsJson:    string(jsonData),
+// 		Order:          1,
+// 		Icon:           "Target05",
+// 		Filters:        ``,
+// 		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"IN","property":"ORGANIZATIONS_STAGE","value":["%s"],"active":true}}]}`, enum.Target),
+// 		Sorting:        `{"id": "ORGANIZATIONS_UPDATED_DATE", "desc": true}`,
+// 		IsPreset:       true,
+// 		IsShared:       false,
+// 	}, nil
+// }
 
 func DefaultTableViewDefinitionContacts() (postgres_entity.TableViewDefinition, error) {
 	columns := DefaultColumns(postgres_entity.TableIDTypeContacts)
@@ -436,18 +430,14 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 		return postgres_entity.Columns{
 			Columns: []postgres_entity.ColumnView{
 				{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsAvatar), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsName), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsWebsite), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsRelationship), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsRenewalLikelihood), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsRenewalDate), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsOnboardingStatus), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsForecastArr), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsOwner), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLastTouchpoint), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsParentOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsName), Width: 170, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 3, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 150, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsSocials), Width: 140, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 200, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 140, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsOwner), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 140, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case postgres_entity.TableIDTypeOrganizations:
@@ -455,56 +445,37 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 			Columns: []postgres_entity.ColumnView{
 				{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsAvatar), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsName), Width: 170, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsWebsite), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 28, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 150, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsSocials), Width: 94, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 26, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 140, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 27, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 140, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLeadSource), Width: 120, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsRelationship), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 11, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsStage), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsOwner), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsContactCount), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 20, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsEmployeeCount), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 22, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 200, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCreatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 25, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsParentOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLastTouchpointDate), Width: 150, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 23, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIsPublic), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 21, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsYearFounded), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsRenewalLikelihood), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsRenewalDate), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsOnboardingStatus), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsForecastArr), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsChurnDate), Width: 100, Visible: false, Name: "", Filter: ""},
-				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLtv), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 3, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIcpFit), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsStage), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 150, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsSocials), Width: 140, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 200, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 140, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 140, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
-	case postgres_entity.TableIDTypeTargets:
-		return postgres_entity.Columns{
-			Columns: []postgres_entity.ColumnView{
-				{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsAvatar), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsName), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsWebsite), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 20, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsSocials), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCreatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLastTouchpoint), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLeadSource), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsEmployeeCount), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsYearFounded), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIsPublic), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsStage), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLinkedinFollowerCount), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsContactCount), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsParentOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
+	// case postgres_entity.TableIDTypeTargets:
+	// 	return postgres_entity.Columns{
+	// 		Columns: []postgres_entity.ColumnView{
+	// 			{ColumnId: 1, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsAvatar), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 2, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsName), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 20, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsPrimaryDomains), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 4, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsSocials), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 5, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCreatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 7, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLeadSource), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 8, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsEmployeeCount), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 9, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsYearFounded), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 10, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIndustry), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 12, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsIsPublic), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 13, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsStage), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 14, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLinkedinFollowerCount), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsContactCount), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 			{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
+	// 		},
+	// 	}
 	case postgres_entity.TableIDTypeUpcomingInvoices:
 		return postgres_entity.Columns{
 			Columns: []postgres_entity.ColumnView{
