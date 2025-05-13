@@ -3,4 +3,9 @@ syntax = "proto3";
 package pb;
 option go_package = "./pb";
 
-message RequestWebpageClassification { string content_id = 1; }
+message RequestWebpageClassification {
+  string content_id = 1;
+  string domain = 2;
+  string url = 3;
+  string content = 4;
+}

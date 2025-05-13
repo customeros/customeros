@@ -11,3 +11,13 @@ func Int32Ptr(i int) *int32 {
 	v := int32(i)
 	return &v
 }
+
+func IntPtr(i int) *int {
+	v := int(i)
+	return &v
+}
+
+func IntToFloat32Ptr(i int) *float32 {
+	v := float32(i)
+	return &v
+}

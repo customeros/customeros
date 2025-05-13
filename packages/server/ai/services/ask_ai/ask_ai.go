@@ -2,9 +2,7 @@ package ai
 
 import (
 	"context"
-	"fmt"
 	"strings"
-	"time"
 
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,7 +19,9 @@ const (
 	DEFAULT_MAX_TOKENS  = 1024
 )
 
-func (s *aiService) AskAI(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
+var ErrEmptyResponse = errors.New("Empty response from LLM")
+
+func (s *aiService) AskAI(ctx context.Context, message *interfaces.AskAIRequest) (*string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.AskAI")
 	defer spans.Finish()
 
@@ -32,56 +32,20 @@ func (s *aiService) AskAI(ctx context.Context, message interfaces.AskAIRequest) 
 		return nil, err
 	}
 
-	var lastError error
-	var answer *string
-
-	for attempt := 0; attempt < int(*message.Retries); attempt++ {
-		// If this isn't the first attempt and we have an error from a previous attempt
-		if attempt > 0 && lastError != nil && answer != nil {
-			// Create an error prompt that includes feedback from the previous attempt
-			errorPrompt := fmt.Sprintf(`
-                I previously asked you to do the following: %s
-                You gave me an unexpected response of %s
-                This resulted in this error: %s
-                I'll give you the data again. Please re-evaluate your reply, and ensure your response is valid.`,
-				utils.IfNotNilString(message.SystemPrompt),
-				*answer,
-				lastError.Error())
-			message.SystemPrompt = &errorPrompt
-		}
-
-		answer, err = s.askAIWithRetry(ctx, message)
-
-		// If successful, return the answer
-		if err == nil && answer != nil {
-			return answer, nil
-		}
-
-		// Store the last error for potential use in the next retry
-		lastError = err
-
-		// If the error is not retryable, stop trying
-		if err != nil && !s.IsRetryable(err) {
-			return nil, err
-		}
-
-		// Add a delay before the next retry (except for the last attempt)
-		if attempt < int(*message.Retries)-1 {
-			backoff := utils.BackOffExponentialDelay(attempt)
-			time.Sleep(backoff)
-		}
+	answer, err := s.routeAIRequest(ctx, message)
+	if err != nil {
+		spans.TraceError(err)
+		return nil, err
+	}
+	if answer == nil {
+		spans.TraceError(ErrEmptyResponse)
+		return nil, ErrEmptyResponse
 	}
 
-	// If we've exhausted all retries, return the last error
-	if lastError != nil {
-		return nil, fmt.Errorf("askAI failed after %d attempts: %w", *message.Retries, lastError)
-	}
-
-	// This handles the case where we didn't get an error but also didn't get a valid answer
-	return nil, fmt.Errorf("askAI failed after %d attempts with no specific error and invalid response", *message.Retries)
+	return answer, nil
 }
 
-func (s *aiService) validateAIRequest(ctx context.Context, request interfaces.AskAIRequest) error {
+func (s *aiService) validateAIRequest(ctx context.Context, request *interfaces.AskAIRequest) error {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.validateAIRequest")
 	defer spans.Finish()
 
@@ -142,8 +106,8 @@ Remember: NEVER return incomplete JSON. If you need more tokens, make the respon
 	return nil
 }
 
-func (s *aiService) askAIWithRetry(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
-	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.askAIWithRetry")
+func (s *aiService) routeAIRequest(ctx context.Context, message *interfaces.AskAIRequest) (*string, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AIService.routeAIRequest")
 	defer spans.Finish()
 
 	var result *string

@@ -34,7 +34,7 @@ func NewGroqService(cfg *config.GroqConfig, warehouseRepos *postgres_repository.
 	}
 }
 
-func (c *GroqService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
+func (c *GroqService) Ask(ctx context.Context, message *interfaces.AskAIRequest) (*string, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "GroqService.Ask")
 	defer spans.Finish()
 	spans.LogObjectAsJson("request", message)
@@ -190,7 +190,7 @@ func (c *GroqService) executeWithRetry(ctx context.Context, reqBody GroqRequest)
 	return nil, lastErr
 }
 
-func buildRequest(message interfaces.AskAIRequest) GroqRequest {
+func buildRequest(message *interfaces.AskAIRequest) GroqRequest {
 	var outputFormat string
 	switch message.OutputFormat {
 	case enum.AIOutputJson:

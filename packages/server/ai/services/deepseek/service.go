@@ -41,7 +41,7 @@ func NewDeepseekService(cfg *config.DeepseekConfig, warehouseRepos *postgres_rep
 	}
 }
 
-func (c *DeepseekService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
+func (c *DeepseekService) Ask(ctx context.Context, message *interfaces.AskAIRequest) (*string, error) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "DeepseekService.Ask")
 	defer span.Finish()
 	span.LogObjectAsJson("request", message)
@@ -141,7 +141,7 @@ func (c *DeepseekService) processResponse(ctx context.Context, resp *http.Respon
 	return &response, nil
 }
 
-func buildRequest(message interfaces.AskAIRequest) *DeepseekRequest {
+func buildRequest(message *interfaces.AskAIRequest) *DeepseekRequest {
 	sysPromptStr := "You are a helpful assistant."
 	if message.SystemPrompt != nil {
 		sysPromptStr = *message.SystemPrompt

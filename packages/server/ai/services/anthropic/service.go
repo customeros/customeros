@@ -43,7 +43,7 @@ func NewAnthropicService(cfg *config.AnthropicConfig, warehouseRepos *postgres_r
 	}
 }
 
-func (c *AnthropicService) Ask(ctx context.Context, message interfaces.AskAIRequest) (*string, error) {
+func (c *AnthropicService) Ask(ctx context.Context, message *interfaces.AskAIRequest) (*string, error) {
 	span, ctx := telemetry.StartServiceSpan(ctx, "AnthropicService.Ask")
 	defer span.Finish()
 	span.LogObjectAsJson("request", message)
@@ -178,7 +178,7 @@ func (c *AnthropicService) executeWithRetry(ctx context.Context, reqBody Anthrop
 	return "", lastErr
 }
 
-func buildRequest(message interfaces.AskAIRequest) AnthropicApiRequest {
+func buildRequest(message *interfaces.AskAIRequest) AnthropicApiRequest {
 	req := AnthropicApiRequest{
 		Model:       message.Model.String(),
 		Messages:    []Message{{Role: "user", Content: message.Prompt}},

@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/nats-io/nats.go"
 
 	"github.com/customeros/customeros/packages/server/ai/interfaces"
 	"github.com/customeros/customeros/packages/server/ai/internal/enum"
 	nats_internal "github.com/customeros/customeros/packages/server/ai/internal/nats"
-	"github.com/customeros/customeros/packages/server/ai/internal/repository"
 	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/ai/internal/utils"
 	"github.com/customeros/customeros/packages/server/ai/services/anthropic"
@@ -24,9 +24,9 @@ import (
 )
 
 type webpageClassification struct {
-	natsConn     *nats_internal.NATSConnections
-	askAI        interfaces.AIService
-	repositories *repository.Repositories
+	natsConn  *nats_internal.NATSConnections
+	askAI     interfaces.AIService
+	warehouse *postgres_repository.WarehouseRepositories
 }
 
 func NewWebpageClassificationService(
@@ -35,13 +35,11 @@ func NewWebpageClassificationService(
 	deepseek *deepseek.DeepseekService,
 	groq *groq.GroqService,
 	gemini *gemini.GeminiService,
-	repositories *repository.Repositories,
 ) interfaces.NatsService {
-	askAI := ai.NewAIService(anthropic, deepseek, groq, gemini, repositories)
+	askAI := ai.NewAIService(anthropic, deepseek, groq, gemini)
 	return &webpageClassification{
-		natsConn:     natsConn,
-		askAI:        askAI,
-		repositories: repositories,
+		natsConn: natsConn,
+		askAI:    askAI,
 	}
 }
 
@@ -80,7 +78,7 @@ func (s *webpageClassification) Start(ctx context.Context) error {
 
 	// Create pull subscription
 	sub, err := s.natsConn.JS.PullSubscribe(
-		">",
+		SUBSCRIBED_SUBJECT,
 		CONSUMER_NAME,
 		nats.Bind(nats_internal.AI_STREAM, CONSUMER_NAME),
 	)
