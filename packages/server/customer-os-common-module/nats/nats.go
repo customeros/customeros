@@ -26,6 +26,7 @@ type NatsHeader string
 
 const (
 	CORE_STREAM           = "core"
+	LEADS_STREAM          = "leads"
 	MAX_STREAM_RECONNECTS = -1 // never stop trying to reconnect
 
 	NATS_HEADER_TENANT NatsHeader = "X-Tenant"
