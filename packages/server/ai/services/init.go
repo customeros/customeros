@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/customeros/customeros/packages/server/ai/internal/config"
 	nats_internal "github.com/customeros/customeros/packages/server/ai/internal/nats"
 	"github.com/customeros/customeros/packages/server/ai/internal/repository"
-	"github.com/customeros/customeros/packages/server/ai/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/ai/services/anthropic"
 	"github.com/customeros/customeros/packages/server/ai/services/deepseek"
 	"github.com/customeros/customeros/packages/server/ai/services/gemini"
@@ -36,7 +36,7 @@ func InitServices(
 	// AI-enabled services
 	services := &Services{
 		WebpageClassification: webpage_classification.NewWebpageClassificationService(
-			natsConn, anthropic, deepseek, groq, gemini, repositories,
+			natsConn, anthropic, deepseek, groq, gemini,
 		),
 	}
 
@@ -44,15 +44,31 @@ func InitServices(
 }
 
 func (s *Services) Start(ctx context.Context) error {
-	span, ctx := telemetry.StartServiceSpan(ctx, "Services.Start")
-	defer span.Finish()
-
-	err := s.WebpageClassification.Start(ctx)
-	if err != nil {
-		span.TraceError(err)
-		return err
+	services := []struct {
+		name    string
+		starter func(context.Context) error
+	}{
+		{"Webpage Classifier", s.WebpageClassification.Start},
 	}
+
+	for _, svc := range services {
+		if err := svc.starter(ctx); err != nil {
+			return fmt.Errorf("failed to start %s service: %w", svc.name, err)
+		}
+	}
+
 	return nil
 }
 
-func (s *Services) Stop(ctx context.Context) {}
+func (s *Services) Stop(ctx context.Context) {
+	services := []struct {
+		name    string
+		stopper func(context.Context)
+	}{
+		{"Webpage Classifier", func(ctx context.Context) { s.WebpageClassification.Stop() }},
+	}
+
+	for _, service := range services {
+		service.stopper(ctx)
+	}
+}

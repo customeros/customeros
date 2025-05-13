@@ -1,0 +1,75 @@
+volumes:
+  rabbitmq_data:
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    networks:
+      - openline
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./provision/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./provision/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  temporal:
+    container_name: temporal
+    environment:
+      - DB=postgres
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=password
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - ENABLE_ES=false
+    image: temporalio/auto-setup:1.22.6
+    networks:
+      - openline
+    ports:
+      - "7233:7233"
+    volumes:
+      - ./temporal:/etc/temporal/config/dynamicconfig
+    labels:
+      kompose.volume.type: configMap
+
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.22.6
+    networks:
+      - openline
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.16.2
+    networks:
+      - openline
+    ports:
+      - "8080:8080"
+
+  gotenberg:
+    image: thecodingmachine/gotenberg:8@sha256:c23c892f5fee99be6ed0fecc295c584f294335f9333373def88899c2a9d38c32
+    container_name: gotenberg
+    depends_on:
+      - neo4j-sidecar
+    networks:
+      - openline
+    ports:
+      - "11006:3000"

@@ -69,7 +69,7 @@ type IPAddressIdentifyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	IpAddress     string                 `protobuf:"bytes,1,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
 	Domain        string                 `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,3,opt,name=errorMessage,proto3" json:"errorMessage,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -132,12 +132,12 @@ const file_request_identify_ipaddress_proto_rawDesc = "" +
 	" request_identify_ipaddress.proto\x12\x02pb\"9\n" +
 	"\x18IPAddressIdentifyRequest\x12\x1d\n" +
 	"\n" +
-	"ip_address\x18\x01 \x01(\tR\tipAddress\"v\n" +
+	"ip_address\x18\x01 \x01(\tR\tipAddress\"w\n" +
 	"\x19IPAddressIdentifyResponse\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\x01 \x01(\tR\tipAddress\x12\x16\n" +
-	"\x06domain\x18\x02 \x01(\tR\x06domain\x12\"\n" +
-	"\ferrorMessage\x18\x03 \x01(\tR\ferrorMessageB\x06Z\x04./pbb\x06proto3"
+	"\x06domain\x18\x02 \x01(\tR\x06domain\x12#\n" +
+	"\rerror_message\x18\x03 \x01(\tR\ferrorMessageB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_request_identify_ipaddress_proto_rawDescOnce sync.Once

@@ -2,7 +2,6 @@ networks:
   openline:
 
 volumes:
-  rabbitmq_data:
   postgres_data:
   timescaledb_data:
   nats_data:
@@ -14,37 +13,6 @@ volumes:
   nui_data:
 
 services:
-  rabbitmq:
-    image: rabbitmq:management
-    container_name: rabbitmq
-    networks:
-      - openline
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-      - ./provision/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./provision/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.62.0
-    container_name: jaeger
-    networks:
-      - openline
-    ports:
-      - "16686:16686"
-      - "6831:6831/udp"
-      - "6831:6831/tcp"
-      - "4317:4317"
-      - "4318:4318"
-      - "14268:14268"
-    environment:
-      - LOG_LEVEL=debug
-
   postgres:
     image: postgres:17.4
     container_name: postgres
@@ -243,90 +211,6 @@ services:
         sleep 2
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
-
-  opensearch:
-    image: opensearchproject/opensearch:2.11.1
-    container_name: opensearch
-    environment:
-      - "discovery.type=single-node"
-      - "plugins.security.disabled=true"
-    volumes:
-      - opensearch-data:/usr/share/opensearch/data
-    ports:
-      - "9200:9200"
-      - "9600:9600"
-    networks:
-      - openline
-
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.11.1
-    container_name: opensearch-dashboards
-    environment:
-      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
-      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
-      - "DISABLE_SECURITY_DASHBOARDS=true"
-    ports:
-      - "5601:5601"
-    networks:
-      - openline
-    depends_on:
-      - opensearch
-
-  temporal:
-    container_name: temporal
-    environment:
-      - DB=postgres
-      - DB_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PWD=password
-      - POSTGRES_SEEDS=postgres
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
-      - ENABLE_ES=false
-    image: temporalio/auto-setup:1.22.6
-    networks:
-      - openline
-    ports:
-      - "7233:7233"
-    volumes:
-      - ./temporal:/etc/temporal/config/dynamicconfig
-    labels:
-      kompose.volume.type: configMap
-
-  temporal-admin-tools:
-    container_name: temporal-admin-tools
-    depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CLI_ADDRESS=temporal:7233
-    image: temporalio/admin-tools:1.22.6
-    networks:
-      - openline
-    stdin_open: true
-    tty: true
-
-  temporal-ui:
-    container_name: temporal-ui
-    depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
-    image: temporalio/ui:2.16.2
-    networks:
-      - openline
-    ports:
-      - "8080:8080"
-
-  gotenberg:
-    image: thecodingmachine/gotenberg:8@sha256:c23c892f5fee99be6ed0fecc295c584f294335f9333373def88899c2a9d38c32
-    container_name: gotenberg
-    depends_on:
-      - neo4j-sidecar
-    networks:
-      - openline
-    ports:
-      - "11006:3000"
 
   prometheus:
     image: prom/prometheus:v2.48.1
