@@ -61,7 +61,7 @@ const (
 	ERR_BACKOFF           = 100 * time.Millisecond
 )
 
-// Start begins listening for raw email events and processing them
+// Start begins listening for webpage classification events and processing them
 func (s *webpageClassification) Start(ctx context.Context) error {
 	// Create durable consumer for processing emails
 	_, err := s.natsConn.JS.AddConsumer(nats_internal.AI_STREAM, &nats.ConsumerConfig{
