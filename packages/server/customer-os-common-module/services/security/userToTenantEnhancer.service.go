@@ -86,19 +86,33 @@ func TenantUserContextEnhancer(cr *neo4jrepository.Repositories, opts ...CommonS
 }
 
 func checkUsernameHeader(c *gin.Context, tenant, username string, cr *neo4jrepository.Repositories, ctx context.Context, cache *caches.Cache) (*neo4jrepository.AuthenticatedUserInTenant, error) {
+	span, ctx := telemetry.StartSpan(ctx, "checkUsernameHeader")
+	defer span.Finish()
+	span.LogKV("header.tenant", tenant)
+	span.LogKV("header.username", username)
+
 	if cache != nil {
 		userDetails, found := cache.GetUserDetailsFromCache(tenant, username)
 		if found {
+			span.LogKV("result.cache.found", true)
 			return userDetails, nil
 		}
 	}
 	authenticatedUserInTenant, err := cr.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, tenant, username)
-	if err != nil || authenticatedUserInTenant == nil || authenticatedUserInTenant.UserId == "" {
+	if err != nil {
+		span.TraceError(err)
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},
 		})
 		c.Abort()
 		return nil, fmt.Errorf("failed to find user: %v", err)
+	} else if authenticatedUserInTenant == nil || authenticatedUserInTenant.UserId == "" {
+		span.TraceError(fmt.Errorf("user not found"))
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": "user not found"}},
+		})
+		c.Abort()
+		return nil, fmt.Errorf("user not found")
 	}
 
 	if cache != nil {

@@ -393,6 +393,7 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		spans.LogObjectAsJson("result", output)
 		return &output, nil
 	} else {
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 }
