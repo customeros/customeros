@@ -7,7 +7,7 @@ This module contains shared enum types used across the Customer OS platform. It 
 Import the enums module in your code:
 
 ```go
-import "github.com/customeros/customeros/packages/server/enums"
+import "github.com/customeros/enums"
 ```
 
 Then use the enum types directly:
@@ -26,7 +26,7 @@ Example:
 
 ```go
 import (
-    "github.com/customeros/customeros/packages/server/enums"
+    "github.com/customeros/enums"
     "github.com/nats-io/nats.go"
 )
 
