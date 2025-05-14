@@ -23,6 +23,7 @@ type CommonConfig struct {
 	Neo4j               commonconf.Neo4jConfig
 	DataWarehouseConfig commonconf.DataWarehouseConfig
 	Nats                commonconf.NATSConfig
+	RabbitMq            commonconf.RabbitMQConfig
 }
 
 func InitConfig() (*Config, error) {
@@ -38,6 +39,7 @@ func InitConfig() (*Config, error) {
 				Neo4jConfig:         commonCfg.Neo4j,
 				DataWarehouseConfig: commonCfg.DataWarehouseConfig,
 				NatsConfig:          commonCfg.Nats,
+				RabbitMQConfig:      commonCfg.RabbitMq,
 			},
 		},
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -476,11 +477,16 @@ func (r *RabbitMQPublisher) publishEventOnExchange(ctx context.Context, entityId
 }
 
 func (r *RabbitMQPublisher) publishMessageOnExchange(ctx context.Context, message interface{}, exchange, routingKey string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQPublisher.PublishMessageOnExchange")
+	span, ctx := telemetry.StartProducerSpan(ctx, "RabbitMQPublisher.PublishMessageOnExchange")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	tracing.LogObjectAsJson(span, "message", message)
+	if r.url == "" {
+		err := errors.New("RabbitMQ URL is not set")
+		span.TraceError(err)
+		return err
+	}
+
+	span.LogObjectAsJson("message", message)
 
 	for attempt := 0; attempt < r.config.MaxRetries; attempt++ {
 		err := r.publishWithConfirm(ctx, message, exchange, routingKey)
