@@ -13,11 +13,11 @@ import (
 	core_crm_pb "github.com/customeros/customeros/packages/server/core-crm/proto/pb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	leads_enum "github.com/customeros/leads/enum"
-	leads_pb "github.com/customeros/leads/proto/pb"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -224,7 +224,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 		return
 	}
 
-	request := &leads_pb.WebtrackerVisitorIdentified{}
+	request := &pb.WebtrackerVisitorIdentified{}
 	err := proto.Unmarshal(msg.Data, request)
 	if err != nil {
 		span.TraceError(errors.Wrap(err, "failed to unmarshal webtracker visitor identified request"))

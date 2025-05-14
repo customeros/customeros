@@ -1,3 +1,5 @@
+proto_dir := "../proto"
+
 help:
     @echo "Available commands:"
     @echo "  help        - Show this help message"
@@ -20,11 +22,11 @@ gen-api:
     go run github.com/99designs/gqlgen generate --config ./gqlgen.yml
 
 gen-proto-common:
-    find ../customer-os-common-module/proto -name "*.proto" -type f -exec \
+    find {{proto_dir}} -name "*.proto" -type f -exec \
     protoc \
-    --proto_path=../customer-os-common-module/proto \
+    --proto_path={{proto_dir}} \
     --go_out=../customer-os-common-module/proto/pb \
-    --go_opt=module=github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb \
+    --go_opt=paths=source_relative \
     --go-grpc_out=../customer-os-common-module/proto/pb \
     --go-grpc_opt=module=github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb \
     {} \;
