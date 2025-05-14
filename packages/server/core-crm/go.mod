@@ -60,6 +60,7 @@ require (
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
+	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
 	github.com/customeros/leads v0.0.68 // indirect
 	github.com/customeros/mailsherpa v0.3.9 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect

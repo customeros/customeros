@@ -7,6 +7,7 @@ replace github.com/customeros/customeros/packages/server/customer-os-common-modu
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
+	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9

@@ -57,6 +57,7 @@ type Repositories struct {
 	MailstackBuyRequestRepository                MailstackBuyRequestRepository
 	OAuthTokenRepository                         OAuthTokenRepository
 	OranizationWebsiteHostingPlatformRepository  OrganizationWebsiteHostingPlatformRepository
+	OutboxRepository                             OutboxRepository
 	PersonalEmailProviderRepository              PersonalEmailProviderRepository
 	PersonalIntegrationRepository                PersonalIntegrationRepository
 	PostmarkApiKeyRepository                     PostmarkApiKeyRepository
@@ -140,6 +141,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		NylasGrantRepository:                         NewNylasGrantRepository(postgresDB.GormDB),
 		OAuthTokenRepository:                         NewOAuthTokenRepository(postgresDB.GormDB),
 		OranizationWebsiteHostingPlatformRepository:  NewOrganizationWebsiteHostingPlatformRepository(postgresDB.GormDB),
+		OutboxRepository:                             NewOutboxRepository(postgresDB.GormDB),
 		PersonalEmailProviderRepository:              NewPersonalEmailProviderRepository(postgresDB.GormDB),
 		PersonalIntegrationRepository:                NewPersonalIntegrationsRepo(postgresDB.GormDB),
 		PostmarkApiKeyRepository:                     NewPostmarkApiKeyRepo(postgresDB.GormDB),
@@ -225,6 +227,7 @@ func (r *Repositories) MigrateOpenlineDB() error {
 		&postgres_entity.PostmarkApiKey{},
 		&postgres_entity.OAuthTokenEntity{},
 		&postgres_entity.QuickbooksSettingsEntity{},
+		&postgres_entity.OutboxEvent{},
 		&postgres_entity.ScrapedWebpage{},
 		&postgres_entity.SkuEntity{},
 		&postgres_entity.SlackChannel{},
