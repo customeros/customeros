@@ -27,6 +27,8 @@ env:
   CGO_ENABLED: 0
   LANG: C.UTF-8
   LC_ALL: C.UTF-8
+  GO111MODULE: on
+  GOPROXY: "https://proxy.golang.org,direct"
 
 jobs:
   build:
@@ -40,8 +42,8 @@ jobs:
           go-version: stable
           cache: true
         env:
-          GOPROXY: "direct"
-          GOSUMDB: "off"
+          GOPROXY: "https://proxy.golang.org,direct"
+          GOSUMDB: "sum.golang.org"
           GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
 
       - name: Go Cache
