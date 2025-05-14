@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package customer_os_common;
-
 package pb;
 option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
 
 message TenantCreated {
   google.protobuf.Timestamp timestamp = 1;
