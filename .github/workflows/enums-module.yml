@@ -1,0 +1,60 @@
+name: enums-module
+
+on:
+  push:
+    branches: ["otter"]
+    paths:
+      - packages/server/enums/**
+      - .github/workflows/enums-module.yml
+  pull_request:
+    paths:
+      - packages/server/enums/**
+      - .github/workflows/enums-module.yml
+  release:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+defaults:
+  run:
+    working-directory: ./packages/server/enums
+
+env:
+  GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+  GOBIN: ${{ github.workspace }}/go/bin
+  CGO_ENABLED: 0
+  LANG: C.UTF-8
+  LC_ALL: C.UTF-8
+
+jobs:
+  build:
+    runs-on: ubicloud-standard-2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: ubicloud/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+        env:
+          GOPROXY: "direct"
+          GOSUMDB: "off"
+          GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+
+      - name: Go Cache
+        id: go-cache
+        uses: ubicloud/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/go/bin
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build
+        run: go build -v ./... 
