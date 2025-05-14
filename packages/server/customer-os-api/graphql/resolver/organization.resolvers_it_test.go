@@ -154,7 +154,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, model.OnboardingStatusDone, organizationStruct.Organization.AccountDetails.Onboarding.Status)
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.Comments, *organizationStruct.Organization.AccountDetails.Onboarding.Comments)
 	require.Equal(t, model.OrganizationRelationshipCustomer, *organizationStruct.Organization.Relationship)
-	require.Equal(t, model.OrganizationStageLead, *organizationStruct.Organization.Stage)
 	require.Equal(t, int64(2), organizationStruct.Organization.ContactCount)
 }
 

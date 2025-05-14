@@ -80,6 +80,7 @@ require (
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/customeros/customeros/packages/server/core-crm v0.0.0-20250504171220-a3d354c2ec9a // indirect
+	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
 	github.com/customeros/leads v0.0.68 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect

@@ -50,6 +50,7 @@ require (
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
+	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
