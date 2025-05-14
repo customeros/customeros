@@ -2,6 +2,7 @@ package neo4j_repository
 
 import (
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
@@ -10,9 +11,10 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
-	"golang.org/x/net/context"
 	"strings"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 type OrganizationWriteRepository interface {
@@ -199,6 +201,14 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		if data.IcpFitReasons != nil {
 			cypherUpdate += `org.icpFitReasons = $icpFitReasons,`
 			paramsUpdate["icpFitReasons"] = *data.IcpFitReasons
+		}
+		if data.QualificationStatus != nil {
+			cypherUpdate += `org.qualificationStatus = $qualificationStatus,`
+			paramsUpdate["qualificationStatus"] = (*data.QualificationStatus).String()
+		}
+		if data.QualifiedBy != nil {
+			cypherUpdate += `org.qualifiedBy = $qualifiedBy,`
+			paramsUpdate["qualifiedBy"] = (*data.QualifiedBy).String()
 		}
 		if utils.IfNotNilString(data.EnrichDomain) != "" && utils.IfNotNilString(data.EnrichSource) != "" {
 			cypherUpdate += `org.enrichDomain = $enrichDomain, org.enrichSource = $enrichSource, org.enrichedAt = $enrichedAt,`

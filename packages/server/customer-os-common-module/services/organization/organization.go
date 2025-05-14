@@ -1716,6 +1716,9 @@ func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields
 	spans, _ := telemetry.StartServiceSpan(ctx, "OrganizationService.adjustIcpFitFields")
 	defer spans.Finish()
 
+	currentUserId := common.GetUserIdFromContext(ctx)
+	setByUser := currentUserId != ""
+
 	if dataFields.Stage != nil {
 		if currentOrganizationEntity.Stage == *dataFields.Stage {
 			spans.LogKV("stage", "same")
@@ -1724,21 +1727,29 @@ func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields
 
 		if *dataFields.Stage == enum.NotAFit {
 			dataFields.IcpFit = utils.ToPtr(enum.IcpNotFit)
+			dataFields.QualificationStatus = utils.ToPtr(enum.QualificationStatusNotQualified)
 			if currentOrganizationEntity.IcpFit == enum.IcpIsFit && dataFields.IcpFitReasons == nil {
 				dataFields.IcpFitReasons = utils.ToPtr([]string{})
 			}
+			if currentOrganizationEntity.QualificationStatus != enum.QualificationStatusNotQualified {
+				if setByUser {
+					dataFields.QualifiedBy = utils.ToPtr(enum.QualifiedByUser)
+				} else {
+					dataFields.QualifiedBy = utils.ToPtr(enum.QualifiedBySystem)
+				}
+			}
 		} else if *dataFields.Stage == enum.Customer {
 			dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
+			dataFields.QualificationStatus = utils.ToPtr(enum.QualificationStatusQualified)
 			if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
 				dataFields.IcpFitReasons = utils.ToPtr([]string{})
 			}
-		} else if *dataFields.Stage == enum.Target {
-			dataFields.IcpFit = utils.ToPtr(enum.IcpNotSet)
-			dataFields.IcpFitReasons = utils.ToPtr([]string{})
-		} else if *dataFields.Stage != enum.Target {
-			dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
-			if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
-				dataFields.IcpFitReasons = utils.ToPtr([]string{})
+			if currentOrganizationEntity.QualificationStatus != enum.QualificationStatusQualified {
+				if setByUser {
+					dataFields.QualifiedBy = utils.ToPtr(enum.QualifiedByUser)
+				} else {
+					dataFields.QualifiedBy = utils.ToPtr(enum.QualifiedBySystem)
+				}
 			}
 		}
 	} else {
