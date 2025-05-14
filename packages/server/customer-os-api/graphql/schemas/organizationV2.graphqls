@@ -36,7 +36,9 @@ type OrganizationUiDetails {
     logoUrl:                String
     iconUrl:                String
     stage:                  OrganizationStage
-    relationship:           OrganizationRelationship
+    qualificationStatus:    QualificationStatus
+    qualifiedBy:            QualifiedBy
+    relationship:           OrganizationRelationship @deprecated
     lastFundingRound:       FundingRound
     leadSource:             String
     valueProposition:       String

@@ -147,9 +147,11 @@ func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organ
 	spans.TagEntity(organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
-		Stage:         utils.ToPtr(enum.Target),
-		IcpFit:        utils.ToPtr(enum.IcpIsFit),
-		IcpFitReasons: &reasons,
+		Stage:               utils.ToPtr(enum.Target),
+		IcpFit:              utils.ToPtr(enum.IcpIsFit),
+		IcpFitReasons:       &reasons,
+		QualificationStatus: utils.ToPtr(enum.QualificationStatusQualified),
+		QualifiedBy:         utils.ToPtr(enum.QualifiedBySystem),
 	})
 	if err != nil {
 		spans.TraceError(err)
@@ -165,9 +167,11 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 	spans.TagEntity(organizationID)
 
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
-		Stage:         utils.ToPtr(enum.NotAFit),
-		IcpFit:        utils.ToPtr(enum.IcpNotFit),
-		IcpFitReasons: &reasons,
+		Stage:               utils.ToPtr(enum.NotAFit),
+		IcpFit:              utils.ToPtr(enum.IcpNotFit),
+		IcpFitReasons:       &reasons,
+		QualificationStatus: utils.ToPtr(enum.QualificationStatusNotQualified),
+		QualifiedBy:         utils.ToPtr(enum.QualifiedBySystem),
 	})
 	if err != nil {
 		spans.TraceError(err)

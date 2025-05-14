@@ -9,3 +9,5 @@ message RequestWebpageClassification {
   string url = 3;
   string content = 4;
 }
+
+// Note: response async in webpage.clasified.proto

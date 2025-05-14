@@ -2228,6 +2228,8 @@ type Organization struct {
 	YearFounded              *int64                        `json:"yearFounded,omitempty"`
 	Stage                    *OrganizationStage            `json:"stage,omitempty"`
 	StageLastUpdated         *time.Time                    `json:"stageLastUpdated,omitempty"`
+	QualificationStatus      *QualificationStatus          `json:"qualificationStatus,omitempty"`
+	QualifiedBy              *QualifiedBy                  `json:"qualifiedBy,omitempty"`
 	Relationship             *OrganizationRelationship     `json:"relationship,omitempty"`
 	LeadSource               *string                       `json:"leadSource,omitempty"`
 	IcpFit                   *IcpFit                       `json:"icpFit,omitempty"`
@@ -2416,6 +2418,8 @@ type OrganizationUIDetails struct {
 	LogoURL                         *string                       `json:"logoUrl,omitempty"`
 	IconURL                         *string                       `json:"iconUrl,omitempty"`
 	Stage                           *OrganizationStage            `json:"stage,omitempty"`
+	QualificationStatus             *QualificationStatus          `json:"qualificationStatus,omitempty"`
+	QualifiedBy                     *QualifiedBy                  `json:"qualifiedBy,omitempty"`
 	Relationship                    *OrganizationRelationship     `json:"relationship,omitempty"`
 	LastFundingRound                *FundingRound                 `json:"lastFundingRound,omitempty"`
 	LeadSource                      *string                       `json:"leadSource,omitempty"`
@@ -6166,6 +6170,122 @@ func (e *PhoneNumberLabel) UnmarshalJSON(b []byte) error {
 }
 
 func (e PhoneNumberLabel) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type QualificationStatus string
+
+const (
+	QualificationStatusPending      QualificationStatus = "PENDING"
+	QualificationStatusQualifying   QualificationStatus = "QUALIFYING"
+	QualificationStatusQualified    QualificationStatus = "QUALIFIED"
+	QualificationStatusNotQualified QualificationStatus = "NOT_QUALIFIED"
+)
+
+var AllQualificationStatus = []QualificationStatus{
+	QualificationStatusPending,
+	QualificationStatusQualifying,
+	QualificationStatusQualified,
+	QualificationStatusNotQualified,
+}
+
+func (e QualificationStatus) IsValid() bool {
+	switch e {
+	case QualificationStatusPending, QualificationStatusQualifying, QualificationStatusQualified, QualificationStatusNotQualified:
+		return true
+	}
+	return false
+}
+
+func (e QualificationStatus) String() string {
+	return string(e)
+}
+
+func (e *QualificationStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = QualificationStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid QualificationStatus", str)
+	}
+	return nil
+}
+
+func (e QualificationStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *QualificationStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e QualificationStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type QualifiedBy string
+
+const (
+	QualifiedByNone   QualifiedBy = "NONE"
+	QualifiedBySystem QualifiedBy = "SYSTEM"
+	QualifiedByUser   QualifiedBy = "USER"
+)
+
+var AllQualifiedBy = []QualifiedBy{
+	QualifiedByNone,
+	QualifiedBySystem,
+	QualifiedByUser,
+}
+
+func (e QualifiedBy) IsValid() bool {
+	switch e {
+	case QualifiedByNone, QualifiedBySystem, QualifiedByUser:
+		return true
+	}
+	return false
+}
+
+func (e QualifiedBy) String() string {
+	return string(e)
+}
+
+func (e *QualifiedBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = QualifiedBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid QualifiedBy", str)
+	}
+	return nil
+}
+
+func (e QualifiedBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *QualifiedBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e QualifiedBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

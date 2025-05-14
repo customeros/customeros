@@ -85,6 +85,8 @@ type Organization implements MetadataInterface {
     yearFounded:            Int64
     stage:                  OrganizationStage
     stageLastUpdated:       Time
+    qualificationStatus:    QualificationStatus
+    qualifiedBy:            QualifiedBy
     relationship:           OrganizationRelationship @deprecated
     leadSource:             String
     icpFit:                 IcpFit
@@ -445,6 +447,19 @@ enum OrganizationStage {
     OPPORTUNITY
     CUSTOMER
     NOT_A_FIT
+}
+
+enum QualificationStatus {
+    PENDING
+    QUALIFYING
+    QUALIFIED
+    NOT_QUALIFIED
+}
+
+enum QualifiedBy {
+    NONE
+    SYSTEM
+    USER
 }
 
 input OrganizationSaveInputFromGlobalOrg {
