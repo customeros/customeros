@@ -1422,6 +1422,8 @@ type ComplexityRoot struct {
 		ParentCompanies               func(childComplexity int) int
 		PhoneNumbers                  func(childComplexity int) int
 		Public                        func(childComplexity int) int
+		QualificationStatus           func(childComplexity int) int
+		QualifiedBy                   func(childComplexity int) int
 		ReferenceID                   func(childComplexity int) int
 		Relationship                  func(childComplexity int) int
 		SlackChannelID                func(childComplexity int) int
@@ -1504,6 +1506,8 @@ type ComplexityRoot struct {
 		ParentID                        func(childComplexity int) int
 		ParentName                      func(childComplexity int) int
 		Public                          func(childComplexity int) int
+		QualificationStatus             func(childComplexity int) int
+		QualifiedBy                     func(childComplexity int) int
 		ReferenceID                     func(childComplexity int) int
 		Relationship                    func(childComplexity int) int
 		RenewalSummaryArrForecast       func(childComplexity int) int
@@ -10787,6 +10791,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Organization.Public(childComplexity), true
 
+	case "Organization.qualificationStatus":
+		if e.complexity.Organization.QualificationStatus == nil {
+			break
+		}
+
+		return e.complexity.Organization.QualificationStatus(childComplexity), true
+
+	case "Organization.qualifiedBy":
+		if e.complexity.Organization.QualifiedBy == nil {
+			break
+		}
+
+		return e.complexity.Organization.QualifiedBy(childComplexity), true
+
 	case "Organization.referenceId":
 		if e.complexity.Organization.ReferenceID == nil {
 			break
@@ -11286,6 +11304,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.OrganizationUiDetails.Public(childComplexity), true
+
+	case "OrganizationUiDetails.qualificationStatus":
+		if e.complexity.OrganizationUiDetails.QualificationStatus == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.QualificationStatus(childComplexity), true
+
+	case "OrganizationUiDetails.qualifiedBy":
+		if e.complexity.OrganizationUiDetails.QualifiedBy == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.QualifiedBy(childComplexity), true
 
 	case "OrganizationUiDetails.referenceId":
 		if e.complexity.OrganizationUiDetails.ReferenceID == nil {
@@ -17729,6 +17761,8 @@ type Organization implements MetadataInterface {
     yearFounded:            Int64
     stage:                  OrganizationStage
     stageLastUpdated:       Time
+    qualificationStatus:    QualificationStatus
+    qualifiedBy:            QualifiedBy
     relationship:           OrganizationRelationship @deprecated
     leadSource:             String
     icpFit:                 IcpFit
@@ -18091,6 +18125,19 @@ enum OrganizationStage {
     NOT_A_FIT
 }
 
+enum QualificationStatus {
+    PENDING
+    QUALIFYING
+    QUALIFIED
+    NOT_QUALIFIED
+}
+
+enum QualifiedBy {
+    NONE
+    SYSTEM
+    USER
+}
+
 input OrganizationSaveInputFromGlobalOrg {
     stage:              OrganizationStage
     relationship:       OrganizationRelationship @deprecated
@@ -18133,7 +18180,9 @@ type OrganizationUiDetails {
     logoUrl:                String
     iconUrl:                String
     stage:                  OrganizationStage
-    relationship:           OrganizationRelationship
+    qualificationStatus:    QualificationStatus
+    qualifiedBy:            QualifiedBy
+    relationship:           OrganizationRelationship @deprecated
     lastFundingRound:       FundingRound
     leadSource:             String
     valueProposition:       String
@@ -40678,6 +40727,10 @@ func (ec *executionContext) fieldContext_Contract_organization(_ context.Context
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -45332,6 +45385,10 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -54179,6 +54236,10 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -59428,6 +59489,10 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -60343,6 +60408,10 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -75376,6 +75445,10 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -78417,6 +78490,10 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -78654,6 +78731,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -78847,6 +78928,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SaveByGlobalOrgan
 				return ec.fieldContext_OrganizationUiDetails_iconUrl(ctx, field)
 			case "stage":
 				return ec.fieldContext_OrganizationUiDetails_stage(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_OrganizationUiDetails_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_OrganizationUiDetails_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_OrganizationUiDetails_relationship(ctx, field)
 			case "lastFundingRound":
@@ -79450,6 +79535,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -79687,6 +79776,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -79924,6 +80017,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -80367,6 +80464,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -80604,6 +80705,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -81120,6 +81225,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -81357,6 +81466,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -81594,6 +81707,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -87819,6 +87936,10 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -91094,6 +91215,88 @@ func (ec *executionContext) fieldContext_Organization_stageLastUpdated(_ context
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_qualificationStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_qualificationStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.QualificationStatus, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.QualificationStatus)
+	fc.Result = res
+	return ec.marshalOQualificationStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualificationStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_qualificationStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type QualificationStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_qualifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_qualifiedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.QualifiedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.QualifiedBy)
+	fc.Result = res
+	return ec.marshalOQualifiedBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualifiedBy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_qualifiedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type QualifiedBy does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_relationship(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_relationship(ctx, field)
 	if err != nil {
@@ -92825,6 +93028,10 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -93149,6 +93356,10 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -94152,6 +94363,88 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_stage(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type OrganizationStage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_qualificationStatus(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_qualificationStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.QualificationStatus, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.QualificationStatus)
+	fc.Result = res
+	return ec.marshalOQualificationStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualificationStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_qualificationStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type QualificationStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_qualifiedBy(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_qualifiedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.QualifiedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.QualifiedBy)
+	fc.Result = res
+	return ec.marshalOQualifiedBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualifiedBy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_qualifiedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type QualifiedBy does not have child fields")
 		},
 	}
 	return fc, nil
@@ -95983,6 +96276,10 @@ func (ec *executionContext) fieldContext_OrganizationWithJobRole_organization(_ 
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -97629,6 +97926,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -103629,6 +103930,10 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -103863,6 +104168,10 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -104097,6 +104406,10 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -104649,6 +104962,10 @@ func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx conte
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -104931,6 +105248,10 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_iconUrl(ctx, field)
 			case "stage":
 				return ec.fieldContext_OrganizationUiDetails_stage(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_OrganizationUiDetails_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_OrganizationUiDetails_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_OrganizationUiDetails_relationship(ctx, field)
 			case "lastFundingRound":
@@ -107825,6 +108146,10 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -109765,6 +110090,10 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -111124,6 +111453,10 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "stageLastUpdated":
 				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "qualificationStatus":
+				return ec.fieldContext_Organization_qualificationStatus(ctx, field)
+			case "qualifiedBy":
+				return ec.fieldContext_Organization_qualifiedBy(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -139164,6 +139497,10 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_stage(ctx, field, obj)
 		case "stageLastUpdated":
 			out.Values[i] = ec._Organization_stageLastUpdated(ctx, field, obj)
+		case "qualificationStatus":
+			out.Values[i] = ec._Organization_qualificationStatus(ctx, field, obj)
+		case "qualifiedBy":
+			out.Values[i] = ec._Organization_qualifiedBy(ctx, field, obj)
 		case "relationship":
 			out.Values[i] = ec._Organization_relationship(ctx, field, obj)
 		case "leadSource":
@@ -139934,6 +140271,10 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			out.Values[i] = ec._OrganizationUiDetails_iconUrl(ctx, field, obj)
 		case "stage":
 			out.Values[i] = ec._OrganizationUiDetails_stage(ctx, field, obj)
+		case "qualificationStatus":
+			out.Values[i] = ec._OrganizationUiDetails_qualificationStatus(ctx, field, obj)
+		case "qualifiedBy":
+			out.Values[i] = ec._OrganizationUiDetails_qualifiedBy(ctx, field, obj)
 		case "relationship":
 			out.Values[i] = ec._OrganizationUiDetails_relationship(ctx, field, obj)
 		case "lastFundingRound":
@@ -152706,6 +153047,38 @@ func (ec *executionContext) unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustome
 }
 
 func (ec *executionContext) marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumberLabel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOQualificationStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualificationStatus(ctx context.Context, v any) (*model.QualificationStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.QualificationStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOQualificationStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualificationStatus(ctx context.Context, sel ast.SelectionSet, v *model.QualificationStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOQualifiedBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualifiedBy(ctx context.Context, v any) (*model.QualifiedBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.QualifiedBy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOQualifiedBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐQualifiedBy(ctx context.Context, sel ast.SelectionSet, v *model.QualifiedBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

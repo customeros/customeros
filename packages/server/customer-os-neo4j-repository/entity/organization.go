@@ -37,45 +37,49 @@ const (
 	OrganizationPropertyLeadSource                OrganizationProperty = "leadSource"
 	OrganizationPropertyIcpCheckedAt              OrganizationProperty = "techIcpCheckedAt"
 	OrganizationPropertyIcpCheckRequestedAt       OrganizationProperty = "techIcpCheckRequestedAt"
+	OrganizationPropertyQualificationStatus       OrganizationProperty = "qualificationStatus"
+	OrganizationPropertyQualifiedBy               OrganizationProperty = "qualifiedBy"
 )
 
 type OrganizationEntity struct {
 	EventStoreAggregate // TODO alexb delete
 	DataLoaderKey
-	ID                 string
-	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
-	CustomId           string `neo4jDb:"property:customId;lookupName:CUSTOMER_ID;supportCaseSensitive:false"`
-	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
-	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
-	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
-	Industry           string // Free text industry, replaced with link to industry node. Use industry as temporary field for sync from other systems
-	IsPublic           bool
-	Hide               bool
-	Market             string
-	LastFundingRound   string
-	LastFundingAmount  string
-	ReferenceId        string `neo4jDb:"property:referenceId;lookupName:REFERENCE_ID;supportCaseSensitive:true"`
-	Note               string
-	Employees          int64
-	CreatedAt          time.Time
-	UpdatedAt          time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
-	LastTouchpointAt   *time.Time `neo4jDb:"property:lastTouchpointAt;lookupName:LAST_TOUCHPOINT_AT;supportCaseSensitive:false"`
-	LastTouchpointId   *string    `neo4jDb:"property:lastTouchpointId;lookupName:LAST_TOUCHPOINT_ID;supportCaseSensitive:false"`
-	LastTouchpointType *string    `neo4jDb:"property:lastTouchpointType;lookupName:LAST_TOUCHPOINT_TYPE;supportCaseSensitive:false"`
-	Source             DataSource
-	YearFounded        *int64
-	Headquarters       string
-	EmployeeGrowthRate string
-	SlackChannelId     string
-	LogoUrl            string
-	IconUrl            string
-	Stage              commonenum.OrganizationStage `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
-	StageUpdatedAt     *time.Time
-	LeadSource         string `neo4jDb:"property:leadSource;lookupName:LEAD_SOURCE;supportCaseSensitive:true"`
-	IcpFit             commonenum.IcpFit
-	IcpFitUpdatedAt    *time.Time
-	IcpFitReasons      []string
-	WrongIndustry      bool
+	ID                  string
+	CustomerOsId        string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
+	CustomId            string `neo4jDb:"property:customId;lookupName:CUSTOMER_ID;supportCaseSensitive:false"`
+	Name                string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	Description         string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
+	Website             string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
+	Industry            string // Free text industry, replaced with link to industry node. Use industry as temporary field for sync from other systems
+	IsPublic            bool
+	Hide                bool
+	Market              string
+	LastFundingRound    string
+	LastFundingAmount   string
+	ReferenceId         string `neo4jDb:"property:referenceId;lookupName:REFERENCE_ID;supportCaseSensitive:true"`
+	Note                string
+	Employees           int64
+	CreatedAt           time.Time
+	UpdatedAt           time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
+	LastTouchpointAt    *time.Time `neo4jDb:"property:lastTouchpointAt;lookupName:LAST_TOUCHPOINT_AT;supportCaseSensitive:false"`
+	LastTouchpointId    *string    `neo4jDb:"property:lastTouchpointId;lookupName:LAST_TOUCHPOINT_ID;supportCaseSensitive:false"`
+	LastTouchpointType  *string    `neo4jDb:"property:lastTouchpointType;lookupName:LAST_TOUCHPOINT_TYPE;supportCaseSensitive:false"`
+	Source              DataSource
+	YearFounded         *int64
+	Headquarters        string
+	EmployeeGrowthRate  string
+	SlackChannelId      string
+	LogoUrl             string
+	IconUrl             string
+	Stage               commonenum.OrganizationStage `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
+	StageUpdatedAt      *time.Time
+	QualificationStatus commonenum.QualificationStatus `neo4jDb:"property:qualificationStatus;lookupName:QUALIFICATION_STATUS;supportCaseSensitive:false"`
+	QualifiedBy         commonenum.QualifiedBy         `neo4jDb:"property:qualifiedBy;lookupName:QUALIFIED_BY;supportCaseSensitive:false"`
+	LeadSource          string                         `neo4jDb:"property:leadSource;lookupName:LEAD_SOURCE;supportCaseSensitive:true"`
+	IcpFit              commonenum.IcpFit
+	IcpFitUpdatedAt     *time.Time
+	IcpFitReasons       []string
+	WrongIndustry       bool
 
 	LinkedOrganizationType *string
 

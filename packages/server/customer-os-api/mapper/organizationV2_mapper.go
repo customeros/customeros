@@ -36,6 +36,8 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.IconURL = utils.StringPtr(entity.IconUrl)
 	output.Notes = utils.StringPtr(entity.Note)
 	output.Stage = utils.ToPtr(enummapper.MapStageToModel(entity.Stage))
+	output.QualificationStatus = utils.ToPtr(enummapper.MapStatusToModel(entity.QualificationStatus))
+	output.QualifiedBy = utils.ToPtr(enummapper.MapQualifiedByToModel(entity.QualifiedBy))
 	output.LeadSource = utils.StringPtr(entity.LeadSource)
 
 	output.Ltv = utils.Float64Ptr(entity.DerivedData.Ltv)
