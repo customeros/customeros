@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+message CompanyCreated {
+  string company_id = 1;
+  string organization_id = 2;
+  string tenant = 3;
+  string primary_domain = 4;
+}
