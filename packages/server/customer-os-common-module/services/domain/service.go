@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -286,14 +285,23 @@ func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jent
 func (s *domainService) IsAcceptedDomainForOrganization(ctx context.Context, domain string) bool {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "DomainService.IsAcceptedDomainForOrganization")
 	defer spans.Finish()
-
 	spans.TagEntity(domain)
 
 	personalEmailProviders := s.cache.GetPersonalEmailProviders()
-	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
-		err := fmt.Errorf("personal email providers not loaded")
-		spans.TraceError(err)
-		return false
+	if len(personalEmailProviders) == 0 {
+		// get personal email providers from personal_email_providers table
+		personalEmailProviderEntities, err := s.postgres.PersonalEmailProviderRepository.GetPersonalEmailProviders(ctx)
+		if err != nil {
+			spans.TraceError(err)
+			return false
+		}
+		// convert to slice of strings
+		personalEmailProviders = make([]string, 0, len(personalEmailProviderEntities))
+		for _, v := range personalEmailProviderEntities {
+			personalEmailProviders = append(personalEmailProviders, v.ProviderDomain)
+		}
+		// set personal email providers in cache
+		s.cache.SetPersonalEmailProviders(personalEmailProviders)
 	}
 
 	if s.cache.IsPersonalEmailProvider(domain) {

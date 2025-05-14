@@ -173,7 +173,7 @@ func (s *organizationService) handleFetchError(err error) {
 
 func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = common.WithCustomContextFromNats(ctx, msg)
-	spans, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleOrganizationMessage", telemetry.WithNewRoot())
+	spans, ctx := telemetry.StartListenerSpan(ctx, "OrganizationService.handleOrganizationMessage", telemetry.WithNewRoot())
 	defer spans.Finish()
 
 	if msg == nil {
@@ -205,7 +205,7 @@ func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg
 
 func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx context.Context, msg *nats.Msg) {
 	ctx = common.WithCustomContextFromNats(ctx, msg)
-	span, ctx := telemetry.StartListenerSpan(ctx, "organizationService.handleWebtrackerVisitorIdentifiedMessage", telemetry.WithNewRoot())
+	span, ctx := telemetry.StartListenerSpan(ctx, "OrganizationService.handleWebtrackerVisitorIdentifiedMessage", telemetry.WithNewRoot())
 	defer span.Finish()
 
 	if msg == nil {
@@ -306,7 +306,7 @@ func (s *organizationService) handleProcessingError(msg *nats.Msg) {
 }
 
 func (s *organizationService) sendOrganizationResponse(ctx context.Context, req *nats.Msg, resp *core_crm_pb.OrganizationSaveResponse) {
-	spans, _ := telemetry.StartServiceSpan(ctx, "organizationService.sendOrganizationResponse")
+	spans, _ := telemetry.StartServiceSpan(ctx, "OrganizationService.sendOrganizationResponse")
 	defer spans.Finish()
 
 	respMessage, err := proto.Marshal(resp)
