@@ -90,8 +90,8 @@ github.com/cucumber/godog v0.15.0 h1:51AL8lBXF3f0cyA5CV4TnJFCTHpgiy+1x1Hb3TtZUmo
 github.com/cucumber/godog v0.15.0/go.mod h1:FX3rzIDybWABU4kuIXLZ/qtqEe1Ac5RdXmqvACJOces=
 github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM+RuOwHZiMI=
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
-github.com/customeros/leads v0.0.54 h1:pcbdGsdnyTPPHkQYq4o/jQI/hBWbH4t9Vnef3r167XY=
-github.com/customeros/leads v0.0.54/go.mod h1:Xue8ATAIsWImBsOsLxqsNmF4+ZD/j5Dk2wsYK3I3z58=
+github.com/customeros/leads v0.0.68 h1:/do96OREhR6/KlVFiudplZ65n2UACcEcjJ7onGvOUiM=
+github.com/customeros/leads v0.0.68/go.mod h1:Xue8ATAIsWImBsOsLxqsNmF4+ZD/j5Dk2wsYK3I3z58=
 github.com/customeros/mailsherpa v0.3.9 h1:i+usip3f5A3IgryzeiYTzZWDxI1fRxp4VxXWGpTDd7c=
 github.com/customeros/mailsherpa v0.3.9/go.mod h1:3PVCXCWUQQ6lTjxFtPs4KlFKteME14hD5GFNiElB7Fk=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

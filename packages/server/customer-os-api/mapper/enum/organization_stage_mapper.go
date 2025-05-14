@@ -16,16 +16,6 @@ var stageByModel = map[model.OrganizationStage]commonenum.OrganizationStage{
 	model.OrganizationStageOpportunity: commonenum.Opportunity,
 	model.OrganizationStageCustomer:    commonenum.Customer,
 	model.OrganizationStageNotAFit:     commonenum.NotAFit,
-
-	model.OrganizationStageLead:           commonenum.Lead,
-	model.OrganizationStageEngaged:        commonenum.Engaged,
-	model.OrganizationStageUnqualified:    commonenum.Unqualified,
-	model.OrganizationStageOnboarding:     commonenum.Onboarding,
-	model.OrganizationStageInitialValue:   commonenum.InitialValue,
-	model.OrganizationStageRecurringValue: commonenum.RecurringValue,
-	model.OrganizationStageMaxValue:       commonenum.MaxValue,
-	model.OrganizationStagePendingChurn:   commonenum.PendingChurn,
-	model.OrganizationStageTrial:          commonenum.Trial,
 }
 
 var stageByValue = utils.ReverseMap(stageByModel)
