@@ -188,12 +188,14 @@ func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg
 	request := &core_crm_pb.OrganizationSaveRequest{}
 	err := proto.Unmarshal(msg.Data, request)
 	if err != nil {
-		s.handleProcessingError(ctx, msg, err)
+		spans.TraceError(errors.Wrap(err, "failed to unmarshal organization save request"))
+		s.handleProcessingError(msg)
 		return
 	}
 
 	if resp == nil {
-		s.handleProcessingError(ctx, msg, errors.New("empty response"))
+		spans.TraceError(errors.New("nil response"))
+		s.handleProcessingError(msg)
 		return
 	}
 
@@ -218,14 +220,15 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 	if tenant == "" {
 		err := errors.New("tenant not set in nats header")
 		span.TraceError(err)
-		s.handleProcessingError(ctx, msg, err)
+		s.handleProcessingError(msg)
 		return
 	}
 
 	request := &leads_pb.WebtrackerVisitorIdentified{}
 	err := proto.Unmarshal(msg.Data, request)
 	if err != nil {
-		s.handleProcessingError(ctx, msg, errors.Wrap(err, "failed to unmarshal webtracker visitor identified request"))
+		span.TraceError(errors.Wrap(err, "failed to unmarshal webtracker visitor identified request"))
+		s.handleProcessingError(msg)
 		return
 	}
 	span.LogObjectAsJson("msg.webtracker.visitor.identified", request)
@@ -236,7 +239,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 		globalOrganization, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, request.Domain)
 		if err != nil {
 			span.TraceError(errors.Wrap(err, "failed to find global organization by primary domain"))
-			s.handleProcessingError(ctx, msg, err)
+			s.handleProcessingError(msg)
 			return
 		}
 		if globalOrganization != nil {
@@ -244,7 +247,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 			orgId, err := s.CreateFromGlobalOrganization(ctx, nil, globalOrganization.ID, data_fields.OrganizationFields{})
 			if err != nil {
 				span.TraceError(errors.Wrap(err, "failed to create organization from global organization"))
-				s.handleProcessingError(ctx, msg, err)
+				s.handleProcessingError(msg)
 				return
 			}
 			span.LogKV("result.orgId", orgId)
@@ -255,7 +258,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 			})
 			if err != nil {
 				span.TraceError(errors.Wrap(err, "failed to create organization from domain"))
-				s.handleProcessingError(ctx, msg, err)
+				s.handleProcessingError(msg)
 				return
 			}
 			span.LogKV("result.orgId", orgId)
@@ -280,7 +283,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 		})
 		if err != nil {
 			span.TraceError(errors.Wrap(err, "failed to create organization from email"))
-			s.handleProcessingError(ctx, msg, err)
+			s.handleProcessingError(msg)
 			return
 		}
 		span.LogKV("result.orgId", orgId)
@@ -289,7 +292,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 	msg.Ack()
 }
 
-func (s *organizationService) handleProcessingError(ctx context.Context, msg *nats.Msg, err error) {
+func (s *organizationService) handleProcessingError(msg *nats.Msg) {
 	metadata, _ := msg.Metadata()
 
 	// Check if we should retry
