@@ -445,16 +445,6 @@ enum OrganizationStage {
     OPPORTUNITY
     CUSTOMER
     NOT_A_FIT
-
-    ENGAGED @deprecated
-    INITIAL_VALUE @deprecated
-    LEAD @deprecated
-    MAX_VALUE @deprecated
-    ONBOARDING @deprecated
-    PENDING_CHURN @deprecated
-    RECURRING_VALUE @deprecated
-    TRIAL @deprecated
-    UNQUALIFIED @deprecated
 }
 
 input OrganizationSaveInputFromGlobalOrg {

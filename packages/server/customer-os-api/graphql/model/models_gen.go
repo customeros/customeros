@@ -5978,23 +5978,14 @@ func (e OrganizationRelationship) MarshalJSON() ([]byte, error) {
 type OrganizationStage string
 
 const (
-	OrganizationStageTarget         OrganizationStage = "TARGET"
-	OrganizationStageEducation      OrganizationStage = "EDUCATION"
-	OrganizationStageSolution       OrganizationStage = "SOLUTION"
-	OrganizationStageEvaluation     OrganizationStage = "EVALUATION"
-	OrganizationStageReadyToBuy     OrganizationStage = "READY_TO_BUY"
-	OrganizationStageOpportunity    OrganizationStage = "OPPORTUNITY"
-	OrganizationStageCustomer       OrganizationStage = "CUSTOMER"
-	OrganizationStageNotAFit        OrganizationStage = "NOT_A_FIT"
-	OrganizationStageEngaged        OrganizationStage = "ENGAGED"
-	OrganizationStageInitialValue   OrganizationStage = "INITIAL_VALUE"
-	OrganizationStageLead           OrganizationStage = "LEAD"
-	OrganizationStageMaxValue       OrganizationStage = "MAX_VALUE"
-	OrganizationStageOnboarding     OrganizationStage = "ONBOARDING"
-	OrganizationStagePendingChurn   OrganizationStage = "PENDING_CHURN"
-	OrganizationStageRecurringValue OrganizationStage = "RECURRING_VALUE"
-	OrganizationStageTrial          OrganizationStage = "TRIAL"
-	OrganizationStageUnqualified    OrganizationStage = "UNQUALIFIED"
+	OrganizationStageTarget      OrganizationStage = "TARGET"
+	OrganizationStageEducation   OrganizationStage = "EDUCATION"
+	OrganizationStageSolution    OrganizationStage = "SOLUTION"
+	OrganizationStageEvaluation  OrganizationStage = "EVALUATION"
+	OrganizationStageReadyToBuy  OrganizationStage = "READY_TO_BUY"
+	OrganizationStageOpportunity OrganizationStage = "OPPORTUNITY"
+	OrganizationStageCustomer    OrganizationStage = "CUSTOMER"
+	OrganizationStageNotAFit     OrganizationStage = "NOT_A_FIT"
 )
 
 var AllOrganizationStage = []OrganizationStage{
@@ -6006,20 +5997,11 @@ var AllOrganizationStage = []OrganizationStage{
 	OrganizationStageOpportunity,
 	OrganizationStageCustomer,
 	OrganizationStageNotAFit,
-	OrganizationStageEngaged,
-	OrganizationStageInitialValue,
-	OrganizationStageLead,
-	OrganizationStageMaxValue,
-	OrganizationStageOnboarding,
-	OrganizationStagePendingChurn,
-	OrganizationStageRecurringValue,
-	OrganizationStageTrial,
-	OrganizationStageUnqualified,
 }
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case OrganizationStageTarget, OrganizationStageEducation, OrganizationStageSolution, OrganizationStageEvaluation, OrganizationStageReadyToBuy, OrganizationStageOpportunity, OrganizationStageCustomer, OrganizationStageNotAFit, OrganizationStageEngaged, OrganizationStageInitialValue, OrganizationStageLead, OrganizationStageMaxValue, OrganizationStageOnboarding, OrganizationStagePendingChurn, OrganizationStageRecurringValue, OrganizationStageTrial, OrganizationStageUnqualified:
+	case OrganizationStageTarget, OrganizationStageEducation, OrganizationStageSolution, OrganizationStageEvaluation, OrganizationStageReadyToBuy, OrganizationStageOpportunity, OrganizationStageCustomer, OrganizationStageNotAFit:
 		return true
 	}
 	return false
