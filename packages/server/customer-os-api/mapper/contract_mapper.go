@@ -19,7 +19,6 @@ func MapEntityToContract(entity *neo4jentity.ContractEntity) *model.Contract {
 			LastUpdated: entity.UpdatedAt,
 			Source:      enummapper.MapDataSourceToModel(entity.Source),
 			AppSource:   entity.AppSource,
-			Version:     entity.AggregateVersion,
 		},
 		BillingDetails: &model.BillingDetails{
 			BillingCycleInMonths:   utils.ToPtr(entity.BillingCycleInMonths),

@@ -168,9 +168,6 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 			VoidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyVoidInvoiceNotificationRequestAt)),
 			PaymentProcessingAt:                  utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPaymentProcessingAt)),
 		},
-		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
-			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
-		},
 	}
 	return &invoiceEntity
 }
@@ -305,9 +302,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *neo4j_entity.Organizati
 		OrganizationInternalFields: neo4j_entity.OrganizationInternalFields{
 			DomainCheckedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyDomainCheckedAt)),
 			HiddenAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyHiddenAt)),
-		},
-		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
-			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 	}
 	return &organizationEntity
@@ -447,9 +441,6 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *neo4j_entity.ContractEntity
 			StatusRenewalRequestedAt:      utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
 			RolloutRenewalRequestedAt:     utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 			NextPreviewInvoiceRequestedAt: utils.GetTimePropOrNil(props, "techNextPreviewInvoiceRequestedAt"),
-		},
-		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
-			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 	}
 
@@ -925,9 +916,6 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *neo4j_entity.ContactEntity {
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:          neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
-			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
-		},
 		ContactInternalFields: neo4j_entity.ContactInternalFields{
 			CheckedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyCheckedAt)),
 		},
