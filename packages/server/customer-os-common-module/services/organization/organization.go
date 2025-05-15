@@ -556,7 +556,6 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
 				organizationCreatedEvent := &pb.CompanyCreated{
-					CompanyId:      organizationId,
 					OrganizationId: organizationId,
 					Tenant:         tenant,
 					PrimaryDomain:  primaryDomain,
