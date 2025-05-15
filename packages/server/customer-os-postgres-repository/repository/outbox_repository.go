@@ -2,16 +2,17 @@ package postgres_repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"time"
 
 	"gorm.io/gorm"
 )
 
 type OutboxRepository interface {
-	Create(ctx context.Context, event *postgres_entity.OutboxEvent) error
+	Create(ctx context.Context, event *postgres_entity.OutboxEvent) (*postgres_entity.OutboxEvent, error)
 	CreateWithTxn(ctx context.Context, txn *gorm.DB, event *postgres_entity.OutboxEvent) error
 	GetPendingEvents(ctx context.Context, limit int) ([]*postgres_entity.OutboxEvent, error)
 	MarkAsProcessing(ctx context.Context, id string, lockDuration time.Duration) error
@@ -31,17 +32,17 @@ func NewOutboxRepository(gormDb *gorm.DB) OutboxRepository {
 	}
 }
 
-func (r *outboxRepository) Create(ctx context.Context, event *postgres_entity.OutboxEvent) error {
+func (r *outboxRepository) Create(ctx context.Context, event *postgres_entity.OutboxEvent) (*postgres_entity.OutboxEvent, error) {
 	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.Create")
 	defer span.Finish()
 
 	err := r.gormDb.WithContext(ctx).Create(event).Error
 	if err != nil {
 		span.TraceError(err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return event, nil
 }
 
 func (r *outboxRepository) CreateWithTxn(ctx context.Context, txn *gorm.DB, event *postgres_entity.OutboxEvent) error {

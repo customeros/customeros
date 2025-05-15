@@ -20,6 +20,8 @@ func (s *OutboxProcessor) processEvent(ctx context.Context, outboxEvent *postgre
 	switch {
 	case outboxEvent.EventType == enums.EventTenantCreated:
 		return s.processTenantCreatedEvent(ctx, outboxEvent)
+	case outboxEvent.EventType == enums.EventOrganizationCreated:
+		return s.processOrganizationCreatedEvent(ctx, outboxEvent)
 
 	default:
 		err := errors.New("event type not implemented")
@@ -37,6 +39,17 @@ func (s *OutboxProcessor) processTenantCreatedEvent(ctx context.Context, event *
 	// TODO write event to data warehouse
 
 	return s.publishEvent(ctx, event, enums.StreamTenant)
+}
+
+func (s *OutboxProcessor) processOrganizationCreatedEvent(ctx context.Context, event *postgres_entity.OutboxEvent) error {
+	span, ctx := telemetry.StartServiceSpan(ctx, "OutboxProcessor.processOrganizationCreatedEvent")
+	defer span.Finish()
+	span.TagEventType(event.EventType.String())
+	span.TagEntity(event.ID)
+
+	// TODO write event to data warehouse
+
+	return s.publishEvent(ctx, event, enums.StreamOrganization)
 }
 
 func (s *OutboxProcessor) publishEvent(ctx context.Context, event *postgres_entity.OutboxEvent, stream enums.NatsStream) error {
