@@ -17,7 +17,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cloudflare/cloudflare-go v0.115.0
 	github.com/coocood/freecache v1.2.4
-	github.com/customeros/customeros/packages/server/core-crm v0.0.0-20250504171220-a3d354c2ec9a
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb

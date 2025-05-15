@@ -4,53 +4,46 @@ package enums
 type NatsEventType string
 
 const (
-	// Core events
-	EventTenantCreated NatsEventType = "core.tenant.created"
+	// tenant events
+	EventTenantCreated NatsEventType = "tenant.created"
 
 	// Organization events
-	EventCreateOrganization        NatsEventType = "organization.create"
-	EventUpdateOrganization        NatsEventType = "organization.update"
-	EventRequestEnrichOrganization NatsEventType = "organization.request_enrich"
-	EventAddDomain                 NatsEventType = "organization.add_domain"
-	EventRemoveDomain              NatsEventType = "organization.remove_domain"
+	EventOrganizationCreated       NatsEventType = "organization.created"
+	EventOrganizationUpdated       NatsEventType = "organization.updated"
+	EventOrganizationDomainAdded   NatsEventType = "organization.domain.added"
+	EventOrganizationDomainRemoved NatsEventType = "organization.domain.removed"
+	EventRequestEnrichOrganization NatsEventType = "request.organization.enrich"
 
 	// Contact events
-	EventCreateContact        NatsEventType = "contact.create"
-	EventUpdateContact        NatsEventType = "contact.update"
-	EventRequestEnrichContact NatsEventType = "contact.request_enrich"
+	EventContactCreated       NatsEventType = "contact.created"
+	EventContactUpdated       NatsEventType = "contact.updated"
+	EventRequestEnrichContact NatsEventType = "request.contact.enrich"
 
 	// Web-related events
-	EventWebsiteCrawled    NatsEventType = "website.crawled"
-	EventWebpageScraped    NatsEventType = "webpage.scraped"
-	EventWebpageClassified NatsEventType = "webpage.classified"
-	EventWebpageProfiled   NatsEventType = "webpage.profiled"
+	EventWebsiteCrawled    NatsEventType = "web.site.crawled"
+	EventWebpageScraped    NatsEventType = "web.page.scraped"
+	EventWebpageClassified NatsEventType = "web.page.classified"
+	EventWebpageProfiled   NatsEventType = "web.page.profiled"
 
 	// AI and analysis events
-	EventAIRequestGeneric             NatsEventType = "ai.request.generic"
-	EventRequestWebpageClassification NatsEventType = "ai.request.webpage_classification"
-	EventRequestWebpageIntent         NatsEventType = "ai.request.webpage_intent"
+	EventRequestWebpageClassification NatsEventType = "request.webpage_classification"
+	EventRequestWebpageIntent         NatsEventType = "request.webpage_intent"
 
 	// ICP Profile events
-	EventRequestICPProfile NatsEventType = "request.icp_profile"
-	EventICPProfileCreated NatsEventType = "icp_profile.created"
+	EventIdealCustomerProfileCreated NatsEventType = "icp.created"
+	EventRequestIdealCustomerProfile NatsEventType = "request.icp"
 
-	// WebTracker - main events
-	EventWebtrackerCreated  NatsEventType = "webtracker.created"
-	EventWebtrackerUpdated  NatsEventType = "webtracker.updated"
-	EventWebtrackerArchived NatsEventType = "webtracker.archived"
-
-	// WebTracker - session events
-	EventWebtrackerSessionCreated  NatsEventType = "webtracker.session.created"
-	EventWebtrackerSessionClosed   NatsEventType = "webtracker.session.closed"
-	EventWebtrackerSessionAnalyzed NatsEventType = "webtracker.session.analyzed"
-
-	// WebTracker - visitor events
+	// WebTracker
+	EventWebtrackerCreated           NatsEventType = "webtracker.created"
+	EventWebtrackerUpdated           NatsEventType = "webtracker.updated"
+	EventWebtrackerArchived          NatsEventType = "webtracker.archived"
+	EventWebtrackerSessionCreated    NatsEventType = "webtracker.session.created"
+	EventWebtrackerSessionClosed     NatsEventType = "webtracker.session.closed"
+	EventWebtrackerSessionAnalyzed   NatsEventType = "webtracker.session.analyzed"
 	EventWebtrackerVisitorIdentified NatsEventType = "webtracker.visitor.identified"
-
-	// WebTracker - page events
-	EventWebtrackerPageView NatsEventType = "webtracker.event.page_viewed"
-	EventWebtrackerPageExit NatsEventType = "webtracker.event.page_exited"
-	EventWebtrackerClick    NatsEventType = "webtracker.event.clicked"
+	EventWebtrackerPageView          NatsEventType = "webtracker.event.page_viewed"
+	EventWebtrackerPageExit          NatsEventType = "webtracker.event.page_exited"
+	EventWebtrackerClick             NatsEventType = "webtracker.event.clicked"
 
 	// WebTracker - proxy configuration
 	EventProxyWebtrackerCnameConfigured    NatsEventType = "proxy.webtracker.cname.configured"
@@ -60,13 +53,23 @@ const (
 
 	// Lead events
 	EventLeadIdentified               NatsEventType = "lead.identified"
-	EventLeadStageUpdate              NatsEventType = "lead.update.stage"
+	EventLeadStageUpdate              NatsEventType = "lead.stage.updated"
 	EventLeadInitialTargetListCreated NatsEventType = "lead.initial_target_list.created"
-	EventLeadError                    NatsEventType = "lead.error"
 
 	// IP Address verification events
 	EventAskIPData   NatsEventType = "request.verify_ipaddress.ipdata"
 	EventAskSnitcher NatsEventType = "request.identify_ipaddress.snitcher"
+
+	// DLQ
+	EventDLQContact      NatsEventType = "dlq.contact"
+	EventDLQICP          NatsEventType = "dlq.icp"
+	EventDLQLead         NatsEventType = "dlq.lead"
+	EventDLQOrganization NatsEventType = "dlq.organization"
+	EventDLQProxy        NatsEventType = "dlq.proxy"
+	EventDLQRequest      NatsEventType = "dlq.request"
+	EventDLQTenant       NatsEventType = "dlq.tenant"
+	EventDLQWeb          NatsEventType = "dlq.web"
+	EventDLQWebtracker   NatsEventType = "dlq.webtracker"
 )
 
 // String returns the string representation of the NatsEventType
