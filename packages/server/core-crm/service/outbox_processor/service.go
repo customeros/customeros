@@ -5,6 +5,7 @@ import (
 	"github.com/customeros/customeros/packages/server/core-crm/internal/utils"
 	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"time"
 )
@@ -30,7 +31,7 @@ const (
 )
 
 func (p *OutboxProcessor) ProcessBatch(ctx context.Context) error {
-	span, ctx := telemetry.StartCronSpan(ctx, "OutboxProcessor.ProcessBatch")
+	span, ctx := telemetry.StartCronSpan(ctx, "OutboxProcessor.ProcessBatch", telemetry.WithNewRoot())
 	defer span.Finish()
 
 	// Get pending events
@@ -45,25 +46,34 @@ func (p *OutboxProcessor) ProcessBatch(ctx context.Context) error {
 		innerCtx := utils.WithCustomContext(ctx, &utils.CustomContext{
 			Tenant: event.Tenant,
 		})
-		// Lock the event
-		err = p.postgres.OutboxRepository.MarkAsProcessing(innerCtx, event.ID, EVENT_LOCK_TIMEOUT)
-		if err != nil {
-			// Another worker might have picked it up
-			continue
-		}
-
-		// Process the event
-		err = p.processEvent(innerCtx, event)
-		if err != nil {
-			// Mark as failed and increment retry count
-			_ = p.postgres.OutboxRepository.MarkAsFailed(innerCtx, event.ID, err.Error())
-			_ = p.postgres.OutboxRepository.IncrementRetryCount(innerCtx, event.ID)
-			continue
-		}
-
-		// Mark as completed
-		_ = p.postgres.OutboxRepository.MarkAsCompleted(innerCtx, event.ID)
+		p.ProcessOutboxEvent(innerCtx, event)
 	}
 
 	return nil
+}
+
+func (p *OutboxProcessor) ProcessOutboxEvent(ctx context.Context, event *postgres_entity.OutboxEvent) {
+	span, ctx := telemetry.StartServiceSpan(ctx, "OutboxProcessor.processOutboxEvent")
+	defer span.Finish()
+	span.TagEventType(event.EventType.String())
+	span.TagEntity(event.ID)
+
+	// Lock the event
+	err := p.postgres.OutboxRepository.MarkAsProcessing(ctx, event.ID, EVENT_LOCK_TIMEOUT)
+	if err != nil {
+		// Another worker might have picked it up
+		return
+	}
+
+	// Process the event
+	err = p.processEvent(ctx, event)
+	if err != nil {
+		// Mark as failed and increment retry count
+		_ = p.postgres.OutboxRepository.MarkAsFailed(ctx, event.ID, err.Error())
+		_ = p.postgres.OutboxRepository.IncrementRetryCount(ctx, event.ID)
+		return
+	}
+
+	// Mark as completed
+	_ = p.postgres.OutboxRepository.MarkAsCompleted(ctx, event.ID)
 }
