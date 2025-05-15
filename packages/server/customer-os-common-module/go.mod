@@ -20,7 +20,7 @@ require (
 	github.com/customeros/customeros/packages/server/core-crm v0.0.0-20250504171220-a3d354c2ec9a
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
-	github.com/customeros/leads v0.0.68
+	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb
 	github.com/customeros/mailsherpa v0.3.9
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v28.1.1+incompatible
@@ -81,7 +81,6 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
-	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -127,6 +126,7 @@ require (
 	github.com/rdegges/go-ipify v0.0.0-20150526035502-2d94a6a86c40 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.4 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect

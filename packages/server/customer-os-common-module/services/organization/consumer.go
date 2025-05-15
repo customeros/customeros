@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/enums"
 	"log"
 	"time"
 
@@ -17,14 +18,13 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	leads_enum "github.com/customeros/leads/enum"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 )
 
 var ORGANIZATION_SUBJECT = "core.organization.>"
-var WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT = string(leads_enum.EventWebtrackerVisitorIdentified)
+var WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT = string(enums.EventWebtrackerVisitorIdentified)
 
 const (
 	// queue groups

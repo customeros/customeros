@@ -16,7 +16,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250512171648-ebf2777022e6
-	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250515055001-beef8da9f627
 	github.com/customeros/mailsherpa v0.3.9
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
@@ -52,7 +52,6 @@ require (
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/customeros/customeros/packages/server/core-crm v0.0.0-20250504171220-a3d354c2ec9a // indirect
 	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
-	github.com/customeros/leads v0.0.68 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

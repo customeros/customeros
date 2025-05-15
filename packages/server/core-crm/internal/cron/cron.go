@@ -2,6 +2,7 @@ package cron
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/core-crm/service"
 	"os"
 	"sync"
 	"time"
@@ -22,6 +23,7 @@ import (
 // CONSTANTS
 const (
 	GroupWebSession = "webSession"
+	GroupOutbox     = "outbox"
 
 	// LeaseDuration is how long a lease lasts before needing renewal
 	LeaseDuration = 15 * time.Second
@@ -38,25 +40,28 @@ var jobLocks = struct {
 }{
 	locks: map[string]*sync.Mutex{
 		GroupWebSession: {},
+		GroupOutbox:     {},
 	},
 }
 
 type CronManager struct {
-	cfg    *config.Config
-	log    logger.Logger
-	cron   *cronv3.Cron
-	k8s    kubernetes.Interface
-	stopCh chan struct{}
-	jobIDs map[string]cronv3.EntryID
+	cfg      *config.Config
+	log      logger.Logger
+	cron     *cronv3.Cron
+	k8s      kubernetes.Interface
+	stopCh   chan struct{}
+	jobIDs   map[string]cronv3.EntryID
+	services *service.Services
 }
 
-func NewCronManager(cfg *config.Config, log logger.Logger, k8s kubernetes.Interface) *CronManager {
+func NewCronManager(cfg *config.Config, log logger.Logger, k8s kubernetes.Interface, services *service.Services) *CronManager {
 	return &CronManager{
-		cfg:    cfg,
-		log:    log,
-		k8s:    k8s,
-		stopCh: make(chan struct{}),
-		jobIDs: make(map[string]cronv3.EntryID),
+		cfg:      cfg,
+		log:      log,
+		k8s:      k8s,
+		stopCh:   make(chan struct{}),
+		jobIDs:   make(map[string]cronv3.EntryID),
+		services: services,
 	}
 }
 
@@ -168,6 +173,22 @@ func (cm *CronManager) registerJobs(c *cronv3.Cron) {
 			Schedule: cronConfig.CronScheduleHeartbeat,
 			HandlerFunc: func(ctx context.Context) {
 				cm.log.Infof("Cron heartbeat from pod: %s", podName)
+			},
+		},
+		{
+			Name:     "outbox",
+			Schedule: cronConfig.CronScheduleProcessOutboxEvents,
+			Group:    GroupOutbox,
+			HandlerFunc: func(ctx context.Context) {
+				_ = cm.services.OutboxProcessor.ProcessBatch(ctx)
+			},
+		},
+		{
+			Name:     "outbox_cleaner",
+			Schedule: cronConfig.CronScheduleOutboxCleanup,
+			Group:    GroupOutbox,
+			HandlerFunc: func(ctx context.Context) {
+				_ = cm.services.OutboxProcessor.Cleanup(ctx)
 			},
 		},
 		// {

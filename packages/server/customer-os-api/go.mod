@@ -27,7 +27,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lucasepe/codename v0.2.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nats-io/nats.go v1.42.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
@@ -43,7 +42,6 @@ require (
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/text v0.25.0
 	google.golang.org/api v0.230.0
-	google.golang.org/protobuf v1.36.6
 	gorm.io/gorm v1.26.1
 )
 
@@ -81,7 +79,6 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/customeros/customeros/packages/server/core-crm v0.0.0-20250504171220-a3d354c2ec9a // indirect
 	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
-	github.com/customeros/leads v0.0.68 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -153,6 +150,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mrz1836/postmark v1.7.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/nats-io/nats.go v1.42.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
@@ -211,6 +209,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e // indirect
 	google.golang.org/grpc v1.72.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/datatypes v1.2.5 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
