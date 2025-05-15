@@ -29,7 +29,7 @@ func NewICPService(
 
 	asyncEvents, err := nats_common.NewAsyncEventsConsumer(natsConn, asyncEventConfig)
 	if err != nil {
-		log.Fatalf("Unable to start Nats on %s", &asyncEventConfig.ServiceName)
+		log.Fatalf("Unable to start Nats on %s", asyncEventConfig.ServiceName)
 	}
 
 	s := &icpService{
