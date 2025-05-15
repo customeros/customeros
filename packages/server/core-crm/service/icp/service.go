@@ -42,7 +42,7 @@ func NewICPService(
 	return s
 }
 
-// Start begins listening for raw email events and processing them
+// Start begins listening for organization events and processing them
 func (s *icpService) Start(ctx context.Context) error {
 	return s.asyncEvents.Start(ctx)
 }
