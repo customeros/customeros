@@ -21,7 +21,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var ORGANIZATION_SUBJECT = "core.organization.>"
 var WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT = string(enums.EventWebtrackerVisitorIdentified)
 
 const (
