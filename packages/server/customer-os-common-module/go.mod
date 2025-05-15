@@ -20,7 +20,7 @@ require (
 	github.com/customeros/customeros/packages/server/core-crm v0.0.0-20250504171220-a3d354c2ec9a
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
-	github.com/customeros/leads v0.0.68
+	github.com/customeros/leads v0.0.70
 	github.com/customeros/mailsherpa v0.3.9
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v28.1.1+incompatible
