@@ -97,7 +97,7 @@ func setupWorkQueueStream(js nats.JetStreamContext, streamName string, subjects 
 		_, err = js.AddStream(&nats.StreamConfig{
 			Name:      streamName,
 			Subjects:  subjects,
-			Retention: nats.WorkQueuePolicy,
+			Retention: nats.InterestPolicy,
 			Storage:   nats.FileStorage,
 			Replicas:  replicas,
 			MaxAge:    168 * time.Hour,

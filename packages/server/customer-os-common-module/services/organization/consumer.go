@@ -29,21 +29,18 @@ func (s *organizationService) Start(ctx context.Context) error {
 		return fmt.Errorf("NATS connection is nil")
 	}
 
-	// Create async consumer for webtracker events
-	webtrackerConsumer, err := s.setupWebtrackerConsumer()
+	webtrackerVisitorIdentifiedConsumer, err := s.setupWebtrackerVisitorIdentifiedConsumer()
 	if err != nil {
 		return fmt.Errorf("failed to setup webtracker consumer: %w", err)
+	}
+	err = webtrackerVisitorIdentifiedConsumer.Start(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to start webtracker visitor identified consumer: %w", err)
 	}
 
 	tenantCreatedConsumer, err := s.setupTenantCreatedConsumer()
 	if err != nil {
 		return fmt.Errorf("failed to setup tenant created consumer: %w", err)
-	}
-
-	// Start processing events
-	err = webtrackerConsumer.Start(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to start webtracker consumer: %w", err)
 	}
 	err = tenantCreatedConsumer.Start(ctx)
 	if err != nil {
@@ -53,7 +50,7 @@ func (s *organizationService) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *organizationService) setupWebtrackerConsumer() (*nats_common.AsyncEventsConsumer, error) {
+func (s *organizationService) setupWebtrackerVisitorIdentifiedConsumer() (*nats_common.AsyncEventsConsumer, error) {
 	config := &nats_common.AsyncConsumerConfig{
 		StreamName:        enums.StreamWebtracker,
 		ServiceName:       SERVICE,
