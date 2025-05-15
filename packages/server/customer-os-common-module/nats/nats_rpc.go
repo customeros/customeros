@@ -82,7 +82,7 @@ func (s *RpcEventsConsumer) Start(ctx context.Context) error {
 		s.Stop()
 	}()
 
-	log.Printf("%s Service started and listening for requests (queue group: %s", s.Config.ServiceName, queueGroup)
+	log.Printf("%s Service started and listening for requests (queue group: %s)", s.Config.ServiceName, queueGroup)
 	return nil
 }
 
