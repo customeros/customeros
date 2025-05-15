@@ -150,7 +150,7 @@ var File_webtracker_session_created_proto protoreflect.FileDescriptor
 
 const file_webtracker_session_created_proto_rawDesc = "" +
 	"\n" +
-	" webtracker_session_created.proto\x12\x02pb\x1a\x1fgoogle/protobuf/timestamp.proto\x1a webtracker_event_type_enum.proto\"\x83\x03\n" +
+	" webtracker_session_created.proto\x12\x02pb\x1a\x1fgoogle/protobuf/timestamp.proto\x1a enum_webtracker_event_type.proto\"\x83\x03\n" +
 	"\x18WebtrackerSessionCreated\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
@@ -204,7 +204,7 @@ func file_webtracker_session_created_proto_init() {
 	if File_webtracker_session_created_proto != nil {
 		return
 	}
-	file_webtracker_event_type_enum_proto_init()
+	file_enum_webtracker_event_type_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

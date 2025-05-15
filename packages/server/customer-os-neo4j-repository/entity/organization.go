@@ -42,7 +42,6 @@ const (
 )
 
 type OrganizationEntity struct {
-	EventStoreAggregate // TODO alexb delete
 	DataLoaderKey
 	ID                  string
 	CustomerOsId        string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`

@@ -417,22 +417,18 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 
 					spans.LogKV("newTenantCreationWith", tenantStr)
 
-					tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
-						Name:      tenantStr,
-						CreatedBy: signInRequest.LoggedInEmail,
-					})
-					if err != nil {
-						return nil, err
-					}
-
-					// publish tenant created event
 					primaryDomain := domain
 					if isPersonalEmail {
 						primaryDomain = ""
 					}
-					err = publishTenantCreatedEvent(ctx, services, tenantEntity.Name, primaryDomain)
+
+					tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
+						Name:      tenantStr,
+						CreatedBy: signInRequest.LoggedInEmail,
+					},
+						primaryDomain)
 					if err != nil {
-						spans.TraceError(err)
+						return nil, err
 					}
 
 					currentTenant = tenantEntity.Name
@@ -611,8 +607,9 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	})
 }
 
-func publishTenantCreatedEvent(ctx context.Context, services *cosapi_services.Services, tenant, domain string) error {
-	span, ctx := telemetry.StartRestSpan(ctx, "Registration.publishTenantCreatedEvent")
+// TODO: to be deleted
+func storeTenantCreatedEvent(ctx context.Context, services *cosapi_services.Services, tenant, domain string) error {
+	span, ctx := telemetry.StartRestSpan(ctx, "Registration.storeTenantCreatedEvent")
 	defer span.Finish()
 
 	tenantCreatedEvent := &pb.TenantCreated{
@@ -621,15 +618,16 @@ func publishTenantCreatedEvent(ctx context.Context, services *cosapi_services.Se
 		Domain:    domain,
 	}
 
-	data, err := proto.Marshal(tenantCreatedEvent)
+	payload, err := proto.Marshal(tenantCreatedEvent)
 	if err != nil {
 		span.TraceError(err)
-		return fmt.Errorf("failed to marshal tenant: %w", err)
+		return fmt.Errorf("failed to marshal tenant created: %w", err)
 	}
 
 	// Create nats message with headers
+	// TODO alexb move sending event to outbox processing
 	msg := nats.NewMsg(commonenum.EventTenantCreated.String())
-	msg.Data = data
+	msg.Data = payload
 	msg.Header.Set(string(nats_common.NATS_HEADER_TENANT), tenant)
 
 	_, err = services.CommonServices.NATSConnections.JS.PublishMsg(msg)

@@ -4,15 +4,20 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/enums"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm"
 	"math/rand"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -67,11 +72,11 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) Merge(ctx context.Context, tx neo4j.ManagedTransaction, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error) {
+func (s *tenantService) Merge(ctx context.Context, tx neo4j.ManagedTransaction, tenantEntity neo4jentity.TenantEntity, domain string) (*neo4jentity.TenantEntity, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantService.Merge")
 	defer spans.Finish()
-
 	spans.LogObjectAsJson("tenantEntity", tenantEntity)
+	spans.LogKV("domain", domain)
 
 	tenantName := strings.ReplaceAll(tenantEntity.Name, " ", "")
 	if tenantName == "" {
@@ -100,9 +105,12 @@ func (s *tenantService) Merge(ctx context.Context, tx neo4j.ManagedTransaction, 
 	}
 
 	// save tenant in postgres table
-	_, err = s.postgres.TenantRepository.Create(ctx, postgresentity.Tenant{
+	_, err = s.postgres.TenantRepository.Create(ctx, postgres_entity.Tenant{
 		Name: tenantName,
 	})
+
+	s.storeTenantCreatedEvent(ctx, tenantName, domain)
+
 	if err != nil {
 		spans.TraceError(err)
 	}
@@ -190,6 +198,47 @@ func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
 
 	// Step 5: Permanently delete tenant mailboxes data OpenSRS
 	// TODO implement this
+
+	return nil
+}
+
+func (s *tenantService) storeTenantCreatedEvent(ctx context.Context, tenant, domain string) error {
+	span, ctx := telemetry.StartServiceSpan(ctx, "TenantService.storeTenantCreatedEvent")
+	defer span.Finish()
+
+	tenantCreatedEvent := &pb.TenantCreated{
+		Timestamp: timestamppb.Now(),
+		Tenant:    tenant,
+		Domain:    domain,
+	}
+
+	payload, err := proto.Marshal(tenantCreatedEvent)
+	if err != nil {
+		span.TraceError(err)
+		return fmt.Errorf("failed to marshal tenant created: %w", err)
+	}
+
+	err = s.postgres.Db.Transaction(func(tx *gorm.DB) error {
+		outboxEvent := &postgres_entity.OutboxEvent{
+			EntityID:  tenant,
+			EventType: enums.EventTenantCreated,
+			Tenant:    tenant,
+			Payload:   payload,
+			Publisher: "registration",
+			Status:    postgres_entity.OutboxPending,
+		}
+
+		err = s.postgres.OutboxRepository.CreateWithTxn(ctx, tx, outboxEvent)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		span.TraceError(err)
+		return err
+	}
 
 	return nil
 }
