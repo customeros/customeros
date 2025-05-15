@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/customeros/customeros/packages/server/enums"
 	"github.com/nats-io/nats.go"
@@ -16,8 +15,8 @@ import (
 
 type RpcConsumerConfig struct {
 	StreamName          enums.NatsStream
-	ServiceName         string
-	SubscribedSubject   string
+	ServiceName         enums.Services
+	SubscribedSubject   enums.NatsEventType
 	MaxResponseSize     *int
 	MaxDeliveryAttempts *int
 }
@@ -52,7 +51,7 @@ func (s *RpcEventsConsumer) RegisterHandler(subject string, handler EventHandler
 }
 
 func (s *RpcEventsConsumer) Start(ctx context.Context) error {
-	queueGroup := fmt.Sprintf("%s-queue-group", strings.ToLower(s.Config.ServiceName))
+	queueGroup := fmt.Sprintf("%s", s.Config.ServiceName)
 
 	stream, err := s.NatsConn.GetNatsConnection(s.Config.StreamName)
 	if err != nil {
@@ -61,7 +60,7 @@ func (s *RpcEventsConsumer) Start(ctx context.Context) error {
 
 	// Create a queue subscription for handling synchronous requests
 	sub, err := stream.Conn.QueueSubscribe(
-		s.Config.SubscribedSubject,
+		s.Config.SubscribedSubject.String(),
 		queueGroup,
 		func(msg *nats.Msg) {
 			reqCtx := telemetry.ExtractTraceContextFromNatsMsg(context.Background(), msg)

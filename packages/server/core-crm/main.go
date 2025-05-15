@@ -17,6 +17,23 @@ func main() {
 		log.Fatalf("config is empty")
 	}
 
+	// Setup openline db
+	openlineDB, err := database.InitDatabase(&database.DatabaseConfig{
+		DBName:          cfg.CommonConfig.Infrastructure.PostgresConfig.Db,
+		Host:            cfg.CommonConfig.Infrastructure.PostgresConfig.Host,
+		ReadPort:        cfg.CommonConfig.Infrastructure.PostgresConfig.ReadPort,
+		WritePort:       cfg.CommonConfig.Infrastructure.PostgresConfig.Port,
+		User:            cfg.CommonConfig.Infrastructure.PostgresConfig.User,
+		Password:        cfg.CommonConfig.Infrastructure.PostgresConfig.Password,
+		MaxConn:         cfg.CommonConfig.Infrastructure.PostgresConfig.MaxConn,
+		MaxIdleConn:     cfg.CommonConfig.Infrastructure.PostgresConfig.MaxIdleConn,
+		ConnMaxLifetime: cfg.CommonConfig.Infrastructure.PostgresConfig.ConnMaxLifetime,
+		LogLevel:        cfg.CommonConfig.Infrastructure.PostgresConfig.LogLevel,
+	})
+	if err != nil {
+		log.Fatalf("Openline database initialization failed: %v", err)
+	}
+
 	// Setup the data warehouse
 	warehouseDB, err := database.InitDatabase(&database.DatabaseConfig{
 		DBName:          cfg.CommonConfig.Infrastructure.DataWarehouseConfig.DBName,
@@ -37,7 +54,7 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	log.Println("Core CRM starting up...")
 
-	srv, err := server.NewServer(cfg, warehouseDB)
+	srv, err := server.NewServer(cfg, openlineDB, warehouseDB)
 	if err != nil {
 		log.Fatalf("Server setup failed: %v", err)
 	}

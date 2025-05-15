@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
-	"github.com/customeros/customeros/packages/server/enums"
 	"log"
 	"net/http"
 	"os"
@@ -15,9 +13,11 @@ import (
 
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_db "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/enums"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -28,6 +28,7 @@ import (
 	"github.com/customeros/customeros/packages/server/core-crm/internal/config"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/database"
+	"github.com/customeros/customeros/packages/server/core-crm/internal/repository"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
 	"github.com/customeros/customeros/packages/server/core-crm/service"
 )
@@ -40,12 +41,12 @@ type Server struct {
 	router                *gin.Engine
 	cronMgr               *cron.CronManager
 	services              *service.Services
-	postgresRepositories  *postgres_repository.Repositories
+	repositories          *repository.Repositories
 	neo4jRepositories     *neo4j_repository.Repositories
 	warehouseRepositories *postgres_repository.WarehouseRepositories
 }
 
-func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*Server, error) {
+func NewServer(cfg *config.Config, openlineDB, warehouseDB *database.DatabaseConnection) (*Server, error) {
 	// Initialize logger
 	appLogger := logger.NewAppLogger(&cfg.CommonConfig.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
@@ -57,23 +58,13 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		log.Printf("Warning: Could not initialize OpenTelemetry: %s", err.Error())
 	}
 
-	// Initialize DBs
-	openlineDB, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
-		Infrastructure: commonConfig.InfrastructureConfig{
-			PostgresConfig: cfg.CommonConfig.Infrastructure.PostgresConfig,
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed opening connection to postgres: %w", err)
-	}
-
 	neoDriver, err := commonConfig.NewNeo4jDriver(cfg.CommonConfig.Infrastructure.Neo4jConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed opening connection to neo4j: %w", err)
 	}
 
 	// Initialize repositories
-	postgresRepos := postgres_repository.InitRepositories(openlineDB)
+	postgresRepos := repository.InitRepos(openlineDB)
 	neo4jRepos := neo4j_repository.InitNeo4jRepositories(&neoDriver, cfg.CommonConfig.Infrastructure.Neo4jConfig.Database)
 	warehouseRepos := postgres_repository.InitWarehouseRepositories(&postgres_db.DbConnections{
 		ReadDB:  warehouseDB.ReadDB,
@@ -87,7 +78,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	}
 
 	// Initialize common services
-	services := service.InitServices(appLogger, neo4jRepos, postgresRepos, warehouseRepos, cfg.CommonConfig, natsConn)
+	services := service.InitServices(appLogger, neo4jRepos, postgresRepos.CommonPostgres, warehouseRepos, cfg.CommonConfig, natsConn)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
@@ -150,7 +141,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		},
 		cronMgr:               cronManager,
 		services:              services,
-		postgresRepositories:  postgresRepos,
+		repositories:          postgresRepos,
 		neo4jRepositories:     neo4jRepos,
 		warehouseRepositories: warehouseRepos,
 		logger:                appLogger,

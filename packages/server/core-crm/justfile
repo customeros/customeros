@@ -16,10 +16,8 @@ gen-proto:
     find {{proto_dir}} -name "*.proto" -type f -exec \
     protoc \
     --proto_path={{proto_dir}} \
-    --go_out=./proto/pb \
+    --go_out=./internal/proto/pb \
     --go_opt=paths=source_relative \
-    --go-grpc_out=./proto/pb \
-    --go-grpc_opt=module=github.com/customeros/customeros/packages/server/core-crm/proto/pb \
     {} \;
 
 migrate:
