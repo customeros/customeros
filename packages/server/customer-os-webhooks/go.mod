@@ -10,6 +10,8 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 
 replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
 
+replace github.com/customeros/customeros/packages/server/enums => ../enums
+
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cenkalti/backoff/v4 v4.3.0

@@ -8,6 +8,8 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
 
+replace github.com/customeros/customeros/packages/server/enums => ../enums
+
 require (
 	github.com/99designs/gqlgen v0.17.73
 	github.com/BurntSushi/toml v1.5.0

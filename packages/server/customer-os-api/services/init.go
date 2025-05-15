@@ -8,6 +8,7 @@ import (
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/enums"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
@@ -89,7 +90,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	}
 
 	// Initialize NATS Streams
-	natsConn, err := nats_common.InitNats(&cfg.Common.Infrastructure.NatsConfig, cfg.App.Environment)
+	natsConn, err := nats_common.InitNats(&cfg.Common.Infrastructure.NatsConfig, cfg.App.Environment, enums.GetAllStreams())
 	if err != nil {
 		log.Fatalf("Failed to initialize NATS: %v", err)
 	}

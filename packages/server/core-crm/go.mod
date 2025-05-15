@@ -8,6 +8,8 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
+replace github.com/customeros/customeros/packages/server/enums => ../enums
+
 require (
 	github.com/99designs/gqlgen v0.17.73
 	github.com/caarlos0/env/v6 v6.10.1

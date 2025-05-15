@@ -14,7 +14,7 @@ import (
 
 type organizationService struct {
 	log             logger.Logger
-	natsConn        *nats_common.NATSConnections
+	natsConns       *nats_common.NATSConnections
 	postgres        *postgres_repository.Repositories
 	neo4j           *neo4j_repository.Repositories
 	events          *events.EventsService
@@ -29,7 +29,7 @@ type organizationService struct {
 
 func NewOrganizationService(
 	log logger.Logger,
-	natsConn *nats_common.NATSConnections,
+	natsConns *nats_common.NATSConnections,
 	postgres *postgres_repository.Repositories,
 	neo4j *neo4j_repository.Repositories,
 	events *events.EventsService,
@@ -42,7 +42,7 @@ func NewOrganizationService(
 ) interfaces.OrganizationService {
 	return &organizationService{
 		log:             log,
-		natsConn:        natsConn,
+		natsConns:       natsConns,
 		postgres:        postgres,
 		neo4j:           neo4j,
 		events:          events,

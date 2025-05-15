@@ -11,17 +11,17 @@ import (
 )
 
 type OutboxProcessor struct {
-	natsConn *nats_common.NATSConnections
-	postgres *postgres_repository.Repositories
+	natsConns *nats_common.NATSConnections
+	postgres  *postgres_repository.Repositories
 }
 
 func NewOutboxProcessor(
-	natsConn *nats_common.NATSConnections,
+	natsConns *nats_common.NATSConnections,
 	postgres *postgres_repository.Repositories,
 ) *OutboxProcessor {
 	return &OutboxProcessor{
-		natsConn: natsConn,
-		postgres: postgres,
+		natsConns: natsConns,
+		postgres:  postgres,
 	}
 }
 

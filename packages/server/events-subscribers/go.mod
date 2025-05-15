@@ -10,6 +10,8 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
 
+replace github.com/customeros/customeros/packages/server/enums => ../enums
+
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250512171648-ebf2777022e6
