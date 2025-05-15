@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/enums"
-
 	"github.com/nats-io/nats.go"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 )
 
 type NatsHeader string
