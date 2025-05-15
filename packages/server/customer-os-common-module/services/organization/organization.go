@@ -3,6 +3,9 @@ package organization
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
+	"github.com/customeros/customeros/packages/server/enums"
+	"google.golang.org/protobuf/proto"
 	"strings"
 	"time"
 
@@ -545,6 +548,41 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				}
 
 				s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		// send to outbox
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if createFlow {
+				organizationCreatedEvent := &pb.CompanyCreated{
+					CompanyId:      organizationId,
+					OrganizationId: organizationId,
+					Tenant:         tenant,
+					PrimaryDomain:  primaryDomain,
+				}
+				payload, err := proto.Marshal(organizationCreatedEvent)
+				if err != nil {
+					spans.TraceError(err)
+					return nil
+				}
+
+				outboxEvent := &postgres_entity.OutboxEvent{
+					EntityID:  tenant,
+					EventType: enums.EventOrganizationCreated,
+					Tenant:    tenant,
+					Payload:   payload,
+					Publisher: "organization",
+					Status:    postgres_entity.OutboxPending,
+				}
+				_, err = s.postgres.OutboxRepository.Create(ctx, outboxEvent)
+				if err != nil {
+					spans.TraceError(err)
+				}
+
+				return nil
+			} else {
+				// send update event to outbox
 			}
 			return nil
 		})
