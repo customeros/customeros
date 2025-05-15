@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
+	"github.com/customeros/customeros/packages/server/enums"
 	"log"
 	"net/http"
 	"os"
@@ -80,7 +81,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 	})
 
 	// Initialize NATS Streams
-	natsConn, err := nats_common.InitNats(&cfg.CommonConfig.Infrastructure.NatsConfig, cfg.AppConfig.Environment)
+	natsConn, err := nats_common.InitNats(&cfg.CommonConfig.Infrastructure.NatsConfig, cfg.AppConfig.Environment, enums.GetAllStreams())
 	if err != nil {
 		log.Fatalf("Failed to initialize NATS: %v", err)
 	}

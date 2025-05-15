@@ -36,10 +36,10 @@ func (s *OutboxProcessor) processTenantCreatedEvent(ctx context.Context, event *
 
 	// TODO write event to data warehouse
 
-	return s.publishEvent(ctx, event)
+	return s.publishEvent(ctx, event, enums.StreamTenant)
 }
 
-func (s *OutboxProcessor) publishEvent(ctx context.Context, event *postgres_entity.OutboxEvent) error {
+func (s *OutboxProcessor) publishEvent(ctx context.Context, event *postgres_entity.OutboxEvent, stream enums.NatsStream) error {
 	span, ctx := telemetry.StartServiceSpan(ctx, "OutboxProcessor.publishEvent")
 	defer span.Finish()
 	span.TagEventType(event.EventType.String())
@@ -50,8 +50,14 @@ func (s *OutboxProcessor) publishEvent(ctx context.Context, event *postgres_enti
 	msg.Data = event.Payload
 	msg.Header.Set(string(nats_common.NATS_HEADER_TENANT), event.Tenant)
 
+	natsConn, err := s.natsConns.GetNatsConnection(stream)
+	if err != nil {
+		span.TraceError(err)
+		return fmt.Errorf("failed to get NATS connection: %w", err)
+	}
+
 	// Publish to the stored subject
-	_, err := s.natsConn.JS.PublishMsg(msg)
+	_, err = natsConn.JS.PublishMsg(msg)
 	if err != nil {
 		span.TraceError(err)
 		return fmt.Errorf("failed to publish outbox event: %w", err)

@@ -3,11 +3,10 @@ package organization
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/enums"
 	"log"
 	"time"
 
-	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
+	"github.com/customeros/customeros/packages/server/enums"
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 
@@ -30,37 +29,25 @@ const (
 	QUEUE_GROUP = "organization-service"
 
 	// consumer configs
-	ORGANIZATION_CONSUMER_NAME = "organization-service-consumer"
-	WEBTRACKER_CONSUMER_NAME   = "organization-service-webtracker-consumer"
-	ACK_WAIT                   = 30 * time.Second
-	MAX_DELIVERY_ATTEMPTS      = 5
-	MAX_ACK_PENDING            = 100
-	FETCH_BATCH_SIZE           = 50
-	MAX_FETCH_WAIT             = 500 * time.Millisecond
-	ERR_BACKOFF                = 100 * time.Millisecond
+	WEBTRACKER_CONSUMER_NAME = "organization-service-webtracker-consumer"
+	ACK_WAIT                 = 30 * time.Second
+	MAX_DELIVERY_ATTEMPTS    = 5
+	MAX_ACK_PENDING          = 100
+	FETCH_BATCH_SIZE         = 50
+	MAX_FETCH_WAIT           = 500 * time.Millisecond
+	ERR_BACKOFF              = 100 * time.Millisecond
 )
 
 func (s *organizationService) Start(ctx context.Context) error {
-	if s.natsConn == nil {
+	if s.natsConns == nil {
 		return fmt.Errorf("NATS connection is nil")
 	}
-
-	// Create durable consumers for both subjects
-	_, err := s.natsConn.JS.AddConsumer(nats_common.CORE_STREAM, &nats.ConsumerConfig{
-		Durable:       ORGANIZATION_CONSUMER_NAME,
-		DeliverGroup:  QUEUE_GROUP,
-		AckPolicy:     nats.AckExplicitPolicy,
-		AckWait:       ACK_WAIT,
-		MaxDeliver:    MAX_DELIVERY_ATTEMPTS,
-		FilterSubject: ORGANIZATION_SUBJECT,
-		MaxAckPending: MAX_ACK_PENDING,
-		DeliverPolicy: nats.DeliverAllPolicy,
-	})
+	webtrackerNatsConn, err := s.natsConns.GetNatsConnection(enums.StreamWebtracker)
 	if err != nil {
-		return fmt.Errorf("failed to create organization consumer: %w", err)
+		return fmt.Errorf("failed to get webtracker NATS connection: %w", err)
 	}
 
-	_, err = s.natsConn.JS.AddConsumer(nats_common.LEADS_STREAM, &nats.ConsumerConfig{
+	_, err = webtrackerNatsConn.JS.AddConsumer(enums.StreamWebtracker.String(), &nats.ConsumerConfig{
 		Durable:       WEBTRACKER_CONSUMER_NAME,
 		DeliverGroup:  QUEUE_GROUP,
 		AckPolicy:     nats.AckExplicitPolicy,
@@ -74,27 +61,15 @@ func (s *organizationService) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to create webtracker consumer: %w", err)
 	}
 
-	// Create pull subscriptions
-	orgSub, err := s.natsConn.JS.PullSubscribe(
-		ORGANIZATION_SUBJECT,
-		ORGANIZATION_CONSUMER_NAME,
-		nats.Bind(nats_common.CORE_STREAM, ORGANIZATION_CONSUMER_NAME),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create organization subscription: %w", err)
-	}
-
-	webSub, err := s.natsConn.JS.PullSubscribe(
+	webSub, err := webtrackerNatsConn.JS.PullSubscribe(
 		WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT,
 		WEBTRACKER_CONSUMER_NAME,
-		nats.Bind(nats_common.LEADS_STREAM, WEBTRACKER_CONSUMER_NAME),
+		nats.Bind(enums.StreamWebtracker.String(), WEBTRACKER_CONSUMER_NAME),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create webtracker subscription: %w", err)
 	}
 
-	// Start processing for both subscriptions
-	go s.processOrganizationEvents(ctx, orgSub)
 	go s.processWebtrackerVisitorIdentifiedEvents(ctx, webSub)
 
 	return nil
@@ -102,21 +77,8 @@ func (s *organizationService) Start(ctx context.Context) error {
 
 // Stop gracefully shuts down the service
 func (s *organizationService) Stop() {
-	if s.natsConn != nil {
-		s.natsConn.Close()
-	}
-}
-
-func (s *organizationService) processOrganizationEvents(ctx context.Context, sub *nats.Subscription) {
-	log.Println("Organization event processor started")
-	for {
-		select {
-		case <-ctx.Done():
-			log.Println("Organization event processor shutting down")
-			return
-		default:
-			// TODO add organization events here
-		}
+	if s.natsConns != nil {
+		s.natsConns.Close()
 	}
 }
 

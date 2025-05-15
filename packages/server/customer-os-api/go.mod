@@ -10,6 +10,8 @@ replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repos
 
 replace github.com/customeros/customeros/packages/server/core-crm => ../core-crm
 
+replace github.com/customeros/customeros/packages/server/enums => ../enums
+
 require (
 	github.com/99designs/gqlgen v0.17.73
 	github.com/caarlos0/env/v6 v6.10.1
@@ -17,6 +19,7 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
+	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb
 	github.com/customeros/mailsherpa v0.3.9
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/zap v1.1.5
@@ -77,7 +80,6 @@ require (
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
-	github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/distribution/reference v0.6.0 // indirect

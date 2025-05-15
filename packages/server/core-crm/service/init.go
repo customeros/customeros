@@ -21,11 +21,11 @@ func InitServices(
 	postgresRepositories *postgres_repository.Repositories,
 	warehouseRepositories *postgres_repository.WarehouseRepositories,
 	cfg *config.CommonConfig,
-	natsConn *nats_common.NATSConnections,
+	natsConns *nats_common.NATSConnections,
 ) *Services {
 
 	outboxProcessor := outbox_processor.NewOutboxProcessor(
-		natsConn,
+		natsConns,
 		postgresRepositories,
 	)
 
@@ -37,7 +37,7 @@ func InitServices(
 			postgresRepositories,
 			warehouseRepositories,
 			cfg,
-			natsConn,
+			natsConns,
 			nil,
 		),
 	}
