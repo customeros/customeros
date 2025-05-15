@@ -22,9 +22,9 @@ func NewICPService(
 ) interfaces.NatsService {
 	// configure nats consumer
 	asyncEventConfig := &nats_common.AsyncConsumerConfig{
-		StreamName:         enums.StreamOrganization,
-		ServiceName:        "icp",
-		SubscribedSubjects: []string{enums.EventOrganizationCreated.String()},
+		StreamName:        enums.StreamOrganization,
+		ServiceName:       "icp",
+		SubscribedSubject: enums.EventOrganizationCreated.String(),
 	}
 
 	asyncEvents, err := nats_common.NewAsyncEventsConsumer(natsConn, asyncEventConfig)
