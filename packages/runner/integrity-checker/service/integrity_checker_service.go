@@ -34,7 +34,7 @@ const (
 
 type IntegrityCheckerService interface {
 	RunNeo4jIntegrityCheckerQueries()
-	RunPostgresIntegrityCheckerQueries()
+	RunOpenlinePostgresIntegrityCheckerQueries()
 }
 
 type integrityCheckerService struct {
@@ -86,21 +86,21 @@ func (s *integrityCheckerService) RunNeo4jIntegrityCheckerQueries() {
 	_ = s.alertInSlack(ctx, result, Neo4j)
 }
 
-func (s *integrityCheckerService) RunPostgresIntegrityCheckerQueries() {
+func (s *integrityCheckerService) RunOpenlinePostgresIntegrityCheckerQueries() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.RunPostgresIntegrityCheckerQueries")
+	spans, ctx := telemetry.StartSpan(ctx, "IntegrityCheckerService.RunOpenlinePostgresIntegrityCheckerQueries")
 	defer spans.Finish()
 
-	integrityCheckerQueries, err := s.getQueriesFromS3(ctx, "postgres-integrity-checker-queries.json")
+	integrityCheckerQueries, err := s.getQueriesFromS3(ctx, "postgres-openline-integrity-checker-queries.json")
 	if err != nil {
 		spans.TraceError(err)
 		s.log.Errorf("Error getting queries from S3: %v", err)
 	}
 	result := s.executePostgresQueries(ctx, integrityCheckerQueries)
 	spans.LogObjectAsJson("integrityCheckerResult", result)
-	s.log.Infof("Postgres integrity checker result: %v", result)
+	s.log.Infof("Postgres (openline DB) integrity checker result: %v", result)
 
 	_ = s.alertInSlack(ctx, result, Postgres)
 }
