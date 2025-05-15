@@ -11,7 +11,6 @@ import (
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 
-	core_crm_pb "github.com/customeros/customeros/packages/server/core-crm/proto/pb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
@@ -116,7 +115,7 @@ func (s *organizationService) processOrganizationEvents(ctx context.Context, sub
 			log.Println("Organization event processor shutting down")
 			return
 		default:
-			s.processOrganizationBatch(sub)
+			// TODO add organization events here
 		}
 	}
 }
@@ -131,20 +130,6 @@ func (s *organizationService) processWebtrackerVisitorIdentifiedEvents(ctx conte
 		default:
 			s.processWebtrackerVisitorIdentifiedEventsBatch(sub)
 		}
-	}
-}
-
-func (s *organizationService) processOrganizationBatch(sub *nats.Subscription) {
-	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
-	if err != nil {
-		s.handleFetchError(err)
-		return
-	}
-
-	for _, msg := range msgs {
-		msgCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		s.handleOrganizationMessage(msgCtx, msg)
-		cancel()
 	}
 }
 
@@ -169,38 +154,6 @@ func (s *organizationService) handleFetchError(err error) {
 	}
 	log.Printf("Fetch error: %v", err)
 	time.Sleep(ERR_BACKOFF)
-}
-
-func (s *organizationService) handleOrganizationMessage(ctx context.Context, msg *nats.Msg) {
-	ctx = common.WithCustomContextFromNats(ctx, msg)
-	spans, ctx := telemetry.StartListenerSpan(ctx, "OrganizationService.handleOrganizationMessage", telemetry.WithNewRoot())
-	defer spans.Finish()
-
-	if msg == nil {
-		spans.TraceError(errors.New("nil nats message"))
-		return
-	}
-	spans.TagString("nats.subject", msg.Subject)
-	spans.TagString("nats.reply", msg.Reply)
-
-	resp := &core_crm_pb.OrganizationSaveResponse{}
-
-	request := &core_crm_pb.OrganizationSaveRequest{}
-	err := proto.Unmarshal(msg.Data, request)
-	if err != nil {
-		spans.TraceError(errors.Wrap(err, "failed to unmarshal organization save request"))
-		s.handleProcessingError(msg)
-		return
-	}
-
-	if resp == nil {
-		spans.TraceError(errors.New("nil response"))
-		s.handleProcessingError(msg)
-		return
-	}
-
-	s.sendOrganizationResponse(ctx, msg, resp)
-	msg.Ack()
 }
 
 func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx context.Context, msg *nats.Msg) {
@@ -303,16 +256,4 @@ func (s *organizationService) handleProcessingError(msg *nats.Msg) {
 		// Max retries reached, acknowledge but could publish to dead letter
 		msg.Ack()
 	}
-}
-
-func (s *organizationService) sendOrganizationResponse(ctx context.Context, req *nats.Msg, resp *core_crm_pb.OrganizationSaveResponse) {
-	spans, _ := telemetry.StartServiceSpan(ctx, "OrganizationService.sendOrganizationResponse")
-	defer spans.Finish()
-
-	respMessage, err := proto.Marshal(resp)
-	if err != nil {
-		spans.TraceError(err)
-		return
-	}
-	req.Respond(respMessage)
 }
