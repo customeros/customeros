@@ -5,11 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
-	"github.com/nats-io/nats.go"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"log"
 	"net/http"
@@ -605,38 +600,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		"userId":        userId,
 		"apiKey":        apiKey,
 	})
-}
-
-// TODO: to be deleted
-func storeTenantCreatedEvent(ctx context.Context, services *cosapi_services.Services, tenant, domain string) error {
-	span, ctx := telemetry.StartRestSpan(ctx, "Registration.storeTenantCreatedEvent")
-	defer span.Finish()
-
-	tenantCreatedEvent := &pb.TenantCreated{
-		Timestamp: timestamppb.Now(),
-		Tenant:    tenant,
-		Domain:    domain,
-	}
-
-	payload, err := proto.Marshal(tenantCreatedEvent)
-	if err != nil {
-		span.TraceError(err)
-		return fmt.Errorf("failed to marshal tenant created: %w", err)
-	}
-
-	// Create nats message with headers
-	// TODO alexb move sending event to outbox processing
-	msg := nats.NewMsg(commonenum.EventTenantCreated.String())
-	msg.Data = payload
-	msg.Header.Set(string(nats_common.NATS_HEADER_TENANT), tenant)
-
-	_, err = services.CommonServices.NATSConnections.JS.PublishMsg(msg)
-	if err != nil {
-		span.TraceError(err)
-		return fmt.Errorf("failed to publish tenant created event: %w", err)
-	}
-
-	return nil
 }
 
 func initializeUserInTenant(ctx context.Context, services *cosapi_services.Services, userId string) (*string, error) {
