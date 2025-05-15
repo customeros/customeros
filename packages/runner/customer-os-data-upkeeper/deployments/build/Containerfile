@@ -34,4 +34,4 @@ COPY --from=builder /app/packages/runner/customer-os-data-upkeeper/.env ./.env
 USER nonroot:nonroot
 
 # Run the application directly
-ENTRYPOINT ["/app/app"]
+ENTRYPOINT ["/app/app", "migrate"]
