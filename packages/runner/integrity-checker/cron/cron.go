@@ -51,5 +51,5 @@ func neo4jIntegrityCheckerJob(cont *container.Container) {
 }
 
 func postgresIntegrityCheckerJob(cont *container.Container) {
-	service.NewIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunPostgresIntegrityCheckerQueries()
+	service.NewIntegrityCheckerService(cont.Cfg, cont.Log, cont.Neo4j, cont.Postgres, cont.Cache).RunOpenlinePostgresIntegrityCheckerQueries()
 }

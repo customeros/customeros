@@ -10,13 +10,13 @@
       ]
     },
     {
-      "name": "Common",
+      "name": "OutboxEvents",
       "queries": [
         {
-          "name": "Test",
-          "query": "SELECT 1 as count"
+          "name": "Uncompleted outbox events older than 5 minutes",
+          "query": "select count(*) from outbox_events where status <> 'completed' and created_at < now() - interval '5 minutes' and created_at > now() - interval '3 days'"
         }
       ]
     }
   ]
-} 
+}
