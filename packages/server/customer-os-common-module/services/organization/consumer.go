@@ -3,8 +3,6 @@ package organization
 import (
 	"context"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/customeros/customeros/packages/server/enums"
 
@@ -12,6 +10,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	nats_common "github.com/customeros/customeros/packages/server/customer-os-common-module/nats"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/proto/pb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -21,57 +20,71 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT = string(enums.EventWebtrackerVisitorIdentified)
-
 const (
-	// queue groups
-	QUEUE_GROUP = "organization-service"
-
-	// consumer configs
-	WEBTRACKER_CONSUMER_NAME = "organization-service-webtracker-consumer"
-	ACK_WAIT                 = 30 * time.Second
-	MAX_DELIVERY_ATTEMPTS    = 5
-	MAX_ACK_PENDING          = 100
-	FETCH_BATCH_SIZE         = 50
-	MAX_FETCH_WAIT           = 500 * time.Millisecond
-	ERR_BACKOFF              = 100 * time.Millisecond
+	SERVICE = "organization-service"
 )
 
 func (s *organizationService) Start(ctx context.Context) error {
 	if s.natsConns == nil {
 		return fmt.Errorf("NATS connection is nil")
 	}
-	webtrackerNatsConn, err := s.natsConns.GetNatsConnection(enums.StreamWebtracker)
+
+	// Create async consumer for webtracker events
+	webtrackerConsumer, err := s.setupWebtrackerConsumer()
 	if err != nil {
-		return fmt.Errorf("failed to get webtracker NATS connection: %w", err)
+		return fmt.Errorf("failed to setup webtracker consumer: %w", err)
 	}
 
-	_, err = webtrackerNatsConn.JS.AddConsumer(enums.StreamWebtracker.String(), &nats.ConsumerConfig{
-		Durable:       WEBTRACKER_CONSUMER_NAME,
-		DeliverGroup:  QUEUE_GROUP,
-		AckPolicy:     nats.AckExplicitPolicy,
-		AckWait:       ACK_WAIT,
-		MaxDeliver:    MAX_DELIVERY_ATTEMPTS,
-		FilterSubject: WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT,
-		MaxAckPending: MAX_ACK_PENDING,
-		DeliverPolicy: nats.DeliverAllPolicy,
-	})
+	tenantCreatedConsumer, err := s.setupTenantCreatedConsumer()
 	if err != nil {
-		return fmt.Errorf("failed to create webtracker consumer: %w", err)
+		return fmt.Errorf("failed to setup tenant created consumer: %w", err)
 	}
 
-	webSub, err := webtrackerNatsConn.JS.PullSubscribe(
-		WEBTRACKER_VISITOR_IDENTIFIED_SUBJECT,
-		WEBTRACKER_CONSUMER_NAME,
-		nats.Bind(enums.StreamWebtracker.String(), WEBTRACKER_CONSUMER_NAME),
-	)
+	// Start processing events
+	err = webtrackerConsumer.Start(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to create webtracker subscription: %w", err)
+		return fmt.Errorf("failed to start webtracker consumer: %w", err)
 	}
-
-	go s.processWebtrackerVisitorIdentifiedEvents(ctx, webSub)
+	err = tenantCreatedConsumer.Start(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to start tenant created consumer: %w", err)
+	}
 
 	return nil
+}
+
+func (s *organizationService) setupWebtrackerConsumer() (*nats_common.AsyncEventsConsumer, error) {
+	config := &nats_common.AsyncConsumerConfig{
+		StreamName:        enums.StreamWebtracker,
+		ServiceName:       SERVICE,
+		SubscribedSubject: string(enums.EventWebtrackerVisitorIdentified),
+	}
+
+	consumer, err := nats_common.NewAsyncEventsConsumer(s.natsConns, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create async consumer: %w", err)
+	}
+
+	consumer.RegisterHandler(string(enums.EventWebtrackerVisitorIdentified), s.handleWebtrackerVisitorIdentifiedMessage)
+
+	return consumer, nil
+}
+
+func (s *organizationService) setupTenantCreatedConsumer() (*nats_common.AsyncEventsConsumer, error) {
+	config := &nats_common.AsyncConsumerConfig{
+		StreamName:        enums.StreamTenant,
+		ServiceName:       SERVICE,
+		SubscribedSubject: string(enums.EventTenantCreated),
+	}
+
+	consumer, err := nats_common.NewAsyncEventsConsumer(s.natsConns, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create async consumer: %w", err)
+	}
+
+	consumer.RegisterHandler(string(enums.EventTenantCreated), s.handleTenantCreatedMessage)
+
+	return consumer, nil
 }
 
 // Stop gracefully shuts down the service
@@ -81,69 +94,34 @@ func (s *organizationService) Stop() {
 	}
 }
 
-func (s *organizationService) processWebtrackerVisitorIdentifiedEvents(ctx context.Context, sub *nats.Subscription) {
-	log.Println("Webtracker visitor identified event processor started")
-	for {
-		select {
-		case <-ctx.Done():
-			log.Println("Webtracker visitor identified event processor shutting down")
-			return
-		default:
-			s.processWebtrackerVisitorIdentifiedEventsBatch(sub)
-		}
-	}
-}
-
-func (s *organizationService) processWebtrackerVisitorIdentifiedEventsBatch(sub *nats.Subscription) {
-	msgs, err := sub.Fetch(FETCH_BATCH_SIZE, nats.MaxWait(MAX_FETCH_WAIT))
-	if err != nil {
-		s.handleFetchError(err)
-		return
-	}
-
-	for _, msg := range msgs {
-		msgCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		s.handleWebtrackerVisitorIdentifiedMessage(msgCtx, msg)
-		cancel()
-	}
-}
-
-func (s *organizationService) handleFetchError(err error) {
-	if errors.Is(err, nats.ErrTimeout) {
-		// No messages available, this is normal
-		return
-	}
-	log.Printf("Fetch error: %v", err)
-	time.Sleep(ERR_BACKOFF)
-}
-
-func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx context.Context, msg *nats.Msg) {
+// handleWebtrackerVisitorIdentifiedMessage processes webtracker visitor identified events.
+// Returns nil for success (message will be acked) or error for failure (message will be retried).
+// Acking/Nacking is handled by the AsyncEventsConsumer based on the returned error.
+func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx context.Context, msg *nats.Msg) error {
 	ctx = common.WithCustomContextFromNats(ctx, msg)
 	span, ctx := telemetry.StartListenerSpan(ctx, "OrganizationService.handleWebtrackerVisitorIdentifiedMessage", telemetry.WithNewRoot())
 	defer span.Finish()
 
 	if msg == nil {
-		span.TraceError(errors.New("nil nats message"))
-		return
+		err := errors.New("nil nats message")
+		span.TraceError(err)
+		return err
 	}
 	span.TagString("nats.subject", msg.Subject)
-	span.TagString("nats.reply", msg.Reply)
 
 	// validate tenant
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("tenant not set in nats header")
 		span.TraceError(err)
-		s.handleProcessingError(msg)
-		return
+		return err
 	}
 
 	request := &pb.WebtrackerVisitorIdentified{}
 	err := proto.Unmarshal(msg.Data, request)
 	if err != nil {
 		span.TraceError(errors.Wrap(err, "failed to unmarshal webtracker visitor identified request"))
-		s.handleProcessingError(msg)
-		return
+		return err
 	}
 	span.LogObjectAsJson("msg.webtracker.visitor.identified", request)
 
@@ -153,16 +131,14 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 		globalOrganization, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, request.Domain)
 		if err != nil {
 			span.TraceError(errors.Wrap(err, "failed to find global organization by primary domain"))
-			s.handleProcessingError(msg)
-			return
+			return err
 		}
 		if globalOrganization != nil {
 			// if found, create a new tenant organization
 			orgId, err := s.CreateFromGlobalOrganization(ctx, nil, globalOrganization.ID, data_fields.OrganizationFields{})
 			if err != nil {
 				span.TraceError(errors.Wrap(err, "failed to create organization from global organization"))
-				s.handleProcessingError(msg)
-				return
+				return err
 			}
 			span.LogKV("result.orgId", orgId)
 		} else {
@@ -172,8 +148,7 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 			})
 			if err != nil {
 				span.TraceError(errors.Wrap(err, "failed to create organization from domain"))
-				s.handleProcessingError(msg)
-				return
+				return err
 			}
 			span.LogKV("result.orgId", orgId)
 		}
@@ -181,14 +156,12 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 		emailValidation := mailvalidate.ValidateEmailSyntax(request.Email)
 		if !emailValidation.IsValid {
 			span.LogKV("result", "invalid email")
-			msg.Ack()
-			return
+			return nil
 		}
 		isPersonalEmailProvider := s.emailService.IsPersonalEmailProvider(ctx, request.Email)
 		if isPersonalEmailProvider {
 			span.LogKV("result", "personal email provider")
-			msg.Ack()
-			return
+			return nil
 		}
 		// if not a personal email provider, create a new organization with the email domain
 		domain := utils.ExtractDomain(request.Email)
@@ -197,24 +170,78 @@ func (s *organizationService) handleWebtrackerVisitorIdentifiedMessage(ctx conte
 		})
 		if err != nil {
 			span.TraceError(errors.Wrap(err, "failed to create organization from email"))
-			s.handleProcessingError(msg)
-			return
+			return err
 		}
 		span.LogKV("result.orgId", orgId)
 	}
 
-	msg.Ack()
+	return nil
 }
 
-func (s *organizationService) handleProcessingError(msg *nats.Msg) {
-	metadata, _ := msg.Metadata()
+func (s *organizationService) handleTenantCreatedMessage(ctx context.Context, msg *nats.Msg) error {
+	ctx = common.WithCustomContextFromNats(ctx, msg)
+	span, ctx := telemetry.StartListenerSpan(ctx, "OrganizationService.handleTenantCreatedMessage", telemetry.WithNewRoot())
+	defer span.Finish()
 
-	// Check if we should retry
-	if metadata.NumDelivered <= uint64(MAX_DELIVERY_ATTEMPTS) {
-		// Negative acknowledgment triggers redelivery
-		msg.Nak()
-	} else {
-		// Max retries reached, acknowledge but could publish to dead letter
-		msg.Ack()
+	if msg == nil {
+		err := errors.New("nil nats message")
+		span.TraceError(err)
+		return err
 	}
+	span.TagString("nats.subject", msg.Subject)
+
+	// validate tenant
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set in nats header")
+		span.TraceError(err)
+		return err
+	}
+
+	request := &pb.TenantCreated{}
+	err := proto.Unmarshal(msg.Data, request)
+	if err != nil {
+		span.TraceError(errors.Wrap(err, "failed to unmarshal tenant created request"))
+		return err
+	}
+	span.LogObjectAsJson("msg.tenant.created", request)
+
+	if request.Domain == "" {
+		span.LogKV("result", "no domain provided")
+		return nil
+	}
+
+	// if domain is populated, find global organization by primary domain
+	if request.Domain != "" {
+		// find global organization by primary domain
+		globalOrganization, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, request.Domain)
+		if err != nil {
+			span.TraceError(errors.Wrap(err, "failed to find global organization by primary domain"))
+			return err
+		}
+		if globalOrganization != nil {
+			// if found, create a new tenant organization
+			orgId, err := s.CreateFromGlobalOrganization(ctx, nil, globalOrganization.ID, data_fields.OrganizationFields{
+				LeadSource: utils.StringPtr("Tenant Registration"),
+			})
+			if err != nil {
+				span.TraceError(errors.Wrap(err, "failed to create organization from global organization"))
+				return err
+			}
+			span.LogKV("result.orgId", orgId)
+		} else {
+			// if not found, create a new organization with the domain
+			orgId, err := s.Save(ctx, nil, nil, data_fields.OrganizationFields{
+				Domains:    []string{request.Domain},
+				LeadSource: utils.StringPtr("Tenant Registration"),
+			})
+			if err != nil {
+				span.TraceError(errors.Wrap(err, "failed to create organization from domain"))
+				return err
+			}
+			span.LogKV("result.orgId", orgId)
+		}
+	}
+
+	return nil
 }
