@@ -77,7 +77,6 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 			LastUpdated: contact.UpdatedAt,
 			Source:      enummapper.MapDataSourceToModel(contact.Source),
 			AppSource:   contact.AppSource,
-			Version:     contact.AggregateVersion,
 		},
 		ID:              contact.Id,
 		Prefix:          utils.StringPtr(contact.Prefix),

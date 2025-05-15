@@ -41,7 +41,6 @@ const (
 
 type ContactEntity struct {
 	DataLoaderKey
-	EventStoreAggregate
 	Id        string
 	CreatedAt time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT"`
 	UpdatedAt time.Time `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT"`

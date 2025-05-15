@@ -20,7 +20,6 @@ type ContractInternalFields struct {
 
 type ContractEntity struct {
 	DataLoaderKey
-	EventStoreAggregate
 	Id                              string
 	Name                            string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	CreatedAt                       time.Time
