@@ -18,7 +18,7 @@ type OutboxRepository interface {
 	MarkAsCompleted(ctx context.Context, id string) error
 	MarkAsFailed(ctx context.Context, id string, errorMessage string) error
 	IncrementRetryCount(ctx context.Context, id string) error
-	DeleteProcessedEvents(ctx context.Context, olderThan time.Duration) (int64, error)
+	DeleteProcessedEvents(ctx context.Context, olderThan time.Duration, limit int64) (int64, error)
 }
 
 type outboxRepository struct {
@@ -167,7 +167,7 @@ func (r *outboxRepository) IncrementRetryCount(ctx context.Context, id string) e
 	return nil
 }
 
-func (r *outboxRepository) DeleteProcessedEvents(ctx context.Context, olderThan time.Duration) (int64, error) {
+func (r *outboxRepository) DeleteProcessedEvents(ctx context.Context, olderThan time.Duration, limit int64) (int64, error) {
 	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.DeleteProcessedEvents")
 	defer span.Finish()
 
@@ -176,12 +176,15 @@ func (r *outboxRepository) DeleteProcessedEvents(ctx context.Context, olderThan 
 	result := r.gormDb.WithContext(ctx).
 		Where("status = ? AND processed_at < ?",
 			postgres_entity.OutboxCompleted, cutoffTime).
+		Limit(int(limit)).
 		Delete(&postgres_entity.OutboxEvent{})
 
 	if result.Error != nil {
 		span.TraceError(result.Error)
 		return 0, result.Error
 	}
+
+	span.LogKV("result.rowsDeleted", result.RowsAffected)
 
 	return result.RowsAffected, nil
 }

@@ -33,14 +33,13 @@ type contextKey string
 
 // Component tag constants
 const (
-	ComponentGraphQL    = "graphql"
-	ComponentPostgres   = "postgres"
-	ComponentNeo4j      = "neo4j"
-	ComponentClickhouse = "clickhouse"
-	ComponentREST       = "rest"
-	ComponentService    = "service"
-	ComponentListener   = "listener"
-	ComponentCronJob    = "cron"
+	ComponentGraphQL  = "graphql"
+	ComponentPostgres = "postgres"
+	ComponentNeo4j    = "neo4j"
+	ComponentREST     = "rest"
+	ComponentService  = "service"
+	ComponentListener = "listener"
+	ComponentCronJob  = "cron"
 )
 
 const (
@@ -54,6 +53,16 @@ const (
 	SpanKindClient   = "client"
 	SpanKindProducer = "producer"
 	SpanKindConsumer = "consumer"
+)
+
+// Span tag constants
+const (
+	SpanTagTenant    = "tenant"
+	SpanTagUserId    = "user.id"
+	SpanTagUserEmail = "user.email"
+	SpanTagEntityId  = "entity.id"
+	SpanTagEventType = "event.type"
+	SpanTagAppSource = "app.source"
 )
 
 // Context keys
@@ -78,16 +87,16 @@ func getDefaultServiceSpanAttributes(ctx context.Context) []attribute.KeyValue {
 	attrs := []attribute.KeyValue{}
 
 	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
-		attrs = append(attrs, attribute.String("tenant", tenant))
+		attrs = append(attrs, attribute.String(SpanTagTenant, tenant))
 	}
 	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		attrs = append(attrs, attribute.String("user.id", userID))
+		attrs = append(attrs, attribute.String(SpanTagUserId, userID))
 	}
 	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
-		attrs = append(attrs, attribute.String("user.email", userEmail))
+		attrs = append(attrs, attribute.String(SpanTagUserEmail, userEmail))
 	}
 	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
-		attrs = append(attrs, attribute.String("app.source", appSource))
+		attrs = append(attrs, attribute.String(SpanTagAppSource, appSource))
 	}
 
 	return attrs
@@ -107,16 +116,16 @@ func setDefaultJaegerSpanTags(ctx context.Context, span opentracing.Span) {
 		return
 	}
 	if tenant := common.GetTenantFromContext(ctx); tenant != "" {
-		span.SetTag("tenant", tenant)
+		span.SetTag(SpanTagTenant, tenant)
 	}
 	if userID := common.GetUserIdFromContext(ctx); userID != "" {
-		span.SetTag("user.id", userID)
+		span.SetTag(SpanTagUserId, userID)
 	}
 	if userEmail := common.GetUserEmailFromContext(ctx); userEmail != "" {
-		span.SetTag("user.email", userEmail)
+		span.SetTag(SpanTagUserEmail, userEmail)
 	}
 	if appSource := common.GetAppSourceFromContext(ctx); appSource != "" {
-		span.SetTag("app.source", appSource)
+		span.SetTag(SpanTagAppSource, appSource)
 	}
 }
 
@@ -461,7 +470,19 @@ func (s *Spans) TagEntity(entityId string) {
 		tracing.TagEntity(s.Jaeger, entityId)
 	}
 	if s.OTel != nil {
-		s.OTel.SetAttributes(attribute.String("entity.id", entityId))
+		s.OTel.SetAttributes(attribute.String(SpanTagEntityId, entityId))
+	}
+}
+
+func (s *Spans) TagEventType(eventType string) {
+	if s == nil || eventType == "" {
+		return
+	}
+	if s.Jaeger != nil {
+		s.Jaeger.SetTag(SpanTagEventType, eventType)
+	}
+	if s.OTel != nil {
+		s.OTel.SetAttributes(attribute.String(SpanTagEventType, eventType))
 	}
 }
 
@@ -473,7 +494,7 @@ func (s *Spans) TagTenant(tenant string) {
 		tracing.TagTenant(s.Jaeger, tenant)
 	}
 	if s.OTel != nil {
-		s.OTel.SetAttributes(attribute.String("tenant", tenant))
+		s.OTel.SetAttributes(attribute.String(SpanTagTenant, tenant))
 	}
 }
 

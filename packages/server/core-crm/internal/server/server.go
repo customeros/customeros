@@ -14,7 +14,6 @@ import (
 
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	services "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_db "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -29,6 +28,7 @@ import (
 	"github.com/customeros/customeros/packages/server/core-crm/internal/cron"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/database"
 	"github.com/customeros/customeros/packages/server/core-crm/internal/telemetry"
+	"github.com/customeros/customeros/packages/server/core-crm/service"
 )
 
 type Server struct {
@@ -38,7 +38,7 @@ type Server struct {
 	httpServer            *http.Server
 	router                *gin.Engine
 	cronMgr               *cron.CronManager
-	services              *services.CommonServices
+	services              *service.Services
 	postgresRepositories  *postgres_repository.Repositories
 	neo4jRepositories     *neo4j_repository.Repositories
 	warehouseRepositories *postgres_repository.WarehouseRepositories
@@ -85,15 +85,15 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		log.Fatalf("Failed to initialize NATS: %v", err)
 	}
 
-	// Initialize services
-	services := services.InitCommonServices(appLogger, neo4jRepos, postgresRepos, warehouseRepos, cfg.CommonConfig, natsConn, nil)
+	// Initialize common services
+	services := service.InitServices(appLogger, neo4jRepos, postgresRepos, warehouseRepos, cfg.CommonConfig, natsConn)
 
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
 	// register API Routes
-	api.RegisterRoutes(context.Background(), router, services, cfg.AppConfig)
+	api.RegisterRoutes(context.Background(), router, services.CommonServices, cfg.AppConfig)
 
 	// Try to get Kubernetes config
 	var k8sClient kubernetes.Interface
@@ -112,6 +112,7 @@ func NewServer(cfg *config.Config, warehouseDB *database.DatabaseConnection) (*S
 		cfg,
 		appLogger,
 		k8sClient,
+		services,
 	)
 
 	// If running in Kubernetes, use leader election
@@ -162,7 +163,7 @@ func (s *Server) Run() error {
 
 	// Starting services
 	log.Println("Starting services...")
-	if err := s.services.Start(ctx); err != nil {
+	if err := s.services.CommonServices.Start(ctx); err != nil {
 		return fmt.Errorf("failed to start services: %w", err)
 	}
 	log.Println("✅ Services started successfully")
@@ -217,7 +218,7 @@ func (s *Server) waitForShutdown() error {
 
 	// Stop services
 	log.Println("Stopping services...")
-	s.services.Stop(shutdownCtx)
+	s.services.CommonServices.Stop(shutdownCtx)
 	log.Println("✅ Services stopped")
 
 	return nil

@@ -99,8 +99,6 @@ github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
 github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb h1:txdOWQVq8UZO9WhIMNm87SRSt7cFdwMt8D/YRHAfGRY=
 github.com/customeros/customeros/packages/server/enums v0.0.0-20250514170720-11697afc2afb/go.mod h1:igO/6ciAeYl6D3ry/oWQfh33t7hay2040PnEyXVFmZw=
-github.com/customeros/leads v0.0.68 h1:/do96OREhR6/KlVFiudplZ65n2UACcEcjJ7onGvOUiM=
-github.com/customeros/leads v0.0.68/go.mod h1:Xue8ATAIsWImBsOsLxqsNmF4+ZD/j5Dk2wsYK3I3z58=
 github.com/customeros/mailsherpa v0.3.9 h1:i+usip3f5A3IgryzeiYTzZWDxI1fRxp4VxXWGpTDd7c=
 github.com/customeros/mailsherpa v0.3.9/go.mod h1:3PVCXCWUQQ6lTjxFtPs4KlFKteME14hD5GFNiElB7Fk=
 github.com/customeros/mailstack v0.2.23 h1:ZqI9ccrHcclV0sOBQZeU1mfm4VmGES2EAVjhju+LSdg=
