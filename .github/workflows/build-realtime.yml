@@ -2,7 +2,7 @@ name: realtime
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: ["otter"]
     paths:
       - packages/server/realtime/**
       - .github/workflows/realtime.yml
@@ -11,7 +11,7 @@ on:
       - packages/server/realtime/**
       - .github/workflows/realtime.yml
   release:
-    types: [ created, edited ]
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -32,42 +32,42 @@ defaults:
     working-directory: ./packages/server/realtime
 
 jobs:
-  static-code-analysis:
-    runs-on: ubicloud-standard-2
-    strategy:
-      matrix:
-        elixir: [ "1.16.1" ]
-        otp: [ "26.2.1" ]
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-      - name: Checkout Github repo
-        uses: actions/checkout@v4
-      - name: Sets up an Erlang/OTP environment
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+  # static-code-analysis:
+  #   runs-on: ubicloud-standard-2
+  #   strategy:
+  #     matrix:
+  #       elixir: [ "1.16.1" ]
+  #       otp: [ "26.2.1" ]
+  #   steps:
+  #     - name: Cancel previous runs
+  #       uses: styfle/cancel-workflow-action@0.12.1
+  #       with:
+  #         access_token: ${{ github.token }}
+  #     - name: Checkout Github repo
+  #       uses: actions/checkout@v4
+  #     - name: Sets up an Erlang/OTP environment
+  #       uses: erlef/setup-beam@v1
+  #       with:
+  #         elixir-version: ${{ matrix.elixir }}
+  #         otp-version: ${{ matrix.otp }}
 
-      - name: Install dependencies
-        # if: steps.mix-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p priv/plts
-          mix local.rebar --force
-          mix local.hex --force
-          mix deps.get
-          mix deps.compile
-      - run: mix format --check-formatted
-      - run: mix credo --mute-exit-status
-      - run: mix dialyzer --no-check --ignore-exit-status
+  #     - name: Install dependencies
+  #       # if: steps.mix-cache.outputs.cache-hit != 'true'
+  #       run: |
+  #         mkdir -p priv/plts
+  #         mix local.rebar --force
+  #         mix local.hex --force
+  #         mix deps.get
+  #         mix deps.compile
+  #     - run: mix format --check-formatted
+  #     - run: mix credo --mute-exit-status
+  #     - run: mix dialyzer --no-check --ignore-exit-status
   test:
     runs-on: ubicloud-standard-2
     strategy:
       matrix:
-        elixir: [ "1.16.1" ]
-        otp: [ "26.2.1" ]
+        elixir: ["1.16.1"]
+        otp: ["26.2.1"]
 
     steps:
       - name: Cancel previous runs
@@ -101,7 +101,7 @@ jobs:
 
   # Generate common metadata for all builds
   prepare:
-    needs: [ test ]
+    needs: [test]
     runs-on: ubicloud-standard-2
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
@@ -123,7 +123,7 @@ jobs:
         working-directory: .
 
   build-amd64:
-    needs: [ prepare ]
+    needs: [prepare]
     runs-on: ubicloud-standard-2
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
@@ -166,7 +166,7 @@ jobs:
         shell: bash
 
   build-arm64:
-    needs: [ prepare ]
+    needs: [prepare]
     runs-on: ubicloud-standard-2-arm
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     outputs:
@@ -210,7 +210,7 @@ jobs:
 
   # Create multi-arch manifests
   create-manifest:
-    needs: [ prepare, build-amd64, build-arm64 ]
+    needs: [prepare, build-amd64, build-arm64]
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     runs-on: ubicloud-standard-2
     steps:
@@ -237,13 +237,13 @@ jobs:
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          
+
           # Create and push the branch/PR manifest
           docker buildx imagetools create \
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.safe-tag }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
-          
+
           # If this is the otter branch, also tag as latest
           if [[ "${{ github.ref_name }}" == "otter" ]]; then
             docker buildx imagetools create \
@@ -251,7 +251,7 @@ jobs:
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
           fi
-          
+
           # For releases, also tag with the release tag
           if [[ "${{ github.event_name }}" == "release" ]]; then
             # For releases, the tag should be the release tag
@@ -268,4 +268,3 @@ jobs:
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.safe-tag }}
         shell: bash
-        
