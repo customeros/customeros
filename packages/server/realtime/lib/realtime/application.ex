@@ -18,7 +18,6 @@ defmodule Realtime.Application do
       RealtimeWeb.Presence,
       RealtimeWeb.Endpoint,
       Realtime.ColorManager,
-      Realtime.DeltaManager,
       Realtime.StoreManager
     ]
 
@@ -28,7 +27,8 @@ defmodule Realtime.Application do
       if env != :test do
         children ++
           [
-            Realtime.RabbitMQConsumer
+            Realtime.RabbitMQConsumer,
+            Realtime.Nats.Supervisor
           ]
       else
         children
