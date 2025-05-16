@@ -52,15 +52,20 @@ func TenantUserContextEnhancer(cr *neo4jrepository.Repositories, opts ...CommonS
 			return
 		}
 
-		//TODO remove this after 01.03.2025
 		//fallback for missing tenant header
-		// should work for all customers until 01.03.2025. should be removed after that
 		if tenantHeader == "" {
 			var err error
 			tenantHeader, err = cr.UserReadRepository.GetCurrentTenantByUserEmail(ctx, usernameHeader)
 			if err != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"errors": []gin.H{{"message": "failed to authorize"}},
+				})
+				c.Abort()
+				return
+			}
+			if tenantHeader == "" {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": "authenticated user not found"}},
 				})
 				c.Abort()
 				return
