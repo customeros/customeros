@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package pb;
-option go_package = "./pb";
-
-message RequestICPFitAnalysis {
-  string tenant = 1;
-  string domain = 2; // the domain of the company to be assessed for fit
-}
