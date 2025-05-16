@@ -24,23 +24,17 @@ import (
 )
 
 const (
-	SpanTagTenant         = "tenant"
-	SpanTagUserId         = "user-id"
-	SpanTagUserEmail      = "user-email"
-	SpanTagEntityId       = "entity-id"
-	SpanTagComponent      = "component"
-	SpanTagExternalSystem = "external-system"
-	SpanTagExternalId     = "external-id"
+	SpanTagTenant    = "tenant"
+	SpanTagUserId    = "user-id"
+	SpanTagUserEmail = "user-email"
+	SpanTagEntityId  = "entity-id"
+	SpanTagComponent = "component"
 )
 
 const (
 	SpanTagComponentPostgresRepository = "postgresRepository"
 	SpanTagComponentNeo4jRepository    = "neo4jRepository"
-	SpanTagComponentRest               = "rest"
-	SpanTagComponentCronJob            = "cronJob"
 	SpanTagComponentService            = "service"
-	SpanTagComponentListener           = "listener"
-	SpanTagComponentAgentCapability    = "agentCapability"
 )
 
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
