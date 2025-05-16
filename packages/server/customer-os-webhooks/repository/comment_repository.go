@@ -3,14 +3,13 @@ package repository
 import (
 	"context"
 	"fmt"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type CommentRepository interface {
@@ -33,16 +32,16 @@ func NewCommentRepository(driver *neo4j.DriverWithContext, database string) Comm
 }
 
 func (r *commentRepository) GetById(ctx context.Context, commentId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("commentId", commentId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommentRepository.GetById")
+	defer spans.Finish()
+	spans.LogKV("commentId", commentId)
 
 	cypher := fmt.Sprintf(`MATCH (c:Comment_%s {id:$commentId}) RETURN c`, common.GetTenantFromContext(ctx))
 	params := map[string]any{
 		"commentId": commentId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -58,10 +57,10 @@ func (r *commentRepository) GetById(ctx context.Context, commentId string) (*dbt
 }
 
 func (r *commentRepository) GetMatchedCommentId(ctx context.Context, externalSystem, externalId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetMatchedCommentId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "CommentRepository.GetMatchedCommentId")
+	defer spans.Finish()
+	spans.LogKV("externalSystem", externalSystem)
+	spans.LogKV("externalId", externalId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (e)<-[:IS_LINKED_WITH {externalId:$commentExternalId}]-(c:Comment)
@@ -72,7 +71,7 @@ func (r *commentRepository) GetMatchedCommentId(ctx context.Context, externalSys
 		"externalSystem":    externalSystem,
 		"commentExternalId": externalId,
 	}
-	span.LogFields(log.String("cypher", cypher))
+	spans.LogKV("cypher", cypher)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -85,6 +84,7 @@ func (r *commentRepository) GetMatchedCommentId(ctx context.Context, externalSys
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return "", err
 	}
 	noteIDs := dbRecords.([]*db.Record)

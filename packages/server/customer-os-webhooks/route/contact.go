@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"io"
 	"net/http"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
@@ -27,22 +27,22 @@ import (
 
 func AddContactRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/contacts",
-		tracing.TracingEnhancer(ctx, "/sync/contacts"),
+		RestTracingEnhancer(ctx, "/sync/contacts"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncContactsHandler(services, log))
 	route.POST("/sync/contact",
-		tracing.TracingEnhancer(ctx, "/sync/contact"),
+		RestTracingEnhancer(ctx, "/sync/contact"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncContactHandler(services, log))
 	route.POST("/sync/better-contact",
-		tracing.TracingEnhancer(ctx, "/sync/better-contact"),
+		RestTracingEnhancer(ctx, "/sync/better-contact"),
 		syncBetterContactResponse(cfg, services, log))
 }
 
 func syncContactsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncContacts", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncContacts", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -59,7 +59,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncContacts) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -68,7 +68,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		// Parse the JSON request body
 		var contacts []model.ContactData
 		if err = json.Unmarshal(requestBody, &contacts); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncContacts) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -89,7 +89,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 
 		syncResult, err := services.ContactService.SyncContacts(ctx, contacts)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncContacts) error in sync contacts: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -104,8 +104,8 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 
 func syncContactHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncContact", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncContact", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -113,14 +113,14 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
 			return
 		}
-		tracing.TagTenant(span, tenant)
+		spans.TagTenant(tenant)
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncContact) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -129,7 +129,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		// Parse the JSON request body
 		var contact model.ContactData
 		if err = json.Unmarshal(requestBody, &contact); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncContact) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -141,7 +141,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 
 		syncResult, err := services.ContactService.SyncContacts(ctx, []model.ContactData{contact})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncContact) error in sync contact: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -156,13 +156,13 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 
 func syncBetterContactResponse(cfg *config.Config, services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncBetterContact", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncBetterContact", c.Request.Header)
+		defer spans.Finish()
 
 		// validate bettercontact is configured
 		if cfg.Common.External.BetterContactConfig.BetterContactCallbackApiKey == "" {
 			err := pkgerrors.New("bettercontact is not configured")
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("bettercontact is not configured")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key not configured"})
 			return
@@ -183,7 +183,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 		// Limit the size of the request body
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
@@ -191,7 +191,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 		// Parse the JSON request body
 		var betterContactResponse postgres_entity.BetterContactResponseBody
 		if err = json.Unmarshal(requestBody, &betterContactResponse); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
@@ -201,14 +201,14 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 
 		err = services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, betterContactResponse.Id, string(requestBody))
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing better contact response"})
 		} else {
 			// store billable events
 			// first check if it was requested externally
 			personEnrichmentRequest, err := services.CommonServices.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetByBettercontactRecordId(ctx, betterContactResponse.Id)
 			if err != nil {
-				tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to check if bettercontact record was requested from person enrichment"))
+				spans.TraceError(pkgerrors.Wrap(err, "failed to check if bettercontact record was requested from person enrichment"))
 			} else if personEnrichmentRequest != nil {
 				emailFound, phoneFound := false, false
 				for _, item := range betterContactResponse.Data {
@@ -226,7 +226,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 							ReferenceData: "generated in webhooks",
 						})
 					if err != nil {
-						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+						spans.TraceError(pkgerrors.Wrap(err, "failed to store billable event"))
 					}
 				}
 				if phoneFound {
@@ -236,7 +236,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 							ReferenceData: "generated in webhooks",
 						})
 					if err != nil {
-						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+						spans.TraceError(pkgerrors.Wrap(err, "failed to store billable event"))
 					}
 				}
 			}

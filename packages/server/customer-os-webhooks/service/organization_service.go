@@ -14,12 +14,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/caches"
@@ -57,25 +55,25 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 }
 
 func (s *organizationService) SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) (SyncResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.SyncOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.SyncOrganizations")
+	defer spans.Finish()
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
-		tracing.TraceErr(span, errors.ErrTenantNotValid)
+		spans.TraceError(errors.ErrTenantNotValid)
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate organization input before syncing
 	for _, org := range organizations {
 		if org.ExternalSystem == "" && org.Source == "" {
-			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
+			spans.TraceError(errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if org.ExternalSystem != "" {
 			if !neo4jentity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
-				tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
+				spans.TraceError(errors.ErrExternalSystemNotAccepted)
+				spans.LogKV("externalSystem", org.ExternalSystem)
 				return SyncResult{}, errors.ErrExternalSystemNotAccepted
 			}
 		}
@@ -144,13 +142,12 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 }
 
 func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *sync.Mutex, orgInput model.OrganizationData, syncDate time.Time, controlDomains *domains) SyncStatus {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.syncOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagExternalSystem, orgInput.ExternalSystem)
-	span.SetTag(tracing.SpanTagExternalId, orgInput.ExternalId)
-	span.LogFields(log.Object("syncDate", syncDate))
-	tracing.LogObjectAsJson(span, "orgInput", orgInput)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.syncOrganization")
+	defer spans.Finish()
+	spans.TagString(telemetry.SpanTagExternalSystem, orgInput.ExternalSystem)
+	spans.TagString(telemetry.SpanTagExternalId, orgInput.ExternalId)
+	spans.LogObjectAsJson("syncDate", syncDate)
+	spans.LogObjectAsJson("orgInput", orgInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	appSource := utils.StringFirstNonEmpty(orgInput.AppSource, constants.AppSourceCustomerOsWebhooks)
@@ -160,7 +157,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 	// Check if organization sync should be skipped
 	if orgInput.Skip {
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus(orgInput.SkipReason)
 	}
 
@@ -185,10 +182,10 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	if orgInput.ExternalSystem != "" {
 		err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
 			s.log.Error(reason)
-			span.LogFields(log.String("output", "failed"))
+			spans.LogKV("output", "failed")
 			return NewFailedSyncStatus(reason)
 		}
 	}
@@ -204,7 +201,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 	// Check if organization should be skipped due to missing domain
 	if orgInput.DomainRequired && !orgInput.IsSubOrg() && !orgInput.HasDomains() {
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus("Missing domain while required")
 	}
 
@@ -220,17 +217,17 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalId, orgInput.CustomerOsId, orgInput.Domains)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed finding existing matched organization with external reference %s for tenant %s :%s", orgInput.ExternalId, tenant, err.Error())
 		s.log.Error(reason)
 	}
 	if !failedSync {
 		matchingOrganizationExists := organizationId != ""
-		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
+		spans.LogKV("found matching organization", matchingOrganizationExists)
 
 		if orgInput.UpdateOnly {
 			if !matchingOrganizationExists {
-				span.LogFields(log.String("output", "skipped"))
+				spans.LogKV("output", "skipped")
 				return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
 			}
 		}
@@ -282,13 +279,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		savedOrgId, err := s.services.CommonServices.OrganizationService.Save(ctx, nil, orgIdPtr, organizationDataFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to save organization"))
+			spans.TraceError(pkgerrors.Wrap(err, "failed to save organization"))
 			reason = fmt.Sprintf("failed to save organization  with external reference %s for tenant %s :%s", orgInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
 		organizationId = savedOrgId
 		orgInput.Id = organizationId
-		span.LogFields(log.String("organizationId", organizationId))
+		spans.LogKV("organizationId", organizationId)
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
@@ -301,7 +298,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			// check if the domain is already linked to an organization. If the domain is already linked, skip the link operation
 			domainInUse, err := s.repositories.OrganizationRepository.IsDomainUsedByOrganization(ctx, tenant, primaryDomain, organizationId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("error while checking if domain is linked to organization: %v", err.Error())
 				continue
 			}
@@ -309,7 +306,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			if !domainInUse {
 				_, err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
 				if err != nil {
-					tracing.TraceErr(span, pkgerrors.Wrapf(err, "failed to link domain %s with organization %s", domain, organizationId))
+					spans.TraceError(pkgerrors.Wrapf(err, "failed to link domain %s with organization %s", domain, organizationId))
 				}
 			}
 		}
@@ -320,7 +317,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			err = s.services.CommonServices.OrganizationService.AddParentOrganization(ctx, nil, parentOrganizationId, organizationId, orgInput.ParentOrganization.Type)
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("Failed to link with parent for organization %s: %s", organizationId, err.Error())
 				s.log.Error(reason)
 			}
@@ -340,7 +337,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 					Id:   organizationId,
 				})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("Failed to create and link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
 				failedSync = true
 			}
@@ -352,7 +349,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, neo4jentity.DecodeDataSource(orgInput.ExternalSystem))
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					reason = fmt.Sprintf("Failed to create phone number %s for organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 					s.log.Error(reason)
 				}
@@ -361,7 +358,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 					err = s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, tenant, organizationId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
 					if err != nil {
 						failedSync = true
-						tracing.TraceErr(span, err, log.String("method", "LinkWithOrganization"))
+						spans.TraceError(err)
 						reason = fmt.Sprintf("Failed to link phone number %s with organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 						s.log.Error(reason)
 					}
@@ -374,7 +371,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			// Create or update location
 			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForOrganizationBySource(ctx, organizationId, orgInput.ExternalSystem)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("Failed to get matched location for organization %s: %s", organizationId, err.Error())
 				failedSync = true
 				s.log.Error(reason)
@@ -396,7 +393,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 					})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					reason = fmt.Sprintf("Failed to create location for organization %s: %s", organizationId, err.Error())
 					s.log.Error(reason)
 				}
@@ -417,7 +414,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 						AppSource: appSource,
 					})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					reason = fmt.Sprintf("Failed to link social %s with organization %s: %s", social.URL, organizationId, err.Error())
 					s.log.Error(reason)
 				}
@@ -425,12 +422,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 	}
 
-	span.LogFields(log.Bool("failedSync", failedSync))
+	spans.LogKV("failedSync", failedSync)
 	if failedSync {
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
-	span.LogFields(log.String("output", "success"))
+	spans.LogKV("output", "success")
 	return NewSuccessfulSyncStatus()
 }
 

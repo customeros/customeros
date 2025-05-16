@@ -3,11 +3,9 @@ package service
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-webhooks/repository/postgres/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -64,11 +62,12 @@ func NewSyncStatusService(log logger.Logger, repositories *repository.Repositori
 }
 
 func (s *syncStatusService) SaveSyncResults(ctx context.Context, tenant, externalSystem, appSource, entityType string, syncDate time.Time, statuses []SyncStatus) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncStatusService.SaveSyncResults")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "statuses", statuses)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("appSource", appSource), log.String("entityType", entityType))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "SyncStatusService.SaveSyncResults")
+	defer spans.Finish()
+	spans.TagString("externalSystem", externalSystem)
+	spans.TagString("appSource", appSource)
+	spans.TagString("entityType", entityType)
+	spans.LogObjectAsJson("statuses", statuses)
 
 	completed, failed, skipped := 0, 0, 0
 	reason := ""

@@ -11,30 +11,29 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/gin-gonic/gin"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
+	"github.com/gin-gonic/gin"
 )
 
 func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/organizations",
-		tracing.TracingEnhancer(ctx, "/sync/organizations"),
+		RestTracingEnhancer(ctx, "/sync/organizations"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncOrganizationsHandler(services, log))
 	route.POST("/sync/organization",
-		tracing.TracingEnhancer(ctx, "/sync/organization"),
+		RestTracingEnhancer(ctx, "/sync/organization"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncOrganizationHandler(services, log))
 }
 
 func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganizations", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganizations", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -51,7 +50,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncOrganizations) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -60,7 +59,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		// Parse the JSON request body
 		var organizations []model.OrganizationData
 		if err = json.Unmarshal(requestBody, &organizations); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncOrganizations) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -81,7 +80,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 
 		syncResult, err := services.OrganizationService.SyncOrganizations(ctx, organizations)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncOrganizations) error in sync organizations: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -96,8 +95,8 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 
 func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganization", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganization", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -111,7 +110,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncOrganization) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -120,7 +119,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		// Parse the JSON request body
 		var organization model.OrganizationData
 		if err = json.Unmarshal(requestBody, &organization); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncOrganization) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -132,7 +131,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 
 		syncResult, err := services.OrganizationService.SyncOrganizations(ctx, []model.OrganizationData{organization})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncOrganization) error in sync organization: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

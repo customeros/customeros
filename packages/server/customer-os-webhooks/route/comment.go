@@ -11,30 +11,29 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/gin-gonic/gin"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
+	"github.com/gin-gonic/gin"
 )
 
 func AddCommentRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/comments",
-		tracing.TracingEnhancer(ctx, "/sync/comments"),
+		RestTracingEnhancer(ctx, "/sync/comments"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncCommentsHandler(services, log))
 	route.POST("/sync/comment",
-		tracing.TracingEnhancer(ctx, "/sync/comment"),
+		RestTracingEnhancer(ctx, "/sync/comment"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncCommentHandler(services, log))
 }
 
 func syncCommentsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncComments", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncComments", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -51,7 +50,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncComments) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -60,7 +59,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 		// Parse the JSON request body
 		var comments []model.CommentData
 		if err = json.Unmarshal(requestBody, &comments); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncComments) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -81,7 +80,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 
 		syncResult, err := services.CommentService.SyncComments(ctx, comments)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncLogEntries) error in sync comments: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -96,8 +95,8 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 
 func syncCommentHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncComment", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncComment", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -111,7 +110,7 @@ func syncCommentHandler(services *service.Services, log logger.Logger) gin.Handl
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncComment) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -120,7 +119,7 @@ func syncCommentHandler(services *service.Services, log logger.Logger) gin.Handl
 		// Parse the JSON request body
 		var comment model.CommentData
 		if err = json.Unmarshal(requestBody, &comment); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncComment) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -132,7 +131,7 @@ func syncCommentHandler(services *service.Services, log logger.Logger) gin.Handl
 
 		syncResult, err := services.CommentService.SyncComments(ctx, []model.CommentData{comment})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncComment) error in sync comment: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

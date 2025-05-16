@@ -167,16 +167,6 @@ func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.
 	TagComponentPostgresRepository(span)
 }
 
-func SetDefaultAgentCapabilitySpanTags(ctx context.Context, span opentracing.Span) {
-	SetDefaultSpanTags(ctx, span)
-	TagComponentAgentCapability(span)
-}
-
-func SetDefaultRestSpanTags(ctx context.Context, span opentracing.Span) {
-	SetDefaultSpanTags(ctx, span)
-	TagComponentRest(span)
-}
-
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	if span == nil || err == nil || coserrors.SkipTracing(err) {
 		return
@@ -226,10 +216,6 @@ func TagComponentNeo4jRepository(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentNeo4jRepository)
 }
 
-func TagComponentAgentCapability(span opentracing.Span) {
-	span.SetTag(SpanTagComponent, SpanTagComponentAgentCapability)
-}
-
 func TagTenant(span opentracing.Span, tenant string) {
 	if tenant != "" {
 		span.SetTag(SpanTagTenant, tenant)
@@ -242,20 +228,8 @@ func TagEntity(span opentracing.Span, entityId string) {
 	}
 }
 
-func TagComponentCronJob(span opentracing.Span) {
-	span.SetTag(SpanTagComponent, SpanTagComponentCronJob)
-}
-
-func TagComponentRest(span opentracing.Span) {
-	span.SetTag(SpanTagComponent, SpanTagComponentRest)
-}
-
 func TagComponentService(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentService)
-}
-
-func TagComponentListener(span opentracing.Span) {
-	span.SetTag(SpanTagComponent, SpanTagComponentListener)
 }
 
 func RecoveryWithJaeger(tracer opentracing.Tracer, log logger.Logger) gin.HandlerFunc {

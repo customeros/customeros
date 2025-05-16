@@ -10,7 +10,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
@@ -21,15 +21,15 @@ import (
 
 func AddSlackRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/slack/channels",
-		tracing.TracingEnhancer(ctx, "/sync/slack/channels"),
+		RestTracingEnhancer(ctx, "/sync/slack/channels"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncSlackChannelsHandler(services, log))
 }
 
 func syncSlackChannelsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncSlackChannels", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncSlackChannels", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -46,7 +46,7 @@ func syncSlackChannelsHandler(services *service.Services, log logger.Logger) gin
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncSlackChannels) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,7 +55,7 @@ func syncSlackChannelsHandler(services *service.Services, log logger.Logger) gin
 		// Parse the JSON request body
 		var slackChannels []model.SlackChannelData
 		if err = json.Unmarshal(requestBody, &slackChannels); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncSlackChannels) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -69,7 +69,7 @@ func syncSlackChannelsHandler(services *service.Services, log logger.Logger) gin
 		for _, slackChannel := range slackChannels {
 			err := services.CommonServices.SlackService.StoreSlackChannel(ctx, tenant, slackChannel.ExternalSystem, slackChannel.ChannelId, slackChannel.ChannelName, nil)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				log.Errorf("(SyncSlackChannels) error in sync users: %s", err.Error())
 				if errors.IsBadRequest(err) {
 					c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

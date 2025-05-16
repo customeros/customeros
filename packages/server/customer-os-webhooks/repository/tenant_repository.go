@@ -2,12 +2,10 @@ package repository
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantRepository interface {
@@ -26,13 +24,12 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 }
 
 func (r *tenantRepository) GetTenant(ctx context.Context, tenant string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenant")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "TenantRepository.GetTenant")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
 
 	query := `MATCH (t:Tenant {name:$tenant}) return t`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

@@ -11,13 +11,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
@@ -45,14 +43,13 @@ func NewInvoiceService(log logger.Logger, repositories *repository.Repositories,
 }
 
 func (s *invoiceService) SyncInvoices(ctx context.Context, invoices []model.InvoiceData) (SyncResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SyncInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("num of invoices", len(invoices)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.SyncInvoices")
+	defer spans.Finish()
+	spans.LogKV("num of invoices", len(invoices))
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
-		tracing.TraceErr(span, errors.ErrTenantNotValid)
+		spans.TraceError(errors.ErrTenantNotValid)
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
@@ -60,12 +57,13 @@ func (s *invoiceService) SyncInvoices(ctx context.Context, invoices []model.Invo
 	for _, invoice := range invoices {
 		// sync by id or external system is required
 		if invoice.Id == "" && invoice.ExternalSystem == "" {
-			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
+			spans.TraceError(errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if invoice.ExternalSystem != "" {
 			if !neo4jentity.IsValidDataSource(strings.ToLower(invoice.ExternalSystem)) {
-				tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", invoice.ExternalSystem))
+				spans.TraceError(errors.ErrExternalSystemNotAccepted)
+				spans.LogKV("externalSystem", invoice.ExternalSystem)
 				return SyncResult{}, errors.ErrExternalSystemNotAccepted
 			}
 		}
@@ -117,13 +115,12 @@ func (s *invoiceService) SyncInvoices(ctx context.Context, invoices []model.Invo
 }
 
 func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex, invoiceInput model.InvoiceData, syncDate time.Time) SyncStatus {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.syncInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagExternalSystem, invoiceInput.ExternalSystem)
-	span.SetTag(tracing.SpanTagExternalId, invoiceInput.ExternalId)
-	span.LogFields(log.Object("syncDate", syncDate))
-	tracing.LogObjectAsJson(span, "invoiceInput", invoiceInput)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.syncInvoice")
+	defer spans.Finish()
+	spans.TagString(telemetry.SpanTagExternalSystem, invoiceInput.ExternalSystem)
+	spans.TagString(telemetry.SpanTagExternalId, invoiceInput.ExternalId)
+	spans.LogObjectAsJson("syncDate", syncDate)
+	spans.LogObjectAsJson("invoiceInput", invoiceInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	failedSync := false
@@ -133,22 +130,22 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, invoiceInput.ExternalSystem)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", invoiceInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("result.status", "failed"))
+		spans.LogKV("result.status", "failed")
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if invoice sync should be skipped
 	if invoiceInput.Skip {
-		span.LogFields(log.String("result.status", "skipped"))
+		spans.LogKV("result.status", "skipped")
 		return NewSkippedSyncStatus(invoiceInput.SkipReason)
 	}
 	if invoiceInput.ExternalId == "" && invoiceInput.Id == "" {
 		reason = fmt.Sprintf("id and external id are empty for invoice, tenant %s", tenant)
 		s.log.Warnf("Skip issue sync: %v", reason)
-		span.LogFields(log.String("result.status", "skipped"))
+		spans.LogKV("result.status", "skipped")
 		return NewSkippedSyncStatus(reason)
 	}
 
@@ -160,7 +157,7 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 		exists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, invoiceInput.Id, model2.NodeLabelInvoice)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			reason = fmt.Sprintf("failed checking if invoice with id %s exists for tenant %s :%s", invoiceInput.Id, tenant, err.Error())
 			s.log.Error(reason)
 			return NewFailedSyncStatus(reason)
@@ -171,11 +168,11 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 	}
 
 	matchingInvoiceExists := invoiceId != ""
-	span.LogFields(log.Bool("found matching invoice", matchingInvoiceExists))
+	spans.LogKV("found matching invoice", matchingInvoiceExists)
 	if invoiceInput.UpdateOnly && !matchingInvoiceExists {
 		reason = fmt.Sprintf("update only is true and matching invoice does not exist for tenant %s", tenant)
 		s.log.Warnf("Skip invoice sync: %v", reason)
-		span.LogFields(log.String("result.status", "skipped"))
+		spans.LogKV("result.status", "skipped")
 		return NewSkippedSyncStatus(reason)
 	}
 
@@ -221,17 +218,17 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 		err = s.services.CommonServices.InvoiceService.UpdateInvoice(ctx, nil, invoiceId, invoiceUpdateFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			reason = fmt.Sprintf("failed updating invoice with id %s for tenant %s :%s", invoiceId, tenant, err)
 			s.log.Error(reason)
 		}
 	}
 
-	span.LogFields(log.Bool("failedSync", failedSync))
+	spans.LogKV("failedSync", failedSync)
 	if failedSync {
-		span.LogFields(log.String("result.status", "failed"))
+		spans.LogKV("result.status", "failed")
 		return NewFailedSyncStatus(reason)
 	}
-	span.LogFields(log.String("result.status", "success"))
+	spans.LogKV("result.status", "success")
 	return NewSuccessfulSyncStatus()
 }

@@ -5,7 +5,6 @@ import (
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/sirupsen/logrus"
-	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,7 +17,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 )
 
@@ -30,10 +28,7 @@ func main() {
 	appLogger := initLogger(cfg)
 
 	// Tracing
-	tracingCloser := initTracing(cfg, appLogger)
-	if tracingCloser != nil {
-		defer tracingCloser.Close()
-	}
+	initTracing(cfg, appLogger)
 	defer telemetry.RecoverAndLogMain(appLogger)
 
 	ctx := context.Background()
@@ -100,25 +95,11 @@ func initLogger(cfg *config.Config) logger.Logger {
 	return appLogger
 }
 
-func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
-	var closer io.Closer
-
-	// Initialize Jaeger if enabled
-	if cfg.Jaeger.Enabled {
-		tracer, jaegerCloser, err := telemetry.NewJaegerTracer(&cfg.Jaeger, appLogger)
-		if err != nil {
-			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
-		}
-		opentracing.SetGlobalTracer(tracer)
-		closer = jaegerCloser
-	}
-
+func initTracing(cfg *config.Config, appLogger logger.Logger) {
 	// Initialize OpenTelemetry if enabled
 	if cfg.OpenTelemetry.Enabled {
 		if err := telemetry.InitOpenTelemetry(context.Background(), &cfg.OpenTelemetry); err != nil {
 			appLogger.Fatalf("Could not initialize OpenTelemetry: %v", err.Error())
 		}
 	}
-
-	return closer
 }

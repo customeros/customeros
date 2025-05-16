@@ -6,26 +6,25 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/pkg/errors"
-
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 func AddEmailRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services) {
 	route.POST("/sync/enrow/email",
-		tracing.TracingEnhancer(ctx, "/sync/enrow/email"),
+		RestTracingEnhancer(ctx, "/sync/enrow/email"),
 		syncEnrowEmailResponse(cfg, services))
 }
 
 func syncEnrowEmailResponse(cfg *config.Config, services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "syncEnrowEmailResponse", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "syncEnrowEmailResponse", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		apiKeyHeader := c.Query("apiKey")
@@ -42,7 +41,7 @@ func syncEnrowEmailResponse(cfg *config.Config, services *service.Services) gin.
 		// Limit the size of the request body
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error reading request body"))
+			spans.TraceError(errors.Wrap(err, "error reading request body"))
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
@@ -50,7 +49,7 @@ func syncEnrowEmailResponse(cfg *config.Config, services *service.Services) gin.
 		// Parse the JSON request body
 		var enrowResponseBody postgresentity.EnrowResponseBody
 		if err = json.Unmarshal(body, &enrowResponseBody); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error unmarshalling request body"))
+			spans.TraceError(errors.Wrap(err, "error unmarshalling request body"))
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
@@ -60,7 +59,7 @@ func syncEnrowEmailResponse(cfg *config.Config, services *service.Services) gin.
 
 		err = services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.AddResponse(ctx, enrowResponseBody.Id, enrowResponseBody.Qualification, string(body))
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error adding enrow response"))
+			spans.TraceError(errors.Wrap(err, "error adding enrow response"))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing enrow response"})
 		} else {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})

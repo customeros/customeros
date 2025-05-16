@@ -2,14 +2,12 @@ package repository
 
 import (
 	"context"
-	commonTracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type OrganizationRepository interface {
@@ -38,13 +36,12 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 }
 
 func (r *organizationRepository) GetById(parentCtx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "OrganizationRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "OrganizationRepository.GetById")
+	defer spans.Finish()
+	spans.LogKV("organizationId", organizationId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) RETURN o`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -64,11 +61,12 @@ func (r *organizationRepository) GetById(parentCtx context.Context, tenant, orga
 }
 
 func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId, customerOsId string, domains []string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId),
-		log.String("customerOsId", customerOsId), log.Object("domains", domains))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetMatchedOrganizationId")
+	defer spans.Finish()
+	spans.LogKV("externalSystem", externalSystem)
+	spans.LogKV("externalId", externalId)
+	spans.LogKV("customerOsId", customerOsId)
+	spans.LogKV("domains", domains)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -100,22 +98,22 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		commonTracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	orgIDs := dbRecords.([]*db.Record)
 	if len(orgIDs) == 1 {
-		span.LogKV("result.organizationId", orgIDs[0].Values[0])
+		spans.LogKV("result.organizationId", orgIDs[0].Values[0])
 		return orgIDs[0].Values[0].(string), nil
 	}
-	span.LogKV("result.organizationId", "")
+	spans.LogKV("result.organizationId", "")
 	return "", nil
 }
 
 func (r *organizationRepository) GetOrganizationIdById(ctx context.Context, tenant, id string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetOrganizationIdById")
+	defer spans.Finish()
+	spans.LogKV("organizationId", id)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 				return org.id order by org.createdAt`
@@ -131,6 +129,7 @@ func (r *organizationRepository) GetOrganizationIdById(ctx context.Context, tena
 		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return "", err
 	}
 	if len(records.([]string)) == 0 {
@@ -140,9 +139,10 @@ func (r *organizationRepository) GetOrganizationIdById(ctx context.Context, tena
 }
 
 func (r *organizationRepository) GetOrganizationIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdByExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetOrganizationIdByExternalId")
+	defer spans.Finish()
+	spans.LogKV("externalId", externalId)
+	spans.LogKV("externalSystemId", externalSystemId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
@@ -160,6 +160,7 @@ func (r *organizationRepository) GetOrganizationIdByExternalId(ctx context.Conte
 		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return "", err
 	}
 	if len(records.([]string)) == 0 {
@@ -169,9 +170,10 @@ func (r *organizationRepository) GetOrganizationIdByExternalId(ctx context.Conte
 }
 
 func (r *organizationRepository) GetOrganizationIdByDomain(ctx context.Context, tenant, domain string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdByDomain")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.GetOrganizationIdByDomain")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("domain", domain)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
 				return org.id order by org.createdAt`
@@ -196,9 +198,11 @@ func (r *organizationRepository) GetOrganizationIdByDomain(ctx context.Context, 
 }
 
 func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context, tenant, domain, skipOrganizationId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.IsDomainUsedByOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "OrganizationRepository.IsDomainUsedByOrganization")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("domain", domain)
+	spans.LogKV("skipOrganizationId", skipOrganizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
 				WHERE org.id <> $skipOrganizationId
@@ -208,8 +212,8 @@ func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context,
 		"domain":             domain,
 		"skipOrganizationId": skipOrganizationId,
 	}
-	span.LogKV("cypher", cypher)
-	commonTracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -222,9 +226,9 @@ func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context,
 		}
 	})
 	if err != nil {
-		commonTracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
-	span.LogKV("result", result.(bool))
+	spans.LogKV("result", result.(bool))
 	return result.(bool), err
 }

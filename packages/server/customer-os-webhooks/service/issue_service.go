@@ -11,12 +11,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
@@ -46,25 +44,25 @@ func NewIssueService(log logger.Logger, repositories *repository.Repositories, s
 }
 
 func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData) (SyncResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.SyncIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("num of issues", len(issues)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.SyncIssues")
+	defer spans.Finish()
+	spans.LogKV("num of issues", len(issues))
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
-		tracing.TraceErr(span, errors.ErrTenantNotValid)
+		spans.TraceError(errors.ErrTenantNotValid)
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate issues input before syncing
 	for _, issue := range issues {
 		if issue.ExternalSystem == "" {
-			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
+			spans.TraceError(errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !neo4jentity.IsValidDataSource(strings.ToLower(issue.ExternalSystem)) {
-			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", issue.ExternalSystem))
+			spans.TraceError(errors.ErrExternalSystemNotAccepted)
+			spans.LogKV("externalSystem", issue.ExternalSystem)
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -115,13 +113,12 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 }
 
 func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, issueInput model.IssueData, syncDate time.Time) SyncStatus {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.syncIssue")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagExternalSystem, issueInput.ExternalSystem)
-	span.SetTag(tracing.SpanTagExternalId, issueInput.ExternalId)
-	span.LogFields(log.Object("syncDate", syncDate))
-	tracing.LogObjectAsJson(span, "issueInput", issueInput)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.syncIssue")
+	defer spans.Finish()
+	spans.TagString(telemetry.SpanTagExternalSystem, issueInput.ExternalSystem)
+	spans.TagString(telemetry.SpanTagExternalId, issueInput.ExternalId)
+	spans.LogObjectAsJson("syncDate", syncDate)
+	spans.LogObjectAsJson("issueInput", issueInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	failedSync := false
@@ -131,47 +128,47 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, issueInput.ExternalSystem)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", issueInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if contact sync should be skipped
 	if issueInput.Skip {
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus(issueInput.SkipReason)
 	} else if issueInput.ExternalId == "" {
 		reason = fmt.Sprintf("external id is empty for issue, tenant %s", tenant)
 		s.log.Warnf("Skip issue sync: %v", reason)
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus(reason)
 	}
 
 	reporterId, reporterLabel, err := s.services.FinderService.FindReferencedEntityId(ctx, issueInput.ExternalSystem, &issueInput.Reporter)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed finding reporter for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
 	submitterId, submitterLabel, err := s.services.FinderService.FindReferencedEntityId(ctx, issueInput.ExternalSystem, &issueInput.Submitter)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed finding submitter for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
 
 	if issueInput.OrganizationRequired && reporterLabel != commonmodel.NodeLabelOrganization {
 		reason = fmt.Sprintf("organization(s) not found for issue %s for tenant %s", issueInput.ExternalId, tenant)
 		s.log.Warnf("Skip issue sync: %v", reason)
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus(reason)
 	}
 
@@ -182,12 +179,12 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	issueId, err := s.repositories.Neo4jRepositories.IssueReadRepository.GetMatchedIssueId(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed finding existing matched issue with external reference %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 		s.log.Error(reason)
 	}
 	if !failedSync {
-		span.LogFields(log.Bool("found matching issue", issueId != ""))
+		spans.LogKV("found matching issue", issueId != "")
 
 		issueFields := data_fields.IssueFields{
 			Source:    utils.StringPtr(issueInput.ExternalSystem),
@@ -231,12 +228,12 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		issueId, err = s.services.CommonServices.IssueService.Save(ctx, nil, &issueId, issueFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Error(reason)
 			reason = fmt.Sprintf("error saving issue with external reference %s for tenant %s :%s", issueInput.ExternalId, common.GetTenantFromContext(ctx), err.Error())
 		}
 		issueInput.Id = issueId
-		tracing.TagEntity(span, issueId)
+		spans.TagEntity(issueId)
 	}
 
 	processedFollowerUserIds := make([]string, 0)
@@ -246,7 +243,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			// find follower
 			followerId, followerLabel, err := s.services.FinderService.FindReferencedEntityId(ctx, issueInput.ExternalSystem, &follower)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("failed finding follower for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
@@ -254,7 +251,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				err = s.services.CommonServices.IssueService.AddUserFollower(ctx, nil, issueId, followerId)
 				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
-					tracing.TraceErr(span, pkgerrors.Wrap(err, "AddUserFollower"))
+					spans.TraceError(pkgerrors.Wrap(err, "AddUserFollower"))
 					reason = fmt.Sprintf("failed to add follower %s to issue %s for tenant %s :%s", followerId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
@@ -268,7 +265,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			// find collaborator
 			collaboratorId, collaboratorLabel, err := s.services.FinderService.FindReferencedEntityId(ctx, issueInput.ExternalSystem, &collaborator)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("failed finding collaborator for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
@@ -276,7 +273,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				err = s.services.CommonServices.IssueService.AddUserFollower(ctx, nil, issueId, collaboratorId)
 				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
-					tracing.TraceErr(span, pkgerrors.Wrap(err, "AddUserFollower"))
+					spans.TraceError(pkgerrors.Wrap(err, "AddUserFollower"))
 					reason = fmt.Sprintf("failed to add follower %s to issue %s for tenant %s :%s", collaboratorId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
@@ -289,26 +286,26 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		// find assignee
 		assigneeId, err := s.services.UserService.GetIdForReferencedUser(ctx, tenant, issueInput.ExternalSystem, issueInput.Assignee)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			reason = fmt.Sprintf("failed finding assignee for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 			s.log.Error(reason)
 		}
 		if assigneeId != "" {
 			err = s.services.CommonServices.IssueService.AddUserAssignee(ctx, nil, issueId, assigneeId)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("failed to add assignee %s to issue %s for tenant %s :%s", assigneeId, issueId, tenant, err.Error())
 				s.log.Error(reason)
 			}
 		}
 	}
 
-	span.LogFields(log.Bool("failedSync", failedSync))
+	spans.LogKV("failedSync", failedSync)
 	if failedSync {
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
-	span.LogFields(log.String("output", "success"))
+	spans.LogKV("output", "success")
 	return NewSuccessfulSyncStatus()
 }
 

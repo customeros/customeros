@@ -2,12 +2,10 @@ package repository
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type UserRepository interface {
@@ -32,10 +30,9 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 }
 
 func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant, externalSystem, externalId, email string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetMatchedUserId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId), log.String("email", email))
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserRepository.GetMatchedUserId")
+	defer spans.Finish()
+	spans.LogKV("externalSystem", externalSystem, "externalId", externalId, "email", email)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u1:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e)
@@ -44,7 +41,7 @@ func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant, externalS
 				with coalesce(u1, u2) as user
 				where user is not null
 				return user.id limit 1`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -73,13 +70,13 @@ func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant, externalS
 }
 
 func (r *userRepository) GetUserIdById(ctx context.Context, tenant, id string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserRepository.GetUserIdById")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant, "id", id)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 				return u.id order by u.createdAt`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -101,14 +98,14 @@ func (r *userRepository) GetUserIdById(ctx context.Context, tenant, id string) (
 }
 
 func (r *userRepository) GetUserIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdByExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserRepository.GetUserIdByExternalId")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant, "externalId", externalId, "externalSystemId", externalSystemId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
 				return u.id order by u.createdAt`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -131,14 +128,14 @@ func (r *userRepository) GetUserIdByExternalId(ctx context.Context, tenant, exte
 }
 
 func (r *userRepository) GetUserIdByExternalIdSecond(ctx context.Context, tenant, externalIdSecond, externalSystemId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdByExternalIdSecond")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "UserRepository.GetUserIdByExternalIdSecond")
+	defer spans.Finish()
+	spans.LogKV("tenant", tenant, "externalIdSecond", externalIdSecond, "externalSystemId", externalSystemId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:IS_LINKED_WITH {externalIdSecond:$externalIdSecond}]->(e)
 				return u.id order by u.createdAt`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

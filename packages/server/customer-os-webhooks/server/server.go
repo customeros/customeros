@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/database"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,12 +16,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -112,7 +111,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		UTC:        true,
 		SkipPaths:  []string{"/metrics", "/health", "/readiness", "/"},
 	}))
-	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer(), server.log))
+	r.Use(telemetry.RecoveryWithTelemetry(server.log))
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)

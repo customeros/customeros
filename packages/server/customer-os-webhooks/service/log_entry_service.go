@@ -10,12 +10,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
@@ -44,24 +42,24 @@ func NewLogEntryService(log logger.Logger, repositories *repository.Repositories
 }
 
 func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) (SyncResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.SyncLogEntries")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "LogEntryService.SyncLogEntries")
+	defer spans.Finish()
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
-		tracing.TraceErr(span, errors.ErrTenantNotValid)
+		spans.TraceError(errors.ErrTenantNotValid)
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate log entry input before syncing
 	for _, logEntry := range logEntries {
 		if logEntry.ExternalSystem == "" {
-			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
+			spans.TraceError(errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !neo4jentity.IsValidDataSource(strings.ToLower(logEntry.ExternalSystem)) {
-			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", logEntry.ExternalSystem))
+			spans.TraceError(errors.ErrExternalSystemNotAccepted)
+			spans.LogKV("externalSystem", logEntry.ExternalSystem)
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -112,13 +110,12 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 }
 
 func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mutex, logEntryInput model.LogEntryData, syncDate time.Time, tenant string) SyncStatus {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.syncLogEntry")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagExternalSystem, logEntryInput.ExternalSystem)
-	span.SetTag(tracing.SpanTagExternalId, logEntryInput.ExternalId)
-	span.LogFields(log.Object("syncDate", syncDate))
-	tracing.LogObjectAsJson(span, "logEntryInput", logEntryInput)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "LogEntryService.syncLogEntry")
+	defer spans.Finish()
+	spans.TagString(telemetry.SpanTagExternalSystem, logEntryInput.ExternalSystem)
+	spans.TagString(telemetry.SpanTagExternalId, logEntryInput.ExternalId)
+	spans.LogObjectAsJson("syncDate", syncDate)
+	spans.LogObjectAsJson("logEntryInput", logEntryInput)
 
 	failedSync := false
 	reason := ""
@@ -126,16 +123,16 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, logEntryInput.ExternalSystem)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", logEntryInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if log entry sync should be skipped
 	if logEntryInput.Skip {
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus(logEntryInput.SkipReason)
 	}
 
@@ -158,7 +155,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			failedSync = true
 			reason = fmt.Sprintf("organization not found for log entry %s for tenant %s", logEntryInput.ExternalId, tenant)
 			s.log.Error(reason)
-			span.LogFields(log.String("output", "failed"))
+			spans.LogKV("output", "failed")
 			return NewFailedSyncStatus(reason)
 		}
 		loggedOrgIds = utils.RemoveDuplicates(loggedOrgIds)
@@ -171,15 +168,15 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	logEntryId, err := s.repositories.LogEntryRepository.GetMatchedLogEntryId(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.ExternalId)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed finding existing matched log entru with external reference %s for tenant %s :%s", logEntryInput.ExternalId, tenant, err.Error())
 		s.log.Error(reason)
 	}
 
 	if !failedSync {
 		matchingLogEntryExists := logEntryId != ""
-		span.LogFields(log.Bool("found matching log entry", matchingLogEntryExists))
-		span.LogFields(log.String("logEntryId", logEntryId))
+		spans.LogKV("found matching log entry", matchingLogEntryExists)
+		spans.LogKV("logEntryId", logEntryId)
 
 		logEntryFields := data_fields.LogEntryFields{
 			Content:     utils.StringPtr(logEntryInput.Content),
@@ -202,10 +199,10 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			logEntryFields.AuthorUserId = utils.StringPtr(userAuthorId)
 		}
 		if len(loggedOrgIds) == 0 {
-			failedSync, reason = s.saveLogEntryToDb(ctx, logEntryId, logEntryInput.ExternalId, "", logEntryFields, span, matchingLogEntryExists)
+			failedSync, reason = s.saveLogEntryToDb(ctx, logEntryId, logEntryInput.ExternalId, "", logEntryFields, spans, matchingLogEntryExists)
 		} else {
 			for _, orgId := range loggedOrgIds {
-				failedSync, reason = s.saveLogEntryToDb(ctx, logEntryId, logEntryInput.ExternalId, orgId, logEntryFields, span, matchingLogEntryExists)
+				failedSync, reason = s.saveLogEntryToDb(ctx, logEntryId, logEntryInput.ExternalId, orgId, logEntryFields, spans, matchingLogEntryExists)
 				if failedSync {
 					break
 				}
@@ -213,16 +210,16 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 		}
 	}
 
-	span.LogFields(log.Bool("failedSync", failedSync))
+	spans.LogKV("failedSync", failedSync)
 	if failedSync {
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
-	span.LogFields(log.String("output", "success"))
+	spans.LogKV("output", "success")
 	return NewSuccessfulSyncStatus()
 }
 
-func (s *logEntryService) saveLogEntryToDb(ctx context.Context, logEntryId, externalId, organizationId string, logEntryFields data_fields.LogEntryFields, span opentracing.Span, matchingLogEntryExists bool) (bool, string) {
+func (s *logEntryService) saveLogEntryToDb(ctx context.Context, logEntryId, externalId, organizationId string, logEntryFields data_fields.LogEntryFields, spans *telemetry.Spans, matchingLogEntryExists bool) (bool, string) {
 	if organizationId != "" {
 		logEntryFields.OrganizationId = utils.StringPtr(organizationId)
 	}
@@ -231,7 +228,7 @@ func (s *logEntryService) saveLogEntryToDb(ctx context.Context, logEntryId, exte
 	logEntryId, err := s.services.CommonServices.LogEntryService.Save(ctx, &logEntryId, logEntryFields)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("error saving log entry with external reference %s for tenant %s :%s", externalId, common.GetTenantFromContext(ctx), err.Error())
 		s.log.Error(reason)
 	}

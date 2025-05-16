@@ -13,12 +13,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
@@ -47,24 +45,23 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, se
 }
 
 func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) (SyncResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.SyncUsers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.SyncUsers")
+	defer spans.Finish()
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
-		tracing.TraceErr(span, errors.ErrTenantNotValid)
+		spans.TraceError(errors.ErrTenantNotValid)
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate user input before syncing
 	for _, user := range users {
 		if user.ExternalSystem == "" {
-			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
+			spans.TraceError(errors.ErrMissingExternalSystem)
 			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !neo4jentity.IsValidDataSource(strings.ToLower(user.ExternalSystem)) {
-			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", user.ExternalSystem))
+			spans.TraceError(errors.ErrExternalSystemNotAccepted)
 			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -115,13 +112,12 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) (Sy
 }
 
 func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userInput model.UserData, syncDate time.Time) SyncStatus {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.syncUser")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagExternalSystem, userInput.ExternalSystem)
-	span.SetTag(tracing.SpanTagExternalId, userInput.ExternalId)
-	span.LogFields(log.Object("syncDate", syncDate))
-	tracing.LogObjectAsJson(span, "userInput", userInput)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.syncUser")
+	defer spans.Finish()
+	spans.TagString(telemetry.SpanTagExternalSystem, userInput.ExternalSystem)
+	spans.TagString(telemetry.SpanTagExternalId, userInput.ExternalId)
+	spans.LogObjectAsJson("syncDate", syncDate)
+	spans.LogObjectAsJson("userInput", userInput)
 
 	tenant := common.GetTenantFromContext(ctx)
 	failedSync := false
@@ -130,16 +126,16 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, userInput.ExternalSystem)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", userInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if user sync should be skipped
 	if userInput.Skip {
-		span.LogFields(log.String("output", "skipped"))
+		spans.LogKV("output", "skipped")
 		return NewSkippedSyncStatus(userInput.SkipReason)
 	}
 
@@ -150,14 +146,14 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, userInput.ExternalSystem, userInput.ExternalId, userInput.Email)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		reason = fmt.Sprintf("failed finding existing matched user with external reference %s for tenant %s :%s", userInput.ExternalId, tenant, err.Error())
 		s.log.Error(reason)
 	}
 
 	if !failedSync {
 		matchingUserExists := userId != ""
-		span.LogFields(log.Bool("found matching user", matchingUserExists))
+		spans.LogKV("found matching user", matchingUserExists)
 
 		// Create new user id if not found
 		var inputUserId *string = nil
@@ -196,12 +192,12 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		userId, err = s.services.CommonServices.UserService.Save(ctx, nil, inputUserId, userFields)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			reason = fmt.Sprintf("failed to save user with external reference %s for tenant %s :%s", userInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
 		userInput.Id = userId
-		span.LogFields(log.String("userId", userId))
+		spans.LogKV("userId", userId)
 	}
 	if !failedSync && userInput.HasEmail() {
 		_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
@@ -216,7 +212,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				Id:   userId,
 			})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			reason = fmt.Sprintf("Failed to create and link email address %s with user %s: %s", userInput.Email, userId, err.Error())
 			failedSync = true
 		}
@@ -228,7 +224,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			phoneNumberId, err := s.services.CommonServices.PhoneNumberService.Merge(ctx, phoneNumberDtls.Number, neo4jentity.DecodeDataSource(userInput.ExternalSystem))
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				reason = fmt.Sprintf("Failed to create phone number %s for user %s: %s", phoneNumberDtls.Number, userId, err.Error())
 				s.log.Error(reason)
 			}
@@ -237,7 +233,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				err = s.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, tenant, userId, phoneNumberId, phoneNumberDtls.Label, phoneNumberDtls.Primary)
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err, log.String("method", "LinkWithUser"))
+					spans.TraceError(err)
 					reason = fmt.Sprintf("Failed to link phone number %s with user %s: %s", phoneNumberDtls.Number, userId, err.Error())
 					s.log.Error(reason)
 				}
@@ -245,12 +241,12 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		}
 	}
 
-	span.LogFields(log.Bool("failedSync", failedSync))
+	spans.LogKV("failedSync", failedSync)
 	if failedSync {
-		span.LogFields(log.String("output", "failed"))
+		spans.LogKV("output", "failed")
 		return NewFailedSyncStatus(reason)
 	}
-	span.LogFields(log.String("output", "success"))
+	spans.LogKV("output", "success")
 	return NewSuccessfulSyncStatus()
 }
 

@@ -16,7 +16,6 @@ type Config struct {
 	Neo4j         commonConfig.Neo4jConfig
 	Postgres      commonConfig.PostgresConfig
 	Logger        logger.Config
-	Jaeger        telemetry.JaegerConfig
 	OpenTelemetry telemetry.OpenTelemetryConfig
 	Cron          cronconfig.Config
 

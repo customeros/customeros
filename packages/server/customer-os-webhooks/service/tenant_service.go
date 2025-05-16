@@ -2,12 +2,11 @@ package service
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantService interface {
@@ -29,18 +28,17 @@ func NewTenantService(log logger.Logger, repositories *repository.Repositories, 
 }
 
 func (s *tenantService) Exists(ctx context.Context, tenant string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Exists")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TenantService.Exists")
+	defer spans.Finish()
 
 	if !s.caches.CheckTenant(tenant) {
 		_, err := s.neo4j.TenantRepository.GetTenant(ctx, tenant)
 		if err != nil {
-			span.LogFields(log.Bool("output", false))
+			spans.LogKV("output", false)
 			return false
 		}
 		s.caches.AddTenant(tenant)
 	}
-	span.LogFields(log.Bool("output", true))
+	spans.LogKV("output", true)
 	return true
 }

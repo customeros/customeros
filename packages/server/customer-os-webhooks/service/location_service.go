@@ -3,12 +3,10 @@ package service
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type LocationService interface {
@@ -28,10 +26,9 @@ func NewLocationService(log logger.Logger, repositories *repository.Repositories
 }
 
 func (s *locationService) GetById(ctx context.Context, locationId string) (*neo4jentity.LocationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("locationId", locationId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "LocationService.GetById")
+	defer spans.Finish()
+	spans.LogKV("locationId", locationId)
 
 	locationNode, err := s.repositories.LocationRepository.GetById(ctx, locationId)
 	if err != nil {
