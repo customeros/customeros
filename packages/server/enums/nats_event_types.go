@@ -24,14 +24,17 @@ const (
 	EventWebpageScraped    NatsEventType = "web.page.scraped"
 	EventWebpageClassified NatsEventType = "web.page.classified"
 	EventWebpageProfiled   NatsEventType = "web.page.profiled"
+	EventRequestWebContent NatsEventType = "request.web.content"
 
 	// AI and analysis events
 	EventRequestWebpageClassification NatsEventType = "request.webpage_classification"
 	EventRequestWebpageIntent         NatsEventType = "request.webpage_intent"
 
 	// ICP Profile events
-	EventIdealCustomerProfileCreated NatsEventType = "icp.created"
-	EventRequestIdealCustomerProfile NatsEventType = "request.icp"
+	EventIdealCustomerProfileCreated       NatsEventType = "icp.created"
+	EventRequestCreateIdealCustomerProfile NatsEventType = "request.icp.create"
+	EventICPFitDetermined                  NatsEventType = "icp.fit.determined"
+	EventRequestICPFitAnalysis             NatsEventType = "request.icp.fit.analysis"
 
 	// WebTracker
 	EventWebtrackerCreated           NatsEventType = "webtracker.created"

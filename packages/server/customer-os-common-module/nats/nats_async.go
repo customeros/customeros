@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/enums"
@@ -16,7 +15,7 @@ type EventHandler func(ctx context.Context, msg *nats.Msg) error
 
 type AsyncConsumerConfig struct {
 	StreamName          enums.NatsStream
-	ServiceName         string
+	ServiceName         enums.Services
 	SubscribedSubject   string
 	AckWait             *time.Duration
 	MaxDeliveryAttempts *int
@@ -61,8 +60,8 @@ func (s *AsyncEventsConsumer) RegisterHandler(subject string, handler EventHandl
 
 func (s *AsyncEventsConsumer) Start(ctx context.Context) error {
 	// Create durable consumer for processing messages
-	consumer := fmt.Sprintf("%s-consumer", strings.ToLower(s.Config.ServiceName))
-	queueGroup := fmt.Sprintf("%s-queue-group", strings.ToLower(s.Config.ServiceName))
+	consumer := fmt.Sprintf("%s.consumer", s.Config.ServiceName.String())
+	queueGroup := fmt.Sprintf("%s", s.Config.ServiceName.String())
 
 	stream, err := s.NatsConn.GetNatsConnection(s.Config.StreamName)
 	if err != nil {

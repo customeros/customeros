@@ -3,7 +3,13 @@ syntax = "proto3";
 package pb;
 option go_package = "./pb";
 
-message RequestICPFitAnalysis {
+enum ICPFit {
+  ICP_FIT_STRONG = 0;
+  ICP_FIT_MODERATE = 1;
+  NOT_A_FIT = 2;
+}
+message ICPFitDetermined {
   string tenant = 1;
   string domain = 2; // the domain of the company to be assessed for fit
+  ICPFit icp_fit = 3;
 }
