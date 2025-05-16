@@ -30,7 +30,7 @@ jobs:
           echo "$HOME/.bun/bin" >> $GITHUB_PATH
 
       - name: Make build.sh executable
-        run: chmod +x ./build.sh
+        run: chmod +x ./packages/server/realtime/build.sh
 
       - name: Build Phoenix app
         run: |
