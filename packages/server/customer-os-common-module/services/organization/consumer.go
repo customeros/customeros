@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	SERVICE = "organization-service"
+	SERVICE = enums.ServicesOrganization
 )
 
 func (s *organizationService) Start(ctx context.Context) error {

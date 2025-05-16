@@ -60,7 +60,7 @@ func (s *AsyncEventsConsumer) RegisterHandler(subject string, handler EventHandl
 
 func (s *AsyncEventsConsumer) Start(ctx context.Context) error {
 	// Create durable consumer for processing messages
-	consumer := fmt.Sprintf("%s.consumer", s.Config.ServiceName.String())
+	consumer := fmt.Sprintf("%s-consumer", s.Config.ServiceName.String())
 	queueGroup := fmt.Sprintf("%s", s.Config.ServiceName.String())
 
 	stream, err := s.NatsConn.GetNatsConnection(s.Config.StreamName)
