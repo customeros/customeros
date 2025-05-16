@@ -42,7 +42,7 @@ func NewExternalSystemService(log logger.Logger, repositories *repository.Reposi
 
 func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant, externalSystem string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.MergeExternalSystem")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystem))
 
@@ -63,7 +63,7 @@ func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant,
 
 func (s *externalSystemService) SyncExternalSystem(ctx context.Context, externalSystemInput model.ExternalSystemData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "externalSystemService.SyncExternalSystem")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {

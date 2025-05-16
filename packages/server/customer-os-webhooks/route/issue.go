@@ -22,19 +22,19 @@ import (
 
 func AddIssueRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/issues",
-		tracing.TracingEnhancer(ctx, "/sync/issues"),
+		RestTracingEnhancer(ctx, "/sync/issues"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncIssuesHandler(services, log))
 	route.POST("/sync/issue",
-		tracing.TracingEnhancer(ctx, "/sync/issue"),
+		RestTracingEnhancer(ctx, "/sync/issue"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncIssueHandler(services, log))
 }
 
 func syncIssuesHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncIssues", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncIssues", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -51,7 +51,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncIssues) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -60,7 +60,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 		// Parse the JSON request body
 		var issues []model.IssueData
 		if err = json.Unmarshal(requestBody, &issues); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncIssues) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -81,7 +81,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 
 		syncResult, err := services.IssueService.SyncIssues(ctx, issues)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncIssues) error in sync issues: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -96,8 +96,8 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 
 func syncIssueHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncIssue", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncIssue", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -112,7 +112,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncIssue) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -121,7 +121,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 		// Parse the JSON request body
 		var issue model.IssueData
 		if err = json.Unmarshal(requestBody, &issue); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncIssue) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -133,7 +133,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 
 		syncResult, err := services.IssueService.SyncIssues(ctx, []model.IssueData{issue})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncIssue) error in sync issue: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

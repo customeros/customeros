@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -32,7 +32,7 @@ func NewInteractionSessionRepository(driver *neo4j.DriverWithContext, database s
 
 func (r *interactionSessionRepository) GetInteractionSessionIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.GetInteractionSessionIdByExternalId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
@@ -63,7 +63,7 @@ func (r *interactionSessionRepository) GetInteractionSessionIdByExternalId(ctx c
 
 func (r *interactionSessionRepository) GetById(parentCtx context.Context, tenant, interactionSessionId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "InteractionSessionRepository.GetById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("interactionSessionId", interactionSessionId))
 

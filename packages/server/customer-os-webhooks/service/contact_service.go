@@ -50,7 +50,7 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 
 func (s *contactService) SyncContacts(ctx context.Context, contacts []model.ContactData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.SyncContacts")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("num of contacts", len(contacts)))
 
@@ -119,7 +119,7 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 
 func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex, contactInput model.ContactData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.syncContact")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, contactInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, contactInput.ExternalId)

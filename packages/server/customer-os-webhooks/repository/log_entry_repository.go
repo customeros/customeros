@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -31,7 +31,7 @@ func NewLogEntryRepository(driver *neo4j.DriverWithContext) LogEntryRepository {
 
 func (r *logEntryRepository) GetById(parentCtx context.Context, tenant, logEntryId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "LogEntryRepository.GetById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("logEntryId", logEntryId))
 
@@ -56,7 +56,7 @@ func (r *logEntryRepository) GetById(parentCtx context.Context, tenant, logEntry
 
 func (r *logEntryRepository) GetMatchedLogEntryId(ctx context.Context, tenant, externalSystem, externalId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryRepository.GetMatchedLogEntryId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
 

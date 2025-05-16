@@ -21,15 +21,15 @@ import (
 
 func AddInvoiceRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/invoice",
-		tracing.TracingEnhancer(ctx, "/sync/invoice"),
+		RestTracingEnhancer(ctx, "/sync/invoice"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.Cfg.App.AppKey, security.WithCache(cache)),
 		syncInvoiceHandler(services, log))
 }
 
 func syncInvoiceHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncInvoice", c.Request.Header)
-		defer span.Finish()
+		spans, ctx := telemetry.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncInvoice", c.Request.Header)
+		defer spans.Finish()
 
 		// Read the tenant header
 		tenant := c.GetHeader("tenant")
@@ -46,7 +46,7 @@ func syncInvoiceHandler(services *service.Services, log logger.Logger) gin.Handl
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncInvoice) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,7 +55,7 @@ func syncInvoiceHandler(services *service.Services, log logger.Logger) gin.Handl
 		// Parse the JSON request body
 		var invoice model.InvoiceData
 		if err = json.Unmarshal(requestBody, &invoice); err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncInvoice) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -67,7 +67,7 @@ func syncInvoiceHandler(services *service.Services, log logger.Logger) gin.Handl
 
 		syncResult, err := services.InvoiceService.SyncInvoices(ctx, []model.InvoiceData{invoice})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			log.Errorf("(SyncInvoice) error in sync invoice: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

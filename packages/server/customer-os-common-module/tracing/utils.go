@@ -167,16 +167,6 @@ func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.
 	TagComponentPostgresRepository(span)
 }
 
-func SetDefaultAgentCapabilitySpanTags(ctx context.Context, span opentracing.Span) {
-	SetDefaultSpanTags(ctx, span)
-	TagComponentAgentCapability(span)
-}
-
-func SetDefaultRestSpanTags(ctx context.Context, span opentracing.Span) {
-	SetDefaultSpanTags(ctx, span)
-	TagComponentRest(span)
-}
-
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	if span == nil || err == nil || coserrors.SkipTracing(err) {
 		return

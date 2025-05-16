@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -27,7 +27,7 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 
 func (r *tenantRepository) GetTenant(ctx context.Context, tenant string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenant")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagTenant, tenant)
 

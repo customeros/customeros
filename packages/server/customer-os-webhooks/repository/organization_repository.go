@@ -39,7 +39,7 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 
 func (r *organizationRepository) GetById(parentCtx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "OrganizationRepository.GetById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
@@ -65,7 +65,7 @@ func (r *organizationRepository) GetById(parentCtx context.Context, tenant, orga
 
 func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId, customerOsId string, domains []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId),
 		log.String("customerOsId", customerOsId), log.Object("domains", domains))
@@ -114,7 +114,7 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 
 func (r *organizationRepository) GetOrganizationIdById(ctx context.Context, tenant, id string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -141,7 +141,7 @@ func (r *organizationRepository) GetOrganizationIdById(ctx context.Context, tena
 
 func (r *organizationRepository) GetOrganizationIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdByExternalId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
@@ -170,7 +170,7 @@ func (r *organizationRepository) GetOrganizationIdByExternalId(ctx context.Conte
 
 func (r *organizationRepository) GetOrganizationIdByDomain(ctx context.Context, tenant, domain string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdByDomain")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
@@ -197,7 +197,7 @@ func (r *organizationRepository) GetOrganizationIdByDomain(ctx context.Context, 
 
 func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context, tenant, domain, skipOrganizationId string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.IsDomainUsedByOrganization")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})

@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -33,7 +33,7 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 
 func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant, externalSystem, externalId, email string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetMatchedUserId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId), log.String("email", email))
 
@@ -74,7 +74,7 @@ func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant, externalS
 
 func (r *userRepository) GetUserIdById(ctx context.Context, tenant, id string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
@@ -102,7 +102,7 @@ func (r *userRepository) GetUserIdById(ctx context.Context, tenant, id string) (
 
 func (r *userRepository) GetUserIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdByExternalId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
@@ -132,7 +132,7 @@ func (r *userRepository) GetUserIdByExternalId(ctx context.Context, tenant, exte
 
 func (r *userRepository) GetUserIdByExternalIdSecond(ctx context.Context, tenant, externalIdSecond, externalSystemId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdByExternalIdSecond")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})

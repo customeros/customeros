@@ -45,7 +45,7 @@ func NewLogEntryService(log logger.Logger, repositories *repository.Repositories
 
 func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.SyncLogEntries")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
@@ -113,7 +113,7 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 
 func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mutex, logEntryInput model.LogEntryData, syncDate time.Time, tenant string) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.syncLogEntry")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, logEntryInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, logEntryInput.ExternalId)

@@ -30,7 +30,7 @@ func NewTenantService(log logger.Logger, repositories *repository.Repositories, 
 
 func (s *tenantService) Exists(ctx context.Context, tenant string) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Exists")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.caches.CheckTenant(tenant) {

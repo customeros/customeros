@@ -31,7 +31,7 @@ func NewFinderService(log logger.Logger, repositories *repository.Repositories, 
 
 func (s *finderService) FindReferencedEntityId(ctx context.Context, externalSystemId string, referencedEntity model.ReferencedEntity) (id string, label string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FinderService.FindReferencedEntityId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystemId))
 	span.LogFields(log.Object("referencedEntity", referencedEntity))

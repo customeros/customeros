@@ -48,7 +48,7 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, se
 
 func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.SyncUsers")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
@@ -116,7 +116,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) (Sy
 
 func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userInput model.UserData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.syncUser")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, userInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, userInput.ExternalId)

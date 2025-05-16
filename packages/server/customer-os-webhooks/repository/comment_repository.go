@@ -3,12 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -34,7 +34,7 @@ func NewCommentRepository(driver *neo4j.DriverWithContext, database string) Comm
 
 func (r *commentRepository) GetById(ctx context.Context, commentId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("commentId", commentId))
 
@@ -59,7 +59,7 @@ func (r *commentRepository) GetById(ctx context.Context, commentId string) (*dbt
 
 func (r *commentRepository) GetMatchedCommentId(ctx context.Context, externalSystem, externalId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetMatchedCommentId")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
 

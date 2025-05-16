@@ -2,12 +2,12 @@ package repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -33,7 +33,7 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 
 func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx context.Context, organizationId, externalSystem string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetMatchedLocationIdForOrganizationBySource")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.String("externalSystem", externalSystem))
 
@@ -68,7 +68,7 @@ func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx con
 
 func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.Context, contactId, externalSystem string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetMatchedLocationIdForContactBySource")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("externalSystem", externalSystem))
 
@@ -103,7 +103,7 @@ func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.
 
 func (r *locationRepository) GetById(ctx context.Context, locationId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("locationId", locationId))
 

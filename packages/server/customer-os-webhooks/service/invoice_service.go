@@ -46,7 +46,7 @@ func NewInvoiceService(log logger.Logger, repositories *repository.Repositories,
 
 func (s *invoiceService) SyncInvoices(ctx context.Context, invoices []model.InvoiceData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SyncInvoices")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("num of invoices", len(invoices)))
 
@@ -118,7 +118,7 @@ func (s *invoiceService) SyncInvoices(ctx context.Context, invoices []model.Invo
 
 func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex, invoiceInput model.InvoiceData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.syncInvoice")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, invoiceInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, invoiceInput.ExternalId)

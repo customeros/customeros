@@ -47,7 +47,7 @@ func NewIssueService(log logger.Logger, repositories *repository.Repositories, s
 
 func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.SyncIssues")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("num of issues", len(issues)))
 
@@ -116,7 +116,7 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 
 func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, issueInput model.IssueData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.syncIssue")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, issueInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, issueInput.ExternalId)

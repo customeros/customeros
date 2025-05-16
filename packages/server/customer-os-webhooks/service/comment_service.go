@@ -45,7 +45,7 @@ func NewCommentService(log logger.Logger, repositories *repository.Repositories,
 
 func (s *commentService) SyncComments(ctx context.Context, comments []model.CommentData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.SyncComments")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
@@ -113,7 +113,7 @@ func (s *commentService) SyncComments(ctx context.Context, comments []model.Comm
 
 func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex, commentInput model.CommentData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.syncComment")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, commentInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, commentInput.ExternalId)

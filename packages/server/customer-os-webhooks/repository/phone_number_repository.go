@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -33,7 +33,7 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 
 func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, phoneNumber string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.Exists")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (p:PhoneNumber_%s) WHERE p.rawPhoneNumber = $phoneNumber OR p.e164 = $phoneNumber RETURN p LIMIT 1"
@@ -61,7 +61,7 @@ func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, phone
 
 func (r *phoneNumberRepository) GetByPhoneNumber(ctx context.Context, tenant, phoneNumber string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetByPhoneNumber")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber_%s) "+
@@ -87,7 +87,7 @@ func (r *phoneNumberRepository) GetByPhoneNumber(ctx context.Context, tenant, ph
 
 func (r *phoneNumberRepository) GetById(ctx context.Context, phoneNumberId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetById")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId))
 

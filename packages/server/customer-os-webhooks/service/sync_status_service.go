@@ -65,7 +65,7 @@ func NewSyncStatusService(log logger.Logger, repositories *repository.Repositori
 
 func (s *syncStatusService) SaveSyncResults(ctx context.Context, tenant, externalSystem, appSource, entityType string, syncDate time.Time, statuses []SyncStatus) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncStatusService.SaveSyncResults")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "statuses", statuses)
 	span.LogFields(log.String("externalSystem", externalSystem), log.String("appSource", appSource), log.String("entityType", entityType))

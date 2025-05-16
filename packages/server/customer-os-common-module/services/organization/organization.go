@@ -567,7 +567,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				}
 
 				outboxEvent := &postgres_entity.OutboxEvent{
-					EntityID:  tenant,
+					EntityID:  organizationId,
 					EventType: enums.EventOrganizationCreated,
 					Tenant:    tenant,
 					Payload:   payload,

@@ -58,7 +58,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 
 func (s *organizationService) SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.SyncOrganizations")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
@@ -145,7 +145,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 
 func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *sync.Mutex, orgInput model.OrganizationData, syncDate time.Time, controlDomains *domains) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.syncOrganization")
-	defer span.Finish()
+	defer spans.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, orgInput.ExternalSystem)
 	span.SetTag(tracing.SpanTagExternalId, orgInput.ExternalId)
