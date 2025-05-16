@@ -29,6 +29,9 @@ jobs:
           curl -fsSL https://bun.sh/install | bash
           echo "$HOME/.bun/bin" >> $GITHUB_PATH
 
+      - name: Make build.sh executable
+        run: chmod +x ./build.sh
+
       - name: Build Phoenix app
         run: |
           ./packages/server/realtime/build.sh
