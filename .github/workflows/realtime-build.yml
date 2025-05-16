@@ -21,8 +21,8 @@ jobs:
       - name: Sets up an Erlang/OTP environment
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+          elixir-version: "1.18.3"
+          otp-version: "27.3.4"
 
       - name: Install Bun
         run: |
