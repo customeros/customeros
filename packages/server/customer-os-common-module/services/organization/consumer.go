@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	SERVICE = enums.ServicesOrganization
+	ORGANIZATION_SERVICE = enums.ServicesOrganization
 )
 
 func (s *organizationService) Start(ctx context.Context) error {
@@ -53,7 +53,7 @@ func (s *organizationService) Start(ctx context.Context) error {
 func (s *organizationService) setupWebtrackerVisitorIdentifiedConsumer() (*nats_common.AsyncEventsConsumer, error) {
 	config := &nats_common.AsyncConsumerConfig{
 		StreamName:        enums.StreamWebtracker,
-		ServiceName:       SERVICE,
+		ServiceName:       ORGANIZATION_SERVICE,
 		SubscribedSubject: string(enums.EventWebtrackerVisitorIdentified),
 	}
 
@@ -70,7 +70,7 @@ func (s *organizationService) setupWebtrackerVisitorIdentifiedConsumer() (*nats_
 func (s *organizationService) setupTenantCreatedConsumer() (*nats_common.AsyncEventsConsumer, error) {
 	config := &nats_common.AsyncConsumerConfig{
 		StreamName:        enums.StreamTenant,
-		ServiceName:       SERVICE,
+		ServiceName:       ORGANIZATION_SERVICE,
 		SubscribedSubject: string(enums.EventTenantCreated),
 	}
 
