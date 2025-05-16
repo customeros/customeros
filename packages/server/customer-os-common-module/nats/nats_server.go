@@ -15,8 +15,9 @@ import (
 type NatsHeader string
 
 const (
-	MAX_STREAM_RECONNECTS            = -1 // never stop trying to reconnect
-	NATS_HEADER_TENANT    NatsHeader = "X-Tenant"
+	MAX_STREAM_RECONNECTS                  = -1 // never stop trying to reconnect
+	NATS_HEADER_TENANT    NatsHeader       = "X-Tenant"
+	REQUEST_STREAM        enums.NatsStream = enums.StreamRequest
 )
 
 // NATSConnection represents a single NATS connection with its associated JetStream context
@@ -116,7 +117,17 @@ func InitNats(config *config.NATSConfig, environment string, streams []enums.Nat
 		}
 		log.Printf("✅ NATS connection established for stream %s", streamName)
 
-		// Create JetStream context for each stream
+		// Special handling for request stream - use core NATS only
+		if streamName == REQUEST_STREAM {
+			streamConns[streamName] = &NATSConnection{
+				Conn: conn,
+				Name: streamName,
+			}
+			log.Printf("✅ Request stream configured for core NATS (no JetStream)")
+			continue
+		}
+
+		// For all other streams, create JetStream context
 		js, err := conn.JetStream()
 		if err != nil {
 			for _, c := range streamConns {
@@ -134,7 +145,7 @@ func InitNats(config *config.NATSConfig, environment string, streams []enums.Nat
 		}
 
 		// Set up stream
-		err = setupWorkQueueStream(js, streamName.String(), []string{streamName.String() + ".>"}, replicas)
+		err = setupJetStream(js, streamName.String(), []string{streamName.String() + ".>"}, replicas)
 		if err != nil {
 			for _, c := range streamConns {
 				c.Close()
@@ -151,7 +162,7 @@ func InitNats(config *config.NATSConfig, environment string, streams []enums.Nat
 	}, nil
 }
 
-func setupWorkQueueStream(js nats.JetStreamContext, streamName string, subjects []string, replicas int) error {
+func setupJetStream(js nats.JetStreamContext, streamName string, subjects []string, replicas int) error {
 	streamInfo, err := js.StreamInfo(streamName)
 	if err != nil {
 		// Stream doesn't exist, create it
