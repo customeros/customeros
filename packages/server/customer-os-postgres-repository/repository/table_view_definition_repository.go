@@ -2,12 +2,10 @@ package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -31,10 +29,8 @@ func NewTableViewDefinitionRepository(gormDb *gorm.DB) TableViewDefinitionReposi
 }
 
 func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Context, tenant, userId string) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.GetTableViewDefinitions")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagUserId, userId)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TableViewDefinitionRepository.GetTableViewDefinitions")
+	defer spans.Finish()
 
 	var tableViewDefinitions []postgres_entity.TableViewDefinition
 	var tableViewSharedDefinitions []postgres_entity.TableViewDefinition
@@ -60,16 +56,16 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 
 	allTableViewDefinitions := append(tableViewDefinitions, tableViewSharedDefinitions...)
 
-	span.LogFields(log.Int("result.count", len(allTableViewDefinitions)))
+	spans.LogKV("result.count", len(allTableViewDefinitions))
 	return helper.QueryResult{Result: allTableViewDefinitions}
 }
 
 func (t tableViewDefinitionRepository) CreateTableViewDefinition(ctx context.Context, viewDefinition postgres_entity.TableViewDefinition) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.CreateTableViewDefinition")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
-	tracing.LogObjectAsJson(span, "viewDefinition", viewDefinition)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TableViewDefinitionRepository.CreateTableViewDefinition")
+	defer spans.Finish()
+
+	spans.LogKV("userId", viewDefinition.UserId)
+	spans.LogObjectAsJson("viewDefinition", viewDefinition)
 
 	// if the view is a preset, set the UserId to empty string
 	if viewDefinition.IsShared {
@@ -78,18 +74,18 @@ func (t tableViewDefinitionRepository) CreateTableViewDefinition(ctx context.Con
 
 	err := t.gormDb.Create(&viewDefinition).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return helper.QueryResult{Error: err}
 	}
-	span.LogFields(log.Uint64("result.createdID", viewDefinition.ID))
+	spans.LogKV("result.createdID", viewDefinition.ID)
 	return helper.QueryResult{Result: viewDefinition}
 }
 
 func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Context, viewDefinition postgres_entity.TableViewDefinition) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.UpdateTableViewDefinition")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TableViewDefinitionRepository.UpdateTableViewDefinition")
+	defer spans.Finish()
+
+	spans.LogKV("userId", viewDefinition.UserId)
 
 	// Retrieve the existing record by ID
 	var existing postgres_entity.TableViewDefinition
@@ -132,10 +128,10 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 }
 
 func (t tableViewDefinitionRepository) UpdateTableViewSharedDefinition(ctx context.Context, viewDefinition postgres_entity.TableViewDefinition) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.UpdateTableViewSharedDefinition")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TableViewDefinitionRepository.UpdateTableViewSharedDefinition")
+	defer spans.Finish()
+
+	spans.LogKV("userId", viewDefinition.UserId)
 
 	// Retrieve the existing record by ID
 	var existing postgres_entity.TableViewDefinition
@@ -178,9 +174,8 @@ func (t tableViewDefinitionRepository) UpdateTableViewSharedDefinition(ctx conte
 }
 
 func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.ArchiveTableViewDefinition")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TableViewDefinitionRepository.ArchiveTableViewDefinition")
+	defer spans.Finish()
 
 	result := t.gormDb.
 		Where("tenant = ?", common.GetTenantFromContext(ctx)).
@@ -189,13 +184,13 @@ func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Co
 		Delete(&postgres_entity.TableViewDefinition{})
 
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		spans.TraceError(result.Error)
 		return result.Error
 	}
 
 	if result.RowsAffected < 1 {
 		err := errors.New("TableViewDef not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -203,8 +198,8 @@ func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Co
 }
 
 func (t tableViewDefinitionRepository) GetTableViewDefinition(ctx context.Context, tenant string, id uint64) (postgres_entity.TableViewDefinition, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.GetTableViewDefinition")
-	defer span.Finish()
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TableViewDefinitionRepository.GetTableViewDefinition")
+	defer spans.Finish()
 
 	var tableViewDefinition postgres_entity.TableViewDefinition
 	err := t.gormDb.
@@ -212,7 +207,7 @@ func (t tableViewDefinitionRepository) GetTableViewDefinition(ctx context.Contex
 		Where("id = ?", id).
 		First(&tableViewDefinition).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return postgres_entity.TableViewDefinition{}, err
 	}
 

@@ -1,9 +1,8 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -22,9 +21,8 @@ func NewInvoiceRepository(gormDb *gorm.DB) InvoiceRepository {
 }
 
 func (r *invoiceRepository) Reserve(ctx context.Context, invoiceNumber postgres_entity.InvoiceNumberEntity) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceRepository.Reserve")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "InvoiceRepository.Reserve")
+	defer spans.Finish()
 
 	err := r.gormDb.Create(&invoiceNumber).Error
 	return err

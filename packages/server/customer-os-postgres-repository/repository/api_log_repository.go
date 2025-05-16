@@ -35,8 +35,8 @@ func NewAPICallLogRepository(db *database.DbConnections) APICallLogRepository {
 }
 
 func (r *apiCallLogRepository) Create(ctx context.Context, log *postgres_entity.APICallLog) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.Create")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.Create")
+	defer spans.Finish()
 
 	// Generate ID if not provided
 	if log.ID == "" {
@@ -45,15 +45,15 @@ func (r *apiCallLogRepository) Create(ctx context.Context, log *postgres_entity.
 
 	err := r.write.WithContext(ctx).Create(log).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *apiCallLogRepository) GetByID(ctx context.Context, id string) (*postgres_entity.APICallLog, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.GetByID")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.GetByID")
+	defer spans.Finish()
 
 	var log postgres_entity.APICallLog
 	err := r.read.WithContext(ctx).Where("id = ?", id).First(&log).Error
@@ -64,32 +64,32 @@ func (r *apiCallLogRepository) GetByID(ctx context.Context, id string) (*postgre
 		return nil, err
 	}
 
-	span.LogKV("result.found", true)
+	spans.LogKV("result.found", true)
 	return &log, nil
 }
 
 func (r *apiCallLogRepository) FindByRequestID(ctx context.Context, requestID string) (*postgres_entity.APICallLog, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.FindByRequestID")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.FindByRequestID")
+	defer spans.Finish()
 
 	var log postgres_entity.APICallLog
 	err := r.read.WithContext(ctx).Where("request_id = ?", requestID).First(&log).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogKV("result.found", false)
+			spans.LogKV("result.found", false)
 			return nil, nil // Return nil, nil when not found
 		}
-		span.TraceError(err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogKV("result.found", true)
+	spans.LogKV("result.found", true)
 	return &log, nil
 }
 
 func (r *apiCallLogRepository) FindByVendor(ctx context.Context, vendor enum.APIVendor, limit, offset int) ([]*postgres_entity.APICallLog, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.FindByVendor")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.FindByVendor")
+	defer spans.Finish()
 
 	var logs []*postgres_entity.APICallLog
 	err := r.read.WithContext(ctx).
@@ -99,7 +99,7 @@ func (r *apiCallLogRepository) FindByVendor(ctx context.Context, vendor enum.API
 		Offset(offset).
 		Find(&logs).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -107,8 +107,8 @@ func (r *apiCallLogRepository) FindByVendor(ctx context.Context, vendor enum.API
 }
 
 func (r *apiCallLogRepository) UpdateResponseData(ctx context.Context, id string, statusCode int, responseBody []byte, errorMessage *string) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.UpdateResponseData")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.UpdateResponseData")
+	defer spans.Finish()
 
 	updates := map[string]interface{}{
 		"status_code": statusCode,
@@ -127,7 +127,7 @@ func (r *apiCallLogRepository) UpdateResponseData(ctx context.Context, id string
 		Where("id = ?", id).
 		Updates(updates).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -135,8 +135,8 @@ func (r *apiCallLogRepository) UpdateResponseData(ctx context.Context, id string
 }
 
 func (r *apiCallLogRepository) DeleteOlderThan(ctx context.Context, age time.Duration) (int64, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.DeleteOlderThan")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "apiCallLogRepository.DeleteOlderThan")
+	defer spans.Finish()
 
 	cutoffTime := time.Now().Add(-age)
 	result := r.write.WithContext(ctx).

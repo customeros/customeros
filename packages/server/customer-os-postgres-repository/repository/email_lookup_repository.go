@@ -2,11 +2,10 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -25,11 +24,10 @@ func NewEmailLookupRepository(gormDb *gorm.DB) EmailLookupRepository {
 }
 
 func (e emailLookupRepository) GetById(ctx context.Context, id string) (*postgres_entity.EmailLookup, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "EmailLookupRepository.GetById")
+	defer spans.Finish()
 
-	span.LogFields(tracingLog.String("id", id))
+	spans.LogKV("id", id)
 
 	var result postgres_entity.EmailLookup
 	err := e.gormDb.
@@ -39,28 +37,27 @@ func (e emailLookupRepository) GetById(ctx context.Context, id string) (*postgre
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogFields(tracingLog.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to get email lookup by ID")
 	}
 
-	span.LogFields(tracingLog.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 	return &result, nil
 }
 
 func (e emailLookupRepository) Create(ctx context.Context, emailLookup postgres_entity.EmailLookup) (*postgres_entity.EmailLookup, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EmailLookupRepository.Create")
+	defer spans.Finish()
 
 	emailLookup.ID = utils.GenerateRandomString(64)
 
 	err := e.gormDb.Create(&emailLookup).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to store email lookup")
 	}
 

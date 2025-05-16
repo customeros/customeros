@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/opentracing/opentracing-go"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 
@@ -29,25 +27,23 @@ func NewFlowsRepository(gormDb *gorm.DB) FlowsRepository {
 }
 
 func (f *flowRepository) Create(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowsRepository.Create")
+	defer spans.Finish()
 
 	flowRecord.ID = utils.GenerateNanoIdWithPrefix("flow", 16)
 
 	var created postgres_entity.Flows
 	err := f.gormDb.Create(&flowRecord).Scan(&created).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return &flowRecord, nil
 }
 
 func (f *flowRepository) FindAll(ctx context.Context, flowRecord postgres_entity.Flows) ([]postgres_entity.Flows, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowsRepository.FindAll")
+	defer spans.Finish()
 
 	var flows []postgres_entity.Flows
 	query := f.gormDb.Where("is_active = true")
@@ -59,7 +55,7 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord postgres_entity
 
 	err := query.Find(&flows).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -67,9 +63,8 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord postgres_entity
 }
 
 func (f *flowRepository) Find(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Find")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowsRepository.Find")
+	defer spans.Finish()
 
 	var flow postgres_entity.Flows
 	err := f.gormDb.
@@ -80,20 +75,19 @@ func (f *flowRepository) Find(ctx context.Context, flowRecord postgres_entity.Fl
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return &flow, nil
 }
 
 func (f *flowRepository) Update(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowsRepository.Update")
+	defer spans.Finish()
 
 	if flowRecord.ID == "" {
 		err := errors.New("flow ID is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -105,7 +99,7 @@ func (f *flowRepository) Update(ctx context.Context, flowRecord postgres_entity.
 		First(&updatedFlows, "id = ?", flowRecord.ID).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

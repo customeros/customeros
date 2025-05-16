@@ -1,10 +1,9 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -25,9 +24,8 @@ func NewTenantWebhookRepo(db *gorm.DB) *TenantWebhookRepo {
 }
 
 func (r *TenantWebhookRepo) GetWebhook(ctx context.Context, tenant, event string) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantWebhookRepo.GetWebhook")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TenantWebhookRepo.GetWebhook")
+	defer spans.Finish()
 
 	var webhookEntity postgres_entity.TenantWebhook
 	err := r.db.
@@ -48,9 +46,8 @@ func (r *TenantWebhookRepo) GetWebhook(ctx context.Context, tenant, event string
 }
 
 func (r *TenantWebhookRepo) GetWebhooks(ctx context.Context, tenant string) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantWebhookRepo.GetWebhooks")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TenantWebhookRepo.GetWebhooks")
+	defer spans.Finish()
 
 	var webhookEntity postgres_entity.TenantWebhook
 	err := r.db.
@@ -65,9 +62,8 @@ func (r *TenantWebhookRepo) GetWebhooks(ctx context.Context, tenant string) help
 }
 
 func (r *TenantWebhookRepo) CreateWebhook(ctx context.Context, webhook postgres_entity.TenantWebhook) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantWebhookRepo.CreateWebhook")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "TenantWebhookRepo.CreateWebhook")
+	defer spans.Finish()
 
 	webhookEntity := postgres_entity.TenantWebhook{
 		TenantName:      webhook.TenantName,

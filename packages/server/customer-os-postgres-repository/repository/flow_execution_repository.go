@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 )
 
@@ -25,13 +24,12 @@ func NewFlowExecutionRepository(gormDb *gorm.DB) FlowExecutionRepository {
 }
 
 func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowExecutionRepository.Create")
+	defer spans.Finish()
 
 	err := f.gormDb.Create(&executionRecord).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -39,9 +37,8 @@ func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord po
 }
 
 func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Find")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowExecutionRepository.Find")
+	defer spans.Finish()
 
 	var foundRecord postgres_entity.FlowExecution
 	err := f.gormDb.
@@ -51,36 +48,34 @@ func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord post
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return &foundRecord, nil
 }
 
 func (f *flowExecutionRepository) FindAll(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*[]postgres_entity.FlowExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowExecutionRepository.FindAll")
+	defer spans.Finish()
 
 	var records []postgres_entity.FlowExecution
 	err := f.gormDb.
 		Where(&executionRecord).
 		Find(&records).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return &records, nil
 }
 
 func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowExecutionRepository.Update")
+	defer spans.Finish()
 
 	if executionRecord.ID == "" {
 		err := errors.New("flow execution ID is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -92,7 +87,7 @@ func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord po
 		First(&updatedRecord, "id = ?", executionRecord.ID).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

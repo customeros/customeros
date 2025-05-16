@@ -2,10 +2,9 @@ package postgres_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -24,15 +23,14 @@ func NewEmailTrackingRepository(gormDb *gorm.DB) EmailTrackingRepository {
 }
 
 func (e emailTrackingRepository) Register(ctx context.Context, emailTracking postgres_entity.EmailTracking) (*postgres_entity.EmailTracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Register")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "emailTracking", emailTracking)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EmailTrackingRepository.Register")
+	defer spans.Finish()
+	spans.LogObjectAsJson("emailTracking", emailTracking)
 
 	err := e.gormDb.Create(&emailTracking).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to store email lookup")
 	}
 
@@ -40,14 +38,13 @@ func (e emailTrackingRepository) Register(ctx context.Context, emailTracking pos
 }
 
 func (e emailTrackingRepository) Update(ctx context.Context, emailTracking postgres_entity.EmailTracking) (*postgres_entity.EmailTracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EmailTrackingRepository.Update")
+	defer spans.Finish()
 
 	// Fetch the existing record
 	var existingTracking postgres_entity.EmailTracking
 	if err := e.gormDb.First(&existingTracking, "id = ?", emailTracking.ID).Error; err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to find email tracking record")
 	}
 
@@ -59,13 +56,13 @@ func (e emailTrackingRepository) Update(ctx context.Context, emailTracking postg
 
 	err := e.gormDb.Model(&existingTracking).Updates(updates).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to update email tracking")
 	}
 
 	// Refresh the struct with updated data
 	if err := e.gormDb.First(&existingTracking, existingTracking.ID).Error; err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "failed to refresh email tracking data")
 	}
 

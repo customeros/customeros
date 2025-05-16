@@ -1,10 +1,9 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -23,10 +22,10 @@ func NewUserWorkingScheduleRepository(gormDb *gorm.DB) UserWorkingScheduleReposi
 }
 
 func (repo *userWorkingScheduleRepositoryImpl) GetForUser(ctx context.Context, tenant, userId string) ([]*postgres_entity.UserWorkingSchedule, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWorkingScheduleRepository.GetForUser")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("tenant", tenant, "userId", userId)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "UserWorkingScheduleRepository.GetForUser")
+	defer spans.Finish()
+
+	spans.LogKV("tenant", tenant, "userId", userId)
 
 	var e []*postgres_entity.UserWorkingSchedule
 	err := repo.gormDb.Where("tenant = ? and user_id = ?", tenant, userId).Find(&e).Error
@@ -34,7 +33,7 @@ func (repo *userWorkingScheduleRepositoryImpl) GetForUser(ctx context.Context, t
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -42,17 +41,17 @@ func (repo *userWorkingScheduleRepositoryImpl) GetForUser(ctx context.Context, t
 }
 
 func (repo *userWorkingScheduleRepositoryImpl) Store(ctx context.Context, tenant string, input *postgres_entity.UserWorkingSchedule) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWorkingScheduleRepository.Store")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "UserWorkingScheduleRepository.Store")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("input", input)
 
 	input.Tenant = tenant
 	input.CreatedAt = utils.Now()
 
 	err := repo.gormDb.Save(&input).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
