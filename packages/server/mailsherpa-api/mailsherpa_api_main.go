@@ -8,7 +8,6 @@ import (
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -33,7 +32,7 @@ func main() {
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
-	defer tracing.RecoverAndLogToJaeger(appLogger)
+	defer telemetry.RecoveryWithTelemetry(appLogger)
 
 	ctx := context.Background()
 

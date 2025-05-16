@@ -2,13 +2,12 @@ package route
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/config"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/logger"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/model"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/service"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
@@ -27,11 +26,11 @@ func healthCheckHandler(c *gin.Context) {
 
 func validateEmail(ctx context.Context, r *gin.Engine, services *service.Services, cfg *config.Config, l logger.Logger) {
 	r.POST("/validateEmail",
-		tracing.TracingEnhancer(ctx, "POST /validateEmail"),
+		RestTracingEnhancer(ctx, "POST /validateEmail"),
 		security.ApiKeyCheckerHTTP(services.PostgresRepositories.TenantWebhookApiKeyRepository, cfg.AppKey, security.WithCache(services.Cache)),
 		func(c *gin.Context) {
-			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ValidateEmailV2")
-			defer span.Finish()
+			spans, ctx := telemetry.StartRestSpan(c.Request.Context(), "ValidateEmailV2")
+			defer spans.Finish()
 
 			var request model.ValidateEmailRequestWithOptions
 
@@ -43,11 +42,11 @@ func validateEmail(ctx context.Context, r *gin.Engine, services *service.Service
 				})
 				return
 			}
-			tracing.LogObjectAsJson(span, "request", request)
+			spans.LogObjectAsJson("request", request)
 
 			// check email is present
 			if request.Email == "" {
-				tracing.TraceErr(span, errors.New("Missing email parameter"))
+				spans.TraceError(errors.New("Missing email parameter"))
 				l.Errorf("Missing email parameter")
 				c.JSON(http.StatusBadRequest, model.ValidateEmailResponse{
 					Status:  "error",
@@ -55,11 +54,11 @@ func validateEmail(ctx context.Context, r *gin.Engine, services *service.Service
 				})
 				return
 			}
-			span.SetTag("email", request.Email)
+			spans.TagString("email", request.Email)
 
 			emailValidationData, err := services.MailsherpaService.ValidateEmailWithMailSherpa(ctx, request.Email)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				l.Errorf("Error on : %v", err.Error())
 				c.JSON(http.StatusInternalServerError, model.ValidateEmailResponse{
 					Status:          "error",
@@ -69,7 +68,7 @@ func validateEmail(ctx context.Context, r *gin.Engine, services *service.Service
 				return
 			}
 
-			tracing.LogObjectAsJson(span, "output", emailValidationData)
+			spans.LogObjectAsJson("output", emailValidationData)
 			c.JSON(http.StatusOK, model.ValidateEmailResponse{
 				Status: "success",
 				Data:   emailValidationData,
