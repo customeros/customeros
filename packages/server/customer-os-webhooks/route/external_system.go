@@ -10,13 +10,12 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/gin-gonic/gin"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
+	"github.com/gin-gonic/gin"
 )
 
 func AddExternalSystemRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {

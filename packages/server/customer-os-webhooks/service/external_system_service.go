@@ -7,11 +7,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
@@ -41,10 +39,10 @@ func NewExternalSystemService(log logger.Logger, repositories *repository.Reposi
 }
 
 func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant, externalSystem string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.MergeExternalSystem")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemService.MergeExternalSystem")
 	defer spans.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem))
+	spans.TagString(telemetry.SpanTagExternalSystem, externalSystem)
+	spans.LogKV("externalSystem", externalSystem)
 
 	if externalSystem == "" {
 		return nil
@@ -53,7 +51,7 @@ func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant,
 	if !s.caches.CheckExternalSystem(tenant, externalSystem) {
 		err := s.services.CommonServices.ExternalSystemService.MergeExternalSystem(ctx, tenant, externalSystem)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		s.caches.AddExternalSystem(tenant, externalSystem)
@@ -62,18 +60,19 @@ func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant,
 }
 
 func (s *externalSystemService) SyncExternalSystem(ctx context.Context, externalSystemInput model.ExternalSystemData) (SyncResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "externalSystemService.SyncExternalSystem")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "externalSystemService.SyncExternalSystem")
 	defer spans.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans.TagString(telemetry.SpanTagExternalSystem, externalSystemInput.ExternalSystem)
+	spans.LogKV("externalSystem", externalSystemInput.ExternalSystem)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
-		tracing.TraceErr(span, errors.ErrTenantNotValid)
+		spans.TraceError(errors.ErrTenantNotValid)
 		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	if externalSystemInput.ExternalSystem == "" {
-		tracing.TraceErr(span, errors.ErrMissingExternalSystem)
+		spans.TraceError(errors.ErrMissingExternalSystem)
 		return SyncResult{}, errors.ErrMissingExternalSystem
 	}
 
@@ -87,10 +86,11 @@ func (s *externalSystemService) SyncExternalSystem(ctx context.Context, external
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, externalSystemInput.ExternalSystem)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err, log.String("externalSystem", externalSystemInput.ExternalSystem))
+		spans.TraceError(err)
+		spans.LogKV("externalSystem", externalSystemInput.ExternalSystem)
 		reason := fmt.Sprintf("failed merging external system %s for tenant %s :%s", externalSystemInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
-		span.LogFields(log.String("result", "failed"))
+		spans.LogKV("result", "failed")
 		statuses = append(statuses, NewFailedSyncStatus(reason))
 	}
 	if !failedSync {
@@ -99,7 +99,8 @@ func (s *externalSystemService) SyncExternalSystem(ctx context.Context, external
 			err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.SetProperty(ctx, tenant, externalSystemInput.ExternalSystem, neo4jentity.PropertyExternalSystemStripePaymentMethodTypes, externalSystemInput.PaymentMethodTypes)
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("externalSystem", externalSystemInput.ExternalSystem))
+				spans.TraceError(err)
+				spans.LogKV("externalSystem", externalSystemInput.ExternalSystem)
 				reason = fmt.Sprintf("failed setting stripe payment method types for tenant %s :%s", tenant, err.Error())
 				s.log.Error(reason)
 			}
@@ -107,10 +108,10 @@ func (s *externalSystemService) SyncExternalSystem(ctx context.Context, external
 	}
 
 	if !failedSync {
-		span.LogFields(log.String("result", "success"))
+		spans.LogKV("result", "success")
 		statuses = append(statuses, NewSuccessfulSyncStatus())
 	} else {
-		span.LogFields(log.String("result", "failed"))
+		spans.LogKV("result", "failed")
 		statuses = append(statuses, NewFailedSyncStatus(reason))
 	}
 

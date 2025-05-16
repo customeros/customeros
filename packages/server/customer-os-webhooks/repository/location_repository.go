@@ -3,13 +3,11 @@ package repository
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type LocationRepository interface {
@@ -32,10 +30,10 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 }
 
 func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx context.Context, organizationId, externalSystem string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetMatchedLocationIdForOrganizationBySource")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationRepository.GetMatchedLocationIdForOrganizationBySource")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.String("externalSystem", externalSystem))
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("externalSystem", externalSystem)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Organization {id:$organizationId})-[:ASSOCIATED_WITH]->(l:Location {source:$source})-[:LOCATION_BELONGS_TO_TENANT]->(t)
 				RETURN l.id limit 1`
@@ -44,7 +42,8 @@ func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx con
 		"source":         externalSystem,
 		"organizationId": organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -57,6 +56,7 @@ func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx con
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return "", err
 	}
 	locationIds := dbRecords.([]*db.Record)
@@ -67,10 +67,10 @@ func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx con
 }
 
 func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.Context, contactId, externalSystem string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetMatchedLocationIdForContactBySource")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationRepository.GetMatchedLocationIdForContactBySource")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("externalSystem", externalSystem))
+	spans.LogKV("contactId", contactId)
+	spans.LogKV("externalSystem", externalSystem)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Contact {id:$contactId})-[:ASSOCIATED_WITH]->(l:Location {source:$source})-[:LOCATION_BELONGS_TO_TENANT]->(t)
 				RETURN l.id limit 1`
@@ -79,7 +79,8 @@ func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.
 		"source":    externalSystem,
 		"contactId": contactId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	spans.LogKV("query", query)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -92,6 +93,7 @@ func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return "", err
 	}
 	locationIds := dbRecords.([]*db.Record)
@@ -102,13 +104,12 @@ func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.
 }
 
 func (r *locationRepository) GetById(ctx context.Context, locationId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetById")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LocationRepository.GetById")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("locationId", locationId))
+	spans.LogKV("locationId", locationId)
 
 	query := "MATCH (:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$locationId}) RETURN l"
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -122,6 +123,7 @@ func (r *locationRepository) GetById(ctx context.Context, locationId string) (*d
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil

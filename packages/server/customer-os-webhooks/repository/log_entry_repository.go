@@ -3,13 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type LogEntryRepository interface {
@@ -30,16 +28,16 @@ func NewLogEntryRepository(driver *neo4j.DriverWithContext) LogEntryRepository {
 }
 
 func (r *logEntryRepository) GetById(parentCtx context.Context, tenant, logEntryId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "LogEntryRepository.GetById")
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "LogEntryRepository.GetById")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("logEntryId", logEntryId))
+	spans.LogKV("logEntryId", logEntryId)
 
 	query := fmt.Sprintf(`MATCH (log:LogEntry_%s {id:$logEntryId}) RETURN log`, tenant)
 	params := map[string]any{
 		"logEntryId": logEntryId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	spans.LogKV("query", query)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -55,16 +53,16 @@ func (r *logEntryRepository) GetById(parentCtx context.Context, tenant, logEntry
 }
 
 func (r *logEntryRepository) GetMatchedLogEntryId(ctx context.Context, tenant, externalSystem, externalId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryRepository.GetMatchedLogEntryId")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "LogEntryRepository.GetMatchedLogEntryId")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId))
+	spans.LogKV("externalSystem", externalSystem)
+	spans.LogKV("externalId", externalId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (e)<-[:IS_LINKED_WITH {externalId:$logEntryExternalId}]-(l:LogEntry)
 				WITH l WHERE l is not null
 				return l.id order by l.createdAt limit 1`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -82,6 +80,7 @@ func (r *logEntryRepository) GetMatchedLogEntryId(ctx context.Context, tenant, e
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return "", err
 	}
 	noteIDs := dbRecords.([]*db.Record)

@@ -19,13 +19,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
@@ -415,9 +413,8 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 // check if the email is a reply to an email sent by mailstack
 // if it is, mark the flow participant as GOAL_ACHIEVED
 func processMailstackReply(ctx context.Context, services *service.Services, tenant string, input model.PostmarkEmailWebhookData, slackChannelUrl string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processMailstackReply")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventService.processMailstackReply")
 	defer spans.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	inReplyTo, err := getInReplyTo(input)
 	if err != nil {

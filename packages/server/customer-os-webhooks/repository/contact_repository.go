@@ -2,13 +2,12 @@ package repository
 
 import (
 	"context"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ContactRepository interface {
@@ -37,13 +36,12 @@ func NewContactRepository(driver *neo4j.DriverWithContext, database string) Cont
 }
 
 func (r *contactRepository) GetById(parentCtx context.Context, tenant, contactId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "ContactRepository.GetById")
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "ContactRepository.GetById")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId))
+	spans.LogKV("contactId", contactId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}) RETURN c`
-	span.LogFields(log.String("query", query))
+	spans.LogKV("query", query)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -57,16 +55,18 @@ func (r *contactRepository) GetById(parentCtx context.Context, tenant, contactId
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return nil, err
 	}
 	return dbRecord.(*dbtype.Node), err
 }
 
 func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant, externalSystem, externalId string, emails []string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetMatchedContactId")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetMatchedContactId")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId), log.Object("emails", emails))
+	spans.LogKV("externalSystem", externalSystem)
+	spans.LogKV("externalId", externalId)
+	spans.LogObjectAsJson("emails", emails)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -84,7 +84,8 @@ func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant, ext
 		"contactExternalId": externalId,
 		"emails":            emails,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	spans.LogKV("query", query)
+	spans.LogObjectAsJson("params", params)
 
 	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -104,9 +105,9 @@ func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant, ext
 }
 
 func (r *contactRepository) GetContactIdById(ctx context.Context, tenant, id string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactIdById")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetContactIdById")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans.LogKV("contactId", id)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
 				return c.id order by c.createdAt`
@@ -131,9 +132,10 @@ func (r *contactRepository) GetContactIdById(ctx context.Context, tenant, id str
 }
 
 func (r *contactRepository) GetContactIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactIdByExternalId")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetContactIdByExternalId")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans.LogKV("externalId", externalId)
+	spans.LogKV("externalSystemId", externalSystemId)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
@@ -160,9 +162,10 @@ func (r *contactRepository) GetContactIdByExternalId(ctx context.Context, tenant
 }
 
 func (r *contactRepository) GetJobRoleId(ctx context.Context, tenant, contactId, organizationId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetJobRoleId")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "ContactRepository.GetJobRoleId")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans.LogKV("contactId", contactId)
+	spans.LogKV("organizationId", organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
 				MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -173,7 +176,8 @@ func (r *contactRepository) GetJobRoleId(ctx context.Context, tenant, contactId,
 		"contactId":      contactId,
 		"organizationId": organizationId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)

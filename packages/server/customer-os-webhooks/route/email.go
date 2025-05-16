@@ -6,14 +6,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 func AddEmailRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services) {

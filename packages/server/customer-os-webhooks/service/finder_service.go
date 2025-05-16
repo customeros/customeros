@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-webhooks/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type FinderService interface {
@@ -30,11 +29,10 @@ func NewFinderService(log logger.Logger, repositories *repository.Repositories, 
 }
 
 func (s *finderService) FindReferencedEntityId(ctx context.Context, externalSystemId string, referencedEntity model.ReferencedEntity) (id string, label string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FinderService.FindReferencedEntityId")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "FinderService.FindReferencedEntityId")
 	defer spans.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystemId))
-	span.LogFields(log.Object("referencedEntity", referencedEntity))
+	spans.TagString(telemetry.SpanTagExternalSystem, externalSystemId)
+	spans.LogObjectAsJson("referencedEntity", referencedEntity)
 
 	id = ""
 	label = ""

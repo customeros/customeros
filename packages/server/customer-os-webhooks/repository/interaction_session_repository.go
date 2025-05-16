@@ -3,12 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type InteractionSessionRepository interface {
@@ -31,9 +30,9 @@ func NewInteractionSessionRepository(driver *neo4j.DriverWithContext, database s
 }
 
 func (r *interactionSessionRepository) GetInteractionSessionIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.GetInteractionSessionIdByExternalId")
+	spans, ctx := telemetry.StartNeo4jSpan(ctx, "InteractionSessionRepository.GetInteractionSessionIdByExternalId")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	spans.LogKV("externalSystemId", externalSystemId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (is:InteractionSession_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
@@ -43,7 +42,8 @@ func (r *interactionSessionRepository) GetInteractionSessionIdByExternalId(ctx c
 		"externalId":       externalId,
 		"externalSystemId": externalSystemId,
 	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -62,17 +62,16 @@ func (r *interactionSessionRepository) GetInteractionSessionIdByExternalId(ctx c
 }
 
 func (r *interactionSessionRepository) GetById(parentCtx context.Context, tenant, interactionSessionId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "InteractionSessionRepository.GetById")
+	spans, ctx := telemetry.StartNeo4jSpan(parentCtx, "InteractionSessionRepository.GetById")
 	defer spans.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("interactionSessionId", interactionSessionId))
+	spans.LogKV("interactionSessionId", interactionSessionId)
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionSession {id:$interactionSessionId}) WHERE i:InteractionSession_%s RETURN i`, tenant)
 	params := map[string]any{
 		"interactionSessionId": interactionSessionId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
+	spans.LogKV("cypher", cypher)
+	spans.LogObjectAsJson("params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -82,6 +81,7 @@ func (r *interactionSessionRepository) GetById(parentCtx context.Context, tenant
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
+		spans.TraceError(err)
 		return nil, err
 	}
 	return dbRecord.(*dbtype.Node), err

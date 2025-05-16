@@ -15,7 +15,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/opentracing/opentracing-go/ext"
+	opentracinglog "github.com/opentracing/opentracing-go/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -57,12 +58,14 @@ const (
 
 // Span tag constants
 const (
-	SpanTagTenant    = "tenant"
-	SpanTagUserId    = "user.id"
-	SpanTagUserEmail = "user.email"
-	SpanTagEntityId  = "entity.id"
-	SpanTagEventType = "event.type"
-	SpanTagAppSource = "app.source"
+	SpanTagTenant         = "tenant"
+	SpanTagUserId         = "user.id"
+	SpanTagUserEmail      = "user.email"
+	SpanTagEntityId       = "entity.id"
+	SpanTagEventType      = "event.type"
+	SpanTagAppSource      = "app.source"
+	SpanTagExternalSystem = "external.system"
+	SpanTagExternalId     = "external.id"
 )
 
 // Context keys
@@ -499,7 +502,7 @@ func (s *Spans) TagTenant(tenant string) {
 }
 
 // Logging Methods
-func (s *Spans) LogFields(fields ...log.Field) {
+func (s *Spans) LogFields(fields ...opentracinglog.Field) {
 	if s == nil {
 		return
 	}
@@ -624,21 +627,21 @@ func (s *Spans) LogObjectAsJson(key string, obj interface{}) {
 	}
 }
 
-func LogError(ctx context.Context, err error, fields ...log.Field) {
+func LogError(ctx context.Context, err error, fields ...opentracinglog.Field) {
 	// Log to Jaeger
 	jaegerSpan := opentracing.SpanFromContext(ctx)
 	if jaegerSpan != nil {
 		// Add standard error fields
-		errorFields := []log.Field{
-			log.Error(err),
-			log.String("event", "error"),
-			log.String("time", time.Now().Format(time.RFC3339)),
+		errorFields := []opentracinglog.Field{
+			opentracinglog.Error(err),
+			opentracinglog.String("event", "error"),
+			opentracinglog.String("time", time.Now().Format(time.RFC3339)),
 		}
 
 		// Add OpenTelemetry specific fields
-		otelFields := []log.Field{
-			log.String("otel.status_code", "error"),
-			log.String("otel.status_message", err.Error()),
+		otelFields := []opentracinglog.Field{
+			opentracinglog.String("otel.status_code", "error"),
+			opentracinglog.String("otel.status_message", err.Error()),
 		}
 
 		// Combine all fields
@@ -658,20 +661,20 @@ func LogError(ctx context.Context, err error, fields ...log.Field) {
 	}
 }
 
-func LogInfo(ctx context.Context, msg string, fields ...log.Field) {
+func LogInfo(ctx context.Context, msg string, fields ...opentracinglog.Field) {
 	// Log to Jaeger
 	jaegerSpan := opentracing.SpanFromContext(ctx)
 	if jaegerSpan != nil {
 		// Add standard info fields
-		infoFields := []log.Field{
-			log.String("event", "info"),
-			log.String("message", msg),
-			log.String("time", time.Now().Format(time.RFC3339)),
+		infoFields := []opentracinglog.Field{
+			opentracinglog.String("event", "info"),
+			opentracinglog.String("message", msg),
+			opentracinglog.String("time", time.Now().Format(time.RFC3339)),
 		}
 
 		// Add OpenTelemetry specific fields
-		otelFields := []log.Field{
-			log.String("otel.status_code", "ok"),
+		otelFields := []opentracinglog.Field{
+			opentracinglog.String("otel.status_code", "ok"),
 		}
 
 		// Combine all fields
@@ -690,20 +693,20 @@ func LogInfo(ctx context.Context, msg string, fields ...log.Field) {
 	}
 }
 
-func LogDebug(ctx context.Context, msg string, fields ...log.Field) {
+func LogDebug(ctx context.Context, msg string, fields ...opentracinglog.Field) {
 	// Log to Jaeger
 	jaegerSpan := opentracing.SpanFromContext(ctx)
 	if jaegerSpan != nil {
 		// Add standard debug fields
-		debugFields := []log.Field{
-			log.String("event", "debug"),
-			log.String("message", msg),
-			log.String("time", time.Now().Format(time.RFC3339)),
+		debugFields := []opentracinglog.Field{
+			opentracinglog.String("event", "debug"),
+			opentracinglog.String("message", msg),
+			opentracinglog.String("time", time.Now().Format(time.RFC3339)),
 		}
 
 		// Add OpenTelemetry specific fields
-		otelFields := []log.Field{
-			log.String("otel.status_code", "ok"),
+		otelFields := []opentracinglog.Field{
+			opentracinglog.String("otel.status_code", "ok"),
 		}
 
 		// Combine all fields
@@ -732,9 +735,9 @@ func TagError(span opentracing.Span, err error) {
 		span.SetTag("otel.status_message", err.Error())
 
 		span.LogFields(
-			log.Error(err),
-			log.String("event", "error"),
-			log.String("time", time.Now().Format(time.RFC3339)),
+			opentracinglog.Error(err),
+			opentracinglog.String("event", "error"),
+			opentracinglog.String("time", time.Now().Format(time.RFC3339)),
 		)
 	}
 }
@@ -785,10 +788,10 @@ func RecoverAndLog(ctx context.Context, spans *Spans, logger logger.Logger) {
 			spans.Jaeger.SetTag("error", true)
 			spans.Jaeger.SetTag("event", "panic")
 			spans.Jaeger.LogFields(
-				log.Error(fmt.Errorf("panic: %v", r)),
-				log.String("event", "panic"),
-				log.String("time", time.Now().Format(time.RFC3339)),
-				log.String("stack", stack),
+				opentracinglog.Error(fmt.Errorf("panic: %v", r)),
+				opentracinglog.String("event", "panic"),
+				opentracinglog.String("time", time.Now().Format(time.RFC3339)),
+				opentracinglog.String("stack", stack),
 			)
 		}
 
@@ -885,8 +888,8 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 		// Log to Jaeger
 		if jaegerSpan != nil {
 			jaegerSpan.LogFields(
-				log.String("request.header.key", key),
-				log.Object("request.header.value", values),
+				opentracinglog.String("request.header.key", key),
+				opentracinglog.Object("request.header.value", values),
 			)
 		}
 		// Log to OpenTelemetry
@@ -986,5 +989,82 @@ func TraceErrorOnActiveSpan(ctx context.Context, err error) {
 			attribute.String("event", "error"),
 			attribute.String("time", time.Now().Format(time.RFC3339)),
 		)
+	}
+}
+
+// RecoveryWithTelemetry creates a gin middleware that recovers from panics and logs them to both Jaeger and OpenTelemetry
+func RecoveryWithTelemetry(log logger.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if r := recover(); r != nil {
+				// Get the current spans from context or create new ones
+				var spans *Spans
+
+				// Try to get existing spans from context
+				if existingSpan := opentracing.SpanFromContext(c.Request.Context()); existingSpan != nil {
+					// Create spans struct with existing Jaeger span
+					spans = &Spans{
+						Jaeger: existingSpan,
+					}
+				} else {
+					// Create new spans if none exist
+					spans, _ = StartSpan(context.Background(), "panic-recovery", WithNewRoot())
+				}
+
+				// Get detailed stack trace
+				stack := string(debug.Stack())
+
+				// Log to OpenTelemetry
+				if spans.OTel != nil {
+					spans.OTel.RecordError(fmt.Errorf("panic: %v", r))
+					spans.OTel.SetStatus(codes.Error, fmt.Sprintf("panic: %v", r))
+					spans.OTel.SetAttributes(
+						attribute.String("event", "panic"),
+						attribute.String("error", fmt.Sprintf("%v", r)),
+						attribute.String("time", time.Now().Format(time.RFC3339)),
+						attribute.String("http.url", c.Request.URL.String()),
+						attribute.String("http.method", c.Request.Method),
+						attribute.Int("http.status_code", 500),
+					)
+					// Log stack trace as an event
+					spans.OTel.AddEvent("panic.stack", trace.WithAttributes(
+						attribute.String("stack", stack),
+					))
+				}
+
+				// Log to Jaeger
+				if spans.Jaeger != nil {
+					spans.Jaeger.SetTag("error", true)
+					spans.Jaeger.SetTag("event", "panic")
+					spans.Jaeger.LogFields(
+						opentracinglog.Error(fmt.Errorf("panic: %v", r)),
+						opentracinglog.String("event", "panic"),
+						opentracinglog.String("time", time.Now().Format(time.RFC3339)),
+						opentracinglog.String("stack", stack),
+						opentracinglog.String("http.url", c.Request.URL.String()),
+						opentracinglog.String("http.method", c.Request.Method),
+					)
+					// Set HTTP tags
+					ext.HTTPUrl.Set(spans.Jaeger, c.Request.URL.String())
+					ext.HTTPMethod.Set(spans.Jaeger, c.Request.Method)
+					ext.HTTPStatusCode.Set(spans.Jaeger, 500)
+				}
+
+				// Log to application logger
+				log.Errorf("[Panic Recovery] Error: %v\nStack trace:\n%s\nPath: %s\nMethod: %s",
+					r,
+					stack,
+					c.Request.URL.Path,
+					c.Request.Method,
+				)
+
+				// Finish spans
+				spans.Finish()
+
+				// Let the chain continue to allow other recovery handlers to process the panic
+				panic(r)
+			}
+		}()
+		c.Next()
 	}
 }
