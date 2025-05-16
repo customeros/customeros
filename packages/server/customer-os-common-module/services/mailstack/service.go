@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"log"
 	"net/http"
 	"net/url"
@@ -284,18 +285,17 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 }
 
 func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, domain string, request interfaces.CreateMailboxRequest) (int, string, *interfaces.MailboxRecord, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackService.RegisterMailbox")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("request.domain", domain)
-	tracing.LogObjectAsJson(span, "request.request", request)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MailstackService.RegisterMailbox")
+	defer spans.Finish()
+	spans.LogKV("request.domain", domain)
+	spans.LogObjectAsJson("request.request", request)
 
 	// Get user ID from linked email
 	var userId string
 	if request.LinkedUserEmail != "" {
 		userDbNode, err := s.neo4j.UserReadRepository.GetFirstUserByEmail(ctx, tenant, request.LinkedUserEmail)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error finding linked user"))
+			spans.TraceError(errors.Wrap(err, "Error finding linked user"))
 			return http.StatusInternalServerError, "Error finding linked user for linked email", nil, err
 		}
 		if userDbNode != nil {
@@ -339,12 +339,8 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 	mailstackReq.Header.Set("X-CUSTOMER-OS-API-KEY", s.cfg.Internal.MailstackApiConfig.ApiKey)
 	mailstackReq.Header.Set("tenant", tenant)
 
-	// Forward Jaeger trace context
-	carrier := opentracing.HTTPHeadersCarrier(mailstackReq.Header)
-	err = opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier)
-	if err != nil {
-		span.LogFields(tracingLog.Error(err))
-	}
+	// Inject span context into the HTTP request
+	mailstackReq = telemetry.InjectSpanContextIntoHTTPRequest(mailstackReq, spans)
 
 	// Create HTTP client with default transport and timeout
 	client := &http.Client{
@@ -367,7 +363,7 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 		if err := json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
 			errorResponse.Error = "Unknown error occurred"
 		}
-		tracing.TraceErr(span, errors.New(errorResponse.Error))
+		spans.TraceError(errors.New(errorResponse.Error))
 
 		// For 500 errors, use a generic message
 		if resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusUnauthorized {
@@ -397,14 +393,14 @@ func (s *mailstackService) RegisterMailbox(ctx context.Context, tenant string, d
 	}
 	_, err = s.email.Merge(ctx, nil, tenant, emailFields, linkWith)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating email node"))
+		spans.TraceError(errors.Wrap(err, "Error creating email node"))
 		return http.StatusInternalServerError, "Internal server error", nil, err
 	}
 
 	// Publish fanout event to provision mailbox
 	err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxRecord.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error publishing mailbox provision event"))
+		spans.TraceError(errors.Wrap(err, "Error publishing mailbox provision event"))
 	}
 
 	return http.StatusOK, "", &mailboxRecord, nil

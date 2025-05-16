@@ -3,6 +3,7 @@ package api_contract
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -60,10 +61,9 @@ type ContractCreateData struct {
 }
 
 func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_interfaces.ContractCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "contractDetails", contractDetails)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.Create")
+	defer spans.Finish()
+	spans.LogObjectAsJson("contractDetails", contractDetails)
 
 	contractDataFields := data_fields.ContractSaveFields{
 		OrganizationId:         &contractDetails.Input.OrganizationID,
@@ -139,7 +139,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_in
 		// if not provided, get default currency from tenant settings
 		tenantSettingsEntity, err := s.tenantSettings.GetTenantSettings(ctx)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 		if tenantSettingsEntity.BaseCurrency.String() != "" {
@@ -149,7 +149,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_in
 
 	tenantBillingProfileEntity, err := s.tenantSettings.GetDefaultTenantBillingProfile(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	if tenantBillingProfileEntity != nil {
@@ -169,20 +169,19 @@ func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_in
 
 	contractId, err := s.contract.Save(ctx, nil, nil, contractDataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error from create contract %s", err.Error())
 		return "", err
 	}
 
-	span.LogFields(log.String("output - createdContractId", contractId))
+	spans.LogKV("result.createdContractId", contractId)
 	return contractId, nil
 }
 
 func (s *contractService) Update(ctx context.Context, input model.ContractUpdateInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.Update")
+	defer spans.Finish()
+	spans.LogObjectAsJson("input", input)
 
 	contractDataFields := data_fields.ContractSaveFields{}
 	contractDataFields.Name = input.Name
@@ -322,7 +321,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 
 	_, err := s.contract.Save(ctx, nil, &input.ContractID, contractDataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
 	}

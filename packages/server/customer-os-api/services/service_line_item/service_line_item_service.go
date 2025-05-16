@@ -3,6 +3,7 @@ package api_sli
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"math"
 	"sort"
 	"time"
@@ -50,21 +51,20 @@ func NewServiceLineItemService(
 }
 
 func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails cosapi_interfaces.ServiceLineItemCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItemService.Create")
+	defer spans.Finish()
+	spans.LogObjectAsJson("serviceLineItemDetails", serviceLineItemDetails)
 
 	// check that quantity is not negative
 	if serviceLineItemDetails.SliQuantity < 0 {
 		err := errors.New("quantity must not be negative")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 	// check that price is not negative for non-one time
 	if serviceLineItemDetails.SliPrice < 0 && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce {
 		err := errors.New("price must not be negative")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -83,7 +83,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 
 	if serviceLineItemDetails.SkuId == "" {
 		err := fmt.Errorf("sku id is required for all service line items")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -91,7 +91,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 
 	sliId, err := s.sli.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -99,15 +99,14 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 }
 
 func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_interfaces.ServiceLineItemNewVersionData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItem.NewVersion")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "serviceLineItemDetails", data)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItem.NewVersion")
+	defer spans.Finish()
+	spans.LogObjectAsJson("serviceLineItemDetails", data)
 
 	if data.Id == "" {
 		err := fmt.Errorf("(ServiceLineItemService.NewVersion) contract line item id is missing")
 		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -116,7 +115,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	// check that given id is parentId, then use latest version as base
 	serviceLineItems, err := s.sli.GetServiceLineItemsByParentId(ctx, data.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on getting service line items by parent id {%s}: %s", data.Id, err.Error())
 		return "", err
 	}
@@ -130,7 +129,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 		// if not found by parent id, treat data.id as SLI id
 		baseServiceLineItemEntity, err = s.sli.GetById(ctx, data.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error on getting contract line item by id {%s}: %s", data.Id, err.Error())
 			return "", err
 		}
@@ -138,13 +137,13 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 
 	if baseServiceLineItemEntity == nil {
 		err := fmt.Errorf("contract line item with id {%s} not found", data.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	contractEntity, err := s.contract.GetContractByServiceLineItem(ctx, baseServiceLineItemEntity.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", baseServiceLineItemEntity.ID, err.Error())
 		return "", err
 	}
@@ -155,7 +154,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	for _, sli := range *serviceLineItems {
 		if sli.Canceled {
 			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
@@ -164,7 +163,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	for _, sli := range *serviceLineItems {
 		if utils.ToDate(sli.StartedAt).Equal(startedAtDate) {
 			err = fmt.Errorf("contract line item with id {%s} already exists with the same start date {%s}", sli.ID, startedAtDate.Format(time.DateOnly))
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
@@ -181,7 +180,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 		}
 		if liveSli != nil && startedAtDate.Before(utils.ToDate(liveSli.StartedAt)) {
 			err = fmt.Errorf("cannot create new version before current active version {%s}", liveSli.StartedAt.Format(time.DateOnly))
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return "", err
 		}
 	}
@@ -189,14 +188,14 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	// Validate new version creation
 	if baseServiceLineItemEntity.Billed == neo4jenum.BilledTypeOnce {
 		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", baseServiceLineItemEntity.ID)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
 	// If contract was invoiced - do not allow creating new version before last invoiced date
 	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on checking if contract was invoiced: %s", err.Error())
 		return "", err
 	}
@@ -204,14 +203,14 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 		// get last issued invoice
 		lastInvoice, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetLastIssuedInvoiceForContract(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error on getting last issued invoice for contract {%s}: %s", contractEntity.Id, err.Error)
 		}
 		if lastInvoice != nil {
 			invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(lastInvoice)
 			if startedAtDate.Before(utils.ToDate(invoiceEntity.PeriodEndDate)) {
 				err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", baseServiceLineItemEntity.ID)
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return "", err
 			}
 		}
@@ -234,7 +233,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 
 	sliId, err := s.sli.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return "", err
 	}
 
@@ -242,29 +241,28 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 }
 
 func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDetails cosapi_interfaces.ServiceLineItemUpdateData) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItemService.Update")
+	defer spans.Finish()
+	spans.LogObjectAsJson("serviceLineItemDetails", serviceLineItemDetails)
 
 	if serviceLineItemDetails.Id == "" {
 		err := fmt.Errorf("(ServiceLineItemService.Update) contract line item id is missing")
 		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	baseServiceLineItemEntity, err := s.sli.GetById(ctx, serviceLineItemDetails.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on getting contract line item by id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
 	}
-	tracing.TagEntity(span, baseServiceLineItemEntity.ID)
+	spans.TagEntity(baseServiceLineItemEntity.ID)
 
 	contractEntity, err := s.contract.GetContractByServiceLineItem(ctx, serviceLineItemDetails.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
 	}
@@ -281,17 +279,17 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		baseServiceLineItemEntity.Comments != serviceLineItemDetails.SliComments ||
 		baseServiceLineItemEntity.Description != utils.IfNotNilString(serviceLineItemDetails.SliDescription) ||
 		(baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeNone)
-	span.LogFields(log.Bool("anyFieldChanged", anyFieldChanged))
+	spans.LogKV("anyFieldChanged", anyFieldChanged)
 
 	// If no changes recorded, return
 	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || utils.CloseToNow(startedAt) || sliIsInvoiced) {
-		span.LogFields(log.String("result", "No changes recorded"))
+		spans.LogKV("result", "No changes recorded")
 		return nil
 	}
 
 	if baseServiceLineItemEntity.Canceled {
 		err = fmt.Errorf("contract line item with id {%s} is already ended", serviceLineItemDetails.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -303,7 +301,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	// Check no SLI of the contract are cancelled
 	serviceLineItemsOfSameParent, err := s.sli.GetServiceLineItemsByParentId(ctx, baseServiceLineItemEntity.ParentID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
 		return err
 	}
@@ -323,7 +321,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			diffAbs := math.Abs(float64(diff))
 			// if diff is less than 10 min, skip update
 			if diffAbs < float64(600) {
-				span.LogFields(log.String("result", "No changes recorded, start date is close to current timestamp"))
+				spans.LogFields(log.String("result", "No changes recorded, start date is close to current timestamp"))
 				return nil
 			}
 		}
@@ -333,7 +331,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	for _, sli := range *serviceLineItemsOfSameParent {
 		if sli.Canceled {
 			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
@@ -341,13 +339,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	// check that quantity is not negative
 	if serviceLineItemDetails.SliQuantity < 0 {
 		err := errors.New("quantity must not be negative")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	// check that price is not negative for non-one time
 	if serviceLineItemDetails.SliPrice < 0 && baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
 		err := errors.New("price must not be negative")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -357,7 +355,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	}
 	if baseServiceLineItemEntity.Billed.String() != serviceLineItemDetails.SliBilledType.String() && baseServiceLineItemEntity.Billed.String() != "" {
 		err = fmt.Errorf("cannot change billing cycle for contract line item with id {%s}", serviceLineItemDetails.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -372,7 +370,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	// Do not allow changing price impacting data for invoiced SLIs
 	if isRetroactiveCorrection && priceImpactedFieldsChanged && sliIsInvoiced {
 		err = fmt.Errorf("service line item with id {%s} is included in invoice and cannot be updated", serviceLineItemDetails.Id)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -386,12 +384,12 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 		if startedAt.Before(referenceDate) {
 			err = fmt.Errorf("cannot update contract line item with id {%s} and start date before {%s}", serviceLineItemDetails.Id, referenceDate.Format(time.DateOnly))
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
 
-	span.LogFields(log.Bool("result.isRetroactiveCorrection", isRetroactiveCorrection))
+	spans.LogFields(log.Bool("result.isRetroactiveCorrection", isRetroactiveCorrection))
 
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
@@ -412,21 +410,21 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			for _, sli := range *serviceLineItemsOfSameParent {
 				if sli.ID != baseServiceLineItemEntity.ID && utils.ToDate(sli.StartedAt).Equal(startedAt) {
 					err = fmt.Errorf("Other version with the same start date {%s} already exists", startedAt.Format(time.DateOnly))
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return err
 				}
 			}
 			if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft && contractEntity.NextInvoiceDate != nil {
 				lastInvoice, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetLastIssuedInvoiceForContract(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					s.log.Errorf("Error on getting last issued invoice for contract {%s}: %s", contractEntity.Id, err.Error)
 				}
 				if lastInvoice != nil {
 					invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(lastInvoice)
 					if !startedAt.After(invoiceEntity.PeriodEndDate) {
 						err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
-						tracing.TraceErr(span, err)
+						spans.TraceError(err)
 						return err
 					}
 				}
@@ -436,7 +434,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 		_, err = s.sli.Save(ctx, nil, &serviceLineItemDetails.Id, sliDataFields)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error on updating service line item with id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 			return err
 		}
@@ -455,7 +453,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			StartedAt:   serviceLineItemDetails.StartedAt,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 	}
