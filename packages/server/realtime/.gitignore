@@ -28,6 +28,7 @@ realtime-*.tar
 
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
+/priv/protos
 
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
