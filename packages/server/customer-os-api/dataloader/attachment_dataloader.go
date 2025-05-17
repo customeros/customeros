@@ -6,11 +6,9 @@ import (
 	"reflect"
 
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 func (i *Loaders) GetAttachmentsForInteractionEvent(ctx context.Context, interactionEventId string) (*neo4j_entity.AttachmentEntities, error) {
@@ -44,16 +42,16 @@ func (i *Loaders) GetAttachmentsForContract(ctx context.Context, contractId stri
 }
 
 func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AttachmentDataLoader.getAttachmentsForInteractionEvents")
+	defer spans.Finish()
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetFor(ctx, commonModel.INTERACTION_EVENT, nil, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction events")}}
@@ -83,27 +81,27 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AttachmentDataLoader.getAttachmentsForMeetings")
+	defer spans.Finish()
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	includes := commonModel.INCLUDES
 	attachmentEntitiesPtr, err := b.attachmentService.GetFor(ctx, commonModel.MEETING, &includes, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction sessions")}}
@@ -133,26 +131,26 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *attachmentBatcher) getAttachmentsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "AttachmentDataLoader.getAttachmentsForContracts")
+	defer spans.Finish()
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetFor(ctx, commonModel.CONTRACT, nil, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for contracts")}}
@@ -182,11 +180,11 @@ func (b *attachmentBatcher) getAttachmentsForContracts(ctx context.Context, keys
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

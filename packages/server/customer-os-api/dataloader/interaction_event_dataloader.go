@@ -2,12 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
@@ -53,10 +51,11 @@ func (i *Loaders) GetInteractionEventsForInteractionEvent(ctx context.Context, i
 }
 
 func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventDataLoader.getInteractionEventsForInteractionSessions")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventDataLoader.getInteractionEventsForInteractionSessions")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -65,7 +64,7 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForInteractionSessions(ctx, ids, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for interaction sessions")}}
@@ -95,26 +94,27 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventDataLoader.getInteractionEventsForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventDataLoader.getInteractionEventsForMeetings")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForMeetings(ctx, ids, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for meetings")}}
@@ -144,20 +144,21 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventDataLoader.getInteractionEventsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventDataLoader.getInteractionEventsForIssues")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -166,7 +167,7 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForIssues(ctx, ids, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
@@ -196,26 +197,27 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventDataLoader.getReplyToInteractionEventsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionEventDataLoader.getReplyToInteractionEventsForInteractionEvents")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetReplyToInteractionsEventForInteractionEvents(ctx, ids, true)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction event participants")}}
@@ -246,11 +248,11 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

@@ -2,19 +2,17 @@ package api_calendar
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type calendarService struct {
@@ -34,10 +32,9 @@ func (s *calendarService) getDriver() neo4j.DriverWithContext {
 }
 
 func (s *calendarService) GetAllForUsers(ctx context.Context, userIds []string) (*entity.CalendarEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CalendarService.GetAllForUsers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("userIds", userIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CalendarService.GetAllForUsers")
+	defer spans.Finish()
+	spans.LogKV("userIds", userIds)
 
 	calendars, err := s.repositories.CalendarRepository.GetAllForUsers(ctx, common.GetTenantFromContext(ctx), userIds)
 	if err != nil {

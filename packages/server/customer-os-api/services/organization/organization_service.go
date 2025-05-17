@@ -12,15 +12,12 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -52,19 +49,17 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 }
 
 func (s *organizationService) CountOrganizations(ctx context.Context, tenant string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CountOrganizations")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.CountOrganizations")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	return s.repositories.Neo4jRepositories.OrganizationReadRepository.CountByTenant(ctx, tenant)
 }
 
 func (s *organizationService) UpdateLastTouchpointByContactId(ctx context.Context, contactID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointByContactId")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.UpdateLastTouchpointByContactId")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactID", contactID))
+
+	span.LogKV("contactID", contactID)
 
 	if contactID == "" {
 		return
@@ -73,19 +68,19 @@ func (s *organizationService) UpdateLastTouchpointByContactId(ctx context.Contex
 }
 
 func (s *organizationService) ExistsById(ctx context.Context, organizationId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ExistsById")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.ExistsById")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
+
+	span.LogKV("organizationId", organizationId)
 
 	return s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, commonmodel.NodeLabelOrganization)
 }
 
 func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByCustomerOsId")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetByCustomerOsId")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("customerOsId", customerOsId))
+
+	span.LogKV("customerOsId", customerOsId)
 
 	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByCustomerOsId(ctx, common.GetTenantFromContext(ctx), customerOsId)
 	if err != nil {
@@ -99,10 +94,10 @@ func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsI
 }
 
 func (s *organizationService) GetByReferenceId(ctx context.Context, referenceId string) (*neo4jentity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByReferenceId")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetByReferenceId")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("referenceId", referenceId))
+
+	span.LogKV("referenceId", referenceId)
 
 	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByReferenceId(ctx, common.GetTenantFromContext(ctx), referenceId)
 	if err != nil {
@@ -116,15 +111,15 @@ func (s *organizationService) GetByReferenceId(ctx context.Context, referenceId 
 }
 
 func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesForOrganizations")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetSubsidiariesForOrganizations")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("parentOrganizationIds", parentOrganizationIds))
+
+	span.LogObjectAsJson("parentOrganizationIds", parentOrganizationIds)
 
 	dbEntries, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationIds, neo4jrepository.Relationship_Subsidiary)
 	if err != nil {
 		s.log.Errorf("(organizationService.GetSubsidiariesForOrganizations) Error getting linked organizations: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return nil, err
 	}
 	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbEntries))
@@ -142,38 +137,38 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 }
 
 func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string, removeExisting bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(
-		log.String("parentOrganizationId", parentOrganizationId),
-		log.String("subsidiaryOrganizationId", subsidiaryOrganizationId),
-		log.String("subsidiaryType", subsidiaryType),
-		log.Bool("removeExisting", removeExisting))
+
+	span.LogKV(
+		"parentOrganizationId", parentOrganizationId,
+		"subsidiaryOrganizationId", subsidiaryOrganizationId,
+		"subsidiaryType", subsidiaryType,
+		"removeExisting", removeExisting)
 
 	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 	if !parentExists {
 		err = fmt.Errorf("Parent organization with id {%s} not found", parentOrganizationId)
 		s.log.Errorf("%v", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 
 	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 	if !subExists {
 		err = fmt.Errorf("subsidiary organization with id {%s} not found", subsidiaryOrganizationId)
 		s.log.Errorf("%v", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 
@@ -181,7 +176,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		// fetch existing subsidiaries of the parent organization
 		existingSubsidiaries, err := s.GetSubsidiariesForOrganizations(ctx, []string{parentOrganizationId})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			span.TraceError(err)
 			s.log.Errorf("error fetching existing subsidiaries: {%v}", err.Error())
 			return err
 		}
@@ -189,7 +184,7 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 			if subsidiary.ID != subsidiaryOrganizationId {
 				err = s.RemoveSubsidiary(ctx, parentOrganizationId, subsidiary.ID)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					span.TraceError(err)
 					s.log.Errorf("error removing existing subsidiary: {%v}", err.Error())
 				}
 			}
@@ -198,62 +193,62 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 
 	err = s.organization.AddParentOrganization(ctx, nil, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("error adding parent organization: {%v}", err.Error())
 	}
 	return err
 }
 
 func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subsidiaryOrganizationId", subsidiaryOrganizationId))
+
+	span.LogKV("parentOrganizationId", parentOrganizationId, "subsidiaryOrganizationId", subsidiaryOrganizationId)
 
 	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 	if !parentExists {
 		err = fmt.Errorf("Parent organization with id {%s} not found", parentOrganizationId)
 		s.log.Errorf("%v", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 
 	subExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subsidiaryOrganizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 	if !subExists {
 		err = fmt.Errorf("sub organization with id {%s} not found", subsidiaryOrganizationId)
 		s.log.Errorf("%v", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 
 	err = s.organization.RemoveParentOrganization(ctx, nil, parentOrganizationId, subsidiaryOrganizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("error removing parent organization: {%v}", err.Error())
 	}
 	return err
 }
 
 func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesOfForOrganizations")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetSubsidiariesOfForOrganizations")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	span.LogObjectAsJson("organizationIds", organizationIds)
 
 	dbEntries, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds, neo4jrepository.Relationship_Subsidiary)
 	if err != nil {
 		s.log.Errorf("(organizationService.GetSubsidiariesOfForOrganizations) Error getting linked parent organizations: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return nil, err
 	}
 	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(dbEntries))
@@ -267,10 +262,9 @@ func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Cont
 }
 
 func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organizationID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpoint")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.UpdateLastTouchpoint")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID))
+	span.LogKV("organizationID", organizationID)
 
 	if organizationID == "" {
 		return
@@ -291,10 +285,9 @@ func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(
 }
 
 func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForSlackChannels")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetOrganizationsForSlackChannels")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
+	span.LogObjectAsJson("slackChannelIds", slackChannelIds)
 
 	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForSlackChannels(ctx, common.GetTenantFromContext(ctx), slackChannelIds)
 	if err != nil {
@@ -310,10 +303,9 @@ func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Conte
 }
 
 func (s *organizationService) GetOrganizationsForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForOpportunities")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetOrganizationsForOpportunities")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("opportunityIds", opportunityIds))
+	span.LogObjectAsJson("opportunityIds", opportunityIds)
 
 	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
 	if err != nil {
@@ -329,15 +321,15 @@ func (s *organizationService) GetOrganizationsForOpportunities(ctx context.Conte
 }
 
 func (s *organizationService) updateLastTouchpointByContactId(ctx context.Context, contactID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByContactId")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.updateLastTouchpointByContactId")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactID", contactID))
+
+	span.LogKV("contactID", contactID)
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(ctx, common.GetTenantFromContext(ctx), contactID, 0, 1000, &utils.CypherFilter{}, &utils.CypherSort{})
 	if err != nil {
 		s.log.Errorf("(organizationService.updateLastTouchpointByContactId) Failed to get organizations for contact: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return
 	}
 	for _, dbNode := range dbNodesWithTotalCount.Nodes {
@@ -350,13 +342,12 @@ func (s *organizationService) updateLastTouchpointByContactId(ctx context.Contex
 }
 
 func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMinMaxRenewalForecastArr")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetMinMaxRenewalForecastArr")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	minArr, maxArr, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastArr(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error getting min and max renewal forecast ARR: %s", err.Error())
 		return 0, 0, err
 	}
@@ -399,14 +390,14 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 }
 
 func (s *organizationService) RemoveOwner(ctx context.Context, organizationID string) (*neo4jentity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveOwner")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.RemoveOwner")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID))
+
+	span.LogKV("organizationID", organizationID)
 
 	dbNode, err := s.repositories.OrganizationRepository.RemoveOwner(ctx, common.GetTenantFromContext(ctx), organizationID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return nil, err
 	}
 	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
@@ -447,10 +438,10 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 }
 
 func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Merge")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.Merge")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("primaryOrganizationId", primaryOrganizationId), log.String("mergedOrganizationId", mergedOrganizationId))
+
+	span.LogKV("primaryOrganizationId", primaryOrganizationId, "mergedOrganizationId", mergedOrganizationId)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -496,7 +487,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 			TargetOrgId: primaryOrganizationId,
 		})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event to RabbitMQ"))
+		span.TraceError(errors.Wrap(err, "failed to publish event to RabbitMQ"))
 	}
 
 	// Update last touchpoint
@@ -504,13 +495,13 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 
 	err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateArr(ctx, tenant, primaryOrganizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error while updating ARR for organization %s: %s", primaryOrganizationId, err.Error())
 	}
 
 	err = s.organization.UpdateRenewalSummary(ctx, primaryOrganizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error while updating renewal summary for organization %s: %s", primaryOrganizationId, err.Error())
 	}
 
@@ -563,10 +554,10 @@ func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Contex
 }
 
 func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForJobRoles")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetOrganizationsForJobRoles")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("jobRoleIds", jobRoleIds))
+
+	span.LogObjectAsJson("jobRoleIds", jobRoleIds)
 
 	organizations, err := s.repositories.OrganizationRepository.GetAllForJobRoles(ctx, common.GetTenantFromContext(ctx), jobRoleIds)
 	if err != nil {
@@ -582,14 +573,14 @@ func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, j
 }
 
 func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSuggestedMergeToForOrganizations")
+	span, ctx := telemetry.StartServiceSpan(ctx, "OrganizationService.GetSuggestedMergeToForOrganizations")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	span.LogObjectAsJson("organizationIds", organizationIds)
 
 	dbEntries, err := s.repositories.OrganizationRepository.GetSuggestedMergePrimaryOrganizations(ctx, organizationIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error getting suggested merge primary organizations: {%v}", err.Error())
 		return nil, err
 	}

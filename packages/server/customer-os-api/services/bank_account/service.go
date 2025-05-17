@@ -6,11 +6,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 )
 
@@ -27,13 +25,12 @@ func NewBankAccountService(log logger.Logger, repository *repository.Repositorie
 }
 
 func (s *bankAccountService) GetTenantBankAccounts(ctx context.Context) (*neo4jentity.BankAccountEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.GetTenantBankAccounts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "BankAccountService.GetTenantBankAccounts")
+	defer spans.Finish()
 
 	dbNodes, err := s.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccounts(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, fmt.Errorf("GetTenantBankAccounts: %s", err.Error())
 	}
 
@@ -46,14 +43,13 @@ func (s *bankAccountService) GetTenantBankAccounts(ctx context.Context) (*neo4je
 }
 
 func (s *bankAccountService) GetTenantBankAccount(ctx context.Context, id string) (*neo4jentity.BankAccountEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BankAccountService.GetTenantBankAccount")
+	span, ctx := telemetry.StartServiceSpan(ctx, "BankAccountService.GetTenantBankAccount")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("bankAccountId", id))
+	span.LogKV("bankAccountId", id)
 
 	dbNode, err := s.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccountById(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return nil, fmt.Errorf("GetTenantBankAccount: %s", err.Error())
 	}
 

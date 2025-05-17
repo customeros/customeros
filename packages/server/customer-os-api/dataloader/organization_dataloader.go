@@ -4,12 +4,10 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -148,16 +146,17 @@ func (i *Loaders) GetLatestOrganizationWithJobRoleForContact(ctx context.Context
 }
 
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntitiesPtr, err := b.organizationService.GetOrganizationsForEmails(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for emails")}}
@@ -187,26 +186,27 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForPhoneNumbers")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForPhoneNumbers")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntitiesPtr, err := b.organizationService.GetOrganizationsForPhoneNumbers(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for phone numbers")}}
@@ -236,26 +236,27 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSubsidiariesForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getSubsidiariesForOrganization")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesForOrganizations(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get subsidiaries for organizations")}}
@@ -285,26 +286,27 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSubsidiariesOfForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getSubsidiariesOfForOrganization")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesOfForOrganizations(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get subsidiaries of for organizations")}}
@@ -334,26 +336,27 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForJobRoles")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForJobRoles")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntities, err := b.organizationService.GetOrganizationsForJobRoles(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for job roles")}}
@@ -380,26 +383,27 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSuggestedMergeToForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getSuggestedMergeToForOrganization")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntitiesPtr, err := b.organizationService.GetSuggestedMergeToForOrganizations(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get suggested merges for organizations")}}
@@ -429,26 +433,27 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OrganizationEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForInvoices")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntities, err := b.commonOrganizationService.GetOrganizationsForInvoices(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for invoices")}}
@@ -475,26 +480,27 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizationsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForContracts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntities, err := b.commonOrganizationService.GetOrganizationsForContracts(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for contracts")}}
@@ -521,26 +527,27 @@ func (b *organizationBatcher) getOrganizationsForContracts(ctx context.Context, 
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForSlackChannels")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForSlackChannels")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	organizationEntities, err := b.organizationService.GetOrganizationsForSlackChannels(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for slack channels")}}
@@ -567,20 +574,21 @@ func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Conte
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizations")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -589,7 +597,7 @@ func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloa
 
 	organizationEntities, err := b.organizationService.GetOrganizations(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
@@ -616,20 +624,21 @@ func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloa
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Object("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getOrganizationsForOpportunities")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -638,7 +647,7 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 
 	organizationEntities, err := b.organizationService.GetOrganizationsForOpportunities(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
@@ -665,20 +674,21 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Object("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getLatestOrganizationWithJobRoleForContacts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OrganizationDataLoader.getLatestOrganizationWithJobRoleForContacts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -687,7 +697,7 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 
 	organizationEntities, err := b.commonOrganizationService.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get latest organization for contacts")}}
@@ -714,11 +724,11 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationWithJobRole{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

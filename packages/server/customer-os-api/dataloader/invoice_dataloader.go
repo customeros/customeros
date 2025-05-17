@@ -2,12 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
@@ -43,10 +41,11 @@ func (i *Loaders) GetInvoicesForServiceLineItem(ctx context.Context, sliId strin
 }
 
 func (b *invoiceBatcher) getInvoiceLinesForInvoice(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceDataLoader.getInvoiceLinesForInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceDataLoader.getInvoiceLinesForInvoice")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -55,7 +54,7 @@ func (b *invoiceBatcher) getInvoiceLinesForInvoice(ctx context.Context, keys dat
 
 	invoiceLinesEntitiesPtr, err := b.invoiceService.GetInvoiceLinesForInvoices(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get invoice lines for invoices")}}
@@ -85,20 +84,21 @@ func (b *invoiceBatcher) getInvoiceLinesForInvoice(ctx context.Context, keys dat
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InvoiceLineEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *invoiceBatcher) getInvoicesForContract(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceDataLoader.getInvoicesForContract")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceDataLoader.getInvoicesForContract")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -107,7 +107,7 @@ func (b *invoiceBatcher) getInvoicesForContract(ctx context.Context, keys datalo
 
 	invoiceEntitiesPtr, err := b.invoiceService.GetInvoicesForContracts(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get invoices for contracts")}}
@@ -137,20 +137,21 @@ func (b *invoiceBatcher) getInvoicesForContract(ctx context.Context, keys datalo
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InvoiceEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *invoiceBatcher) getInvoicesForServiceLineItem(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceDataLoader.getInvoicesForServiceLineItem")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceDataLoader.getInvoicesForServiceLineItem")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -159,7 +160,7 @@ func (b *invoiceBatcher) getInvoicesForServiceLineItem(ctx context.Context, keys
 
 	invoiceEntitiesPtr, err := b.invoiceService.GetInvoicesForServiceLineItems(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get invoices for service line items")}}
@@ -189,11 +190,11 @@ func (b *invoiceBatcher) getInvoicesForServiceLineItem(ctx context.Context, keys
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InvoiceEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

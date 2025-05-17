@@ -2,12 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
@@ -35,10 +33,11 @@ func (i *Loaders) GetServiceLineItemForInvoiceLine(ctx context.Context, invoiceL
 }
 
 func (b *serviceLineItemBatcher) getServiceLineItemsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemDataLoader.getServiceLineItemsForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItemDataLoader.getServiceLineItemsForContracts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -47,7 +46,7 @@ func (b *serviceLineItemBatcher) getServiceLineItemsForContracts(ctx context.Con
 
 	serviceLineItemEntitiesPtr, err := b.serviceLineItemService.GetServiceLineItemsForContracts(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get service line items for contracts")}}
@@ -77,20 +76,21 @@ func (b *serviceLineItemBatcher) getServiceLineItemsForContracts(ctx context.Con
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ServiceLineItemEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *serviceLineItemBatcher) getServiceLineItemForInvoiceLine(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemDataLoader.getServiceLineItemsForInvoiceLines")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItemDataLoader.getServiceLineItemsForInvoiceLines")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -99,7 +99,7 @@ func (b *serviceLineItemBatcher) getServiceLineItemForInvoiceLine(ctx context.Co
 
 	sliEntities, err := b.serviceLineItemService.GetServiceLineItemsForInvoiceLines(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get service line items for invoice lines")}}
@@ -126,11 +126,11 @@ func (b *serviceLineItemBatcher) getServiceLineItemForInvoiceLine(ctx context.Co
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.ServiceLineItemEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Object("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

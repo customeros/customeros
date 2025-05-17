@@ -2,12 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
@@ -23,10 +21,10 @@ func (i *Loaders) GetCommentsForIssue(ctx context.Context, issueId string) (*neo
 }
 
 func (b *commentBatcher) getCommentsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentDataLoader.getCommentsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CommentDataLoader.getCommentsForIssues")
+	defer spans.Finish()
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -35,7 +33,7 @@ func (b *commentBatcher) getCommentsForIssues(ctx context.Context, keys dataload
 
 	commentEntitiesPtr, err := b.commentService.GetCommentsForIssues(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
@@ -65,11 +63,11 @@ func (b *commentBatcher) getCommentsForIssues(ctx context.Context, keys dataload
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.CommentEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

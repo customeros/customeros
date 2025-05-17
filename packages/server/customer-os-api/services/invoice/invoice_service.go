@@ -10,14 +10,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
@@ -53,11 +50,9 @@ func NewInvoiceService(log logger.Logger, repositories *repository.Repositories,
 }
 
 func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organizationId string, where *model.Filter) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.CountInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.Object("where", where))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.CountInvoices")
+	defer spans.Finish()
+	spans.LogObjectAsJson("where", where)
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
 	invoiceFilterCypher, invoiceFilterParams := "", make(map[string]interface{})
@@ -118,21 +113,20 @@ func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organization
 		filter = " WHERE " + filter
 	}
 
-	span.LogFields(log.String("filter", filter))
-	span.LogFields(log.Object("params", params))
+	spans.LogObjectAsJson("filter", filter)
+	spans.LogObjectAsJson("params", params)
 
 	return s.repositories.Neo4jRepositories.InvoiceReadRepository.CountInvoices(ctx, tenant, filter, params)
 }
 
 func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string, page, limit int, where *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetInvoices")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
-	span.LogFields(log.Object("page", page))
-	span.LogFields(log.Object("limit", limit))
-	span.LogFields(log.Object("where", where))
-	span.LogFields(log.Object("sortBy", sortBy))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InvoiceService.GetInvoices")
+	defer spans.Finish()
+	spans.LogKV("organizationId", organizationId)
+	spans.LogKV("page", page)
+	spans.LogKV("limit", limit)
+	spans.LogKV("where", where)
+	spans.LogKV("sortBy", sortBy)
 
 	paginatedResult := utils.Pagination{
 		Limit: limit,
@@ -286,8 +280,8 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 		filter = " WHERE " + filter
 	}
 
-	span.LogFields(log.String("filter", filter))
-	span.LogFields(log.Object("params", params))
+	spans.LogKV("filter", filter)
+	spans.LogObjectAsJson("params", params)
 
 	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetPaginatedInvoices(ctx, common.GetTenantFromContext(ctx),
 		paginatedResult.GetSkip(),
@@ -296,7 +290,7 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 		params,
 		cypherSort)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

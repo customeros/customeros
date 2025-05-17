@@ -51,23 +51,22 @@ func (l *MailstackProvisionBuyRequestListener) Handle(ctx context.Context, baseE
 }
 
 func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "MailstackProvisionBuyRequestListener.handle")
+	defer spans.Finish()
 
 	mailstackBuyRequest, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetById(ctx, entityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if mailstackBuyRequest == nil {
 		err = errors.New("mailstack buy request not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
-	span.LogKV("mailstackBuyRequest.Status", mailstackBuyRequest.Status)
+	spans.LogKV("mailstackBuyRequest.Status", mailstackBuyRequest.Status)
 
 	if mailstackBuyRequest.Status != postgres_entity.MailstackBuyRequestStatusPending {
 		return nil
@@ -75,20 +74,20 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 
 	err = l.processDomains(ctx, mailstackBuyRequest)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = l.processMailboxes(ctx, mailstackBuyRequest)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	// reload latest state for domains
 	domains, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -99,12 +98,12 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 
 		statusCode, errMessage, mailboxes, err := l.dependencies.CommonServices.MailstackService.GetMailboxes(ctx, domain.Tenant, domain.Domain, "")
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 		if statusCode != http.StatusOK {
 			err = errors.New(errMessage)
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			return err
 		}
 
@@ -115,7 +114,7 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 
 			err := l.dependencies.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, mailbox.ID, common_model.MAILBOX, dto.MailstackProvisionMailbox{})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				return err
 			}
 		}
@@ -138,7 +137,7 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 
 		_, err = l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, nil, mailstackBuyRequest)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
@@ -146,26 +145,25 @@ func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entit
 }
 
 func (l *MailstackProvisionBuyRequestListener) configureDomainInMailstack(ctx context.Context, domain string, website string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.configureDomainInMailstack")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "MailstackProvisionBuyRequestListener.configureDomainInMailstack")
+	defer spans.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("missing tenant in context")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	statusCode, errorMsg, _, err := l.dependencies.CommonServices.MailstackService.ConfigureDomain(ctx, tenant, domain, website)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if statusCode != http.StatusOK {
 		err := errors.New(errorMsg)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -173,19 +171,18 @@ func (l *MailstackProvisionBuyRequestListener) configureDomainInMailstack(ctx co
 }
 
 func (l *MailstackProvisionBuyRequestListener) purchaseDomainInMailstack(ctx context.Context, tenant string, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.purchaseDomainInMailstack")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "MailstackProvisionBuyRequestListener.purchaseDomainInMailstack")
+	defer spans.Finish()
 
 	statusCode, errorMsg, err := l.dependencies.CommonServices.MailstackService.PurchaseDomain(ctx, tenant, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if statusCode != http.StatusOK {
 		err := errors.New(errorMsg)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -193,13 +190,12 @@ func (l *MailstackProvisionBuyRequestListener) purchaseDomainInMailstack(ctx con
 }
 
 func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Context, mailstackBuyRequest *postgres_entity.MailstackBuyRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.processDomains")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "MailstackProvisionBuyRequestListener.processDomains")
+	defer spans.Finish()
 
 	domains, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -220,7 +216,7 @@ func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Contex
 			if domain.Status == postgres_entity.MailstackBuyRequestDomainStatusPendingProvisioning {
 				err := l.purchaseDomainInMailstack(ctx, domain.Tenant, domain.Domain)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					mailstackBuyRequest.Status = postgres_entity.MailstackBuyRequestStatusFailed
 					domain.Status = postgres_entity.MailstackBuyRequestDomainStatusFailed
 				} else {
@@ -229,7 +225,7 @@ func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Contex
 
 				err = l.dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, postgres_entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return // Exit the goroutine on error
 				}
 			}
@@ -238,14 +234,14 @@ func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Contex
 			if domain.Status == postgres_entity.MailstackBuyRequestDomainStatusPendingConfiguration {
 				err := l.configureDomainInMailstack(ctx, domain.Domain, domain.RedirectWebsite)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 				} else {
 					domain.Status = postgres_entity.MailstackBuyRequestDomainStatusCompleted
 				}
 
 				err = l.dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, postgres_entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					spans.TraceError(err)
 					return // Exit the goroutine on error
 				}
 			}

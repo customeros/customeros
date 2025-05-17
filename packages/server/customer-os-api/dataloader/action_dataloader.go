@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -23,16 +21,17 @@ func (i *Loaders) GetActionsForInteractionEvent(ctx context.Context, interaction
 }
 
 func (b *actionBatcher) getActionsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionDataLoader.getActionsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ActionDataLoader.getActionsForInteractionEvents")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	actionsForNodes, err := b.actionService.GetActionsForNodes(ctx, neo4jenum.INTERACTION_EVENT, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction events")}}
@@ -62,11 +61,11 @@ func (b *actionBatcher) getActionsForInteractionEvents(ctx context.Context, keys
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ActionEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Object("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

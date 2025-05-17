@@ -2,17 +2,15 @@ package api_timeline_event
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"golang.org/x/exp/slices"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
@@ -34,12 +32,11 @@ func NewTimelineEventService(log logger.Logger, repositories *repository.Reposit
 }
 
 func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, contactId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsForContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.Int("size", size), log.Object("types", types))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetTimelineEventsForContact")
+	defer spans.Finish()
+	spans.LogKV("contactId", contactId, "size", size, "types", types)
 	if from != nil {
-		span.LogFields(log.String("from", from.String()))
+		spans.LogKV("from", from.String())
 	}
 
 	nodeLabels := []string{}
@@ -70,15 +67,14 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 }
 
 func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsForOrganization")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetTimelineEventsForOrganization")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.Int("size", size), log.Object("types", types))
+	span.LogKV("organizationId", organizationId, "size", size, "types", types)
 	if from != nil {
-		span.LogFields(log.String("from", from.String()))
+		span.LogKV("from", from.String())
 	}
 
-	nodeLabels := []string{}
+	var nodeLabels []string
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
 	}
@@ -105,10 +101,9 @@ func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Cont
 }
 
 func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context.Context, contactId string, types []model.TimelineEventType) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsTotalCountForContact")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetTimelineEventsTotalCountForContact")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.Object("types", types))
+	span.LogKV("contactId", contactId, "types", types)
 
 	nodeLabels := []string{}
 	for _, v := range types {
@@ -129,12 +124,11 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context
 }
 
 func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx context.Context, organizationId string, types []model.TimelineEventType) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsTotalCountForOrganization")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetTimelineEventsTotalCountForOrganization")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.Object("types", types))
+	span.LogKV("organizationId", organizationId, "types", types)
 
-	nodeLabels := []string{}
+	var nodeLabels []string
 	for _, value := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[value.String()])
 	}
@@ -178,10 +172,9 @@ func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node)
 }
 
 func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids []string) (*entity.TimelineEventEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsWithIds")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetTimelineEventsWithIds")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	span.LogObjectAsJson("ids", ids)
 
 	dbNodes, err := s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEventsWithIds(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
@@ -199,19 +192,17 @@ func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids
 }
 
 func (s *timelineEventService) GetInboundCommsCountCountByOrganizations(ctx context.Context, organizationIds []string) (map[string]int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetInboundCommsCountCountByOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetInboundCommsCountCountByOrganizations")
+	defer spans.Finish()
+	spans.LogObjectAsJson("organizationIds", organizationIds)
 
 	return s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetInboundCommsTimelineEventsCountByOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 }
 
 func (s *timelineEventService) GetOutboundCommsCountCountByOrganizations(ctx context.Context, organizationIds []string) (map[string]int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetOutboundCommsCountCountByOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", organizationIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventService.GetOutboundCommsCountCountByOrganizations")
+	defer spans.Finish()
+	spans.LogObjectAsJson("organizationIds", organizationIds)
 
 	return s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetOutboundCommsTimelineEventsCountByOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 }

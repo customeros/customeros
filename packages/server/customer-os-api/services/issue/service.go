@@ -2,18 +2,16 @@ package api_issue
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -30,19 +28,17 @@ func NewIssueService(log logger.Logger, repositories *repository.Repositories) c
 }
 
 func (s *issueService) GetIssueSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetIssueSummaryByStatusForOrganization")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetIssueSummaryByStatusForOrganization")
+	defer spans.Finish()
+	spans.LogKV("organizationId", organizationId)
 
 	return s.repositories.Neo4jRepositories.IssueReadRepository.GetIssueCountByStatusForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
 }
 
 func (s *issueService) GetById(ctx context.Context, issueId string) (*neo4jentity.IssueEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("issueId", issueId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetById")
+	defer spans.Finish()
+	spans.LogKV("issueId", issueId)
 
 	if issueDbNode, err := s.repositories.Neo4jRepositories.IssueReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), issueId); err != nil {
 		return nil, err
@@ -52,10 +48,9 @@ func (s *issueService) GetById(ctx context.Context, issueId string) (*neo4jentit
 }
 
 func (s *issueService) GetIssuesForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.IssueEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetIssuesForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetIssuesForInteractionEvents")
+	defer spans.Finish()
+	spans.LogObjectAsJson("ids", ids)
 
 	issues, err := s.repositories.IssueRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
@@ -71,10 +66,9 @@ func (s *issueService) GetIssuesForInteractionEvents(ctx context.Context, ids []
 }
 
 func (s *issueService) GetSubmitterParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetSubmitterParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetSubmitterParticipantsForIssues")
+	defer spans.Finish()
+	spans.LogObjectAsJson("issueIds", issueIds)
 
 	records, err := s.repositories.IssueRepository.GetSubmitterParticipantsForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
@@ -83,16 +77,15 @@ func (s *issueService) GetSubmitterParticipantsForIssues(ctx context.Context, is
 
 	issueParticipants := s.convertDbNodesToIssueParticipants(records)
 
-	span.LogFields(log.Int("result count", len(issueParticipants)))
+	spans.LogKV("result count", len(issueParticipants))
 
 	return &issueParticipants, nil
 }
 
 func (s *issueService) GetReporterParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetReporterParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetReporterParticipantsForIssues")
+	defer spans.Finish()
+	spans.LogObjectAsJson("issueIds", issueIds)
 
 	records, err := s.repositories.IssueRepository.GetReporterParticipantsForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
@@ -101,16 +94,15 @@ func (s *issueService) GetReporterParticipantsForIssues(ctx context.Context, iss
 
 	issueParticipants := s.convertDbNodesToIssueParticipants(records)
 
-	span.LogFields(log.Int("result count", len(issueParticipants)))
+	spans.LogKV("result count", len(issueParticipants))
 
 	return &issueParticipants, nil
 }
 
 func (s *issueService) GetAssigneeParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetAssigneeParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetAssigneeParticipantsForIssues")
+	defer spans.Finish()
+	spans.LogObjectAsJson("issueIds", issueIds)
 
 	records, err := s.repositories.IssueRepository.GetAssigneeParticipantsForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
@@ -119,16 +111,15 @@ func (s *issueService) GetAssigneeParticipantsForIssues(ctx context.Context, iss
 
 	issueParticipants := s.convertDbNodesToIssueParticipants(records)
 
-	span.LogFields(log.Int("result count", len(issueParticipants)))
+	spans.LogKV("result count", len(issueParticipants))
 
 	return &issueParticipants, nil
 }
 
 func (s *issueService) GetFollowerParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetFollowerParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueService.GetFollowerParticipantsForIssues")
+	defer spans.Finish()
+	spans.LogObjectAsJson("issueIds", issueIds)
 
 	records, err := s.repositories.IssueRepository.GetFollowerParticipantsForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
@@ -137,7 +128,7 @@ func (s *issueService) GetFollowerParticipantsForIssues(ctx context.Context, iss
 
 	issueParticipants := s.convertDbNodesToIssueParticipants(records)
 
-	span.LogFields(log.Int("result count", len(issueParticipants)))
+	spans.LogKV("result count", len(issueParticipants))
 
 	return &issueParticipants, nil
 }

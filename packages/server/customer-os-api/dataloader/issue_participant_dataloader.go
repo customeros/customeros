@@ -2,12 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
@@ -53,10 +51,11 @@ func (i *Loaders) GetFollowerParticipantsForIssue(ctx context.Context, issueId s
 }
 
 func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getSubmitterParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueParticipantDataLoader.getSubmitterParticipantsForIssues")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -65,7 +64,7 @@ func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.
 
 	participantEntitiesPtr, err := b.issueService.GetSubmitterParticipantsForIssues(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
@@ -96,20 +95,21 @@ func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getReporterParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueParticipantDataLoader.getReporterParticipantsForIssues")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -118,7 +118,7 @@ func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.C
 
 	participantEntitiesPtr, err := b.issueService.GetReporterParticipantsForIssues(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get issue participants")}}
@@ -149,20 +149,21 @@ func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.C
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getAssigneeParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueParticipantDataLoader.getAssigneeParticipantsForIssues")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -171,7 +172,7 @@ func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.C
 
 	participantEntitiesPtr, err := b.issueService.GetAssigneeParticipantsForIssues(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get issue participants")}}
@@ -202,20 +203,21 @@ func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.C
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *issueParticipantBatcher) getFollowerParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getFollowerParticipantsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "IssueParticipantDataLoader.getFollowerParticipantsForIssues")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -224,7 +226,7 @@ func (b *issueParticipantBatcher) getFollowerParticipantsForIssues(ctx context.C
 
 	participantEntitiesPtr, err := b.issueService.GetFollowerParticipantsForIssues(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get issue participants")}}
@@ -255,11 +257,11 @@ func (b *issueParticipantBatcher) getFollowerParticipantsForIssues(ctx context.C
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

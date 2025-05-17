@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -22,16 +20,17 @@ func (i *Loaders) GetNotesForMeeting(ctx context.Context, meetingId string) (*en
 }
 
 func (b *noteBatcher) getNotesForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteDataLoader.getNotesForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteDataLoader.getNotesForMeetings")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	noteEntitiesPtr, err := b.noteService.GetNotesForMeetings(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get noted entities for notes")}}
@@ -61,11 +60,11 @@ func (b *noteBatcher) getNotesForMeetings(ctx context.Context, keys dataloader.K
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.NoteEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

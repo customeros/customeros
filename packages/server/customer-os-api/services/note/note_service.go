@@ -2,22 +2,19 @@ package api_note
 
 import (
 	"context"
-
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 )
 
 type noteService struct {
@@ -37,12 +34,12 @@ func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 }
 
 func (s *noteService) GetById(ctx context.Context, id string) (*entity.NoteEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetById")
-	defer span.Finish()
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteService.GetById")
+	defer spans.Finish()
 
 	byId, err := s.repositories.Neo4jRepositories.CommonReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id, commonModel.NodeLabelNote)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -54,10 +51,9 @@ func (s *noteService) GetById(ctx context.Context, id string) (*entity.NoteEntit
 }
 
 func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.NoteLinkAttachment")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteService.NoteLinkAttachment")
+	defer spans.Finish()
+	spans.LogKV("noteID", noteID, "attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -69,7 +65,7 @@ func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, att
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -77,10 +73,9 @@ func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, att
 }
 
 func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.NoteUnlinkAttachment")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteService.NoteUnlinkAttachment")
+	defer spans.Finish()
+	spans.LogKV("noteID", noteID, "attachmentID", attachmentID)
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -92,7 +87,7 @@ func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, a
 		ToEntityType:   commonModel.ATTACHMENT,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -126,9 +121,8 @@ func (s *noteService) convertDbNodesToNotes(records []*utils.DbNodeAndId) entity
 }
 
 func (s *noteService) UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.UpdateNote")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteService.UpdateNote")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
@@ -142,10 +136,9 @@ func (s *noteService) UpdateNote(ctx context.Context, entity *entity.NoteEntity)
 	return emailEntity, nil
 }
 func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForMeeting")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("meetingId", meetingId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteService.CreateNoteForMeeting")
+	defer spans.Finish()
+	spans.LogKV("meetingId", meetingId)
 
 	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForMeeting(ctx, common.GetContext(ctx).Tenant, meetingId, entity)
 	if err != nil {
@@ -161,10 +154,9 @@ func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string
 }
 
 func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.DeleteNote")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("noteId", noteId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "NoteService.DeleteNote")
+	defer spans.Finish()
+	spans.LogKV("noteId", noteId)
 
 	err := s.repositories.NoteRepository.Delete(ctx, common.GetTenantFromContext(ctx), noteId)
 	if err != nil {

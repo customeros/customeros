@@ -3,12 +3,10 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/graph-gophers/dataloader"
 )
 
 func (i *Loaders) GetTimelineEventForTimelineEventId(ctx context.Context, timelineEventId string) (*entity.TimelineEvent, error) {
@@ -48,16 +46,17 @@ func (i *Loaders) GetOutboundCommsCountForOrganization(ctx context.Context, orga
 }
 
 func (b *timelineEventBatcher) getTimelineEventsForTimelineEventIds(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventDataLoader.getTimelineEventsForTimelineEventIds")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventDataLoader.getTimelineEventsForTimelineEventIds")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	timelineEventsPtr, err := b.timelineEventService.GetTimelineEventsWithIds(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get timeline events for timeline event ids")}}
@@ -83,16 +82,17 @@ func (b *timelineEventBatcher) getTimelineEventsForTimelineEventIds(ctx context.
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *timelineEventBatcher) getInboundCommsCountForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventBatcher.getInboundCommsCountForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventBatcher.getInboundCommsCountForOrganizations")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -101,7 +101,7 @@ func (b *timelineEventBatcher) getInboundCommsCountForOrganizations(ctx context.
 
 	countsPerOrg, err := b.timelineEventService.GetInboundCommsCountCountByOrganizations(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get inbound comms count for organization")}}
@@ -122,16 +122,17 @@ func (b *timelineEventBatcher) getInboundCommsCountForOrganizations(ctx context.
 		results[ix] = &dataloader.Result{Data: 0, Error: nil}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *timelineEventBatcher) getOutboundCommsCountForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventBatcher.getInboundCommsCountForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "TimelineEventBatcher.getInboundCommsCountForOrganizations")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -140,7 +141,7 @@ func (b *timelineEventBatcher) getOutboundCommsCountForOrganizations(ctx context
 
 	countsPerOrg, err := b.timelineEventService.GetOutboundCommsCountCountByOrganizations(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get outbound comms count for organization")}}
@@ -161,7 +162,7 @@ func (b *timelineEventBatcher) getOutboundCommsCountForOrganizations(ctx context
 		results[ix] = &dataloader.Result{Data: 0, Error: nil}
 	}
 
-	span.LogFields(log.Int("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
