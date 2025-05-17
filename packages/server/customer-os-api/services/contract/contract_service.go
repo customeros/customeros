@@ -11,13 +11,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -330,13 +328,12 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 }
 
 func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4jentity.ContractEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contractId", contractId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetById")
+	defer spans.Finish()
+	spans.LogKV("contractId", contractId)
 
 	if contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr
 	} else {
@@ -345,9 +342,9 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4
 }
 
 func (s *contractService) GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForInvoices")
-	defer span.Finish()
-	span.LogFields(log.Object("invoiceIds", invoiceIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractsForInvoices")
+	defer spans.Finish()
+	spans.LogObjectAsJson("invoiceIds", invoiceIds)
 
 	contracts, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForInvoices(ctx, common.GetTenantFromContext(ctx), invoiceIds)
 	if err != nil {
@@ -363,8 +360,8 @@ func (s *contractService) GetContractsForInvoices(ctx context.Context, invoiceId
 }
 
 func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.ContractsExistForTenant")
-	defer span.Finish()
+	spans, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.ContractsExistForTenant")
+	defer spans.Finish()
 
 	contractsExistForTenant, err := s.repositories.Neo4jRepositories.ContractReadRepository.TenantsHasAtLeastOneContract(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
@@ -374,63 +371,56 @@ func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, er
 }
 
 func (s *contractService) CountContracts(ctx context.Context, tenant string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.CountContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.CountContracts")
+	defer spans.Finish()
 
 	return s.repositories.Neo4jRepositories.ContractReadRepository.CountContracts(ctx, tenant)
 }
 
 func (s *contractService) SoftDeleteContract(ctx context.Context, contractId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.SoftDeleteContract")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.SoftDeleteContract")
+	defer spans.Finish()
+	spans.TagEntity(contractId)
 
 	// check contract exists
-	if err := s.validateContractExists(ctx, contractId, span); err != nil {
+	if err := s.validateContractExists(ctx, contractId, spans); err != nil {
 		return false, err
 	}
 
 	// check contract has no invoices
 	countInvoices, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.CountNonDryRunInvoicesForContract(ctx, common.GetTenantFromContext(ctx), contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("error on counting invoices for contract: %s", err.Error())
 		return false, err
 	}
 	if countInvoices > 0 {
 		err := fmt.Errorf("contract with id {%s} has invoices", contractId)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf(err.Error())
 		return false, err
 	}
 
 	err = s.contract.SoftDelete(ctx, contractId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Failed to delete contract: %s", err.Error())
 		return false, nil
 	}
-
-	// wait for contract to be deleted from graph db
-	neo4jrepository.WaitForNodeDeletedFromNeo4j(ctx, s.repositories.Neo4jRepositories, contractId, model2.NodeLabelContract, span)
 
 	return false, nil
 }
 
 func (s *contractService) RenewContract(ctx context.Context, contractId string, renewalDate *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RenewContract")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.RenewContract")
+	defer spans.Finish()
+	spans.TagEntity(contractId)
 	if renewalDate != nil {
-		span.LogFields(log.Object("renewalDate", renewalDate.String()))
+		spans.LogFields(log.Object("renewalDate", renewalDate.String()))
 	}
 
 	// check contract exists
-	if err := s.validateContractExists(ctx, contractId, span); err != nil {
+	if err := s.validateContractExists(ctx, contractId, spans); err != nil {
 		return err
 	}
 
@@ -441,7 +431,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 
 	// if contract is not renewable - return
 	if contractEntity.LengthInMonths == 0 {
-		span.LogFields(log.Bool("result.contractRenewable", false))
+		spans.LogFields(log.Bool("result.contractRenewable", false))
 		return nil
 	}
 
@@ -457,7 +447,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 			RenewedAt:       renewalDate,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error creating renewal opportunity: %s", err.Error())
 			return err
 		}
@@ -472,7 +462,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 			RenewedAt:       renewalDate,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("Error approving renewal opportunity: %s", err.Error())
 			return err
 		}
@@ -487,7 +477,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 				RenewedAt: renewalDate,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				spans.TraceError(err)
 				s.log.Errorf("Error from events processing: %s", err.Error())
 				return err
 			}
@@ -495,7 +485,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 		}
 		err = s.opportunity.RolloutRenewalOpportunity(ctx, contractId)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 			s.log.Errorf("failed to rollout renewal opportunity: %s", err.Error())
 			return err
 		}
@@ -504,54 +494,52 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 	return nil
 }
 
-func (s *contractService) validateContractExists(ctx context.Context, contractId string, span opentracing.Span) error {
+func (s *contractService) validateContractExists(ctx context.Context, contractId string, spans *telemetry.Spans) error {
 	if contractId == "" {
 		err := fmt.Errorf("contract id is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err.Error())
 		return err
 	}
 
 	contractExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contractId, model2.NodeLabelContract)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err.Error())
 		return err
 	}
 	if !contractExists {
 		err := fmt.Errorf("contract with id {%s} not found", contractId)
 		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (s *contractService) GetContractByServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4jentity.ContractEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractByServiceLineItem")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractByServiceLineItem")
+	defer spans.Finish()
+	spans.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
 	contract, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Errorf("Error on getting contract by service line item: %s", err.Error())
 		return nil, err
 	}
 	if contract == nil {
 		err = fmt.Errorf("Contract not found for service line item: %s", serviceLineItemId)
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return &neo4jentity.ContractEntity{}, err
 	}
 	return neo4jmapper.MapDbNodeToContractEntity(contract), nil
 }
 
 func (s *contractService) GetPaginatedContracts(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractByServiceLineItem")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractByServiceLineItem")
+	defer spans.Finish()
+	spans.LogFields(log.Int("page", page), log.Int("limit", limit))
 
 	paginatedResult := utils.Pagination{
 		Limit: limit,
