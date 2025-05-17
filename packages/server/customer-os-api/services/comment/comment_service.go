@@ -3,11 +3,9 @@ package api_comment
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
@@ -27,14 +25,13 @@ func NewCommentService(log logger.Logger, repositories *repository.Repositories)
 }
 
 func (s *commentService) GetCommentsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.CommentEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.GetCommentsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CommentService.GetCommentsForIssues")
+	defer spans.Finish()
+	spans.LogObjectAsJson("issueIds", issueIds)
 
 	comments, err := s.repositories.Neo4jRepositories.CommentReadRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	commentEntities := neo4jentity.CommentEntities{}
@@ -43,6 +40,6 @@ func (s *commentService) GetCommentsForIssues(ctx context.Context, issueIds []st
 		commentEntity.DataloaderKey = v.LinkedNodeId
 		commentEntities = append(commentEntities, *commentEntity)
 	}
-	span.LogFields(log.Int("result count", len(commentEntities)))
+	spans.LogKV("result count", len(commentEntities))
 	return &commentEntities, nil
 }

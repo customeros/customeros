@@ -3,11 +3,9 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -22,16 +20,17 @@ func (i *Loaders) GetAttendedByParticipantsForInteractionSession(ctx context.Con
 }
 
 func (b *interactionSessionParticipantBatcher) getAttendedByParticipantsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionParticipantDataLoader.getAttendedByParticipantsForInteractionSessions")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "InteractionSessionParticipantDataLoader.getAttendedByParticipantsForInteractionSessions")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	participantEntitiesPtr, err := b.interactionSessionService.GetAttendedByParticipantsForInteractionSessions(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction event participants")}}
@@ -62,11 +61,11 @@ func (b *interactionSessionParticipantBatcher) getAttendedByParticipantsForInter
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionSessionParticipants{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

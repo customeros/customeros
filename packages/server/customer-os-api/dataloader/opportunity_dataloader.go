@@ -3,12 +3,10 @@ package dataloader
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
@@ -44,10 +42,11 @@ func (i *Loaders) GetOpportunitiesForOrganization(ctx context.Context, orgId str
 }
 
 func (b *opportunityBatcher) getOpportunitiesForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityDataLoader.getOpportunitiesForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityDataLoader.getOpportunitiesForContracts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -58,7 +57,7 @@ func (b *opportunityBatcher) getOpportunitiesForContracts(ctx context.Context, k
 
 	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForContracts(ctx, tenant, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get opportunities for contracts")}}
@@ -88,20 +87,21 @@ func (b *opportunityBatcher) getOpportunitiesForContracts(ctx context.Context, k
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OpportunityEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *opportunityBatcher) getOpportunitiesForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityDataLoader.getOpportunitiesForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityDataLoader.getOpportunitiesForOrganizations")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	tenant := common.GetTenantFromContext(ctx)
 
@@ -112,7 +112,7 @@ func (b *opportunityBatcher) getOpportunitiesForOrganizations(ctx context.Contex
 
 	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForOrganizations(ctx, tenant, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get opportunities for organizations")}}
@@ -142,20 +142,21 @@ func (b *opportunityBatcher) getOpportunitiesForOrganizations(ctx context.Contex
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OpportunityEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *opportunityBatcher) getOpportunitiesForTasks(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityDataLoader.getOpportunitiesForTasks")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "OpportunityDataLoader.getOpportunitiesForTasks")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -164,7 +165,7 @@ func (b *opportunityBatcher) getOpportunitiesForTasks(ctx context.Context, keys 
 
 	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForTasks(ctx, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get opportunities for tasks")}}
@@ -194,11 +195,11 @@ func (b *opportunityBatcher) getOpportunitiesForTasks(ctx context.Context, keys 
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.OpportunityEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("result.count", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

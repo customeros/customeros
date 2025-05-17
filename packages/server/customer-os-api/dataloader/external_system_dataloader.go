@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -73,92 +71,101 @@ func (i *Loaders) GetExternalSystemsForInteractionEvent(ctx context.Context, ieI
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForComments(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForComments")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForComments")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.COMMENT, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.COMMENT, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForIssues")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.ISSUE, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.ISSUE, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForOrganizations")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.ORGANIZATION, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.ORGANIZATION, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForContracts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForContracts")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.CONTRACT, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.CONTRACT, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForOpportunities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForOpportunities")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.OPPORTUNITY, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.OPPORTUNITY, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForServiceLineItems(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForServiceLineItems")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForServiceLineItems")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.SERVICE_LINE_ITEM, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.SERVICE_LINE_ITEM, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForLogEntries")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForLogEntries")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.LOG_ENTRY, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.LOG_ENTRY, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForMeetings")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForMeetings")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.MEETING, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.MEETING, spans)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ExternalSystemDataLoader.getExternalSystemsForInteractionEvents")
+	defer spans.Finish()
 
-	return b.getExternalSystemsFor(ctx, keys, commonModel.INTERACTION_EVENT, span)
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
+
+	return b.getExternalSystemsFor(ctx, keys, commonModel.INTERACTION_EVENT, spans)
 }
 
-func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys dataloader.Keys, entityType commonModel.EntityType, span opentracing.Span) []*dataloader.Result {
+func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys dataloader.Keys, entityType commonModel.EntityType, spans *telemetry.Spans) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsForEntities(ctx, ids, entityType)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get external systems for entities")}}
@@ -188,11 +195,11 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ExternalSystemEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

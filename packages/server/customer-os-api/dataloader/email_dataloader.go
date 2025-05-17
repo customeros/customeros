@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
 	"reflect"
 )
@@ -47,16 +45,17 @@ func (i *Loaders) GetPrimaryEmailForContact(ctx context.Context, contactId strin
 }
 
 func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getEmailsForContacts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailDataLoader.getEmailsForContacts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	emailEntitiesPtr, err := b.emailService.GetAllForEntityTypeByIds(ctx, neo4jmodel.CONTACT, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get emails for contacts")}}
@@ -87,26 +86,27 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.EmailEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getEmailsForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailDataLoader.getEmailsForOrganizations")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	emailEntitiesPtr, err := b.emailService.GetAllForEntityTypeByIds(ctx, neo4jmodel.ORGANIZATION, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get emails for organizations")}}
@@ -137,20 +137,21 @@ func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys datal
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.EmailEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
 
 func (b *emailBatcher) getPrimaryEmailForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getPrimaryEmailForContacts")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "EmailDataLoader.getPrimaryEmailForContacts")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
@@ -159,7 +160,7 @@ func (b *emailBatcher) getPrimaryEmailForContacts(ctx context.Context, keys data
 
 	emailEntities, err := b.commonEmailService.GetPrimaryEmailsForEntityIds(ctx, neo4jmodel.CONTACT, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: pkgerrors.Wrap(err, "context deadline exceeded")}}
@@ -186,11 +187,11 @@ func (b *emailBatcher) getPrimaryEmailForContacts(ctx context.Context, keys data
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.EmailEntity{}), true); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	span.LogFields(log.Object("result.length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }

@@ -5,13 +5,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
@@ -60,16 +57,12 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 }
 
 func (s *dashboardService) GetDashboardViewRenewalsData(ctx context.Context, requestDetails cosapi_interfaces.DashboardViewRenewalsRequest) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewRenewalsData")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
-	if requestDetails.Where != nil {
-		span.LogFields(log.Object("filter", *requestDetails.Where))
-	}
-	if requestDetails.Sort != nil {
-		span.LogFields(log.Object("sort", *requestDetails.Sort))
-	}
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DashboardService.GetDashboardViewRenewalsData")
+	defer spans.Finish()
+	spans.LogKV("page", requestDetails.Page)
+	spans.LogKV("limit", requestDetails.Limit)
+	spans.LogObjectAsJson("filter", requestDetails.Where)
+	spans.LogObjectAsJson("sort", requestDetails.Sort)
 
 	paginatedResult := utils.Pagination{
 		Limit: requestDetails.Limit,

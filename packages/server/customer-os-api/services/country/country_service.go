@@ -5,12 +5,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
@@ -29,10 +27,9 @@ func NewCountryService(log logger.Logger, repository *repository.Repositories) c
 }
 
 func (s *countryService) GetCountriesForPhoneNumbers(ctx context.Context, ids []string) (*neo4j_entity.CountryEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryService.GetCountriesForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "CountryService.GetCountriesForOrganizations")
+	defer spans.Finish()
+	spans.LogObjectAsJson("ids", ids)
 
 	countryDbNodes, err := s.repositories.Neo4jRepositories.CountryReadRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {

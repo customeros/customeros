@@ -3,13 +3,12 @@ package dataloader
 import (
 	"context"
 	"errors"
+	"reflect"
+
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/graph-gophers/dataloader"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"reflect"
 )
 
 func (i *Loaders) GetActionItemsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.ActionItemEntities, error) {
@@ -23,16 +22,16 @@ func (i *Loaders) GetActionItemsForInteractionEvent(ctx context.Context, interac
 }
 
 func (b *actionItemBatcher) getActionItemsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionItemDataLoader.getActionItemsForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ActionItemDataLoader.getActionItemsForInteractionEvents")
+	defer spans.Finish()
+	spans.LogObjectAsJson("keys", keys)
+	spans.LogKV("keys_length", len(keys))
 
 	ids, keyOrder := sortKeys(keys)
 
 	actionItemsForNodes, err := b.actionItemService.GetActionItemsForNodes(ctx, repository.LINKED_WITH_INTERACTION_EVENT, ids)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction events")}}
@@ -62,11 +61,10 @@ func (b *actionItemBatcher) getActionItemsForInteractionEvents(ctx context.Conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.ActionItemEntities{})); err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
-
-	span.LogFields(log.Object("output - results_length", len(results)))
+	spans.LogKV("result.length", len(results))
 
 	return results
 }
