@@ -2,23 +2,21 @@ package api_user
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"reflect"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 	api_filters "github.com/customeros/customeros/packages/server/customer-os-api/services/filters"
 	api_sort "github.com/customeros/customeros/packages/server/customer-os-api/services/sort"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type userService struct {
@@ -43,9 +41,8 @@ func (s *userService) getNeo4jDriver() neo4j.DriverWithContext {
 }
 
 func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.ContainsRole")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.ContainsRole")
+	defer spans.Finish()
 
 	myRoles := common.GetRolesFromContext(ctx)
 	for _, allowedRole := range allowedRoles {
@@ -59,9 +56,8 @@ func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []mod
 }
 
 func (s *userService) CanAddRemoveRole(parentCtx context.Context, role model.Role) bool {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.CanAddRemoveRole")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(parentCtx, "UserService.CanAddRemoveRole")
+	defer spans.Finish()
 
 	switch role {
 	case model.RoleAdmin:
@@ -78,10 +74,9 @@ func (s *userService) CanAddRemoveRole(parentCtx context.Context, role model.Rol
 	}
 }
 
-func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetAll")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+func (s *userService) GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model2.SortBy) (*utils.Pagination, error) {
+	spans, ctx := telemetry.StartServiceSpan(ctx, "UserService.GetAll")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)

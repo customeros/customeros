@@ -3,20 +3,18 @@ package api_meeting
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"reflect"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"golang.org/x/exp/slices"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
@@ -50,9 +48,8 @@ func NewMeetingService(
 }
 
 func (s *meetingService) Create(ctx context.Context, newMeeting *cosapi_interfaces.MeetingCreateData) (*neo4jentity.MeetingEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.Create")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
@@ -83,9 +80,8 @@ func (s *meetingService) Create(ctx context.Context, newMeeting *cosapi_interfac
 }
 
 func (s *meetingService) Update(ctx context.Context, input *cosapi_interfaces.MeetingUpdateData) (*neo4jentity.MeetingEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.Update")
+	defer spans.Finish()
 
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
@@ -304,10 +300,9 @@ func (s *meetingService) GetMeetingForInteractionEvent(ctx context.Context, inte
 }
 
 func (s *meetingService) GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.MeetingEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.GetMeetingsForInteractionEvents")
+	span, ctx := telemetry.StartServiceSpan(ctx, "MeetingService.GetMeetingsForInteractionEvents")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
+	span.LogObjectAsJson("ids", ids)
 
 	issues, err := s.repositories.MeetingRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {

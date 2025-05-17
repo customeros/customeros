@@ -2,10 +2,9 @@ package api_billable
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -26,13 +25,12 @@ func NewBillableService(log logger.Logger, repositories *repository.Repositories
 }
 
 func (s *billableService) GetBillableDetails(ctx context.Context) (*model.TenantBillableInfo, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "BillableService.GetBillableDetails")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "BillableService.GetBillableDetails")
+	defer spans.Finish()
 
 	dbRecord, err := s.repositories.ContactRepository.GetBillableContactStats(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, errors.Wrap(err, "GetBillableDetails")
 	}
 	return &model.TenantBillableInfo{

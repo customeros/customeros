@@ -12,13 +12,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
@@ -321,7 +318,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			diffAbs := math.Abs(float64(diff))
 			// if diff is less than 10 min, skip update
 			if diffAbs < float64(600) {
-				spans.LogFields(log.String("result", "No changes recorded, start date is close to current timestamp"))
+				spans.LogKV("result", "No changes recorded, start date is close to current timestamp")
 				return nil
 			}
 		}
@@ -389,7 +386,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 	}
 
-	spans.LogFields(log.Bool("result.isRetroactiveCorrection", isRetroactiveCorrection))
+	spans.LogKV("result.isRetroactiveCorrection", isRetroactiveCorrection)
 
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
@@ -462,14 +459,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 }
 
 func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId string) (completed bool, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Delete")
+	span, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItemService.Delete")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+	span.LogKV("serviceLineItemId", serviceLineItemId)
 
 	sliEntity, err := s.sli.GetById(ctx, serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemId, err.Error())
 		return false, err
 	}
@@ -477,13 +473,13 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 	// Check SLI is not invoiced
 	sliInvoiced, err := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error on checking if service line item was invoiced: %s", err.Error())
 		return false, err
 	}
 	if sliInvoiced {
 		err := fmt.Errorf("service line item with id {%s} is included in invoice and cannot be deleted", serviceLineItemId)
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf(err.Error())
 		return false, err
 	}
@@ -491,19 +487,19 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 	// if contract is not draft prevent removing current or past SLIs
 	contractEntity, err := s.contract.GetContractByServiceLineItem(ctx, serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return false, err
 	}
 	if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft && !sliEntity.StartedAt.After(utils.Today()) {
 		err = fmt.Errorf("cannot delete contract line item with id {%s} in the past", serviceLineItemId)
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return false, err
 	}
 
 	err = s.sli.Delete(ctx, nil, serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return false, err
 	}
@@ -512,15 +508,13 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 }
 
 func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Close")
+	span, ctx := telemetry.StartServiceSpan(ctx, "ServiceLineItemService.Close")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
-	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
+	span.LogKV("serviceLineItemId", serviceLineItemId)
 
 	contractEntity, err := s.contract.GetContractByServiceLineItem(ctx, serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
@@ -533,7 +527,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 
 	currentSliEntity, err := s.sli.GetById(ctx, serviceLineItemId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error on getting service line item by id {%s}: %s", serviceLineItemId, err.Error())
 		return err
 	}
@@ -547,14 +541,14 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 	// closing past SLIs not allowed
 	if currentSliEntity.EndedAt != nil && currentSliEntity.EndedAt.Before(utils.Today()) {
 		err = fmt.Errorf("contract line item with id {%s} is already closed", serviceLineItemId)
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		return err
 	}
 
 	// First remove any future SLI with same parent ID
 	sliEntities, err := s.sli.GetServiceLineItemsByParentId(ctx, currentSliEntity.ParentID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error on getting service line items by parent id {%s}: %s", currentSliEntity.ParentID, err.Error())
 		return err
 	}
@@ -569,7 +563,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 
 	err = s.sli.Close(ctx, nil, serviceLineItemId, utils.IfNotNilTimeWithDefault(endedAt, utils.Now()))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		span.TraceError(err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
 	}

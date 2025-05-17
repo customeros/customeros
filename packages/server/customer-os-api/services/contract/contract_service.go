@@ -16,8 +16,6 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
@@ -360,7 +358,7 @@ func (s *contractService) GetContractsForInvoices(ctx context.Context, invoiceId
 }
 
 func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, error) {
-	spans, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.ContractsExistForTenant")
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.ContractsExistForTenant")
 	defer spans.Finish()
 
 	contractsExistForTenant, err := s.repositories.Neo4jRepositories.ContractReadRepository.TenantsHasAtLeastOneContract(ctx, common.GetTenantFromContext(ctx))
@@ -416,7 +414,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 	defer spans.Finish()
 	spans.TagEntity(contractId)
 	if renewalDate != nil {
-		spans.LogFields(log.Object("renewalDate", renewalDate.String()))
+		spans.LogKV("renewalDate", renewalDate.String())
 	}
 
 	// check contract exists
@@ -431,7 +429,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 
 	// if contract is not renewable - return
 	if contractEntity.LengthInMonths == 0 {
-		spans.LogFields(log.Bool("result.contractRenewable", false))
+		spans.LogKV("result.contractRenewable", false)
 		return nil
 	}
 
@@ -520,7 +518,7 @@ func (s *contractService) validateContractExists(ctx context.Context, contractId
 func (s *contractService) GetContractByServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4jentity.ContractEntity, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractByServiceLineItem")
 	defer spans.Finish()
-	spans.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+	spans.LogKV("serviceLineItemId", serviceLineItemId)
 
 	contract, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItemId)
 	if err != nil {
@@ -539,7 +537,7 @@ func (s *contractService) GetContractByServiceLineItem(ctx context.Context, serv
 func (s *contractService) GetPaginatedContracts(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
 	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.GetContractByServiceLineItem")
 	defer spans.Finish()
-	spans.LogFields(log.Int("page", page), log.Int("limit", limit))
+	spans.LogKV("page", page, "limit", limit)
 
 	paginatedResult := utils.Pagination{
 		Limit: limit,

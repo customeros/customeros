@@ -2,20 +2,17 @@ package api_location
 
 import (
 	"context"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 )
 
 type locationService struct {
@@ -50,10 +47,9 @@ func (s *locationService) Update(ctx context.Context, entity neo4jentity.Locatio
 }
 
 func (s *locationService) DetachFromEntity(ctx context.Context, entityType commonModel.EntityType, entityId, locationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.DetachFromEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("emailId", locationId), log.String("entityId", entityId), log.String("entityType", string(entityType)))
+	spans, ctx := telemetry.StartServiceSpan(ctx, "LocationService.DetachFromEntity")
+	defer spans.Finish()
+	spans.LogKV("emailId", locationId, "entityId", entityId, "entityType", string(entityType))
 
 	err := s.repositories.LocationRepository.RemoveRelationshipAndDeleteOrphans(ctx, entityType, entityId, locationId)
 

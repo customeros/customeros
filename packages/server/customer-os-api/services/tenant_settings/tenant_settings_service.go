@@ -3,9 +3,8 @@ package api_tenant_settings
 import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -130,7 +129,7 @@ func NewTenantSettingsService(log logger.Logger, cfg *config.Config, postgres *p
 }
 
 func (s *tenantSettingsService) GetForTenant(ctx context.Context) (*postgresentity.TenantSettings, map[string]bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.GetForTenant")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.GetForTenant")
 	defer span.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -160,7 +159,7 @@ func (s *tenantSettingsService) GetForTenant(ctx context.Context) (*postgresenti
 }
 
 func (s *tenantSettingsService) SaveIntegrationData(ctx context.Context, request map[string]interface{}) (*postgresentity.TenantSettings, map[string]bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.SaveIntegrationData")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.SaveIntegrationData")
 	defer span.Finish()
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -1320,7 +1319,7 @@ func (s *tenantSettingsService) SaveIntegrationData(ctx context.Context, request
 }
 
 func (s *tenantSettingsService) ClearIntegrationData(ctx context.Context, identifier string) (*postgresentity.TenantSettings, map[string]bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantSettingsService.ClearIntegrationData")
+	span, ctx := telemetry.StartServiceSpan(ctx, "TenantSettingsService.ClearIntegrationData")
 	defer span.Finish()
 
 	tenantSettings, _, err := s.GetForTenant(ctx)
