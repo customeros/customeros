@@ -7,9 +7,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
@@ -32,14 +31,13 @@ func NewFlowComputeParticipantsRequirementsListener(logger logger.Logger, deps *
 }
 
 func (l *FlowComputeParticipantsRequirementsListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowComputeParticipantsRequirementsListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "FlowComputeParticipantsRequirementsListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -47,31 +45,31 @@ func (l *FlowComputeParticipantsRequirementsListener) Handle(ctx context.Context
 }
 
 func (l *FlowComputeParticipantsRequirementsListener) handle(ctx context.Context, entityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowComputeParticipantsRequirementsListener.handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "FlowComputeParticipantsRequirementsListener.handle")
+	defer spans.Finish()
+	spans.LogKV("entityId", entityId)
 
 	flow, err := l.dependencies.CommonServices.FlowService.FlowGetById(ctx, entityId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if flow == nil {
 		err = errors.New("flow not found")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	flowRequirements, err := l.dependencies.CommonServices.FlowExecutionService.GetFlowRequirements(ctx, flow.Id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	flowParticipants, err := l.dependencies.CommonServices.FlowService.FlowParticipantGetList(ctx, []string{flow.Id})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -86,7 +84,7 @@ func (l *FlowComputeParticipantsRequirementsListener) handle(ctx context.Context
 		return nil, nil
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

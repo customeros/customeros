@@ -8,8 +8,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
@@ -32,14 +31,13 @@ func NewHideContactListener(logger logger.Logger, deps *model.DependencyContaine
 }
 
 func (l *HideContactListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "HideContactListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "HideContactListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -47,7 +45,7 @@ func (l *HideContactListener) Handle(ctx context.Context, baseEvent any) error {
 
 	err = l.dependencies.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, nil, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "OrganizationWriteRepository.RefreshContactCountByContactId"))
+		spans.TraceError(errors.Wrap(err, "OrganizationWriteRepository.RefreshContactCountByContactId"))
 	}
 
 	return nil
