@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -30,16 +31,12 @@ func NewDashboardService(log logger.Logger, repositories *repository.Repositorie
 }
 
 func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context, requestDetails cosapi_interfaces.DashboardViewOrganizationsRequest) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewOrganizationsData")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit))
-	if requestDetails.Where != nil {
-		tracing.LogObjectAsJson(span, "where", *requestDetails.Where)
-	}
-	if requestDetails.Sort != nil {
-		tracing.LogObjectAsJson(span, "sort", *requestDetails.Sort)
-	}
+	spans, ctx := telemetry.StartServiceSpan(ctx, "DashboardService.GetDashboardViewOrganizationsData")
+	defer spans.Finish()
+	spans.LogKV("page", requestDetails.Page)
+	spans.LogKV("limit", requestDetails.Limit)
+	spans.LogObjectAsJson("where", requestDetails.Where)
+	spans.LogObjectAsJson("sort", requestDetails.Sort)
 
 	paginatedResult := utils.Pagination{
 		Limit: requestDetails.Limit,

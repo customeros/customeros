@@ -1,11 +1,10 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -24,10 +23,10 @@ func NewExternalAppKeysRepository(gormDb *gorm.DB) ExternalAppKeysRepository {
 }
 
 func (e externalAppKeysRepository) GetAppKeys(ctx context.Context, app, group string, usageLimit int) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ExternalAppKeysRepository.GetAppKeys")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("app", app, "group1", group)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "ExternalAppKeysRepository.GetAppKeys")
+	defer spans.Finish()
+
+	spans.LogKV("app", app, "group1", group)
 
 	var appKeys []postgres_entity.ExternalAppKeys
 	err := e.gormDb.
@@ -42,10 +41,10 @@ func (e externalAppKeysRepository) GetAppKeys(ctx context.Context, app, group st
 }
 
 func (e externalAppKeysRepository) IncrementUsageCount(ctx context.Context, id uint64) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ExternalAppKeysRepository.IncrementUsageCount")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("id", id)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "ExternalAppKeysRepository.IncrementUsageCount")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	// create entry if not exists
 	appKey := postgres_entity.ExternalAppKeys{

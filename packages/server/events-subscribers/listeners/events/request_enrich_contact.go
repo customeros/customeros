@@ -7,8 +7,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
@@ -30,23 +29,22 @@ func NewRequestEnrichContactListener(logger logger.Logger, deps *model.Dependenc
 }
 
 func (l *RequestEnrichContactListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestEnrichContactListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestEnrichContactListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	contactId := event.Event.EntityId
-	span.LogKV("contactId", contactId)
+	spans.LogKV("contactId", contactId)
 
 	err = l.dependencies.CommonServices.EnrichmentService.EnrichContact(ctx, contactId, "")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

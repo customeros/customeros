@@ -3,9 +3,8 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/opentracing/opentracing-go"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 
@@ -28,9 +27,8 @@ func NewFlowNodeRepository(gormDb *gorm.DB) FlowNodeRepository {
 }
 
 func (f *flowNodeRepository) Create(ctx context.Context, flowNode postgres_entity.FlowNode) (*postgres_entity.FlowNode, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowNodeRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowNodeRepository.Create")
+	defer spans.Finish()
 
 	flowNode.ID = utils.GenerateNanoIdWithPrefix("node", 16)
 
@@ -43,25 +41,23 @@ func (f *flowNodeRepository) Create(ctx context.Context, flowNode postgres_entit
 }
 
 func (f *flowNodeRepository) FindAll(ctx context.Context, flowNode postgres_entity.FlowNode) ([]postgres_entity.FlowNode, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowRepository.FindAll")
+	defer spans.Finish()
 
 	var nodes []postgres_entity.FlowNode
 	err := f.gormDb.
 		Where(&flowNode).
 		Find(&nodes).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return nodes, nil
 }
 
 func (f *flowNodeRepository) Find(ctx context.Context, flowNode postgres_entity.FlowNode) (*postgres_entity.FlowNode, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowNodeRepository.Find")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowNodeRepository.Find")
+	defer spans.Finish()
 
 	var node postgres_entity.FlowNode
 	err := f.gormDb.
@@ -71,20 +67,19 @@ func (f *flowNodeRepository) Find(ctx context.Context, flowNode postgres_entity.
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return &node, nil
 }
 
 func (f *flowNodeRepository) Update(ctx context.Context, flowNode postgres_entity.FlowNode) (*postgres_entity.FlowNode, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowNodeRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowNodeRepository.Update")
+	defer spans.Finish()
 
 	if flowNode.ID == "" {
 		err := errors.New("flow node ID is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -96,10 +91,10 @@ func (f *flowNodeRepository) Update(ctx context.Context, flowNode postgres_entit
 		First(&updatedNode, "id = ?", flowNode.ID).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	tracing.LogObjectAsJson(span, "payload", updatedNode)
+	spans.LogObjectAsJson("payload", updatedNode)
 	return &updatedNode, nil
 }

@@ -9,10 +9,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
@@ -35,23 +34,22 @@ func NewRequestValidateEmailListener(logger logger.Logger, deps *model.Dependenc
 }
 
 func (l *RequestValidateEmailListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestValidateEmailListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestValidateEmailListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	emailId := event.Event.EntityId
-	span.LogKV("emailId", emailId)
+	spans.LogKV("emailId", emailId)
 
 	emailDbNode, err := l.dependencies.Neo4jRepositories.EmailReadRepository.GetById(ctx, event.Event.Tenant, emailId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Failed to get email node from neo4j"))
+		spans.TraceError(errors.Wrap(err, "Failed to get email node from neo4j"))
 		return err
 	}
 	emailEntity := neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
@@ -60,26 +58,26 @@ func (l *RequestValidateEmailListener) Handle(ctx context.Context, baseEvent any
 }
 
 func (l *RequestValidateEmailListener) validateEmail(ctx context.Context, emailId, emailAddressToValidate string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestValidateEmailListener.validateEmail")
-	defer span.Finish()
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestValidateEmailListener.validateEmail")
+	defer spans.Finish()
 	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, emailId)
+	spans.TagTenant(tenant)
+	spans.TagEntity(emailId)
 
 	emailValidationResponse, err := l.dependencies.CommonServices.VerifyService.ValidateEmail(
 		ctx, emailAddressToValidate)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error while calling email validation api"))
+		spans.TraceError(errors.Wrap(err, "error while calling email validation api"))
 		return nil
 	}
 
 	if emailValidationResponse.EmailData.SkippedValidation {
-		span.LogKV("result.skippedValidation", true)
+		spans.LogKV("result.skippedValidation", true)
 		l.dependencies.Logger.Warnf("Email %s for tenant %s skipped validation", emailId, tenant)
 		return nil
 	}
 	if emailValidationResponse.EmailData.RetryValidation {
-		span.LogKV("result.retryValidation", true)
+		spans.LogKV("result.retryValidation", true)
 		l.dependencies.Logger.Warnf("Email %s for tenant %s need retry validation", emailId, tenant)
 	}
 
@@ -114,7 +112,7 @@ func (l *RequestValidateEmailListener) validateEmail(ctx context.Context, emailI
 		RetryValidation: emailValidationResponse.EmailData.RetryValidation,
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to update email validation details"))
+		spans.TraceError(errors.Wrap(err, "failed to update email validation details"))
 	}
 
 	return err

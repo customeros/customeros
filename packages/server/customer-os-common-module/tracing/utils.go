@@ -5,14 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"io"
 	"net/http"
 	"runtime"
 	"runtime/debug"
-	"strings"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
@@ -195,11 +193,6 @@ func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapC
 		return make(opentracing.TextMapCarrier)
 	}
 	return textMapCarrier
-}
-
-func GetTraceId(span opentracing.Span) string {
-	tracingData := ExtractTextMapCarrier((span).Context())
-	return strings.Split(tracingData["uber-trace-id"], ":")[0]
 }
 
 func TagComponentPostgresRepository(span opentracing.Span) {

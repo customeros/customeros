@@ -3,8 +3,7 @@ package postgres_repository
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -23,15 +22,15 @@ func NewWebSessionPageVisitRepository(gormDb *gorm.DB) WebSessionPageVisitReposi
 }
 
 func (r *webSessionPageVisitRepository) Create(ctx context.Context, pageVisit postgres_entity.WebSessionPageVisit) (*postgres_entity.WebSessionPageVisit, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionPageVisitRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "pageVisit", pageVisit)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "WebSessionPageVisitRepository.Create")
+	defer spans.Finish()
+
+	spans.LogObjectAsJson("pageVisit", pageVisit)
 
 	var created postgres_entity.WebSessionPageVisit
 	err := r.gormDb.Create(&pageVisit).Scan(&created).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

@@ -1,10 +1,9 @@
 package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
-	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -25,9 +24,8 @@ func NewPersonalIntegrationsRepo(db *gorm.DB) *PersonalIntegrationsRepo {
 }
 
 func (r *PersonalIntegrationsRepo) FindActivesByIntegration(ctx context.Context, integration string) ([]*postgres_entity.PersonalIntegration, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindActivesByIntegration")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "PersonalIntegrationsRepo.FindActivesByIntegration")
+	defer spans.Finish()
 
 	var personalIntegrationEntity []*postgres_entity.PersonalIntegration
 	err := r.db.
@@ -38,9 +36,8 @@ func (r *PersonalIntegrationsRepo) FindActivesByIntegration(ctx context.Context,
 }
 
 func (r *PersonalIntegrationsRepo) FindIntegration(ctx context.Context, tenant, email, integration string) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindIntegration")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "PersonalIntegrationsRepo.FindIntegration")
+	defer spans.Finish()
 
 	var personalIntegrationEntity postgres_entity.PersonalIntegration
 	err := r.db.
@@ -57,9 +54,8 @@ func (r *PersonalIntegrationsRepo) FindIntegration(ctx context.Context, tenant, 
 }
 
 func (r *PersonalIntegrationsRepo) FindIntegrations(ctx context.Context, tenant, email string) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindIntegrations")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "PersonalIntegrationsRepo.FindIntegrations")
+	defer spans.Finish()
 
 	var personalIntegrationEntities []postgres_entity.PersonalIntegration
 	err := r.db.
@@ -75,9 +71,8 @@ func (r *PersonalIntegrationsRepo) FindIntegrations(ctx context.Context, tenant,
 }
 
 func (r *PersonalIntegrationsRepo) SaveIntegration(ctx context.Context, integration postgres_entity.PersonalIntegration) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.SaveIntegration")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "PersonalIntegrationsRepo.SaveIntegration")
+	defer spans.Finish()
 
 	personalIntegrationEntity := postgres_entity.PersonalIntegration{
 		TenantName: integration.TenantName,

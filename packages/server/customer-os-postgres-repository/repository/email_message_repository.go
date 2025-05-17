@@ -2,11 +2,9 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -28,15 +26,15 @@ func NewEmailMessageRepository(gormDb *gorm.DB) EmailMessageRepository {
 }
 
 func (repo *emailMessageRepositoryImpl) GetByProviderMessageId(ctx context.Context, tenant, providerMessageId string) (*postgres_entity.EmailMessage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetByProviderMessageId")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "EmailMessageRepository.GetByProviderMessageId")
+	defer spans.Finish()
 
-	span.LogFields(log.String("tenant", tenant), log.String("providerMessageId", providerMessageId))
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("providerMessageId", providerMessageId)
 
 	if tenant == "" || providerMessageId == "" {
 		err := errors.New("params missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -44,10 +42,10 @@ func (repo *emailMessageRepositoryImpl) GetByProviderMessageId(ctx context.Conte
 	err := repo.gormDb.Where("tenant = ? and provider_message_id = ?", tenant, providerMessageId).First(&e).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogFields(log.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -55,15 +53,16 @@ func (repo *emailMessageRepositoryImpl) GetByProviderMessageId(ctx context.Conte
 }
 
 func (repo *emailMessageRepositoryImpl) GetByProducer(ctx context.Context, tenant, producerId, producerType string) (*postgres_entity.EmailMessage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetByProducer")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "EmailMessageRepository.GetByProducer")
+	defer spans.Finish()
 
-	span.LogFields(log.String("tenant", tenant), log.String("producerId", producerId), log.String("producerType", producerType))
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("producerId", producerId)
+	spans.LogKV("producerType", producerType)
 
 	if tenant == "" || producerId == "" || producerType == "" {
 		err := errors.New("params missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -71,10 +70,10 @@ func (repo *emailMessageRepositoryImpl) GetByProducer(ctx context.Context, tenan
 	err := repo.gormDb.Where("tenant = ? and producer_id = ? and producer_type = ?", tenant, producerId, producerType).First(&e).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			span.LogFields(log.Bool("result.found", false))
+			spans.LogKV("result.found", false)
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -82,14 +81,13 @@ func (repo *emailMessageRepositoryImpl) GetByProducer(ctx context.Context, tenan
 }
 
 func (repo *emailMessageRepositoryImpl) GetForSending(ctx context.Context) ([]*postgres_entity.EmailMessage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetForSending")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "EmailMessageRepository.GetForSending")
+	defer spans.Finish()
 
 	var entities []*postgres_entity.EmailMessage
 	err := repo.gormDb.Where("status = ?", postgres_entity.EmailMessageStatusScheduled).Order("created_at asc").Limit(25).Find(&entities).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -97,14 +95,13 @@ func (repo *emailMessageRepositoryImpl) GetForSending(ctx context.Context) ([]*p
 }
 
 func (repo *emailMessageRepositoryImpl) GetForProcessing(ctx context.Context) ([]*postgres_entity.EmailMessage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetForProcessing")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "EmailMessageRepository.GetForProcessing")
+	defer spans.Finish()
 
 	var entities []*postgres_entity.EmailMessage
 	err := repo.gormDb.Where("status = ?", postgres_entity.EmailMessageStatusSent).Order("created_at asc").Limit(25).Find(&entities).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -112,16 +109,17 @@ func (repo *emailMessageRepositoryImpl) GetForProcessing(ctx context.Context) ([
 }
 
 func (repo *emailMessageRepositoryImpl) Store(ctx context.Context, tenant string, input *postgres_entity.EmailMessage) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.Store")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "EmailMessageRepository.Store")
+	defer spans.Finish()
 
-	span.LogFields(log.String("tenant", tenant), log.String("producerId", input.ProducerId), log.String("producerType", input.ProducerType))
+	spans.LogKV("tenant", tenant)
+	spans.LogKV("producerId", input.ProducerId)
+	spans.LogKV("producerType", input.ProducerType)
 
 	if input.Status == "" || input.ProducerId == "" || input.ProducerType == "" || input.From == "" || len(input.To) == 0 || input.Subject == "" || input.Content == "" {
-		span.LogFields(log.Object("input", input))
+		spans.LogObjectAsJson("input", input)
 		err := errors.New("params missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -130,7 +128,7 @@ func (repo *emailMessageRepositoryImpl) Store(ctx context.Context, tenant string
 
 	err := repo.gormDb.Save(&input).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

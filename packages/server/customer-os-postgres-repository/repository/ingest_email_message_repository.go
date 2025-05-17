@@ -2,8 +2,7 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 
@@ -31,27 +30,27 @@ func NewIngestEmailMessageRepository(gormDb *gorm.DB) IngestEmailMessageReposito
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) Store(ctx context.Context, tenant, username, provider, messageId string, ingestEmailMessage *postgres_entity.IngestEmailMessage) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.Store")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.Store")
+	defer spans.Finish()
+
+	spans.TagTenant(tenant)
 
 	result := postgres_entity.IngestEmailMessage{}
 	err := repo.gormDb.Find(&result, "tenant = ? AND username = ? AND provider = ? AND message_id = ?", tenant, username, provider, messageId).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if result.Tenant != "" {
 		err := errors.New("IngestEmailMessageRepository.Store - email already exists")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	err = repo.gormDb.Save(&ingestEmailMessage).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -59,16 +58,15 @@ func (repo *ingestEmailMessageRepositoryImpl) Store(ctx context.Context, tenant,
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) UpdateState(ctx context.Context, id string, state postgres_entity.IngestEmailMessageState) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.UpdateState")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.UpdateState")
+	defer spans.Finish()
 
 	err := repo.gormDb.Model(&postgres_entity.IngestEmailMessage{}).
 		Where("id = ?", id).
 		Update("state", state).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -76,14 +74,13 @@ func (repo *ingestEmailMessageRepositoryImpl) UpdateState(ctx context.Context, i
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) CountForUsername(ctx context.Context, tenant, username, provider string) (int64, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.CountForUsername")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.CountForUsername")
+	defer spans.Finish()
 
 	var result int64
 	err := repo.gormDb.Model(postgres_entity.IngestEmailMessage{}).Where("provider = ? AND tenant = ? AND username = ?", provider, tenant, username).Count(&result).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return 0, err
 	}
 
@@ -91,9 +88,8 @@ func (repo *ingestEmailMessageRepositoryImpl) CountForUsername(ctx context.Conte
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) GetByMessageId(ctx context.Context, externalSystem, tenant, username, messageId string) (*postgres_entity.IngestEmailMessage, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.GetByMessageId")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.GetByMessageId")
+	defer spans.Finish()
 
 	var result *postgres_entity.IngestEmailMessage
 	err := repo.gormDb.Where("provider = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).First(&result).Error
@@ -109,14 +105,13 @@ func (repo *ingestEmailMessageRepositoryImpl) GetByMessageId(ctx context.Context
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) EmailExistsByMessageId(ctx context.Context, tenant, username, provider, messageId string) (bool, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.EmailExistsByMessageId")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.EmailExistsByMessageId")
+	defer spans.Finish()
 
 	var result int64
 	err := repo.gormDb.Model(postgres_entity.IngestEmailMessage{}).Where("provider = ? AND tenant = ? AND username = ? AND message_id = ?", provider, tenant, username, messageId).Count(&result).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return false, err
 	}
 
@@ -124,10 +119,13 @@ func (repo *ingestEmailMessageRepositoryImpl) EmailExistsByMessageId(ctx context
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) GetEmail(ctx context.Context, id string) (*postgres_entity.IngestEmailMessage, error) {
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.GetEmail")
+	defer spans.Finish()
+
 	result := postgres_entity.IngestEmailMessage{}
 	err := repo.gormDb.First(&result, "id = ? ", id).Error
 	if err != nil {
-		tracing.TraceErr(nil, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -135,15 +133,14 @@ func (repo *ingestEmailMessageRepositoryImpl) GetEmail(ctx context.Context, id s
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) GetDistinctUsersForPendingMessages(ctx context.Context) ([]postgres_entity.IngestEmailMessage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.GetDistinctUsersForPendingMessages")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.GetDistinctUsersForPendingMessages")
+	defer spans.Finish()
 
 	var results []postgres_entity.IngestEmailMessage
 
 	err := repo.gormDb.Select("DISTINCT tenant, username").Where("state = ?", postgres_entity.IngestEmailMessageStatePending).Find(&results).Error
 	if err != nil {
-		tracing.TraceErr(nil, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -151,15 +148,14 @@ func (repo *ingestEmailMessageRepositoryImpl) GetDistinctUsersForPendingMessages
 }
 
 func (repo *ingestEmailMessageRepositoryImpl) GetEmailsForUserForSync(ctx context.Context, tenant, username string) ([]postgres_entity.IngestEmailMessage, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IngestEmailMessageRepository.GetEmailsForUserForSync")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "IngestEmailMessageRepository.GetEmailsForUserForSync")
+	defer spans.Finish()
 
 	results := []postgres_entity.IngestEmailMessage{}
 
 	err := repo.gormDb.Order("sent_at desc").Limit(50).Find(&results, "tenant = ? AND username = ? AND state = ?", tenant, username, postgres_entity.IngestEmailMessageStatePending).Error
 	if err != nil {
-		tracing.TraceErr(nil, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

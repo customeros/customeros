@@ -2,13 +2,11 @@ package postgres_repository
 
 import (
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -32,15 +30,14 @@ func NewEnrichDetailsBetterContactRepository(gormDb *gorm.DB) EnrichDetailsBette
 }
 
 func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Context, data postgres_entity.EnrichDetailsBetterContact) (*postgres_entity.EnrichDetailsBetterContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.RegisterRequest")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "data", data)
+	spans, _ := telemetry.StartServiceSpan(ctx, "EnrichDetailsBetterContactRepository.RegisterRequest")
+	defer spans.Finish()
+	spans.LogObjectAsJson("data", data)
 
 	data.CreatedAt = utils.Now()
 	err := r.gormDb.Create(&data).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -48,10 +45,10 @@ func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Contex
 }
 
 func (r enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, requestId, response string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.AddResponse")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.SetTag("requestId", requestId)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsBetterContactRepository.AddResponse")
+	defer spans.Finish()
+
+	spans.LogKV("requestId", requestId)
 
 	// Add response to the request with the given requestId
 	err := r.gormDb.
@@ -66,7 +63,7 @@ func (r enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, r
 		).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -74,10 +71,10 @@ func (r enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, r
 }
 
 func (r enrichDetailsBetterContactRepository) GetById(ctx context.Context, id string) (*postgres_entity.EnrichDetailsBetterContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(tracingLog.String("id", id))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsBetterContactRepository.GetById")
+	defer spans.Finish()
+
+	spans.LogKV("id", id)
 
 	var betterContactEntity *postgres_entity.EnrichDetailsBetterContact
 	err := r.gormDb.
@@ -92,10 +89,10 @@ func (r enrichDetailsBetterContactRepository) GetById(ctx context.Context, id st
 }
 
 func (r enrichDetailsBetterContactRepository) GetByRequestId(ctx context.Context, requestId string) (*postgres_entity.EnrichDetailsBetterContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetByRequestId")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(tracingLog.String("requestId", requestId))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsBetterContactRepository.GetByRequestId")
+	defer spans.Finish()
+
+	spans.LogKV("requestId", requestId)
 
 	var betterContactEntity *postgres_entity.EnrichDetailsBetterContact
 	err := r.gormDb.
@@ -110,16 +107,15 @@ func (r enrichDetailsBetterContactRepository) GetByRequestId(ctx context.Context
 }
 
 func (r enrichDetailsBetterContactRepository) GetByRequestParams(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool, lookBack time.Duration) ([]*postgres_entity.EnrichDetailsBetterContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetByRequestParams")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(
-		tracingLog.String("linkedInUrl", linkedInUrl),
-		tracingLog.String("firstName", firstName),
-		tracingLog.String("lastName", lastName),
-		tracingLog.String("companyName", companyName),
-		tracingLog.String("companyDomain", companyDomain),
-		tracingLog.Bool("enrichPhoneNumber", enrichPhoneNumber))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsBetterContactRepository.GetByRequestParams")
+	defer spans.Finish()
+
+	spans.LogKV("linkedInUrl", linkedInUrl)
+	spans.LogKV("firstName", firstName)
+	spans.LogKV("lastName", lastName)
+	spans.LogKV("companyName", companyName)
+	spans.LogKV("companyDomain", companyDomain)
+	spans.LogKV("enrichPhoneNumber", enrichPhoneNumber)
 
 	var betterContactEntity []*postgres_entity.EnrichDetailsBetterContact
 	tx := r.gormDb.
@@ -143,10 +139,10 @@ func (r enrichDetailsBetterContactRepository) GetByRequestParams(ctx context.Con
 }
 
 func (r enrichDetailsBetterContactRepository) GetWithoutResponses(ctx context.Context, limit int) ([]*postgres_entity.EnrichDetailsBetterContact, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(tracingLog.Int("limit", limit))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
+	defer spans.Finish()
+
+	spans.LogKV("limit", limit)
 
 	var betterContactEntities []*postgres_entity.EnrichDetailsBetterContact
 	err := r.gormDb.

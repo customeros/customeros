@@ -11,11 +11,10 @@ import (
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
@@ -38,29 +37,28 @@ func NewRequestEnrichOrganizationListener(logger logger.Logger, deps *model.Depe
 }
 
 func (l *RequestEnrichOrganizationListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestEnrichOrganizationListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestEnrichOrganizationListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	data, err := events.DecodeEventData[dto.RequestEnrichOrganization](ctx, event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	organizationId := event.Event.EntityId
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	spans.TagEntity(organizationId)
 
 	if data.Url == "" {
 		errors.New("Url is not set on event message")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -73,20 +71,20 @@ func (l *RequestEnrichOrganizationListener) Handle(ctx context.Context, baseEven
 }
 
 func (l *RequestEnrichOrganizationListener) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestEnrichOrganizationListener.enrichOrganization")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, organizationId)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestEnrichOrganizationListener.enrichOrganization")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
+	spans.TagEntity(organizationId)
 
 	if domain == "" {
-		tracing.TraceErr(span, errors.New("domain is empty"))
+		spans.TraceError(errors.New("domain is empty"))
 		return nil
 	}
 
 	// check if domain is primary
 	domainEntity, err := l.dependencies.CommonServices.DomainService.GetDomain(ctx, domain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain"))
+		spans.TraceError(errors.Wrap(err, "failed to get domain"))
 		l.dependencies.Logger.Errorf("Error getting domain %s: %s", domain, err.Error())
 		return nil
 	}
@@ -97,7 +95,7 @@ func (l *RequestEnrichOrganizationListener) enrichOrganization(ctx context.Conte
 
 	organizationDbNode, err := l.dependencies.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		l.dependencies.Logger.Errorf("Error getting organization with id %s: %v", organizationId, err)
 		return nil
 	}
@@ -110,18 +108,18 @@ func (l *RequestEnrichOrganizationListener) enrichOrganization(ctx context.Conte
 
 	err = l.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4j_entity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
+		spans.TraceError(errors.Wrap(err, "failed to update enrich requested at"))
 	}
 
 	l.dependencies.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	enrichOrganizationResponse, err := l.dependencies.CommonServices.EnrichmentService.FetchEnrichOrganizationData(ctx, &domain, nil)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to call enrich organization"))
+		spans.TraceError(errors.Wrap(err, "failed to call enrich organization"))
 		l.dependencies.Logger.Errorf("Error calling enrich organization: %s", err.Error())
 		err = l.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4j_entity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
+			spans.TraceError(errors.Wrap(err, "failed to update enrich failed at"))
 		}
 		return nil
 	}
@@ -130,7 +128,7 @@ func (l *RequestEnrichOrganizationListener) enrichOrganization(ctx context.Conte
 	} else {
 		err = l.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4j_entity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
+			spans.TraceError(errors.Wrap(err, "failed to update enrich failed at"))
 		}
 	}
 
@@ -138,10 +136,10 @@ func (l *RequestEnrichOrganizationListener) enrichOrganization(ctx context.Conte
 }
 
 func (l *RequestEnrichOrganizationListener) updateOrganizationWithEnrichData(ctx context.Context, tenant, domain string, organizationEntity neo4j_entity.OrganizationEntity, data *interfaces.OrganizationData) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestEnrichOrganizationListener.updateOrganizationWithEnrichData")
-	defer span.Finish()
-	tracing.LogObjectAsJson(span, "data", data)
-	tracing.TagTenant(span, tenant)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestEnrichOrganizationListener.updateOrganizationWithEnrichData")
+	defer spans.Finish()
+	spans.LogObjectAsJson("data", data)
+	spans.TagTenant(tenant)
 
 	orgFields := data_fields.OrganizationFields{
 		Source:       utils.StringPtr(neo4j_entity.DataSourceOpenline.String()),
@@ -190,7 +188,7 @@ func (l *RequestEnrichOrganizationListener) updateOrganizationWithEnrichData(ctx
 
 	_, err := l.dependencies.CommonServices.OrganizationService.Save(ctx, nil, &organizationEntity.ID, orgFields)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		l.dependencies.Logger.Errorf("Error updaing organization with enrich data: %s", err.Error())
 	}
 
@@ -213,7 +211,7 @@ func (l *RequestEnrichOrganizationListener) updateOrganizationWithEnrichData(ctx
 				Type: commonmodel.ORGANIZATION,
 			})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			spans.TraceError(err)
 		}
 	}
 
@@ -224,17 +222,17 @@ func (l *RequestEnrichOrganizationListener) updateOrganizationWithEnrichData(ctx
 
 	err = l.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationEntity.ID, string(neo4j_entity.OrganizationPropertyEnrichedAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to update enriched at"))
+		spans.TraceError(errors.Wrap(err, "failed to update enriched at"))
 	}
 	l.dependencies.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, organizationEntity.ID, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 }
 
 func (l *RequestEnrichOrganizationListener) addSocial(ctx context.Context, organizationId, tenant, url, alias, externalId, appSource string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestEnrichOrganizationListener.addSocial")
-	defer span.Finish()
-	tracing.TagTenant(span, tenant)
-	tracing.TagEntity(span, organizationId)
-	span.LogKV("url", url, "alias", alias, "externalId", externalId, "appSource", appSource)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "RequestEnrichOrganizationListener.addSocial")
+	defer spans.Finish()
+	spans.TagTenant(tenant)
+	spans.TagEntity(organizationId)
+	spans.LogKV("url", url, "alias", alias, "externalId", externalId, "appSource", appSource)
 
 	socialEntity := neo4j_entity.SocialEntity{
 		Url:        url,
@@ -249,7 +247,7 @@ func (l *RequestEnrichOrganizationListener) addSocial(ctx context.Context, organ
 		Type: commonmodel.ORGANIZATION,
 	}, socialEntity)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		l.dependencies.Logger.Errorf("Error adding %s social: %s", url, err.Error())
 	}
 }

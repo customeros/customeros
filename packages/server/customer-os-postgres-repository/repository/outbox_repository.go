@@ -33,12 +33,12 @@ func NewOutboxRepository(gormDb *gorm.DB) OutboxRepository {
 }
 
 func (r *outboxRepository) Create(ctx context.Context, event *postgres_entity.OutboxEvent) (*postgres_entity.OutboxEvent, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.Create")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.Create")
+	defer spans.Finish()
 
 	err := r.gormDb.WithContext(ctx).Create(event).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -46,12 +46,12 @@ func (r *outboxRepository) Create(ctx context.Context, event *postgres_entity.Ou
 }
 
 func (r *outboxRepository) CreateWithTxn(ctx context.Context, txn *gorm.DB, event *postgres_entity.OutboxEvent) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.CreateWithTxn")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.CreateWithTxn")
+	defer spans.Finish()
 
 	err := txn.WithContext(ctx).Create(event).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -59,9 +59,9 @@ func (r *outboxRepository) CreateWithTxn(ctx context.Context, txn *gorm.DB, even
 }
 
 func (r *outboxRepository) GetPendingEvents(ctx context.Context, limit int) ([]*postgres_entity.OutboxEvent, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.GetPendingEvents")
-	defer span.Finish()
-	span.LogKV("limit", limit)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.GetPendingEvents")
+	defer spans.Finish()
+	spans.LogKV("limit", limit)
 
 	var events []*postgres_entity.OutboxEvent
 
@@ -72,18 +72,18 @@ func (r *outboxRepository) GetPendingEvents(ctx context.Context, limit int) ([]*
 		Limit(limit).
 		Find(&events).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
-	span.LogKV("result.count", len(events))
+	spans.LogKV("result.count", len(events))
 	return events, err
 }
 
 func (r *outboxRepository) MarkAsProcessing(ctx context.Context, id string, lockDuration time.Duration) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.MarkAsProcessing")
-	defer span.Finish()
-	span.LogKV("id", id)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.MarkAsProcessing")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	lockUntil := time.Now().Add(lockDuration)
 
@@ -96,7 +96,7 @@ func (r *outboxRepository) MarkAsProcessing(ctx context.Context, id string, lock
 		})
 
 	if result.Error != nil {
-		span.TraceError(result.Error)
+		spans.TraceError(result.Error)
 		return result.Error
 	}
 
@@ -108,9 +108,9 @@ func (r *outboxRepository) MarkAsProcessing(ctx context.Context, id string, lock
 }
 
 func (r *outboxRepository) MarkAsCompleted(ctx context.Context, id string) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.MarkAsCompleted")
-	defer span.Finish()
-	span.LogKV("id", id)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.MarkAsCompleted")
+	defer spans.Finish()
+	spans.LogKV("id", id)
 
 	now := utils.Now()
 
@@ -124,7 +124,7 @@ func (r *outboxRepository) MarkAsCompleted(ctx context.Context, id string) error
 		}).Error
 
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -132,9 +132,9 @@ func (r *outboxRepository) MarkAsCompleted(ctx context.Context, id string) error
 }
 
 func (r *outboxRepository) MarkAsFailed(ctx context.Context, id string, errorMessage string) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.MarkAsFailed")
-	defer span.Finish()
-	span.LogKV("errorMessage", errorMessage, "id", id)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.MarkAsFailed")
+	defer spans.Finish()
+	spans.LogKV("errorMessage", errorMessage, "id", id)
 
 	err := r.gormDb.WithContext(ctx).
 		Model(&postgres_entity.OutboxEvent{}).
@@ -146,22 +146,22 @@ func (r *outboxRepository) MarkAsFailed(ctx context.Context, id string, errorMes
 		}).Error
 
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return err
 	}
 	return nil
 }
 
 func (r *outboxRepository) IncrementRetryCount(ctx context.Context, id string) error {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.IncrementRetryCount")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.IncrementRetryCount")
+	defer spans.Finish()
 
 	err := r.gormDb.WithContext(ctx).
 		Model(&postgres_entity.OutboxEvent{}).
 		Where("id = ?", id).
 		UpdateColumn("retry_count", gorm.Expr("retry_count + 1")).Error
 	if err != nil {
-		span.TraceError(err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -169,8 +169,8 @@ func (r *outboxRepository) IncrementRetryCount(ctx context.Context, id string) e
 }
 
 func (r *outboxRepository) DeleteProcessedEvents(ctx context.Context, olderThan time.Duration, limit int64) (int64, error) {
-	span, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.DeleteProcessedEvents")
-	defer span.Finish()
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "outboxRepository.DeleteProcessedEvents")
+	defer spans.Finish()
 
 	cutoffTime := time.Now().Add(-olderThan)
 
@@ -181,11 +181,11 @@ func (r *outboxRepository) DeleteProcessedEvents(ctx context.Context, olderThan 
 		Delete(&postgres_entity.OutboxEvent{})
 
 	if result.Error != nil {
-		span.TraceError(result.Error)
+		spans.TraceError(result.Error)
 		return 0, result.Error
 	}
 
-	span.LogKV("result.rowsDeleted", result.RowsAffected)
+	spans.LogKV("result.rowsDeleted", result.RowsAffected)
 
 	return result.RowsAffected, nil
 }

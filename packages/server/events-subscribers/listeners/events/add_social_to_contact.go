@@ -6,6 +6,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/mitchellh/mapstructure"
 	"github.com/opentracing/opentracing-go"
@@ -32,26 +33,25 @@ func NewAddSocialToContactListener(logger logger.Logger, deps *model.DependencyC
 }
 
 func (l *AddSocialToContactListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AddSocialToContactListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "AddSocialToContactListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	data, err := events.DecodeEventData[dto.AddSocialToContact](ctx, event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if data.SocialUrl == "" {
 		err = errors.New("Social not set on event message")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -60,7 +60,7 @@ func (l *AddSocialToContactListener) Handle(ctx context.Context, baseEvent any) 
 
 	err = l.dependencies.CommonServices.EnrichmentService.EnrichContact(ctx, contactId, socialId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

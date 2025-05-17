@@ -3,6 +3,7 @@ package api_invoice
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"reflect"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -311,15 +312,14 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 }
 
 func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceUpdateInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateInvoice")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	spans, ctx := telemetry.StartServiceSpan(ctx, "ContractService.UpdateInvoice")
+	defer spans.Finish()
+	spans.LogObjectAsJson("input", input)
 
 	if input.ID == "" {
 		err := fmt.Errorf("invoice id is missing")
 		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -327,7 +327,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 	if !invoiceExists {
 		err := fmt.Errorf("invoice with id {%s} not found", input.ID)
 		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -357,14 +357,14 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 		if input.Status != nil {
 			data.UpdateStatus = true
 		} else {
-			span.LogFields(log.String("result", "No fields to update"))
+			spans.LogKV("result", "No fields to update")
 			return nil
 		}
 	}
 
 	err := s.invoice.UpdateInvoice(ctx, nil, input.ID, data)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		s.log.Error(err.Error())
 		return err
 	}

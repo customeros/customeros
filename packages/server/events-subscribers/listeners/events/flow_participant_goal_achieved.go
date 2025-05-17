@@ -10,6 +10,7 @@ import (
 	common_model "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -37,32 +38,31 @@ func NewFlowParticipantGoalAchievedListener(logger logger.Logger, deps *model.De
 }
 
 func (l *FlowParticipantGoalAchievedListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantGoalAchievedListener.Handle")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
+	spans, ctx := telemetry.StartListenerSpan(ctx, "FlowParticipantGoalAchievedListener.Handle")
+	defer spans.Finish()
+	spans.LogObjectAsJson("baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	data, err := events.DecodeEventData[dto.FlowParticipantGoalAchieved](ctx, event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if data.ParticipantId == "" {
 		err := errors.New("ParticipantID is empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
 	if data.ParticipantType == "" {
 		err := errors.New("ParticipantType is empty")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 

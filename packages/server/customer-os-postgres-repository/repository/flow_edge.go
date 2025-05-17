@@ -3,9 +3,8 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/opentracing/opentracing-go"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 
@@ -28,9 +27,8 @@ func NewFlowEdgeRepository(gormDb *gorm.DB) FlowEdgeRepository {
 }
 
 func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.CreateFlowEdge")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowEdgeRepository.CreateFlowEdge")
+	defer spans.Finish()
 
 	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge", 16)
 
@@ -43,25 +41,23 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge postgres_entit
 }
 
 func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge postgres_entity.FlowEdge) ([]postgres_entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.FindAll")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowEdgeRepository.FindAll")
+	defer spans.Finish()
 
 	var results []postgres_entity.FlowEdge
 	err := f.gormDb.
 		Where(&flowEdge).
 		Find(&results).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 	return results, nil
 }
 
 func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Find")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowEdgeRepository.Find")
+	defer spans.Finish()
 
 	var result postgres_entity.FlowEdge
 	err := f.gormDb.
@@ -71,7 +67,7 @@ func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge postgres_entity.
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -79,13 +75,12 @@ func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge postgres_entity.
 }
 
 func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, ctx := telemetry.StartPostgresSpan(ctx, "FlowEdgeRepository.Update")
+	defer spans.Finish()
 
 	if flowEdge.ID == "" {
 		err := errors.New("flow edge ID is missing")
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 
@@ -97,7 +92,7 @@ func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge postgres_entit
 		First(&updatedEdge, "id = ?", flowEdge.ID).
 		Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return nil, err
 	}
 

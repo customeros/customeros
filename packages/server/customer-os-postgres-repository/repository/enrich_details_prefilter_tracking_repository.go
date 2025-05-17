@@ -2,11 +2,9 @@ package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/telemetry"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -28,9 +26,8 @@ func NewEnrichDetailsPrefilterTrackingRepository(gormDb *gorm.DB) EnrichDetailsP
 }
 
 func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx context.Context) ([]*postgres_entity.EnrichDetailsPreFilterTracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests")
+	defer spans.Finish()
 
 	var entitites []*postgres_entity.EnrichDetailsPreFilterTracking
 	err := r.gormDb.
@@ -39,19 +36,19 @@ func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx cont
 		Find(&entitites).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(entitites)))
+	spans.LogKV("result.count", len(entitites))
 
 	return entitites, err
 }
 
 func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, ip string) (*postgres_entity.EnrichDetailsPreFilterTracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetByIP")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(tracingLog.String("ip", ip))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsPrefilterTrackingRepository.GetByIP")
+	defer spans.Finish()
+
+	spans.LogKV("ip", ip)
 
 	var postgres_entity *postgres_entity.EnrichDetailsPreFilterTracking
 	err := r.gormDb.
@@ -59,24 +56,24 @@ func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, i
 		First(&postgres_entity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		spans.LogKV("result.found", false)
 		return nil, nil
 	}
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 	}
 
-	span.LogFields(tracingLog.Bool("result.found", true))
+	spans.LogKV("result.found", true)
 
 	return postgres_entity, err
 }
 
 func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Context, ip string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterRequest")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogKV("ip", ip)
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterRequest")
+	defer spans.Finish()
+
+	spans.LogKV("ip", ip)
 
 	request := postgres_entity.EnrichDetailsPreFilterTracking{
 		CreatedAt: utils.Now(),
@@ -85,7 +82,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 
 	err := r.gormDb.Create(&request).Error
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -93,14 +90,17 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 }
 
 func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, skipIdenitifyReason, response string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterResponse")
-	defer span.Finish()
-	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-	span.LogFields(tracingLog.String("ip", ip), tracingLog.Bool("shouldIdentify", shouldIdentify), tracingLog.String("response", response), tracingLog.String("skipIdenitifyReason", skipIdenitifyReason))
+	spans, _ := telemetry.StartPostgresSpan(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterResponse")
+	defer spans.Finish()
+
+	spans.LogKV("ip", ip)
+	spans.LogKV("shouldIdentify", shouldIdentify)
+	spans.LogKV("response", response)
+	spans.LogKV("skipIdenitifyReason", skipIdenitifyReason)
 
 	byId, err := r.GetByIP(ctx, ip)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
@@ -111,7 +111,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.C
 	err = r.gormDb.Save(byId).Error
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		spans.TraceError(err)
 		return err
 	}
 
