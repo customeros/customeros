@@ -12,3 +12,4 @@ packages/apps/spaces/.sentryclirc
 packages/apps/www/node_modules
 packages/apps/www/.env
 .aider*
+.elixir*

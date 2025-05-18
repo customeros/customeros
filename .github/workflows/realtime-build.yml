@@ -3,10 +3,10 @@ name: Realtime Build (PR)
 on:
   pull_request:
     paths:
-      - "packages/server/realtime/**"
+      - "packages/server/core/**"
 
 env:
-  APP_PATH: packages/server/realtime
+  APP_PATH: packages/server/core
 
 permissions:
   pull-requests: read
@@ -29,9 +29,6 @@ jobs:
           curl -fsSL https://bun.sh/install | bash
           echo "$HOME/.bun/bin" >> $GITHUB_PATH
 
-      - name: Make build.sh executable
-        run: chmod +x ./packages/server/realtime/build.sh
-
       - name: Build Phoenix app
         run: |
-          ./packages/server/realtime/build.sh
+          ./deployment/runners/build-core.sh ${{ env.APP_PATH }}
