@@ -1,4 +1,4 @@
-name: Realtime Build (PR)
+name: Core Build (PR)
 
 on:
   pull_request:
