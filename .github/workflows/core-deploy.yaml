@@ -1,4 +1,4 @@
-name: Realtime Deploy
+name: Core Deploy
 on:
   push:
     tags:
@@ -58,7 +58,7 @@ jobs:
 
       - name: Build and push container image
         run: |
-          ./deployment/runners/build-image.sh \
+          ./deployment/runners/build-and-push-image.sh \
             ${{ env.REGISTRY }} \
             ${{ env.IMAGE_NAME }} \
             ${{ env.VERSION }} \
