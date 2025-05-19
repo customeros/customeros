@@ -64,7 +64,7 @@ jobs:
 
       - name: Build and push container image
         run: |
-          sh ./packages/server/realtime/build-image.sh \
+          bash ./packages/server/realtime/build-image.sh \
             ${{ env.REGISTRY }} \
             ${{ env.IMAGE_NAME }} \
             ${{ env.VERSION }} \
