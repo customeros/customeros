@@ -10,7 +10,7 @@ ARCH=${5:-"arm64"}
 REPO=$6
 APP_PATH=$7
 
-CONTAINERFILE_PATH="./Dockerfile"
+CONTAINERFILE_PATH="${APP_PATH}/Dockerfile"
 
 # Ensure required variables are set
 if [ -z "$REGISTRY" ] || [ -z "$IMAGE_NAME" ] || [ -z "$VERSION" ]; then
