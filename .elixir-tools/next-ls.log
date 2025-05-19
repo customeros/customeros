@@ -1,0 +1,137 @@
+
+14:08:22.722 [info] Loading 157 CA(s) from :otp store
+
+14:08:23.191 id=1 [debug] handled request client -> server initialize in 67ms
+
+14:08:23.195 [debug] sent notification server -> client window/logMessage
+
+14:08:23.197 [debug] NextLS v0.23.3 has initialized!
+
+14:08:23.197 [debug] sent notification server -> client window/logMessage
+
+14:08:23.197 [debug] Log file located at /Users/mbrown/src/github.com/customeros/customeros/.elixir-tools/next-ls.log
+
+14:08:23.199 id=42 [debug] sent request server -> client client/registerCapability
+
+14:08:23.199 [debug] sent notification server -> client window/logMessage
+
+14:08:23.199 [info] [extension] Credo initializing with options %NextLS.InitOpts.Extensions.Credo{enable: true, cli_options: []}
+
+14:08:26.853 [debug] sent notification server -> client window/logMessage
+
+14:08:26.853 [debug] Booting runtimes...
+
+14:08:26.856 id=3 [debug] sent request server -> client window/workDoneProgress/create
+
+14:08:26.858 [debug] sent notification server -> client $/progress
+
+14:08:27.032 [debug] sent notification server -> client window/logMessage
+
+14:08:27.032 [info] Beginning DB migration...
+
+14:08:27.038 [debug] sent notification server -> client window/logMessage
+
+14:08:27.038 [info] Database is being upgraded from version 0 to 7.
+
+This will trigger a full recompilation in order to re-index your codebase.
+
+
+14:08:27.040 [debug] sent notification server -> client window/logMessage
+
+14:08:27.040 [info] Finished DB migration...
+
+14:08:27.040 [debug] sent notification server -> client window/logMessage
+
+14:08:27.040 [info] Booting runtime for realtime.
+
+- elixir: /Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin/elixir
+- zombie wrapper script: /Users/mbrown/Library/Application Support/.burrito/next_ls_erts-15.2_0.23.3/lib/next_ls-0.23.3/priv/cmd
+- working_dir: /Users/mbrown/src/github.com/customeros/customeros/packages/server/realtime
+- command: /Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin/elixir --no-halt --sname nextls-runtime-1747573707040094000 --cookie B5KWOZJIEP7TC5LDWAQBZUILE3M23QPWYKPSADNHECVNH73HK4LA==== -S mix loadpaths --no-compile
+
+Environment: 
+
+LSP=nextls
+NEXTLS_PARENT_PID=g1h3IG5leHQtbHMtMTc0NzU3MzcwMzA4ODgwNTQ1OEBtYXR0AAAA4gAAAABoKdvI
+MIX_ENV=dev
+MIX_TARGET=host
+MIX_BUILD_ROOT=.elixir-tools/_build
+ROOTDIR=false
+BINDIR=false
+RELEASE_ROOT=false
+RELEASE_SYS_CONFIG=false
+PATH=/Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin:/Users/mbrown/Library/Application Support/.burrito/next_ls_erts-15.2_0.23.3/bin:/Users/mbrown/.local/share/nvim/mason/bin:/Users/mbrown/.local/share/nvim/mason/bin:/Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin:/Users/mbrown/.local/share/mise/installs/elixir/1.18.3/.mix/escripts:/Users/mbrown/.local/share/mise/installs/erlang/27.3.4/bin:/Users/mbrown/.local/share/mise/installs/go/1.24.2/bin:/Users/mbrown/.local/share/mise/installs/janet/1.38.0/bin:/Users/mbrown/.local/share/mise/installs/lua/5.4.6/bin:/Users/mbrown/.local/share/mise/installs/lua/5.4.6/luarocks/bin:/Users/mbrown/.local/share/mise/installs/neovim/stable/nvim-macos-arm64/bin:/Users/mbrown/.local/share/mise/installs/node/22.5.1/bin:/Users/mbrown/.local/share/mise/installs/ocaml/5.3.0/bin:/Users/mbrown/.local/share/mise/installs/python/3.13.2/bin:/Users/mbrown/.local/share/mise/installs/zig/0.14.0/bin:/Users/mbrown/.opam/ocaml-base-compiler.5.3.0/bin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/mbrown/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+
+14:08:27.040 [debug] handled notification client -> server initialized in 3847ms
+
+14:08:27.044 [debug] handled notification client -> server textDocument/didOpen in 3ms
+
+14:08:27.665 [debug] sent notification server -> client $/progress
+
+14:08:27.665 [debug] sent notification server -> client window/logMessage
+
+14:08:27.665 [debug] Unchecked dependencies for environment dev:
+* telemetry_metrics (Hex package)
+  the dependency is not available, run "mix deps.get"
+* bandit (Hex package)
+  the dependency is not available, run "mix deps.get"
+* phoenix_live_view (Hex package)
+  the dependency is not available, run "mix deps.get"
+* telemetry_poller (Hex package)
+
+
+14:08:27.665 [debug] sent notification server -> client window/logMessage
+
+14:08:27.665 [error] Runtime for folder realtime failed to initialize
+
+14:08:27.666 [debug] sent notification server -> client window/logMessage
+
+14:08:27.666 [info] Booting runtime for realtime.
+
+- elixir: /Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin/elixir
+- zombie wrapper script: /Users/mbrown/Library/Application Support/.burrito/next_ls_erts-15.2_0.23.3/lib/next_ls-0.23.3/priv/cmd
+- working_dir: /Users/mbrown/src/github.com/customeros/customeros/packages/server/realtime
+- command: /Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin/elixir --no-halt --sname nextls-runtime-1747573707666075917 --cookie B5KWOZJIEP7TC5LDWAQBZUILE3M23QPWYKPSADNHECVNH73HK4LA==== -S mix loadpaths --no-compile
+
+Environment: 
+
+LSP=nextls
+NEXTLS_PARENT_PID=g1h3IG5leHQtbHMtMTc0NzU3MzcwMzA4ODgwNTQ1OEBtYXR0AAAA4gAAAABoKdvI
+MIX_ENV=dev
+MIX_TARGET=host
+MIX_BUILD_ROOT=.elixir-tools/_build
+ROOTDIR=false
+BINDIR=false
+RELEASE_ROOT=false
+RELEASE_SYS_CONFIG=false
+PATH=/Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin:/Users/mbrown/Library/Application Support/.burrito/next_ls_erts-15.2_0.23.3/bin:/Users/mbrown/.local/share/nvim/mason/bin:/Users/mbrown/.local/share/nvim/mason/bin:/Users/mbrown/.local/share/mise/installs/elixir/1.18.3/bin:/Users/mbrown/.local/share/mise/installs/elixir/1.18.3/.mix/escripts:/Users/mbrown/.local/share/mise/installs/erlang/27.3.4/bin:/Users/mbrown/.local/share/mise/installs/go/1.24.2/bin:/Users/mbrown/.local/share/mise/installs/janet/1.38.0/bin:/Users/mbrown/.local/share/mise/installs/lua/5.4.6/bin:/Users/mbrown/.local/share/mise/installs/lua/5.4.6/luarocks/bin:/Users/mbrown/.local/share/mise/installs/neovim/stable/nvim-macos-arm64/bin:/Users/mbrown/.local/share/mise/installs/node/22.5.1/bin:/Users/mbrown/.local/share/mise/installs/ocaml/5.3.0/bin:/Users/mbrown/.local/share/mise/installs/python/3.13.2/bin:/Users/mbrown/.local/share/mise/installs/zig/0.14.0/bin:/Users/mbrown/.opam/ocaml-base-compiler.5.3.0/bin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.go/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/opt/libpq/bin:/Users/mbrown/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/mbrown/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+
+14:08:27.666 [debug] sent notification server -> client window/logMessage
+
+14:08:27.666 [error] The runtime for realtime has crashed with reason: {:shutdown, :unchecked_dependencies}
+
+14:08:27.667 [debug] sent notification server -> client window/logMessage
+
+14:08:27.667 [info] The runtime for realtime has successfully shut down.
+
+14:08:27.667 id=67 [debug] sent request server -> client window/showMessageRequest
+
+14:08:27.734 [debug] sent notification server -> client window/logMessage
+
+14:08:27.734 [info] Not running `mix deps.get`
+
+14:09:28.184 [debug] handled notification client -> server textDocument/didClose in 2ms
+
+14:09:28.348 [debug] handled notification client -> server textDocument/didOpen in 93µs
+
+14:09:34.009 [debug] handled notification client -> server textDocument/didOpen in 111µs
+
+14:09:38.977 [debug] handled notification client -> server textDocument/didOpen in 72µs
+
+14:09:49.631 [debug] handled notification client -> server textDocument/didOpen in 112µs
+
+14:09:53.546 [debug] handled notification client -> server textDocument/didOpen in 218µs
+
+14:10:04.366 [debug] handled notification client -> server textDocument/didOpen in 219µs

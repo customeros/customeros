@@ -27,8 +27,8 @@ const (
 	EventRequestWebContent NatsEventType = "request.web.content"
 
 	// AI and analysis events
-	EventRequestWebpageClassification NatsEventType = "request.webpage_classification"
-	EventRequestWebpageIntent         NatsEventType = "request.webpage_intent"
+	EventRequestWebpageClassification NatsEventType = "request.ai.webpage_classification"
+	EventRequestWebpageIntent         NatsEventType = "request.ai.webpage_intent"
 
 	// ICP Profile events
 	EventIdealCustomerProfileCreated       NatsEventType = "icp.created"
