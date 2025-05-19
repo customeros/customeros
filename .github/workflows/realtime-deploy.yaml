@@ -59,12 +59,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Make build.sh executable
+      - name: Make build-image.sh executable
         run: chmod +x ./packages/server/realtime/build-image.sh
 
       - name: Build and push container image
         run: |
-          ./packages/server/realtime/build-image.sh \
+          sh ./packages/server/realtime/build-image.sh \
             ${{ env.REGISTRY }} \
             ${{ env.IMAGE_NAME }} \
             ${{ env.VERSION }} \
