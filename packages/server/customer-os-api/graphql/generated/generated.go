@@ -19095,6 +19095,7 @@ input UserUpdateInput {
   id: ID!
   name: String
   profilePhotoUrl: String @deprecated
+  profilePhotoUrlV2: String
 }
 
 input UserOnboardingDetailsInput {
@@ -128070,7 +128071,7 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "profilePhotoUrl"}
+	fieldsInOrder := [...]string{"id", "name", "profilePhotoUrl", "profilePhotoUrlV2"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -128098,6 +128099,13 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.ProfilePhotoURL = data
+		case "profilePhotoUrlV2":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrlV2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURLV2 = data
 		}
 	}
 

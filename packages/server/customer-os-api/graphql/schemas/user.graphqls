@@ -149,6 +149,7 @@ input UserUpdateInput {
   id: ID!
   name: String
   profilePhotoUrl: String @deprecated
+  profilePhotoUrlV2: String
 }
 
 input UserOnboardingDetailsInput {
