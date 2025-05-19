@@ -3350,9 +3350,10 @@ func (UserParticipant) IsIssueParticipant() {}
 func (UserParticipant) IsMeetingParticipant() {}
 
 type UserUpdateInput struct {
-	ID              string  `json:"id"`
-	Name            *string `json:"name,omitempty"`
-	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+	ID                string  `json:"id"`
+	Name              *string `json:"name,omitempty"`
+	ProfilePhotoURL   *string `json:"profilePhotoUrl,omitempty"`
+	ProfilePhotoURLV2 *string `json:"profilePhotoUrlV2,omitempty"`
 }
 
 type WebsiteCheckDetails struct {

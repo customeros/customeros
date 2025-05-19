@@ -61,6 +61,9 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input *model.UserUpda
 	userData := data_fields.UserFields{
 		ProfilePhotoUrl: input.ProfilePhotoURL,
 	}
+	if input.ProfilePhotoURLV2 != nil && *input.ProfilePhotoURLV2 == "" {
+		userData.ProfilePhotoKey = utils.StringPtr("")
+	}
 	if input.Name != nil {
 		firstName, lastName := utils.SplitFullName(*input.Name)
 		userData.FirstName = &firstName
