@@ -36,7 +36,7 @@ defmodule Web.UserSocket do
   channel "TenantBillingProfiles:*", Web.TenantBillingProfilesChannel
   channel "Contact:*", Web.ContactChannel
   channel "Contacts:*", Web.ContactsChannel
-  channel "Reminder*", Web.ReminderChannel
+  channel "Reminder:*", Web.ReminderChannel
   channel "Reminders*", Web.RemindersChannel
   channel "Action:*", Web.ActionChannel
   channel "Actions:*", Web.ActionsChannel
