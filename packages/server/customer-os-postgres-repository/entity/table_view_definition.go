@@ -101,6 +101,7 @@ const (
 	ColumnViewTypeOrganizationsTags                  ColumnViewType = "ORGANIZATIONS_TAGS"
 	ColumnViewTypeOrganizationsUpdatedDate           ColumnViewType = "ORGANIZATIONS_UPDATED_DATE"
 	ColumnViewTypeOrganizationsIcpFit                ColumnViewType = "ORGANIZATIONS_ICP_FIT"
+	ColumnViewTypeOrganizationsQualificationStatus   ColumnViewType = "ORGANIZATIONS_QUALIFICATION_STATUS"
 	ColumnViewTypeContactsAvatar                     ColumnViewType = "CONTACTS_AVATAR"
 	ColumnViewTypeContactsName                       ColumnViewType = "CONTACTS_NAME"
 	ColumnViewTypeContactsOrganization               ColumnViewType = "CONTACTS_ORGANIZATION"

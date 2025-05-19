@@ -11,7 +11,7 @@ var statusByModel = map[model.QualificationStatus]commonenum.QualificationStatus
 	model.QualificationStatusQualifying:   commonenum.QualificationStatusQualifying,
 	model.QualificationStatusQualified:    commonenum.QualificationStatusQualified,
 	model.QualificationStatusNotQualified: commonenum.QualificationStatusNotQualified,
-	model.QualificationStatusPending:      "",
+	model.QualificationStatusPending:      commonenum.QualificationStatusPending,
 }
 
 var statusByValue = utils.ReverseMap(statusByModel)

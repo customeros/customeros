@@ -73,14 +73,18 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 					org.onboardingStatus = $onboardingStatus,
 					org.lastTouchpointAt = datetime(),
 					org.lastTouchpointType = $lastTouchpointType,
+					org.qualificationStatus = $createQualificationStatus,
+					org.qualificationStatusOrder = $createQualificationStatusOrder,
 					org.hide=false`, tenant)
 		paramsCreate := map[string]any{
-			"tenant":             tenant,
-			"organizationId":     organizationId,
-			"source":             utils.IfNotNilString(data.Source),
-			"appSource":          utils.IfNotNilString(data.AppSource),
-			"onboardingStatus":   string(neo4jenum.OnboardingStatusNotApplicable),
-			"lastTouchpointType": neo4jenum.TouchpointTypeActionCreated.String(),
+			"tenant":                         tenant,
+			"organizationId":                 organizationId,
+			"source":                         utils.IfNotNilString(data.Source),
+			"appSource":                      utils.IfNotNilString(data.AppSource),
+			"onboardingStatus":               string(neo4jenum.OnboardingStatusNotApplicable),
+			"lastTouchpointType":             neo4jenum.TouchpointTypeActionCreated.String(),
+			"createQualificationStatus":      enum.QualificationStatusPending.String(),
+			"createQualificationStatusOrder": enum.QualificationStatusPending.Order(),
 		}
 
 		spans.LogKV("cypherCreate", cypherCreate)
@@ -205,6 +209,9 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		if data.QualificationStatus != nil {
 			cypherUpdate += `org.qualificationStatus = $qualificationStatus,`
 			paramsUpdate["qualificationStatus"] = (*data.QualificationStatus).String()
+
+			cypherUpdate += `org.qualificationStatusOrder = $qualificationStatusOrder,`
+			paramsUpdate["qualificationStatusOrder"] = (*data.QualificationStatus).Order()
 		}
 		if data.QualifiedBy != nil {
 			cypherUpdate += `org.qualifiedBy = $qualifiedBy,`

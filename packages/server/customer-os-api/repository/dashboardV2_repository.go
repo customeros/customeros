@@ -111,6 +111,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsStage) {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyStage))
 			}
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsQualificationStatus) {
+				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyQualificationStatus))
+			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsSocials) {
 				socialFilter.Filters = append(socialFilter.Filters, utils.CreateStringCypherFilter("url", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
@@ -354,6 +357,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				} else {
 					aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE '' END as SORT_BY "
 				}
+			}
+			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsQualificationStatus) {
+				aliases += "CASE WHEN o.qualificationStatusOrder IS NULL THEN 0 ELSE o.qualificationStatusOrder END as SORT_BY "
 			}
 			if sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLeadSource) {
 				if sort.Direction == commonmodel.SortingDirectionAsc {
