@@ -2,20 +2,19 @@ import Config
 
 # Core application configuration
 config :core,
-  ecto_repos: [Core.Repo],
+  ecto_repos: [Core.Realtime.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Web endpoint configuration
-config(:core, Web.Endpoint,
+config :core, Web.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: Web.ErrorHTML, json: Web.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Realtime.PubSub,
+  pubsub_server: Core.Realtime.PubSub,
   live_view: [signing_salt: "jVLoUB9r"]
-)
 
 # Logger configuration
 config :logger, :console,

@@ -33,7 +33,7 @@ end
 if get_env.("PHX_SERVER", nil), do: config(:realtime, Web.Endpoint, server: true)
 
 # Database configuration
-config(:core, Core.Repo,
+config :core, Core.Repo,
   username: get_env.("POSTGRES_USER", "postgres"),
   password: get_env.("POSTGRES_PASSWORD", "password"),
   hostname: get_env.("POSTGRES_HOST", "localhost"),
@@ -42,7 +42,6 @@ config(:core, Core.Repo,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
-)
 
 # OpenTelemetry configuration
 config :opentelemetry, :resource, service: %{name: "Realtime"}
@@ -63,15 +62,15 @@ config :opentelemetry, :processors,
 # Nats configuration
 if config_env() == :prod do
   # Set NATS environment to production in production mode
-  config :nats, environment: "production"
+  config :core, :nats, environment: "production"
 end
 
 # Configure NATS hosts if environment variables are set
 Enum.each(1..3, fn node ->
   host_var = "NATS_HOST_NODE_#{node}"
 
-  if host = get_env.(host_var, "") do
-    if host != "", do: config(:nats, String.to_atom("nats_node_#{node}"), host)
+  if host = get_env.(host_var, "localhost") do
+    if host != "", do: config(:core, :nats, String.to_atom("nats_node_#{node}"))
   end
 end)
 
