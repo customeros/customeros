@@ -7,13 +7,13 @@ defmodule Core.Nats.Supervisor do
   @impl true
   def init(_init_args) do
     children = [
-      Nats.Connection,
-      {Nats.Consumer,
-       stream: "webtracker",
-       consumer: "realtime-webtracker-consumer",
-       deliver_group: "realtime-webtracker-group",
-       filter_subject: "webtracker.>",
-       handler: Core.Nats.Handlers.WebtrackerHandler}
+      Core.Nats.Connection
+      # {Core.Nats.Consumer,
+      #  stream: "webtracker",
+      #  consumer: "realtime-webtracker-consumer",
+      #  deliver_group: "realtime-webtracker-group",
+      #  filter_subject: "webtracker.>",
+      #  handler: Core.Nats.Handlers.WebtrackerHandler}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
