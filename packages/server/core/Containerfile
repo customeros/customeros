@@ -59,11 +59,11 @@ COPY packages/server/core/lib lib
 COPY packages/server/core/priv priv
 
 # overlays
-Run mkdir -p rel/overlays/bin
+RUN mkdir -p rel/overlays/bin
 
-# Copy overlay files if they exist
-COPY packages/server/core/rel/overlays/bin/server rel/overlays/bin/server || true
-COPY packages/server/core/rel/overlays/bin/server.bat rel/overlays/bin/server.bat || true
+# Copy overlay files
+COPY packages/server/core/scripts/rel/server rel/overlays/bin/server
+COPY packages/server/core/scripts/rel/server.bat rel/overlays/bin/server.bat
 
 # Make sure server script is executable
 RUN if [ -f rel/overlays/bin/server ]; then chmod +x rel/overlays/bin/server; fi
@@ -73,7 +73,6 @@ RUN mix compile
 
 # Copy runtime config
 COPY packages/server/core/config/runtime.exs config/
-COPY packages/server/core/scripts/rel rel
 
 # Create the release
 RUN mix release
