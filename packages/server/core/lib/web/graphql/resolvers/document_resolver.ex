@@ -1,5 +1,5 @@
 defmodule Web.Graphql.Resolvers.DocumentResolver do
-  alias Realtime.Documents
+  alias Core.Realtime.Documents
 
   def list_documents(_parent, %{organization_id: id}, %{
         context: ctx

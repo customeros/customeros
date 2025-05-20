@@ -58,6 +58,16 @@ RUN mix deps.compile
 COPY packages/server/core/lib lib
 COPY packages/server/core/priv priv
 
+# overlays
+Run mkdir -p rel/overlays/bin
+
+# Copy overlay files if they exist
+COPY packages/server/core/rel/overlays/bin/server rel/overlays/bin/server || true
+COPY packages/server/core/rel/overlays/bin/server.bat rel/overlays/bin/server.bat || true
+
+# Make sure server script is executable
+RUN if [ -f rel/overlays/bin/server ]; then chmod +x rel/overlays/bin/server; fi
+
 # Compile the release
 RUN mix compile
 

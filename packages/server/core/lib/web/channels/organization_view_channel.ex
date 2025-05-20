@@ -5,7 +5,7 @@ defmodule Web.OrganizationViewChannel do
   require Logger
   require Enum
   use Web, :channel
-  alias Realtime.ColorManager
+  alias Core.Realtime.ColorManager
   alias Web.Presence
 
   @impl true

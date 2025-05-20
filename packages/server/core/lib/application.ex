@@ -9,13 +9,13 @@ defmodule Core.Application do
 
     children = [
       Web.Telemetry,
-      Realtime.Repo,
+      Core.Repo,
       {DNSCluster, query: Application.get_env(:core, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Realtime.PubSub},
       Web.Presence,
       Web.Endpoint,
-      Realtime.ColorManager,
-      Realtime.StoreManager
+      Core.Realtime.ColorManager,
+      Core.Realtime.StoreManager
     ]
 
     env = Application.get_env(:core, :app_env, :prod)
@@ -24,14 +24,14 @@ defmodule Core.Application do
       if env != :test do
         children ++
           [
-            Realtime.RabbitMQConsumer,
-            Nats.Supervisor
+            Core.Realtime.RabbitMQConsumer,
+            Core.Nats.Supervisor
           ]
       else
         children
       end
 
-    opts = [strategy: :one_for_one, name: Realtime.Supervisor]
+    opts = [strategy: :one_for_one, name: Core.Realtime.Supervisor]
     Supervisor.start_link(children, opts)
   end
 

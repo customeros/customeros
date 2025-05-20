@@ -1,7 +1,7 @@
 defmodule Web.DocumentController do
   use Web, :controller
   require Logger
-  alias Realtime.Documents
+  alias Core.Realtime.Documents
 
   def create(
         conn,
@@ -34,7 +34,7 @@ defmodule Web.DocumentController do
       |> Enum.map(fn doc ->
         if is_struct(doc), do: Map.from_struct(doc), else: doc
       end)
-      |> Enum.map(&Realtime.Util.to_camel_case_map/1)
+      |> Enum.map(&Core.Realtime.Util.to_camel_case_map/1)
       |> Jason.encode!()
 
     conn
@@ -48,7 +48,7 @@ defmodule Web.DocumentController do
         json_response =
           document
           |> Map.from_struct()
-          |> Realtime.Util.to_camel_case_map()
+          |> Core.Realtime.Util.to_camel_case_map()
           |> Jason.encode!()
 
         conn

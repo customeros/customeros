@@ -12,7 +12,9 @@ defmodule Core.MixProject do
       deps: deps(),
       releases: [
         core: [
-          applications: [opentelemetry: :temporary]
+          applications: [opentelemetry: :temporary],
+          include_executables_for: [:unix],
+          strip_beams: Mix.env() == :prod,
         ]
       ],
       dialyzer: [plt_add_deps: :apps_direct]

@@ -6,7 +6,7 @@ defmodule Web.GenericMultiChannel do
   require Logger
   use Web, :channel
 
-  @store Realtime.StoreManager
+  @store Core.Realtime.StoreManager
 
   def handle_join(
         entity_prefix,
