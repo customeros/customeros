@@ -73,7 +73,7 @@ RUN mix compile
 
 # Copy runtime config
 COPY packages/server/core/config/runtime.exs config/
-COPY packages/server/core/rel rel
+COPY packages/server/core/scripts/rel rel
 
 # Create the release
 RUN mix release

@@ -41,7 +41,7 @@ priv/scripts/*
 
 .vscode/
 .elixir_ls/
-.elixir-tools
+.elixir-tools/
 .lexical
 
 .env*
