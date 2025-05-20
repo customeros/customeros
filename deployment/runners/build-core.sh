@@ -34,4 +34,4 @@ mix compile
 echo "==> Building release..."
 mix release
 
-echo "==> Build complete. Release output at: _build/prod/rel/realtime"
+echo "==> Build complete. Release output at: _build/prod/rel/core"
