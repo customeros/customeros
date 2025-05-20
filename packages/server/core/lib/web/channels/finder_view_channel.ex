@@ -4,7 +4,7 @@ defmodule Web.FinderChannel do
   """
   require Logger
   use Web, :channel
-  alias Web.ColorManager
+  alias Core.Realtime.ColorManager
   alias Web.Presence
 
   @impl true

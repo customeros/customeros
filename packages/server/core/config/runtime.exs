@@ -33,7 +33,7 @@ end
 if get_env.("PHX_SERVER", nil), do: config(:realtime, Web.Endpoint, server: true)
 
 # Database configuration
-config(:core, Realtime.Repo,
+config(:core, Core.Repo,
   username: get_env.("POSTGRES_USER", "postgres"),
   password: get_env.("POSTGRES_PASSWORD", "password"),
   hostname: get_env.("POSTGRES_HOST", "localhost"),
