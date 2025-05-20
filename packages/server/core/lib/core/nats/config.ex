@@ -16,11 +16,12 @@ defmodule Core.Nats.Config do
   ]
 
   def from_env do
-    environment = Application.get_env(:ai, :environment)
-    nats_node_1 = Application.get_env(:ai, :nats_node_1)
-    nats_node_2 = Application.get_env(:ai, :nats_node_2)
-    nats_node_3 = Application.get_env(:ai, :nats_node_3)
-    nats_port = Application.get_env(:ai, :nats_port)
+    nats_config = Application.get_env(:core, :nats, %{})
+    environment = Map.get(nats_config, :environment)
+    nats_node_1 = Map.get(nats_config, :nats_node_1)
+    nats_node_2 = Map.get(nats_config, :nats_node_2)
+    nats_node_3 = Map.get(nats_config, :nats_node_3)
+    nats_port = Map.get(nats_config, :nats_port)
 
     %__MODULE__{
       environment: environment,
