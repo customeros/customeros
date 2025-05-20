@@ -445,6 +445,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsContactCount), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLeadSource), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCreatedDate), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsQualificationStatus), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case postgres_entity.TableIDTypeUpcomingInvoices:
