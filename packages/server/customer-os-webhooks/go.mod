@@ -21,7 +21,7 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20250512171648-ebf2777022e6
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-contrib/zap v1.1.5
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
@@ -30,6 +30,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/net v0.40.0
 	google.golang.org/grpc v1.72.1
 	gorm.io/gorm v1.26.1
 )
@@ -154,7 +155,6 @@ require (
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
