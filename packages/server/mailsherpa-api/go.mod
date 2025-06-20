@@ -19,7 +19,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/smartystreets/smartystreets-go-sdk v1.21.1
+	github.com/smartystreets/smartystreets-go-sdk v1.22.0
 	golang.org/x/net v0.40.0
 )
 
