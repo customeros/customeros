@@ -16,7 +16,7 @@ jobs:
     runs-on: ubicloud-standard-2
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Sets up an Erlang/OTP environment
         uses: erlef/setup-beam@v1

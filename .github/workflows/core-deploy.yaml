@@ -23,7 +23,7 @@ jobs:
   deploy:
     runs-on: ubicloud-standard-2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -70,7 +70,7 @@ jobs:
             ${{ env.CONTAINERFILE_PATH }}
 
       - name: Checkout cloud repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.CLOUD_REPO }}
           token: ${{ secrets.CLOUD_REPO_KEY }}

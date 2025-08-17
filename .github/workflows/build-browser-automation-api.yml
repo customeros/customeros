@@ -53,7 +53,7 @@ jobs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Log in to registry
       - name: Log in to the Container registry
@@ -96,7 +96,7 @@ jobs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Log in to registry
       - name: Log in to the Container registry
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubicloud-standard-2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Log in to the Container registry
       - name: Log in to the Container registry
