@@ -45,7 +45,7 @@ require (
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/text v0.25.0
 	google.golang.org/api v0.230.0
-	gorm.io/gorm v1.26.1
+	gorm.io/gorm v1.30.3
 )
 
 require (
