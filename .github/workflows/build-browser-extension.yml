@@ -39,7 +39,7 @@ jobs:
         working-directory: ./packages/apps/extension
 
       - name: Upload dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: browser-extension
           path: packages/apps/extension/dist
