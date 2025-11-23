@@ -22,7 +22,7 @@ jobs:
     runs-on: ubicloud-standard-2
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Go
         uses: ubicloud/setup-go@v5

@@ -44,7 +44,7 @@ jobs:
   #       with:
   #         access_token: ${{ github.token }}
   #     - name: Checkout Github repo
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #     - name: Sets up an Erlang/OTP environment
   #       uses: erlef/setup-beam@v1
   #       with:
@@ -75,7 +75,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
       - name: Checkout Github repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Sets up an Erlang/OTP environment
         uses: erlef/setup-beam@v1
         with:
@@ -130,7 +130,7 @@ jobs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Log in to registry
       - name: Log in to the Container registry
@@ -173,7 +173,7 @@ jobs:
       digest: ${{ steps.digest.outputs.value }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Log in to registry
       - name: Log in to the Container registry
@@ -215,7 +215,7 @@ jobs:
     runs-on: ubicloud-standard-2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Log in to the Container registry
       - name: Log in to the Container registry
